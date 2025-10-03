@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Studio professionnel pour composer, prévisualiser et exporter des reviews produits cannabis." />
+  <title>Reviews Maker · Studio professionnel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="home-page">
+  <div class="app-shell">
+    <header class="top-nav" role="banner">
+      <div class="brand" role="button" tabindex="0" aria-label="Accueil">
+        <span class="brand-mark" aria-hidden="true">🌿</span>
+        <div class="brand-text">
+          <strong>Reviews Maker</strong>
+          <span>Studio professionnel</span>
+        </div>
+      </div>
+      <div class="top-nav-status">
+        <div class="nav-actions">
+          <span class="pill-btn" id="openTips" title="Afficher les raccourcis et astuces" tabindex="0" role="button">
+            <span aria-hidden="true">💡</span>
+            Astuce
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <main class="workspace home-workspace" role="main">
+      <!-- Section Hero -->
+      <section class="hero-section">
+        <div class="hero-content">
+          <h1 class="hero-title">Composez une review premium</h1>
+          <p class="hero-subtitle">Sélectionnez le type de produit pour activer les blocs adaptés.</p>
+          
+          <!-- Sélection du type de produit -->
+          <div class="type-selector" role="list">
+            <button type="button" class="type-card" data-type="Hash" role="listitem">
+              <span class="type-icon" aria-hidden="true">🍫</span>
+              <div class="type-content">
+                <span class="type-title">Hash</span>
+                <span class="type-caption">bubble hash, WPFF, dry sift, etc.</span>
+              </div>
+            </button>
+            <button type="button" class="type-card" data-type="Fleur" role="listitem">
+              <span class="type-icon" aria-hidden="true">🍃</span>
+              <div class="type-content">
+                <span class="type-title">Fleur</span>
+                <span class="type-caption">Indoor, outdoor, greenhouse…</span>
+              </div>
+            </button>
+            <button type="button" class="type-card" data-type="Concentré" role="listitem">
+              <span class="type-icon" aria-hidden="true">🍯</span>
+              <div class="type-content">
+                <span class="type-title">Concentré</span>
+                <span class="type-caption">Rosin, BHO, live resin, etc.</span>
+              </div>
+            </button>
+            <button type="button" class="type-card" data-type="Comestible" role="listitem">
+              <span class="type-icon" aria-hidden="true">🍬</span>
+              <div class="type-content">
+                <span class="type-title">Comestible</span>
+                <span class="type-caption">Pâtisserie, boisson, huile…</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- Actions rapides retirées: la gestion des brouillons se fait via la galerie -->
+        </div>
+      </section>
+
+      <!-- Bibliothèque des reviews -->
+      <section class="library-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span aria-hidden="true">📚</span>
+            Vos reviews récentes
+          </h2>
+          <button type="button" class="btn btn-ghost" id="openFullLibrary">Voir tout</button>
+        </div>
+
+        <!-- Bibliothèque compacte -->
+        <div class="compact-library" id="compactLibrary">
+          <div class="compact-library-empty" id="compactLibraryEmpty" style="display: none;">
+            <span class="empty-icon" aria-hidden="true">📝</span>
+            <p>Aucune review encore créée</p>
+            <span class="empty-hint">Commencez par choisir un type de produit ci-dessus</span>
+          </div>
+          <div class="compact-library-list" id="compactLibraryList"></div>
+          <div class="library-actions-below">
+            <button type="button" class="btn btn-outline" id="showMoreLibrary">Voir plus</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal Bibliothèque complète -->
+    <div class="modal" id="libraryModal" style="display: none;">
+      <div class="modal-overlay" id="libraryModalOverlay"></div>
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="libraryTitle">
+        <div class="modal-header">
+          <h2 id="libraryTitle">Bibliothèque complète</h2>
+          <button type="button" class="modal-close" id="closeLibrary" aria-label="Fermer">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="search-bar">
+            <input type="text" id="librarySearch" placeholder="Rechercher par nom, variété, farm..." class="search-input">
+          </div>
+          <div class="library-grid" id="libraryGrid">
+            <!-- Reviews complètes seront générées ici -->
+          </div>
+          <div class="library-empty" id="libraryEmpty" style="display: none;">
+            <span class="empty-icon" aria-hidden="true">📚</span>
+            <p>Aucune review trouvée</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Astuces -->
+    <div class="modal" id="tipsModal" style="display: none;">
+      <div class="modal-overlay" id="tipsModalOverlay"></div>
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="tipsTitle">
+        <div class="modal-header">
+          <h2 id="tipsTitle">Raccourcis & Astuces</h2>
+          <button type="button" class="modal-close" id="closeTips" aria-label="Fermer">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="tips-content">
+            <div class="tip-group">
+              <h3>🎯 Navigation</h3>
+              <ul>
+                <li><kbd>Tab</kbd> / <kbd>Shift</kbd> + <kbd>Tab</kbd> : Navigation entre les champs</li>
+                <li><kbd>Échap</kbd> : Fermer les modales</li>
+                <li>Cliquer sur le logo : Retour à l'accueil</li>
+              </ul>
+            </div>
+            <div class="tip-group">
+              <h3>✨ Fonctionnalités</h3>
+              <ul>
+                <li>Sauvegarde automatique pendant la saisie</li>
+                <li>Aperçu en temps réel</li>
+                <li>Export haute qualité en PNG</li>
+                <li>Gestion des brouillons</li>
+              </ul>
+            </div>
+            <div class="tip-group">
+              <h3>📝 Bonnes pratiques</h3>
+              <ul>
+                <li>Remplissez au minimum les sections obligatoires</li>
+                <li>Ajoutez une photo pour un rendu optimal</li>
+                <li>Utilisez des descriptions détaillées</li>
+                <li>Sauvegardez régulièrement vos reviews importantes</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Preview-only Overlay for home page (to visualize a review from gallery) -->
+  <div id="previewOverlay" class="preview-overlay" hidden></div>
+  <div id="previewModal" class="preview-modal" role="dialog" aria-modal="true" aria-label="Aperçu de la review" hidden>
+    <header class="preview-modal-header">
+      <h3>Aperçu</h3>
+      <div class="actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="downloadPreviewPng">Télécharger l'image</button>
+        <button type="button" class="pill-btn" id="closePreviewModal" title="Fermer">✕</button>
+      </div>
+    </header>
+    <div class="preview-modal-body">
+      <div id="previewModalContent" class="review-content"></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
