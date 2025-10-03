@@ -288,6 +288,12 @@ const productStructures = {
             label: "Pipeline de séparation (ordre des étapes)",
             type: "sequence",
             choices: choiceCatalog.separationTypes
+          },
+          {
+            key: "tamisMaillages",
+            label: "Tamis — maillages utilisés (µm)",
+            type: "text",
+            placeholder: "ex: 220, 180, 160–120, 90, 73, 45"
           }
         ]
       },
@@ -514,14 +520,20 @@ const productStructures = {
             type: "text",
             choices: Array.from(
               new Set([
-                "Solventless",
-                "BHO",
-                "PHO",
-                "CO₂",
-                "Éthanol",
-                ...choiceCatalog.extractionSansSolvants,
-                ...choiceCatalog.extractionSolvants,
-                ...choiceCatalog.extractionAvancees
+                "Rosin",
+                "Live Resin",
+                "Wax",
+                "Crumble",
+                "Sauce",
+                "Distillate",
+                "Diamonds",
+                "RSO",
+                "Shatter",
+                "Budder",
+                "Wax",
+                "Budder",
+                "Sand",
+
               ])
             )
           },
