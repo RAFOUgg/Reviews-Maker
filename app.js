@@ -1098,68 +1098,45 @@ function setupModalEvents() {
       if (typeof isEditorPage !== 'undefined' && isEditorPage) {
         const overlay = document.createElement('div');
         overlay.id = 'tipsOverlay';
-        overlay.style.position = 'fixed';
-        overlay.style.inset = '0';
-        overlay.style.background = 'rgba(0,0,0,0.35)';
-        overlay.style.zIndex = '9998';
-  const box = document.createElement('div');
-        box.style.position = 'fixed';
-        box.style.left = '50%';
-        box.style.top = '50%';
-        box.style.transform = 'translate(-50%, -50%)';
-  box.style.maxWidth = '560px';
-  box.style.width = 'min(92vw, 560px)';
-        box.style.maxHeight = '80vh';
-        box.style.overflow = 'auto';
-        box.style.background = 'var(--panel-bg, #111827)';
-        box.style.border = '1px solid var(--glass-border, rgba(255,255,255,0.08))';
-        box.style.borderRadius = '12px';
-        box.style.boxShadow = '0 12px 40px rgba(0,0,0,0.45)';
-        box.style.padding = '16px 18px';
-        // Close button
+        overlay.className = 'tips-overlay';
+        const dialog = document.createElement('div');
+        dialog.className = 'tips-dialog';
+        const header = document.createElement('div');
+        header.className = 'tips-header';
+        const h3 = document.createElement('h3');
+        h3.textContent = 'Raccourcis & Astuces';
         const closeBtn = document.createElement('button');
         closeBtn.type = 'button';
-        closeBtn.className = 'pill-btn';
-        closeBtn.style.position = 'absolute';
-        closeBtn.style.right = '10px';
-        closeBtn.style.top = '10px';
-        closeBtn.textContent = '✕';
+        closeBtn.className = 'close';
+        closeBtn.innerText = '✕';
         closeBtn.title = 'Fermer';
         closeBtn.addEventListener('click', () => overlay.remove());
-        box.appendChild(closeBtn);
+        header.appendChild(h3);
+        header.appendChild(closeBtn);
+        const body = document.createElement('div');
+        body.className = 'tips-body';
         const frag = tpl.content.cloneNode(true);
-        // Extract inner content: if template root has class 'tips-popover', unwrap it
+        // Unwrap potential .tips-popover wrapper
         let inner = frag.firstElementChild;
         let contentNode = null;
         if (inner && inner.classList && inner.classList.contains('tips-popover')) {
           const wrapper = document.createElement('div');
-          wrapper.style.display = 'block';
-          wrapper.style.width = '100%';
-          wrapper.style.boxSizing = 'border-box';
-          wrapper.innerHTML = inner.innerHTML; // unwrap to drop tips-popover styles
+          wrapper.innerHTML = inner.innerHTML;
           contentNode = wrapper;
         } else if (inner) {
           contentNode = inner;
         }
         if (contentNode) {
-          // Normalize styles for readability
-          contentNode.style.margin = '0';
-          contentNode.style.padding = '0';
-          contentNode.style.width = '100%';
-          contentNode.style.maxWidth = 'unset';
-          contentNode.style.background = 'transparent';
-          contentNode.style.whiteSpace = 'normal';
-          contentNode.style.overflowWrap = 'anywhere';
-          contentNode.style.boxSizing = 'border-box';
+          // Optional: split into grid blocks if markup has recognizable sections
+          // For now, just ensure good wrapping
           contentNode.querySelectorAll?.('.kbd-line')?.forEach?.(el => {
-            el.style.display = 'flex';
-            el.style.flexWrap = 'wrap';
-            el.style.gap = '8px';
-            el.style.alignItems = 'center';
+            el.classList.add('tips-kbd-line');
           });
-          box.appendChild(contentNode);
+          body.appendChild(contentNode);
         }
-        overlay.appendChild(box);
+        dialog.appendChild(header);
+        dialog.appendChild(body);
+        overlay.appendChild(dialog);
         overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
         document.body.appendChild(overlay);
         return;
