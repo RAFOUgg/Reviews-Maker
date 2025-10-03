@@ -2005,6 +2005,40 @@ function selectProductType(type) {
   const card = dom.typeCards.find(c => c.dataset.type === type);
   if (card) {
     handleTypeSelection(card);
+  } else {
+    // Fallback when no .type-card exists on this page (review.html)
+    // Apply the type directly and render step 2
+    if (!type || !productStructures[type]) return;
+    currentType = type;
+    formData = { productType: currentType };
+    imageUrl = "";
+    totals = {};
+    currentReviewId = null;
+    isReadOnlyView = false;
+    isNonDraftRecord = false;
+
+    if (dom.productTypeInput) {
+      dom.productTypeInput.value = currentType;
+    }
+
+    renderForm();
+    updateProgress();
+
+    const workspace = document.querySelector('.workspace');
+    if (workspace) workspace.classList.add('has-content');
+    const compact = document.getElementById('assistantCompact');
+    if (compact) compact.hidden = false;
+    if (dom.selectedTypeChip) dom.selectedTypeChip.textContent = `Type: ${currentType}`;
+
+    const formPanel = document.querySelector('.panel.panel-form');
+    const previewPanel = document.querySelector('.panel.panel-preview');
+    if (formPanel) { formPanel.hidden = false; formPanel.removeAttribute('hidden'); }
+    if (previewPanel) { previewPanel.setAttribute('hidden',''); }
+
+    document.body.classList.add('assistant-hidden');
+    formPanel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    setDraftFlag(true);
   }
 }
 
