@@ -1082,18 +1082,21 @@ function setupFormEvents() {
 }
 
 function setupModalEvents() {
-  // Modal Astuces
+  // Astuces (modal on home, anchored popover on editor)
   if (dom.openTips) {
+    const openTipsModal = () => { if (dom.tipsModal) dom.tipsModal.style.display = 'flex'; };
     const toggleTipsPopover = () => {
       const existing = document.getElementById('activeTipsPopover');
       if (existing) { existing.remove(); return; }
       const tpl = document.getElementById('tipsPopoverTemplate') || document.getElementById('tipsTemplate');
-      if (!tpl) { showToast("Astuces indisponibles", 'warning'); return; }
+      if (!tpl) { 
+        if (dom.tipsModal) { openTipsModal(); return; }
+        showToast('Astuces indisponibles', 'warning'); 
+        return; 
+      }
       const wrap = document.createElement('div');
       wrap.id = 'activeTipsPopover';
-      wrap.style.position = 'fixed';
-      wrap.style.right = '16px';
-      wrap.style.top = '72px';
+      wrap.style.position = 'absolute';
       wrap.style.maxWidth = '460px';
       wrap.style.zIndex = '9999';
       wrap.style.background = 'var(--panel-bg, #111827)';
@@ -1101,11 +1104,31 @@ function setupModalEvents() {
       wrap.style.borderRadius = '12px';
       wrap.style.boxShadow = '0 10px 30px rgba(0,0,0,0.35)';
       wrap.style.padding = '14px 16px';
+      wrap.style.visibility = 'hidden'; // position after measuring
       wrap.appendChild(tpl.content.cloneNode(true));
       document.body.appendChild(wrap);
+      // Position near the button, clamped to viewport
+      try {
+        const btn = dom.openTips;
+        const rect = btn.getBoundingClientRect();
+        const popW = wrap.offsetWidth || 360;
+        const margin = 16;
+        const desiredLeft = window.scrollX + rect.right - popW; // right-align to button
+        let left = Math.max(window.scrollX + margin, desiredLeft);
+        const maxLeft = window.scrollX + window.innerWidth - popW - margin;
+        left = Math.min(left, maxLeft);
+        const top = window.scrollY + rect.bottom + 8;
+        wrap.style.left = left + 'px';
+        wrap.style.top = top + 'px';
+      } catch {}
+      wrap.style.visibility = 'visible';
     };
-    dom.openTips.addEventListener("click", toggleTipsPopover);
-    dom.openTips.addEventListener("keydown", (e) => {
+    dom.openTips.addEventListener('click', () => {
+      // Prefer modal when present (home page)
+      if (dom.tipsModal) { openTipsModal(); return; }
+      toggleTipsPopover();
+    });
+    dom.openTips.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dom.openTips.click(); }
     });
     // Close tips when clicking outside
