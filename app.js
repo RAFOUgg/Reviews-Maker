@@ -189,12 +189,11 @@ const choiceCatalog = {
   extractionSolvants: [
     "Extraction à l'éthanol (EHO)",
     "Extraction à l'alcool isopropylique (IPA)",
-    "Extraction à l'acétone",
+    "Extraction à l'acétone (AHO)",
     "Extraction au butane (BHO)",
     "Extraction a l'isobutane (IHO)",
-    "Extraction au pentane (PHO)",
-    "Extraction au propane",
-    "Extraction à l'hexane",
+    "Extraction au propane (PHO)",
+    "Extraction à l'hexane (HHO)",
     "Extraction aux huiles végétales (coco, olive)",
     "Extraction au CO₂ supercritique",
     "Autre"
@@ -548,26 +547,7 @@ const productStructures = {
               ...choiceCatalog.extractionAvancees
             ]))
           },
-          {
-            key: "solvant",
-            label: "Solvant",
-            type: "text",
-            choices: [
-              "Butane",
-              "Propane",
-              "Mélange BHO",
-              "Éthanol",
-              "Isopropanol",
-              "Acétone",
-              "Hexane",
-              "Huile de coco",
-              "Huile d'olive",
-              "CO₂ supercritique",
-              "Sans solvant",
-              "Autre"
-            ]
-          },
-          { key: "purge", label: "Purge", type: "textarea" },
+          { key: "purgevide", label: "Purge à vide", type: "boolean" },
           { key: "photo", label: "Photo", type: "file" }
         ]
       },
@@ -1959,10 +1939,20 @@ function loadReviewIntoForm(review, mode = 'view') {
           } else if (input.dataset.multiselect === 'true') {
             rehydrateMultipleChoice(input.id, Array.isArray(parsed) ? parsed : (parsed ? [parsed] : []));
           } else {
-            rehydrateMultipleChoice(input.id, Array.isArray(parsed) ? parsed : (parsed ? [parsed] : []));
+            // Could be boolean or other simple hidden values stored as JSON string
+            if (input.id === 'purgevide') {
+              rehydrateBoolean(input.id, parsed);
+            } else {
+              rehydrateMultipleChoice(input.id, Array.isArray(parsed) ? parsed : (parsed ? [parsed] : []));
+            }
           }
         } catch {
-          input.value = String(val);
+          // For non-JSON or legacy scalars
+          if (input.id === 'purgevide') {
+            rehydrateBoolean(input.id, String(val));
+          } else {
+            input.value = String(val);
+          }
         }
         return;
       }
@@ -2251,7 +2241,7 @@ function renderForm() {
     formTitle.textContent = `Informations du produit — ${currentType}`;
   }
   // After initial render, generate a fresh preview if data exists
-  try { collectFormData(); generateReview(); } catch {}
+  try { updateConditionalVisibility(); collectFormData(); generateReview(); } catch {}
 }
 
 function renderSectionNav(sections = []) {
@@ -2357,6 +2347,12 @@ function updateSectionControls() {
 function createFieldGroup(field, sectionIndex, section) {
   const wrapper = document.createElement("div");
   wrapper.className = "field-group";
+  // Allow conditional display rules via field.showWhen predicate (optional)
+  if (typeof field.showWhen === 'function') {
+    wrapper.dataset.conditional = 'true';
+    // Initial state hidden; will be toggled after render
+    wrapper.style.display = 'none';
+  }
 
   const label = document.createElement("label");
   label.setAttribute("for", field.key);
@@ -2408,6 +2404,8 @@ function createFieldGroup(field, sectionIndex, section) {
       hidden.value = JSON.stringify(steps);
       renderDisplay(steps);
       updateProgress();
+      // Update conditional fields visibility based on sequence content
+      try { updateConditionalVisibility(); } catch {}
       try { collectFormData(); generateReview(); } catch {}
     }
 
@@ -2543,13 +2541,51 @@ function createFieldGroup(field, sectionIndex, section) {
     return wrapper;
   }
 
+  // Boolean yes/no
+  if (field.type === 'boolean') {
+    const group = document.createElement('div');
+    group.className = 'boolean-group';
+    const yesId = `${field.key}_yes`;
+    const noId = `${field.key}_no`;
+    const name = `${field.key}_bool`; // radios share a group name
+
+    const hidden = document.createElement('input');
+    hidden.type = 'hidden';
+    hidden.id = field.key;
+
+    const makeRadio = (id, value, labelText) => {
+      const lbl = document.createElement('label');
+      lbl.className = 'radio';
+      const r = document.createElement('input');
+      r.type = 'radio';
+      r.name = name;
+      r.id = id;
+      r.value = value;
+      r.addEventListener('change', () => {
+        hidden.value = value;
+        updateProgress();
+        try { collectFormData(); generateReview(); } catch {}
+      });
+      const span = document.createElement('span');
+      span.textContent = labelText;
+      lbl.append(r, span);
+      return lbl;
+    };
+
+    group.appendChild(makeRadio(yesId, 'Oui', 'Oui'));
+    group.appendChild(makeRadio(noId, 'Non', 'Non'));
+    wrapper.appendChild(group);
+    wrapper.appendChild(hidden);
+    return wrapper;
+  }
+
   let input;
 
   switch (field.type) {
     case "textarea":
       input = document.createElement("textarea");
       input.id = field.key;
-      input.placeholder = field.label;
+      input.placeholder = field.placeholder || field.label;
       input.addEventListener("input", () => updateProgress());
       // Wide textareas: span both columns when possible
       wrapper.style.gridColumn = "1 / -1";
@@ -2597,12 +2633,32 @@ function createFieldGroup(field, sectionIndex, section) {
       input = document.createElement("input");
       input.type = "text";
       input.id = field.key;
-      input.placeholder = field.label;
+      input.placeholder = field.placeholder || field.label;
       input.addEventListener("input", () => updateProgress());
   }
 
   wrapper.appendChild(input);
   return wrapper;
+}
+
+// Toggle conditional field visibility: currently used to show mesh sizes when sequence contains a sieve step
+function updateConditionalVisibility() {
+  // Determine if the current Hash separation pipeline contains any sieve/tamis related step
+  let hasSieve = false;
+  try {
+    const hidden = document.getElementById('pipelineSeparation');
+    if (hidden && hidden.dataset.sequence === 'true') {
+      const arr = JSON.parse(hidden.value || '[]');
+      const joined = (Array.isArray(arr) ? arr.join(' ').toLowerCase() : '');
+      hasSieve = /tamis|bubble|ice\s*hash|whole\s*plant\s*fresh\s*frozen|wpff|dry\s*tamis|tamisage/.test(joined);
+    }
+  } catch {}
+
+  // Show/hide the tamis field if present
+  const tamisField = document.getElementById('tamisMaillages')?.closest('.field-group');
+  if (tamisField && tamisField.dataset.conditional === 'true') {
+    tamisField.style.display = hasSieve ? '' : 'none';
+  }
 }
 
 function clampNumericValue(input, max) {
@@ -2655,6 +2711,7 @@ function rehydrateSequenceField(fieldId, steps) {
   if (display) {
     display.innerHTML = vals.length ? vals.map(v => `<span class="chip">${v}</span>`).join('') : 'Ajouter une étape';
   }
+  try { updateConditionalVisibility(); } catch {}
 }
 
 function rehydrateMultipleChoice(fieldId, selections) {
@@ -2684,6 +2741,24 @@ function rehydrateMultipleChoice(fieldId, selections) {
       display.innerHTML = arr.length ? arr.map(v => `<span class="chip">${v}</span>`).join('') : 'Sélectionner';
     }
   }
+}
+
+function rehydrateBoolean(fieldId, value) {
+  const hidden = document.getElementById(fieldId);
+  if (!hidden) return;
+  const group = hidden.previousElementSibling;
+  const val = String(value || '').toLowerCase();
+  // Accept 'Oui'/'Non' or 'true'/'false'
+  let norm;
+  if (val === 'true' || val === 'oui' || val === 'yes') norm = 'oui';
+  else if (val === 'false' || val === 'non' || val === 'no') norm = 'non';
+  // Set radios
+  const radios = group?.querySelectorAll(`input[type="radio"][name="${fieldId}_bool"]`) || [];
+  radios.forEach(r => {
+    const v = r.value.toLowerCase();
+    r.checked = (norm ? (norm === 'oui' ? v === 'oui' : v === 'non') : false);
+  });
+  hidden.value = norm === 'non' ? 'Non' : (norm === 'oui' ? 'Oui' : '');
 }
 
 function setReadOnly(on) {
