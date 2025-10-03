@@ -104,6 +104,11 @@ html {
   outline: none;
   transition: var(--transition);
 }
+.sequence .step-extra .mesh-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
 .sequence .step-extra input[type="text"]::placeholder { color: var(--text-soft); }
 .sequence .step-extra input[type="text"]:focus {
   border-color: rgba(56, 240, 184, 0.45);

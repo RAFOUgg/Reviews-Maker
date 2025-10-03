@@ -288,12 +288,6 @@ const productStructures = {
             type: "sequence",
             choices: choiceCatalog.separationTypes
           },
-          {
-            key: "tamisMaillages",
-            label: "Tamis — maillages utilisés (µm)",
-            type: "text",
-            placeholder: "ex: 220, 180, 160–120, 90, 73, 45"
-          }
         ]
       },
       {
@@ -329,14 +323,10 @@ const productStructures = {
         title: "Visuel & Technique",
         fields: [
           { key: "couleurTransparence", label: "Couleur/transparence", type: "number", max: 10 },
-          { key: "viscosite", label: "Viscosité", type: "number", max: 10 },
           { key: "pureteVisuelle", label: "Pureté visuelle", type: "number", max: 10 },
-          { key: "odeurVisuel", label: "Odeur", type: "number", max: 10 },
-          { key: "melting", label: "Melting", type: "number", max: 10 },
-          { key: "residus", label: "Résidus", type: "number", max: 10 }
         ],
         total: true,
-        totalKeys: ["couleurTransparence", "viscosite", "pureteVisuelle", "odeurVisuel", "melting", "residus"]
+        totalKeys: ["couleurTransparence", "friabiliteViscosite", "pureteVisuelle", "meltingResidus"]
       },
       {
         title: "Odeur",
@@ -344,21 +334,22 @@ const productStructures = {
           { key: "intensiteAromatique", label: "Intensité aromatique", type: "number", max: 10 },
           { key: "notesDominantesOdeur", label: "Notes dominantes", type: "textarea" },
           { key: "notesSecondairesOdeur", label: "Notes secondaires", type: "textarea" },
-          { key: "fideliteStrain", label: "Fidélité au strain", type: "number", max: 10 }
+          { key: "fideliteCultivars", label: "Fidélité au cultivars", type: "number", max: 10 }
         ],
         total: true,
-        totalKeys: ["intensiteAromatique", "fideliteStrain"]
+        totalKeys: ["intensiteAromatique", "fideliteCultivars"]
       },
       {
         title: "Texture",
         fields: [
           { key: "durete", label: "Dureté", type: "number", max: 10 },
           { key: "densite", label: "Densité", type: "number", max: 10 },
-          { key: "friabilite", label: "Friabilité", type: "number", max: 10 },
+          { key: "friabiliteViscosite", label: "Friabilité/Viscosité", type: "number", max: 10 },
+          { key: "meltingResidus", label: "Melting/Résidus", type: "number", max: 10 },
           { key: "aspectCollantGras", label: "Aspect collant/gras", type: "number", max: 10 }
         ],
         total: true,
-        totalKeys: ["durete", "densite", "friabilite", "aspectCollantGras"]
+        totalKeys: ["durete", "densite", "friabiliteViscosite", "aspectCollantGras"]
       },
       {
         title: "Goûts & expériences fumée",
@@ -2395,7 +2386,10 @@ function createFieldGroup(field, sectionIndex, section) {
         const name = li.querySelector('.step-label')?.textContent || '';
         if (!name) return null;
         if (li.dataset.sieve === 'true') {
-          const mesh = li.querySelector('input[data-mesh]')?.value?.trim();
+          const minV = li.querySelector('input[data-mesh-min]')?.value?.trim() || '';
+          const maxV = li.querySelector('input[data-mesh-max]')?.value?.trim() || '';
+          const any = minV || maxV;
+          const mesh = (minV && maxV) ? `${minV}–${maxV}` : (any ? `0–${minV || maxV}` : '');
           return mesh ? { name, mesh } : { name };
         }
         return { name };
@@ -2440,18 +2434,51 @@ function createFieldGroup(field, sectionIndex, section) {
       actions.append(up, down, del);
       li.append(label, actions);
 
-      // Add per-step mesh input for sieve steps
+      // Add per-step mesh input (min/max) for sieve steps
       if (isSieveStep(text)) {
         li.dataset.sieve = 'true';
         const extra = document.createElement('div');
         extra.className = 'step-extra';
-        const meshInput = document.createElement('input');
-        meshInput.type = 'text';
-        meshInput.placeholder = 'maillage (µm) — ex: 220, 180, 160–120, 90';
-        meshInput.setAttribute('data-mesh', '');
-        meshInput.value = (meta && meta.mesh) ? String(meta.mesh) : '';
-        meshInput.addEventListener('input', () => serialize());
-        extra.appendChild(meshInput);
+        const pair = document.createElement('div');
+        pair.className = 'mesh-pair';
+        const minInput = document.createElement('input');
+        minInput.type = 'text';
+        minInput.placeholder = 'min (µm)';
+        minInput.setAttribute('data-mesh-min', '');
+        const maxInput = document.createElement('input');
+        maxInput.type = 'text';
+        maxInput.placeholder = 'max (µm)';
+        maxInput.setAttribute('data-mesh-max', '');
+        // If meta.mesh exists, try to parse and prefill
+        if (meta && meta.mesh) {
+          try {
+            const str = String(meta.mesh);
+            const m = str.match(/(\d+)\s*[–-]\s*(\d+)/);
+            if (m) {
+              minInput.value = m[1];
+              maxInput.value = m[2];
+            } else {
+              // single value => set as max
+              const single = str.match(/(\d+)/);
+              if (single) { maxInput.value = single[1]; }
+            }
+          } catch {}
+        }
+        const onPairChange = () => {
+          // Compose mesh string: if both -> "min–max"; if one -> "0–X"
+          const minV = minInput.value.trim();
+          const maxV = maxInput.value.trim();
+          const any = minV || maxV;
+          const mesh = (minV && maxV) ? `${minV}–${maxV}` : (any ? `0–${minV || maxV}` : '');
+          // Nothing more to set on DOM, mesh used during serialization via currentEntries()
+          serialize();
+        };
+        minInput.addEventListener('input', onPairChange);
+        maxInput.addEventListener('input', onPairChange);
+        pair.append(minInput, maxInput);
+        extra.appendChild(pair);
+        
+        // Back-compat: also render a composed chip value immediately after creation
         li.appendChild(extra);
       }
 
@@ -2736,19 +2763,41 @@ function rehydrateSequenceField(fieldId, steps) {
       li.dataset.sieve = 'true';
       const extra = document.createElement('div');
       extra.className = 'step-extra';
-      const meshInput = document.createElement('input');
-      meshInput.type = 'text';
-      meshInput.placeholder = 'maillage (µm) — ex: 220, 180, 160–120, 90';
-      meshInput.setAttribute('data-mesh', '');
-      meshInput.value = (meta && meta.mesh) ? String(meta.mesh) : '';
-      meshInput.addEventListener('input', () => {
+      const pair = document.createElement('div');
+      pair.className = 'mesh-pair';
+      const minInput = document.createElement('input');
+      minInput.type = 'text';
+      minInput.placeholder = 'min (µm)';
+      minInput.setAttribute('data-mesh-min', '');
+      const maxInput = document.createElement('input');
+      maxInput.type = 'text';
+      maxInput.placeholder = 'max (µm)';
+      maxInput.setAttribute('data-mesh-max', '');
+      // Prefill from meta.mesh if provided
+      if (meta && meta.mesh) {
+        try {
+          const str = String(meta.mesh);
+          const m = str.match(/(\d+)\s*[–-]\s*(\d+)/);
+          if (m) {
+            minInput.value = m[1];
+            maxInput.value = m[2];
+          } else {
+            const single = str.match(/(\d+)/);
+            if (single) { maxInput.value = single[1]; }
+          }
+        } catch {}
+      }
+      const onPairChange = () => {
         try {
           const arr = Array.from(list.querySelectorAll('li.sequence-item')).map(li2 => {
             const name2 = li2.querySelector('.step-label')?.textContent || '';
             if (!name2) return null;
             if (li2.dataset.sieve === 'true') {
-              const m2 = li2.querySelector('input[data-mesh]')?.value?.trim();
-              return m2 ? { name: name2, mesh: m2 } : { name: name2 };
+              const minV2 = li2.querySelector('input[data-mesh-min]')?.value?.trim() || '';
+              const maxV2 = li2.querySelector('input[data-mesh-max]')?.value?.trim() || '';
+              const any2 = minV2 || maxV2;
+              const mesh2 = (minV2 && maxV2) ? `${minV2}–${maxV2}` : (any2 ? `0–${minV2 || maxV2}` : '');
+              return mesh2 ? { name: name2, mesh: mesh2 } : { name: name2 };
             }
             return { name: name2 };
           }).filter(Boolean);
@@ -2762,14 +2811,38 @@ function rehydrateSequenceField(fieldId, steps) {
             }).join('') : 'Ajouter une étape';
           }
         } catch {}
-      });
-      extra.appendChild(meshInput);
+      };
+      minInput.addEventListener('input', onPairChange);
+      maxInput.addEventListener('input', onPairChange);
+      pair.append(minInput, maxInput);
+      extra.appendChild(pair);
       li.appendChild(extra);
     }
     const serialize = () => {
-      const stepsNow = Array.from(list.querySelectorAll('li .step-label')).map(el => el.textContent || '').filter(Boolean);
-      hidden.value = JSON.stringify(stepsNow);
-      updateProgress();
+      try {
+        const arr = Array.from(list.querySelectorAll('li.sequence-item')).map(li2 => {
+          const name2 = li2.querySelector('.step-label')?.textContent || '';
+          if (!name2) return null;
+          if (li2.dataset.sieve === 'true') {
+            const minV2 = li2.querySelector('input[data-mesh-min]')?.value?.trim() || '';
+            const maxV2 = li2.querySelector('input[data-mesh-max]')?.value?.trim() || '';
+            const any2 = minV2 || maxV2;
+            const mesh2 = (minV2 && maxV2) ? `${minV2}–${maxV2}` : (any2 ? `0–${minV2 || maxV2}` : '');
+            return mesh2 ? { name: name2, mesh: mesh2 } : { name: name2 };
+          }
+          return { name: name2 };
+        }).filter(Boolean);
+        const hasMeta = arr.some(e => e && typeof e === 'object' && Object.keys(e).some(k => k !== 'name'));
+        hidden.value = JSON.stringify(hasMeta ? arr : arr.map(e => e?.name || ''));
+        if (display) {
+          display.innerHTML = arr.length ? arr.map(v => {
+            const nm = (v && typeof v === 'object') ? (v.name || '') : String(v);
+            const ms = (v && typeof v === 'object' && v.mesh) ? ` <small style="opacity:.82;">(${v.mesh})</small>` : '';
+            return `<span class="chip">${nm}${ms}</span>`;
+          }).join('') : 'Ajouter une étape';
+        }
+        updateProgress();
+      } catch {}
     };
     up.addEventListener('click', () => { if (li.previousElementSibling) { list.insertBefore(li, li.previousElementSibling); serialize(); } });
     down.addEventListener('click', () => { if (li.nextElementSibling) { list.insertBefore(li.nextElementSibling, li); serialize(); } });
