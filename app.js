@@ -1024,7 +1024,8 @@ function setupFormEvents() {
           showToast('Review supprimée', 'success');
         }
       } catch {}
-      handleReset('full');
+      // Après suppression, on peut revenir à l'accueil proprement
+      navigateToHome();
     });
   }
   if (dom.togglePreviewBtn) {
@@ -1910,7 +1911,8 @@ async function downloadPreviewAsPng() {
 function loadReviewIntoForm(review, mode = 'view') {
   if (!review) return;
   // Reset and set current type
-  handleReset('full');
+  // Use a non-navigating reset to avoid redirecting to index.html
+  handleReset('soft');
   const type = review.productType;
   if (!type || !productStructures[type]) {
     showToast("Type de produit inconnu pour cette review", "error");
