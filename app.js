@@ -2866,13 +2866,14 @@ function readFileAsDataURL(file) {
 // -------- Backend distant (API REST) --------
 async function tryEnableRemote() {
   try {
-    const base = window.location.origin;
-    const r = await fetch(base + '/api/ping', { cache: 'no-store' });
+    // If hosted under /reviews, use that as base-path; otherwise root
+    const basePath = (typeof location !== 'undefined' && location.pathname && location.pathname.startsWith('/reviews')) ? '/reviews' : '';
+    const r = await fetch(basePath + '/api/ping', { cache: 'no-store' });
     if (!r.ok) return;
     const js = await r.json();
     if (js && js.ok) {
       remoteEnabled = true;
-      remoteBase = base;
+      remoteBase = basePath; // ensure subsequent calls hit /reviews/api when relevant
       console.info('[remote] API détectée');
       showToast('Backend serveur détecté', 'info');
       renderCompactLibrary();
