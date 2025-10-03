@@ -48,6 +48,15 @@ Studio web ergonomique pour composer, visualiser et exporter des fiches de revie
 > **Astuce** : Les reviews en cours d'édition sont automatiquement sauvegardées comme brouillons. Utilisez le bouton *Bibliothèque* pour consulter vos reviews et brouillons. (Ou depuis l'aperçu compact sous l'assistant de création).
 > **Raccourcis** : `Ctrl/⌘ + ↑/↓` change la section active, `Ctrl/⌘ + Entrée` déclenche la génération.
 
+## Technique de filtrations nécessitant une indication particulière
+    Tamisage WPFF (Whole Plant Fresh Frozen) -> maillage du/des tamis utilisé(s)
+    Tamisage à l'eau glacée (Bubble Hash) -> maillage du/des tamis utilisé(s)
+    Tamisage à la glace carbonique (Ice Hash) -> maillage du/des tamis utilisé(s)
+    Tamisage à sec (Dry) -> maillage du/des tamis utilisé(s)
+    Tamisage à sec congelé (Ice Dry) -> maillage du/des tamis utilisé(s)
+    Pressage à chaud (Rosin) -> maillage du/des tamis utilisé(s) + température de pressage
+    C02 supercritique -> pression et température
+
 ## 📋 Types de produits et informations collectées
 
 ### 🔷 Hash

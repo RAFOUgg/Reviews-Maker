@@ -2384,10 +2384,22 @@ function createFieldGroup(field, sectionIndex, section) {
     const hidden = document.createElement("input");
     hidden.type = "hidden"; hidden.id = field.key; hidden.dataset.sequence = "true";
 
-    function currentSteps() {
-      return Array.from(list.querySelectorAll("li .step-label"))
-        .map(el => el.textContent || "")
-        .filter(Boolean);
+    // Helpers
+    function isSieveStep(name) {
+      const n = (name || '').toLowerCase();
+      return /tamis|bubble|ice\s*hash|ice\s*dry|wpff/.test(n);
+    }
+
+    function currentEntries() {
+      return Array.from(list.querySelectorAll('li.sequence-item')).map(li => {
+        const name = li.querySelector('.step-label')?.textContent || '';
+        if (!name) return null;
+        if (li.dataset.sieve === 'true') {
+          const mesh = li.querySelector('input[data-mesh]')?.value?.trim();
+          return mesh ? { name, mesh } : { name };
+        }
+        return { name };
+      }).filter(Boolean);
     }
 
     function renderDisplay(values) {
@@ -2396,20 +2408,26 @@ function createFieldGroup(field, sectionIndex, section) {
         display.textContent = "Ajouter une étape";
         return;
       }
-      display.innerHTML = arr.map(v => `<span class="chip">${v}</span>`).join("");
+      display.innerHTML = arr.map(v => {
+        const name = (v && typeof v === 'object') ? (v.name || '') : String(v);
+        const mesh = (v && typeof v === 'object' && v.mesh) ? ` <small style="opacity:.82;">(${v.mesh})</small>` : '';
+        return `<span class="chip">${name}${mesh}</span>`;
+      }).join("");
     }
 
     function serialize() {
-      const steps = currentSteps();
-      hidden.value = JSON.stringify(steps);
-      renderDisplay(steps);
+      const entries = currentEntries();
+      const hasMeta = entries.some(e => e && typeof e === 'object' && Object.keys(e).some(k => k !== 'name'));
+      const payload = hasMeta ? entries : entries.map(e => e?.name || '');
+      hidden.value = JSON.stringify(payload);
+      renderDisplay(payload);
       updateProgress();
       // Update conditional fields visibility based on sequence content
       try { updateConditionalVisibility(); } catch {}
       try { collectFormData(); generateReview(); } catch {}
     }
 
-    function createItem(text) {
+    function createItem(text, meta = {}) {
       const li = document.createElement("li");
       li.className = "sequence-item";
       const label = document.createElement("span");
@@ -2421,6 +2439,21 @@ function createFieldGroup(field, sectionIndex, section) {
       const del = document.createElement("button"); del.type = "button"; del.className = "step-del"; del.title = "Supprimer"; del.textContent = "✕";
       actions.append(up, down, del);
       li.append(label, actions);
+
+      // Add per-step mesh input for sieve steps
+      if (isSieveStep(text)) {
+        li.dataset.sieve = 'true';
+        const extra = document.createElement('div');
+        extra.className = 'step-extra';
+        const meshInput = document.createElement('input');
+        meshInput.type = 'text';
+        meshInput.placeholder = 'maillage (µm) — ex: 220, 180, 160–120, 90';
+        meshInput.setAttribute('data-mesh', '');
+        meshInput.value = (meta && meta.mesh) ? String(meta.mesh) : '';
+        meshInput.addEventListener('input', () => serialize());
+        extra.appendChild(meshInput);
+        li.appendChild(extra);
+      }
 
       up.addEventListener("click", () => { if (li.previousElementSibling) { list.insertBefore(li, li.previousElementSibling); serialize(); } });
       down.addEventListener("click", () => { if (li.nextElementSibling) { list.insertBefore(li.nextElementSibling, li); serialize(); } });
@@ -2682,7 +2715,11 @@ function rehydrateSequenceField(fieldId, steps) {
   const display = container?.querySelector('.multi-select-display');
   if (!list) return;
   list.innerHTML = '';
-  function createItem(text) {
+  function isSieveStep(name) {
+    const n = (name || '').toLowerCase();
+    return /tamis|bubble|ice\s*hash|ice\s*dry|wpff/.test(n);
+  }
+  function createItem(text, meta = {}) {
     const li = document.createElement('li');
     li.className = 'sequence-item';
     const label = document.createElement('span');
@@ -2695,6 +2732,40 @@ function rehydrateSequenceField(fieldId, steps) {
     const del = document.createElement('button'); del.type='button'; del.className='step-del'; del.title='Supprimer'; del.textContent='✕';
     actions.append(up, down, del);
     li.append(label, actions);
+    if (isSieveStep(text)) {
+      li.dataset.sieve = 'true';
+      const extra = document.createElement('div');
+      extra.className = 'step-extra';
+      const meshInput = document.createElement('input');
+      meshInput.type = 'text';
+      meshInput.placeholder = 'maillage (µm) — ex: 220, 180, 160–120, 90';
+      meshInput.setAttribute('data-mesh', '');
+      meshInput.value = (meta && meta.mesh) ? String(meta.mesh) : '';
+      meshInput.addEventListener('input', () => {
+        try {
+          const arr = Array.from(list.querySelectorAll('li.sequence-item')).map(li2 => {
+            const name2 = li2.querySelector('.step-label')?.textContent || '';
+            if (!name2) return null;
+            if (li2.dataset.sieve === 'true') {
+              const m2 = li2.querySelector('input[data-mesh]')?.value?.trim();
+              return m2 ? { name: name2, mesh: m2 } : { name: name2 };
+            }
+            return { name: name2 };
+          }).filter(Boolean);
+          const hasMeta = arr.some(e => e && typeof e === 'object' && Object.keys(e).some(k => k !== 'name'));
+          hidden.value = JSON.stringify(hasMeta ? arr : arr.map(e => e?.name || ''));
+          if (display) {
+            display.innerHTML = arr.length ? arr.map(v => {
+              const nm = (v && typeof v === 'object') ? (v.name || '') : String(v);
+              const ms = (v && typeof v === 'object' && v.mesh) ? ` <small style="opacity:.82;">(${v.mesh})</small>` : '';
+              return `<span class="chip">${nm}${ms}</span>`;
+            }).join('') : 'Ajouter une étape';
+          }
+        } catch {}
+      });
+      extra.appendChild(meshInput);
+      li.appendChild(extra);
+    }
     const serialize = () => {
       const stepsNow = Array.from(list.querySelectorAll('li .step-label')).map(el => el.textContent || '').filter(Boolean);
       hidden.value = JSON.stringify(stepsNow);
@@ -2706,10 +2777,22 @@ function rehydrateSequenceField(fieldId, steps) {
     return li;
   }
   const vals = Array.isArray(steps) ? steps : [];
-  vals.forEach(s => list.appendChild(createItem(s)));
-  hidden.value = JSON.stringify(vals);
+  vals.forEach(s => {
+    if (s && typeof s === 'object') {
+      list.appendChild(createItem(String(s.name || ''), s));
+    } else {
+      list.appendChild(createItem(String(s || '')));
+    }
+  });
+  // Set hidden to the same structure
+  const hasMeta = vals.some(v => v && typeof v === 'object' && Object.keys(v).some(k => k !== 'name'));
+  hidden.value = JSON.stringify(hasMeta ? vals : vals.map(v => typeof v === 'object' ? (v?.name || '') : v));
   if (display) {
-    display.innerHTML = vals.length ? vals.map(v => `<span class="chip">${v}</span>`).join('') : 'Ajouter une étape';
+    display.innerHTML = vals.length ? vals.map(v => {
+      const nm = (v && typeof v === 'object') ? (v.name || '') : String(v);
+      const ms = (v && typeof v === 'object' && v.mesh) ? ` <small style="opacity:.82;">(${v.mesh})</small>` : '';
+      return `<span class="chip">${nm}${ms}</span>`;
+    }).join('') : 'Ajouter une étape';
   }
   try { updateConditionalVisibility(); } catch {}
 }
@@ -3373,7 +3456,14 @@ function generateFullReview() {
           if (Array.isArray(steps) && steps.length) {
             fieldClass += " field-sequence";
             displayValue = `<ol class="sequence-list">
-              ${steps.map(s => `<li class="sequence-item">${s}</li>`).join("")}
+              ${steps.map(s => {
+                if (s && typeof s === 'object') {
+                  const name = s.name || '';
+                  const mesh = s.mesh ? ` <small style="opacity:.8;">(${s.mesh})</small>` : '';
+                  return `<li class="sequence-item">${name}${mesh}</li>`;
+                }
+                return `<li class="sequence-item">${s}</li>`;
+              }).join("")}
             </ol>`;
           } else {
             return;
