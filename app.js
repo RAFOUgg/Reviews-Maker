@@ -473,7 +473,7 @@ const productStructures = {
           { key: "inhalation", label: "Notes (inhalation)", type: "textarea" },
           { key: "expiration", label: "Notes (expiration)", type: "textarea" },
           { key: "intensiteFumee", label: "Intensité", type: "number", max: 10 },
-          { key: "agressivite", label: "Agressivité/piquant", type: "number", max: 10 }
+          { key: "agressivite", label: "Agressivité/piquant", type: "number", max: 10 },
           { key: "cendre", label: "Cendre", type: "number", max: 10 }
         ],
         total: true,
@@ -734,7 +734,13 @@ const LAYOUT_THRESHOLDS = {
   exitAspect: 1.08
 };
 
-document.addEventListener("DOMContentLoaded", init);
+// Initialize app once DOM is ready; if already ready, run immediately
+if (document.readyState === 'loading') {
+  document.addEventListener("DOMContentLoaded", init, { once: true });
+} else {
+  // DOM is already parsed
+  init();
+}
 
 function init() {
   // Initialisation différente selon la page
