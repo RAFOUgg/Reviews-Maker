@@ -1007,9 +1007,20 @@ function setupFormEvents() {
       const hasData = Object.keys(formData || {}).length > 1 || imageUrl;
       if (!confirm(hasData ? "Supprimer cette review ? Cette action est irréversible." : "Supprimer (aucune donnée sauvegardée).")) return;
       try {
-        if (currentReviewId && db) {
-          await dbDeleteReview(currentReviewId);
-          showToast('Review supprimée', 'success');
+        if (currentReviewId) {
+          let ok = false;
+          if (remoteEnabled) {
+            ok = await remoteDeleteReview(currentReviewId);
+          }
+          // Toujours supprimer la copie locale si présente
+          if (db) {
+            try { await dbDeleteReview(currentReviewId); } catch {}
+          }
+          if (ok || !remoteEnabled) {
+            showToast('Review supprimée', 'success');
+          } else {
+            showToast('Suppression distante échouée', 'warning');
+          }
         }
       } catch {}
       // Après suppression, on peut revenir à l'accueil proprement
@@ -1589,7 +1600,16 @@ async function renderLibraryList() {
       if (!r.id) { showToast("Suppression non disponible (entrée ancienne)", "warning"); return; }
       const ok = confirm(`Supprimer « ${title} » ?`);
       if (!ok) return;
-      try { await dbDeleteReview(r.id); showToast("Review supprimée."); renderLibraryList(); renderCompactLibrary(); }
+      try {
+        let remoteOk = true;
+        if (remoteEnabled) {
+          remoteOk = await remoteDeleteReview(r.id);
+        }
+        try { await dbDeleteReview(r.id); } catch {}
+        showToast(remoteOk ? "Review supprimée." : "Supprimée localement, échec serveur", remoteOk ? 'success' : 'warning');
+        renderLibraryList();
+        renderCompactLibrary();
+      }
       catch(e){ showToast("Échec de la suppression", "error"); }
     });
     li.addEventListener('dblclick', async () => { await openPreviewOnly(r); toggleLibrary(false); });
@@ -1795,10 +1815,14 @@ async function renderFullLibrary() {
     item.querySelector('[data-act="delete"]').addEventListener('click', async () => {
       if (confirm(`Êtes-vous sûr de vouloir supprimer "${title}" ?`)) {
         try {
-          await dbDeleteReview(r.id);
+          let remoteOk = true;
+          if (remoteEnabled) {
+            remoteOk = await remoteDeleteReview(r.id);
+          }
+          try { await dbDeleteReview(r.id); } catch {}
           renderFullLibrary(); // Recharger la liste
           renderCompactLibrary(); // Mettre à jour la vue compacte aussi
-          showToast("Review supprimée", "success");
+          showToast(remoteOk ? "Review supprimée" : "Supprimée localement, échec serveur", remoteOk ? 'success' : 'warning');
         } catch (e) {
           console.error("Erreur suppression:", e);
           showToast("Erreur lors de la suppression", "error");
@@ -3303,6 +3327,19 @@ async function remoteSave(reviewObj) {
     const js = await resp.json();
     return js.review || null;
   } catch (e) { console.warn('Remote save erreur', e); return null; }
+}
+
+// Suppression d'une review côté serveur (si backend actif)
+async function remoteDeleteReview(id) {
+  if (!remoteEnabled || id == null) return false;
+  try {
+    const r = await fetch(`${remoteBase}/api/reviews/${id}`, { method: 'DELETE' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return true;
+  } catch (e) {
+    console.warn('Remote delete erreur', e);
+    return false;
+  }
 }
 
 function generateReview() {
