@@ -850,6 +850,10 @@ async function initEditorPage() {
   dom.libraryGrid = document.getElementById("libraryGrid");
   dom.libraryEmpty = document.getElementById("libraryEmpty");
   dom.librarySearch = document.getElementById("librarySearch");
+  // Drawer-based library elements on the editor page
+  dom.libraryOverlay = document.getElementById("libraryOverlay");
+  dom.libraryDrawer = document.getElementById("libraryDrawer");
+  dom.libraryList = document.getElementById("libraryList");
   dom.openLibrary = document.getElementById("openLibrary");
 
   // Masquer l'aperçu par défaut pour gagner de la place
@@ -1080,18 +1084,51 @@ function setupFormEvents() {
 function setupModalEvents() {
   // Modal Astuces
   if (dom.openTips) {
-    dom.openTips.addEventListener("click", () => {
-      if (dom.tipsModal) dom.tipsModal.style.display = "flex";
+    const toggleTipsPopover = () => {
+      const existing = document.getElementById('activeTipsPopover');
+      if (existing) { existing.remove(); return; }
+      const tpl = document.getElementById('tipsPopoverTemplate') || document.getElementById('tipsTemplate');
+      if (!tpl) { showToast("Astuces indisponibles", 'warning'); return; }
+      const wrap = document.createElement('div');
+      wrap.id = 'activeTipsPopover';
+      wrap.style.position = 'fixed';
+      wrap.style.right = '16px';
+      wrap.style.top = '72px';
+      wrap.style.maxWidth = '460px';
+      wrap.style.zIndex = '9999';
+      wrap.style.background = 'var(--panel-bg, #111827)';
+      wrap.style.border = '1px solid var(--glass-border, rgba(255,255,255,0.08))';
+      wrap.style.borderRadius = '12px';
+      wrap.style.boxShadow = '0 10px 30px rgba(0,0,0,0.35)';
+      wrap.style.padding = '14px 16px';
+      wrap.appendChild(tpl.content.cloneNode(true));
+      document.body.appendChild(wrap);
+    };
+    dom.openTips.addEventListener("click", toggleTipsPopover);
+    dom.openTips.addEventListener("keydown", (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dom.openTips.click(); }
+    });
+    // Close tips when clicking outside
+    document.addEventListener('pointerdown', (e) => {
+      const pop = document.getElementById('activeTipsPopover');
+      if (!pop) return;
+      if (pop.contains(e.target)) return;
+      if (dom.openTips && dom.openTips.contains(e.target)) return;
+      pop.remove();
     });
   }
   if (dom.closeTips) {
     dom.closeTips.addEventListener("click", () => {
       if (dom.tipsModal) dom.tipsModal.style.display = "none";
+      const pop = document.getElementById('activeTipsPopover');
+      if (pop) pop.remove();
     });
   }
   if (dom.tipsModalOverlay) {
     dom.tipsModalOverlay.addEventListener("click", () => {
       if (dom.tipsModal) dom.tipsModal.style.display = "none";
+      const pop = document.getElementById('activeTipsPopover');
+      if (pop) pop.remove();
     });
   }
 
@@ -1118,7 +1155,11 @@ function setupModalEvents() {
   if (dom.closeLibrary) {
     dom.closeLibrary.addEventListener("click", () => {
       if (dom.libraryModal) dom.libraryModal.style.display = "none";
+      if (dom.libraryDrawer) toggleLibrary(false);
     });
+  }
+  if (dom.libraryOverlay) {
+    dom.libraryOverlay.addEventListener('click', () => toggleLibrary(false));
   }
   if (dom.libraryModalOverlay) {
     dom.libraryModalOverlay.addEventListener("click", () => {
@@ -1141,6 +1182,11 @@ function setupModalEvents() {
       }
       if (dom.libraryModal && dom.libraryModal.style.display === "flex") {
         dom.libraryModal.style.display = "none";
+      }
+      const pop = document.getElementById('activeTipsPopover');
+      if (pop) pop.remove();
+      if (dom.libraryDrawer && !dom.libraryDrawer.hasAttribute('hidden')) {
+        toggleLibrary(false);
       }
     }
   });
