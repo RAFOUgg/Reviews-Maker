@@ -275,6 +275,82 @@ body::before {
   text-transform: uppercase;
 }
 
+/* Tips full dialog (editor) */
+.tips-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1600;
+  background: rgba(0, 0, 0, 0.42);
+}
+.tips-dialog {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, 720px);
+  max-height: 82vh;
+  overflow: auto;
+  background: rgba(10, 18, 34, 0.98);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+}
+.tips-dialog .tips-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.tips-dialog .tips-header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.tips-dialog .tips-header .close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: rgba(148,163,184,0.12);
+  cursor: pointer;
+}
+.tips-dialog .tips-body {
+  padding: 14px 18px 18px;
+}
+.tips-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+@media (min-width: 700px) {
+  .tips-grid { grid-template-columns: 1fr 1fr; }
+}
+.tips-block {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.tips-block h4 { margin: 0 0 8px 0; font-size: 0.98rem; }
+.tips-block ul { margin: 0; padding-left: 18px; color: var(--text-muted); }
+.tips-kbd-line { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--text-muted); }
+.tips-kbd-line kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow: inset 0 -2px 0 rgba(148, 163, 184, 0.18);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .pill-btn:hover {
   background: rgba(148, 163, 184, 0.2);
   border-color: rgba(56, 240, 184, 0.45);
