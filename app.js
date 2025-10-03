@@ -1128,27 +1128,37 @@ function setupModalEvents() {
         closeBtn.addEventListener('click', () => overlay.remove());
         box.appendChild(closeBtn);
         const frag = tpl.content.cloneNode(true);
-        // Normalize inner template element to fill dialog width and wrap text
-        const inner = frag.firstElementChild;
-        if (inner) {
-          inner.style.margin = '0';
-          inner.style.padding = '0';
-          inner.style.width = '100%';
-          inner.style.maxWidth = 'unset';
-          inner.style.background = 'transparent';
-          inner.style.whiteSpace = 'normal';
-          inner.style.overflowWrap = 'anywhere';
-          inner.style.boxSizing = 'border-box';
-          inner.style.display = 'block';
-          // Ensure keybinding lines wrap nicely
-          inner.querySelectorAll?.('.kbd-line')?.forEach?.(el => {
+        // Extract inner content: if template root has class 'tips-popover', unwrap it
+        let inner = frag.firstElementChild;
+        let contentNode = null;
+        if (inner && inner.classList && inner.classList.contains('tips-popover')) {
+          const wrapper = document.createElement('div');
+          wrapper.style.display = 'block';
+          wrapper.style.width = '100%';
+          wrapper.style.boxSizing = 'border-box';
+          wrapper.innerHTML = inner.innerHTML; // unwrap to drop tips-popover styles
+          contentNode = wrapper;
+        } else if (inner) {
+          contentNode = inner;
+        }
+        if (contentNode) {
+          // Normalize styles for readability
+          contentNode.style.margin = '0';
+          contentNode.style.padding = '0';
+          contentNode.style.width = '100%';
+          contentNode.style.maxWidth = 'unset';
+          contentNode.style.background = 'transparent';
+          contentNode.style.whiteSpace = 'normal';
+          contentNode.style.overflowWrap = 'anywhere';
+          contentNode.style.boxSizing = 'border-box';
+          contentNode.querySelectorAll?.('.kbd-line')?.forEach?.(el => {
             el.style.display = 'flex';
             el.style.flexWrap = 'wrap';
             el.style.gap = '8px';
             el.style.alignItems = 'center';
           });
+          box.appendChild(contentNode);
         }
-        box.appendChild(frag);
         overlay.appendChild(box);
         overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
         document.body.appendChild(overlay);
