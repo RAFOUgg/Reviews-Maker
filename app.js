@@ -269,13 +269,14 @@ const productStructures = {
         fields: [
           { key: "cultivars", label: "Cultivars", type: "text" },
           { key: "breeder", label: "Breeders de la graine", type: "text" },
+          { key: "farm", label: "Farm", type: "text" },
           {
             key: "matiereVegetale",
             label: "Type de matière végétale",
             type: "multiple-choice",
-            choices: ["Fleurs fraîches", "Fleurs sèches", "Trim", "Kief", "Autre"]
+            choices: ["Fleurs fraîches", "Fleurs sèches", "Trim", "Autre"]
           },
-          { key: "farm", label: "Farm", type: "text" },
+          { key: "hashmaker", label: "Hash Maker", type: "text" },
           { key: "photo", label: "Photo", type: "file" }
         ]
       },
@@ -879,8 +880,14 @@ async function initEditorPage() {
     if (reviewData) {
       loadReviewIntoForm(reviewData, 'edit');
     } else if (reviewId != null) {
-      // Charger depuis la base si seulement un id est fourni (DB initialisée plus haut)
-      const r = await dbGetReviewById(reviewId);
+      // Charger depuis API distante si dispo, sinon DB locale
+      let r = null;
+      if (remoteEnabled) {
+        try { r = await remoteGetReview(reviewId); } catch {}
+      }
+      if (!r) {
+        try { r = await dbGetReviewById(reviewId); } catch {}
+      }
       if (r) loadReviewIntoForm(r, 'edit');
     }
   }
@@ -1700,11 +1707,13 @@ async function renderCompactLibrary() {
     });
     item.querySelector('[data-act="edit"]').addEventListener('click', () => { 
       if (isHomePage) {
-        // Si id disponible, on passe par l'URL, sinon fallback via sessionStorage
-        if (r.id != null) {
+        // Préférer passer l'objet complet pour éviter un 2e fetch
+        if (r) {
+          navigateToEditor(r.productType, r, r.id ?? null);
+        } else if (r?.id != null) {
           navigateToEditor(r.productType, null, r.id);
         } else {
-          navigateToEditor(r.productType, r, null);
+          navigateToEditor(r.productType);
         }
       } else {
         loadReviewIntoForm(r, 'edit'); 
@@ -3009,6 +3018,19 @@ async function remoteListReviews() {
     if (!r.ok) throw new Error('HTTP '+r.status);
     return await r.json();
   } catch (e) { console.warn('Remote list erreur', e); return dbGetAllReviews(); }
+}
+
+// Récupération d'une review précise via l'API distante
+async function remoteGetReview(id) {
+  if (!remoteEnabled || id == null) return null;
+  try {
+    const r = await fetch(`${remoteBase}/api/reviews/${id}`);
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    return await r.json();
+  } catch (e) {
+    console.warn('Remote get erreur', e);
+    return null;
+  }
 }
 
 async function remoteSave(reviewObj) {

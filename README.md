@@ -57,7 +57,8 @@ Studio web ergonomique pour composer, visualiser et exporter des fiches de revie
     - Breeders de la graine
 Possibilité de choisir une weed déjà reviewée dans la base de données comme matière première.
 - Type de matière végétale utilisée (fleurs fraîches/sèches, trim, kief)
-- Farm/producteur
+- Farm
+- Hash Maker
 - Photo du produit
 - Methode de séparation, pouvant être une pipeline de séparation (séquence ordonnée) : WPFF, Bubble Hash, Ice'O Lator, tamisage à sec, séparation électrostatique, etc.
 - Possible taille de trichome par rapport au maillage du/des tamis utilisé(s) : XXµm -> XXµm , par defaut : 0-Xµm où X est a completer par l'utilisateur.
