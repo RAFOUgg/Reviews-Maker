@@ -1097,18 +1097,18 @@ function setupModalEvents() {
       // On the editor page, show a centered overlay-style popover
       if (typeof isEditorPage !== 'undefined' && isEditorPage) {
         const overlay = document.createElement('div');
-        overlay.id = 'activeTipsPopover';
+        overlay.id = 'tipsOverlay';
         overlay.style.position = 'fixed';
         overlay.style.inset = '0';
         overlay.style.background = 'rgba(0,0,0,0.35)';
         overlay.style.zIndex = '9998';
-        const box = document.createElement('div');
+  const box = document.createElement('div');
         box.style.position = 'fixed';
         box.style.left = '50%';
         box.style.top = '50%';
         box.style.transform = 'translate(-50%, -50%)';
-        box.style.maxWidth = '560px';
-        box.style.width = 'min(92vw, 560px)';
+  box.style.maxWidth = '560px';
+  box.style.width = 'min(92vw, 560px)';
         box.style.maxHeight = '80vh';
         box.style.overflow = 'auto';
         box.style.background = 'var(--panel-bg, #111827)';
@@ -1127,7 +1127,28 @@ function setupModalEvents() {
         closeBtn.title = 'Fermer';
         closeBtn.addEventListener('click', () => overlay.remove());
         box.appendChild(closeBtn);
-        box.appendChild(tpl.content.cloneNode(true));
+        const frag = tpl.content.cloneNode(true);
+        // Normalize inner template element to fill dialog width and wrap text
+        const inner = frag.firstElementChild;
+        if (inner) {
+          inner.style.margin = '0';
+          inner.style.padding = '0';
+          inner.style.width = '100%';
+          inner.style.maxWidth = 'unset';
+          inner.style.background = 'transparent';
+          inner.style.whiteSpace = 'normal';
+          inner.style.overflowWrap = 'anywhere';
+          inner.style.boxSizing = 'border-box';
+          inner.style.display = 'block';
+          // Ensure keybinding lines wrap nicely
+          inner.querySelectorAll?.('.kbd-line')?.forEach?.(el => {
+            el.style.display = 'flex';
+            el.style.flexWrap = 'wrap';
+            el.style.gap = '8px';
+            el.style.alignItems = 'center';
+          });
+        }
+        box.appendChild(frag);
         overlay.appendChild(box);
         overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
         document.body.appendChild(overlay);
@@ -1173,6 +1194,8 @@ function setupModalEvents() {
     // Close tips when clicking outside
     document.addEventListener('pointerdown', (e) => {
       const pop = document.getElementById('activeTipsPopover');
+      const tipsOverlay = document.getElementById('tipsOverlay');
+      if (tipsOverlay && tipsOverlay.contains(e.target)) return; // don't close when clicking inside overlay/modal
       if (!pop) return;
       // If it's the centered overlay, clicking inside shouldn't close
       if (pop.contains && pop.contains(e.target)) return;
@@ -1248,6 +1271,8 @@ function setupModalEvents() {
       }
       const pop = document.getElementById('activeTipsPopover');
       if (pop) pop.remove();
+      const tipsOverlay = document.getElementById('tipsOverlay');
+      if (tipsOverlay) tipsOverlay.remove();
       if (dom.libraryDrawer && !dom.libraryDrawer.hasAttribute('hidden')) {
         toggleLibrary(false);
       }
