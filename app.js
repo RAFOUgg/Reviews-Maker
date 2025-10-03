@@ -1082,7 +1082,7 @@ function setupFormEvents() {
 }
 
 function setupModalEvents() {
-  // Astuces (modal on home, anchored popover on editor)
+  // Astuces (modal on home, centered overlay on editor)
   if (dom.openTips) {
     const openTipsModal = () => { if (dom.tipsModal) dom.tipsModal.style.display = 'flex'; };
     const toggleTipsPopover = () => {
@@ -1094,6 +1094,46 @@ function setupModalEvents() {
         showToast('Astuces indisponibles', 'warning'); 
         return; 
       }
+      // On the editor page, show a centered overlay-style popover
+      if (typeof isEditorPage !== 'undefined' && isEditorPage) {
+        const overlay = document.createElement('div');
+        overlay.id = 'activeTipsPopover';
+        overlay.style.position = 'fixed';
+        overlay.style.inset = '0';
+        overlay.style.background = 'rgba(0,0,0,0.35)';
+        overlay.style.zIndex = '9998';
+        const box = document.createElement('div');
+        box.style.position = 'fixed';
+        box.style.left = '50%';
+        box.style.top = '50%';
+        box.style.transform = 'translate(-50%, -50%)';
+        box.style.maxWidth = '560px';
+        box.style.width = 'min(92vw, 560px)';
+        box.style.maxHeight = '80vh';
+        box.style.overflow = 'auto';
+        box.style.background = 'var(--panel-bg, #111827)';
+        box.style.border = '1px solid var(--glass-border, rgba(255,255,255,0.08))';
+        box.style.borderRadius = '12px';
+        box.style.boxShadow = '0 12px 40px rgba(0,0,0,0.45)';
+        box.style.padding = '16px 18px';
+        // Close button
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'pill-btn';
+        closeBtn.style.position = 'absolute';
+        closeBtn.style.right = '10px';
+        closeBtn.style.top = '10px';
+        closeBtn.textContent = '✕';
+        closeBtn.title = 'Fermer';
+        closeBtn.addEventListener('click', () => overlay.remove());
+        box.appendChild(closeBtn);
+        box.appendChild(tpl.content.cloneNode(true));
+        overlay.appendChild(box);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+        document.body.appendChild(overlay);
+        return;
+      }
+      // Fallback: anchored popover (unlikely now)
       const wrap = document.createElement('div');
       wrap.id = 'activeTipsPopover';
       wrap.style.position = 'absolute';
@@ -1104,16 +1144,15 @@ function setupModalEvents() {
       wrap.style.borderRadius = '12px';
       wrap.style.boxShadow = '0 10px 30px rgba(0,0,0,0.35)';
       wrap.style.padding = '14px 16px';
-      wrap.style.visibility = 'hidden'; // position after measuring
+      wrap.style.visibility = 'hidden';
       wrap.appendChild(tpl.content.cloneNode(true));
       document.body.appendChild(wrap);
-      // Position near the button, clamped to viewport
       try {
         const btn = dom.openTips;
         const rect = btn.getBoundingClientRect();
         const popW = wrap.offsetWidth || 360;
         const margin = 16;
-        const desiredLeft = window.scrollX + rect.right - popW; // right-align to button
+        const desiredLeft = window.scrollX + rect.right - popW;
         let left = Math.max(window.scrollX + margin, desiredLeft);
         const maxLeft = window.scrollX + window.innerWidth - popW - margin;
         left = Math.min(left, maxLeft);
@@ -1135,7 +1174,8 @@ function setupModalEvents() {
     document.addEventListener('pointerdown', (e) => {
       const pop = document.getElementById('activeTipsPopover');
       if (!pop) return;
-      if (pop.contains(e.target)) return;
+      // If it's the centered overlay, clicking inside shouldn't close
+      if (pop.contains && pop.contains(e.target)) return;
       if (dom.openTips && dom.openTips.contains(e.target)) return;
       pop.remove();
     });
