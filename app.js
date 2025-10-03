@@ -349,7 +349,7 @@ const productStructures = {
           { key: "aspectCollantGras", label: "Aspect collant/gras", type: "number", max: 10 }
         ],
         total: true,
-        totalKeys: ["durete", "densite", "friabiliteViscosite", "aspectCollantGras"]
+        totalKeys: ["durete", "densite", "friabiliteViscosite", "meltingResidus", "aspectCollantGras"]
       },
       {
         title: "Goûts & expériences fumée",
@@ -441,10 +441,9 @@ const productStructures = {
           { key: "trichome", label: "Trichome", type: "number", max: 10 },
           { key: "pistil", label: "Pistil", type: "number", max: 10 },
           { key: "manucure", label: "Manucure", type: "number", max: 10 },
-          { key: "cendre", label: "Cendre", type: "number", max: 10 }
         ],
         total: true,
-        totalKeys: ["densite", "trichome", "pistil", "manucure", "cendre"]
+        totalKeys: ["densite", "trichome", "pistil", "manucure"]
       },
       {
         title: "Odeur",
@@ -475,9 +474,10 @@ const productStructures = {
           { key: "expiration", label: "Notes (expiration)", type: "textarea" },
           { key: "intensiteFumee", label: "Intensité", type: "number", max: 10 },
           { key: "agressivite", label: "Agressivité/piquant", type: "number", max: 10 }
+          { key: "cendre", label: "Cendre", type: "number", max: 10 }
         ],
         total: true,
-        totalKeys: ["intensiteFumee", "agressivite"]
+        totalKeys: ["intensiteFumee", "agressivite", "cendre"]
       },
       {
         title: "Effet",
@@ -613,10 +613,9 @@ const productStructures = {
           { key: "intensiteAromatique", label: "Intensité aromatique", type: "number", max: 10 },
           { key: "notesDominantes", label: "Notes dominantes", type: "textarea" },
           { key: "notesSecondaires", label: "Notes secondaires", type: "textarea" },
-          { key: "fidelitecultivars", label: "Fidélité au cultivars", type: "number", max: 10 }
         ],
         total: true,
-        totalKeys: ["intensiteAromatique", "fidelitecultivars"]
+        totalKeys: ["intensiteAromatique"]
       },
       {
         title: "Expérience Inhalation",
