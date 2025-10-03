@@ -65,7 +65,7 @@ npm start
 ```
 Arrêter (Ctrl+C) avant de passer en service.
 
-### 4.5 Service systemd
+### 4.5 (Option A) Service systemd
 Créer `/etc/systemd/system/reviews-maker.service` :
 ```ini
 [Unit]
@@ -93,7 +93,30 @@ sudo systemctl start reviews-maker
 sudo systemctl status reviews-maker
 ```
 
-### 4.6 Nginx reverse proxy
+### 4.6 (Option B) PM2 (alternative à systemd)
+PM2 simplifie la supervision et la rotation des logs.
+
+Installation globale puis démarrage:
+```bash
+sudo npm install -g pm2
+cd /var/www/Reviews-Maker/server
+pm2 start ecosystem.config.cjs --env production
+pm2 save
+pm2 startup  # exécuter la commande affichée pour activer au boot
+```
+
+Logs / statut:
+```bash
+pm2 status
+pm2 logs reviews-maker
+```
+
+Redémarrage après mise à jour de code:
+```bash
+pm2 restart reviews-maker
+```
+
+### 4.7 Nginx reverse proxy
 Installer :
 ```bash
 sudo apt install -y nginx
@@ -122,7 +145,7 @@ sudo systemctl reload nginx
 ```
 Aller sur http://exemple.com/index.html
 
-### 4.7 HTTPS (Let's Encrypt)
+### 4.8 HTTPS (Let's Encrypt)
 ```bash
 sudo apt install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d exemple.com -d www.exemple.com
@@ -130,7 +153,7 @@ sudo certbot --nginx -d exemple.com -d www.exemple.com
 ```
 Certificat auto-renouvelé par timer systemd.
 
-### 4.8 Sauvegardes / Mises à jour
+### 4.9 Sauvegardes / Mises à jour
 - DB = fichier `db/reviews.sqlite` + images `db/review_images/`.
 - Sauvegarde régulière :
 ```bash
@@ -143,7 +166,7 @@ git pull
 sudo systemctl restart reviews-maker
 ```
 
-### 4.9 Sécurité rapide
+### 4.10 Sécurité rapide
 - Garder le port 3000 fermé en externe (pare-feu UFW: autoriser seulement 80/443).
 ```bash
 sudo ufw allow 80,443/tcp
@@ -183,3 +206,64 @@ curl -s http://localhost:3000/api/reviews | jq
 
 ---
 Bon déploiement ! 🌿
+
+---
+
+## 9. Déploiement via Docker
+
+### 9.1 Construction locale
+```bash
+docker build -t reviews-maker:latest .
+docker run -d --name reviews-maker \
+    -p 3000:3000 \
+    -v $(pwd)/db:/app/db \
+    reviews-maker:latest
+```
+Accès: http://localhost:3000/index.html
+
+### 9.2 Production (exemple)
+1. Copier le dépôt sur le serveur dans /opt/reviews-maker
+2. Construire l'image (ou récupérer depuis GHCR si workflow activé):
+```bash
+docker pull ghcr.io/RAFOUgg/reviews-maker:latest || true
+cd /opt/reviews-maker
+docker build -t reviews-maker:latest .
+```
+3. Lancer avec un volume persistant:
+```bash
+docker run -d --name reviews-maker \
+    --restart=unless-stopped \
+    -p 127.0.0.1:3000:3000 \
+    -v /opt/reviews-maker/db:/app/db \
+    reviews-maker:latest
+```
+4. Mettre Nginx devant (voir section 4.7) en pointant vers 127.0.0.1:3000
+
+### 9.3 Mises à jour
+```bash
+docker pull ghcr.io/RAFOUgg/reviews-maker:latest
+docker stop reviews-maker && docker rm reviews-maker
+docker run -d --name reviews-maker -p 127.0.0.1:3000:3000 -v /opt/reviews-maker/db:/app/db reviews-maker:latest
+```
+
+### 9.4 Sauvegarde hors conteneur
+`/opt/reviews-maker/db` contient la base et les images. Sauvegarder ce dossier régulièrement.
+
+## 10. Intégration Continue (CI)
+
+Le workflow GitHub Actions `docker-image.yml` construit et pousse automatiquement l'image multi-architecture sur GHCR à chaque push sur `main`.
+
+Pour la déployer sur un VPS via Docker pull, ajouter un second workflow avec SSH (ex: `appleboy/ssh-action`) si désiré.
+
+---
+## 11. Checklist rapide Production
+| Élément | OK ? |
+|--------|------|
+| Node 20 LTS ou Docker |  |
+| Port interne 3000 accessible seulement local |  |
+| Reverse proxy + HTTPS |  |
+| Sauvegarde planifiée `db/` |  |
+| PM2 ou systemd actif (non les deux) |  |
+| Logs surveillés |  |
+| MàJ sécurité (unattended-upgrades) |  |
+

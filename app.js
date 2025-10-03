@@ -1,3 +1,65 @@
+// --- Hosting base-path support -------------------------------------------
+// If the app is served under /reviews, transparently prefix any absolute
+// API calls starting with /api/ so they hit /reviews/api/... behind Nginx.
+// This keeps the frontend code unchanged while allowing path-based hosting.
+(() => {
+  try {
+    const base = (typeof location !== 'undefined' && location.pathname && location.pathname.startsWith('/reviews')) ? '/reviews' : '';
+    // Patch fetch
+    if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
+      const origFetch = window.fetch.bind(window);
+      window.fetch = (input, init) => {
+        try {
+          if (typeof input === 'string' && input.startsWith('/api/')) input = base + input;
+        } catch {}
+        return origFetch(input, init);
+      };
+    }
+    // Patch XMLHttpRequest (au cas où)
+    if (typeof window !== 'undefined' && window.XMLHttpRequest && window.XMLHttpRequest.prototype && window.XMLHttpRequest.prototype.open) {
+      const origOpen = window.XMLHttpRequest.prototype.open;
+      window.XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+        try {
+          if (typeof url === 'string' && url.startsWith('/api/')) url = base + url;
+        } catch {}
+        return origOpen.call(this, method, url, ...rest);
+      };
+    }
+  } catch {}
+})();
+// --------------------------------------------------------------------------
+
+// --- Auto-advance on editor when ?type=... is provided ---------------------
+(() => {
+  try {
+    if (typeof document === 'undefined') return;
+    const params = new URLSearchParams(location.search);
+    const type = params.get('type');
+    if (!type) return;
+    // Wait until the editor UI has rendered the type buttons, then click it
+    let tries = 0;
+    const lower = String(type).toLowerCase();
+    const attempt = () => {
+      const candidates = document.querySelectorAll('.type-card, [data-type]');
+      let target = null;
+      candidates.forEach((el) => {
+        const dt = (el.getAttribute && el.getAttribute('data-type')) || '';
+        if (dt && dt.toLowerCase() === lower) target = el;
+      });
+      if (target && typeof target.click === 'function') {
+        target.click();
+        return; // done
+      }
+      if (++tries < 80) setTimeout(attempt, 100); // retry up to ~8s
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', attempt, { once: true });
+    } else {
+      attempt();
+    }
+  } catch {}
+})();
+// --------------------------------------------------------------------------
 // DÉTECTION DE PAGE ET NAVIGATION
 const isHomePage = document.body.classList.contains('home-page');
 const isEditorPage = document.body.classList.contains('editor-page');
