@@ -542,29 +542,7 @@ const productStructures = {
           { key: "photo", label: "Photo", type: "file" }
         ]
       },
-      {
-        title: "Procédés d'extraction",
-        fields: [
-          {
-            key: "extractionSolvants",
-            label: "Méthodes avec solvants",
-            type: "multiple-choice",
-            choices: choiceCatalog.extractionSolvants
-          },
-          {
-            key: "extractionSansSolvants",
-            label: "Méthodes sans solvants",
-            type: "multiple-choice",
-            choices: choiceCatalog.extractionSansSolvants
-          },
-          {
-            key: "extractionAvancees",
-            label: "Techniques avancées",
-            type: "multiple-choice",
-            choices: choiceCatalog.extractionAvancees
-          }
-        ]
-      },
+      // Section "Procédés d'extraction" supprimée car redondante avec la section 01
       {
         title: "Purification & séparation",
         fields: [
@@ -622,7 +600,13 @@ const productStructures = {
         fields: [
           { key: "textureBouche", label: "Texture en bouche", type: "number", max: 10 },
           { key: "douceur", label: "Douceur / Agressivité", type: "number", max: 10 },
-          { key: "intensite", label: "Intensité", type: "number", max: 10 }
+          { key: "intensite", label: "Intensité", type: "number", max: 10 },
+          { key: "dryPuff", label: "Notes (dry puff/tirage à sec/froid)", type: "textarea" },
+          { key: "inhalation", label: "Notes (inhalation)", type: "textarea" },
+          { key: "expiration", label: "Notes (expiration)", type: "textarea" },
+          { key: "intensiteFumee", label: "Intensité", type: "number", max: 10 },
+          { key: "agressivite", label: "Agressivité/piquant", type: "number", max: 10 },
+          { key: "cendre", label: "Cendre", type: "number", max: 10 }
         ],
         total: true,
         totalKeys: ["textureBouche", "douceur", "intensite"]
@@ -633,7 +617,12 @@ const productStructures = {
           { key: "montee", label: "Montée", type: "number", max: 10 },
           { key: "intensiteEffets", label: "Intensité des effets", type: "number", max: 10 },
           { key: "typeEffet", label: "Type d'effet", type: "textarea" },
-          { key: "duree", label: "Durée", type: "number", max: 10 }
+          { 
+            key: "duree", 
+            label: "Durée", 
+            type: "multiple-choice",
+            choices: ["<15min", "<30min", "<1h", "<2h", "2h+"]
+          }
         ],
         total: true,
         totalKeys: ["montee", "intensiteEffets", "duree"]
@@ -2456,17 +2445,43 @@ function createFieldGroup(field, sectionIndex, section) {
       const n = (name || '').toLowerCase();
       return /tamis|bubble|ice\s*hash|ice\s*dry|wpff/.test(n);
     }
+    function isRosinStep(name) {
+      const n = (name || '').toLowerCase();
+      // Matches 'Pressage à chaud (Rosin)' or anything containing 'rosin'
+      return /rosin|pressage\s*(à|a)\s*chaud/.test(n);
+    }
+    function isCO2Step(name) {
+      const n = (name || '').toLowerCase();
+      // Matches 'Extraction au CO₂ supercritique' with either co2/co₂ and supercritique
+      return /(co2|co₂).*(supercritique)/.test(n);
+    }
 
     function currentEntries() {
       return Array.from(list.querySelectorAll('li.sequence-item')).map(li => {
         const name = li.querySelector('.step-label')?.textContent || '';
         if (!name) return null;
-        if (li.dataset.sieve === 'true') {
+        // Mesh-capable steps (sieve and rosin)
+        if (li.dataset.sieve === 'true' || li.dataset.rosin === 'true') {
           const minV = li.querySelector('input[data-mesh-min]')?.value?.trim() || '';
           const maxV = li.querySelector('input[data-mesh-max]')?.value?.trim() || '';
           const any = minV || maxV;
           const mesh = (minV && maxV) ? `${minV}–${maxV}` : (any ? `0–${minV || maxV}` : '');
+          if (li.dataset.rosin === 'true') {
+            const tempC = li.querySelector('input[data-rosin-temp]')?.value?.trim() || '';
+            const obj = { name };
+            if (mesh) obj.mesh = mesh;
+            if (tempC) obj.tempC = tempC;
+            return obj;
+          }
           return mesh ? { name, mesh } : { name };
+        }
+        if (li.dataset.co2 === 'true') {
+          const pressureBar = li.querySelector('input[data-co2-pressure]')?.value?.trim() || '';
+          const tempC = li.querySelector('input[data-co2-temp]')?.value?.trim() || '';
+          const obj = { name };
+          if (pressureBar) obj.pressureBar = pressureBar;
+          if (tempC) obj.tempC = tempC;
+          return obj;
         }
         return { name };
       }).filter(Boolean);
@@ -2480,8 +2495,15 @@ function createFieldGroup(field, sectionIndex, section) {
       }
       display.innerHTML = arr.map(v => {
         const name = (v && typeof v === 'object') ? (v.name || '') : String(v);
-        const mesh = (v && typeof v === 'object' && v.mesh) ? ` <small style="opacity:.82;">(${v.mesh})</small>` : '';
-        return `<span class="chip">${name}${mesh}</span>`;
+        let meta = '';
+        if (v && typeof v === 'object') {
+          const parts = [];
+          if (v.mesh) parts.push(`${v.mesh}`);
+          if (v.pressureBar) parts.push(`${v.pressureBar} bar`);
+          if (v.tempC) parts.push(`${v.tempC}°C`);
+          if (parts.length) meta = ` <small style="opacity:.82;">(${parts.join(', ')})</small>`;
+        }
+        return `<span class="chip">${name}${meta}</span>`;
       }).join("");
     }
 
@@ -2510,11 +2532,14 @@ function createFieldGroup(field, sectionIndex, section) {
       actions.append(up, down, del);
       li.append(label, actions);
 
-      // Add per-step mesh input (min/max) for sieve steps
-      if (isSieveStep(text)) {
-        li.dataset.sieve = 'true';
+      // Extra metadata editors per step type
+      const n = (text || '').toString();
+      if (isSieveStep(n) || isRosinStep(n)) {
+        if (isSieveStep(n)) li.dataset.sieve = 'true';
+        if (isRosinStep(n)) li.dataset.rosin = 'true';
         const extra = document.createElement('div');
         extra.className = 'step-extra';
+        // Mesh range (common to sieve and rosin)
         const pair = document.createElement('div');
         pair.className = 'mesh-pair';
         const minInput = document.createElement('input');
@@ -2525,7 +2550,6 @@ function createFieldGroup(field, sectionIndex, section) {
         maxInput.type = 'text';
         maxInput.placeholder = 'max (µm)';
         maxInput.setAttribute('data-mesh-max', '');
-        // If meta.mesh exists, try to parse and prefill
         if (meta && meta.mesh) {
           try {
             const str = String(meta.mesh);
@@ -2534,27 +2558,48 @@ function createFieldGroup(field, sectionIndex, section) {
               minInput.value = m[1];
               maxInput.value = m[2];
             } else {
-              // single value => set as max
               const single = str.match(/(\d+)/);
               if (single) { maxInput.value = single[1]; }
             }
           } catch {}
         }
-        const onPairChange = () => {
-          // Compose mesh string: if both -> "min–max"; if one -> "0–X"
-          const minV = minInput.value.trim();
-          const maxV = maxInput.value.trim();
-          const any = minV || maxV;
-          const mesh = (minV && maxV) ? `${minV}–${maxV}` : (any ? `0–${minV || maxV}` : '');
-          // Nothing more to set on DOM, mesh used during serialization via currentEntries()
-          serialize();
-        };
+        const onPairChange = () => { serialize(); };
         minInput.addEventListener('input', onPairChange);
         maxInput.addEventListener('input', onPairChange);
         pair.append(minInput, maxInput);
         extra.appendChild(pair);
-        
-        // Back-compat: also render a composed chip value immediately after creation
+        // Rosin temperature
+        if (li.dataset.rosin === 'true') {
+          const temp = document.createElement('input');
+          temp.type = 'text';
+          temp.placeholder = 'Température (°C)';
+          temp.setAttribute('data-rosin-temp', '');
+          if (meta && (meta.tempC || meta.temperature)) {
+            temp.value = String(meta.tempC || meta.temperature);
+          }
+          temp.addEventListener('input', () => serialize());
+          extra.appendChild(temp);
+        }
+        li.appendChild(extra);
+      } else if (isCO2Step(n)) {
+        li.dataset.co2 = 'true';
+        const extra = document.createElement('div');
+        extra.className = 'step-extra';
+        const pressure = document.createElement('input');
+        pressure.type = 'text';
+        pressure.placeholder = 'Pression (bar)';
+        pressure.setAttribute('data-co2-pressure', '');
+        const temp = document.createElement('input');
+        temp.type = 'text';
+        temp.placeholder = 'Température (°C)';
+        temp.setAttribute('data-co2-temp', '');
+        if (meta) {
+          if (meta.pressureBar) pressure.value = String(meta.pressureBar);
+          if (meta.tempC || meta.temperature) temp.value = String(meta.tempC || meta.temperature);
+        }
+        pressure.addEventListener('input', () => serialize());
+        temp.addEventListener('input', () => serialize());
+        extra.append(pressure, temp);
         li.appendChild(extra);
       }
 
@@ -2785,7 +2830,8 @@ function updateConditionalVisibility() {
     const hidden = document.getElementById('pipelineSeparation');
     if (hidden && hidden.dataset.sequence === 'true') {
       const arr = JSON.parse(hidden.value || '[]');
-      const joined = (Array.isArray(arr) ? arr.join(' ').toLowerCase() : '');
+      const names = Array.isArray(arr) ? arr.map(v => (v && typeof v === 'object') ? (v.name || '') : String(v)) : [];
+      const joined = names.join(' ').toLowerCase();
       hasSieve = /tamis|bubble|ice\s*hash|whole\s*plant\s*fresh\s*frozen|wpff|dry\s*tamis|tamisage/.test(joined);
     }
   } catch {}
@@ -2822,6 +2868,14 @@ function rehydrateSequenceField(fieldId, steps) {
     const n = (name || '').toLowerCase();
     return /tamis|bubble|ice\s*hash|ice\s*dry|wpff/.test(n);
   }
+  function isRosinStep(name) {
+    const n = (name || '').toLowerCase();
+    return /rosin|pressage\s*(à|a)\s*chaud/.test(n);
+  }
+  function isCO2Step(name) {
+    const n = (name || '').toLowerCase();
+    return /(co2|co₂).*(supercritique)/.test(n);
+  }
   function createItem(text, meta = {}) {
     const li = document.createElement('li');
     li.className = 'sequence-item';
@@ -2835,8 +2889,11 @@ function rehydrateSequenceField(fieldId, steps) {
     const del = document.createElement('button'); del.type='button'; del.className='step-del'; del.title='Supprimer'; del.textContent='✕';
     actions.append(up, down, del);
     li.append(label, actions);
-    if (isSieveStep(text)) {
-      li.dataset.sieve = 'true';
+    // Extra metadata editors per step type
+    const n = (text || '').toString();
+    if (isSieveStep(n) || isRosinStep(n)) {
+      if (isSieveStep(n)) li.dataset.sieve = 'true';
+      if (isRosinStep(n)) li.dataset.rosin = 'true';
       const extra = document.createElement('div');
       extra.className = 'step-extra';
       const pair = document.createElement('div');
@@ -2849,7 +2906,6 @@ function rehydrateSequenceField(fieldId, steps) {
       maxInput.type = 'text';
       maxInput.placeholder = 'max (µm)';
       maxInput.setAttribute('data-mesh-max', '');
-      // Prefill from meta.mesh if provided
       if (meta && meta.mesh) {
         try {
           const str = String(meta.mesh);
@@ -2868,12 +2924,26 @@ function rehydrateSequenceField(fieldId, steps) {
           const arr = Array.from(list.querySelectorAll('li.sequence-item')).map(li2 => {
             const name2 = li2.querySelector('.step-label')?.textContent || '';
             if (!name2) return null;
-            if (li2.dataset.sieve === 'true') {
+            if (li2.dataset.sieve === 'true' || li2.dataset.rosin === 'true') {
               const minV2 = li2.querySelector('input[data-mesh-min]')?.value?.trim() || '';
               const maxV2 = li2.querySelector('input[data-mesh-max]')?.value?.trim() || '';
               const any2 = minV2 || maxV2;
               const mesh2 = (minV2 && maxV2) ? `${minV2}–${maxV2}` : (any2 ? `0–${minV2 || maxV2}` : '');
-              return mesh2 ? { name: name2, mesh: mesh2 } : { name: name2 };
+              const obj = { name: name2 };
+              if (mesh2) obj.mesh = mesh2;
+              if (li2.dataset.rosin === 'true') {
+                const t = li2.querySelector('input[data-rosin-temp]')?.value?.trim() || '';
+                if (t) obj.tempC = t;
+              }
+              return obj;
+            }
+            if (li2.dataset.co2 === 'true') {
+              const p = li2.querySelector('input[data-co2-pressure]')?.value?.trim() || '';
+              const t = li2.querySelector('input[data-co2-temp]')?.value?.trim() || '';
+              const obj = { name: name2 };
+              if (p) obj.pressureBar = p;
+              if (t) obj.tempC = t;
+              return obj;
             }
             return { name: name2 };
           }).filter(Boolean);
@@ -2882,8 +2952,14 @@ function rehydrateSequenceField(fieldId, steps) {
           if (display) {
             display.innerHTML = arr.length ? arr.map(v => {
               const nm = (v && typeof v === 'object') ? (v.name || '') : String(v);
-              const ms = (v && typeof v === 'object' && v.mesh) ? ` <small style="opacity:.82;">(${v.mesh})</small>` : '';
-              return `<span class="chip">${nm}${ms}</span>`;
+              const parts = [];
+              if (v && typeof v === 'object') {
+                if (v.mesh) parts.push(`${v.mesh}`);
+                if (v.pressureBar) parts.push(`${v.pressureBar} bar`);
+                if (v.tempC) parts.push(`${v.tempC}°C`);
+              }
+              const metaStr = parts.length ? ` <small style="opacity:.82;">(${parts.join(', ')})</small>` : '';
+              return `<span class="chip">${nm}${metaStr}</span>`;
             }).join('') : 'Ajouter une étape';
           }
         } catch {}
@@ -2892,6 +2968,83 @@ function rehydrateSequenceField(fieldId, steps) {
       maxInput.addEventListener('input', onPairChange);
       pair.append(minInput, maxInput);
       extra.appendChild(pair);
+      // Rosin temp
+      if (isRosinStep(n)) {
+        const temp = document.createElement('input');
+        temp.type = 'text';
+        temp.placeholder = 'Température (°C)';
+        temp.setAttribute('data-rosin-temp', '');
+        if (meta && (meta.tempC || meta.temperature)) {
+          temp.value = String(meta.tempC || meta.temperature);
+        }
+        temp.addEventListener('input', onPairChange);
+        extra.appendChild(temp);
+      }
+      li.appendChild(extra);
+    } else if (isCO2Step(n)) {
+      li.dataset.co2 = 'true';
+      const extra = document.createElement('div');
+      extra.className = 'step-extra';
+      const pressure = document.createElement('input');
+      pressure.type = 'text';
+      pressure.placeholder = 'Pression (bar)';
+      pressure.setAttribute('data-co2-pressure', '');
+      const temp = document.createElement('input');
+      temp.type = 'text';
+      temp.placeholder = 'Température (°C)';
+      temp.setAttribute('data-co2-temp', '');
+      if (meta) {
+        if (meta.pressureBar) pressure.value = String(meta.pressureBar);
+        if (meta.tempC || meta.temperature) temp.value = String(meta.tempC || meta.temperature);
+      }
+      const onChange = () => {
+        try {
+          const arr = Array.from(list.querySelectorAll('li.sequence-item')).map(li2 => {
+            const name2 = li2.querySelector('.step-label')?.textContent || '';
+            if (!name2) return null;
+            if (li2.dataset.sieve === 'true' || li2.dataset.rosin === 'true') {
+              const minV2 = li2.querySelector('input[data-mesh-min]')?.value?.trim() || '';
+              const maxV2 = li2.querySelector('input[data-mesh-max]')?.value?.trim() || '';
+              const any2 = minV2 || maxV2;
+              const mesh2 = (minV2 && maxV2) ? `${minV2}–${maxV2}` : (any2 ? `0–${minV2 || maxV2}` : '');
+              const obj = { name: name2 };
+              if (mesh2) obj.mesh = mesh2;
+              if (li2.dataset.rosin === 'true') {
+                const t2 = li2.querySelector('input[data-rosin-temp]')?.value?.trim() || '';
+                if (t2) obj.tempC = t2;
+              }
+              return obj;
+            }
+            if (li2.dataset.co2 === 'true') {
+              const p2 = li2.querySelector('input[data-co2-pressure]')?.value?.trim() || '';
+              const t2 = li2.querySelector('input[data-co2-temp]')?.value?.trim() || '';
+              const obj = { name: name2 };
+              if (p2) obj.pressureBar = p2;
+              if (t2) obj.tempC = t2;
+              return obj;
+            }
+            return { name: name2 };
+          }).filter(Boolean);
+          const hasMeta = arr.some(e => e && typeof e === 'object' && Object.keys(e).some(k => k !== 'name'));
+          hidden.value = JSON.stringify(hasMeta ? arr : arr.map(e => e?.name || ''));
+          if (display) {
+            display.innerHTML = arr.length ? arr.map(v => {
+              const nm = (v && typeof v === 'object') ? (v.name || '') : String(v);
+              const parts = [];
+              if (v && typeof v === 'object') {
+                if (v.mesh) parts.push(`${v.mesh}`);
+                if (v.pressureBar) parts.push(`${v.pressureBar} bar`);
+                if (v.tempC) parts.push(`${v.tempC}°C`);
+              }
+              const metaStr = parts.length ? ` <small style="opacity:.82;">(${parts.join(', ')})</small>` : '';
+              return `<span class="chip">${nm}${metaStr}</span>`;
+            }).join('') : 'Ajouter une étape';
+          }
+        } catch {}
+      };
+      pressure.addEventListener('input', onChange);
+      temp.addEventListener('input', onChange);
+      extra.append(pressure, temp);
       li.appendChild(extra);
     }
     const serialize = () => {
@@ -2939,8 +3092,14 @@ function rehydrateSequenceField(fieldId, steps) {
   if (display) {
     display.innerHTML = vals.length ? vals.map(v => {
       const nm = (v && typeof v === 'object') ? (v.name || '') : String(v);
-      const ms = (v && typeof v === 'object' && v.mesh) ? ` <small style="opacity:.82;">(${v.mesh})</small>` : '';
-      return `<span class="chip">${nm}${ms}</span>`;
+      const parts = [];
+      if (v && typeof v === 'object') {
+        if (v.mesh) parts.push(`${v.mesh}`);
+        if (v.pressureBar) parts.push(`${v.pressureBar} bar`);
+        if (v.tempC) parts.push(`${v.tempC}°C`);
+      }
+      const metaStr = parts.length ? ` <small style="opacity:.82;">(${parts.join(', ')})</small>` : '';
+      return `<span class="chip">${nm}${metaStr}</span>`;
     }).join('') : 'Ajouter une étape';
   }
   try { updateConditionalVisibility(); } catch {}
@@ -3252,14 +3411,15 @@ function buildSuggestedName() {
   const val = (k) => (formData[k] || '').toString().trim();
   // Try to parse arrays from JSON strings where relevant
   const parseArr = (v) => { try { const a = JSON.parse(v||''); return Array.isArray(a) ? a : []; } catch { return []; } };
+  const namesOnly = (arr) => (Array.isArray(arr) ? arr.map(x => (x && typeof x === 'object') ? (x.name || '') : String(x)).filter(Boolean) : []);
   let parts = [];
   if (type === 'Hash') {
     parts = [val('cultivars'), val('breeder'), val('farm')];
-    const sep = parseArr(formData['pipelineSeparation']).join(' → ');
+    const sep = namesOnly(parseArr(formData['pipelineSeparation'])).join(' → ');
     if (sep) parts.push(sep);
   } else if (type === 'Concentré') {
     parts = [val('cultivars'), val('farm')];
-    const pipe = parseArr(formData['pipelineExtraction']).join(' → ');
+    const pipe = namesOnly(parseArr(formData['pipelineExtraction'])).join(' → ');
     const typeExt = val('typeExtraction');
     const add = [typeExt, pipe].filter(Boolean).join(' • ');
     if (add) parts.push(add);
@@ -3733,8 +3893,12 @@ function generateFullReview() {
               ${steps.map(s => {
                 if (s && typeof s === 'object') {
                   const name = s.name || '';
-                  const mesh = s.mesh ? ` <small style="opacity:.8;">(${s.mesh})</small>` : '';
-                  return `<li class="sequence-item">${name}${mesh}</li>`;
+                  const parts = [];
+                  if (s.mesh) parts.push(`${s.mesh}`);
+                  if (s.pressureBar) parts.push(`${s.pressureBar} bar`);
+                  if (s.tempC) parts.push(`${s.tempC}°C`);
+                  const meta = parts.length ? ` <small style="opacity:.8;">(${parts.join(', ')})</small>` : '';
+                  return `<li class="sequence-item">${name}${meta}</li>`;
                 }
                 return `<li class="sequence-item">${s}</li>`;
               }).join("")}
