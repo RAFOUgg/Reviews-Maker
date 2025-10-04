@@ -3441,6 +3441,27 @@ textarea {
   max-height: calc(90vh - 200px);
 }
 
+/* Save modal specific */
+.save-form { display: grid; gap: 1.25rem; }
+.save-form .form-row { display: grid; gap: 0.5rem; }
+.save-form .field-label { font-weight: 600; }
+.save-form input[type="text"] {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: var(--surface-elevated);
+  border: 2px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+}
+.save-form input[type="text"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.1);
+}
+.save-form .field-hint { color: var(--text-muted); font-size: 0.9rem; margin: 0; }
+.save-form .field-error { color: #fca5a5; font-size: 0.9rem; margin: 0; }
+.modal-actions { display: flex; justify-content: flex-end; gap: .75rem; margin-top: .5rem; }
+
 /* Styles pour les astuces */
 .tips-content {
   display: grid;

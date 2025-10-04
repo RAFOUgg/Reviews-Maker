@@ -828,6 +828,17 @@ async function initEditorPage() {
   dom.previewModalContent = document.getElementById("previewModalContent");
   dom.downloadPreviewPng = document.getElementById("downloadPreviewPng");
   dom.closePreviewModal = document.getElementById("closePreviewModal");
+  // Save modal controls
+  dom.saveModal = document.getElementById('saveModal');
+  dom.saveModalOverlay = document.getElementById('saveModalOverlay');
+  dom.closeSaveModal = document.getElementById('closeSaveModal');
+  dom.saveForm = document.getElementById('saveForm');
+  dom.saveName = document.getElementById('saveName');
+  dom.saveHolder = document.getElementById('saveHolder');
+  dom.saveNameError = document.getElementById('saveNameError');
+  dom.saveHolderError = document.getElementById('saveHolderError');
+  dom.cancelSave = document.getElementById('cancelSave');
+  dom.confirmSave = document.getElementById('confirmSave');
   
   // Modals
   dom.libraryModal = document.getElementById("libraryModal");
@@ -986,19 +997,13 @@ function setupFormEvents() {
   if (dom.saveBtn) {
     dom.saveBtn.addEventListener("click", async () => {
       try {
-        // Collect latest data and suggest a nice default name
+        // Pré-remplir le formulaire de sauvegarde et ouvrir la modale
         collectFormData();
         const defName = buildSuggestedName();
-        const userName = prompt("Nom de la review", defName);
-        if (userName === null) {
-          // Cancelled
-          return;
-        }
-        if (userName && userName.trim()) {
-          formData.productName = userName.trim();
-        }
-        await saveReview(false);
-      } catch (e) { console.error(e); showToast("Impossible d'enregistrer.", 'error'); }
+        if (dom.saveName) dom.saveName.value = formData.productName || defName || '';
+        if (dom.saveHolder) dom.saveHolder.value = formData.holderName || '';
+        openSaveModal();
+      } catch (e) { console.error(e); showToast("Impossible d'ouvrir la fenêtre de sauvegarde.", 'error'); }
     });
   }
   const deleteBtn = document.getElementById('deleteBtn');
@@ -1267,6 +1272,7 @@ function setupModalEvents() {
       if (pop) pop.remove();
       const tipsOverlay = document.getElementById('tipsOverlay');
       if (tipsOverlay) tipsOverlay.remove();
+      if (dom.saveModal && dom.saveModal.style.display === 'flex') closeSaveModal();
       if (dom.libraryDrawer && !dom.libraryDrawer.hasAttribute('hidden')) {
         toggleLibrary(false);
       }
@@ -1303,6 +1309,27 @@ async function initDatabase() {
   } catch (err) {
     console.error("Erreur d'initialisation de la base de données", err);
     showToast("Problème d'initialisation. Mode hors ligne activé.", "warning");
+  }
+  // Save modal events
+  if (dom.closeSaveModal) dom.closeSaveModal.addEventListener('click', closeSaveModal);
+  if (dom.saveModalOverlay) dom.saveModalOverlay.addEventListener('click', closeSaveModal);
+  if (dom.cancelSave) dom.cancelSave.addEventListener('click', closeSaveModal);
+  if (dom.saveForm) {
+    dom.saveForm.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      // Validation
+      const name = (dom.saveName?.value || '').trim();
+      const holder = (dom.saveHolder?.value || '').trim();
+      let ok = true;
+      if (!name) { dom.saveNameError?.removeAttribute('hidden'); ok = false; } else { dom.saveNameError?.setAttribute('hidden',''); }
+      if (!holder) { dom.saveHolderError?.removeAttribute('hidden'); ok = false; } else { dom.saveHolderError?.setAttribute('hidden',''); }
+      if (!ok) return;
+      // Inject into formData and persist
+      formData.productName = name;
+      formData.holderName = holder; // nouveau champ obligatoire
+      try { await saveReview(false); closeSaveModal(); }
+      catch(e){ console.error(e); showToast("Impossible d'enregistrer.", 'error'); }
+    });
   }
 }
 
@@ -1684,6 +1711,7 @@ async function renderCompactLibrary() {
       day: 'numeric',
       month: 'short'
     });
+    const holder = r.holderName ? ` • ${r.holderName}` : '';
   const draftBadge = r.isDraft ? `<span class="draft-badge">Brouillon</span>` : '';
     
     // Image d'aperçu si disponible
@@ -1696,7 +1724,7 @@ async function renderCompactLibrary() {
       ${imageHtml}
       <div class="compact-item-content">
         <div class="compact-item-title">${title}</div>
-        <div class="compact-item-meta">${r.productType || "Review"} • ${date}</div>
+        <div class="compact-item-meta">${r.productType || "Review"} • ${date}${holder}</div>
       </div>
       <div class="compact-item-actions">
         <button type="button" class="btn btn-outline btn-xs" data-act="load" title="Aperçu">👀</button>
@@ -1773,6 +1801,7 @@ async function renderFullLibrary() {
       year: 'numeric'
     });
     const draftBadge = r.isDraft ? `<span class="draft-badge">Draft</span>` : '';
+    const holder = r.holderName ? `<div class="library-item-farm">Titulaire: ${r.holderName}</div>` : '';
     
     // Image d'aperçu si disponible
     const imageHtml = r.image ? 
@@ -1786,6 +1815,7 @@ async function renderFullLibrary() {
         <div class="library-item-title">${title}</div>
         <div class="library-item-type">${r.productType || "Review"}</div>
         ${r.farm ? `<div class="library-item-farm">${r.farm}</div>` : ''}
+        ${holder}
         <div class="library-item-date">${date}</div>
       </div>
       <div class="library-item-actions">
@@ -3265,6 +3295,16 @@ function readFileAsDataURL(file) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+// ---- Save modal helpers ----
+function openSaveModal() {
+  if (!dom.saveModal) return;
+  dom.saveModal.style.display = 'flex';
+}
+function closeSaveModal() {
+  if (!dom.saveModal) return;
+  dom.saveModal.style.display = 'none';
 }
 
 // -------- Backend distant (API REST) --------

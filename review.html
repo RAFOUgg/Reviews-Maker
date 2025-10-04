@@ -182,6 +182,37 @@
     <div class="preview-modal-body">
       <div id="previewModalContent" class="review-content"></div>
     </div>
+
+    <!-- Save Modal -->
+    <div class="modal" id="saveModal" style="display:none;">
+      <div class="modal-overlay" id="saveModalOverlay"></div>
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="saveTitle">
+        <div class="modal-header">
+          <h2 id="saveTitle">Enregistrer la review</h2>
+          <button type="button" class="modal-close" id="closeSaveModal" aria-label="Fermer">✕</button>
+        </div>
+        <div class="modal-body">
+          <form id="saveForm" class="save-form" novalidate>
+            <div class="form-row">
+              <label for="saveName" class="field-label">Nom de la review</label>
+              <input type="text" id="saveName" placeholder="Ex: Gelato 41 - Hash" required aria-required="true" />
+              <p class="field-hint">Visible dans votre bibliothèque et sur l’export.</p>
+              <p class="field-error" id="saveNameError" hidden>Veuillez saisir un nom de review.</p>
+            </div>
+            <div class="form-row">
+              <label for="saveHolder" class="field-label">Titulaire de la review <span aria-hidden="true" style="color:#ef4444">*</span></label>
+              <input type="text" id="saveHolder" placeholder="Nom et/ou équipe (obligatoire)" required aria-required="true" />
+              <p class="field-hint">Ex: Rafi, Studio RM, @alias …</p>
+              <p class="field-error" id="saveHolderError" hidden>Le nom du titulaire est obligatoire.</p>
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-outline" id="cancelSave">Annuler</button>
+              <button type="submit" class="btn btn-secondary" id="confirmSave">Enregistrer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
     </div>
     <template id="tipsTemplate">
     <div class="toast" role="status" aria-live="polite">

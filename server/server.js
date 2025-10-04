@@ -93,6 +93,10 @@ app.post('/api/reviews', upload.single('image'), (req, res) => {
   } else {
     incoming = req.body;
   }
+  // Validation serveur: holderName requis
+  if (!incoming.holderName || String(incoming.holderName).trim().length === 0) {
+    return res.status(400).json({ error: 'validation_error', field: 'holderName', message: 'Titulaire requis' });
+  }
   if (req.file) {
     incoming.image = '/images/' + req.file.filename;
   }
@@ -121,6 +125,12 @@ app.put('/api/reviews/:id', upload.single('image'), (req, res) => {
     if (req.body.data) {
       try { incoming = JSON.parse(req.body.data); } catch {}
     } else { incoming = req.body; }
+    // Validation serveur: si holderName fourni ou déjà existant, s'assurer qu'il est non vide
+    const existing = JSON.parse(row.data || '{}');
+    const holderName = (incoming.holderName ?? existing.holderName);
+    if (!holderName || String(holderName).trim().length === 0) {
+      return res.status(400).json({ error: 'validation_error', field: 'holderName', message: 'Titulaire requis' });
+    }
     if (req.file) incoming.image = '/images/' + req.file.filename;
 
     const merged = { ...JSON.parse(row.data), ...incoming };
