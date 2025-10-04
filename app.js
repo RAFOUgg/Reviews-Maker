@@ -838,6 +838,16 @@ async function initEditorPage() {
   dom.libraryGrid = document.getElementById("libraryGrid");
   dom.libraryEmpty = document.getElementById("libraryEmpty");
   dom.librarySearch = document.getElementById("librarySearch");
+  // Auth modal
+  dom.authModal = document.getElementById("authModal");
+  dom.authModalOverlay = document.getElementById("authModalOverlay");
+  dom.closeAuth = document.getElementById("closeAuth");
+  dom.authTokenInput = document.getElementById("authTokenInput");
+  dom.authConnect = document.getElementById("authConnect");
+  dom.authDisconnect = document.getElementById("authDisconnect");
+  dom.authStatus = document.getElementById("authStatus");
+  dom.floatingAuthBtn = document.getElementById("floatingAuthBtn");
+  dom.openMyLibrary = document.getElementById("openMyLibrary");
   // Drawer-based library elements on the editor page
   dom.libraryOverlay = document.getElementById("libraryOverlay");
   dom.libraryDrawer = document.getElementById("libraryDrawer");
@@ -922,6 +932,9 @@ function setupHomePageEvents() {
 
   // Modals et autres événements
   setupModalEvents();
+  
+  // Initialize auth UI
+  updateAuthUI();
 
   // Tabs: only show when remote + token
   if (dom.homeTabs) {
@@ -1271,6 +1284,85 @@ function setupModalEvents() {
     }, 300));
   }
 
+  // Modal Auth
+  if (dom.floatingAuthBtn) {
+    dom.floatingAuthBtn.addEventListener("click", () => {
+      if (dom.authModal) {
+        dom.authModal.style.display = "flex";
+        updateAuthUI();
+      }
+    });
+  }
+  if (dom.openMyLibrary) {
+    dom.openMyLibrary.addEventListener("click", () => {
+      // Switch to "mine" tab on home page
+      if (isHomePage && dom.homeTabs) {
+        const btnMine = dom.homeTabs.querySelector('[data-tab="mine"]');
+        if (btnMine) btnMine.click();
+        // Scroll to gallery section
+        const librarySection = document.querySelector('.library-section');
+        if (librarySection) librarySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }
+  if (dom.closeAuth) {
+    dom.closeAuth.addEventListener("click", () => {
+      if (dom.authModal) dom.authModal.style.display = "none";
+    });
+  }
+  if (dom.authModalOverlay) {
+    dom.authModalOverlay.addEventListener("click", () => {
+      if (dom.authModal) dom.authModal.style.display = "none";
+    });
+  }
+  if (dom.authConnect) {
+    dom.authConnect.addEventListener("click", async () => {
+      const token = dom.authTokenInput?.value?.trim();
+      if (!token) {
+        showAuthStatus("Veuillez entrer un token", "error");
+        return;
+      }
+      // Test token validity
+      try {
+        const r = await fetch(remoteBase + '/api/ping', { 
+          headers: { 'X-Auth-Token': token }
+        });
+        if (r.ok) {
+          localStorage.setItem('authToken', token);
+          showAuthStatus("Connexion réussie!", "success");
+          updateAuthUI();
+          setTimeout(() => {
+            if (dom.authModal) dom.authModal.style.display = "none";
+            // Refresh library and show "Ma bibliothèque"
+            if (isHomePage) {
+              renderCompactLibrary();
+              setupHomeTabs();
+            }
+          }, 800);
+        } else {
+          showAuthStatus("Token invalide", "error");
+        }
+      } catch (err) {
+        showAuthStatus("Erreur de connexion", "error");
+        console.error('Auth error:', err);
+      }
+    });
+  }
+  if (dom.authDisconnect) {
+    dom.authDisconnect.addEventListener("click", () => {
+      localStorage.removeItem('authToken');
+      showAuthStatus("Déconnecté", "info");
+      updateAuthUI();
+      setTimeout(() => {
+        if (dom.authModal) dom.authModal.style.display = "none";
+        if (isHomePage) {
+          renderCompactLibrary();
+          setupHomeTabs();
+        }
+      }, 800);
+    });
+  }
+
   // Fermeture par Échap
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
@@ -1279,6 +1371,9 @@ function setupModalEvents() {
       }
       if (dom.libraryModal && dom.libraryModal.style.display === "flex") {
         dom.libraryModal.style.display = "none";
+      }
+      if (dom.authModal && dom.authModal.style.display === "flex") {
+        dom.authModal.style.display = "none";
       }
       const pop = document.getElementById('activeTipsPopover');
       if (pop) pop.remove();
@@ -1290,6 +1385,56 @@ function setupModalEvents() {
       }
     }
   });
+}
+
+// Helper functions for auth UI
+function updateAuthUI() {
+  const token = localStorage.getItem('authToken');
+  const isConnected = !!token;
+  
+  // Update modal UI
+  if (dom.authConnect) dom.authConnect.style.display = isConnected ? 'none' : 'inline-flex';
+  if (dom.authDisconnect) dom.authDisconnect.style.display = isConnected ? 'inline-flex' : 'none';
+  if (dom.authTokenInput) dom.authTokenInput.value = isConnected ? '••••••••' : '';
+  if (dom.authTokenInput) dom.authTokenInput.disabled = isConnected;
+  
+  // Update floating button
+  if (dom.floatingAuthBtn) {
+    if (isConnected) {
+      dom.floatingAuthBtn.innerHTML = '<span aria-hidden="true">✓</span>';
+      dom.floatingAuthBtn.title = "Compte lié";
+      dom.floatingAuthBtn.classList.add('connected');
+    } else {
+      dom.floatingAuthBtn.innerHTML = '<span aria-hidden="true">🔗</span>';
+      dom.floatingAuthBtn.title = "Lier mon compte";
+      dom.floatingAuthBtn.classList.remove('connected');
+    }
+  }
+  
+  // Show/hide "Ma bibliothèque" button
+  if (dom.openMyLibrary) {
+    dom.openMyLibrary.style.display = isConnected ? 'inline-flex' : 'none';
+  }
+}
+
+function showAuthStatus(message, type = "info") {
+  if (!dom.authStatus) return;
+  dom.authStatus.textContent = message;
+  dom.authStatus.className = `auth-status auth-status-${type}`;
+  dom.authStatus.style.display = 'block';
+  setTimeout(() => {
+    if (dom.authStatus) dom.authStatus.style.display = 'none';
+  }, 3000);
+}
+
+function setupHomeTabs() {
+  if (!isHomePage || !dom.homeTabs) return;
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    dom.homeTabs.style.display = 'flex';
+  } else {
+    dom.homeTabs.style.display = 'none';
+  }
 }
 
 // Utilitaire debounce
@@ -1677,10 +1822,10 @@ async function renderLibraryList() {
         <div class="sub">${r.productType || ""} • ${r.farm || ""} • ${date}</div>
       </div>
       <div class="actions">
-        <button type="button" class="btn btn-outline btn-sm" data-act="load">Aperçu</button>
-        <button type="button" class="btn btn-secondary btn-sm" data-act="edit">Éditer</button>
-        <button type="button" class="btn btn-outline btn-sm" data-act="dup">Dupliquer</button>
-        <button type="button" class="btn btn-outline btn-sm" data-act="delete">Supprimer</button>
+        <button type="button" class="btn btn-outline btn-sm" data-act="load">👀</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-act="edit">✏️</button>
+        <button type="button" class="btn btn-outline btn-sm" data-act="dup">⏩</button>
+        <button type="button" class="btn btn-outline btn-sm" data-act="delete">🗑️</button>
       </div>`;
   li.querySelector('[data-act="load"]').addEventListener('click', async () => { await openPreviewOnly(r); toggleLibrary(false); });
     li.querySelector('[data-act="edit"]').addEventListener('click', () => { loadReviewIntoForm(r, 'edit'); toggleLibrary(false); });
