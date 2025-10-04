@@ -49,6 +49,33 @@ const INIT_SQL = `CREATE TABLE IF NOT EXISTS reviews (
 
 db.serialize(() => {
   db.run(INIT_SQL);
+  // Idempotent migration for existing databases missing new columns
+  db.all("PRAGMA table_info('reviews')", [], (err, rows) => {
+    if (err) { console.warn('[db] PRAGMA table_info error', err); return; }
+    const cols = new Set((rows || []).map(r => r.name));
+    const addCol = (name, defSql, after = null) => new Promise(res => {
+      if (cols.has(name)) return res(true);
+      const sql = `ALTER TABLE reviews ADD COLUMN ${defSql}`;
+      db.run(sql, [], (e) => {
+        if (e) { console.warn(`[db] ALTER TABLE add ${name} failed`, e.message); }
+        else { console.log(`[db] Added column ${name}`); cols.add(name); }
+        res(!e);
+      });
+    });
+    (async () => {
+      // Ensure columns exist
+      await addCol('ownerId', "ownerId TEXT");
+      await addCol('isDraft', "isDraft INTEGER DEFAULT 0");
+      await addCol('isPrivate', "isPrivate INTEGER DEFAULT 0");
+      await addCol('createdAt', "createdAt TEXT");
+      await addCol('updatedAt', "updatedAt TEXT");
+      // Backfill sensible defaults for existing rows (NULLs only)
+      db.run("UPDATE reviews SET isDraft=0 WHERE isDraft IS NULL", () => {});
+      db.run("UPDATE reviews SET isPrivate=0 WHERE isPrivate IS NULL", () => {});
+      db.run("UPDATE reviews SET createdAt=datetime('now') WHERE createdAt IS NULL", () => {});
+      db.run("UPDATE reviews SET updatedAt=datetime('now') WHERE updatedAt IS NULL", () => {});
+    })();
+  });
 });
 
 const app = express();

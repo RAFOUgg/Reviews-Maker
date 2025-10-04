@@ -589,6 +589,9 @@ const productStructures = {
         title: "Goût",
         fields: [
           { key: "intensiteAromatique", label: "Intensité aromatique", type: "number", max: 10 },
+          { key: "dryPuff", label: "Notes (dry puff/tirage à sec/froid)", type: "textarea" },
+          { key: "inhalation", label: "Notes (inhalation)", type: "textarea" },
+          { key: "expiration", label: "Notes (expiration)", type: "textarea" },
           { key: "notesDominantes", label: "Notes dominantes", type: "textarea" },
           { key: "notesSecondaires", label: "Notes secondaires", type: "textarea" },
         ],
@@ -601,9 +604,6 @@ const productStructures = {
           { key: "textureBouche", label: "Texture en bouche", type: "number", max: 10 },
           { key: "douceur", label: "Douceur / Agressivité", type: "number", max: 10 },
           { key: "intensite", label: "Intensité", type: "number", max: 10 },
-          { key: "dryPuff", label: "Notes (dry puff/tirage à sec/froid)", type: "textarea" },
-          { key: "inhalation", label: "Notes (inhalation)", type: "textarea" },
-          { key: "expiration", label: "Notes (expiration)", type: "textarea" },
           { key: "intensiteFumee", label: "Intensité", type: "number", max: 10 },
           { key: "agressivite", label: "Agressivité/piquant", type: "number", max: 10 },
           { key: "cendre", label: "Cendre", type: "number", max: 10 }
