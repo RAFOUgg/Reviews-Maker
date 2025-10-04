@@ -1292,7 +1292,9 @@ async function initDatabase() {
   try {
     await setupDatabase();
     await migrateLocalStorageToDB();
-    await dedupeDatabase();
+    if (shouldDedupeOnStart()) {
+      await dedupeDatabase();
+    }
     
     // Charger la bibliothèque après l'initialisation de la DB
     if (isHomePage || isEditorPage) {
@@ -1334,6 +1336,18 @@ async function initDatabase() {
       catch(e){ console.error(e); showToast("Impossible d'enregistrer.", 'error'); }
     });
   }
+}
+
+// Désactive la déduplication destructive par défaut pour éviter des "disparitions" perçues.
+// Activez-la manuellement via ?dedupe=1 ou localStorage.setItem('rm_dedupeOnStart','1').
+function shouldDedupeOnStart() {
+  try {
+    const params = new URLSearchParams(location.search);
+    if (params.get('dedupe') === '1') return true;
+  } catch {}
+  try {
+    return localStorage.getItem('rm_dedupeOnStart') === '1';
+  } catch { return false; }
 }
 
 // Gestion des erreurs globales
@@ -3349,24 +3363,51 @@ async function remoteListReviews() {
 // On préfère les versions serveur lorsqu'elles existent, mais on ne perd pas les brouillons locaux
 // si l'API renvoie une liste vide ou encore non synchronisée.
 async function listUnifiedReviews() {
+  const basePath = (typeof location !== 'undefined' && location.pathname && location.pathname.startsWith('/reviews')) ? '/reviews' : '';
+  const normalizeImage = (img) => {
+    try {
+      if (!img || typeof img !== 'string') return img;
+      if (img.startsWith('data:')) return img; // base64 local
+      if (basePath && img.startsWith('/images/')) return basePath + img;
+      return img;
+    } catch { return img; }
+  };
+
   let local = [];
   try { local = await dbGetAllReviews(); } catch {}
-  if (!remoteEnabled) return local;
+  if (!remoteEnabled) {
+    return (local || []).map(r => ({ ...r, image: normalizeImage(r.image) }));
+  }
   let remote = [];
   try { remote = await remoteListReviews(); } catch {}
-  if (!Array.isArray(remote) || remote.length === 0) return local;
+  // Si le serveur ne renvoie rien, ne pas écraser les locales
+  if (!Array.isArray(remote) || remote.length === 0) {
+    return (local || []).map(r => ({ ...r, image: normalizeImage(r.image) }));
+  }
 
-  const map = new Map();
+  const byKey = new Map();
   const keyOf = (r) => (r && (r.correlationKey || computeCorrelationKey(r))) || null;
+  // Indexer locales d'abord
   for (const r of local || []) {
     const k = keyOf(r) || `local-${r.id ?? Math.random()}`;
-    if (!map.has(k)) map.set(k, r);
+    byKey.set(k, { ...r, image: normalizeImage(r.image) });
   }
+  // Appliquer les versions serveur en priorité, MAIS conserver l'image locale si la version serveur n'en a pas
   for (const r of remote || []) {
     const k = keyOf(r) || `remote-${r.id ?? Math.random()}`;
-    map.set(k, r);
+    const normalizedRemote = { ...r, image: normalizeImage(r.image) };
+    const existing = byKey.get(k);
+    if (existing) {
+      const merged = { ...existing, ...normalizedRemote };
+      if (!normalizedRemote.image && existing.image) {
+        merged.image = existing.image; // garder l'image locale si le remote n'en a pas
+      }
+      byKey.set(k, merged);
+    } else {
+      byKey.set(k, normalizedRemote);
+    }
   }
-  return Array.from(map.values());
+  return Array.from(byKey.values());
 }
 
 // Récupération d'une review précise via l'API distante
