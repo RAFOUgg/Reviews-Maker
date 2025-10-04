@@ -996,14 +996,15 @@ function setupFormEvents() {
   }
   if (dom.saveBtn) {
     dom.saveBtn.addEventListener("click", async () => {
+      // Ouvrir la modale immédiatement pour ne pas bloquer l'UX
+      openSaveModal();
+      // Pré-remplir ensuite (si une erreur survient, on ignore, la modale reste ouverte)
       try {
-        // Pré-remplir le formulaire de sauvegarde et ouvrir la modale
         collectFormData();
         const defName = buildSuggestedName();
         if (dom.saveName) dom.saveName.value = formData.productName || defName || '';
         if (dom.saveHolder) dom.saveHolder.value = formData.holderName || '';
-        openSaveModal();
-      } catch (e) { console.error(e); showToast("Impossible d'ouvrir la fenêtre de sauvegarde.", 'error'); }
+      } catch (e) { console.warn('Prefill save modal failed', e); }
     });
   }
   // Suppression via l'éditeur désactivée: suppression uniquement depuis la galerie
