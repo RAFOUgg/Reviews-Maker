@@ -3303,7 +3303,15 @@ function readFileAsDataURL(file) {
 // ---- Save modal helpers ----
 function openSaveModal() {
   if (!dom.saveModal) return;
+  try {
+    // Hide preview-only overlay/modal if visible to avoid stacking issues
+    dom.previewOverlay?.setAttribute('hidden','');
+    dom.previewModal?.setAttribute('hidden','');
+  } catch {}
   dom.saveModal.style.display = 'flex';
+  // In case some global style toggled visibility via hidden attr
+  dom.saveModal.removeAttribute('hidden');
+  console.debug('[ui] Save modal opened');
 }
 function closeSaveModal() {
   if (!dom.saveModal) return;
