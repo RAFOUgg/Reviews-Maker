@@ -348,6 +348,146 @@ app.put('/api/reviews/:id/privacy', (req, res) => {
   });
 });
 
+// ============================================================================
+// EMAIL AUTHENTICATION ROUTES
+// ============================================================================
+
+// Helper: Generate 6-digit code
+function generateCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Helper: Send email (mock for now, implement with nodemailer in production)
+async function sendVerificationEmail(email, code) {
+  // In production, use nodemailer or a service like SendGrid, Mailgun, etc.
+  console.log(`[EMAIL] Sending verification code to ${email}: ${code}`);
+  // For development, just log it
+  // TODO: Implement real email sending
+  return true;
+}
+
+// POST /api/auth/send-code - Request verification code
+app.post('/api/auth/send-code', async (req, res) => {
+  const email = req.body?.email?.trim()?.toLowerCase();
+  
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'invalid_email', message: 'Adresse email invalide' });
+  }
+  
+  // Generate code
+  const code = generateCode();
+  const expires = Date.now() + CODE_EXPIRY;
+  
+  // Store code
+  verificationCodes.set(email, { code, expires, attempts: 0 });
+  
+  // Send email
+  try {
+    await sendVerificationEmail(email, code);
+    res.json({ ok: true, message: 'Code envoyé par email' });
+  } catch (err) {
+    console.error('[AUTH] Error sending email:', err);
+    res.status(500).json({ error: 'email_error', message: 'Erreur lors de l\'envoi de l\'email' });
+  }
+  
+  // Clean up expired codes periodically
+  setTimeout(() => {
+    for (const [email, data] of verificationCodes.entries()) {
+      if (Date.now() > data.expires) {
+        verificationCodes.delete(email);
+      }
+    }
+  }, CODE_EXPIRY);
+});
+
+// POST /api/auth/verify-code - Verify code and create session
+app.post('/api/auth/verify-code', (req, res) => {
+  const email = req.body?.email?.trim()?.toLowerCase();
+  const code = req.body?.code?.trim();
+  
+  if (!email || !code) {
+    return res.status(400).json({ error: 'missing_fields', message: 'Email et code requis' });
+  }
+  
+  const stored = verificationCodes.get(email);
+  
+  if (!stored) {
+    return res.status(404).json({ error: 'code_not_found', message: 'Code expiré ou introuvable' });
+  }
+  
+  // Check expiry
+  if (Date.now() > stored.expires) {
+    verificationCodes.delete(email);
+    return res.status(410).json({ error: 'code_expired', message: 'Code expiré' });
+  }
+  
+  // Check attempts
+  if (stored.attempts >= MAX_ATTEMPTS) {
+    verificationCodes.delete(email);
+    return res.status(429).json({ error: 'too_many_attempts', message: 'Trop de tentatives' });
+  }
+  
+  // Verify code
+  if (stored.code !== code) {
+    stored.attempts++;
+    return res.status(401).json({ 
+      error: 'invalid_code', 
+      message: 'Code invalide', 
+      attemptsLeft: MAX_ATTEMPTS - stored.attempts 
+    });
+  }
+  
+  // Success! Generate session token
+  const token = Buffer.from(`${email}:${Date.now()}:${Math.random()}`).toString('base64');
+  
+  // Store token (in production, use proper session management)
+  // For now, create a token file
+  const tokenFile = path.join(TOKENS_DIR, token);
+  try {
+    fs.writeFileSync(tokenFile, JSON.stringify({ ownerId: email, roles: [], createdAt: new Date().toISOString() }));
+  } catch (err) {
+    console.error('[AUTH] Error storing token:', err);
+  }
+  
+  // Clean up code
+  verificationCodes.delete(email);
+  
+  res.json({ ok: true, token, email });
+});
+
+// POST /api/auth/logout - Logout (delete token)
+app.post('/api/auth/logout', (req, res) => {
+  const token = req.header('X-Auth-Token') || req.body?.token;
+  
+  if (!token) {
+    return res.status(400).json({ error: 'no_token' });
+  }
+  
+  // Delete token file
+  const tokenFile = path.join(TOKENS_DIR, token);
+  try {
+    if (fs.existsSync(tokenFile)) {
+      fs.unlinkSync(tokenFile);
+    }
+  } catch (err) {
+    console.error('[AUTH] Error deleting token:', err);
+  }
+  
+  res.json({ ok: true });
+});
+
+// GET /api/auth/me - Get current user info
+app.get('/api/auth/me', (req, res) => {
+  const email = req.auth?.ownerId;
+  const isStaff = req.auth?.roles?.includes('staff');
+  
+  if (!email) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+  
+  res.json({ email, isStaff });
+});
+
 app.listen(PORT, () => {
   console.log('Reviews Maker API running on port ' + PORT);
 });

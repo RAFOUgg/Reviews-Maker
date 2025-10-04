@@ -842,12 +842,22 @@ async function initEditorPage() {
   dom.authModal = document.getElementById("authModal");
   dom.authModalOverlay = document.getElementById("authModalOverlay");
   dom.closeAuth = document.getElementById("closeAuth");
-  dom.authTokenInput = document.getElementById("authTokenInput");
-  dom.authConnect = document.getElementById("authConnect");
+  // Email auth elements
+  dom.authStepEmail = document.getElementById("authStepEmail");
+  dom.authStepCode = document.getElementById("authStepCode");
+  dom.authStepConnected = document.getElementById("authStepConnected");
+  dom.authEmailInput = document.getElementById("authEmailInput");
+  dom.authCodeInput = document.getElementById("authCodeInput");
+  dom.authEmailDisplay = document.getElementById("authEmailDisplay");
+  dom.authConnectedEmail = document.getElementById("authConnectedEmail");
+  dom.authSendCode = document.getElementById("authSendCode");
+  dom.authVerifyCode = document.getElementById("authVerifyCode");
+  dom.authResendCode = document.getElementById("authResendCode");
+  dom.authBack = document.getElementById("authBack");
   dom.authDisconnect = document.getElementById("authDisconnect");
   dom.authStatus = document.getElementById("authStatus");
   dom.floatingAuthBtn = document.getElementById("floatingAuthBtn");
-  dom.openMyLibrary = document.getElementById("openMyLibrary");
+  dom.openLibrary = document.getElementById("openLibrary");
   // Drawer-based library elements on the editor page
   dom.libraryOverlay = document.getElementById("libraryOverlay");
   dom.libraryDrawer = document.getElementById("libraryDrawer");
@@ -1194,7 +1204,7 @@ function setupModalEvents() {
     }, 300));
   }
 
-  // Modal Auth
+  // Modal Auth - Email based
   if (dom.floatingAuthBtn) {
     dom.floatingAuthBtn.addEventListener("click", () => {
       if (dom.authModal) {
@@ -1203,66 +1213,197 @@ function setupModalEvents() {
       }
     });
   }
-  if (dom.openMyLibrary) {
-    dom.openMyLibrary.addEventListener("click", () => {
-      // Switch to "mine" tab on home page
+  
+  if (dom.openLibrary) {
+    dom.openLibrary.addEventListener("click", () => {
+      // On home page, switch to "mine" tab
       if (isHomePage && dom.homeTabs) {
         const btnMine = dom.homeTabs.querySelector('[data-tab="mine"]');
         if (btnMine) btnMine.click();
-        // Scroll to gallery section
         const librarySection = document.querySelector('.library-section');
         if (librarySection) librarySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
+      // On editor page, open library drawer
+      else if (dom.libraryDrawer) {
+        toggleLibrary(true);
+      }
+      // Fallback: open library modal
+      else if (dom.libraryModal) {
+        dom.libraryModal.style.display = "flex";
+        renderFullLibrary();
+      }
     });
   }
+  
   if (dom.closeAuth) {
     dom.closeAuth.addEventListener("click", () => {
       if (dom.authModal) dom.authModal.style.display = "none";
     });
   }
+  
   if (dom.authModalOverlay) {
     dom.authModalOverlay.addEventListener("click", () => {
       if (dom.authModal) dom.authModal.style.display = "none";
     });
   }
-  if (dom.authConnect) {
-    dom.authConnect.addEventListener("click", async () => {
-      const token = dom.authTokenInput?.value?.trim();
-      if (!token) {
-        showAuthStatus("Veuillez entrer un token", "error");
+  
+  // Send verification code
+  if (dom.authSendCode) {
+    dom.authSendCode.addEventListener("click", async () => {
+      const email = dom.authEmailInput?.value?.trim()?.toLowerCase();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showAuthStatus("Adresse email invalide", "error");
         return;
       }
-      // Test token validity
+      
+      dom.authSendCode.disabled = true;
+      dom.authSendCode.textContent = "Envoi en cours...";
+      
       try {
-        const r = await fetch(remoteBase + '/api/ping', { 
-          headers: { 'X-Auth-Token': token }
+        const r = await fetch(remoteBase + '/api/auth/send-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
         });
+        
+        const data = await r.json();
+        
         if (r.ok) {
-          localStorage.setItem('authToken', token);
-          showAuthStatus("Connexion réussie!", "success");
-          updateAuthUI();
+          showAuthStatus("Code envoyé ! Vérifiez vos emails", "success");
+          // Switch to code verification step
+          if (dom.authStepEmail) dom.authStepEmail.style.display = 'none';
+          if (dom.authStepCode) dom.authStepCode.style.display = 'flex';
+          if (dom.authEmailDisplay) dom.authEmailDisplay.textContent = email;
+          // Store email temporarily
+          sessionStorage.setItem('authEmail', email);
+        } else {
+          showAuthStatus(data.message || "Erreur lors de l'envoi", "error");
+        }
+      } catch (err) {
+        showAuthStatus("Erreur de connexion au serveur", "error");
+        console.error('Send code error:', err);
+      } finally {
+        dom.authSendCode.disabled = false;
+        dom.authSendCode.textContent = "Envoyer le code";
+      }
+    });
+  }
+  
+  // Verify code
+  if (dom.authVerifyCode) {
+    dom.authVerifyCode.addEventListener("click", async () => {
+      const email = sessionStorage.getItem('authEmail');
+      const code = dom.authCodeInput?.value?.trim();
+      
+      if (!code || code.length !== 6) {
+        showAuthStatus("Code invalide (6 chiffres)", "error");
+        return;
+      }
+      
+      dom.authVerifyCode.disabled = true;
+      dom.authVerifyCode.textContent = "Vérification...";
+      
+      try {
+        const r = await fetch(remoteBase + '/api/auth/verify-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, code })
+        });
+        
+        const data = await r.json();
+        
+        if (r.ok) {
+          // Save token and email
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('authEmail', data.email);
+          sessionStorage.removeItem('authEmail');
+          
+          showAuthStatus("Connexion réussie !", "success");
+          
           setTimeout(() => {
+            updateAuthUI();
             if (dom.authModal) dom.authModal.style.display = "none";
-            // Refresh library and show "Ma bibliothèque"
             if (isHomePage) {
               renderCompactLibrary();
               setupHomeTabs();
             }
           }, 800);
         } else {
-          showAuthStatus("Token invalide", "error");
+          showAuthStatus(data.message || "Code incorrect", "error");
         }
       } catch (err) {
         showAuthStatus("Erreur de connexion", "error");
-        console.error('Auth error:', err);
+        console.error('Verify code error:', err);
+      } finally {
+        dom.authVerifyCode.disabled = false;
+        dom.authVerifyCode.textContent = "Vérifier";
       }
     });
   }
+  
+  // Resend code
+  if (dom.authResendCode) {
+    dom.authResendCode.addEventListener("click", async () => {
+      const email = sessionStorage.getItem('authEmail');
+      if (!email) return;
+      
+      dom.authResendCode.disabled = true;
+      dom.authResendCode.textContent = "Envoi...";
+      
+      try {
+        const r = await fetch(remoteBase + '/api/auth/send-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        
+        if (r.ok) {
+          showAuthStatus("Nouveau code envoyé", "success");
+        } else {
+          showAuthStatus("Erreur lors de l'envoi", "error");
+        }
+      } catch (err) {
+        showAuthStatus("Erreur de connexion", "error");
+      } finally {
+        dom.authResendCode.disabled = false;
+        dom.authResendCode.textContent = "Renvoyer";
+      }
+    });
+  }
+  
+  // Back button
+  if (dom.authBack) {
+    dom.authBack.addEventListener("click", () => {
+      if (dom.authStepCode) dom.authStepCode.style.display = 'none';
+      if (dom.authStepEmail) dom.authStepEmail.style.display = 'flex';
+      if (dom.authCodeInput) dom.authCodeInput.value = '';
+      sessionStorage.removeItem('authEmail');
+    });
+  }
+  
+  // Disconnect
   if (dom.authDisconnect) {
-    dom.authDisconnect.addEventListener("click", () => {
+    dom.authDisconnect.addEventListener("click", async () => {
+      const token = localStorage.getItem('authToken');
+      
+      if (token) {
+        try {
+          await fetch(remoteBase + '/api/auth/logout', {
+            method: 'POST',
+            headers: { 'X-Auth-Token': token }
+          });
+        } catch (err) {
+          console.error('Logout error:', err);
+        }
+      }
+      
       localStorage.removeItem('authToken');
+      localStorage.removeItem('authEmail');
+      sessionStorage.removeItem('authEmail');
+      
       showAuthStatus("Déconnecté", "info");
       updateAuthUI();
+      
       setTimeout(() => {
         if (dom.authModal) dom.authModal.style.display = "none";
         if (isHomePage) {
@@ -1300,13 +1441,25 @@ function setupModalEvents() {
 // Helper functions for auth UI
 function updateAuthUI() {
   const token = localStorage.getItem('authToken');
-  const isConnected = !!token;
+  const email = localStorage.getItem('authEmail');
+  const isConnected = !!(token && email);
   
-  // Update modal UI
-  if (dom.authConnect) dom.authConnect.style.display = isConnected ? 'none' : 'inline-flex';
-  if (dom.authDisconnect) dom.authDisconnect.style.display = isConnected ? 'inline-flex' : 'none';
-  if (dom.authTokenInput) dom.authTokenInput.value = isConnected ? '••••••••' : '';
-  if (dom.authTokenInput) dom.authTokenInput.disabled = isConnected;
+  // Show/hide auth steps based on connection state
+  if (isConnected) {
+    if (dom.authStepEmail) dom.authStepEmail.style.display = 'none';
+    if (dom.authStepCode) dom.authStepCode.style.display = 'none';
+    if (dom.authStepConnected) {
+      dom.authStepConnected.style.display = 'flex';
+      if (dom.authConnectedEmail) dom.authConnectedEmail.textContent = email;
+    }
+  } else {
+    if (dom.authStepEmail) dom.authStepEmail.style.display = 'flex';
+    if (dom.authStepCode) dom.authStepCode.style.display = 'none';
+    if (dom.authStepConnected) dom.authStepConnected.style.display = 'none';
+    // Reset inputs
+    if (dom.authEmailInput) dom.authEmailInput.value = '';
+    if (dom.authCodeInput) dom.authCodeInput.value = '';
+  }
   
   // Update floating button
   if (dom.floatingAuthBtn) {
@@ -1322,8 +1475,8 @@ function updateAuthUI() {
   }
   
   // Show/hide "Ma bibliothèque" button
-  if (dom.openMyLibrary) {
-    dom.openMyLibrary.style.display = isConnected ? 'inline-flex' : 'none';
+  if (dom.openLibrary) {
+    dom.openLibrary.style.display = isConnected ? 'inline-flex' : 'none';
   }
 }
 
