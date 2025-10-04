@@ -1684,7 +1684,7 @@ async function duplicateReview(review) {
 async function renderCompactLibrary() {
   if (!dom.compactLibraryList) return;
   
-  const items = remoteEnabled ? await remoteListReviews() : await dbGetAllReviews();
+  const items = await listUnifiedReviews();
   const list = items
     .sort((a,b) => (a.date || "").localeCompare(b.date || ""))
     .reverse()
@@ -1768,7 +1768,7 @@ async function renderCompactLibrary() {
 async function renderFullLibrary() {
   if (!dom.libraryGrid) return;
   
-  const items = remoteEnabled ? await remoteListReviews() : await dbGetAllReviews();
+  const items = await listUnifiedReviews();
   const searchTerm = dom.librarySearch?.value?.toLowerCase() || "";
   
   const filteredItems = items.filter(r => {
@@ -3343,6 +3343,30 @@ async function remoteListReviews() {
     if (!r.ok) throw new Error('HTTP '+r.status);
     return await r.json();
   } catch (e) { console.warn('Remote list erreur', e); return dbGetAllReviews(); }
+}
+
+// Liste unifiée des reviews (serveur + locale) avec déduplication par correlationKey.
+// On préfère les versions serveur lorsqu'elles existent, mais on ne perd pas les brouillons locaux
+// si l'API renvoie une liste vide ou encore non synchronisée.
+async function listUnifiedReviews() {
+  let local = [];
+  try { local = await dbGetAllReviews(); } catch {}
+  if (!remoteEnabled) return local;
+  let remote = [];
+  try { remote = await remoteListReviews(); } catch {}
+  if (!Array.isArray(remote) || remote.length === 0) return local;
+
+  const map = new Map();
+  const keyOf = (r) => (r && (r.correlationKey || computeCorrelationKey(r))) || null;
+  for (const r of local || []) {
+    const k = keyOf(r) || `local-${r.id ?? Math.random()}`;
+    if (!map.has(k)) map.set(k, r);
+  }
+  for (const r of remote || []) {
+    const k = keyOf(r) || `remote-${r.id ?? Math.random()}`;
+    map.set(k, r);
+  }
+  return Array.from(map.values());
 }
 
 // Récupération d'une review précise via l'API distante
