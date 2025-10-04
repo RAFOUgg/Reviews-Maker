@@ -18,8 +18,12 @@ fs.mkdirSync(IMAGE_DIR, { recursive: true });
 const TOKENS_DIR = path.join(__dirname, '..', 'server', 'tokens');
 fs.mkdirSync(TOKENS_DIR, { recursive: true });
 
+// LaFoncedalle API Configuration
+const LAFONCEDALLE_API_URL = process.env.LAFONCEDALLE_API_URL || 'http://localhost:3001'; // URL de l'API LaFoncedalle
+const LAFONCEDALLE_API_KEY = process.env.LAFONCEDALLE_API_KEY || 'your-api-key'; // Clé API pour authentifier les requêtes
+
 // Email auth: store verification codes temporarily (in production, use Redis)
-const verificationCodes = new Map(); // email -> {code, expires, attempts}
+const verificationCodes = new Map(); // email -> {code, expires, attempts, discordUser}
 const CODE_EXPIRY = 10 * 60 * 1000; // 10 minutes
 const MAX_ATTEMPTS = 5;
 
