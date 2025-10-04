@@ -1515,12 +1515,34 @@ async function updateAuthUI() {
 
 function showAuthStatus(message, type = "info") {
   if (!dom.authStatus) return;
-  dom.authStatus.textContent = message;
-  dom.authStatus.className = `auth-status auth-status-${type}`;
-  dom.authStatus.style.display = 'block';
+  
+  // Créer ou réutiliser l'élément de notification
+  let notification = document.getElementById('globalAuthNotification');
+  if (!notification) {
+    notification = document.createElement('div');
+    notification.id = 'globalAuthNotification';
+    document.body.appendChild(notification);
+  }
+  
+  notification.textContent = message;
+  notification.className = `auth-status auth-status-${type}`;
+  notification.style.display = 'block';
+  
+  // Supprimer l'ancien event listener pour éviter les doublons
+  const newNotification = notification.cloneNode(true);
+  notification.parentNode.replaceChild(newNotification, notification);
+  
+  // Clic pour fermer immédiatement
+  newNotification.addEventListener('click', () => {
+    newNotification.style.display = 'none';
+  });
+  
+  // Auto-fermeture après 5 secondes
   setTimeout(() => {
-    if (dom.authStatus) dom.authStatus.style.display = 'none';
-  }, 3000);
+    if (newNotification && newNotification.style.display === 'block') {
+      newNotification.style.display = 'none';
+    }
+  }, 5000);
 }
 
 function setupHomeTabs() {
