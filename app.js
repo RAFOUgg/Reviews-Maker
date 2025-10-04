@@ -275,19 +275,14 @@ const productStructures = {
             type: "multiple-choice",
             choices: ["Fleurs fraîches", "Fleurs sèches", "Trim", "Autre"]
           },
-          { key: "hashmaker", label: "Hash Maker", type: "text" },
-          { key: "photo", label: "Photo", type: "file" }
-        ]
-      },
-      {
-        title: "Procédés de séparation",
-        fields: [
           {
             key: "pipelineSeparation",
             label: "Pipeline de séparation (ordre des étapes)",
             type: "sequence",
             choices: choiceCatalog.separationTypes
           },
+          { key: "hashmaker", label: "Hash Maker", type: "text" },
+          { key: "photo", label: "Photo", type: "file" }
         ]
       },
       {
@@ -828,6 +823,8 @@ async function initEditorPage() {
   dom.saveHolder = document.getElementById('saveHolder');
   dom.saveNameError = document.getElementById('saveNameError');
   dom.saveHolderError = document.getElementById('saveHolderError');
+  dom.savePrivacy = document.getElementById('savePrivacy');
+  dom.savePrivacySegment = document.getElementById('savePrivacySegment');
   dom.cancelSave = document.getElementById('cancelSave');
   dom.confirmSave = document.getElementById('confirmSave');
   
@@ -1344,6 +1341,9 @@ async function initDatabase() {
       // Inject into formData and persist
       formData.productName = name;
       formData.holderName = holder; // nouveau champ obligatoire
+      // Privacy from Save modal
+      const privVal = (dom.savePrivacy?.value || 'public');
+      formData.isPrivate = privVal === 'private';
       try {
         const res = await saveReview(false);
         // Si le serveur a renvoyé une erreur de validation, l'afficher et ne pas fermer
@@ -1356,6 +1356,30 @@ async function initDatabase() {
       }
       catch(e){ console.error(e); showToast("Impossible d'enregistrer.", 'error'); }
     });
+  }
+  // Wire segmented privacy control
+  if (dom.savePrivacySegment && dom.savePrivacy) {
+    const updateSeg = (mode) => {
+      dom.savePrivacy.value = mode;
+      const btns = dom.savePrivacySegment.querySelectorAll('button[data-privacy]');
+      btns.forEach(b => {
+        const on = b.getAttribute('data-privacy') === mode;
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        b.classList.toggle('btn-secondary', on);
+        b.classList.toggle('btn-outline', !on);
+      });
+    };
+    dom.savePrivacySegment.addEventListener('click', (e) => {
+      const t = e.target;
+      if (!(t instanceof HTMLElement)) return;
+      const btn = t.closest('button[data-privacy]');
+      if (!btn) return;
+      const mode = btn.getAttribute('data-privacy');
+      if (!mode) return;
+      updateSeg(mode);
+    });
+    // Default public unless editing an existing private review
+    if (formData && formData.isPrivate) updateSeg('private'); else updateSeg('public');
   }
 }
 
