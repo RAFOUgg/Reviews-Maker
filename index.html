@@ -23,10 +23,10 @@
       </div>
       <div class="top-nav-status">
         <div class="nav-actions">
-          <span class="pill-btn" id="openMyLibrary" title="Ma bibliothèque personnelle" tabindex="0" role="button" style="display:none;">
+          <button type="button" class="pill-btn" id="openLibrary" title="Ma bibliothèque personnelle" style="display:none;">
             <span aria-hidden="true">📚</span>
             Ma bibliothèque
-          </span>
+          </button>
           <span class="pill-btn" id="openTips" title="Afficher les raccourcis et astuces" tabindex="0" role="button">
             <span aria-hidden="true">💡</span>
             Astuce
@@ -190,16 +190,41 @@
       <div class="modal-body">
         <div class="auth-content">
           <p class="auth-description">Liez votre compte pour synchroniser vos reviews sur le serveur et y accéder depuis n'importe quel appareil.</p>
-          <div class="form-group">
-            <label for="authTokenInput">Token d'authentification</label>
-            <input type="password" id="authTokenInput" class="input" placeholder="Entrez votre token..." />
+          
+          <!-- Étape 1: Demande d'email -->
+          <div id="authStepEmail" class="auth-step">
+            <div class="form-group">
+              <label for="authEmailInput">Adresse email</label>
+              <input type="email" id="authEmailInput" class="input" placeholder="votre@email.com" />
+            </div>
+            <div class="auth-actions">
+              <button type="button" class="btn btn-primary" id="authSendCode">Envoyer le code</button>
+            </div>
           </div>
+          
+          <!-- Étape 2: Vérification du code -->
+          <div id="authStepCode" class="auth-step" style="display:none;">
+            <p class="auth-info">Un code de vérification a été envoyé à <strong id="authEmailDisplay"></strong></p>
+            <div class="form-group">
+              <label for="authCodeInput">Code de vérification</label>
+              <input type="text" id="authCodeInput" class="input" placeholder="123456" maxlength="6" />
+            </div>
+            <div class="auth-actions">
+              <button type="button" class="btn btn-outline" id="authBack">Retour</button>
+              <button type="button" class="btn btn-primary" id="authVerifyCode">Vérifier</button>
+            </div>
+            <p class="auth-help">Code non reçu ? <button type="button" class="link-btn" id="authResendCode">Renvoyer</button></p>
+          </div>
+          
+          <!-- Étape 3: Connecté -->
+          <div id="authStepConnected" class="auth-step" style="display:none;">
+            <p class="auth-info">Connecté en tant que <strong id="authConnectedEmail"></strong></p>
+            <div class="auth-actions">
+              <button type="button" class="btn btn-outline" id="authDisconnect">Se déconnecter</button>
+            </div>
+          </div>
+          
           <div class="auth-status" id="authStatus" style="display:none;"></div>
-          <div class="auth-actions">
-            <button type="button" class="btn btn-primary" id="authConnect">Se connecter</button>
-            <button type="button" class="btn btn-outline" id="authDisconnect" style="display:none;">Se déconnecter</button>
-          </div>
-          <p class="auth-help">Vous n'avez pas de token ? Contactez un administrateur.</p>
         </div>
       </div>
     </div>

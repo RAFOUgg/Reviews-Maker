@@ -18,6 +18,11 @@ fs.mkdirSync(IMAGE_DIR, { recursive: true });
 const TOKENS_DIR = path.join(__dirname, '..', 'server', 'tokens');
 fs.mkdirSync(TOKENS_DIR, { recursive: true });
 
+// Email auth: store verification codes temporarily (in production, use Redis)
+const verificationCodes = new Map(); // email -> {code, expires, attempts}
+const CODE_EXPIRY = 10 * 60 * 1000; // 10 minutes
+const MAX_ATTEMPTS = 5;
+
 // Storage config for images
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, IMAGE_DIR),
