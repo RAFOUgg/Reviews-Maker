@@ -1067,6 +1067,24 @@ function setupFormEvents() {
 
   updateProgress(0);
   updateSectionControls();
+
+  // Fallback: delegated listener to ensure the Save modal opens even if direct binding failed
+  document.addEventListener('click', (e) => {
+    const el = e.target;
+    if (!(el instanceof Element)) return;
+    const btn = el.closest('#saveBtn');
+    if (!btn) return;
+    try {
+      openSaveModal();
+      // Prefill best-effort
+      try {
+        collectFormData();
+        const defName = buildSuggestedName();
+        if (dom.saveName) dom.saveName.value = formData.productName || defName || '';
+        if (dom.saveHolder) dom.saveHolder.value = formData.holderName || '';
+      } catch {}
+    } catch {}
+  }, { capture: true });
 }
 
 function setupModalEvents() {
