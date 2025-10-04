@@ -1006,32 +1006,7 @@ function setupFormEvents() {
       } catch (e) { console.error(e); showToast("Impossible d'ouvrir la fenêtre de sauvegarde.", 'error'); }
     });
   }
-  const deleteBtn = document.getElementById('deleteBtn');
-  if (deleteBtn) {
-    deleteBtn.addEventListener('click', async () => {
-      const hasData = Object.keys(formData || {}).length > 1 || imageUrl;
-      if (!confirm(hasData ? "Supprimer cette review ? Cette action est irréversible." : "Supprimer (aucune donnée sauvegardée).")) return;
-      try {
-        if (currentReviewId) {
-          let ok = false;
-          if (remoteEnabled) {
-            ok = await remoteDeleteReview(currentReviewId);
-          }
-          // Toujours supprimer la copie locale si présente
-          if (db) {
-            try { await dbDeleteReview(currentReviewId); } catch {}
-          }
-          if (ok || !remoteEnabled) {
-            showToast('Review supprimée', 'success');
-          } else {
-            showToast('Suppression distante échouée', 'warning');
-          }
-        }
-      } catch {}
-      // Après suppression, on peut revenir à l'accueil proprement
-      navigateToHome();
-    });
-  }
+  // Suppression via l'éditeur désactivée: suppression uniquement depuis la galerie
   if (dom.togglePreviewBtn) {
     dom.togglePreviewBtn.addEventListener("click", togglePreviewMode);
   }
