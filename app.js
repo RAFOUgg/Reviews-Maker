@@ -789,7 +789,7 @@ function initHomePage() {
 async function initEditorPage() {
   // Éléments spécifiques à la page éditeur
   dom.typeCards = Array.from(document.querySelectorAll(".type-card"));
-  dom.productTypeInput = document.getElementById("productType");
+    dom.productTypeInput = document.getElementById("productType") || null;
   dom.dynamicSections = document.getElementById("dynamicSections");
   dom.reviewForm = document.getElementById("reviewForm");
   dom.previewPlaceholder = document.getElementById("previewPlaceholder");
@@ -1829,6 +1829,7 @@ async function renderFullLibrary() {
           <span aria-hidden="true">✏️</span>
           Éditer
         </button>
+        ${remoteEnabled ? `<button type="button" class="btn btn-outline btn-sm" data-act="privacy" title="Basculer privé/public">🔒/🌐</button>` : ''}
         <button type="button" class="btn btn-danger btn-sm" data-act="delete" title="Supprimer">
           <span aria-hidden="true">🗑️</span>
           Supprimer
@@ -1848,7 +1849,8 @@ async function renderFullLibrary() {
       }
     });
     
-    item.querySelector('[data-act="delete"]').addEventListener('click', async () => {
+    const delBtn = item.querySelector('[data-act="delete"]');
+    delBtn.addEventListener('click', async () => {
       if (confirm(`Êtes-vous sûr de vouloir supprimer "${title}" ?`)) {
         try {
           let remoteOk = true;
@@ -1865,6 +1867,30 @@ async function renderFullLibrary() {
         }
       }
     });
+
+    // Privacy toggle (owner or staff; server enforces authorization)
+    const privacyBtn = item.querySelector('[data-act="privacy"]');
+    if (privacyBtn) {
+      privacyBtn.addEventListener('click', async () => {
+        if (!remoteEnabled) return;
+        try {
+          const next = !r.isPrivate;
+          const ok = await remoteTogglePrivacy(r.id, next);
+          if (ok) {
+            r.isPrivate = next;
+            showToast(next ? 'Passée en privé' : 'Rendue publique', 'info');
+            // Refresh lists to reflect server state
+            await renderFullLibrary();
+            await renderCompactLibrary();
+          } else {
+            showToast('Action non autorisée ou échec serveur', 'warning');
+          }
+        } catch (e) {
+          console.warn(e);
+          showToast('Impossible de changer la confidentialité', 'error');
+        }
+      });
+    }
     
     dom.libraryGrid.appendChild(item);
   });
@@ -3671,6 +3697,26 @@ async function remoteDeleteReview(id) {
     return true;
   } catch (e) {
     console.warn('Remote delete erreur', e);
+    return false;
+  }
+}
+
+// Basculer la confidentialité côté serveur
+async function remoteTogglePrivacy(id, isPrivate) {
+  if (!remoteEnabled || id == null) return false;
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
+    if (token) headers['X-Auth-Token'] = token;
+    const r = await fetch(`${remoteBase}/api/reviews/${id}/privacy`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ isPrivate: !!isPrivate })
+    });
+    if (!r.ok) return false;
+    return true;
+  } catch (e) {
+    console.warn('Remote privacy erreur', e);
     return false;
   }
 }

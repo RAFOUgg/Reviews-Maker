@@ -13,6 +13,15 @@
     .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 0.75rem; }
     .muted { opacity: .8; }
     .tokens li { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .toolbar { display:flex; gap:.5rem; align-items:center; margin-bottom:.5rem; flex-wrap:wrap; }
+    .toolbar input, .toolbar select { padding:.4rem .5rem; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: inherit; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { text-align:left; padding:.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); vertical-align: top; }
+    th { font-weight:600; }
+    .btn-sm { padding: .25rem .5rem; font-size:.85rem; }
+    .pill { display:inline-block; padding:.1rem .45rem; border-radius:999px; font-size:.75rem; border:1px solid rgba(255,255,255,0.12); }
+    .pill.orange { background:#7c4a10; }
+    .pill.gray { background:#3f3f46; }
   </style>
 </head>
 <body>
@@ -29,6 +38,41 @@
       <ul class="tokens" id="tokenList"></ul>
       <p class="muted">Les fichiers sont listés depuis <code>server/tokens/</code>. Le contenu des fichiers peut être un JSON { ownerId, roles } ou juste l'ID/utilisateur.</p>
     </div>
+
+    <div class="admin-section" id="reviews">
+      <h2>Reviews (staff)</h2>
+      <div class="toolbar">
+        <input type="search" id="q" placeholder="Rechercher (nom, type, titulaire, ownerId)" />
+        <select id="fDraft">
+          <option value="">Tous</option>
+          <option value="0">Publié</option>
+          <option value="1">Brouillon</option>
+        </select>
+        <select id="fPrivate">
+          <option value="">Public+Privé</option>
+          <option value="0">Public</option>
+          <option value="1">Privé</option>
+        </select>
+      </div>
+      <div style="overflow:auto">
+        <table id="tbl">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nom</th>
+              <th>Type</th>
+              <th>Titulaire</th>
+              <th>Owner</th>
+              <th>Draft</th>
+              <th>Privé</th>
+              <th>MAJ</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
   </div>
   <script>
     function getToken() {
@@ -41,6 +85,14 @@
       const r = await fetch(url, { headers });
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return await r.json();
+    }
+    async function sendJSON(url, method, body) {
+      const headers = { 'Content-Type': 'application/json' };
+      const t = getToken();
+      if (t) headers['X-Auth-Token'] = t;
+      const r = await fetch(url, { method, headers, body: JSON.stringify(body||{}) });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return await r.json().catch(() => ({}));
     }
     async function loadStats() {
       try {
@@ -61,8 +113,70 @@
         });
       } catch (e) { console.error(e); }
     }
+    let allReviews = [];
+    async function loadReviews() {
+      try {
+        // Staff sees all via /api/reviews when staff token provided
+        allReviews = await fetchJSON('/api/reviews');
+        renderTable();
+      } catch (e) { console.error(e); }
+    }
+    function renderTable() {
+      const q = (document.getElementById('q').value||'').toLowerCase();
+      const fDraft = document.getElementById('fDraft').value;
+      const fPrivate = document.getElementById('fPrivate').value;
+      const tbody = document.querySelector('#tbl tbody');
+      tbody.innerHTML = '';
+      const filtered = (allReviews||[]).filter(r => {
+        if (fDraft !== '' && String(!!r.isDraft ? 1 : 0) !== fDraft) return false;
+        if (fPrivate !== '' && String(!!r.isPrivate ? 1 : 0) !== fPrivate) return false;
+        if (!q) return true;
+        const name = (r.productName||r.cultivars||r.name||'').toLowerCase();
+        const type = (r.productType||'').toLowerCase();
+        const holder = (r.holderName||'').toLowerCase();
+        const owner = (r.ownerId||'').toLowerCase();
+        return name.includes(q) || type.includes(q) || holder.includes(q) || owner.includes(q);
+      });
+      filtered.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.id ?? ''}</td>
+          <td>${r.productName || r.cultivars || r.name || ''}</td>
+          <td>${r.productType || ''}</td>
+          <td>${r.holderName || ''}</td>
+          <td>${r.ownerId || ''}</td>
+          <td>${r.isDraft ? '<span class="pill orange">Brouillon</span>' : ''}</td>
+          <td>${r.isPrivate ? '<span class="pill gray">Privé</span>' : '<span class="pill">Public</span>'}</td>
+          <td>${new Date(r.updatedAt||r.createdAt||Date.now()).toLocaleString('fr-FR')}</td>
+          <td>
+            <button class="btn btn-outline btn-sm" data-act="privacy">${r.isPrivate ? 'Rendre public' : 'Rendre privé'}</button>
+            <button class="btn btn-danger btn-sm" data-act="delete">Supprimer</button>
+          </td>`;
+        // actions
+        tr.querySelector('[data-act="privacy"]').addEventListener('click', async () => {
+          try {
+            await sendJSON(`/api/reviews/${r.id}/privacy`, 'PUT', { isPrivate: !r.isPrivate });
+            await loadReviews();
+          } catch (e) { console.error(e); alert('Impossible de basculer privé/public'); }
+        });
+        tr.querySelector('[data-act="delete"]').addEventListener('click', async () => {
+          if (!confirm('Supprimer cette review ?')) return;
+          try {
+            const headers = {};
+            const t = getToken(); if (t) headers['X-Auth-Token'] = t;
+            await fetch(`/api/reviews/${r.id}`, { method: 'DELETE', headers });
+            await loadReviews();
+          } catch (e) { console.error(e); alert('Suppression impossible'); }
+        });
+        tbody.appendChild(tr);
+      });
+    }
+    document.getElementById('q').addEventListener('input', () => renderTable());
+    document.getElementById('fDraft').addEventListener('change', () => renderTable());
+    document.getElementById('fPrivate').addEventListener('change', () => renderTable());
     loadStats();
     loadTokens();
+    loadReviews();
   </script>
 </body>
 </html>
