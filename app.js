@@ -1119,112 +1119,22 @@ function setupFormEvents() {
 }
 
 function setupModalEvents() {
-  // Astuces (modal on home, centered overlay on editor)
+  // Astuces - Utilise maintenant le modal sur toutes les pages
   if (dom.openTips) {
-    const openTipsModal = () => { if (dom.tipsModal) dom.tipsModal.style.display = 'flex'; };
-    const toggleTipsPopover = () => {
-      const existing = document.getElementById('activeTipsPopover');
-      if (existing) { existing.remove(); return; }
-      const tpl = document.getElementById('tipsPopoverTemplate') || document.getElementById('tipsTemplate');
-      if (!tpl) { 
-        if (dom.tipsModal) { openTipsModal(); return; }
-        showToast('Astuces indisponibles', 'warning'); 
-        return; 
+    const openTipsModal = () => { 
+      if (dom.tipsModal) {
+        dom.tipsModal.style.display = 'flex'; 
+      } else {
+        showToast('Modal astuces non disponible', 'warning');
       }
-      // On the editor page, show a centered overlay-style popover
-      if (typeof isEditorPage !== 'undefined' && isEditorPage) {
-        const overlay = document.createElement('div');
-        overlay.id = 'tipsOverlay';
-        overlay.className = 'tips-overlay';
-        const dialog = document.createElement('div');
-        dialog.className = 'tips-dialog';
-        const header = document.createElement('div');
-        header.className = 'tips-header';
-        const h3 = document.createElement('h3');
-        h3.textContent = 'Raccourcis & Astuces';
-        const closeBtn = document.createElement('button');
-        closeBtn.type = 'button';
-        closeBtn.className = 'close';
-        closeBtn.innerText = '✕';
-        closeBtn.title = 'Fermer';
-        closeBtn.addEventListener('click', () => overlay.remove());
-        header.appendChild(h3);
-        header.appendChild(closeBtn);
-        const body = document.createElement('div');
-        body.className = 'tips-body';
-        const frag = tpl.content.cloneNode(true);
-        // Unwrap potential .tips-popover wrapper
-        let inner = frag.firstElementChild;
-        let contentNode = null;
-        if (inner && inner.classList && inner.classList.contains('tips-popover')) {
-          const wrapper = document.createElement('div');
-          wrapper.innerHTML = inner.innerHTML;
-          contentNode = wrapper;
-        } else if (inner) {
-          contentNode = inner;
-        }
-        if (contentNode) {
-          // Optional: split into grid blocks if markup has recognizable sections
-          // For now, just ensure good wrapping
-          contentNode.querySelectorAll?.('.kbd-line')?.forEach?.(el => {
-            el.classList.add('tips-kbd-line');
-          });
-          body.appendChild(contentNode);
-        }
-        dialog.appendChild(header);
-        dialog.appendChild(body);
-        overlay.appendChild(dialog);
-        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
-        document.body.appendChild(overlay);
-        return;
-      }
-      // Fallback: anchored popover (unlikely now)
-      const wrap = document.createElement('div');
-      wrap.id = 'activeTipsPopover';
-      wrap.style.position = 'absolute';
-      wrap.style.maxWidth = '460px';
-      wrap.style.zIndex = '9999';
-      wrap.style.background = 'var(--panel-bg, #111827)';
-      wrap.style.border = '1px solid var(--glass-border, rgba(255,255,255,0.08))';
-      wrap.style.borderRadius = '12px';
-      wrap.style.boxShadow = '0 10px 30px rgba(0,0,0,0.35)';
-      wrap.style.padding = '14px 16px';
-      wrap.style.visibility = 'hidden';
-      wrap.appendChild(tpl.content.cloneNode(true));
-      document.body.appendChild(wrap);
-      try {
-        const btn = dom.openTips;
-        const rect = btn.getBoundingClientRect();
-        const popW = wrap.offsetWidth || 360;
-        const margin = 16;
-        const desiredLeft = window.scrollX + rect.right - popW;
-        let left = Math.max(window.scrollX + margin, desiredLeft);
-        const maxLeft = window.scrollX + window.innerWidth - popW - margin;
-        left = Math.min(left, maxLeft);
-        const top = window.scrollY + rect.bottom + 8;
-        wrap.style.left = left + 'px';
-        wrap.style.top = top + 'px';
-      } catch {}
-      wrap.style.visibility = 'visible';
     };
-    dom.openTips.addEventListener('click', () => {
-      // Prefer modal when present (home page)
-      if (dom.tipsModal) { openTipsModal(); return; }
-      toggleTipsPopover();
-    });
+    
+    dom.openTips.addEventListener('click', openTipsModal);
     dom.openTips.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dom.openTips.click(); }
-    });
-    // Close tips when clicking outside
-    document.addEventListener('pointerdown', (e) => {
-      const pop = document.getElementById('activeTipsPopover');
-      const tipsOverlay = document.getElementById('tipsOverlay');
-      if (tipsOverlay && tipsOverlay.contains(e.target)) return; // don't close when clicking inside overlay/modal
-      if (!pop) return;
-      // If it's the centered overlay, clicking inside shouldn't close
-      if (pop.contains && pop.contains(e.target)) return;
-      if (dom.openTips && dom.openTips.contains(e.target)) return;
-      pop.remove();
+      if (e.key === 'Enter' || e.key === ' ') { 
+        e.preventDefault(); 
+        openTipsModal(); 
+      }
     });
   }
   if (dom.closeTips) {
@@ -2019,12 +1929,29 @@ async function renderFullLibrary() {
   const items = await listUnifiedReviews();
   const searchTerm = dom.librarySearch?.value?.toLowerCase() || "";
   
+  // Get current user token to identify ownership
+  const token = localStorage.getItem('authToken');
+  const isAuthenticated = !!token;
+  
   const filteredItems = items.filter(r => {
-    if (!searchTerm) return true;
-    const searchFields = [
-      r.productName, r.cultivars, r.productType, r.farm, r.description, r.notes
-    ].filter(Boolean).join(' ').toLowerCase();
-    return searchFields.includes(searchTerm);
+    // Filter by search term
+    if (searchTerm) {
+      const searchFields = [
+        r.productName, r.cultivars, r.productType, r.farm, r.description, r.notes
+      ].filter(Boolean).join(' ').toLowerCase();
+      if (!searchFields.includes(searchTerm)) return false;
+    }
+    
+    // Filter private reviews: only show if user is authenticated
+    // (server already filters by ownership, so if we receive a private review, it's ours)
+    // But for extra safety, we can add client-side check
+    // Actually, the server already handles this correctly in /api/reviews
+    // So private reviews that appear here are either:
+    // 1. Public reviews (isPrivate=false)
+    // 2. User's own private reviews (when authenticated)
+    // No additional filtering needed here as server handles it
+    
+    return true;
   });
   
   const list = filteredItems
@@ -3864,8 +3791,12 @@ async function listUnifiedReviews() {
   }
 
   // Add remaining local entries not matched by any remote (keep drafts)
+  // But filter out private reviews that are only local (they shouldn't be shown in public gallery)
   for (const [s, r] of localByStrict.entries()) {
     if (usedLocalStrict.has(s)) continue;
+    // Don't add local-only private reviews to the unified list
+    // They will only be visible in "Ma bibliothèque" via /api/my/reviews
+    if (r.isPrivate && !r.id) continue; // Skip local-only private reviews
     if (!mergedByStrict.has(s)) mergedByStrict.set(s, r);
   }
 

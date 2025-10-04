@@ -3,7 +3,54 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Studio professionnel pour composer, prévisualiser et exporter des reviews produits cannabis." />
+    <meta name="description" content="Studio professionnel pour composer, prévisualiser et e      <div class="tips-section" style="font-size:0.9rem; color:var(--text-muted)">Astuce: les champs séquence permettent d'ajouter plusieurs étapes dans l'ordre (ex: Bubble Hash → Séparation électrostatique).</div>
+    </div>
+    </template>
+
+    <!-- Modal Astuces -->
+    <div class="modal" id="tipsModal" style="display: none;">
+      <div class="modal-overlay" id="tipsModalOverlay"></div>
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="tipsTitle">
+        <div class="modal-header">
+          <h2 id="tipsTitle">Raccourcis & Astuces</h2>
+          <button type="button" class="modal-close" id="closeTips" aria-label="Fermer">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="tips-content">
+            <div class="tip-group">
+              <h3>🎯 Navigation</h3>
+              <ul>
+                <li><kbd>Tab</kbd> / <kbd>Shift</kbd> + <kbd>Tab</kbd> : Navigation entre les champs</li>
+                <li><kbd>Échap</kbd> : Fermer les modales</li>
+                <li>Cliquer sur le logo : Retour à l'accueil</li>
+              </ul>
+            </div>
+            <div class="tip-group">
+              <h3>✨ Fonctionnalités</h3>
+              <ul>
+                <li>Sauvegarde automatique pendant la saisie</li>
+                <li>Aperçu en temps réel</li>
+                <li>Export haute qualité en PNG</li>
+                <li>Gestion des brouillons</li>
+              </ul>
+            </div>
+            <div class="tip-group">
+              <h3>📝 Bonnes pratiques</h3>
+              <ul>
+                <li>Remplissez au minimum les sections obligatoires</li>
+                <li>Ajoutez une photo pour un rendu optimal</li>
+                <li>Utilisez des descriptions détaillées</li>
+                <li>Sauvegardez régulièrement vos reviews importantes</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>er des reviews produits cannabis." />
     <title>Reviews Maker · Studio professionnel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
