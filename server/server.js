@@ -99,12 +99,19 @@ function resolveOwnerIdFromToken(token) {
     const file = path.join(TOKENS_DIR, token);
     if (fs.existsSync(file)) {
       const content = fs.readFileSync(file, 'utf-8').trim();
-      // support JSON { ownerId: "..", roles: ["staff"] }
+      // support JSON { ownerId: "..", roles: ["staff"], discordId: "...", discordUsername: "..." }
       try {
         const js = JSON.parse(content);
-        if (js && (js.ownerId || js.roles)) return js;
+        if (js && (js.ownerId || js.roles)) {
+          return {
+            ownerId: js.ownerId,
+            roles: Array.isArray(js.roles) ? js.roles : [],
+            discordId: js.discordId || null,
+            discordUsername: js.discordUsername || null
+          };
+        }
       } catch {}
-      return { ownerId: content || token, roles: [] };
+      return { ownerId: content || token, roles: [], discordId: null, discordUsername: null };
     }
   } catch {}
   return null;
@@ -113,10 +120,22 @@ function resolveOwnerIdFromToken(token) {
 app.use((req, _res, next) => {
   const token = req.header('X-Auth-Token') || req.query.token;
   const info = resolveOwnerIdFromToken(token);
-  let ownerId = null; let roles = [];
-  if (info && typeof info === 'object') { ownerId = info.ownerId || null; roles = Array.isArray(info.roles) ? info.roles : []; }
-  else if (typeof info === 'string') { ownerId = info; }
-  req.auth = { token: token || null, ownerId, roles };
+  let ownerId = null; 
+  let roles = [];
+  let discordId = null;
+  let discordUsername = null;
+  
+  if (info && typeof info === 'object') { 
+    ownerId = info.ownerId || null; 
+    roles = Array.isArray(info.roles) ? info.roles : [];
+    discordId = info.discordId || null;
+    discordUsername = info.discordUsername || null;
+  }
+  else if (typeof info === 'string') { 
+    ownerId = info; 
+  }
+  
+  req.auth = { token: token || null, ownerId, roles, discordId, discordUsername };
   next();
 });
 
@@ -361,13 +380,64 @@ function generateCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Helper: Send email (mock for now, implement with nodemailer in production)
+// Helper: Verify email against Discord bot database and get Discord user info
+async function getDiscordUserByEmail(email) {
+  try {
+    const response = await fetch(`${LAFONCEDALLE_API_URL}/api/discord/user-by-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${LAFONCEDALLE_API_KEY}`
+      },
+      body: JSON.stringify({ email })
+    });
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null; // Email not found in Discord database
+      }
+      throw new Error(`LaFoncedalle API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    // Expected format: { discordId: "123456", username: "User#1234", email: "..." }
+    return data;
+  } catch (error) {
+    console.error('[Discord] Error verifying email:', error);
+    throw error;
+  }
+}
+
+// Helper: Send verification email via LaFoncedalle mailing service
 async function sendVerificationEmail(email, code) {
-  // In production, use nodemailer or a service like SendGrid, Mailgun, etc.
-  console.log(`[EMAIL] Sending verification code to ${email}: ${code}`);
-  // For development, just log it
-  // TODO: Implement real email sending
-  return true;
+  try {
+    const response = await fetch(`${LAFONCEDALLE_API_URL}/api/mail/send-verification`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${LAFONCEDALLE_API_KEY}`
+      },
+      body: JSON.stringify({
+        to: email,
+        code: code,
+        subject: 'Code de vérification Reviews Maker',
+        // Optional: custom template parameters
+        appName: 'Reviews Maker',
+        expiryMinutes: 10
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`LaFoncedalle mailing API error: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log(`[EMAIL] Verification code sent to ${email} via LaFoncedalle`);
+    return result;
+  } catch (error) {
+    console.error('[EMAIL] Error sending verification code:', error);
+    throw error;
+  }
 }
 
 // POST /api/auth/send-code - Request verification code
@@ -378,20 +448,44 @@ app.post('/api/auth/send-code', async (req, res) => {
     return res.status(400).json({ error: 'invalid_email', message: 'Adresse email invalide' });
   }
   
-  // Generate code
-  const code = generateCode();
-  const expires = Date.now() + CODE_EXPIRY;
-  
-  // Store code
-  verificationCodes.set(email, { code, expires, attempts: 0 });
-  
-  // Send email
   try {
+    // Step 1: Verify email exists in Discord bot database
+    const discordUser = await getDiscordUserByEmail(email);
+    
+    if (!discordUser) {
+      return res.status(404).json({ 
+        error: 'email_not_found', 
+        message: 'Cette adresse email n\'est pas liée à un compte Discord. Veuillez d\'abord lier votre email sur le serveur Discord LaFoncedalle.' 
+      });
+    }
+    
+    console.log(`[AUTH] Discord user found for ${email}:`, discordUser.username);
+    
+    // Step 2: Generate verification code
+    const code = generateCode();
+    const expires = Date.now() + CODE_EXPIRY;
+    
+    // Step 3: Store code with Discord user info
+    verificationCodes.set(email, { 
+      code, 
+      expires, 
+      attempts: 0,
+      discordUser: {
+        discordId: discordUser.discordId,
+        username: discordUser.username
+      }
+    });
+    
+    // Step 4: Send verification email via LaFoncedalle
     await sendVerificationEmail(email, code);
+    
     res.json({ ok: true, message: 'Code envoyé par email' });
   } catch (err) {
-    console.error('[AUTH] Error sending email:', err);
-    res.status(500).json({ error: 'email_error', message: 'Erreur lors de l\'envoi de l\'email' });
+    console.error('[AUTH] Error in send-code:', err);
+    res.status(500).json({ 
+      error: 'server_error', 
+      message: 'Erreur lors de la vérification de l\'email ou de l\'envoi du code' 
+    });
   }
   
   // Clean up expired codes periodically
@@ -444,13 +538,22 @@ app.post('/api/auth/verify-code', (req, res) => {
   // Success! Generate session token
   const token = Buffer.from(`${email}:${Date.now()}:${Math.random()}`).toString('base64');
   
-  // Store token (in production, use proper session management)
-  // For now, create a token file
+  // Store token with Discord user information
   const tokenFile = path.join(TOKENS_DIR, token);
+  const tokenData = {
+    ownerId: email,
+    discordId: stored.discordUser?.discordId || null,
+    discordUsername: stored.discordUser?.username || null,
+    roles: [],
+    createdAt: new Date().toISOString()
+  };
+  
   try {
-    fs.writeFileSync(tokenFile, JSON.stringify({ ownerId: email, roles: [], createdAt: new Date().toISOString() }));
+    fs.writeFileSync(tokenFile, JSON.stringify(tokenData, null, 2));
+    console.log(`[AUTH] Token created for Discord user: ${tokenData.discordUsername}`);
   } catch (err) {
     console.error('[AUTH] Error storing token:', err);
+    return res.status(500).json({ error: 'token_error', message: 'Erreur lors de la création de la session' });
   }
   
   // Clean up code
