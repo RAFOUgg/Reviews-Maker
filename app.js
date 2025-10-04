@@ -3385,29 +3385,65 @@ async function listUnifiedReviews() {
     return (local || []).map(r => ({ ...r, image: normalizeImage(r.image) }));
   }
 
-  const byKey = new Map();
-  const keyOf = (r) => (r && (r.correlationKey || computeCorrelationKey(r))) || null;
-  // Indexer locales d'abord
+  const strictKey = (r) => (r && (r.correlationKey || computeCorrelationKey(r))) || null;
+  const looseKey = (r) => computeLooseKey(r);
+
+  const localByStrict = new Map();
+  const localByLoose = new Map();
   for (const r of local || []) {
-    const k = keyOf(r) || `local-${r.id ?? Math.random()}`;
-    byKey.set(k, { ...r, image: normalizeImage(r.image) });
+    const s = strictKey(r) || `local-${r.id ?? Math.random()}`;
+    localByStrict.set(s, { ...r, image: normalizeImage(r.image) });
+    const l = looseKey(r);
+    if (l && !localByLoose.has(l)) localByLoose.set(l, r);
   }
-  // Appliquer les versions serveur en priorité, MAIS conserver l'image locale si la version serveur n'en a pas
+
+  const mergedByStrict = new Map();
+  const usedLocalStrict = new Set();
+
+  // Merge remote entries with local ones by strict key, otherwise by loose key
   for (const r of remote || []) {
-    const k = keyOf(r) || `remote-${r.id ?? Math.random()}`;
-    const normalizedRemote = { ...r, image: normalizeImage(r.image) };
-    const existing = byKey.get(k);
-    if (existing) {
-      const merged = { ...existing, ...normalizedRemote };
-      if (!normalizedRemote.image && existing.image) {
-        merged.image = existing.image; // garder l'image locale si le remote n'en a pas
+    const normRemote = { ...r, image: normalizeImage(r.image) };
+    const s = strictKey(r) || `remote-${r.id ?? Math.random()}`;
+    let base = localByStrict.get(s);
+    if (!base) {
+      const l = looseKey(r);
+      if (l && localByLoose.has(l)) {
+        const candidate = localByLoose.get(l);
+        const s2 = strictKey(candidate) || `local-${candidate.id ?? Math.random()}`;
+        base = localByStrict.get(s2);
+        if (base) usedLocalStrict.add(s2);
       }
-      byKey.set(k, merged);
     } else {
-      byKey.set(k, normalizedRemote);
+      usedLocalStrict.add(s);
+    }
+    if (base) {
+      const merged = { ...base, ...normRemote };
+      if (!normRemote.image && base.image) merged.image = base.image;
+      mergedByStrict.set(s, merged);
+    } else {
+      mergedByStrict.set(s, normRemote);
     }
   }
-  return Array.from(byKey.values());
+
+  // Add remaining local entries not matched by any remote (keep drafts)
+  for (const [s, r] of localByStrict.entries()) {
+    if (usedLocalStrict.has(s)) continue;
+    if (!mergedByStrict.has(s)) mergedByStrict.set(s, r);
+  }
+
+  // Stable sort: by date desc, then image-first, then name
+  const arr = Array.from(mergedByStrict.values());
+  arr.sort((a, b) => {
+    const da = new Date(a.date || 0).getTime();
+    const db = new Date(b.date || 0).getTime();
+    if (db !== da) return db - da;
+    const ia = a.image ? 1 : 0;
+    const ib = b.image ? 1 : 0;
+    if (ib !== ia) return ib - ia;
+    const na = (a.productName || a.cultivars || '').localeCompare(b.productName || b.cultivars || '');
+    return na;
+  });
+  return arr;
 }
 
 // Récupération d'une review précise via l'API distante
