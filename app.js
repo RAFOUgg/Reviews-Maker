@@ -1934,7 +1934,6 @@ async function renderCompactLibrary() {
         <div class="compact-item-meta">${r.productType || "Review"} • ${date}${holder}</div>
       </div>
       <div class="compact-item-actions">
-        <button type="button" class="btn btn-outline btn-xs" data-act="load" title="Aperçu">👀</button>
         <button type="button" class="btn btn-secondary btn-xs" data-act="edit" title="Éditer">✏️</button>
       </div>
     `;
