@@ -1327,7 +1327,16 @@ async function initDatabase() {
       // Inject into formData and persist
       formData.productName = name;
       formData.holderName = holder; // nouveau champ obligatoire
-      try { await saveReview(false); closeSaveModal(); }
+      try {
+        const res = await saveReview(false);
+        // Si le serveur a renvoyé une erreur de validation, l'afficher et ne pas fermer
+        if (res && res.remoteError && res.remoteError.field === 'holderName') {
+          dom.saveHolderError?.removeAttribute('hidden');
+          dom.saveHolderError && (dom.saveHolderError.textContent = 'Le titulaire est obligatoire.');
+          return;
+        }
+        closeSaveModal();
+      }
       catch(e){ console.error(e); showToast("Impossible d'enregistrer.", 'error'); }
     });
   }
@@ -3348,7 +3357,7 @@ async function remoteGetReview(id) {
 }
 
 async function remoteSave(reviewObj) {
-  if (!remoteEnabled) return null;
+  if (!remoteEnabled) return { ok: false, error: 'remote_disabled' };
   try {
     const method = reviewObj.id ? 'PUT' : 'POST';
     const url = remoteBase + '/api/reviews' + (reviewObj.id ? '/' + reviewObj.id : '');
@@ -3363,10 +3372,17 @@ async function remoteSave(reviewObj) {
       if (copy.image && copy.image.length > 50000) delete copy.image; // éviter gros base64
       resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(copy) });
     }
-    if (!resp.ok) throw new Error('HTTP '+resp.status);
-    const js = await resp.json();
-    return js.review || null;
-  } catch (e) { console.warn('Remote save erreur', e); return null; }
+    const status = resp.status;
+    let js = null;
+    try { js = await resp.json(); } catch {}
+    if (!resp.ok) {
+      return { ok: false, status, ...(js || {}), message: js?.message || ('HTTP '+status) };
+    }
+    return { ok: true, review: js?.review || js };
+  } catch (e) {
+    console.warn('Remote save erreur', e);
+    return { ok: false, error: 'network_error', message: String(e?.message || e) };
+  }
 }
 
 // Suppression d'une review côté serveur (si backend actif)
@@ -3885,12 +3901,17 @@ async function saveReview(isDraft = true) {
       if (!(lastSelectedImageFile instanceof File) && remoteCopy.image && remoteCopy.image.length > 50000) {
         delete remoteCopy.image; // éviter envoi base64 lourd
       }
-      const savedRemote = await remoteSave(remoteCopy);
-      if (savedRemote && savedRemote.id) {
-        currentReviewId = savedRemote.id;
+      const remoteRes = await remoteSave(remoteCopy);
+      if (remoteRes?.ok && remoteRes.review?.id) {
+        currentReviewId = remoteRes.review.id;
+      } else if (remoteRes && remoteRes.error) {
+        // Propager l'erreur serveur à l'appelant pour affichage UI
+        return { ok: true, remoteError: remoteRes };
       }
     } catch (e) { console.warn('Sync distante échouée', e); }
   }
+
+  return { ok: true };
 }
 
 async function exportImage(event) {
