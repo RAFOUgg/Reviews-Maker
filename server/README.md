@@ -21,6 +21,8 @@ Tu peux donc ouvrir: http://localhost:3000/index.html
 
 ## 3. Endpoints
 
+### 3.1 Reviews
+
 | Méthode | URL                  | Description |
 |---------|---------------------|-------------|
 | GET     | /api/ping           | Test vie serveur |
@@ -29,6 +31,22 @@ Tu peux donc ouvrir: http://localhost:3000/index.html
 | POST    | /api/reviews        | Création (multipart ou JSON) |
 | PUT     | /api/reviews/:id    | Mise à jour |
 | DELETE  | /api/reviews/:id    | Suppression |
+
+### 3.2 Authentification (LaFoncedalle)
+
+| Méthode | URL                      | Description |
+|---------|--------------------------|-------------|
+| POST    | /api/auth/send-code      | Envoyer un code de vérification par email |
+| POST    | /api/auth/verify-code    | Vérifier le code et créer une session |
+| POST    | /api/auth/logout         | Déconnexion (supprimer le token) |
+| GET     | /api/auth/me             | Récupérer les infos de l'utilisateur connecté |
+
+**Note** : L'authentification utilise l'API LaFoncedalle pour :
+- Vérifier que l'email est lié à un compte Discord
+- Envoyer les codes de vérification par email
+- Récupérer le pseudo Discord de l'utilisateur
+
+Voir [INTEGRATION_LAFONCEDALLE.md](../INTEGRATION_LAFONCEDALLE.md) pour plus de détails.
 
 Payload JSON principal = l'objet complet de la review (les champs utilisés dans `app.js`).
 Si une image est uploadée via champ `image`, on renvoie `image: /images/<fichier>`.

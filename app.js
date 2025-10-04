@@ -1397,8 +1397,11 @@ function setupModalEvents() {
         }
       }
       
+      // Clear all auth-related data including Discord info
       localStorage.removeItem('authToken');
       localStorage.removeItem('authEmail');
+      localStorage.removeItem('discordUsername');
+      localStorage.removeItem('discordId');
       sessionStorage.removeItem('authEmail');
       
       showAuthStatus("Déconnecté", "info");
@@ -1439,7 +1442,7 @@ function setupModalEvents() {
 }
 
 // Helper functions for auth UI
-function updateAuthUI() {
+async function updateAuthUI() {
   const token = localStorage.getItem('authToken');
   const email = localStorage.getItem('authEmail');
   const isConnected = !!(token && email);
@@ -1450,7 +1453,37 @@ function updateAuthUI() {
     if (dom.authStepCode) dom.authStepCode.style.display = 'none';
     if (dom.authStepConnected) {
       dom.authStepConnected.style.display = 'flex';
-      if (dom.authConnectedEmail) dom.authConnectedEmail.textContent = email;
+      
+      // Fetch user info from server to get Discord username
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+          headers: { 'X-Auth-Token': token }
+        });
+        
+        if (response.ok) {
+          const userData = await response.json();
+          // Display Discord username if available, otherwise email
+          const displayName = userData.discordUsername || email;
+          if (dom.authConnectedEmail) {
+            dom.authConnectedEmail.textContent = displayName;
+            // Store Discord info in localStorage for offline access
+            if (userData.discordUsername) {
+              localStorage.setItem('discordUsername', userData.discordUsername);
+              localStorage.setItem('discordId', userData.discordId);
+            }
+          }
+        } else {
+          // Fallback to email if API call fails
+          if (dom.authConnectedEmail) dom.authConnectedEmail.textContent = email;
+        }
+      } catch (err) {
+        console.error('[AUTH] Error fetching user info:', err);
+        // Use cached Discord username if available
+        const cachedUsername = localStorage.getItem('discordUsername');
+        if (dom.authConnectedEmail) {
+          dom.authConnectedEmail.textContent = cachedUsername || email;
+        }
+      }
     }
   } else {
     if (dom.authStepEmail) dom.authStepEmail.style.display = 'flex';
