@@ -3,74 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Studio professionnel pour composer, prévisualiser et e      <div class="tips-section" style="font-size:0.9rem; color:var(--text-muted)">Astuce: les champs      <div class="tips-section" style="font-size:0.9rem; color:var(--text-muted)">Astuce: les champs séquence permettent d'ajouter plusieurs étapes dans l'ordre (ex: Bubble Hash → Séparation électrostatique).</div>
+    <meta name="description" content="Studio professionnel pour composer, prévisualiser et e      <div class="tips-section" style="font-size:0.9rem; color:var(--text-muted)">Astuce: les champs séquence permettent d'ajouter plusieurs étapes dans l'ordre (ex: Bubble Hash → Séparation électrostatique).</div>
     </div>
     </template>
-
-    <!-- Bouton flottant de connexion -->
-    <button type="button" class="floating-auth-btn" id="floatingAuthBtn" title="Lier mon compte">
-      <span aria-hidden="true">🔗</span>
-    </button>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="app.js"></script>
-  </body>
-</html>ence permettent d'ajouter plusieurs étapes dans l'ordre (ex: Bubble Hash → Séparation électrostatique).</div>
-    </div>
-    </template>
-
-    <!-- Modal Connexion / Authentification -->
-    <div class="modal" id="authModal" style="display: none;">
-      <div class="modal-overlay" id="authModalOverlay"></div>
-      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-        <div class="modal-header">
-          <h2 id="authTitle">Connexion</h2>
-          <button type="button" class="modal-close" id="closeAuth" aria-label="Fermer">
-            <span aria-hidden="true">×</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="auth-content">
-            <p class="auth-description">Liez votre compte pour synchroniser vos reviews sur le serveur et y accéder depuis n'importe quel appareil.</p>
-            
-            <!-- Étape 1: Demande d'email -->
-            <div id="authStepEmail" class="auth-step">
-              <div class="form-group">
-                <label for="authEmailInput">Adresse email</label>
-                <input type="email" id="authEmailInput" class="input" placeholder="votre@email.com" />
-              </div>
-              <div class="auth-actions">
-                <button type="button" class="btn btn-primary" id="authSendCode">Envoyer le code</button>
-              </div>
-            </div>
-            
-            <!-- Étape 2: Vérification du code -->
-            <div id="authStepCode" class="auth-step" style="display:none;">
-              <p class="auth-info">Un code de vérification a été envoyé à <strong id="authEmailDisplay"></strong></p>
-              <div class="form-group">
-                <label for="authCodeInput">Code de vérification</label>
-                <input type="text" id="authCodeInput" class="input" placeholder="123456" maxlength="6" />
-              </div>
-              <div class="auth-actions">
-                <button type="button" class="btn btn-outline" id="authBack">Retour</button>
-                <button type="button" class="btn btn-primary" id="authVerifyCode">Vérifier</button>
-              </div>
-              <p class="auth-help">Code non reçu ? <button type="button" class="link-btn" id="authResendCode">Renvoyer</button></p>
-            </div>
-            
-            <!-- Étape 3: Connecté -->
-            <div id="authStepConnected" class="auth-step" style="display:none;">
-              <p class="auth-info">Connecté en tant que <strong id="authConnectedEmail"></strong></p>
-              <div class="auth-actions">
-                <button type="button" class="btn btn-outline" id="authDisconnect">Se déconnecter</button>
-              </div>
-            </div>
-            
-            <div class="auth-status" id="authStatus" style="display:none;"></div>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Modal Astuces -->
     <div class="modal" id="tipsModal" style="display: none;">
