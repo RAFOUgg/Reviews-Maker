@@ -90,8 +90,25 @@ db.serialize(() => {
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
+
+// Force UTF-8 encoding for all responses
+app.use((req, res, next) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  next();
+});
+
 app.use('/images', express.static(IMAGE_DIR));
-app.use(express.static(path.join(__dirname, '..'))); // servir les fichiers front
+app.use(express.static(path.join(__dirname, '..')), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.html')) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    } else if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css; charset=utf-8');
+    } else if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    }
+  }
+}); // servir les fichiers front
 // Auth middleware (optional): accepts X-Auth-Token header; matches file in tokens dir
 function resolveOwnerIdFromToken(token) {
   if (!token) return null;
