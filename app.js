@@ -749,6 +749,7 @@ function initHomePage() {
   // Éléments spécifiques à la page d'accueil
   dom.typeCards = Array.from(document.querySelectorAll(".type-card"));
   dom.compactLibraryList = document.getElementById("compactLibraryList");
+  dom.compactMyList = document.getElementById("compactMyList");
   dom.compactLibraryEmpty = document.getElementById("compactLibraryEmpty");
   dom.openTips = document.getElementById("openTips");
   dom.openFullLibrary = document.getElementById("openFullLibrary");
@@ -769,6 +770,7 @@ function initHomePage() {
   dom.tipsModalOverlay = document.getElementById("tipsModalOverlay");
   dom.closeTips = document.getElementById("closeTips");
   dom.libraryGrid = document.getElementById("libraryGrid");
+  dom.homeTabs = document.getElementById('homeTabs');
   dom.libraryEmpty = document.getElementById("libraryEmpty");
   dom.librarySearch = document.getElementById("librarySearch");
 
@@ -907,7 +909,12 @@ function setupHomePageEvents() {
   if (dom.showMoreLibrary) {
     dom.showMoreLibrary.addEventListener('click', async () => {
       homeGalleryLimit += 8;
-      await renderCompactLibrary();
+      // Render active tab
+      if (dom.homeTabs && dom.compactMyList && dom.compactMyList.style.display==='grid') {
+        await renderMyCompactLibrary();
+      } else {
+        await renderCompactLibrary();
+      }
     });
   }
 
@@ -918,6 +925,31 @@ function setupHomePageEvents() {
 
   // Modals et autres événements
   setupModalEvents();
+
+  // Tabs: only show when remote + token
+  if (dom.homeTabs) {
+    const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
+    if (token) {
+      dom.homeTabs.style.display = 'flex';
+      const btnPub = dom.homeTabs.querySelector('[data-tab="public"]');
+      const btnMine = dom.homeTabs.querySelector('[data-tab="mine"]');
+      const activate = (tab) => {
+        btnPub?.classList.toggle('btn-secondary', tab==='public');
+        btnMine?.classList.toggle('btn-secondary', tab==='mine');
+        if (tab==='public') {
+          dom.compactLibraryList.style.display='grid';
+          dom.compactMyList.style.display='none';
+        } else {
+          dom.compactLibraryList.style.display='none';
+          dom.compactMyList.style.display='grid';
+          renderMyCompactLibrary();
+        }
+      };
+      btnPub?.addEventListener('click', () => activate('public'));
+      btnMine?.addEventListener('click', () => activate('mine'));
+      activate('public');
+    }
+  }
 }
 
 function setupEditorPageEvents() {
@@ -1767,6 +1799,51 @@ async function renderCompactLibrary() {
   });
 }
 
+// Render "Ma bibliothèque" (server-backed: /api/my/reviews) with same card style
+async function renderMyCompactLibrary() {
+  if (!dom.compactMyList) return;
+  dom.compactMyList.innerHTML='';
+  // If no remote or no token, fallback to local DB items
+  let items = [];
+  const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
+  if (remoteEnabled && token) {
+    try {
+      const headers = { 'X-Auth-Token': token };
+      const r = await fetch(`${remoteBase}/api/my/reviews`, { headers, cache:'no-store' });
+      if (r.ok) items = await r.json();
+    } catch {}
+  }
+  if (!Array.isArray(items) || items.length===0) {
+    try { items = await dbGetAllReviews(); } catch {}
+  }
+  items = (items||[]).sort((a,b)=>(a.date||'').localeCompare(b.date||'')).reverse().slice(0, homeGalleryLimit);
+  // Toggle show more visibility similarly
+  if (dom.showMoreLibrary) {
+    const totalCount = (Array.isArray(items) ? items.length : 0);
+    // We don't know full count easily without separate fetch; keep button visible like public view
+    dom.showMoreLibrary.style.display = totalCount >= homeGalleryLimit ? 'inline-flex' : 'none';
+  }
+  if (items.length===0) return;
+  items.forEach(r => {
+    const item = document.createElement('div');
+    item.className='compact-library-item';
+    if (r.isDraft) item.classList.add('is-draft');
+    const title = r.productName || r.cultivars || r.productType || 'Review';
+    const date = new Date(r.date || Date.now()).toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
+    const holder = r.holderName ? ` • ${r.holderName}` : '';
+    const draftBadge = r.isDraft ? `<span class="draft-badge">Brouillon</span>` : '';
+    const imgHtml = r.image ? `<img src="${r.image}" alt="" class="compact-item-image" />` : `<div class="compact-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.6rem;">📷</div>`;
+    item.innerHTML = `${draftBadge}${imgHtml}<div class="compact-item-content"><div class="compact-item-title">${title}</div><div class="compact-item-meta">${r.productType || 'Review'} • ${date}${holder}</div></div><div class="compact-item-actions"><button type="button" class="btn btn-outline btn-xs" data-act="load" title="Aperçu">👀</button><button type="button" class="btn btn-secondary btn-xs" data-act="edit" title="Éditer">✏️</button></div>`;
+    const openPreview = async () => { await openPreviewOnly(r); };
+    item.querySelector('[data-act="load"]').addEventListener('click', openPreview);
+    item.addEventListener('click', (e) => { const t=e.target; if (t instanceof HTMLElement && t.closest('.btn')) return; openPreview(); });
+    item.querySelector('[data-act="edit"]').addEventListener('click', () => {
+      if (isHomePage) navigateToEditor(r.productType, r, r.id ?? null); else loadReviewIntoForm(r, 'edit');
+    });
+    dom.compactMyList.appendChild(item);
+  });
+}
+
 // Rendu de la bibliothèque complète dans la modal
 async function renderFullLibrary() {
   if (!dom.libraryGrid) return;
@@ -1829,7 +1906,7 @@ async function renderFullLibrary() {
           <span aria-hidden="true">✏️</span>
           Éditer
         </button>
-        ${remoteEnabled ? `<button type="button" class="btn btn-outline btn-sm" data-act="privacy" title="Basculer privé/public">🔒/🌐</button>` : ''}
+  ${(remoteEnabled && r.id != null) ? `<button type="button" class="btn btn-outline btn-sm" data-act="privacy" title="Basculer statut">${r.isPrivate ? '🔒 Privé' : '🌐 Public'}</button>` : ''}
         <button type="button" class="btn btn-danger btn-sm" data-act="delete" title="Supprimer">
           <span aria-hidden="true">🗑️</span>
           Supprimer
@@ -1879,6 +1956,7 @@ async function renderFullLibrary() {
           if (ok) {
             r.isPrivate = next;
             showToast(next ? 'Passée en privé' : 'Rendue publique', 'info');
+            privacyBtn.textContent = r.isPrivate ? '🔒 Privé' : '🌐 Public';
             // Refresh lists to reflect server state
             await renderFullLibrary();
             await renderCompactLibrary();

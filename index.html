@@ -80,6 +80,10 @@
             <span aria-hidden="true">📚</span>
             Vos reviews récentes
           </h2>
+          <div class="tabs" id="homeTabs" style="display:none; gap:.5rem;">
+            <button type="button" class="btn btn-outline btn-sm" data-tab="public">Galerie publique</button>
+            <button type="button" class="btn btn-outline btn-sm" data-tab="mine">Ma bibliothèque</button>
+          </div>
           <button type="button" class="btn btn-ghost" id="openFullLibrary">Voir tout</button>
         </div>
 
@@ -91,6 +95,7 @@
             <span class="empty-hint">Commencez par choisir un type de produit ci-dessus</span>
           </div>
           <div class="compact-library-list" id="compactLibraryList"></div>
+          <div class="compact-library-list" id="compactMyList" style="display:none"></div>
           <div class="library-actions-below">
             <button type="button" class="btn btn-outline" id="showMoreLibrary">Voir plus</button>
           </div>
