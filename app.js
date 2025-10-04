@@ -3497,7 +3497,10 @@ async function tryEnableRemote() {
   try {
     // If hosted under /reviews, use that as base-path; otherwise root
     const basePath = (typeof location !== 'undefined' && location.pathname && location.pathname.startsWith('/reviews')) ? '/reviews' : '';
-    const r = await fetch(basePath + '/api/ping', { cache: 'no-store' });
+  const headers = {};
+  const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
+  if (token) headers['X-Auth-Token'] = token;
+  const r = await fetch(basePath + '/api/ping', { cache: 'no-store', headers });
     if (!r.ok) return;
     const js = await r.json();
     if (js && js.ok) {
@@ -3513,7 +3516,10 @@ async function tryEnableRemote() {
 async function remoteListReviews() {
   if (!remoteEnabled) return dbGetAllReviews();
   try {
-    const r = await fetch(remoteBase + '/api/reviews');
+    const headers = {};
+    const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
+    if (token) headers['X-Auth-Token'] = token;
+    const r = await fetch(remoteBase + '/api/reviews', { headers });
     if (!r.ok) throw new Error('HTTP '+r.status);
     return await r.json();
   } catch (e) { console.warn('Remote list erreur', e); return dbGetAllReviews(); }
@@ -3610,7 +3616,10 @@ async function listUnifiedReviews() {
 async function remoteGetReview(id) {
   if (!remoteEnabled || id == null) return null;
   try {
-    const r = await fetch(`${remoteBase}/api/reviews/${id}`);
+    const headers = {};
+    const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
+    if (token) headers['X-Auth-Token'] = token;
+    const r = await fetch(`${remoteBase}/api/reviews/${id}`, { headers });
     if (!r.ok) throw new Error('HTTP '+r.status);
     return await r.json();
   } catch (e) {
@@ -3624,16 +3633,18 @@ async function remoteSave(reviewObj) {
   try {
     const method = reviewObj.id ? 'PUT' : 'POST';
     const url = remoteBase + '/api/reviews' + (reviewObj.id ? '/' + reviewObj.id : '');
+    const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
+    const headers = token ? { 'X-Auth-Token': token } : {};
     let resp;
     if (lastSelectedImageFile instanceof File) {
       const fd = new FormData();
       fd.append('data', JSON.stringify(reviewObj));
       fd.append('image', lastSelectedImageFile, lastSelectedImageFile.name);
-      resp = await fetch(url, { method, body: fd });
+      resp = await fetch(url, { method, body: fd, headers });
     } else {
       const copy = { ...reviewObj };
       if (copy.image && copy.image.length > 50000) delete copy.image; // éviter gros base64
-      resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(copy) });
+      resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json', ...(token ? { 'X-Auth-Token': token } : {}) }, body: JSON.stringify(copy) });
     }
     const status = resp.status;
     let js = null;
@@ -3652,7 +3663,10 @@ async function remoteSave(reviewObj) {
 async function remoteDeleteReview(id) {
   if (!remoteEnabled || id == null) return false;
   try {
-    const r = await fetch(`${remoteBase}/api/reviews/${id}`, { method: 'DELETE' });
+    const headers = {};
+    const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
+    if (token) headers['X-Auth-Token'] = token;
+    const r = await fetch(`${remoteBase}/api/reviews/${id}`, { method: 'DELETE', headers });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return true;
   } catch (e) {
