@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Reviews Maker</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .admin-wrap { max-width: 1100px; margin: 2rem auto; padding: 1rem; }
+    .admin-section { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+    .admin-section h2 { margin: 0 0 0.75rem 0; font-size: 1.2rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.75rem; }
+    .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 0.75rem; }
+    .muted { opacity: .8; }
+    .tokens li { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+</head>
+<body>
+  <div class="admin-wrap">
+    <h1>Administration</h1>
+
+    <div class="admin-section" id="stats">
+      <h2>Statistiques</h2>
+      <div class="grid" id="statsGrid"></div>
+    </div>
+
+    <div class="admin-section" id="tokens">
+      <h2>Tokens (lecture seule)</h2>
+      <ul class="tokens" id="tokenList"></ul>
+      <p class="muted">Les fichiers sont listés depuis <code>server/tokens/</code>. Le contenu des fichiers peut être un JSON { ownerId, roles } ou juste l'ID/utilisateur.</p>
+    </div>
+  </div>
+  <script>
+    function getToken() {
+      return localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token');
+    }
+    async function fetchJSON(url) {
+      const headers = {};
+      const t = getToken();
+      if (t) headers['X-Auth-Token'] = t;
+      const r = await fetch(url, { headers });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return await r.json();
+    }
+    async function loadStats() {
+      try {
+        const s = await fetchJSON('/api/admin/stats');
+        const g = document.getElementById('statsGrid');
+        g.innerHTML = '';
+        const mk = (k, v) => `<div class="card"><div class="muted">${k}</div><div style="font-size:1.4rem;">${v}</div></div>`;
+        g.innerHTML = mk('Total reviews', s.total) + mk('Brouillons', s.drafts) + mk('Privées', s.privates);
+      } catch (e) { console.error(e); }
+    }
+    async function loadTokens() {
+      try {
+        const t = await fetchJSON('/api/admin/tokens');
+        const ul = document.getElementById('tokenList');
+        ul.innerHTML = '';
+        (t.tokens||[]).forEach(tok => {
+          const li = document.createElement('li'); li.textContent = tok; ul.appendChild(li);
+        });
+      } catch (e) { console.error(e); }
+    }
+    loadStats();
+    loadTokens();
+  </script>
+</body>
+</html>

@@ -267,3 +267,56 @@ Pour la déployer sur un VPS via Docker pull, ajouter un second workflow avec SS
 | Logs surveillés |  |
 | MàJ sécurité (unattended-upgrades) |  |
 
+---
+
+## 12. Auth par token (brouillons privés, staff) et mini admin
+
+Le serveur supporte un header `X-Auth-Token` (ou `?token=`). Il cherche un fichier `server/tokens/<TOKEN>`.
+
+Format du fichier token:
+- Contenu simple: l'`ownerId` (ex: ID Discord)
+- JSON avancé:
+```json
+{ "ownerId": "123456789012345678", "roles": ["staff"] }
+```
+
+Règles d'accès:
+- Sans token: on voit uniquement les reviews publiées (isDraft=0) et non privées (isPrivate=0).
+- Avec token (non-staff): on voit les publiées non privées + toutes ses reviews (brouillons, privées incluses).
+- Staff: accès à tout.
+
+Endpoints utiles:
+- `GET /api/reviews` — filtrage selon règles ci-dessus
+- `GET /api/public/reviews` — publiées & non privées (galerie publique)
+- `GET /api/my/reviews` — toutes mes reviews (token requis)
+- `GET /api/admin/stats` — stats globales (staff)
+- `GET /api/admin/tokens` — liste des fichiers tokens (staff, lecture seule)
+- `PUT /api/reviews/:id/privacy` — changer `isPrivate` (owner ou staff)
+
+Créer un token (staff):
+```bash
+echo '{"ownerId":"123456789012345678","roles":["staff"]}' | sudo tee server/tokens/MON_TOKEN
+sudo chown www-data:www-data server/tokens/MON_TOKEN
+```
+Créer un token (utilisateur standard):
+```bash
+echo '123456789012345678' | sudo tee server/tokens/TOKEN_USER
+sudo chown www-data:www-data server/tokens/TOKEN_USER
+```
+Côté client, utiliser `https://exemple.com/index.html?token=MON_TOKEN` ou `localStorage.authToken = 'MON_TOKEN'`.
+
+Exemple intégration bot Discord/LaFoncedalle:
+1) Le bot génère un token (UUID) lors de l'onboarding utilisateur.
+2) Écrit `server/tokens/<TOKEN>` avec `{ ownerId: <discordId>, roles: [] }` (ou `["staff"]` pour un staff).
+3) Envoie au user l'URL `https://exemple.com/index.html?token=<TOKEN>`.
+
+Mini pages:
+- `admin.html` (staff): statistiques + liste des tokens (lecture seule)
+- `gallery.html` (public): galerie des reviews publiées non privées
+
+Rappel HTTPS & sécurité:
+- Nginx en frontal avec Certbot (section 4.8)
+- UFW: n'ouvrir que 80/443
+- Service Node écoutant sur 127.0.0.1:3000
+- Sauvegarder `db/` régulièrement (base + images)
+
