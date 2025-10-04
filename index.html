@@ -23,6 +23,10 @@
       </div>
       <div class="top-nav-status">
         <div class="nav-actions">
+          <span class="pill-btn" id="openMyLibrary" title="Ma bibliothèque personnelle" tabindex="0" role="button" style="display:none;">
+            <span aria-hidden="true">📚</span>
+            Ma bibliothèque
+          </span>
           <span class="pill-btn" id="openTips" title="Afficher les raccourcis et astuces" tabindex="0" role="button">
             <span aria-hidden="true">💡</span>
             Astuce
@@ -79,7 +83,7 @@
         <div class="section-header">
           <h2 class="section-title">
             <span aria-hidden="true">📚</span>
-            Vos reviews récentes
+            Galerie
           </h2>
           <div class="tabs" id="homeTabs" style="display:none; gap:.5rem;">
             <button type="button" class="btn btn-outline btn-sm" data-tab="public">Galerie publique</button>
@@ -172,6 +176,40 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal Connexion / Authentification -->
+  <div class="modal" id="authModal" style="display: none;">
+    <div class="modal-overlay" id="authModalOverlay"></div>
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <div class="modal-header">
+        <h2 id="authTitle">Connexion</h2>
+        <button type="button" class="modal-close" id="closeAuth" aria-label="Fermer">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="auth-content">
+          <p class="auth-description">Liez votre compte pour synchroniser vos reviews sur le serveur et y accéder depuis n'importe quel appareil.</p>
+          <div class="form-group">
+            <label for="authTokenInput">Token d'authentification</label>
+            <input type="password" id="authTokenInput" class="input" placeholder="Entrez votre token..." />
+          </div>
+          <div class="auth-status" id="authStatus" style="display:none;"></div>
+          <div class="auth-actions">
+            <button type="button" class="btn btn-primary" id="authConnect">Se connecter</button>
+            <button type="button" class="btn btn-outline" id="authDisconnect" style="display:none;">Se déconnecter</button>
+          </div>
+          <p class="auth-help">Vous n'avez pas de token ? Contactez un administrateur.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bouton flottant de connexion -->
+  <button type="button" class="floating-auth-btn" id="floatingAuthBtn" title="Lier mon compte">
+    <span aria-hidden="true">🔗</span>
+  </button>
+
   <!-- Preview-only Overlay for home page (to visualize a review from gallery) -->
   <div id="previewOverlay" class="preview-overlay" hidden></div>
   <div id="previewModal" class="preview-modal" role="dialog" aria-modal="true" aria-label="Aperçu de la review" hidden>
