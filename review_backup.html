@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Studio professionnel pour composer, prévisualiser et e      <div class="tips-section" style="font-size:0.9rem; color:var(--text-muted)">Astuce: les champs      <div class="tips-section" style="font-size:0.9rem; color:var(--text-muted)">Astuce: les champs séquence permettent d'ajouter plusieurs étapes dans l'ordre (ex: Bubble Hash → Séparation électrostatique).</div>
+    </div>
+    </template>
+
+    <!-- Bouton flottant de connexion -->
+    <button type="button" class="floating-auth-btn" id="floatingAuthBtn" title="Lier mon compte">
+      <span aria-hidden="true">🔗</span>
+    </button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>ence permettent d'ajouter plusieurs étapes dans l'ordre (ex: Bubble Hash → Séparation électrostatique).</div>
+    </div>
+    </template>
+
+    <!-- Modal Connexion / Authentification -->
+    <div class="modal" id="authModal" style="display: none;">
+      <div class="modal-overlay" id="authModalOverlay"></div>
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+        <div class="modal-header">
+          <h2 id="authTitle">Connexion</h2>
+          <button type="button" class="modal-close" id="closeAuth" aria-label="Fermer">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="auth-content">
+            <p class="auth-description">Liez votre compte pour synchroniser vos reviews sur le serveur et y accéder depuis n'importe quel appareil.</p>
+            
+            <!-- Étape 1: Demande d'email -->
+            <div id="authStepEmail" class="auth-step">
+              <div class="form-group">
+                <label for="authEmailInput">Adresse email</label>
+                <input type="email" id="authEmailInput" class="input" placeholder="votre@email.com" />
+              </div>
+              <div class="auth-actions">
+                <button type="button" class="btn btn-primary" id="authSendCode">Envoyer le code</button>
+              </div>
+            </div>
+            
+            <!-- Étape 2: Vérification du code -->
+            <div id="authStepCode" class="auth-step" style="display:none;">
+              <p class="auth-info">Un code de vérification a été envoyé à <strong id="authEmailDisplay"></strong></p>
+              <div class="form-group">
+                <label for="authCodeInput">Code de vérification</label>
+                <input type="text" id="authCodeInput" class="input" placeholder="123456" maxlength="6" />
+              </div>
+              <div class="auth-actions">
+                <button type="button" class="btn btn-outline" id="authBack">Retour</button>
+                <button type="button" class="btn btn-primary" id="authVerifyCode">Vérifier</button>
+              </div>
+              <p class="auth-help">Code non reçu ? <button type="button" class="link-btn" id="authResendCode">Renvoyer</button></p>
+            </div>
+            
+            <!-- Étape 3: Connecté -->
+            <div id="authStepConnected" class="auth-step" style="display:none;">
+              <p class="auth-info">Connecté en tant que <strong id="authConnectedEmail"></strong></p>
+              <div class="auth-actions">
+                <button type="button" class="btn btn-outline" id="authDisconnect">Se déconnecter</button>
+              </div>
+            </div>
+            
+            <div class="auth-status" id="authStatus" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Astuces -->
+    <div class="modal" id="tipsModal" style="display: none;">
+      <div class="modal-overlay" id="tipsModalOverlay"></div>
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="tipsTitle">
+        <div class="modal-header">
+          <h2 id="tipsTitle">Raccourcis & Astuces</h2>
+          <button type="button" class="modal-close" id="closeTips" aria-label="Fermer">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="tips-content">
+            <div class="tip-group">
+              <h3>🎯 Navigation</h3>
+              <ul>
+                <li><kbd>Tab</kbd> / <kbd>Shift</kbd> + <kbd>Tab</kbd> : Navigation entre les champs</li>
+                <li><kbd>Échap</kbd> : Fermer les modales</li>
+                <li>Cliquer sur le logo : Retour à l'accueil</li>
+              </ul>
+            </div>
+            <div class="tip-group">
+              <h3>✨ Fonctionnalités</h3>
+              <ul>
+                <li>Sauvegarde automatique pendant la saisie</li>
+                <li>Aperçu en temps réel</li>
+                <li>Export haute qualité en PNG</li>
+                <li>Gestion des brouillons</li>
+              </ul>
+            </div>
+            <div class="tip-group">
+              <h3>📝 Bonnes pratiques</h3>
+              <ul>
+                <li>Remplissez au minimum les sections obligatoires</li>
+                <li>Ajoutez une photo pour un rendu optimal</li>
+                <li>Utilisez des descriptions détaillées</li>
+                <li>Sauvegardez régulièrement vos reviews importantes</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>er des reviews produits cannabis." />
+    <title>Reviews Maker · Studio professionnel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="ink\logo.png" />
+  </head>
+  <body class="editor-page">
+    <div class="app-shell">
+    <header class="top-nav" role="banner">
+      <div class="brand" id="brandLogo" role="button" tabindex="0" title="Retour à l'accueil">
+        <span class="brand-mark" aria-hidden="true"><img src="ink\logo.png" alt="" style="width:22px;height:22px;object-fit:contain;border-radius:4px" /></span>
+        <div class="brand-text">
+          <strong>Reviews Maker</strong>
+          <span>Studio professionnel</span>
+        </div>
+      </div>
+      <div class="top-nav-status">
+        <div class="progress compact">
+          <div class="progress-legend">
+            <span>Type</span>
+            <span>Infos</span>
+            <span>Validation</span>
+          </div>
+          <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="nav-actions">
+          <button type="button" class="pill-btn" id="togglePreviewPanel" title="Afficher l'aperçu">
+            <span aria-hidden="true">👁️</span>
+            Afficher l'aperçu
+          </button>
+          
+          <span class="pill-btn" id="openTips" title="Afficher les raccourcis et astuces" tabindex="0" role="button">
+            <span aria-hidden="true">💡</span>
+            Astuces
+          </span>
+          <button type="button" class="pill-btn" id="openLibrary" title="Consulter les reviews enregistrées">
+            <span aria-hidden="true">📁</span>
+            Ma Bibliothèque
+          </button>
+        </div>
+      </div>
+    </header>
+    <!-- Workspace wrapper was missing; required for proper layout -->
+    <main class="workspace editor-workspace" role="main">
+    <section class="panel panel-form" aria-labelledby="form-title" hidden>
+        <header class="panel-header">
+          <p class="panel-eyebrow">Contenu détaillé</p>
+          <h2 id="form-title">Informations du produit</h2>
+        </header>
+
+        <form id="reviewForm" class="review-form" novalidate>
+          <input type="hidden" id="productType" name="productType" required aria-required="true" />
+
+          <div class="form-content">
+            <nav id="sectionNav" class="section-nav" aria-label="Navigation des sections"></nav>
+            <div id="dynamicSections" class="dynamic-sections"></div>
+          </div>
+
+          <div class="section-controls form-toolbar" aria-live="polite">
+            <button type="button" class="btn btn-outline" id="prevSection" disabled>
+              <span aria-hidden="true">⬅</span>
+              Section précédente
+            </button>
+            <button type="button" class="btn btn-secondary" id="nextSection" disabled>
+              Section suivante
+              <span aria-hidden="true">➡</span>
+            </button>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="saveBtn">
+              <span aria-hidden="true">💾</span>
+              Enregistrer
+            </button>
+            <button type="button" class="btn btn-outline" id="resetBtn">
+              <span aria-hidden="true">🔄</span>
+              Réinitialiser
+            </button>
+          </div>
+        </form>
+    </section>
+
+  <aside class="panel panel-preview" aria-live="polite" aria-labelledby="preview-title" hidden>
+        <header class="panel-header preview-header">
+          <p class="panel-eyebrow">Aperçu en direct</p>
+          <h2 id="preview-title">Qualité studio prête à exporter</h2>
+          <p class="panel-subtitle">
+            Visualisez le rendu final pendant la saisie. L'aperçu reste épinglé pour les écrans larges.
+          </p>
+        </header>
+
+        <div class="preview-body">
+          <div class="preview-placeholder" id="previewPlaceholder">
+            <span class="placeholder-icon" aria-hidden="true">🪄</span>
+            <h3>Commencez votre review</h3>
+            <p>
+              Sélectionnez un type de produit puis complétez les blocs d'information. L'aperçu se mettra à jour automatiquement à la génération.
+            </p>
+            <ul class="placeholder-list">
+              <li>Aperçu compact en temps réel</li>
+              <li>Score global et progression</li>
+              <li>Export haute qualité</li>
+            </ul>
+          </div>
+
+          <div id="reviewOutput" class="review-output" hidden>
+            <div class="preview-controls">
+              <button type="button" class="btn btn-outline btn-sm" id="togglePreviewBtn">
+                <span aria-hidden="true">🔄</span>
+                <span id="togglePreviewText">Version complète</span>
+              </button>
+            </div>
+            <div class="review-content" id="reviewContent"></div>
+            <div class="review-actions">
+              <button type="button" class="btn btn-primary" id="exportImageBtn">
+                <span aria-hidden="true">📸</span>
+                Exporter en image
+              </button>
+              <button type="button" class="btn btn-outline" id="newReviewBtn">
+                <span aria-hidden="true">🆕</span>
+                Nouvelle review
+              </button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="site-footer">
+      <p>© <span id="footerYear"></span> Reviews Maker. Création de reviews premium &amp; export multiformat.</p>
+      <div class="footer-links">
+        <a href="#" aria-label="Guide qualité">Guide qualité</a>
+        <a href="#" aria-label="Support">Support</a>
+        <a href="#" aria-label="Mentions légales">Mentions légales</a>
+      </div>
+    </footer>
+    </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="app.js" defer></script>
+
+    <!-- Library Drawer Templates/Containers -->
+    <div id="libraryOverlay" class="library-overlay" hidden></div>
+    <aside id="libraryDrawer" class="library-drawer" aria-hidden="true" aria-label="Bibliothèque des reviews" hidden>
+    <header class="library-header">
+      <h3>Bibliothèque</h3>
+      <div class="library-actions">
+        <input type="search" id="librarySearch" placeholder="Rechercher par nom, type, producteur…" aria-label="Rechercher une review" />
+        <button type="button" class="pill-btn" id="closeLibrary" title="Fermer la bibliothèque">✕</button>
+      </div>
+    </header>
+    <div class="library-body">
+      <ul id="libraryList" class="library-list" role="list"></ul>
+      <div id="libraryEmpty" class="library-empty" hidden>
+        <p>Aucune review enregistrée pour le moment.</p>
+      </div>
+    </div>
+    </aside>
+
+    <!-- Preview-only Overlay -->
+    <div id="previewOverlay" class="preview-overlay" hidden></div>
+    <div id="previewModal" class="preview-modal" role="dialog" aria-modal="true" aria-label="Aperçu de la review" hidden>
+    <header class="preview-modal-header">
+      <h3>Aperçu</h3>
+      <div class="actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="downloadPreviewPng">Télécharger l'image</button>
+        <button type="button" class="pill-btn" id="closePreviewModal" title="Fermer">✕</button>
+      </div>
+    </header>
+    <div class="preview-modal-body">
+      <div id="previewModalContent" class="review-content"></div>
+    </div>
+    </div>
+
+    <!-- Save Modal -->
+    <div class="modal" id="saveModal" style="display:none;">
+      <div class="modal-overlay" id="saveModalOverlay"></div>
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="saveTitle">
+        <div class="modal-header">
+          <h2 id="saveTitle">Enregistrer la review</h2>
+          <button type="button" class="modal-close" id="closeSaveModal" aria-label="Fermer">✕</button>
+        </div>
+        <div class="modal-body">
+          <form id="saveForm" class="save-form" novalidate>
+            <div class="form-row">
+              <label for="saveName" class="field-label">Nom de la review</label>
+              <input type="text" id="saveName" placeholder="Ex: Gelato 41 - Hash" required aria-required="true" />
+              <p class="field-hint">Visible dans votre bibliothèque et sur l’export.</p>
+              <p class="field-error" id="saveNameError" hidden>Veuillez saisir un nom de review.</p>
+            </div>
+            <div class="form-row">
+              <label for="saveHolder" class="field-label">Titulaire de la review <span aria-hidden="true" style="color:#ef4444">*</span></label>
+              <input type="text" id="saveHolder" placeholder="Nom et/ou équipe (obligatoire)" required aria-required="true" />
+              <p class="field-hint">Ex: Rafi, Studio RM, @alias …</p>
+              <p class="field-error" id="saveHolderError" hidden>Le nom du titulaire est obligatoire.</p>
+            </div>
+            <div class="form-row">
+              <label class="field-label">Confidentialité</label>
+              <div class="segmented" id="savePrivacySegment" role="group" aria-label="Choisir la confidentialité">
+                <button type="button" class="btn btn-outline btn-sm" data-privacy="public" aria-pressed="true">🌐 Public</button>
+                <button type="button" class="btn btn-outline btn-sm" data-privacy="private" aria-pressed="false">🔒 Privé</button>
+              </div>
+              <input type="hidden" id="savePrivacy" value="public" />
+              <p class="field-hint">Public: visible dans la galerie. Privé: visible uniquement pour vous (et le staff).</p>
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-outline" id="cancelSave">Annuler</button>
+              <button type="submit" class="btn btn-secondary" id="confirmSave">Enregistrer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <template id="tipsTemplate">
+    <div class="toast" role="status" aria-live="polite">
+      <strong>Raccourcis utiles</strong>
+      <div style="margin-top:6px; color: var(--text-muted); font-size: 0.95rem;">
+        <div><kbd>Ctrl/⌘</kbd> + <kbd>↑</kbd>/<kbd>↓</kbd> — changer de section</div>
+        <div><kbd>Ctrl/⌘</kbd> + <kbd>Entrée</kbd> — générer la review</div>
+      </div>
+    </div>
+    </template>
+    <template id="tipsPopoverTemplate">
+    <div class="tips-popover" role="dialog" aria-label="Astuces et étapes">
+      <h4>Raccourcis clavier</h4>
+      <div class="tips-section">
+        <div class="kbd-line"><kbd>Ctrl/⌘</kbd><span>+</span><kbd>↑</kbd>/<kbd>↓</kbd><span>• Changer de section</span></div>
+        <div class="kbd-line"><kbd>Ctrl/⌘</kbd><span>+</span><kbd>Entrée</kbd><span>• Générer la review</span></div>
+      </div>
+      <h4 class="tips-section">Étapes pour compléter une review</h4>
+      <ol class="tip-steps">
+        <li>Étape 1 — Choisir le type de produit (Hash, Fleur, Concentré).</li>
+        <li>Étape 2 — Remplir les sections affichées (les totaux se mettent à jour).</li>
+        <li>Étape 3 — Générer la review pour prévisualiser et vérifier.</li>
+        <li>Étape 4 — Exporter en PNG et/ou CSV. L’état « Brouillon » disparaît à l’export.</li>
+      </ol>
+      <div class="tips-section" style="font-size:0.9rem; color:var(--text-muted)">Astuce: les champs séquence permettent d’ajouter plusieurs étapes dans l’ordre (ex: Bubble Hash → Séparation électrostatique).</div>
+    </div>
+    </template>
+  </body>
+</html>
