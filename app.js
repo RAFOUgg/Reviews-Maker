@@ -1959,37 +1959,53 @@ async function renderLibraryList(mode = 'mine') {
     const date = new Date(r.date || Date.now()).toLocaleString("fr-FR");
     const thumb = r.image ? `<div style="width:44px;height:44px;border-radius:8px;overflow:hidden;border:1px solid var(--glass-border)"><img src="${r.image}" alt="" style="width:100%;height:100%;object-fit:cover"/></div>` : '';
     const draftBadge = r.isDraft ? `<span style="background:#f59e0b;color:white;font-size:11px;padding:2px 6px;border-radius:4px;margin-left:8px;">Brouillon</span>` : '';
-    li.innerHTML = `
-      <div class="meta">
-        <div class="title" style="display:flex;align-items:center;gap:10px;">${thumb}${title}${draftBadge}</div>
-        <div class="sub">${r.productType || ""} • ${r.farm || ""} • ${date}</div>
-      </div>
+    
+    // Show actions only in 'mine' mode
+    const actionsHtml = mode === 'mine' ? `
       <div class="actions">
         <button type="button" class="btn btn-outline btn-sm" data-act="load">👀</button>
         <button type="button" class="btn btn-secondary btn-sm" data-act="edit">✏️</button>
         <button type="button" class="btn btn-outline btn-sm" data-act="dup">⏩</button>
         <button type="button" class="btn btn-outline btn-sm" data-act="delete">🗑️</button>
-      </div>`;
-  li.querySelector('[data-act="load"]').addEventListener('click', async () => { await openPreviewOnly(r); toggleLibrary(false); });
-    li.querySelector('[data-act="edit"]').addEventListener('click', () => { loadReviewIntoForm(r, 'edit'); toggleLibrary(false); });
-    li.querySelector('[data-act="dup"]').addEventListener('click', async () => { await duplicateReview(r); });
-    li.querySelector('[data-act="delete"]').addEventListener('click', async () => {
-      if (!r.id) { showToast("Suppression non disponible (entrée ancienne)", "warning"); return; }
-      const ok = confirm(`Supprimer « ${title} » ?`);
-      if (!ok) return;
-      try {
-        let remoteOk = true;
-        if (remoteEnabled) {
-          remoteOk = await remoteDeleteReview(r.id);
+      </div>
+    ` : '';
+    
+    li.innerHTML = `
+      <div class="meta">
+        <div class="title" style="display:flex;align-items:center;gap:10px;">${thumb}${title}${draftBadge}</div>
+        <div class="sub">${r.productType || ""} • ${r.farm || ""} • ${date}</div>
+      </div>
+      ${actionsHtml}`;
+  
+    // Always allow preview
+    const previewAction = async () => { await openPreviewOnly(r); toggleLibrary(false, mode); };
+    
+    if (mode === 'mine') {
+      li.querySelector('[data-act="load"]').addEventListener('click', previewAction);
+      li.querySelector('[data-act="edit"]').addEventListener('click', () => { loadReviewIntoForm(r, 'edit'); toggleLibrary(false, mode); });
+      li.querySelector('[data-act="dup"]').addEventListener('click', async () => { await duplicateReview(r); });
+      li.querySelector('[data-act="delete"]').addEventListener('click', async () => {
+        if (!r.id) { showToast("Suppression non disponible (entrée ancienne)", "warning"); return; }
+        const ok = confirm(`Supprimer « ${title} » ?`);
+        if (!ok) return;
+        try {
+          let remoteOk = true;
+          if (remoteEnabled) {
+            remoteOk = await remoteDeleteReview(r.id);
+          }
+          try { await dbDeleteReview(r.id); } catch {}
+          showToast(remoteOk ? "Review supprimée." : "Supprimée localement, échec serveur", remoteOk ? 'success' : 'warning');
+          renderLibraryList(mode);
+          renderCompactLibrary();
         }
-        try { await dbDeleteReview(r.id); } catch {}
-        showToast(remoteOk ? "Review supprimée." : "Supprimée localement, échec serveur", remoteOk ? 'success' : 'warning');
-        renderLibraryList();
-        renderCompactLibrary();
-      }
-      catch(e){ showToast("Échec de la suppression", "error"); }
-    });
-    li.addEventListener('dblclick', async () => { await openPreviewOnly(r); toggleLibrary(false); });
+        catch(e){ showToast("Échec de la suppression", "error"); }
+      });
+      li.addEventListener('dblclick', previewAction);
+    } else {
+      // In public mode, just click to preview
+      li.addEventListener('click', previewAction);
+    }
+    
     dom.libraryList.appendChild(li);
   });
 }
