@@ -1047,7 +1047,7 @@ function setupFormEvents() {
         if (dom.saveName) dom.saveName.value = formData.productName || defName || '';
         // Afficher le titulaire automatique
         const cachedUsername = localStorage.getItem('discordUsername');
-        const cachedEmail = localStorage.getItem('userEmail');
+        const cachedEmail = localStorage.getItem('authEmail');
         const holder = cachedUsername || cachedEmail || 'Utilisateur non connecté';
         if (dom.saveHolderDisplay) dom.saveHolderDisplay.textContent = holder;
       } catch (e) { console.warn('Prefill save modal failed', e); }
@@ -1129,7 +1129,7 @@ function setupFormEvents() {
         if (dom.saveName) dom.saveName.value = formData.productName || defName || '';
         // Afficher le titulaire automatique
         const cachedUsername = localStorage.getItem('discordUsername');
-        const cachedEmail = localStorage.getItem('userEmail');
+        const cachedEmail = localStorage.getItem('authEmail');
         const holder = cachedUsername || cachedEmail || 'Utilisateur non connecté';
         if (dom.saveHolderDisplay) dom.saveHolderDisplay.textContent = holder;
       } catch {}
@@ -1630,7 +1630,7 @@ async function initDatabase() {
       
       // Récupérer automatiquement le pseudo Discord/email de l'utilisateur connecté
       const cachedUsername = localStorage.getItem('discordUsername');
-      const cachedEmail = localStorage.getItem('userEmail');
+      const cachedEmail = localStorage.getItem('authEmail');
       const holder = cachedUsername || cachedEmail || 'Utilisateur';
       
       // Inject into formData and persist
