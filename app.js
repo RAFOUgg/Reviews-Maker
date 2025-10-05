@@ -949,12 +949,8 @@ function setupHomePageEvents() {
   if (dom.showMoreLibrary) {
     dom.showMoreLibrary.addEventListener('click', async () => {
       homeGalleryLimit += 8;
-      // Render active tab
-      if (dom.homeTabs && dom.compactMyList && dom.compactMyList.style.display==='grid') {
-        await renderMyCompactLibrary();
-      } else {
-        await renderCompactLibrary();
-      }
+      // Always render public gallery
+      await renderCompactLibrary();
     });
   }
 
@@ -968,30 +964,13 @@ function setupHomePageEvents() {
   
   // Initialize auth UI
   updateAuthUI();
-
-  // Tabs: only show when remote + token
-  if (dom.homeTabs) {
-    const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
-    if (token) {
-      dom.homeTabs.style.display = 'flex';
-      const btnPub = dom.homeTabs.querySelector('[data-tab="public"]');
-      const btnMine = dom.homeTabs.querySelector('[data-tab="mine"]');
-      const activate = (tab) => {
-        btnPub?.classList.toggle('btn-secondary', tab==='public');
-        btnMine?.classList.toggle('btn-secondary', tab==='mine');
-        if (tab==='public') {
-          dom.compactLibraryList.style.display='grid';
-          dom.compactMyList.style.display='none';
-        } else {
-          dom.compactLibraryList.style.display='none';
-          dom.compactMyList.style.display='grid';
-          renderMyCompactLibrary();
-        }
-      };
-      btnPub?.addEventListener('click', () => activate('public'));
-      btnMine?.addEventListener('click', () => activate('mine'));
-      activate('public');
-    }
+  
+  // Always show public gallery on home page
+  if (dom.compactLibraryList) {
+    dom.compactLibraryList.style.display = 'grid';
+  }
+  if (dom.compactMyList) {
+    dom.compactMyList.style.display = 'none';
   }
 }
 
@@ -1485,13 +1464,21 @@ async function updateAuthUI() {
         
         if (response.ok) {
           const userData = await response.json();
-          // Display Discord username if available, otherwise email
-          const displayName = userData.discordUsername || email;
+          // Display Discord username if available, otherwise Discord ID, otherwise email
+          let displayName = userData.discordUsername || email;
+          
+          // If no username but we have a Discord ID, format it nicely
+          if (!userData.discordUsername && userData.discordId) {
+            displayName = `Discord #${userData.discordId.slice(-4)}`;
+          }
+          
           if (dom.authConnectedEmail) {
             dom.authConnectedEmail.textContent = displayName;
             // Store Discord info in localStorage for offline access
             if (userData.discordUsername) {
               localStorage.setItem('discordUsername', userData.discordUsername);
+            }
+            if (userData.discordId) {
               localStorage.setItem('discordId', userData.discordId);
             }
           }
@@ -1501,10 +1488,17 @@ async function updateAuthUI() {
         }
       } catch (err) {
         console.error('[AUTH] Error fetching user info:', err);
-        // Use cached Discord username if available
+        // Use cached Discord info if available
         const cachedUsername = localStorage.getItem('discordUsername');
+        const cachedDiscordId = localStorage.getItem('discordId');
         if (dom.authConnectedEmail) {
-          dom.authConnectedEmail.textContent = cachedUsername || email;
+          if (cachedUsername) {
+            dom.authConnectedEmail.textContent = cachedUsername;
+          } else if (cachedDiscordId) {
+            dom.authConnectedEmail.textContent = `Discord #${cachedDiscordId.slice(-4)}`;
+          } else {
+            dom.authConnectedEmail.textContent = email;
+          }
         }
       }
     }
