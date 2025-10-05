@@ -1045,11 +1045,8 @@ function setupFormEvents() {
         collectFormData();
         const defName = buildSuggestedName();
         if (dom.saveName) dom.saveName.value = formData.productName || defName || '';
-        // Afficher le titulaire automatique
-        const cachedUsername = localStorage.getItem('discordUsername');
-        const cachedEmail = localStorage.getItem('authEmail');
-        const holder = cachedUsername || cachedEmail || 'Utilisateur non connecté';
-        if (dom.saveHolderDisplay) dom.saveHolderDisplay.textContent = holder;
+        // Afficher le titulaire automatique avec récupération async
+        await updateHolderDisplay();
       } catch (e) { console.warn('Prefill save modal failed', e); }
     });
   }
@@ -1115,7 +1112,7 @@ function setupFormEvents() {
   updateSectionControls();
 
   // Fallback: delegated listener to ensure the Save modal opens even if direct binding failed
-  document.addEventListener('click', (e) => {
+  document.addEventListener('click', async (e) => {
     const el = e.target;
     if (!(el instanceof Element)) return;
     const btn = el.closest('#saveBtn');
@@ -1127,11 +1124,8 @@ function setupFormEvents() {
         collectFormData();
         const defName = buildSuggestedName();
         if (dom.saveName) dom.saveName.value = formData.productName || defName || '';
-        // Afficher le titulaire automatique
-        const cachedUsername = localStorage.getItem('discordUsername');
-        const cachedEmail = localStorage.getItem('authEmail');
-        const holder = cachedUsername || cachedEmail || 'Utilisateur non connecté';
-        if (dom.saveHolderDisplay) dom.saveHolderDisplay.textContent = holder;
+        // Afficher le titulaire automatique avec récupération async
+        await updateHolderDisplay();
       } catch {}
     } catch {}
   }, { capture: true });
@@ -1454,6 +1448,49 @@ function setupModalEvents() {
   });
 }
 
+// Helper function to get and display holder name
+async function updateHolderDisplay() {
+  if (!dom.saveHolderDisplay) return;
+  
+  // Afficher temporairement un message de chargement
+  dom.saveHolderDisplay.textContent = 'Récupération...';
+  
+  const token = localStorage.getItem('authToken');
+  const cachedUsername = localStorage.getItem('discordUsername');
+  const cachedEmail = localStorage.getItem('authEmail');
+  
+  // Si on a déjà le pseudo Discord en cache, l'utiliser
+  if (cachedUsername) {
+    dom.saveHolderDisplay.textContent = cachedUsername;
+    return cachedUsername;
+  }
+  
+  // Sinon, essayer de le récupérer du serveur
+  if (token) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        headers: { 'X-Auth-Token': token }
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        if (userData.discordUsername) {
+          localStorage.setItem('discordUsername', userData.discordUsername);
+          dom.saveHolderDisplay.textContent = userData.discordUsername;
+          return userData.discordUsername;
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to fetch Discord username:', err);
+    }
+  }
+  
+  // Fallback sur l'email
+  const holder = cachedEmail || 'Utilisateur non connecté';
+  dom.saveHolderDisplay.textContent = holder;
+  return holder;
+}
+
 // Helper functions for auth UI
 async function updateAuthUI() {
   const token = localStorage.getItem('authToken');
@@ -1629,9 +1666,8 @@ async function initDatabase() {
       if (!ok) return;
       
       // Récupérer automatiquement le pseudo Discord/email de l'utilisateur connecté
-      const cachedUsername = localStorage.getItem('discordUsername');
-      const cachedEmail = localStorage.getItem('authEmail');
-      const holder = cachedUsername || cachedEmail || 'Utilisateur';
+      // Utiliser la fonction qui récupère depuis le serveur si nécessaire
+      const holder = await updateHolderDisplay() || 'Utilisateur';
       
       // Inject into formData and persist
       formData.productName = name;
