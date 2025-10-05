@@ -1472,11 +1472,14 @@ async function updateHolderDisplay() {
       
       if (response.ok) {
         const userData = await response.json();
+        // Essayer différents champs: discordUsername ou user_name (depuis la DB LaFoncedalle)
+        const username = userData.discordUsername || userData.user_name;
+        
         // Vérifier qu'on a un vrai pseudo Discord (pas un User#xxxx ou Discord #xxxx)
-        if (userData.discordUsername && !userData.discordUsername.startsWith('User#') && !userData.discordUsername.startsWith('Discord #')) {
-          localStorage.setItem('discordUsername', userData.discordUsername);
-          dom.saveHolderDisplay.textContent = userData.discordUsername;
-          return userData.discordUsername;
+        if (username && !username.startsWith('User#') && !username.startsWith('Discord #')) {
+          localStorage.setItem('discordUsername', username);
+          dom.saveHolderDisplay.textContent = username;
+          return username;
         }
       }
     } catch (err) {
@@ -1511,19 +1514,22 @@ async function updateAuthUI() {
         
         if (response.ok) {
           const userData = await response.json();
+          // Essayer différents champs: discordUsername ou user_name (depuis la DB LaFoncedalle)
+          const username = userData.discordUsername || userData.user_name;
+          
           // Display Discord username if available, otherwise Discord ID, otherwise email
-          let displayName = userData.discordUsername || email;
+          let displayName = username || email;
           
           // If no username but we have a Discord ID, format it nicely
-          if (!userData.discordUsername && userData.discordId) {
+          if (!username && userData.discordId) {
             displayName = `Discord #${userData.discordId.slice(-4)}`;
           }
           
           if (dom.authConnectedEmail) {
             dom.authConnectedEmail.textContent = displayName;
             // Store Discord info in localStorage for offline access
-            if (userData.discordUsername) {
-              localStorage.setItem('discordUsername', userData.discordUsername);
+            if (username) {
+              localStorage.setItem('discordUsername', username);
             }
             if (userData.discordId) {
               localStorage.setItem('discordId', userData.discordId);
