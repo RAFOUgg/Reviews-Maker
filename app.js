@@ -2208,13 +2208,13 @@ async function renderFullLibrary(mode = 'mine') {
       month: 'long',
       year: 'numeric'
     });
-    const draftBadge = r.isDraft ? `<span class="draft-badge">Draft</span>` : '';
-    const holder = r.holderName ? `<div class="library-item-farm">Titulaire: ${r.holderName}</div>` : '';
+    const draftBadge = r.isDraft ? `<span class="draft-badge" style="position: absolute; top: 8px; left: 8px; z-index: 10;">Draft</span>` : '';
+    const holder = r.holderName ? `<div class="library-item-farm">${r.holderName}</div>` : '';
     
     // Image d'aperçu si disponible
     const imageHtml = r.image ? 
-      `<img src="${r.image}" alt="" class="library-item-image" />` : 
-      `<div class="library-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 1rem;">📷</div>`;
+      `<img src="${r.image}" alt="${title}" class="library-item-image" />` : 
+      `<div class="library-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">📷</div>`;
     
     // Show actions only in 'mine' mode
     const actionsHtml = mode === 'mine' ? `
@@ -2235,8 +2235,8 @@ async function renderFullLibrary(mode = 'mine') {
       ${draftBadge}
       ${imageHtml}
       <div class="library-item-content">
-        <div class="library-item-title">${title}</div>
         <div class="library-item-type">${r.productType || "Review"}</div>
+        <div class="library-item-title">${title}</div>
         ${r.farm ? `<div class="library-item-farm">${r.farm}</div>` : ''}
         ${holder}
         <div class="library-item-date">${date}</div>
