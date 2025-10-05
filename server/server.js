@@ -595,21 +595,33 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 // GET /api/auth/me - Get current user info
-app.get('/api/auth/me', (req, res) => {
+app.get('/api/auth/me', async (req, res) => {
   const email = req.auth?.ownerId;
   const isStaff = req.auth?.roles?.includes('staff');
   const discordId = req.auth?.discordId;
-  const discordUsername = req.auth?.discordUsername;
+  let discordUsername = req.auth?.discordUsername;
   
   if (!email) {
     return res.status(401).json({ error: 'unauthorized' });
+  }
+  
+  // Fetch real username from LaFoncedalle database
+  try {
+    const discordUser = await getDiscordUserByEmail(email);
+    if (discordUser && discordUser.user_name) {
+      discordUsername = discordUser.user_name;
+    }
+  } catch (error) {
+    console.error('[AUTH] Failed to fetch Discord username:', error);
+    // Continue with JWT username as fallback
   }
   
   res.json({ 
     email, 
     isStaff,
     discordId,
-    discordUsername
+    discordUsername,
+    user_name: discordUsername // Ajouter aussi le champ user_name pour compatibilité
   });
 });
 
