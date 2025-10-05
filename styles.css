@@ -2759,7 +2759,7 @@ textarea {
 
 .toast-container {
   position: fixed;
-  right: clamp(24px, 4vw, 40px);
+  left: clamp(24px, 4vw, 40px);
   bottom: clamp(24px, 4vw, 40px);
   display: grid;
   gap: 12px;
