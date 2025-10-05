@@ -166,7 +166,7 @@ nano .env
 Ajoutez à la fin :
 
 ```bash
-REVIEWS_MAKER_API_KEY=votre_cle_secrete_ici
+REVIEWS_MAKER_API_KEY=7e5f5c97bf1ea98f0d9be2a4ad0300dc84a5c34d10d5d44f14d85af0ec5efd16
 ```
 
 Pour générer une clé sécurisée :
