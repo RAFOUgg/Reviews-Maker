@@ -19,7 +19,10 @@ module.exports = {
       },
       env_production: {
         PORT: process.env.PORT || 3000,
-        NODE_ENV: 'production'
+        NODE_ENV: 'production',
+        // Configuration API LaFoncedalleBot
+        LAFONCEDALLE_API_URL: process.env.LAFONCEDALLE_API_URL || 'http://localhost:3001',
+        LAFONCEDALLE_API_KEY: process.env.LAFONCEDALLE_API_KEY || 'your-api-key-here'
       },
       watch: false,
       max_memory_restart: '300M',
