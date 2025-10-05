@@ -1452,15 +1452,12 @@ function setupModalEvents() {
 async function updateHolderDisplay() {
   if (!dom.saveHolderDisplay) return;
   
-  // Afficher temporairement un message de chargement
-  dom.saveHolderDisplay.textContent = 'Récupération...';
-  
   const token = localStorage.getItem('authToken');
   const cachedUsername = localStorage.getItem('discordUsername');
   const cachedEmail = localStorage.getItem('authEmail');
   
-  // Si on a déjà le pseudo Discord en cache, l'utiliser
-  if (cachedUsername) {
+  // Si on a un vrai pseudo Discord en cache (pas un User#xxxx), l'utiliser
+  if (cachedUsername && !cachedUsername.startsWith('User#') && !cachedUsername.startsWith('Discord #')) {
     dom.saveHolderDisplay.textContent = cachedUsername;
     return cachedUsername;
   }
@@ -1468,13 +1465,15 @@ async function updateHolderDisplay() {
   // Sinon, essayer de le récupérer du serveur
   if (token && remoteBase) {
     try {
+      dom.saveHolderDisplay.textContent = 'Récupération...';
       const response = await fetch(`${remoteBase}/api/auth/me`, {
         headers: { 'X-Auth-Token': token }
       });
       
       if (response.ok) {
         const userData = await response.json();
-        if (userData.discordUsername) {
+        // Vérifier qu'on a un vrai pseudo Discord (pas un User#xxxx ou Discord #xxxx)
+        if (userData.discordUsername && !userData.discordUsername.startsWith('User#') && !userData.discordUsername.startsWith('Discord #')) {
           localStorage.setItem('discordUsername', userData.discordUsername);
           dom.saveHolderDisplay.textContent = userData.discordUsername;
           return userData.discordUsername;
@@ -1485,7 +1484,7 @@ async function updateHolderDisplay() {
     }
   }
   
-  // Fallback sur l'email
+  // Fallback sur l'email (solution temporaire en attendant la configuration Discord côté serveur)
   const holder = cachedEmail || 'Utilisateur non connecté';
   dom.saveHolderDisplay.textContent = holder;
   return holder;
