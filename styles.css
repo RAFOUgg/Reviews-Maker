@@ -2143,8 +2143,25 @@ button {
 }
 
 .compact-library-item.is-draft {
-  /* Bordure subtile déjà traitée via ::after à gauche ; on garde la carte propre */
-  border-left: 0;
+  border: 2px solid rgba(245, 158, 11, 0.5);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.compact-library-item.is-draft::after {
+  content: "📋 Brouillon";
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 0.65rem;
+  color: rgba(245, 158, 11, 1);
+  background: rgba(15, 23, 42, 0.95);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  z-index: 10;
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .compact-item-icon {
@@ -2203,12 +2220,14 @@ button {
 /* Badge de brouillon spécial pour galerie */
 .compact-library-item .draft-badge {
   position: absolute;
-  top: 2px;
-  left: 2px;
-  font-size: 0.5rem;
-  padding: 1px 3px;
-  border-radius: 2px;
-  z-index: 1;
+  top: 4px;
+  left: 4px;
+  font-size: 0.6rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  z-index: 10;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(245, 158, 11, 0.4);
 }
 
 .compact-item-badge {
@@ -2301,15 +2320,40 @@ button {
 }
 
 .draft-badge {
-  font-size: 0.65rem;
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: white;
-  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  background: rgba(245, 158, 11, 0.15);
+  color: rgba(245, 158, 11, 1);
+  padding: 5px 10px;
   border-radius: 6px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  backdrop-filter: blur(8px);
+}
+
+.draft-badge::before {
+  content: "📋";
+  font-size: 0.85rem;
+}
+
+.library-item.is-draft {
+  border: 2px solid rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.library-item.is-draft .library-item-image::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 0%, rgba(245, 158, 11, 0.1) 100%);
+  pointer-events: none;
 }
 
 .review-actions {

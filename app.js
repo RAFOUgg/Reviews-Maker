@@ -2472,6 +2472,8 @@ function loadReviewIntoForm(review, mode = 'view') {
     updateProgress();
     // Show preview immediately if review HTML can be generated
     generateReview();
+    // S'assurer que les contrôles de section sont correctement mis à jour
+    updateSectionControls();
   }, 50);
   
   // Ensure panels are visible like after type selection
@@ -2500,6 +2502,11 @@ function loadReviewIntoForm(review, mode = 'view') {
     setReadOnly(true);
     setDraftFlag(false);
   }
+  
+  // S'assurer que les boutons sont bien réactivés après le chargement
+  setTimeout(() => {
+    updateSectionControls();
+  }, 100);
 }
 
 function scheduleLayoutModeUpdate() {
