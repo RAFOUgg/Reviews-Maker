@@ -2690,7 +2690,8 @@ body {
 
 .library-body {
   overflow-y: auto;
-  padding: 14px 16px;
+  padding: 20px 18px;
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .library-list {
