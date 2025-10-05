@@ -768,6 +768,26 @@ function initHomePage() {
   dom.homeTabs = document.getElementById('homeTabs');
   dom.libraryEmpty = document.getElementById("libraryEmpty");
   dom.librarySearch = document.getElementById("librarySearch");
+  
+  // Auth modal - needed for floating auth button
+  dom.authModal = document.getElementById("authModal");
+  dom.authModalOverlay = document.getElementById("authModalOverlay");
+  dom.closeAuth = document.getElementById("closeAuth");
+  dom.authStepEmail = document.getElementById("authStepEmail");
+  dom.authStepCode = document.getElementById("authStepCode");
+  dom.authStepConnected = document.getElementById("authStepConnected");
+  dom.authEmailInput = document.getElementById("authEmailInput");
+  dom.authCodeInput = document.getElementById("authCodeInput");
+  dom.authEmailDisplay = document.getElementById("authEmailDisplay");
+  dom.authConnectedEmail = document.getElementById("authConnectedEmail");
+  dom.authSendCode = document.getElementById("authSendCode");
+  dom.authVerifyCode = document.getElementById("authVerifyCode");
+  dom.authResendCode = document.getElementById("authResendCode");
+  dom.authBack = document.getElementById("authBack");
+  dom.authDisconnect = document.getElementById("authDisconnect");
+  dom.authStatus = document.getElementById("authStatus");
+  dom.floatingAuthBtn = document.getElementById("floatingAuthBtn");
+  dom.openLibrary = document.getElementById("openLibrary");
 
   console.log('DOM elements found:', {
     typeCards: dom.typeCards.length,
