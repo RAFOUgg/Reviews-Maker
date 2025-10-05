@@ -1506,7 +1506,7 @@ async function updateAuthUI() {
       
       // Fetch user info from server to get Discord username
       try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        const response = await fetch(`${remoteBase}/api/auth/me`, {
           headers: { 'X-Auth-Token': token }
         });
         
