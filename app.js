@@ -1466,9 +1466,9 @@ async function updateHolderDisplay() {
   }
   
   // Sinon, essayer de le récupérer du serveur
-  if (token) {
+  if (token && remoteBase) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+      const response = await fetch(`${remoteBase}/api/auth/me`, {
         headers: { 'X-Auth-Token': token }
       });
       
