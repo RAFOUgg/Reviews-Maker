@@ -1135,9 +1135,14 @@ function setupModalEvents() {
   // Astuces - Utilise maintenant le modal sur toutes les pages
   if (dom.openTips) {
     const openTipsModal = () => { 
+      // Réessayer de trouver le modal s'il n'est pas déjà chargé
+      if (!dom.tipsModal) {
+        dom.tipsModal = document.getElementById("tipsModal");
+      }
       if (dom.tipsModal) {
         dom.tipsModal.style.display = 'flex'; 
       } else {
+        console.error('Modal tipsModal introuvable dans le DOM');
         showToast('Modal astuces non disponible', 'warning');
       }
     };
@@ -4006,7 +4011,7 @@ async function tryEnableRemote() {
       remoteEnabled = true;
       remoteBase = basePath; // ensure subsequent calls hit /reviews/api when relevant
       console.info('[remote] API détectée');
-      showToast('Backend serveur détecté', 'info');
+      // Toast supprimé pour ne pas surcharger l'UI
       renderCompactLibrary();
     }
   } catch {}
