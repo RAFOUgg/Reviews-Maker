@@ -900,6 +900,9 @@ async function initEditorPage() {
   setupEditorPageEvents();
   await initDatabase();
   
+  // Initialize auth UI on editor page
+  updateAuthUI();
+  
   // Si un type est spécifié dans l'URL, l'appliquer automatiquement
   if (type) {
     // Sélection immédiate pour éviter tout clignotement de l'étape 1
