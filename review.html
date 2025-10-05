@@ -286,23 +286,49 @@
       </div>
     </div>
     </template>
-    <template id="tipsPopoverTemplate">
-    <div class="tips-popover" role="dialog" aria-label="Astuces et étapes">
-      <h4>Raccourcis clavier</h4>
-      <div class="tips-section">
-        <div class="kbd-line"><kbd>Ctrl/⌘</kbd><span>+</span><kbd>↑</kbd>/<kbd>↓</kbd><span>• Changer de section</span></div>
-        <div class="kbd-line"><kbd>Ctrl/⌘</kbd><span>+</span><kbd>Entrée</kbd><span>• Générer la review</span></div>
+    <!-- Modal Astuces -->
+    <div class="modal" id="tipsModal" style="display: none;">
+      <div class="modal-overlay" id="tipsModalOverlay"></div>
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="tipsTitle">
+        <div class="modal-header">
+          <h2 id="tipsTitle">Raccourcis & Astuces</h2>
+          <button type="button" class="modal-close" id="closeTips" aria-label="Fermer">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="tips-content">
+            <div class="tip-group">
+              <h3>⌨️ Raccourcis clavier</h3>
+              <ul>
+                <li><kbd>Ctrl/⌘</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd> : Changer de section</li>
+                <li><kbd>Ctrl/⌘</kbd> + <kbd>Entrée</kbd> : Générer la review</li>
+                <li><kbd>Tab</kbd> / <kbd>Shift</kbd> + <kbd>Tab</kbd> : Navigation entre les champs</li>
+                <li><kbd>Échap</kbd> : Fermer les modales</li>
+              </ul>
+            </div>
+            <div class="tip-group">
+              <h3>📝 Étapes pour compléter une review</h3>
+              <ol>
+                <li>Choisir le type de produit (Hash, Fleur, Concentré)</li>
+                <li>Remplir les sections affichées (les totaux se mettent à jour automatiquement)</li>
+                <li>Générer la review pour prévisualiser et vérifier</li>
+                <li>Exporter en PNG et/ou CSV (l'état « Brouillon » disparaît à l'export)</li>
+              </ol>
+            </div>
+            <div class="tip-group">
+              <h3>✨ Astuces</h3>
+              <ul>
+                <li>Les champs séquence permettent d'ajouter plusieurs étapes dans l'ordre (ex: Bubble Hash → Séparation électrostatique)</li>
+                <li>Ajoutez une photo pour un rendu optimal</li>
+                <li>La sauvegarde est automatique pendant la saisie</li>
+                <li>Vos brouillons sont accessibles depuis "Ma Bibliothèque"</li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
-      <h4 class="tips-section">Étapes pour compléter une review</h4>
-      <ol class="tip-steps">
-        <li>Étape 1 — Choisir le type de produit (Hash, Fleur, Concentré).</li>
-        <li>Étape 2 — Remplir les sections affichées (les totaux se mettent à jour).</li>
-        <li>Étape 3 — Générer la review pour prévisualiser et vérifier.</li>
-        <li>Étape 4 — Exporter en PNG et/ou CSV. L'état « Brouillon » disparaît à l'export.</li>
-      </ol>
-      <div class="tips-section" style="font-size:0.9rem; color:var(--text-muted)">Astuce: les champs séquence permettent d'ajouter plusieurs étapes dans l'ordre (ex: Bubble Hash → Séparation électrostatique).</div>
     </div>
-    </template>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="app.js"></script>
