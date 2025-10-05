@@ -1164,24 +1164,28 @@ function setupModalEvents() {
     });
   }
 
-  // Modal Bibliothèque
+  // "Ma bibliothèque" button opens MY reviews with full actions
   if (dom.openLibrary) {
     dom.openLibrary.addEventListener("click", () => {
       // Prefer the drawer overlay on review page
       if (dom.libraryDrawer) {
-        toggleLibrary(true);
+        toggleLibrary(true, 'mine');
         return;
       }
       if (dom.libraryModal) {
         dom.libraryModal.style.display = "flex";
-        renderFullLibrary();
+        renderFullLibrary('mine'); // Full actions for my reviews
       }
     });
   }
+  // "Voir tout" button opens PUBLIC gallery in read-only mode
   if (dom.openFullLibrary) {
     dom.openFullLibrary.addEventListener("click", () => {
-      if (dom.libraryDrawer) { toggleLibrary(true); return; }
-      if (dom.libraryModal) { dom.libraryModal.style.display = "flex"; renderFullLibrary(); }
+      if (dom.libraryDrawer) { toggleLibrary(true, 'public'); return; }
+      if (dom.libraryModal) { 
+        dom.libraryModal.style.display = "flex"; 
+        renderFullLibrary('public'); // Read-only public gallery
+      }
     });
   }
   if (dom.closeLibrary) {
@@ -1912,12 +1916,12 @@ function dbGetReviewById(id) {
 }
 
 // ---------- Library drawer UI ----------
-function toggleLibrary(open) {
+function toggleLibrary(open, mode = 'mine') {
   if (open) {
     dom.libraryOverlay?.removeAttribute("hidden");
     dom.libraryDrawer?.removeAttribute("hidden");
     dom.libraryDrawer?.setAttribute("aria-hidden", "false");
-    renderLibraryList();
+    renderLibraryList(mode);
   } else {
     dom.libraryOverlay?.setAttribute("hidden", "");
     dom.libraryDrawer?.setAttribute("hidden", "");
@@ -1925,10 +1929,14 @@ function toggleLibrary(open) {
   }
 }
 
-async function renderLibraryList() {
+async function renderLibraryList(mode = 'mine') {
   if (!dom.libraryList) return;
   const q = (dom.librarySearch?.value || "").trim().toLowerCase();
-  const items = await dbGetAllReviews();
+  
+  // Load reviews based on mode
+  const items = mode === 'public' 
+    ? (remoteEnabled ? await remoteListPublicReviews() : [])
+    : (remoteEnabled ? await remoteListMyReviews() : await dbGetAllReviews());
   const list = items
     .sort((a,b) => (a.date || "").localeCompare(b.date || ""))
     .reverse()
@@ -2023,7 +2031,8 @@ async function duplicateReview(review) {
 async function renderCompactLibrary() {
   if (!dom.compactLibraryList) return;
   
-  const items = await listUnifiedReviews();
+  // Load only public reviews for public gallery
+  const items = remoteEnabled ? await remoteListPublicReviews() : [];
   const list = items
     .sort((a,b) => (a.date || "").localeCompare(b.date || ""))
     .reverse()
@@ -2046,7 +2055,6 @@ async function renderCompactLibrary() {
   list.forEach(r => {
     const item = document.createElement("div");
     item.className = "compact-library-item";
-    if (r.isDraft) item.classList.add("is-draft");
     
     const title = r.productName || r.cultivars || r.productType || "Review";
     const date = new Date(r.date || Date.now()).toLocaleDateString("fr-FR", {
@@ -2054,49 +2062,24 @@ async function renderCompactLibrary() {
       month: 'short'
     });
     const holder = r.holderName ? ` • ${r.holderName}` : '';
-  const draftBadge = r.isDraft ? `<span class="draft-badge">Brouillon</span>` : '';
     
     // Image d'aperçu si disponible
     const imageHtml = r.image ? 
       `<img src="${r.image}" alt="" class="compact-item-image" />` : 
       `<div class="compact-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.6rem;">📷</div>`;
     
+    // Public gallery: NO edit buttons, just preview
     item.innerHTML = `
-      ${draftBadge}
       ${imageHtml}
       <div class="compact-item-content">
         <div class="compact-item-title">${title}</div>
         <div class="compact-item-meta">${r.productType || "Review"} • ${date}${holder}</div>
       </div>
-      <div class="compact-item-actions">
-        <button type="button" class="btn btn-secondary btn-xs" data-act="edit" title="Éditer">✏️</button>
-      </div>
     `;
     
-    // Event listeners
-  const openPreview = async () => { await openPreviewOnly(r); };
-    item.querySelector('[data-act="load"]').addEventListener('click', openPreview);
-    // Ouvrir l'aperçu en cliquant sur la carte ou l'image
-    item.addEventListener('click', (e) => {
-      const target = e.target;
-      // Éviter le déclenchement si on clique sur un bouton d'action
-      if (target instanceof HTMLElement && target.closest('.btn')) return;
-      openPreview();
-    });
-    item.querySelector('[data-act="edit"]').addEventListener('click', () => { 
-      if (isHomePage) {
-        // Préférer passer l'objet complet pour éviter un 2e fetch
-        if (r) {
-          navigateToEditor(r.productType, r, r.id ?? null);
-        } else if (r?.id != null) {
-          navigateToEditor(r.productType, null, r.id);
-        } else {
-          navigateToEditor(r.productType);
-        }
-      } else {
-        loadReviewIntoForm(r, 'edit'); 
-      }
-    });
+    // Click to preview only (read-only)
+    const openPreview = async () => { await openPreviewOnly(r); };
+    item.addEventListener('click', openPreview);
     
     dom.compactLibraryList.appendChild(item);
   });
@@ -2148,10 +2131,16 @@ async function renderMyCompactLibrary() {
 }
 
 // Rendu de la bibliothèque complète dans la modal
-async function renderFullLibrary() {
+async function renderFullLibrary(mode = 'mine') {
   if (!dom.libraryGrid) return;
   
-  const items = await listUnifiedReviews();
+  // Load reviews based on mode:
+  // - 'public': Only public reviews (read-only)
+  // - 'mine': Only my reviews (full actions)
+  const items = mode === 'public' 
+    ? (remoteEnabled ? await remoteListPublicReviews() : [])
+    : (remoteEnabled ? await remoteListMyReviews() : await dbGetAllReviews());
+  
   const searchTerm = dom.librarySearch?.value?.toLowerCase() || "";
   
   // Get current user token to identify ownership
@@ -2211,16 +2200,8 @@ async function renderFullLibrary() {
       `<img src="${r.image}" alt="" class="library-item-image" />` : 
       `<div class="library-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 1rem;">📷</div>`;
     
-    item.innerHTML = `
-      ${draftBadge}
-      ${imageHtml}
-      <div class="library-item-content">
-        <div class="library-item-title">${title}</div>
-        <div class="library-item-type">${r.productType || "Review"}</div>
-        ${r.farm ? `<div class="library-item-farm">${r.farm}</div>` : ''}
-        ${holder}
-        <div class="library-item-date">${date}</div>
-      </div>
+    // Show actions only in 'mine' mode
+    const actionsHtml = mode === 'mine' ? `
       <div class="library-item-actions">
         <button type="button" class="btn btn-outline btn-sm" data-act="edit" title="Éditer">
           <span aria-hidden="true">✏️</span>
@@ -2232,22 +2213,40 @@ async function renderFullLibrary() {
           Supprimer
         </button>
       </div>
+    ` : '';
+    
+    item.innerHTML = `
+      ${draftBadge}
+      ${imageHtml}
+      <div class="library-item-content">
+        <div class="library-item-title">${title}</div>
+        <div class="library-item-type">${r.productType || "Review"}</div>
+        ${r.farm ? `<div class="library-item-farm">${r.farm}</div>` : ''}
+        ${holder}
+        <div class="library-item-date">${date}</div>
+      </div>
+      ${actionsHtml}
     `;
     
-    // Event listeners
-    item.querySelector('[data-act="edit"]').addEventListener('click', () => {
-      // Fermer la modal
-      if (dom.libraryModal) dom.libraryModal.style.display = "none";
-      
-      if (isHomePage) {
-        navigateToEditor(r.productType, r);
-      } else {
-        loadReviewIntoForm(r, 'edit'); 
+    // Event listeners only in 'mine' mode
+    if (mode === 'mine') {
+      const editBtn = item.querySelector('[data-act="edit"]');
+      if (editBtn) {
+        editBtn.addEventListener('click', () => {
+          // Fermer la modal
+          if (dom.libraryModal) dom.libraryModal.style.display = "none";
+          
+          if (isHomePage) {
+            navigateToEditor(r.productType, r);
+          } else {
+            loadReviewIntoForm(r, 'edit'); 
+          }
+        });
       }
-    });
-    
-    const delBtn = item.querySelector('[data-act="delete"]');
-    delBtn.addEventListener('click', async () => {
+      
+      const delBtn = item.querySelector('[data-act="delete"]');
+      if (delBtn) {
+        delBtn.addEventListener('click', async () => {
       if (confirm(`Êtes-vous sûr de vouloir supprimer "${title}" ?`)) {
         try {
           let remoteOk = true;
@@ -2255,7 +2254,7 @@ async function renderFullLibrary() {
             remoteOk = await remoteDeleteReview(r.id);
           }
           try { await dbDeleteReview(r.id); } catch {}
-          renderFullLibrary(); // Recharger la liste
+          renderFullLibrary(mode); // Recharger la liste avec le même mode
           renderCompactLibrary(); // Mettre à jour la vue compacte aussi
           showToast(remoteOk ? "Review supprimée" : "Supprimée localement, échec serveur", remoteOk ? 'success' : 'warning');
         } catch (e) {
@@ -2263,30 +2262,37 @@ async function renderFullLibrary() {
           showToast("Erreur lors de la suppression", "error");
         }
       }
-    });
+        });
+      }
 
-    // Privacy toggle (owner or staff; server enforces authorization)
-    const privacyBtn = item.querySelector('[data-act="privacy"]');
-    if (privacyBtn) {
-      privacyBtn.addEventListener('click', async () => {
-        if (!remoteEnabled) return;
-        try {
-          const next = !r.isPrivate;
-          const ok = await remoteTogglePrivacy(r.id, next);
-          if (ok) {
-            r.isPrivate = next;
-            showToast(next ? 'Passée en privé' : 'Rendue publique', 'info');
-            privacyBtn.textContent = r.isPrivate ? '🔒 Privé' : '🌐 Public';
-            // Refresh lists to reflect server state
-            await renderFullLibrary();
-            await renderCompactLibrary();
-          } else {
-            showToast('Action non autorisée ou échec serveur', 'warning');
+      // Privacy toggle (owner or staff; server enforces authorization)
+      const privacyBtn = item.querySelector('[data-act="privacy"]');
+      if (privacyBtn) {
+        privacyBtn.addEventListener('click', async () => {
+          if (!remoteEnabled) return;
+          try {
+            const next = !r.isPrivate;
+            const ok = await remoteTogglePrivacy(r.id, next);
+            if (ok) {
+              r.isPrivate = next;
+              showToast(next ? 'Passée en privé' : 'Rendue publique', 'info');
+              privacyBtn.textContent = r.isPrivate ? '🔒 Privé' : '🌐 Public';
+              // Refresh lists to reflect server state
+              await renderFullLibrary(mode); // Recharger avec le même mode
+              await renderCompactLibrary();
+            } else {
+              showToast('Action non autorisée ou échec serveur', 'warning');
+            }
+          } catch (e) {
+            console.warn(e);
+            showToast('Impossible de changer la confidentialité', 'error');
           }
-        } catch (e) {
-          console.warn(e);
-          showToast('Impossible de changer la confidentialité', 'error');
-        }
+        });
+      }
+    } else {
+      // In public mode, just add click to preview
+      item.addEventListener('click', async () => {
+        await openPreviewOnly(r);
       });
     }
     
@@ -3947,6 +3953,36 @@ async function remoteListReviews() {
     if (!r.ok) throw new Error('HTTP '+r.status);
     return await r.json();
   } catch (e) { console.warn('Remote list erreur', e); return dbGetAllReviews(); }
+}
+
+// List only public reviews (for public gallery)
+async function remoteListPublicReviews() {
+  if (!remoteEnabled) return [];
+  try {
+    const r = await fetch(remoteBase + '/api/public/reviews');
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    return await r.json();
+  } catch (e) { 
+    console.warn('Remote public list error', e); 
+    return []; 
+  }
+}
+
+// List only MY reviews (for personal library)
+async function remoteListMyReviews() {
+  if (!remoteEnabled) return dbGetAllReviews();
+  try {
+    const token = localStorage.getItem('authToken');
+    if (!token) return dbGetAllReviews(); // Fallback to local if not authenticated
+    
+    const headers = { 'X-Auth-Token': token };
+    const r = await fetch(remoteBase + '/api/my/reviews', { headers });
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    return await r.json();
+  } catch (e) { 
+    console.warn('Remote my reviews error', e); 
+    return dbGetAllReviews(); 
+  }
 }
 
 // Liste unifiée des reviews (serveur + locale) avec déduplication par correlationKey.
