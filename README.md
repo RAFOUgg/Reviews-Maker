@@ -211,11 +211,43 @@ Possibilité de choisir une weed déjà reviewée dans la base de données comme
 
 ```
 Reviews-Maker/
-├── app.js         # Logique métier et interactions dynamiques
-├── review.html    # Layout principal et structure de la page
-├── styles.css     # Thème graphique et responsive design
-└── README.md      # Ce guide
+├── index.html                    # Page d'accueil avec sélection du type
+├── review.html                   # Éditeur de review avec formulaire dynamique
+├── gallery.html                  # Galerie complète des reviews
+├── admin.html                    # Page d'administration
+├── app.js                        # Logique métier et interactions dynamiques
+├── styles.css                    # Thème graphique et responsive design
+├── server/                       # Backend Node.js + Express
+│   ├── server.js                 # API REST pour reviews et authentification
+│   ├── ecosystem.config.cjs      # Configuration PM2 pour production
+│   ├── package.json              # Dépendances Node.js
+│   ├── tokens/                   # Tokens de session utilisateur
+│   └── README.md                 # Documentation du backend
+├── db/                           # Base de données et images
+│   ├── reviews.sqlite            # Base SQLite (généré automatiquement)
+│   └── review_images/            # Images uploadées
+└── docs/                         # Documentation
+    ├── README.md                 # Ce guide
+    ├── INTEGRATION_LAFONCEDALLE_API.md         # Doc intégration API
+    └── DEPLOIEMENT_INTEGRATION_LAFONCEDALLE.md # Guide de déploiement
 ```
+
+## 🔐 Authentification et synchronisation
+
+Reviews-Maker s'intègre avec **LaFoncedalleBot** pour l'authentification des utilisateurs :
+
+- **Base de données partagée** : LaFoncedalleBot gère les utilisateurs Discord et leurs emails
+- **Service de mailing** : LaFoncedalleBot envoie les codes de vérification
+- **Flux simplifié** :
+  1. L'utilisateur entre son email
+  2. Reviews-Maker vérifie via l'API LaFoncedalleBot si l'email est lié à Discord
+  3. Un code est envoyé par email via LaFoncedalleBot
+  4. L'utilisateur entre le code pour activer son compte
+  5. Le compte est nommé avec le pseudo Discord
+
+**Documentation complète** :
+- API Integration : [INTEGRATION_LAFONCEDALLE_API.md](INTEGRATION_LAFONCEDALLE_API.md)
+- Guide de déploiement : [DEPLOIEMENT_INTEGRATION_LAFONCEDALLE.md](DEPLOIEMENT_INTEGRATION_LAFONCEDALLE.md)
 
 ## 🔧 Personnalisation
 

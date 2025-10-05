@@ -32,7 +32,7 @@ Tu peux donc ouvrir: http://localhost:3000/index.html
 | PUT     | /api/reviews/:id    | Mise à jour |
 | DELETE  | /api/reviews/:id    | Suppression |
 
-### 3.2 Authentification (LaFoncedalle)
+### 3.2 Authentification (LaFoncedalleBot Integration)
 
 | Méthode | URL                      | Description |
 |---------|--------------------------|-------------|
@@ -41,12 +41,32 @@ Tu peux donc ouvrir: http://localhost:3000/index.html
 | POST    | /api/auth/logout         | Déconnexion (supprimer le token) |
 | GET     | /api/auth/me             | Récupérer les infos de l'utilisateur connecté |
 
-**Note** : L'authentification utilise l'API LaFoncedalle pour :
-- Vérifier que l'email est lié à un compte Discord
-- Envoyer les codes de vérification par email
-- Récupérer le pseudo Discord de l'utilisateur
+**Note** : L'authentification s'intègre avec LaFoncedalleBot via son API :
 
-Voir [INTEGRATION_LAFONCEDALLE.md](../INTEGRATION_LAFONCEDALLE.md) pour plus de détails.
+#### Architecture
+```
+Reviews-Maker (frontend) 
+    ↓
+Reviews-Maker (backend/server.js)
+    ↓ API calls
+LaFoncedalleBot (API + Service de mailing + Base de données Discord)
+```
+
+#### Flux d'authentification
+1. L'utilisateur entre son email sur Reviews-Maker
+2. Reviews-Maker interroge l'API de LaFoncedalleBot pour vérifier si l'email existe dans la base Discord
+3. Si l'email est trouvé, LaFoncedalleBot renvoie le profil Discord (ID + pseudo)
+4. Reviews-Maker demande à LaFoncedalleBot d'envoyer un code de vérification par email
+5. L'utilisateur entre le code reçu
+6. Reviews-Maker vérifie le code et crée une session
+7. Le compte est nommé automatiquement avec le pseudo Discord
+
+#### Configuration requise
+- `LAFONCEDALLE_API_URL` : URL de l'API LaFoncedalleBot (ex: http://localhost:3001)
+- `LAFONCEDALLE_API_KEY` : Clé API partagée pour sécuriser les requêtes
+
+Voir [INTEGRATION_LAFONCEDALLE_API.md](../INTEGRATION_LAFONCEDALLE_API.md) pour la documentation complète.
+Voir [DEPLOIEMENT_INTEGRATION_LAFONCEDALLE.md](../DEPLOIEMENT_INTEGRATION_LAFONCEDALLE.md) pour le guide de déploiement.
 
 Payload JSON principal = l'objet complet de la review (les champs utilisés dans `app.js`).
 Si une image est uploadée via champ `image`, on renvoie `image: /images/<fichier>`.
