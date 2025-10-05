@@ -195,10 +195,11 @@
               <p class="field-error" id="saveNameError" hidden>Veuillez saisir un nom de review.</p>
             </div>
             <div class="form-row">
-              <label for="saveHolder" class="field-label">Titulaire de la review <span aria-hidden="true" style="color:#ef4444">*</span></label>
-              <input type="text" id="saveHolder" placeholder="Nom et/ou équipe (obligatoire)" required aria-required="true" />
-              <p class="field-hint">Ex: Rafi, Studio RM, @alias …</p>
-              <p class="field-error" id="saveHolderError" hidden>Le nom du titulaire est obligatoire.</p>
+              <label class="field-label">Titulaire</label>
+              <div style="padding: 12px; background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 8px; color: var(--text);">
+                <span id="saveHolderDisplay">Chargement...</span>
+              </div>
+              <p class="field-hint">Le titulaire est automatiquement défini avec votre pseudo Discord.</p>
             </div>
             <div class="form-row">
               <label class="field-label">Confidentialité</label>

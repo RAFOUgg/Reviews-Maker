@@ -840,9 +840,8 @@ async function initEditorPage() {
   dom.closeSaveModal = document.getElementById('closeSaveModal');
   dom.saveForm = document.getElementById('saveForm');
   dom.saveName = document.getElementById('saveName');
-  dom.saveHolder = document.getElementById('saveHolder');
+  dom.saveHolderDisplay = document.getElementById('saveHolderDisplay');
   dom.saveNameError = document.getElementById('saveNameError');
-  dom.saveHolderError = document.getElementById('saveHolderError');
   dom.savePrivacy = document.getElementById('savePrivacy');
   dom.savePrivacySegment = document.getElementById('savePrivacySegment');
   dom.cancelSave = document.getElementById('cancelSave');
@@ -1046,7 +1045,11 @@ function setupFormEvents() {
         collectFormData();
         const defName = buildSuggestedName();
         if (dom.saveName) dom.saveName.value = formData.productName || defName || '';
-        if (dom.saveHolder) dom.saveHolder.value = formData.holderName || '';
+        // Afficher le titulaire automatique
+        const cachedUsername = localStorage.getItem('discordUsername');
+        const cachedEmail = localStorage.getItem('userEmail');
+        const holder = cachedUsername || cachedEmail || 'Utilisateur non connecté';
+        if (dom.saveHolderDisplay) dom.saveHolderDisplay.textContent = holder;
       } catch (e) { console.warn('Prefill save modal failed', e); }
     });
   }
@@ -1124,7 +1127,11 @@ function setupFormEvents() {
         collectFormData();
         const defName = buildSuggestedName();
         if (dom.saveName) dom.saveName.value = formData.productName || defName || '';
-        if (dom.saveHolder) dom.saveHolder.value = formData.holderName || '';
+        // Afficher le titulaire automatique
+        const cachedUsername = localStorage.getItem('discordUsername');
+        const cachedEmail = localStorage.getItem('userEmail');
+        const holder = cachedUsername || cachedEmail || 'Utilisateur non connecté';
+        if (dom.saveHolderDisplay) dom.saveHolderDisplay.textContent = holder;
       } catch {}
     } catch {}
   }, { capture: true });
@@ -1617,25 +1624,23 @@ async function initDatabase() {
       ev.preventDefault();
       // Validation
       const name = (dom.saveName?.value || '').trim();
-      const holder = (dom.saveHolder?.value || '').trim();
       let ok = true;
       if (!name) { dom.saveNameError?.removeAttribute('hidden'); ok = false; } else { dom.saveNameError?.setAttribute('hidden',''); }
-      if (!holder) { dom.saveHolderError?.removeAttribute('hidden'); ok = false; } else { dom.saveHolderError?.setAttribute('hidden',''); }
       if (!ok) return;
+      
+      // Récupérer automatiquement le pseudo Discord/email de l'utilisateur connecté
+      const cachedUsername = localStorage.getItem('discordUsername');
+      const cachedEmail = localStorage.getItem('userEmail');
+      const holder = cachedUsername || cachedEmail || 'Utilisateur';
+      
       // Inject into formData and persist
       formData.productName = name;
-      formData.holderName = holder; // nouveau champ obligatoire
+      formData.holderName = holder; // automatiquement rempli avec le pseudo Discord
       // Privacy from Save modal
       const privVal = (dom.savePrivacy?.value || 'public');
       formData.isPrivate = privVal === 'private';
       try {
         const res = await saveReview(false);
-        // Si le serveur a renvoyé une erreur de validation, l'afficher et ne pas fermer
-        if (res && res.remoteError && res.remoteError.field === 'holderName') {
-          dom.saveHolderError?.removeAttribute('hidden');
-          dom.saveHolderError && (dom.saveHolderError.textContent = 'Le titulaire est obligatoire.');
-          return;
-        }
         closeSaveModal();
       }
       catch(e){ console.error(e); showToast("Impossible d'enregistrer.", 'error'); }
