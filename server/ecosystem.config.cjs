@@ -21,7 +21,7 @@ module.exports = {
         PORT: process.env.PORT || 3000,
         NODE_ENV: 'production',
         // Configuration API LaFoncedalleBot
-        LAFONCEDALLE_API_URL: 'http://172.18.0.2:5000',
+        LAFONCEDALLE_API_URL: 'http://localhost:5000',
         LAFONCEDALLE_API_KEY: '7e5f5c97bf1ea98f0d9be2a4ad0300dc84a5c34d10d5d44f14d85af0ec5efd16',
       },
       watch: false,
