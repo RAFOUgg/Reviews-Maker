@@ -6501,6 +6501,19 @@ kbd {
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 @media (max-width: 768px) {
   
+  /* Conteneurs de listes multi-select ultra-compacts */
+  .multi-select-container,
+  .checkbox-list,
+  .radio-list {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(52, 211, 153, 0.1) !important;
+    border-radius: 4px !important;
+    padding: 0.4rem !important;
+    margin: 0.3rem 0 !important;
+    max-height: 200px !important;
+    overflow-y: auto !important;
+  }
+  
   /* Interface ultra-compacte et ergonomique */
   .panel {
     padding: 0.8rem !important;
@@ -6535,7 +6548,7 @@ kbd {
   .checkbox-item {
     padding: 0.2rem !important;
     min-height: 26px !important;
-    margin-bottom: 0.15rem !important;
+    margin-bottom: 0.1rem !important;
     border-radius: 2px !important;
     background: rgba(255, 255, 255, 0.04) !important;
     border: 1px solid rgba(52, 211, 153, 0.15) !important;
@@ -6658,6 +6671,26 @@ kbd {
     opacity: 0.7 !important;
   }
   
+  /* Scrollbars optimisées pour les listes compactes */
+  .multi-select-container::-webkit-scrollbar,
+  .checkbox-list::-webkit-scrollbar,
+  .radio-list::-webkit-scrollbar {
+    width: 3px !important;
+  }
+  
+  .multi-select-container::-webkit-scrollbar-track,
+  .checkbox-list::-webkit-scrollbar-track,
+  .radio-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-radius: 2px !important;
+  }
+  
+  .multi-select-container::-webkit-scrollbar-thumb,
+  .checkbox-list::-webkit-scrollbar-thumb,
+  .radio-list::-webkit-scrollbar-thumb {
+    background: rgba(52, 211, 153, 0.3) !important;
+    border-radius: 2px !important;
+  }
   /* Groupes boolean ultra-compacts */
   .boolean-group {
     gap: 0.1rem !important;
@@ -6694,6 +6727,32 @@ kbd {
     border-radius: 4px !important;
   }
   
+  /* Optimisations pour les listes verticales d'éléments */
+  .checkbox-list .checkbox-item,
+  .radio-list .radio {
+    display: flex !important;
+    align-items: center !important;
+    padding: 0.15rem 0.3rem !important;
+    min-height: 24px !important;
+    margin-bottom: 0.05rem !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(52, 211, 153, 0.08) !important;
+    border-radius: 2px !important;
+  }
+  
+  .checkbox-list .checkbox-item:last-child,
+  .radio-list .radio:last-child {
+    margin-bottom: 0 !important;
+  }
+  
+  .checkbox-list .checkbox-item label,
+  .radio-list .radio label {
+    font-size: 0.5rem !important;
+    font-weight: 500 !important;
+    line-height: 1.0 !important;
+    margin: 0 !important;
+    flex: 1 !important;
+  }
   /* Grilles de checkbox/radio ultra-compactes */
   .checkbox-grid,
   .radio-grid {
