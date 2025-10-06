@@ -6510,7 +6510,7 @@ kbd {
     border-radius: 3px !important;
     padding: 0.2rem !important;
     margin: 0.2rem 0 !important;
-    max-height: 100px !important;
+    max-height: 50px !important;
     overflow-y: auto !important;
   }
   
