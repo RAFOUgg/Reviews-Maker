@@ -506,7 +506,7 @@ const productStructures = {
             key: "matiereVegetale",
             label: "Type de matière végétale",
             type: "multiple-choice",
-            choices: ["Fleurs fraîches", "Fleurs sèches", "Trim", "Autre"]
+            choices: ["Fleurs fraîches", "Fleurs sèches", "Trim", "Trichomes", "Autre"]
           },
           {
             key: "typeExtraction",
