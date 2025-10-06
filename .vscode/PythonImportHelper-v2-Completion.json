@@ -1,0 +1,29 @@
+[
+    {
+        "label": "get_discord_user_by_email",
+        "kind": 2,
+        "importPath": "code_pour_lafoncedalle",
+        "description": "code_pour_lafoncedalle",
+        "peekOfCode": "def get_discord_user_by_email():\n    \"\"\"\n    Vérifie si un email existe dans la base Discord et retourne le profil utilisateur.\n    Utilisé par Reviews-Maker pour l'authentification.\n    \"\"\"\n    # Vérification de l'authentification API\n    auth_header = request.headers.get('Authorization')\n    expected_header = f\"Bearer {REVIEWS_MAKER_API_KEY}\"\n    if not auth_header or auth_header != expected_header:\n        Logger.warning(\"Tentative d'accès non autorisée à /api/discord/user-by-email\")",
+        "detail": "code_pour_lafoncedalle",
+        "documentation": {}
+    },
+    {
+        "label": "send_verification_code",
+        "kind": 2,
+        "importPath": "code_pour_lafoncedalle",
+        "description": "code_pour_lafoncedalle",
+        "peekOfCode": "def send_verification_code():\n    \"\"\"\n    Envoie un code de vérification par email pour Reviews-Maker.\n    \"\"\"\n    # Vérification de l'authentification API\n    auth_header = request.headers.get('Authorization')\n    expected_header = f\"Bearer {REVIEWS_MAKER_API_KEY}\"\n    if not auth_header or auth_header != expected_header:\n        Logger.warning(\"Tentative d'accès non autorisée à /api/mail/send-verification\")\n        return jsonify({\"error\": \"unauthorized\", \"message\": \"API key manquante ou invalide\"}), 401",
+        "detail": "code_pour_lafoncedalle",
+        "documentation": {}
+    },
+    {
+        "label": "REVIEWS_MAKER_API_KEY",
+        "kind": 5,
+        "importPath": "code_pour_lafoncedalle",
+        "description": "code_pour_lafoncedalle",
+        "peekOfCode": "REVIEWS_MAKER_API_KEY = os.getenv('REVIEWS_MAKER_API_KEY', 'your-api-key-here')\n# 3. Ajoutez les deux endpoints ci-dessous À LA FIN du fichier (avant le if __name__ == '__main__':)\n# ========================================\n# ========================================\n# ENDPOINTS POUR REVIEWS-MAKER\n# ========================================\n@app.route('/api/discord/user-by-email', methods=['POST'])\ndef get_discord_user_by_email():\n    \"\"\"\n    Vérifie si un email existe dans la base Discord et retourne le profil utilisateur.",
+        "detail": "code_pour_lafoncedalle",
+        "documentation": {}
+    }
+]

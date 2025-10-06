@@ -266,9 +266,9 @@ const productStructures = {
       {
         title: "Informations générales",
         fields: [
-          { key: "cultivars", label: "Cultivars", type: "text" },
-          { key: "breeder", label: "Breeders de la graine", type: "text" },
-          { key: "farm", label: "Farm", type: "text" },
+          { key: "cultivars", label: "Cultivars de la/les matière(s) organique(s)", type: "text" },
+          { key: "breeder", label: "Breeders de la/les graine(s)", type: "text" },
+          { key: "farm", label: "Farm(s)", type: "text" },
           {
             key: "matiereVegetale",
             label: "Type de matière végétale",
@@ -319,9 +319,10 @@ const productStructures = {
         fields: [
           { key: "couleurTransparence", label: "Couleur/transparence", type: "number", max: 10 },
           { key: "pureteVisuelle", label: "Pureté visuelle", type: "number", max: 10 },
+          { key: "densite", label: "Densité", type: "number", max: 10 },
         ],
         total: true,
-        totalKeys: ["couleurTransparence", "friabiliteViscosite", "pureteVisuelle", "meltingResidus"]
+        totalKeys: ["couleurTransparence","pureteVisuelle", "densite"]
       },
       {
         title: "Odeur",
