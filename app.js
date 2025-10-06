@@ -763,6 +763,11 @@ function init() {
   
   // Créer la navigation mobile pour tous les types de pages
   createMobileBottomNav();
+  
+  // Améliorer l'UX des champs de saisie
+  setTimeout(() => {
+    enhanceFormFields();
+  }, 500); // Délai pour s'assurer que les éléments sont chargés
 }
 
 function createMobileBottomNav() {
@@ -808,6 +813,142 @@ function createMobileBottomNav() {
 
 // Recréer la navigation mobile lors du redimensionnement
 window.addEventListener('resize', createMobileBottomNav);
+
+// Améliorations UX pour les champs de saisie
+function enhanceFormFields() {
+  // Auto-resize pour les textarea
+  function autoResizeTextarea(textarea) {
+    textarea.style.height = 'auto';
+    const scrollHeight = textarea.scrollHeight;
+    const maxHeight = 300; // Hauteur maximum
+    textarea.style.height = Math.min(scrollHeight, maxHeight) + 'px';
+    
+    // Gestion du scroll si le contenu dépasse
+    if (scrollHeight > maxHeight) {
+      textarea.style.overflowY = 'auto';
+    } else {
+      textarea.style.overflowY = 'hidden';
+    }
+  }
+  
+  // Appliquer l'auto-resize à toutes les textarea
+  document.querySelectorAll('textarea').forEach(textarea => {
+    // Auto-resize initial
+    autoResizeTextarea(textarea);
+    
+    // Auto-resize lors de la saisie
+    textarea.addEventListener('input', () => autoResizeTextarea(textarea));
+    
+    // Effet de focus amélioré
+    textarea.addEventListener('focus', function() {
+      this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+    });
+  });
+  
+  // Améliorations pour tous les champs de saisie
+  document.querySelectorAll('input[type="text"], input[type="number"], select').forEach(field => {
+    // Effet de focus avec animation du label
+    field.addEventListener('focus', function() {
+      const fieldGroup = this.closest('.field-group');
+      if (fieldGroup) {
+        fieldGroup.classList.add('focused');
+      }
+    });
+    
+    field.addEventListener('blur', function() {
+      const fieldGroup = this.closest('.field-group');
+      if (fieldGroup) {
+        fieldGroup.classList.remove('focused');
+      }
+    });
+    
+    // Validation visuelle en temps réel
+    field.addEventListener('input', function() {
+      if (this.value.trim() !== '') {
+        this.classList.add('has-content');
+      } else {
+        this.classList.remove('has-content');
+      }
+    });
+  });
+  
+  // Amélioration des boutons radio et checkbox
+  document.querySelectorAll('.radio, .checkbox-item').forEach(element => {
+    element.addEventListener('click', function(e) {
+      // Effet ripple
+      const ripple = document.createElement('div');
+      ripple.className = 'ripple-effect';
+      ripple.style.cssText = `
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(52, 211, 153, 0.4);
+        transform: scale(0);
+        animation: ripple 0.6s linear;
+        pointer-events: none;
+      `;
+      
+      const rect = this.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const x = e.clientX - rect.left - size / 2;
+      const y = e.clientY - rect.top - size / 2;
+      
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = x + 'px';
+      ripple.style.top = y + 'px';
+      
+      this.appendChild(ripple);
+      
+      // Supprimer l'effet après l'animation
+      setTimeout(() => {
+        if (ripple.parentNode) {
+          ripple.parentNode.removeChild(ripple);
+        }
+      }, 600);
+    });
+  });
+  
+  // Placeholder dynamique pour les textarea
+  document.querySelectorAll('textarea[placeholder]').forEach(textarea => {
+    const originalPlaceholder = textarea.placeholder;
+    
+    textarea.addEventListener('focus', function() {
+      if (this.value === '') {
+        this.placeholder = 'Commencez à écrire...';
+      }
+    });
+    
+    textarea.addEventListener('blur', function() {
+      this.placeholder = originalPlaceholder;
+    });
+  });
+}
+
+// CSS pour l'animation ripple
+const rippleCSS = `
+  @keyframes ripple {
+    to {
+      transform: scale(4);
+      opacity: 0;
+    }
+  }
+  
+  .field-group.focused label {
+    color: var(--primary) !important;
+    transform: translateX(2px) !important;
+  }
+  
+  .has-content {
+    background: rgba(255, 255, 255, 0.12) !important;
+  }
+`;
+
+// Ajouter le CSS
+if (!document.getElementById('enhanced-ux-styles')) {
+  const style = document.createElement('style');
+  style.id = 'enhanced-ux-styles';
+  style.textContent = rippleCSS;
+  document.head.appendChild(style);
+}
 
 function initHomePage() {
   console.log('Initializing home page...');

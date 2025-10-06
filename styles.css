@@ -5380,136 +5380,324 @@ kbd {
   select,
   .input {
     font-size: 16px !important; /* Évite le zoom iOS */
-    padding: 1rem;
-    min-height: 50px;
-    background: rgba(255, 255, 255, 0.08) !important; /* Plus visible */
-    border: 2px solid rgba(52, 211, 153, 0.25) !important; /* Bordure plus visible */
-    border-radius: var(--radius-md);
+    padding: 1.2rem 1rem !important; /* Plus de padding vertical */
+    min-height: 56px !important; /* Taille optimale pour le tactile */
+    background: rgba(255, 255, 255, 0.1) !important; /* Plus visible */
+    border: 2px solid rgba(52, 211, 153, 0.3) !important; /* Bordure plus visible */
+    border-radius: 14px !important; /* Coins plus arrondis pour mobile */
     color: var(--text) !important;
-    font-weight: 500 !important; /* Texte plus gras */
-    transition: all 0.25s ease;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1) !important; /* Ombre intérieure */
+    font-weight: 500 !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; /* Transition plus fluide */
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), 
+                0 1px 3px rgba(52, 211, 153, 0.1) !important; /* Ombres plus prononcées */
+    position: relative !important;
   }
   
+  /* Animation au focus plus sophistiquée */
   input:focus,
   textarea:focus,
   select:focus {
-    background: rgba(255, 255, 255, 0.12) !important; /* Plus contrasté au focus */
+    background: rgba(255, 255, 255, 0.15) !important; /* Plus contrasté */
     border-color: var(--primary) !important;
-    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2), 
-                inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-    outline: none;
-    transform: translateY(-1px) !important; /* Léger décalage au focus */
+    box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.25), 
+                inset 0 2px 4px rgba(0, 0, 0, 0.15),
+                0 4px 12px rgba(52, 211, 153, 0.15) !important; /* Glow effect */
+    outline: none !important;
+    transform: translateY(-2px) scale(1.01) !important; /* Élévation + légère expansion */
   }
   
-  /* Sélecteurs spéciaux */
+  /* États hover pour meilleure interactivité */
+  input:hover:not(:focus),
+  textarea:hover:not(:focus),
+  select:hover:not(:focus) {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(52, 211, 153, 0.4) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), 
+                0 2px 8px rgba(52, 211, 153, 0.12) !important;
+  }
+  
+  /* Sélecteurs avec flèche personnalisée */
   select {
     background-image: linear-gradient(45deg, transparent 50%, var(--primary) 50%), 
                       linear-gradient(135deg, var(--primary) 50%, transparent 50%) !important;
-    background-position: calc(100% - 20px) calc(1em + 2px), 
-                         calc(100% - 15px) calc(1em + 2px) !important;
-    background-size: 5px 5px, 5px 5px !important;
+    background-position: calc(100% - 24px) calc(1em + 4px), 
+                         calc(100% - 18px) calc(1em + 4px) !important;
+    background-size: 6px 6px, 6px 6px !important;
     background-repeat: no-repeat !important;
-    padding-right: 2.5rem !important; /* Espace pour la flèche */
+    padding-right: 3rem !important; /* Plus d'espace pour la flèche */
+    cursor: pointer !important;
   }
   
-  /* Placeholder plus visible */
+  /* Placeholders améliorés */
   input::placeholder,
   textarea::placeholder {
-    color: rgba(148, 163, 184, 0.7) !important;
+    color: rgba(148, 163, 184, 0.8) !important;
     font-weight: 400 !important;
+    font-style: italic !important;
+    transition: all 0.3s ease !important;
   }
   
+  input:focus::placeholder,
+  textarea:focus::placeholder {
+    color: rgba(148, 163, 184, 0.5) !important;
+    transform: translateY(-2px) !important;
+  }
+  
+  /* Textarea améliorés avec auto-resize et UX optimisée */
   textarea {
-    min-height: 120px;
-    resize: vertical;
+    min-height: 140px !important; /* Plus de hauteur par défaut */
+    resize: vertical !important;
+    line-height: 1.6 !important; /* Meilleure lisibilité */
+    font-family: 'Inter', sans-serif !important; /* Police cohérente */
+    overflow-y: auto !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(52, 211, 153, 0.5) transparent !important;
   }
   
-  /* Grilles de champs : 1 colonne */
+  /* Scrollbar personnalisée pour textarea */
+  textarea::-webkit-scrollbar {
+    width: 8px !important;
+  }
+  
+  textarea::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 4px !important;
+  }
+  
+  textarea::-webkit-scrollbar-thumb {
+    background: rgba(52, 211, 153, 0.4) !important;
+    border-radius: 4px !important;
+  }
+  
+  textarea::-webkit-scrollbar-thumb:hover {
+    background: rgba(52, 211, 153, 0.6) !important;
+  }
+  
+  /* Labels plus élégants */
+  label {
+    font-size: 1rem !important; /* Légèrement plus grand */
+    font-weight: 600 !important; /* Plus gras */
+    color: var(--text) !important;
+    margin-bottom: 0.7rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    transition: color 0.3s ease !important;
+  }
+  
+  /* Animation label quand le champ est focus */
+  .field-group:focus-within label {
+    color: var(--primary) !important;
+    transform: translateX(2px) !important;
+  }
+  
+  /* Grilles de champs : 1 colonne avec espacement optimisé */
   .field-group,
   .field-row {
     grid-template-columns: 1fr !important;
-    gap: 1rem;
+    gap: 1.5rem !important; /* Plus d'espacement */
   }
   
-  /* Inline fields deviennent vertical */
+  /* Inline fields deviennent vertical avec animations */
   .field-inline {
-    flex-direction: column;
+    flex-direction: column !important;
     align-items: stretch !important;
-    gap: 1rem;
+    gap: 1.2rem !important;
   }
   
   /* ────────────────────────────────────────
-     SÉLECTEURS ET CARTES - Plus lisibles
+     AMÉLIORATIONS SUPPLÉMENTAIRES MOBILE
+     ──────────────────────────────────────── */
+  
+  /* Sections de formulaire mieux espacées */
+  .form-section {
+    margin-bottom: 2rem !important;
+    padding: 1.5rem !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(52, 211, 153, 0.1) !important;
+  }
+  
+  /* Boutons d'action plus visibles */
+  .btn, .pill-btn {
+    min-height: 56px !important;
+    padding: 1rem 1.5rem !important;
+    font-weight: 600 !important;
+    border-radius: 14px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    font-size: 1rem !important;
+  }
+  
+  .btn:hover, .pill-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(52, 211, 153, 0.25) !important;
+  }
+  
+  .btn:active, .pill-btn:active {
+    transform: translateY(0) scale(0.98) !important;
+    transition: all 0.1s ease !important;
+  }
+  
+  /* Améliorations pour les groupes de boutons */
+  .boolean-group {
+    gap: 1rem !important;
+  }
+  
+  .boolean-group .radio {
+    border-radius: 14px !important;
+    min-height: 64px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  /* États checked plus visibles */
+  .radio:has(input:checked),
+  .checkbox-item:has(input:checked) {
+    background: rgba(52, 211, 153, 0.15) !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 4px 15px rgba(52, 211, 153, 0.25) !important;
+  }
+  
+  /* Améliorations des sections navigation */
+  .section-nav {
+    padding: 1.5rem !important;
+    gap: 1rem !important;
+  }
+  
+  .nav-btn {
+    min-height: 56px !important;
+    padding: 1rem 2rem !important;
+    font-size: 1.05rem !important;
+    font-weight: 600 !important;
+    border-radius: 14px !important;
+  }
+  
+  /* ────────────────────────────────────────
+     SÉLECTEURS ET CARTES - Plus lisibles et tactiles
      ──────────────────────────────────────── */
   
   /* Type cards sur la page d'accueil */
   .type-card {
-    padding: 1.5rem !important;
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 2px solid rgba(52, 211, 153, 0.25) !important;
-    border-radius: var(--radius-lg) !important;
-    transition: all 0.25s ease !important;
+    padding: 1.8rem !important; /* Plus de padding */
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 2px solid rgba(52, 211, 153, 0.3) !important;
+    border-radius: 16px !important; /* Plus arrondi */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    min-height: 80px !important; /* Hauteur minimum tactile */
+    cursor: pointer !important;
   }
   
   .type-card:hover,
   .type-card:focus {
-    background: rgba(255, 255, 255, 0.12) !important;
+    background: rgba(255, 255, 255, 0.15) !important;
     border-color: var(--primary) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px rgba(52, 211, 153, 0.15) !important;
+    transform: translateY(-3px) scale(1.02) !important;
+    box-shadow: 0 12px 32px rgba(52, 211, 153, 0.2) !important;
+  }
+  
+  .type-card:active {
+    transform: translateY(-1px) scale(1.01) !important;
+    transition: all 0.1s ease !important;
   }
   
   .type-card .type-title {
-    font-size: 1.1rem !important;
-    font-weight: 600 !important;
+    font-size: 1.15rem !important;
+    font-weight: 700 !important; /* Plus gras */
     color: var(--text) !important;
+    margin-bottom: 0.3rem !important;
   }
   
   .type-card .type-description {
-    font-size: 0.9rem !important;
+    font-size: 0.95rem !important;
     color: var(--text-muted) !important;
     font-weight: 400 !important;
+    line-height: 1.4 !important;
   }
   
-  /* Boutons radio et checkbox */
+  /* Boutons radio et checkbox améliorés */
   .radio,
   .checkbox-item {
-    padding: 1rem !important;
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 2px solid rgba(52, 211, 153, 0.25) !important;
-    border-radius: var(--radius-md) !important;
-    min-height: 50px !important;
+    padding: 1.2rem !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 2px solid rgba(52, 211, 153, 0.3) !important;
+    border-radius: 12px !important;
+    min-height: 60px !important; /* Plus tactile */
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+  
+  /* Effet de ripple au clic */
+  .radio::before,
+  .checkbox-item::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: rgba(52, 211, 153, 0.3) !important;
+    border-radius: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.3s ease, height 0.3s ease !important;
+    pointer-events: none !important;
+  }
+  
+  .radio:active::before,
+  .checkbox-item:active::before {
+    width: 100px !important;
+    height: 100px !important;
   }
   
   .radio:hover,
   .checkbox-item:hover {
-    background: rgba(255, 255, 255, 0.12) !important;
+    background: rgba(255, 255, 255, 0.15) !important;
     border-color: var(--primary) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(52, 211, 153, 0.15) !important;
   }
   
-  /* Labels plus lisibles */
+  /* Labels dans les sélecteurs */
   .radio label,
   .checkbox-item label {
-    font-size: 1rem !important;
-    font-weight: 500 !important;
+    font-size: 1.05rem !important;
+    font-weight: 600 !important;
     color: var(--text) !important;
+    cursor: pointer !important;
+    margin: 0 !important;
+    line-height: 1.4 !important;
   }
   
-  /* Multi-select plus clair */
+  /* Multi-select button amélioré */
   .multi-select-button {
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 2px solid rgba(52, 211, 153, 0.25) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 2px solid rgba(52, 211, 153, 0.3) !important;
     color: var(--text) !important;
-    font-weight: 500 !important;
-    padding: 1rem !important;
-    min-height: 50px !important;
+    font-weight: 600 !important;
+    padding: 1.2rem !important;
+    min-height: 56px !important;
+    border-radius: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+  
+  .multi-select-button:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: var(--primary) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(52, 211, 153, 0.15) !important;
   }
   
   .multi-select-button:focus {
-    background: rgba(255, 255, 255, 0.12) !important;
+    background: rgba(255, 255, 255, 0.15) !important;
     border-color: var(--primary) !important;
-    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2) !important;
+    box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.25) !important;
+    outline: none !important;
   }
   
   /* ────────────────────────────────────────
