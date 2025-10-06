@@ -4867,41 +4867,81 @@ async function remoteTogglePrivacy(id, isPrivate) {
   }
 }
 
+// Preview mode management
+let currentPreviewMode = localStorage.getItem('previewMode') || 'detailed';
+
+function setPreviewMode(mode) {
+  currentPreviewMode = mode;
+  localStorage.setItem('previewMode', mode);
+  
+  // Update UI buttons
+  document.querySelectorAll('.preview-mode-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+  
+  // Regenerate preview
+  generateReview();
+}
+
 function generateReview() {
   if (!dom.reviewContent || !dom.reviewOutput) {
     return;
   }
 
-  // Générer deux versions : aperçu compact et version complète
-  generateLivePreview();
+  // Generate based on current mode
+  switch (currentPreviewMode) {
+    case 'compact':
+      generateCompactPreview();
+      break;
+    case 'detailed':
+      generateDetailedPreview();
+      break;
+    case 'card':
+      generateCardPreview();
+      break;
+    case 'minimal':
+      generateMinimalPreview();
+      break;
+    default:
+      generateDetailedPreview();
+  }
+  
+  // Always generate full review for export
   generateFullReview();
 }
 
-function generateLivePreview() {
+// Helper functions for preview generation
+function getPreviewData() {
   const structure = productStructures[currentType];
   
-  // Helper to get cultivar names from cultivarsList
-  const getCultivarTitle = () => {
+  // Get cultivar info
+  const getCultivarInfo = () => {
     try {
       const list = JSON.parse(formData['cultivarsList'] || '[]');
       if (Array.isArray(list) && list.length > 0) {
-        const names = list.map(c => c.name).filter(Boolean);
-        return names.length > 0 ? names.join(' + ') : formData.cultivars || formData.productType || "Review en cours";
+        return {
+          title: list.map(c => c.name).filter(Boolean).join(' + ') || formData.cultivars || formData.productType || "Review en cours",
+          details: list
+        };
       }
     } catch {}
-    return formData.cultivars || formData.productType || "Review en cours";
+    return {
+      title: formData.cultivars || formData.productType || "Review en cours",
+      details: null
+    };
   };
   
-  const title = getCultivarTitle();
+  const cultivarInfo = getCultivarInfo();
   
-  // Icônes pour chaque type de produit
+  // Product icons
   const productIcons = {
     'Hash': '🧊',
     'Fleur': '🌸', 
-    'Concentré': '💎'
+    'Concentré': '💎',
+    'Comestible': '🍬'
   };
 
-  // Calcul du score global
+  // Calculate global score
   let globalScore = 0;
   let maxGlobalScore = 0;
   let sectionsWithData = 0;
@@ -4913,73 +4953,470 @@ function generateLivePreview() {
       sectionsWithData++;
     }
   });
+  
+  const scoreOutOf10 = maxGlobalScore > 0 ? (globalScore / maxGlobalScore * 10) : 0;
+  const percentage = maxGlobalScore > 0 ? (globalScore / maxGlobalScore * 100) : 0;
+  
+  return {
+    structure,
+    cultivarInfo,
+    productIcon: productIcons[currentType] || '🌿',
+    globalScore,
+    maxGlobalScore,
+    sectionsWithData,
+    scoreOutOf10,
+    percentage
+  };
+}
 
-  // Aperçu compact pour l'interface live
-  let previewHtml = `
-    <div class="live-preview">
-      <div class="live-header">
-        <div class="live-product-badge">
-          <span class="live-icon">${productIcons[currentType] || '🌿'}</span>
-          <span class="live-type">${currentType}</span>
+// MODE 1: COMPACT - Vue condensée avec scores principaux
+function generateCompactPreview() {
+  const data = getPreviewData();
+  
+  let html = `
+    <div class="preview-compact">
+      <div class="preview-mode-selector">
+        <button class="preview-mode-btn ${currentPreviewMode === 'minimal' ? 'active' : ''}" data-mode="minimal" onclick="setPreviewMode('minimal')" title="Mode minimal">
+          <span>━</span>
+        </button>
+        <button class="preview-mode-btn ${currentPreviewMode === 'compact' ? 'active' : ''}" data-mode="compact" onclick="setPreviewMode('compact')" title="Mode compact">
+          <span>▤</span>
+        </button>
+        <button class="preview-mode-btn ${currentPreviewMode === 'detailed' ? 'active' : ''}" data-mode="detailed" onclick="setPreviewMode('detailed')" title="Mode détaillé">
+          <span>☰</span>
+        </button>
+        <button class="preview-mode-btn ${currentPreviewMode === 'card' ? 'active' : ''}" data-mode="card" onclick="setPreviewMode('card')" title="Mode carte">
+          <span>▣</span>
+        </button>
+      </div>
+      
+      <div class="compact-header">
+        <div class="compact-badge">
+          <span class="compact-icon">${data.productIcon}</span>
+          <span class="compact-type">${currentType}</span>
         </div>
-        <h3 class="live-title">${title}</h3>
+        <h3 class="compact-title">${data.cultivarInfo.title}</h3>
       </div>`;
 
-  // Score global compact
-  if (maxGlobalScore > 0) {
-    const percentage = (globalScore / maxGlobalScore) * 100;
-    const scoreOutOf10 = (globalScore/maxGlobalScore*10).toFixed(1);
-    previewHtml += `
-      <div class="live-score">
-        <div class="live-score-circle">
-          <span class="live-score-value">${scoreOutOf10}</span>
-          <span class="live-score-unit">/10</span>
-        </div>
-        <div class="live-score-info">
-          <div class="live-score-bar">
-            <div class="live-score-fill" style="width: ${percentage}%"></div>
+  if (data.maxGlobalScore > 0) {
+    html += `
+      <div class="compact-score">
+        <div class="compact-score-circle">
+          <svg class="score-ring" viewBox="0 0 100 100">
+            <circle class="score-ring-bg" cx="50" cy="50" r="45" />
+            <circle class="score-ring-fill" cx="50" cy="50" r="45" 
+              style="stroke-dasharray: ${data.percentage * 2.827}, 282.7" />
+          </svg>
+          <div class="score-ring-content">
+            <span class="score-ring-value">${data.scoreOutOf10.toFixed(1)}</span>
+            <span class="score-ring-unit">/10</span>
           </div>
-          <span class="live-score-text">${sectionsWithData} section${sectionsWithData > 1 ? 's' : ''} complétée${sectionsWithData > 1 ? 's' : ''}</span>
+        </div>
+        <div class="compact-score-details">
+          <div class="compact-score-item">
+            <span class="score-label">Score total</span>
+            <span class="score-value">${data.globalScore.toFixed(1)}/${data.maxGlobalScore}</span>
+          </div>
+          <div class="compact-score-item">
+            <span class="score-label">Sections</span>
+            <span class="score-value">${data.sectionsWithData}/${data.structure.sections.length}</span>
+          </div>
         </div>
       </div>`;
   }
 
-  // Résumé compact des sections
-  previewHtml += '<div class="live-sections">';
-  structure.sections.forEach((section, index) => {
+  html += '<div class="compact-sections">';
+  data.structure.sections.forEach((section, index) => {
     const sectionScore = totals[`section-${index}`];
-    let hasData = false;
-    let filledFields = 0;
+    const hasData = section.fields.some(f => f.type !== "file" && formData[f.key]);
     
-    section.fields.forEach(field => {
-      if (field.type !== "file" && formData[field.key]) {
-        hasData = true;
-        filledFields++;
-      }
-    });
-
-    const statusIcon = hasData ? '✅' : '⭕';
-    const scoreDisplay = sectionScore ? ` ${sectionScore.sum.toFixed(1)}/${sectionScore.max}` : '';
+    if (!hasData) return;
     
-    previewHtml += `
-      <div class="live-section ${hasData ? 'has-data' : 'empty'}">
-        <span class="live-section-icon">${statusIcon}</span>
-        <span class="live-section-title">${section.title}</span>
-        <span class="live-section-score">${scoreDisplay}</span>
+    const scoreText = sectionScore ? `${sectionScore.sum.toFixed(1)}/${sectionScore.max}` : '';
+    const scorePercent = sectionScore ? (sectionScore.sum / sectionScore.max * 100) : 0;
+    
+    html += `
+      <div class="compact-section">
+        <div class="compact-section-header">
+          <span class="compact-section-title">${section.title}</span>
+          <span class="compact-section-score">${scoreText}</span>
+        </div>
+        ${sectionScore ? `<div class="compact-section-bar">
+          <div class="compact-section-fill" style="width: ${scorePercent}%"></div>
+        </div>` : ''}
       </div>`;
   });
   
-  previewHtml += '</div></div>';
+  html += '</div></div>';
 
-  // Mettre à jour l'aperçu live
   if (dom.reviewContent) {
-    dom.reviewContent.innerHTML = previewHtml;
+    dom.reviewContent.innerHTML = html;
   }
-
   if (dom.previewPlaceholder) {
     dom.previewPlaceholder.classList.add("hidden");
   }
+  dom.reviewOutput.hidden = false;
+}
 
+// MODE 2: DETAILED - Vue complète avec tous les détails
+function generateDetailedPreview() {
+  const data = getPreviewData();
+  
+  let html = `
+    <div class="preview-detailed">
+      <div class="preview-mode-selector">
+        <button class="preview-mode-btn ${currentPreviewMode === 'minimal' ? 'active' : ''}" data-mode="minimal" onclick="setPreviewMode('minimal')" title="Mode minimal">
+          <span>━</span>
+        </button>
+        <button class="preview-mode-btn ${currentPreviewMode === 'compact' ? 'active' : ''}" data-mode="compact" onclick="setPreviewMode('compact')" title="Mode compact">
+          <span>▤</span>
+        </button>
+        <button class="preview-mode-btn ${currentPreviewMode === 'detailed' ? 'active' : ''}" data-mode="detailed" onclick="setPreviewMode('detailed')" title="Mode détaillé">
+          <span>☰</span>
+        </button>
+        <button class="preview-mode-btn ${currentPreviewMode === 'card' ? 'active' : ''}" data-mode="card" onclick="setPreviewMode('card')" title="Mode carte">
+          <span>▣</span>
+        </button>
+      </div>
+      
+      <div class="detailed-header">
+        <div class="detailed-badge">
+          <span>${data.productIcon}</span>
+          <span>${currentType}</span>
+        </div>
+        <h2 class="detailed-title">${data.cultivarInfo.title}</h2>
+      </div>`;
+
+  // Cultivars details
+  if (data.cultivarInfo.details && data.cultivarInfo.details.length > 0) {
+    html += '<div class="detailed-cultivars">';
+    data.cultivarInfo.details.forEach((c, idx) => {
+      const meta = [];
+      if (c.farm) meta.push(`📍 ${c.farm}`);
+      if (c.breeder) meta.push(`🧬 ${c.breeder}`);
+      if (c.matiere && c.matiere.length) meta.push(`🌱 ${c.matiere.join(', ')}`);
+      
+      html += `
+        <div class="detailed-cultivar">
+          <span class="cultivar-badge">${idx + 1}</span>
+          <div class="cultivar-info">
+            <strong>${c.name || ''}</strong>
+            ${meta.length ? `<span class="cultivar-meta">${meta.join(' • ')}</span>` : ''}
+          </div>
+        </div>`;
+    });
+    html += '</div>';
+  }
+
+  // Global score
+  if (data.maxGlobalScore > 0) {
+    html += `
+      <div class="detailed-global-score">
+        <div class="global-score-main">
+          <div class="global-score-circle">
+            <svg class="score-ring" viewBox="0 0 120 120">
+              <circle class="score-ring-bg" cx="60" cy="60" r="54" />
+              <circle class="score-ring-fill" cx="60" cy="60" r="54" 
+                style="stroke-dasharray: ${data.percentage * 3.393}, 339.3" />
+            </svg>
+            <div class="score-ring-content">
+              <span class="score-ring-value">${data.scoreOutOf10.toFixed(1)}</span>
+              <span class="score-ring-unit">/10</span>
+            </div>
+          </div>
+          <div class="global-score-info">
+            <h3>Score global</h3>
+            <p class="score-breakdown">${data.globalScore.toFixed(1)} / ${data.maxGlobalScore} points</p>
+            <p class="score-sections">${data.sectionsWithData} section${data.sectionsWithData > 1 ? 's' : ''} complétée${data.sectionsWithData > 1 ? 's' : ''}</p>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // Sections detailed
+  html += '<div class="detailed-sections">';
+  data.structure.sections.forEach((section, index) => {
+    const sectionScore = totals[`section-${index}`];
+    let hasContent = false;
+    const fields = [];
+    
+    section.fields.forEach(field => {
+      if (field.type === "file") return;
+      const value = formData[field.key];
+      if (!value) return;
+      
+      hasContent = true;
+      let displayValue = value;
+      let fieldClass = "detailed-field";
+      
+      // Format value based on type
+      if (field.type === "number") {
+        const numValue = Number.parseFloat(value);
+        const percent = (numValue / (field.max || 10)) * 100;
+        displayValue = `
+          <span class="field-number">${numValue.toFixed(1)}</span>
+          <div class="field-bar">
+            <div class="field-bar-fill" style="width: ${percent}%"></div>
+          </div>`;
+        fieldClass += " field-number-type";
+      } else if (field.type === "sequence" || field.type === "pipeline-with-cultivars") {
+        try {
+          const steps = JSON.parse(value);
+          if (Array.isArray(steps) && steps.length) {
+            displayValue = `<ol class="field-sequence">
+              ${steps.map(s => {
+                const name = (s && typeof s === 'object') ? s.name : String(s);
+                const parts = [];
+                if (s.mesh) parts.push(`${s.mesh}µm`);
+                if (s.tempC) parts.push(`${s.tempC}°C`);
+                if (s.pressureBar) parts.push(`${s.pressureBar}bar`);
+                if (s.cultivars && s.cultivars.length) parts.push(`🌿 ${s.cultivars.join(', ')}`);
+                const meta = parts.length ? ` <small>(${parts.join(', ')})</small>` : '';
+                return `<li>${name}${meta}</li>`;
+              }).join("")}
+            </ol>`;
+          }
+        } catch {}
+      } else if (field.type === "multiple-choice" || field.type === "cultivar-list") {
+        try {
+          const items = JSON.parse(value);
+          if (Array.isArray(items) && items.length) {
+            displayValue = `<div class="field-tags">
+              ${items.map(item => {
+                if (typeof item === 'object' && item.name) {
+                  // cultivar-list format
+                  return `<span class="field-tag cultivar-tag">${item.name}</span>`;
+                }
+                return `<span class="field-tag">${item}</span>`;
+              }).join("")}
+            </div>`;
+          }
+        } catch {}
+      }
+      
+      fields.push({ label: field.label, value: displayValue, class: fieldClass });
+    });
+    
+    if (!hasContent) return;
+    
+    const scorePercent = sectionScore ? (sectionScore.sum / sectionScore.max * 100) : 0;
+    
+    html += `
+      <div class="detailed-section">
+        <div class="detailed-section-header">
+          <h3>${section.title}</h3>
+          ${sectionScore ? `
+            <div class="section-score">
+              <span class="section-score-value">${sectionScore.sum.toFixed(1)}/${sectionScore.max}</span>
+              <div class="section-score-bar">
+                <div class="section-score-fill" style="width: ${scorePercent}%"></div>
+              </div>
+            </div>` : ''}
+        </div>
+        <div class="detailed-section-content">
+          ${fields.map(f => `
+            <div class="${f.class}">
+              <label>${f.label}</label>
+              <div class="field-value">${f.value}</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>`;
+  });
+  
+  html += '</div></div>';
+
+  if (dom.reviewContent) {
+    dom.reviewContent.innerHTML = html;
+  }
+  if (dom.previewPlaceholder) {
+    dom.previewPlaceholder.classList.add("hidden");
+  }
+  dom.reviewOutput.hidden = false;
+}
+
+// MODE 3: CARD - Style carte sociale
+function generateCardPreview() {
+  const data = getPreviewData();
+  
+  let html = `
+    <div class="preview-card">
+      <div class="preview-mode-selector">
+        <button class="preview-mode-btn ${currentPreviewMode === 'minimal' ? 'active' : ''}" data-mode="minimal" onclick="setPreviewMode('minimal')" title="Mode minimal">
+          <span>━</span>
+        </button>
+        <button class="preview-mode-btn ${currentPreviewMode === 'compact' ? 'active' : ''}" data-mode="compact" onclick="setPreviewMode('compact')" title="Mode compact">
+          <span>▤</span>
+        </button>
+        <button class="preview-mode-btn ${currentPreviewMode === 'detailed' ? 'active' : ''}" data-mode="detailed" onclick="setPreviewMode('detailed')" title="Mode détaillé">
+          <span>☰</span>
+        </button>
+        <button class="preview-mode-btn ${currentPreviewMode === 'card' ? 'active' : ''}" data-mode="card" onclick="setPreviewMode('card')" title="Mode carte">
+          <span>▣</span>
+        </button>
+      </div>
+      
+      <div class="card-container">`;
+  
+  // Image section
+  if (imageUrl) {
+    html += `
+      <div class="card-image">
+        <img src="${imageUrl}" alt="${data.cultivarInfo.title}" />
+        <div class="card-overlay">
+          <div class="card-badge">${data.productIcon} ${currentType}</div>
+        </div>
+      </div>`;
+  } else {
+    html += `
+      <div class="card-image card-image-placeholder">
+        <div class="card-placeholder-icon">${data.productIcon}</div>
+        <div class="card-overlay">
+          <div class="card-badge">${currentType}</div>
+        </div>
+      </div>`;
+  }
+  
+  html += `
+    <div class="card-content">
+      <h2 class="card-title">${data.cultivarInfo.title}</h2>`;
+  
+  // Score badge
+  if (data.maxGlobalScore > 0) {
+    const scoreClass = data.scoreOutOf10 >= 8 ? 'excellent' : data.scoreOutOf10 >= 6 ? 'good' : 'average';
+    html += `
+      <div class="card-score ${scoreClass}">
+        <span class="card-score-value">${data.scoreOutOf10.toFixed(1)}</span>
+        <span class="card-score-unit">/10</span>
+      </div>`;
+  }
+  
+  // Quick stats
+  html += `
+    <div class="card-stats">
+      <div class="card-stat">
+        <span class="stat-icon">📊</span>
+        <div class="stat-content">
+          <span class="stat-label">Score</span>
+          <span class="stat-value">${data.globalScore.toFixed(1)}/${data.maxGlobalScore}</span>
+        </div>
+      </div>
+      <div class="card-stat">
+        <span class="stat-icon">✓</span>
+        <div class="stat-content">
+          <span class="stat-label">Sections</span>
+          <span class="stat-value">${data.sectionsWithData}/${data.structure.sections.length}</span>
+        </div>
+      </div>`;
+  
+  // Farm info if available
+  const farmInfo = data.cultivarInfo.details?.[0]?.farm || formData.farm;
+  if (farmInfo) {
+    html += `
+      <div class="card-stat">
+        <span class="stat-icon">📍</span>
+        <div class="stat-content">
+          <span class="stat-label">Farm</span>
+          <span class="stat-value">${farmInfo}</span>
+        </div>
+      </div>`;
+  }
+  
+  html += `
+    </div>
+    
+    <div class="card-sections">`;
+  
+  // Top sections with scores
+  const sectionsWithScores = data.structure.sections
+    .map((section, index) => ({ section, index, score: totals[`section-${index}`] }))
+    .filter(s => s.score && s.score.sum > 0)
+    .sort((a, b) => (b.score.sum / b.score.max) - (a.score.sum / a.score.max))
+    .slice(0, 4);
+  
+  sectionsWithScores.forEach(({ section, score }) => {
+    const percent = (score.sum / score.max) * 100;
+    html += `
+      <div class="card-section-item">
+        <span class="card-section-name">${section.title}</span>
+        <div class="card-section-score">
+          <span>${score.sum.toFixed(1)}</span>
+          <div class="card-section-bar">
+            <div class="card-section-fill" style="width: ${percent}%"></div>
+          </div>
+        </div>
+      </div>`;
+  });
+  
+  html += `
+    </div>
+  </div>
+</div>
+</div>`;
+
+  if (dom.reviewContent) {
+    dom.reviewContent.innerHTML = html;
+  }
+  if (dom.previewPlaceholder) {
+    dom.previewPlaceholder.classList.add("hidden");
+  }
+  dom.reviewOutput.hidden = false;
+}
+
+// MODE 4: MINIMAL - Vue ultra-simple
+function generateMinimalPreview() {
+  const data = getPreviewData();
+  
+  let html = `
+    <div class="preview-minimal">
+      <div class="preview-mode-selector">
+        <button class="preview-mode-btn ${currentPreviewMode === 'minimal' ? 'active' : ''}" data-mode="minimal" onclick="setPreviewMode('minimal')" title="Mode minimal">
+          <span>━</span>
+        </button>
+        <button class="preview-mode-btn ${currentPreviewMode === 'compact' ? 'active' : ''}" data-mode="compact" onclick="setPreviewMode('compact')" title="Mode compact">
+          <span>▤</span>
+        </button>
+        <button class="preview-mode-btn ${currentPreviewMode === 'detailed' ? 'active' : ''}" data-mode="detailed" onclick="setPreviewMode('detailed')" title="Mode détaillé">
+          <span>☰</span>
+        </button>
+        <button class="preview-mode-btn ${currentPreviewMode === 'card' ? 'active' : ''}" data-mode="card" onclick="setPreviewMode('card')" title="Mode carte">
+          <span>▣</span>
+        </button>
+      </div>
+      
+      <div class="minimal-content">
+        <div class="minimal-icon">${data.productIcon}</div>
+        <h2 class="minimal-title">${data.cultivarInfo.title}</h2>
+        <p class="minimal-type">${currentType}</p>`;
+  
+  if (data.maxGlobalScore > 0) {
+    const scoreClass = data.scoreOutOf10 >= 8 ? 'excellent' : data.scoreOutOf10 >= 6 ? 'good' : 'average';
+    html += `
+      <div class="minimal-score ${scoreClass}">
+        <div class="minimal-score-value">${data.scoreOutOf10.toFixed(1)}</div>
+        <div class="minimal-score-label">/ 10</div>
+      </div>
+      <div class="minimal-progress">
+        <div class="minimal-progress-bar">
+          <div class="minimal-progress-fill" style="width: ${data.percentage}%"></div>
+        </div>
+        <span class="minimal-progress-text">${data.globalScore.toFixed(1)} / ${data.maxGlobalScore} points</span>
+      </div>`;
+  }
+  
+  html += `
+    <div class="minimal-info">
+      <span>${data.sectionsWithData} section${data.sectionsWithData > 1 ? 's' : ''} complétée${data.sectionsWithData > 1 ? 's' : ''}</span>
+    </div>
+  </div>
+</div>`;
+
+  if (dom.reviewContent) {
+    dom.reviewContent.innerHTML = html;
+  }
+  if (dom.previewPlaceholder) {
+    dom.previewPlaceholder.classList.add("hidden");
+  }
   dom.reviewOutput.hidden = false;
 }
 
