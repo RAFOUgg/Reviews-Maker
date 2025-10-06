@@ -6533,19 +6533,19 @@ kbd {
   /* Éléments interactifs ultra-compacts */
   .radio,
   .checkbox-item {
-    padding: 0.3rem !important;
-    min-height: 32px !important;
-    margin-bottom: 0.2rem !important;
-    border-radius: 3px !important;
+    padding: 0.2rem !important;
+    min-height: 26px !important;
+    margin-bottom: 0.15rem !important;
+    border-radius: 2px !important;
     background: rgba(255, 255, 255, 0.04) !important;
     border: 1px solid rgba(52, 211, 153, 0.15) !important;
   }
   
   .radio label,
   .checkbox-item label {
-    font-size: 0.65rem !important;
+    font-size: 0.55rem !important;
     font-weight: 500 !important;
-    line-height: 1.1 !important;
+    line-height: 1.0 !important;
     margin: 0 !important;
   }
   
@@ -6577,26 +6577,26 @@ kbd {
   
   /* Multi-select ultra-compact */
   .multi-select-button {
-    min-height: 34px !important;
-    padding: 0.4rem !important;
+    min-height: 28px !important;
+    padding: 0.25rem !important;
     background: rgba(255, 255, 255, 0.04) !important;
     border: 1px solid rgba(52, 211, 153, 0.15) !important;
-    border-radius: 3px !important;
-    font-size: 0.65rem !important;
-    line-height: 1.1 !important;
+    border-radius: 2px !important;
+    font-size: 0.55rem !important;
+    line-height: 1.0 !important;
   }
   
   /* Options des menus déroulants ultra-compacts */
   select {
-    font-size: 0.65rem !important;
-    line-height: 1.1 !important;
-    min-height: 34px !important;
-    padding: 0.4rem !important;
+    font-size: 0.55rem !important;
+    line-height: 1.0 !important;
+    min-height: 28px !important;
+    padding: 0.25rem !important;
   }
   
   select option {
-    font-size: 0.65rem !important;
-    padding: 0.25rem !important;
+    font-size: 0.55rem !important;
+    padding: 0.15rem !important;
   }
   
   /* Espaces ultra-optimisés */
@@ -6625,18 +6625,18 @@ kbd {
   
   /* Options multi-select ultra-compactes */
   .multi-select-menu {
-    font-size: 0.65rem !important;
+    font-size: 0.55rem !important;
   }
   
   .multi-select-menu .option {
-    padding: 0.25rem 0.4rem !important;
-    font-size: 0.65rem !important;
-    line-height: 1.1 !important;
-    min-height: 28px !important;
+    padding: 0.15rem 0.25rem !important;
+    font-size: 0.55rem !important;
+    line-height: 1.0 !important;
+    min-height: 22px !important;
   }
   
   .multi-select-menu .option label {
-    font-size: 0.6rem !important;
+    font-size: 0.5rem !important;
     font-weight: 500 !important;
   }
   
@@ -6646,32 +6646,32 @@ kbd {
     line-height: 1.3 !important;
   }
   
-  /* Tous les inputs et selects compacts */
+  /* Tous les inputs et selects ultra-compacts */
   input, select, textarea {
-    font-size: 0.7rem !important;
-    line-height: 1.1 !important;
+    font-size: 0.6rem !important;
+    line-height: 1.0 !important;
   }
   
   input::placeholder,
   textarea::placeholder {
-    font-size: 0.7rem !important;
+    font-size: 0.6rem !important;
     opacity: 0.7 !important;
   }
   
   /* Groupes boolean ultra-compacts */
   .boolean-group {
-    gap: 0.2rem !important;
-    margin: 0.4rem 0 !important;
+    gap: 0.1rem !important;
+    margin: 0.3rem 0 !important;
   }
   
   .boolean-group .radio {
-    min-height: 30px !important;
-    padding: 0.25rem !important;
-    border-radius: 3px !important;
+    min-height: 24px !important;
+    padding: 0.15rem !important;
+    border-radius: 2px !important;
   }
   
   .boolean-group .radio label {
-    font-size: 0.6rem !important;
+    font-size: 0.5rem !important;
     font-weight: 500 !important;
   }
   
@@ -6697,21 +6697,21 @@ kbd {
   /* Grilles de checkbox/radio ultra-compactes */
   .checkbox-grid,
   .radio-grid {
-    gap: 0.2rem !important;
+    gap: 0.1rem !important;
   }
   
   .checkbox-grid .checkbox-item,
   .radio-grid .radio {
-    font-size: 0.65rem !important;
-    padding: 0.25rem !important;
-    min-height: 30px !important;
+    font-size: 0.55rem !important;
+    padding: 0.15rem !important;
+    min-height: 24px !important;
   }
   
   .checkbox-grid .checkbox-item label,
   .radio-grid .radio label {
-    font-size: 0.6rem !important;
+    font-size: 0.5rem !important;
     font-weight: 500 !important;
-    line-height: 1.1 !important;
+    line-height: 1.0 !important;
   }
   
   .section-title {
