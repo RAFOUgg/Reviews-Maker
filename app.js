@@ -354,7 +354,7 @@ const productStructures = {
           { key: "inhalation", label: "Notes (inhalation)", type: "textarea" },
           { key: "expiration", label: "Notes (expiration)", type: "textarea" },
           { key: "intensiteFumee", label: "Intensité", type: "number", max: 10 },
-          { key: "agressivite", label: "Agressivité/piquant", type: "number", max: 10 }
+          { key: "agressivite", label: "Agressivité/piquant", type: "number", max: 10 },
           { key: "cendre", label: "Cendre", type: "number", max: 10 }
         ],
         total: true,
