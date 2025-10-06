@@ -6547,7 +6547,7 @@ kbd {
   .radio,
   .checkbox-item {
     padding: 0.1rem !important;
-    min-height: 20px !important;
+    min-height: 10px !important;
     margin-bottom: 0.05rem !important;
     border-radius: 1px !important;
     background: rgba(255, 255, 255, 0.04) !important;
@@ -6557,7 +6557,7 @@ kbd {
   .radio label,
   .checkbox-item label {
     font-size: 0.45rem !important;
-    font-weight: 500 !important;
+    font-weight: 250 !important;
     line-height: 0.9 !important;
     margin: 0 !important;
   }
