@@ -383,8 +383,8 @@ const productStructures = {
       {
         title: "Informations générales",
         fields: [
-          { key: "cultivars", label: "Cultivars", type: "text" },
-          { key: "breeder", label: "Breeder de la graines", type: "text" },
+          { key: "cultivars", label: "Cultivar", type: "text" },
+          { key: "breeder", label: "Breeder de la graine", type: "text" },
           { key: "farm", label: "Farm", type: "text" },
           {
             key: "typeCulture",
@@ -499,7 +499,8 @@ const productStructures = {
       {
         title: "Informations générales",
         fields: [
-          { key: "cultivars", label: "Cultivars de la/les matière(s) organique(s)", type: "text" },
+          { key: "cultivars", label: "Cultivar(s) de la/les matière(s) organique(s)", type: "text" },
+          { key: "breeder", label: "Breeder de la/les graine(s)", type: "text" },
           { key: "farm", label: "Farm(s) / Producteur(s)", type: "text" },
           {
             key: "typeExtraction",
