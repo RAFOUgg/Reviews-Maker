@@ -5380,79 +5380,72 @@ kbd {
   select,
   .input {
     font-size: 16px !important; /* Évite le zoom iOS */
-    padding: 0.8rem 0.7rem !important; /* Padding réduit */
-    min-height: 44px !important; /* Taille plus compacte */
-    background: rgba(255, 255, 255, 0.1) !important;
-    border: 2px solid rgba(52, 211, 153, 0.3) !important;
-    border-radius: 10px !important; /* Coins moins arrondis */
+    padding: 0.6rem 0.5rem !important; /* Padding minimal */
+    min-height: 40px !important; /* Hauteur minimale mais tactile */
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(52, 211, 153, 0.25) !important; /* Bordure plus fine */
+    border-radius: 8px !important; /* Coins discrets */
     color: var(--text) !important;
     font-weight: 500 !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1), 
-                0 1px 2px rgba(52, 211, 153, 0.08) !important; /* Ombres réduites */
+    transition: all 0.2s ease !important; /* Transition plus rapide */
+    box-shadow: none !important; /* Pas d'ombre par défaut */
     position: relative !important;
   }
   
-  /* Animation au focus plus compacte */
+  /* Focus simple et net */
   input:focus,
   textarea:focus,
   select:focus {
-    background: rgba(255, 255, 255, 0.15) !important;
+    background: rgba(255, 255, 255, 0.12) !important;
     border-color: var(--primary) !important;
-    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2), 
-                inset 0 1px 2px rgba(0, 0, 0, 0.1),
-                0 2px 8px rgba(52, 211, 153, 0.1) !important; /* Glow réduit */
+    box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.15) !important; /* Glow minimal */
     outline: none !important;
-    transform: translateY(-1px) scale(1.005) !important; /* Élévation réduite */
+    transform: none !important; /* Pas de mouvement */
   }
   
-  /* États hover pour meilleure interactivité */
+  /* Hover simple */
   input:hover:not(:focus),
   textarea:hover:not(:focus),
   select:hover:not(:focus) {
-    background: rgba(255, 255, 255, 0.12) !important;
-    border-color: rgba(52, 211, 153, 0.4) !important;
-    transform: translateY(-1px) !important;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), 
-                0 2px 8px rgba(52, 211, 153, 0.12) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(52, 211, 153, 0.3) !important;
   }
   
-  /* Sélecteurs avec flèche personnalisée */
+  /* Sélecteurs minimalistes */
   select {
-    background-image: linear-gradient(45deg, transparent 50%, var(--primary) 50%), 
-                      linear-gradient(135deg, var(--primary) 50%, transparent 50%) !important;
-    background-position: calc(100% - 24px) calc(1em + 4px), 
-                         calc(100% - 18px) calc(1em + 4px) !important;
-    background-size: 6px 6px, 6px 6px !important;
+    background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), 
+                      linear-gradient(135deg, var(--text-muted) 50%, transparent 50%) !important;
+    background-position: calc(100% - 16px) calc(1em + 2px), 
+                         calc(100% - 12px) calc(1em + 2px) !important;
+    background-size: 4px 4px, 4px 4px !important; /* Flèche plus petite */
     background-repeat: no-repeat !important;
-    padding-right: 3rem !important; /* Plus d'espace pour la flèche */
+    padding-right: 2rem !important;
     cursor: pointer !important;
   }
   
-  /* Placeholders améliorés */
+  /* Placeholders discrets */
   input::placeholder,
   textarea::placeholder {
-    color: rgba(148, 163, 184, 0.8) !important;
+    color: rgba(148, 163, 184, 0.6) !important;
     font-weight: 400 !important;
-    font-style: italic !important;
-    transition: all 0.3s ease !important;
+    font-style: normal !important;
+    transition: all 0.2s ease !important;
   }
   
   input:focus::placeholder,
   textarea:focus::placeholder {
-    color: rgba(148, 163, 184, 0.5) !important;
-    transform: translateY(-2px) !important;
+    color: rgba(148, 163, 184, 0.4) !important;
   }
   
-  /* Textarea plus compacts */
+  /* Textarea ultra-compacts */
   textarea {
-    min-height: 100px !important; /* Hauteur réduite */
+    min-height: 80px !important; /* Hauteur très réduite */
     resize: vertical !important;
-    line-height: 1.5 !important;
+    line-height: 1.4 !important; /* Ligne plus compacte */
     font-family: 'Inter', sans-serif !important;
     overflow-y: auto !important;
     scrollbar-width: thin !important;
-    scrollbar-color: rgba(52, 211, 153, 0.5) transparent !important;
+    scrollbar-color: rgba(52, 211, 153, 0.3) transparent !important;
   }
   
   /* Scrollbar personnalisée pour textarea */
@@ -5474,16 +5467,14 @@ kbd {
     background: rgba(52, 211, 153, 0.6) !important;
   }
   
-  /* Labels compacts */
+  /* Labels minimalistes */
   label {
-    font-size: 0.9rem !important; /* Plus petit */
+    font-size: 0.85rem !important; /* Plus petit */
     font-weight: 600 !important;
-    color: var(--text) !important;
-    margin-bottom: 0.4rem !important; /* Marge réduite */
-    display: flex !important;
-    align-items: center !important;
-    gap: 0.3rem !important; /* Gap réduit */
-    transition: color 0.3s ease !important;
+    color: var(--text-muted) !important; /* Couleur plus discrète */
+    margin-bottom: 0.3rem !important; /* Marge minimale */
+    display: block !important;
+    transition: color 0.2s ease !important;
   }
   
   /* Animation label quand le champ est focus */
@@ -5492,41 +5483,43 @@ kbd {
     transform: translateX(2px) !important;
   }
   
-  /* Grilles de champs compactes */
+  /* Grilles ultra-compactes */
   .field-group,
   .field-row {
     grid-template-columns: 1fr !important;
-    gap: 1rem !important; /* Espacement réduit */
+    gap: 0.7rem !important; /* Espacement minimal */
+    margin-bottom: 1rem !important; /* Marge réduite */
   }
   
-  /* Inline fields compacts */
+  /* Inline fields minimalistes */
   .field-inline {
     flex-direction: column !important;
     align-items: stretch !important;
-    gap: 0.8rem !important; /* Gap réduit */
+    gap: 0.5rem !important; /* Gap minimal */
   }
   
   /* ────────────────────────────────────────
      AMÉLIORATIONS SUPPLÉMENTAIRES MOBILE
      ──────────────────────────────────────── */
   
-  /* Sections de formulaire compactes */
+  /* Sections ultra-compactes */
   .form-section {
-    margin-bottom: 1.5rem !important; /* Marge réduite */
-    padding: 1rem !important; /* Padding réduit */
-    background: rgba(255, 255, 255, 0.03) !important;
-    border-radius: 12px !important;
-    border: 1px solid rgba(52, 211, 153, 0.1) !important;
+    margin-bottom: 1rem !important; /* Marge minimale */
+    padding: 0.8rem !important; /* Padding minimal */
+    background: rgba(255, 255, 255, 0.02) !important; /* Background discret */
+    border-radius: 8px !important;
+    border: 1px solid rgba(52, 211, 153, 0.08) !important; /* Bordure très fine */
   }
   
-  /* Boutons compacts */
+  /* Boutons ultra-compacts */
   .btn, .pill-btn {
-    min-height: 44px !important; /* Hauteur réduite */
-    padding: 0.7rem 1.2rem !important; /* Padding réduit */
+    min-height: 40px !important; /* Hauteur minimale */
+    padding: 0.5rem 1rem !important; /* Padding minimal */
     font-weight: 600 !important;
-    border-radius: 10px !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    font-size: 0.9rem !important; /* Texte plus petit */
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    font-size: 0.85rem !important; /* Texte plus petit */
+    border: 1px solid rgba(52, 211, 153, 0.2) !important;
   }
   
   .btn:hover, .pill-btn:hover {
@@ -5539,53 +5532,54 @@ kbd {
     transition: all 0.1s ease !important;
   }
   
-  /* Groupes boolean compacts */
+  /* Groupes boolean minimalistes */
   .boolean-group {
-    gap: 0.8rem !important; /* Gap réduit */
+    gap: 0.5rem !important; /* Gap minimal */
   }
   
   .boolean-group .radio {
-    border-radius: 10px !important;
-    min-height: 48px !important; /* Hauteur réduite */
+    border-radius: 8px !important;
+    min-height: 40px !important; /* Hauteur minimale */
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    padding: 0.5rem !important;
   }
   
-  /* États checked plus visibles */
+  /* États checked discrets */
   .radio:has(input:checked),
   .checkbox-item:has(input:checked) {
-    background: rgba(52, 211, 153, 0.15) !important;
+    background: rgba(52, 211, 153, 0.1) !important;
     border-color: var(--primary) !important;
-    box-shadow: 0 4px 15px rgba(52, 211, 153, 0.25) !important;
+    box-shadow: none !important; /* Pas d'ombre */
   }
   
-  /* Améliorations des sections navigation */
+  /* Sections navigation compactes */
   .section-nav {
-    padding: 1.5rem !important;
-    gap: 1rem !important;
+    padding: 1rem !important; /* Padding réduit */
+    gap: 0.7rem !important; /* Gap réduit */
   }
   
   .nav-btn {
-    min-height: 56px !important;
-    padding: 1rem 2rem !important;
-    font-size: 1.05rem !important;
+    min-height: 40px !important; /* Hauteur réduite */
+    padding: 0.6rem 1.5rem !important; /* Padding compact */
+    font-size: 0.9rem !important; /* Texte plus petit */
     font-weight: 600 !important;
-    border-radius: 14px !important;
+    border-radius: 8px !important;
   }
   
   /* ────────────────────────────────────────
      SÉLECTEURS ET CARTES - Plus lisibles et tactiles
      ──────────────────────────────────────── */
   
-  /* Type cards compactes */
+  /* Type cards ultra-compactes */
   .type-card {
-    padding: 1.2rem !important; /* Padding réduit */
-    background: rgba(255, 255, 255, 0.1) !important;
-    border: 2px solid rgba(52, 211, 153, 0.3) !important;
-    border-radius: 12px !important; /* Moins arrondi */
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    min-height: 60px !important; /* Hauteur réduite */
+    padding: 0.8rem !important; /* Padding minimal */
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(52, 211, 153, 0.2) !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    min-height: 50px !important; /* Hauteur minimale */
     cursor: pointer !important;
   }
   
@@ -5603,29 +5597,29 @@ kbd {
   }
   
   .type-card .type-title {
-    font-size: 1.15rem !important;
-    font-weight: 700 !important; /* Plus gras */
+    font-size: 1rem !important; /* Taille réduite */
+    font-weight: 600 !important;
     color: var(--text) !important;
-    margin-bottom: 0.3rem !important;
+    margin-bottom: 0.2rem !important;
   }
   
   .type-card .type-description {
-    font-size: 0.95rem !important;
+    font-size: 0.8rem !important; /* Plus petit */
     color: var(--text-muted) !important;
     font-weight: 400 !important;
-    line-height: 1.4 !important;
+    line-height: 1.3 !important;
   }
   
-  /* Boutons radio et checkbox compacts */
+  /* Boutons radio/checkbox minimalistes */
   .radio,
   .checkbox-item {
-    padding: 0.8rem !important; /* Padding réduit */
-    background: rgba(255, 255, 255, 0.1) !important;
-    border: 2px solid rgba(52, 211, 153, 0.3) !important;
-    border-radius: 10px !important;
-    min-height: 48px !important; /* Hauteur réduite */
+    padding: 0.6rem !important; /* Padding minimal */
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(52, 211, 153, 0.2) !important;
+    border-radius: 8px !important;
+    min-height: 42px !important; /* Hauteur minimale */
     cursor: pointer !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: all 0.2s ease !important;
     position: relative !important;
     overflow: hidden !important;
   }
@@ -5660,28 +5654,28 @@ kbd {
     box-shadow: 0 4px 12px rgba(52, 211, 153, 0.15) !important;
   }
   
-  /* Labels dans les sélecteurs */
+  /* Labels dans les sélecteurs compacts */
   .radio label,
   .checkbox-item label {
-    font-size: 1.05rem !important;
-    font-weight: 600 !important;
+    font-size: 0.9rem !important; /* Plus petit */
+    font-weight: 500 !important; /* Moins gras */
     color: var(--text) !important;
     cursor: pointer !important;
     margin: 0 !important;
-    line-height: 1.4 !important;
+    line-height: 1.3 !important;
   }
   
-  /* Multi-select compact */
+  /* Multi-select minimal */
   .multi-select-button {
-    background: rgba(255, 255, 255, 0.1) !important;
-    border: 2px solid rgba(52, 211, 153, 0.3) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(52, 211, 153, 0.2) !important;
     color: var(--text) !important;
     font-weight: 600 !important;
-    padding: 0.8rem !important; /* Padding réduit */
-    min-height: 44px !important; /* Hauteur réduite */
-    border-radius: 10px !important;
+    padding: 0.6rem !important; /* Padding minimal */
+    min-height: 40px !important; /* Hauteur minimale */
+    border-radius: 8px !important;
     cursor: pointer !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: all 0.2s ease !important;
     position: relative !important;
     overflow: hidden !important;
   }
