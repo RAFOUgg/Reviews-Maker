@@ -816,12 +816,14 @@ window.addEventListener('resize', createMobileBottomNav);
 
 // Améliorations UX pour les champs de saisie
 function enhanceFormFields() {
-  // Auto-resize pour les textarea
+  // Auto-resize pour les textarea avec limites compactes
   function autoResizeTextarea(textarea) {
     textarea.style.height = 'auto';
     const scrollHeight = textarea.scrollHeight;
-    const maxHeight = 300; // Hauteur maximum
-    textarea.style.height = Math.min(scrollHeight, maxHeight) + 'px';
+    const maxHeight = 200; // Hauteur maximum réduite
+    const minHeight = 100; // Hauteur minimum réduite
+    const newHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
+    textarea.style.height = newHeight + 'px';
     
     // Gestion du scroll si le contenu dépasse
     if (scrollHeight > maxHeight) {

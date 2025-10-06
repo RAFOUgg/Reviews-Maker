@@ -5380,30 +5380,30 @@ kbd {
   select,
   .input {
     font-size: 16px !important; /* Évite le zoom iOS */
-    padding: 1.2rem 1rem !important; /* Plus de padding vertical */
-    min-height: 56px !important; /* Taille optimale pour le tactile */
-    background: rgba(255, 255, 255, 0.1) !important; /* Plus visible */
-    border: 2px solid rgba(52, 211, 153, 0.3) !important; /* Bordure plus visible */
-    border-radius: 14px !important; /* Coins plus arrondis pour mobile */
+    padding: 0.8rem 0.7rem !important; /* Padding réduit */
+    min-height: 44px !important; /* Taille plus compacte */
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 2px solid rgba(52, 211, 153, 0.3) !important;
+    border-radius: 10px !important; /* Coins moins arrondis */
     color: var(--text) !important;
     font-weight: 500 !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; /* Transition plus fluide */
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), 
-                0 1px 3px rgba(52, 211, 153, 0.1) !important; /* Ombres plus prononcées */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1), 
+                0 1px 2px rgba(52, 211, 153, 0.08) !important; /* Ombres réduites */
     position: relative !important;
   }
   
-  /* Animation au focus plus sophistiquée */
+  /* Animation au focus plus compacte */
   input:focus,
   textarea:focus,
   select:focus {
-    background: rgba(255, 255, 255, 0.15) !important; /* Plus contrasté */
+    background: rgba(255, 255, 255, 0.15) !important;
     border-color: var(--primary) !important;
-    box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.25), 
-                inset 0 2px 4px rgba(0, 0, 0, 0.15),
-                0 4px 12px rgba(52, 211, 153, 0.15) !important; /* Glow effect */
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2), 
+                inset 0 1px 2px rgba(0, 0, 0, 0.1),
+                0 2px 8px rgba(52, 211, 153, 0.1) !important; /* Glow réduit */
     outline: none !important;
-    transform: translateY(-2px) scale(1.01) !important; /* Élévation + légère expansion */
+    transform: translateY(-1px) scale(1.005) !important; /* Élévation réduite */
   }
   
   /* États hover pour meilleure interactivité */
@@ -5444,12 +5444,12 @@ kbd {
     transform: translateY(-2px) !important;
   }
   
-  /* Textarea améliorés avec auto-resize et UX optimisée */
+  /* Textarea plus compacts */
   textarea {
-    min-height: 140px !important; /* Plus de hauteur par défaut */
+    min-height: 100px !important; /* Hauteur réduite */
     resize: vertical !important;
-    line-height: 1.6 !important; /* Meilleure lisibilité */
-    font-family: 'Inter', sans-serif !important; /* Police cohérente */
+    line-height: 1.5 !important;
+    font-family: 'Inter', sans-serif !important;
     overflow-y: auto !important;
     scrollbar-width: thin !important;
     scrollbar-color: rgba(52, 211, 153, 0.5) transparent !important;
@@ -5474,15 +5474,15 @@ kbd {
     background: rgba(52, 211, 153, 0.6) !important;
   }
   
-  /* Labels plus élégants */
+  /* Labels compacts */
   label {
-    font-size: 1rem !important; /* Légèrement plus grand */
-    font-weight: 600 !important; /* Plus gras */
+    font-size: 0.9rem !important; /* Plus petit */
+    font-weight: 600 !important;
     color: var(--text) !important;
-    margin-bottom: 0.7rem !important;
+    margin-bottom: 0.4rem !important; /* Marge réduite */
     display: flex !important;
     align-items: center !important;
-    gap: 0.5rem !important;
+    gap: 0.3rem !important; /* Gap réduit */
     transition: color 0.3s ease !important;
   }
   
@@ -5492,41 +5492,41 @@ kbd {
     transform: translateX(2px) !important;
   }
   
-  /* Grilles de champs : 1 colonne avec espacement optimisé */
+  /* Grilles de champs compactes */
   .field-group,
   .field-row {
     grid-template-columns: 1fr !important;
-    gap: 1.5rem !important; /* Plus d'espacement */
+    gap: 1rem !important; /* Espacement réduit */
   }
   
-  /* Inline fields deviennent vertical avec animations */
+  /* Inline fields compacts */
   .field-inline {
     flex-direction: column !important;
     align-items: stretch !important;
-    gap: 1.2rem !important;
+    gap: 0.8rem !important; /* Gap réduit */
   }
   
   /* ────────────────────────────────────────
      AMÉLIORATIONS SUPPLÉMENTAIRES MOBILE
      ──────────────────────────────────────── */
   
-  /* Sections de formulaire mieux espacées */
+  /* Sections de formulaire compactes */
   .form-section {
-    margin-bottom: 2rem !important;
-    padding: 1.5rem !important;
+    margin-bottom: 1.5rem !important; /* Marge réduite */
+    padding: 1rem !important; /* Padding réduit */
     background: rgba(255, 255, 255, 0.03) !important;
-    border-radius: 16px !important;
+    border-radius: 12px !important;
     border: 1px solid rgba(52, 211, 153, 0.1) !important;
   }
   
-  /* Boutons d'action plus visibles */
+  /* Boutons compacts */
   .btn, .pill-btn {
-    min-height: 56px !important;
-    padding: 1rem 1.5rem !important;
+    min-height: 44px !important; /* Hauteur réduite */
+    padding: 0.7rem 1.2rem !important; /* Padding réduit */
     font-weight: 600 !important;
-    border-radius: 14px !important;
+    border-radius: 10px !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    font-size: 1rem !important;
+    font-size: 0.9rem !important; /* Texte plus petit */
   }
   
   .btn:hover, .pill-btn:hover {
@@ -5539,14 +5539,14 @@ kbd {
     transition: all 0.1s ease !important;
   }
   
-  /* Améliorations pour les groupes de boutons */
+  /* Groupes boolean compacts */
   .boolean-group {
-    gap: 1rem !important;
+    gap: 0.8rem !important; /* Gap réduit */
   }
   
   .boolean-group .radio {
-    border-radius: 14px !important;
-    min-height: 64px !important;
+    border-radius: 10px !important;
+    min-height: 48px !important; /* Hauteur réduite */
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -5578,14 +5578,14 @@ kbd {
      SÉLECTEURS ET CARTES - Plus lisibles et tactiles
      ──────────────────────────────────────── */
   
-  /* Type cards sur la page d'accueil */
+  /* Type cards compactes */
   .type-card {
-    padding: 1.8rem !important; /* Plus de padding */
+    padding: 1.2rem !important; /* Padding réduit */
     background: rgba(255, 255, 255, 0.1) !important;
     border: 2px solid rgba(52, 211, 153, 0.3) !important;
-    border-radius: 16px !important; /* Plus arrondi */
+    border-radius: 12px !important; /* Moins arrondi */
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    min-height: 80px !important; /* Hauteur minimum tactile */
+    min-height: 60px !important; /* Hauteur réduite */
     cursor: pointer !important;
   }
   
@@ -5616,14 +5616,14 @@ kbd {
     line-height: 1.4 !important;
   }
   
-  /* Boutons radio et checkbox améliorés */
+  /* Boutons radio et checkbox compacts */
   .radio,
   .checkbox-item {
-    padding: 1.2rem !important;
+    padding: 0.8rem !important; /* Padding réduit */
     background: rgba(255, 255, 255, 0.1) !important;
     border: 2px solid rgba(52, 211, 153, 0.3) !important;
-    border-radius: 12px !important;
-    min-height: 60px !important; /* Plus tactile */
+    border-radius: 10px !important;
+    min-height: 48px !important; /* Hauteur réduite */
     cursor: pointer !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     position: relative !important;
@@ -5671,15 +5671,15 @@ kbd {
     line-height: 1.4 !important;
   }
   
-  /* Multi-select button amélioré */
+  /* Multi-select compact */
   .multi-select-button {
     background: rgba(255, 255, 255, 0.1) !important;
     border: 2px solid rgba(52, 211, 153, 0.3) !important;
     color: var(--text) !important;
     font-weight: 600 !important;
-    padding: 1.2rem !important;
-    min-height: 56px !important;
-    border-radius: 12px !important;
+    padding: 0.8rem !important; /* Padding réduit */
+    min-height: 44px !important; /* Hauteur réduite */
+    border-radius: 10px !important;
     cursor: pointer !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     position: relative !important;
