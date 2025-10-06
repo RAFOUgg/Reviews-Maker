@@ -6507,10 +6507,10 @@ kbd {
   .radio-list {
     background: rgba(255, 255, 255, 0.02) !important;
     border: 1px solid rgba(52, 211, 153, 0.1) !important;
-    border-radius: 4px !important;
-    padding: 0.4rem !important;
-    margin: 0.3rem 0 !important;
-    max-height: 200px !important;
+    border-radius: 3px !important;
+    padding: 0.2rem !important;
+    margin: 0.2rem 0 !important;
+    max-height: 150px !important;
     overflow-y: auto !important;
   }
   
@@ -6546,19 +6546,19 @@ kbd {
   /* Éléments interactifs ultra-compacts */
   .radio,
   .checkbox-item {
-    padding: 0.2rem !important;
-    min-height: 26px !important;
-    margin-bottom: 0.1rem !important;
-    border-radius: 2px !important;
+    padding: 0.1rem !important;
+    min-height: 20px !important;
+    margin-bottom: 0.05rem !important;
+    border-radius: 1px !important;
     background: rgba(255, 255, 255, 0.04) !important;
     border: 1px solid rgba(52, 211, 153, 0.15) !important;
   }
   
   .radio label,
   .checkbox-item label {
-    font-size: 0.55rem !important;
+    font-size: 0.45rem !important;
     font-weight: 500 !important;
-    line-height: 1.0 !important;
+    line-height: 0.9 !important;
     margin: 0 !important;
   }
   
@@ -6590,13 +6590,13 @@ kbd {
   
   /* Multi-select ultra-compact */
   .multi-select-button {
-    min-height: 28px !important;
-    padding: 0.25rem !important;
+    min-height: 22px !important;
+    padding: 0.15rem !important;
     background: rgba(255, 255, 255, 0.04) !important;
     border: 1px solid rgba(52, 211, 153, 0.15) !important;
-    border-radius: 2px !important;
-    font-size: 0.55rem !important;
-    line-height: 1.0 !important;
+    border-radius: 1px !important;
+    font-size: 0.45rem !important;
+    line-height: 0.9 !important;
   }
   
   /* Options des menus déroulants ultra-compacts */
@@ -6638,18 +6638,18 @@ kbd {
   
   /* Options multi-select ultra-compactes */
   .multi-select-menu {
-    font-size: 0.55rem !important;
+    font-size: 0.45rem !important;
   }
   
   .multi-select-menu .option {
-    padding: 0.15rem 0.25rem !important;
-    font-size: 0.55rem !important;
-    line-height: 1.0 !important;
-    min-height: 22px !important;
+    padding: 0.08rem 0.15rem !important;
+    font-size: 0.45rem !important;
+    line-height: 0.9 !important;
+    min-height: 16px !important;
   }
   
   .multi-select-menu .option label {
-    font-size: 0.5rem !important;
+    font-size: 0.42rem !important;
     font-weight: 500 !important;
   }
   
@@ -6693,18 +6693,18 @@ kbd {
   }
   /* Groupes boolean ultra-compacts */
   .boolean-group {
-    gap: 0.1rem !important;
-    margin: 0.3rem 0 !important;
+    gap: 0.05rem !important;
+    margin: 0.2rem 0 !important;
   }
   
   .boolean-group .radio {
-    min-height: 24px !important;
-    padding: 0.15rem !important;
-    border-radius: 2px !important;
+    min-height: 18px !important;
+    padding: 0.08rem !important;
+    border-radius: 1px !important;
   }
   
   .boolean-group .radio label {
-    font-size: 0.5rem !important;
+    font-size: 0.42rem !important;
     font-weight: 500 !important;
   }
   
@@ -6732,12 +6732,12 @@ kbd {
   .radio-list .radio {
     display: flex !important;
     align-items: center !important;
-    padding: 0.15rem 0.3rem !important;
-    min-height: 24px !important;
-    margin-bottom: 0.05rem !important;
+    padding: 0.08rem 0.15rem !important;
+    min-height: 18px !important;
+    margin-bottom: 0.02rem !important;
     background: rgba(255, 255, 255, 0.02) !important;
     border: 1px solid rgba(52, 211, 153, 0.08) !important;
-    border-radius: 2px !important;
+    border-radius: 1px !important;
   }
   
   .checkbox-list .checkbox-item:last-child,
@@ -6747,30 +6747,30 @@ kbd {
   
   .checkbox-list .checkbox-item label,
   .radio-list .radio label {
-    font-size: 0.5rem !important;
+    font-size: 0.42rem !important;
     font-weight: 500 !important;
-    line-height: 1.0 !important;
+    line-height: 0.9 !important;
     margin: 0 !important;
     flex: 1 !important;
   }
   /* Grilles de checkbox/radio ultra-compactes */
   .checkbox-grid,
   .radio-grid {
-    gap: 0.1rem !important;
+    gap: 0.05rem !important;
   }
   
   .checkbox-grid .checkbox-item,
   .radio-grid .radio {
-    font-size: 0.55rem !important;
-    padding: 0.15rem !important;
-    min-height: 24px !important;
+    font-size: 0.45rem !important;
+    padding: 0.08rem !important;
+    min-height: 18px !important;
   }
   
   .checkbox-grid .checkbox-item label,
   .radio-grid .radio label {
-    font-size: 0.5rem !important;
+    font-size: 0.42rem !important;
     font-weight: 500 !important;
-    line-height: 1.0 !important;
+    line-height: 0.9 !important;
   }
   
   .section-title {
