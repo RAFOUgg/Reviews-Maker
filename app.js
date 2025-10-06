@@ -1023,25 +1023,18 @@ function setupEditorPageEvents() {
   dom.previewOverlay?.addEventListener('click', closePreviewOnly);
   dom.downloadPreviewPng?.addEventListener('click', downloadPreviewAsPng);
 
-  // Toggle panneau d'aperçu (révèle/masque la colonne Aperçu)
+  // Toggle panneau d'aperçu (ouvre la modale d'aperçu)
   if (dom.togglePreviewPanel) {
     dom.togglePreviewPanel.addEventListener('click', () => {
-      // Open/close preview modal with the latest generated HTML
+      // Open preview modal with the latest generated HTML
       if (!dom.previewModal || !dom.previewOverlay || !dom.reviewContent) return;
-      const isOpen = !dom.previewModal.hasAttribute('hidden');
-      if (isOpen) {
-        dom.previewOverlay.setAttribute('hidden','');
-        dom.previewModal.setAttribute('hidden','');
-        dom.togglePreviewPanel.innerHTML = '<span aria-hidden="true">👁️</span> Afficher l\'aperçu';
-      } else {
-        // Ensure content is up-to-date
-        try { collectFormData(); generateReview(); } catch {}
-        const html = dom.reviewContent.innerHTML || '';
-        if (dom.previewModalContent) dom.previewModalContent.innerHTML = html;
-        dom.previewOverlay.removeAttribute('hidden');
-        dom.previewModal.removeAttribute('hidden');
-        dom.togglePreviewPanel.innerHTML = '<span aria-hidden="true">🙈</span> Masquer l\'aperçu';
-      }
+      // Toujours ouvrir (fermeture via croix ou clic extérieur)
+      // Ensure content is up-to-date
+      try { collectFormData(); generateReview(); } catch {}
+      const html = dom.reviewContent.innerHTML || '';
+      if (dom.previewModalContent) dom.previewModalContent.innerHTML = html;
+      dom.previewOverlay.removeAttribute('hidden');
+      dom.previewModal.removeAttribute('hidden');
     });
   }
 }
@@ -2453,6 +2446,7 @@ async function openPreviewOnly(review) {
 function closePreviewOnly() {
   dom.previewOverlay?.setAttribute('hidden','');
   dom.previewModal?.setAttribute('hidden','');
+  // Le bouton garde toujours le même texte (pas besoin de le changer)
 }
 
 async function downloadPreviewAsPng() {
@@ -4951,6 +4945,12 @@ function setPreviewMode(mode) {
   
   // Regenerate preview
   generateReview();
+  
+  // Update modal content if it's open
+  if (dom.previewModal && !dom.previewModal.hasAttribute('hidden')) {
+    const html = dom.reviewContent?.innerHTML || '';
+    if (dom.previewModalContent) dom.previewModalContent.innerHTML = html;
+  }
 }
 
 // Rendre la fonction accessible globalement
