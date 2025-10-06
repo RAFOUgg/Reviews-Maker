@@ -1201,6 +1201,175 @@ select:focus {
   color: var(--primary);
 }
 
+/* Cultivar list styles */
+.cultivar-list {
+  display: grid;
+  gap: 16px;
+}
+
+.add-cultivar-btn {
+  justify-self: flex-start;
+}
+
+.cultivar-items {
+  display: grid;
+  gap: 14px;
+}
+
+.cultivar-item {
+  padding: 16px;
+  background: rgba(12, 21, 38, 0.6);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: 12px;
+}
+
+.cultivar-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.cultivar-item-number {
+  font-weight: 600;
+  color: var(--primary);
+  font-size: 1.05rem;
+}
+
+.cultivar-fields {
+  display: grid;
+  gap: 12px;
+}
+
+.field-inline {
+  display: grid;
+  gap: 6px;
+}
+
+.field-inline label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.field-inline input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(10, 18, 34, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: inherit;
+  transition: var(--transition);
+}
+
+.field-inline input[type="text"]:focus {
+  outline: none;
+  border-color: rgba(52, 211, 153, 0.5);
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.matiere-group .checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(10, 18, 34, 0.4);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: var(--transition);
+}
+
+.checkbox-label:hover {
+  border-color: rgba(52, 211, 153, 0.4);
+  background: rgba(10, 18, 34, 0.6);
+}
+
+.checkbox-label input[type="checkbox"] {
+  accent-color: var(--primary);
+}
+
+.btn-icon {
+  padding: 6px 10px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-icon:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+/* Pipeline with cultivars styles */
+.pipeline-with-cultivars {
+  display: grid;
+  position: relative;
+  gap: 10px;
+}
+
+.pipeline-list {
+  list-style: decimal inside;
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 8px 10px;
+  background: rgba(12, 21, 38, 0.6);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+}
+
+.pipeline-item {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(10, 18, 34, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: var(--radius-sm);
+}
+
+.pipeline-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.step-cultivars {
+  padding: 10px;
+  background: rgba(52, 211, 153, 0.05);
+  border: 1px solid rgba(52, 211, 153, 0.15);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: 8px;
+}
+
+.step-cultivars-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.step-cultivars-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 input[type="file"] {
   padding: 12px 16px;
   cursor: pointer;
@@ -1427,6 +1596,48 @@ button {
   padding: 4px 12px;
   border-radius: 12px;
   display: inline-block;
+}
+
+/* Cultivars info display in generated review */
+.cultivars-info {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.cultivar-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: var(--radius-md);
+}
+
+.cultivar-number {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.cultivar-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.cultivar-details strong {
+  color: var(--primary);
+  font-size: 1.05rem;
+}
+
+.cultivar-meta {
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .review-image-container {

@@ -266,20 +266,18 @@ const productStructures = {
       {
         title: "Informations générales",
         fields: [
-          { key: "cultivars", label: "Cultivars de la/les matière(s) organique(s)", type: "text" },
-          { key: "breeder", label: "Breeders de la/les graine(s)", type: "text" },
-          { key: "farm", label: "Farm(s)", type: "text" },
-          {
-            key: "matiereVegetale",
-            label: "Type de matière végétale",
-            type: "multiple-choice",
-            choices: ["Fleurs fraîches", "Fleurs sèches", "Trim", "Autre"]
+          { 
+            key: "cultivarsList", 
+            label: "Cultivars utilisés", 
+            type: "cultivar-list",
+            matiereChoices: ["Fleurs fraîches", "Fleurs sèches", "Trim", "Autre"]
           },
           {
             key: "pipelineSeparation",
             label: "Pipeline de séparation (ordre des étapes)",
-            type: "sequence",
-            choices: choiceCatalog.separationTypes
+            type: "pipeline-with-cultivars",
+            choices: choiceCatalog.separationTypes,
+            cultivarsSource: "cultivarsList"
           },
           { key: "hashmaker", label: "Hash Maker", type: "text" },
           { key: "photo", label: "Photo", type: "file" }
@@ -499,14 +497,11 @@ const productStructures = {
       {
         title: "Informations générales",
         fields: [
-          { key: "cultivars", label: "Cultivar(s) de la/les matière(s) organique(s)", type: "text" },
-          { key: "breeder", label: "Breeder de la/les graine(s)", type: "text" },
-          { key: "farm", label: "Farm(s) / Producteur(s)", type: "text" },
-          {
-            key: "matiereVegetale",
-            label: "Type de matière végétale",
-            type: "multiple-choice",
-            choices: ["Fleurs fraîches", "Fleurs sèches", "Trim", "Trichomes", "Autre"]
+          { 
+            key: "cultivarsList", 
+            label: "Cultivars utilisés", 
+            type: "cultivar-list",
+            matiereChoices: ["Fleurs fraîches", "Fleurs sèches", "Trim", "Trichomes", "Autre"]
           },
           {
             key: "typeExtraction",
@@ -524,23 +519,21 @@ const productStructures = {
                 "RSO",
                 "Shatter",
                 "Budder",
-                "Wax",
-                "Budder",
-                "Sand",
-
+                "Sand"
               ])
             )
           },
           {
             key: "pipelineExtraction",
             label: "Pipeline extraction/séparation (ordre)",
-            type: "sequence",
+            type: "pipeline-with-cultivars",
             choices: Array.from(new Set([
               ...choiceCatalog.separationTypes,
               ...choiceCatalog.extractionSansSolvants,
               ...choiceCatalog.extractionSolvants,
               ...choiceCatalog.extractionAvancees
-            ]))
+            ])),
+            cultivarsSource: "cultivarsList"
           },
           { key: "purgevide", label: "Purge à vide", type: "boolean" },
           { key: "photo", label: "Photo", type: "file" }
@@ -2515,11 +2508,15 @@ function loadReviewIntoForm(review, mode = 'view') {
       if (val == null) return;
       if (input.type === "file") return;
       if (input.type === "hidden") {
-        // sequence or multiple/multiselect
+        // sequence, multiple/multiselect, cultivar-list, or pipeline-with-cultivars
         try {
           const parsed = JSON.parse(String(val));
           if (input.dataset.sequence === 'true') {
             rehydrateSequenceField(input.id, Array.isArray(parsed) ? parsed : []);
+          } else if (input.dataset.cultivarList === 'true') {
+            rehydrateCultivarList(input.id, Array.isArray(parsed) ? parsed : []);
+          } else if (input.dataset.pipelineWithCultivars === 'true') {
+            rehydratePipelineWithCultivars(input.id, Array.isArray(parsed) ? parsed : []);
           } else if (input.dataset.multiselect === 'true') {
             rehydrateMultipleChoice(input.id, Array.isArray(parsed) ? parsed : (parsed ? [parsed] : []));
           } else {
@@ -2949,6 +2946,477 @@ function createFieldGroup(field, sectionIndex, section) {
   label.setAttribute("for", field.key);
   label.textContent = `${field.label}${field.type === "number" ? " /10" : ""}`;
   wrapper.appendChild(label);
+
+  // Cultivar list: dynamic list of cultivars with farm and matiere properties
+  if (field.type === "cultivar-list") {
+    const container = document.createElement("div");
+    container.className = "cultivar-list";
+    
+    const list = document.createElement("div");
+    list.className = "cultivar-items";
+    
+    const addBtn = document.createElement("button");
+    addBtn.type = "button";
+    addBtn.className = "btn btn-outline add-cultivar-btn";
+    addBtn.innerHTML = '<span aria-hidden="true">⊕</span> Ajouter un cultivar';
+    
+    const hidden = document.createElement("input");
+    hidden.type = "hidden";
+    hidden.id = field.key;
+    hidden.dataset.cultivarList = "true";
+    
+    let cultivarCounter = 0;
+    
+    function serializeCultivars() {
+      const items = Array.from(list.querySelectorAll('.cultivar-item')).map(item => ({
+        name: item.querySelector('[data-cultivar-name]')?.value?.trim() || '',
+        farm: item.querySelector('[data-cultivar-farm]')?.value?.trim() || '',
+        breeder: item.querySelector('[data-cultivar-breeder]')?.value?.trim() || '',
+        matiere: Array.from(item.querySelectorAll('[data-cultivar-matiere]:checked')).map(cb => cb.value)
+      })).filter(c => c.name); // Only keep cultivars with a name
+      hidden.value = JSON.stringify(items);
+      updateProgress();
+      try { collectFormData(); generateReview(); } catch {}
+      // Notify pipeline fields to update their cultivar checkboxes
+      updatePipelineCultivars();
+    }
+    
+    function createCultivarItem(data = {}) {
+      const item = document.createElement("div");
+      item.className = "cultivar-item";
+      item.dataset.cultivarId = ++cultivarCounter;
+      
+      const header = document.createElement("div");
+      header.className = "cultivar-item-header";
+      const title = document.createElement("span");
+      title.className = "cultivar-item-number";
+      title.textContent = `Cultivar ${cultivarCounter}`;
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "btn-icon";
+      delBtn.innerHTML = '🗑️';
+      delBtn.title = "Supprimer ce cultivar";
+      delBtn.addEventListener('click', () => {
+        item.remove();
+        serializeCultivars();
+      });
+      header.append(title, delBtn);
+      
+      const fields = document.createElement("div");
+      fields.className = "cultivar-fields";
+      
+      // Cultivar name
+      const nameGroup = document.createElement("div");
+      nameGroup.className = "field-inline";
+      const nameLabel = document.createElement("label");
+      nameLabel.textContent = "Nom";
+      const nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.placeholder = "Ex: Gelato 41";
+      nameInput.dataset.cultivarName = "";
+      nameInput.value = data.name || '';
+      nameInput.addEventListener('input', serializeCultivars);
+      nameGroup.append(nameLabel, nameInput);
+      
+      // Farm
+      const farmGroup = document.createElement("div");
+      farmGroup.className = "field-inline";
+      const farmLabel = document.createElement("label");
+      farmLabel.textContent = "Farm";
+      const farmInput = document.createElement("input");
+      farmInput.type = "text";
+      farmInput.placeholder = "Ex: La Ferme Bio";
+      farmInput.dataset.cultivarFarm = "";
+      farmInput.value = data.farm || '';
+      farmInput.addEventListener('input', serializeCultivars);
+      farmGroup.append(farmLabel, farmInput);
+      
+      // Breeder
+      const breederGroup = document.createElement("div");
+      breederGroup.className = "field-inline";
+      const breederLabel = document.createElement("label");
+      breederLabel.textContent = "Breeder";
+      const breederInput = document.createElement("input");
+      breederInput.type = "text";
+      breederInput.placeholder = "Ex: Cookies Fam";
+      breederInput.dataset.cultivarBreeder = "";
+      breederInput.value = data.breeder || '';
+      breederInput.addEventListener('input', serializeCultivars);
+      breederGroup.append(breederLabel, breederInput);
+      
+      // Matiere vegetale (checkboxes)
+      const matiereGroup = document.createElement("div");
+      matiereGroup.className = "field-inline matiere-group";
+      const matiereLabel = document.createElement("label");
+      matiereLabel.textContent = "Matière";
+      const matiereChoices = document.createElement("div");
+      matiereChoices.className = "checkbox-group";
+      (field.matiereChoices || []).forEach(choice => {
+        const lbl = document.createElement("label");
+        lbl.className = "checkbox-label";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.value = choice;
+        cb.dataset.cultivarMatiere = "";
+        cb.checked = data.matiere && data.matiere.includes(choice);
+        cb.addEventListener('change', serializeCultivars);
+        lbl.append(cb, document.createTextNode(choice));
+        matiereChoices.appendChild(lbl);
+      });
+      matiereGroup.append(matiereLabel, matiereChoices);
+      
+      fields.append(nameGroup, farmGroup, breederGroup, matiereGroup);
+      item.append(header, fields);
+      return item;
+    }
+    
+    addBtn.addEventListener('click', () => {
+      list.appendChild(createCultivarItem());
+      serializeCultivars();
+    });
+    
+    container.append(addBtn, list, hidden);
+    wrapper.appendChild(container);
+    wrapper.style.gridColumn = "1 / -1"; // Full width
+    return wrapper;
+  }
+
+  // Pipeline with cultivars: sequence with cultivar assignment per step
+  if (field.type === "pipeline-with-cultivars" && Array.isArray(field.choices) && field.choices.length) {
+    const container = document.createElement("div");
+    container.className = "pipeline-with-cultivars";
+    container.dataset.cultivarsSource = field.cultivarsSource || '';
+
+    const display = document.createElement("button");
+    display.type = "button";
+    display.className = "multi-select-display";
+    display.setAttribute("aria-haspopup", "listbox");
+    display.setAttribute("aria-expanded", "false");
+    display.textContent = "Ajouter une étape";
+
+    const menu = document.createElement("div");
+    menu.className = "multi-select-menu";
+    menu.setAttribute("role", "listbox");
+    menu.hidden = true;
+
+    const list = document.createElement("ol");
+    list.className = "pipeline-list";
+
+    const hidden = document.createElement("input");
+    hidden.type = "hidden";
+    hidden.id = field.key;
+    hidden.dataset.pipelineWithCultivars = "true";
+
+    // Helpers for special step types (same as sequence)
+    function isSieveStep(name) {
+      const n = (name || '').toLowerCase();
+      return /tamis|bubble|ice\s*hash|ice\s*dry|wpff/.test(n);
+    }
+    function isRosinStep(name) {
+      const n = (name || '').toLowerCase();
+      return /rosin|pressage\s*(à|a)\s*chaud/.test(n);
+    }
+    function isCO2Step(name) {
+      const n = (name || '').toLowerCase();
+      return /(co2|co₂).*(supercritique)/.test(n);
+    }
+
+    function getCultivarsList() {
+      const sourceKey = field.cultivarsSource;
+      if (!sourceKey) return [];
+      const sourceInput = document.getElementById(sourceKey);
+      if (!sourceInput) return [];
+      try {
+        const data = JSON.parse(sourceInput.value || '[]');
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function currentEntries() {
+      return Array.from(list.querySelectorAll('li.pipeline-item')).map(li => {
+        const name = li.querySelector('.step-label')?.textContent || '';
+        if (!name) return null;
+        
+        const entry = { name };
+        
+        // Get selected cultivars
+        const selectedCultivars = Array.from(li.querySelectorAll('[data-step-cultivar]:checked')).map(cb => cb.value);
+        if (selectedCultivars.length) entry.cultivars = selectedCultivars;
+        
+        // Mesh-capable steps
+        if (li.dataset.sieve === 'true' || li.dataset.rosin === 'true') {
+          const minV = li.querySelector('input[data-mesh-min]')?.value?.trim() || '';
+          const maxV = li.querySelector('input[data-mesh-max]')?.value?.trim() || '';
+          const any = minV || maxV;
+          const mesh = (minV && maxV) ? `${minV}–${maxV}` : (any ? `0–${minV || maxV}` : '');
+          if (mesh) entry.mesh = mesh;
+          
+          if (li.dataset.rosin === 'true') {
+            const tempC = li.querySelector('input[data-rosin-temp]')?.value?.trim() || '';
+            if (tempC) entry.tempC = tempC;
+          }
+        }
+        
+        if (li.dataset.co2 === 'true') {
+          const pressureBar = li.querySelector('input[data-co2-pressure]')?.value?.trim() || '';
+          const tempC = li.querySelector('input[data-co2-temp]')?.value?.trim() || '';
+          if (pressureBar) entry.pressureBar = pressureBar;
+          if (tempC) entry.tempC = tempC;
+        }
+        
+        return entry;
+      }).filter(Boolean);
+    }
+
+    function renderDisplay(values) {
+      const arr = Array.isArray(values) ? values : [];
+      if (!arr.length) {
+        display.textContent = "Ajouter une étape";
+        return;
+      }
+      display.innerHTML = arr.map(v => {
+        const name = (v && typeof v === 'object') ? (v.name || '') : String(v);
+        let meta = '';
+        if (v && typeof v === 'object') {
+          const parts = [];
+          if (v.mesh) parts.push(`${v.mesh}`);
+          if (v.pressureBar) parts.push(`${v.pressureBar} bar`);
+          if (v.tempC) parts.push(`${v.tempC}°C`);
+          if (v.cultivars && v.cultivars.length) {
+            parts.push(`🌿 ${v.cultivars.join(', ')}`);
+          }
+          if (parts.length) meta = ` <small style="opacity:.82;">(${parts.join(', ')})</small>`;
+        }
+        return `<span class="chip">${name}${meta}</span>`;
+      }).join("");
+    }
+
+    function serialize() {
+      const entries = currentEntries();
+      hidden.value = JSON.stringify(entries);
+      renderDisplay(entries);
+      updateProgress();
+      try { collectFormData(); generateReview(); } catch {}
+    }
+
+    function createItem(text, meta = {}) {
+      const li = document.createElement("li");
+      li.className = "pipeline-item";
+      
+      const header = document.createElement("div");
+      header.className = "pipeline-item-header";
+      
+      const label = document.createElement("span");
+      label.className = "step-label";
+      label.textContent = text;
+      
+      const actions = document.createElement("span");
+      actions.className = "step-actions";
+      const up = document.createElement("button");
+      up.type = "button";
+      up.className = "step-move";
+      up.title = "Monter";
+      up.textContent = "↑";
+      const down = document.createElement("button");
+      down.type = "button";
+      down.className = "step-move";
+      down.title = "Descendre";
+      down.textContent = "↓";
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "step-del";
+      del.title = "Supprimer";
+      del.textContent = "✕";
+      actions.append(up, down, del);
+      header.append(label, actions);
+      li.appendChild(header);
+
+      // Cultivars selector
+      const cultivarsDiv = document.createElement("div");
+      cultivarsDiv.className = "step-cultivars";
+      const cultivarsLabel = document.createElement("span");
+      cultivarsLabel.textContent = "Cultivars pour cette étape :";
+      cultivarsLabel.className = "step-cultivars-label";
+      const cultivarsCheckboxes = document.createElement("div");
+      cultivarsCheckboxes.className = "step-cultivars-checkboxes";
+      cultivarsCheckboxes.dataset.cultivarsTarget = "";
+      cultivarsDiv.append(cultivarsLabel, cultivarsCheckboxes);
+      li.appendChild(cultivarsDiv);
+      
+      // Populate cultivars checkboxes
+      updateItemCultivars(li, meta.cultivars || []);
+
+      // Extra metadata editors (mesh, temp, pressure, etc.)
+      const n = (text || '').toString();
+      if (isSieveStep(n) || isRosinStep(n)) {
+        if (isSieveStep(n)) li.dataset.sieve = 'true';
+        if (isRosinStep(n)) li.dataset.rosin = 'true';
+        const extra = document.createElement('div');
+        extra.className = 'step-extra';
+        const pair = document.createElement('div');
+        pair.className = 'mesh-pair';
+        const minInput = document.createElement('input');
+        minInput.type = 'text';
+        minInput.placeholder = 'min (µm)';
+        minInput.setAttribute('data-mesh-min', '');
+        const maxInput = document.createElement('input');
+        maxInput.type = 'text';
+        maxInput.placeholder = 'max (µm)';
+        maxInput.setAttribute('data-mesh-max', '');
+        if (meta && meta.mesh) {
+          try {
+            const str = String(meta.mesh);
+            const m = str.match(/(\d+)\s*[–-]\s*(\d+)/);
+            if (m) {
+              minInput.value = m[1];
+              maxInput.value = m[2];
+            } else {
+              const single = str.match(/(\d+)/);
+              if (single) { maxInput.value = single[1]; }
+            }
+          } catch {}
+        }
+        minInput.addEventListener('input', serialize);
+        maxInput.addEventListener('input', serialize);
+        pair.append(minInput, maxInput);
+        extra.appendChild(pair);
+        if (li.dataset.rosin === 'true') {
+          const temp = document.createElement('input');
+          temp.type = 'text';
+          temp.placeholder = 'Température (°C)';
+          temp.setAttribute('data-rosin-temp', '');
+          if (meta && (meta.tempC || meta.temperature)) {
+            temp.value = String(meta.tempC || meta.temperature);
+          }
+          temp.addEventListener('input', serialize);
+          extra.appendChild(temp);
+        }
+        li.appendChild(extra);
+      } else if (isCO2Step(n)) {
+        li.dataset.co2 = 'true';
+        const extra = document.createElement('div');
+        extra.className = 'step-extra';
+        const pressure = document.createElement('input');
+        pressure.type = 'text';
+        pressure.placeholder = 'Pression (bar)';
+        pressure.setAttribute('data-co2-pressure', '');
+        const temp = document.createElement('input');
+        temp.type = 'text';
+        temp.placeholder = 'Température (°C)';
+        temp.setAttribute('data-co2-temp', '');
+        if (meta) {
+          if (meta.pressureBar) pressure.value = String(meta.pressureBar);
+          if (meta.tempC || meta.temperature) temp.value = String(meta.tempC || meta.temperature);
+        }
+        pressure.addEventListener('input', serialize);
+        temp.addEventListener('input', serialize);
+        extra.append(pressure, temp);
+        li.appendChild(extra);
+      }
+
+      up.addEventListener("click", () => {
+        if (li.previousElementSibling) {
+          list.insertBefore(li, li.previousElementSibling);
+          serialize();
+        }
+      });
+      down.addEventListener("click", () => {
+        if (li.nextElementSibling) {
+          list.insertBefore(li.nextElementSibling, li);
+          serialize();
+        }
+      });
+      del.addEventListener("click", () => {
+        li.remove();
+        serialize();
+      });
+
+      return li;
+    }
+    
+    function updateItemCultivars(item, selectedCultivars = []) {
+      const checkboxesDiv = item.querySelector('[data-cultivars-target]');
+      if (!checkboxesDiv) return;
+      checkboxesDiv.innerHTML = '';
+      
+      const cultivars = getCultivarsList();
+      if (!cultivars.length) {
+        checkboxesDiv.innerHTML = '<em style="opacity:0.6;font-size:0.9em;">Aucun cultivar défini</em>';
+        return;
+      }
+      
+      cultivars.forEach(c => {
+        if (!c.name) return;
+        const lbl = document.createElement('label');
+        lbl.className = 'checkbox-label';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = c.name;
+        cb.dataset.stepCultivar = '';
+        cb.checked = selectedCultivars.includes(c.name);
+        cb.addEventListener('change', serialize);
+        lbl.append(cb, document.createTextNode(c.name));
+        checkboxesDiv.appendChild(lbl);
+      });
+    }
+
+    // Build adder menu
+    field.choices.forEach(choice => {
+      const opt = document.createElement("div");
+      opt.className = "multi-select-option";
+      opt.setAttribute("role", "option");
+      opt.tabIndex = 0;
+      opt.textContent = choice;
+      opt.addEventListener("click", () => {
+        list.appendChild(createItem(choice));
+        serialize();
+      });
+      opt.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          opt.click();
+        }
+      });
+      menu.appendChild(opt);
+    });
+
+    // Toggle menu
+    display.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = !menu.hidden;
+      document.querySelectorAll(".multi-select-menu").forEach(el => {
+        el.hidden = true;
+        el.previousElementSibling?.setAttribute("aria-expanded","false");
+      });
+      menu.hidden = isOpen;
+      display.setAttribute("aria-expanded", String(!isOpen));
+    });
+
+    // Close on outside click
+    document.addEventListener("click", (e) => {
+      if (!container.contains(e.target)) {
+        menu.hidden = true;
+        display.setAttribute("aria-expanded", "false");
+      }
+    });
+
+    // Store update function globally for cross-field updates
+    window.updatePipelineCultivars = function() {
+      // Update all pipeline items with fresh cultivar list
+      container.querySelectorAll('.pipeline-item').forEach(item => {
+        const currentSelected = Array.from(item.querySelectorAll('[data-step-cultivar]:checked')).map(cb => cb.value);
+        updateItemCultivars(item, currentSelected);
+      });
+      serialize();
+    };
+
+    container.append(display, menu, list, hidden);
+    wrapper.appendChild(container);
+    wrapper.style.gridColumn = "1 / -1"; // Full width
+    return wrapper;
+  }
 
   if (field.type === "sequence" && Array.isArray(field.choices) && field.choices.length) {
     // Sequence builder using a dropdown adder (like multi-select but ordered)
@@ -3687,6 +4155,110 @@ function rehydrateBoolean(fieldId, value) {
   hidden.value = norm === 'non' ? 'Non' : (norm === 'oui' ? 'Oui' : '');
 }
 
+function rehydrateCultivarList(fieldId, cultivars) {
+  const hidden = document.getElementById(fieldId);
+  if (!hidden || !hidden.dataset.cultivarList) return;
+  const container = hidden.closest('.cultivar-list');
+  const list = container?.querySelector('.cultivar-items');
+  if (!list) return;
+  
+  hidden.value = JSON.stringify(cultivars);
+  
+  // Clear and rebuild
+  list.innerHTML = '';
+  const addBtn = container.querySelector('.add-cultivar-btn');
+  
+  cultivars.forEach(c => {
+    // Trigger the add button to create items (simulate click but pass data)
+    if (addBtn) {
+      addBtn.click();
+      // Get the last added item and populate it
+      const items = list.querySelectorAll('.cultivar-item');
+      const lastItem = items[items.length - 1];
+      if (lastItem) {
+        lastItem.querySelector('[data-cultivar-name]').value = c.name || '';
+        lastItem.querySelector('[data-cultivar-farm]').value = c.farm || '';
+        lastItem.querySelector('[data-cultivar-breeder]').value = c.breeder || '';
+        if (c.matiere && Array.isArray(c.matiere)) {
+          c.matiere.forEach(m => {
+            const cb = lastItem.querySelector(`[data-cultivar-matiere][value="${m}"]`);
+            if (cb) cb.checked = true;
+          });
+        }
+      }
+    }
+  });
+}
+
+function rehydratePipelineWithCultivars(fieldId, steps) {
+  const hidden = document.getElementById(fieldId);
+  if (!hidden || !hidden.dataset.pipelineWithCultivars) return;
+  const container = hidden.closest('.pipeline-with-cultivars');
+  const list = container?.querySelector('.pipeline-list');
+  const menu = container?.querySelector('.multi-select-menu');
+  if (!list || !menu) return;
+  
+  hidden.value = JSON.stringify(steps);
+  
+  // Clear and rebuild
+  list.innerHTML = '';
+  
+  steps.forEach(step => {
+    const stepName = (step && typeof step === 'object') ? step.name : String(step);
+    if (!stepName) return;
+    
+    // Find and click the menu option to add the step
+    const options = Array.from(menu.querySelectorAll('.multi-select-option'));
+    const opt = options.find(o => o.textContent.trim() === stepName);
+    if (opt) {
+      opt.click();
+      
+      // Get the last added item and populate metadata
+      const items = list.querySelectorAll('.pipeline-item');
+      const lastItem = items[items.length - 1];
+      if (lastItem && typeof step === 'object') {
+        // Set cultivars
+        if (step.cultivars && Array.isArray(step.cultivars)) {
+          step.cultivars.forEach(cv => {
+            const cb = lastItem.querySelector(`[data-step-cultivar][value="${cv}"]`);
+            if (cb) cb.checked = true;
+          });
+        }
+        
+        // Set mesh/temp/pressure
+        if (step.mesh) {
+          try {
+            const str = String(step.mesh);
+            const m = str.match(/(\d+)\s*[–-]\s*(\d+)/);
+            if (m) {
+              const minInput = lastItem.querySelector('[data-mesh-min]');
+              const maxInput = lastItem.querySelector('[data-mesh-max]');
+              if (minInput) minInput.value = m[1];
+              if (maxInput) maxInput.value = m[2];
+            } else {
+              const single = str.match(/(\d+)/);
+              if (single) {
+                const maxInput = lastItem.querySelector('[data-mesh-max]');
+                if (maxInput) maxInput.value = single[1];
+              }
+            }
+          } catch {}
+        }
+        
+        if (step.tempC || step.temperature) {
+          const tempInput = lastItem.querySelector('[data-rosin-temp], [data-co2-temp]');
+          if (tempInput) tempInput.value = String(step.tempC || step.temperature);
+        }
+        
+        if (step.pressureBar) {
+          const pressureInput = lastItem.querySelector('[data-co2-pressure]');
+          if (pressureInput) pressureInput.value = String(step.pressureBar);
+        }
+      }
+    }
+  });
+}
+
 function setReadOnly(on) {
   isReadOnlyView = !!on;
   const disable = !!on;
@@ -3947,13 +4519,44 @@ function buildSuggestedName() {
   // Try to parse arrays from JSON strings where relevant
   const parseArr = (v) => { try { const a = JSON.parse(v||''); return Array.isArray(a) ? a : []; } catch { return []; } };
   const namesOnly = (arr) => (Array.isArray(arr) ? arr.map(x => (x && typeof x === 'object') ? (x.name || '') : String(x)).filter(Boolean) : []);
+  
+  // Helper to get cultivar names from cultivarsList
+  const getCultivarNames = () => {
+    try {
+      const list = JSON.parse(formData['cultivarsList'] || '[]');
+      return Array.isArray(list) ? list.map(c => c.name).filter(Boolean).join(', ') : '';
+    } catch {
+      return val('cultivars'); // Fallback to old field
+    }
+  };
+  
   let parts = [];
   if (type === 'Hash') {
-    parts = [val('cultivars'), val('breeder'), val('farm')];
+    const cultivars = getCultivarNames() || val('cultivars');
+    const farms = (() => {
+      try {
+        const list = JSON.parse(formData['cultivarsList'] || '[]');
+        const farmList = list.map(c => c.farm).filter(Boolean);
+        return farmList.length ? [...new Set(farmList)].join(', ') : val('farm');
+      } catch {
+        return val('farm');
+      }
+    })();
+    parts = [cultivars, farms];
     const sep = namesOnly(parseArr(formData['pipelineSeparation'])).join(' → ');
     if (sep) parts.push(sep);
   } else if (type === 'Concentré') {
-    parts = [val('cultivars'), val('farm')];
+    const cultivars = getCultivarNames() || val('cultivars');
+    const farms = (() => {
+      try {
+        const list = JSON.parse(formData['cultivarsList'] || '[]');
+        const farmList = list.map(c => c.farm).filter(Boolean);
+        return farmList.length ? [...new Set(farmList)].join(', ') : val('farm');
+      } catch {
+        return val('farm');
+      }
+    })();
+    parts = [cultivars, farms];
     const pipe = namesOnly(parseArr(formData['pipelineExtraction'])).join(' → ');
     const typeExt = val('typeExtraction');
     const add = [typeExt, pipe].filter(Boolean).join(' • ');
@@ -4276,7 +4879,20 @@ function generateReview() {
 
 function generateLivePreview() {
   const structure = productStructures[currentType];
-  const title = formData.cultivars || formData.productType || "Review en cours";
+  
+  // Helper to get cultivar names from cultivarsList
+  const getCultivarTitle = () => {
+    try {
+      const list = JSON.parse(formData['cultivarsList'] || '[]');
+      if (Array.isArray(list) && list.length > 0) {
+        const names = list.map(c => c.name).filter(Boolean);
+        return names.length > 0 ? names.join(' + ') : formData.cultivars || formData.productType || "Review en cours";
+      }
+    } catch {}
+    return formData.cultivars || formData.productType || "Review en cours";
+  };
+  
+  const title = getCultivarTitle();
   
   // Icônes pour chaque type de produit
   const productIcons = {
@@ -4370,7 +4986,27 @@ function generateLivePreview() {
 function generateFullReview() {
   // Version complète pour l'export optimisée pour lisibilité et compacité
   const structure = productStructures[currentType];
-  const title = formData.cultivars || formData.productType;
+  
+  // Helper to get cultivar info
+  const getCultivarInfo = () => {
+    try {
+      const list = JSON.parse(formData['cultivarsList'] || '[]');
+      if (Array.isArray(list) && list.length > 0) {
+        return {
+          title: list.map(c => c.name).filter(Boolean).join(' + ') || formData.cultivars || formData.productType,
+          details: list
+        };
+      }
+    } catch {}
+    return {
+      title: formData.cultivars || formData.productType,
+      details: null
+    };
+  };
+  
+  const cultivarInfo = getCultivarInfo();
+  const title = cultivarInfo.title;
+  
   const date = new Date().toLocaleDateString("fr-FR", {
     day: "2-digit",
     month: "long",
@@ -4395,8 +5031,24 @@ function generateFullReview() {
     </div>
     <h2 class="product-title">${title}</h2>`;
 
-  // Informations de base compactes
-  if (formData.farm) {
+  // Affichage des cultivars multiples avec leurs détails
+  if (cultivarInfo.details && cultivarInfo.details.length > 0) {
+    html += '<div class="cultivars-info">';
+    cultivarInfo.details.forEach((c, idx) => {
+      html += `<div class="cultivar-card">`;
+      html += `<span class="cultivar-number">🌿 ${idx + 1}</span>`;
+      html += `<div class="cultivar-details">`;
+      if (c.name) html += `<strong>${c.name}</strong>`;
+      const meta = [];
+      if (c.farm) meta.push(`📍 ${c.farm}`);
+      if (c.breeder) meta.push(`🧬 ${c.breeder}`);
+      if (c.matiere && c.matiere.length) meta.push(`🌱 ${c.matiere.join(', ')}`);
+      if (meta.length) html += `<span class="cultivar-meta">${meta.join(' • ')}</span>`;
+      html += `</div></div>`;
+    });
+    html += '</div>';
+  } else if (formData.farm) {
+    // Fallback pour anciennes reviews
     html += `<div class="farm-info">📍 ${formData.farm}</div>`;
   }
 
