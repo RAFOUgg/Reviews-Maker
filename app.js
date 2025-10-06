@@ -430,7 +430,7 @@ const productStructures = {
         ]
       },
       {
-        title: "Visuel",
+        title: "Visuel et Technique",
         fields: [
           { key: "densite", label: "Densité", type: "number", max: 10 },
           { key: "trichome", label: "Trichome", type: "number", max: 10 },
