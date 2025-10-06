@@ -5138,7 +5138,7 @@ kbd {
   body {
     font-size: 15px;
     line-height: 1.6;
-    padding-top: 70px; /* Espace pour navigation top fixe */
+    padding-top: 0 !important; /* Pas besoin avec sticky */
     padding-bottom: 80px; /* Espace pour navigation bottom */
   }
   
@@ -5159,24 +5159,31 @@ kbd {
   /* ────────────────────────────────────────
      NAVIGATION TOP - Compact et élégant
      ──────────────────────────────────────── */
-  .nav {
-    padding: 1rem 1.25rem;
-    backdrop-filter: blur(20px);
-    background: rgba(15, 23, 42, 0.95);
-    border-bottom: 1px solid rgba(52, 211, 153, 0.1);
-    position: sticky;
-    top: 0;
-    z-index: 100;
+  .top-nav {
+    position: static !important; /* Pas sticky sur mobile */
+    top: auto !important;
+    margin: 0 !important;
+    padding: 1rem 1.25rem !important;
+    background: rgba(15, 23, 42, 0.95) !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(52, 211, 153, 0.1) !important;
+    border-radius: 0 !important;
+    backdrop-filter: blur(20px) !important;
+    box-shadow: none !important;
   }
   
-  .nav-logo {
-    font-size: 1.35rem;
-    font-weight: 700;
+  .top-nav .brand .brand-text strong {
+    font-size: 1.35rem !important;
+    font-weight: 700 !important;
   }
   
   /* Actions en bas pour mobile */
-  .nav-actions {
-    display: none; /* On les met en bottom navigation */
+  .top-nav .nav-actions {
+    display: none !important; /* On les met en bottom navigation */
+  }
+  
+  .top-nav-status {
+    display: none !important;
   }
   
   /* ────────────────────────────────────────
@@ -5196,12 +5203,12 @@ kbd {
     z-index: 99;
   }
   
-  .floating-actions {
+  /* Créer une navigation bottom avec les actions originales */
+  .mobile-bottom-nav {
     position: fixed !important;
     bottom: 12px !important;
     left: 50% !important;
     transform: translateX(-50%);
-    right: auto !important;
     display: flex !important;
     gap: 12px;
     padding: 12px;
@@ -5215,21 +5222,22 @@ kbd {
     max-width: calc(100vw - 32px);
   }
   
-  .floating-actions .pill-btn,
-  .floating-actions .btn {
-    min-height: 44px;
-    padding: 0 1rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    white-space: nowrap;
-    border-radius: 20px;
-    box-shadow: none;
-    transition: all 0.2s ease;
+  .mobile-bottom-nav .pill-btn {
+    min-height: 44px !important;
+    padding: 0 1rem !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    border-radius: 20px !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
   }
   
-  .floating-actions .pill-btn:active,
-  .floating-actions .btn:active {
-    transform: scale(0.95);
+  .mobile-bottom-nav .pill-btn:active {
+    transform: scale(0.95) !important;
   }
   
   /* ────────────────────────────────────────
@@ -5252,7 +5260,7 @@ kbd {
   .wrap,
   .main-content {
     padding: 1.25rem !important;
-    padding-top: 0.5rem !important; /* Réduit car top-nav est fixe */
+    padding-top: 1rem !important; /* Normal car sticky */
     max-width: 100%;
   }
   
@@ -5355,20 +5363,42 @@ kbd {
     font-size: 16px !important; /* Évite le zoom iOS */
     padding: 1rem;
     min-height: 50px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1.5px solid rgba(52, 211, 153, 0.15);
+    background: rgba(255, 255, 255, 0.08) !important; /* Plus visible */
+    border: 2px solid rgba(52, 211, 153, 0.25) !important; /* Bordure plus visible */
     border-radius: var(--radius-md);
-    color: var(--text);
+    color: var(--text) !important;
+    font-weight: 500 !important; /* Texte plus gras */
     transition: all 0.25s ease;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1) !important; /* Ombre intérieure */
   }
   
   input:focus,
   textarea:focus,
   select:focus {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.1);
+    background: rgba(255, 255, 255, 0.12) !important; /* Plus contrasté au focus */
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2), 
+                inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
     outline: none;
+    transform: translateY(-1px) !important; /* Léger décalage au focus */
+  }
+  
+  /* Sélecteurs spéciaux */
+  select {
+    background-image: linear-gradient(45deg, transparent 50%, var(--primary) 50%), 
+                      linear-gradient(135deg, var(--primary) 50%, transparent 50%) !important;
+    background-position: calc(100% - 20px) calc(1em + 2px), 
+                         calc(100% - 15px) calc(1em + 2px) !important;
+    background-size: 5px 5px, 5px 5px !important;
+    background-repeat: no-repeat !important;
+    padding-right: 2.5rem !important; /* Espace pour la flèche */
+  }
+  
+  /* Placeholder plus visible */
+  input::placeholder,
+  textarea::placeholder {
+    color: rgba(148, 163, 184, 0.7) !important;
+    font-weight: 400 !important;
   }
   
   textarea {
@@ -5388,6 +5418,79 @@ kbd {
     flex-direction: column;
     align-items: stretch !important;
     gap: 1rem;
+  }
+  
+  /* ────────────────────────────────────────
+     SÉLECTEURS ET CARTES - Plus lisibles
+     ──────────────────────────────────────── */
+  
+  /* Type cards sur la page d'accueil */
+  .type-card {
+    padding: 1.5rem !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 2px solid rgba(52, 211, 153, 0.25) !important;
+    border-radius: var(--radius-lg) !important;
+    transition: all 0.25s ease !important;
+  }
+  
+  .type-card:hover,
+  .type-card:focus {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: var(--primary) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(52, 211, 153, 0.15) !important;
+  }
+  
+  .type-card .type-title {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    color: var(--text) !important;
+  }
+  
+  .type-card .type-description {
+    font-size: 0.9rem !important;
+    color: var(--text-muted) !important;
+    font-weight: 400 !important;
+  }
+  
+  /* Boutons radio et checkbox */
+  .radio,
+  .checkbox-item {
+    padding: 1rem !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 2px solid rgba(52, 211, 153, 0.25) !important;
+    border-radius: var(--radius-md) !important;
+    min-height: 50px !important;
+  }
+  
+  .radio:hover,
+  .checkbox-item:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: var(--primary) !important;
+  }
+  
+  /* Labels plus lisibles */
+  .radio label,
+  .checkbox-item label {
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    color: var(--text) !important;
+  }
+  
+  /* Multi-select plus clair */
+  .multi-select-button {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 2px solid rgba(52, 211, 153, 0.25) !important;
+    color: var(--text) !important;
+    font-weight: 500 !important;
+    padding: 1rem !important;
+    min-height: 50px !important;
+  }
+  
+  .multi-select-button:focus {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2) !important;
   }
   
   /* ────────────────────────────────────────

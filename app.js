@@ -760,7 +760,54 @@ function init() {
     // Fallback pour l'ancienne page review.html
     initEditorPage();
   }
+  
+  // Créer la navigation mobile pour tous les types de pages
+  createMobileBottomNav();
 }
+
+function createMobileBottomNav() {
+  // Vérifier si on est sur mobile
+  const isMobile = window.innerWidth <= 768;
+  if (!isMobile) return;
+  
+  // Chercher les boutons de navigation existants
+  const openLibrary = document.getElementById('openLibrary');
+  const openTips = document.getElementById('openTips');
+  
+  if (!openLibrary || !openTips) return;
+  
+  // Créer le conteneur de navigation mobile s'il n'existe pas
+  let mobileNav = document.querySelector('.mobile-bottom-nav');
+  if (!mobileNav) {
+    mobileNav = document.createElement('div');
+    mobileNav.className = 'mobile-bottom-nav';
+    document.body.appendChild(mobileNav);
+  }
+  
+  // Cloner les boutons et les ajouter à la navigation mobile
+  const libraryBtn = openLibrary.cloneNode(true);
+  const tipsBtn = openTips.cloneNode(true);
+  
+  // Ajuster les IDs pour éviter les conflits
+  libraryBtn.id = 'mobileOpenLibrary';
+  tipsBtn.id = 'mobileOpenTips';
+  
+  // Forcer l'affichage des boutons clonés
+  libraryBtn.style.display = 'inline-flex';
+  tipsBtn.style.display = 'inline-flex';
+  
+  // Ajouter les boutons à la navigation mobile
+  mobileNav.innerHTML = '';
+  mobileNav.appendChild(libraryBtn);
+  mobileNav.appendChild(tipsBtn);
+  
+  // Copier les event listeners des boutons originaux
+  libraryBtn.addEventListener('click', () => openLibrary.click());
+  tipsBtn.addEventListener('click', () => openTips.click());
+}
+
+// Recréer la navigation mobile lors du redimensionnement
+window.addEventListener('resize', createMobileBottomNav);
 
 function initHomePage() {
   console.log('Initializing home page...');
