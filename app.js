@@ -355,9 +355,10 @@ const productStructures = {
           { key: "expiration", label: "Notes (expiration)", type: "textarea" },
           { key: "intensiteFumee", label: "Intensité", type: "number", max: 10 },
           { key: "agressivite", label: "Agressivité/piquant", type: "number", max: 10 }
+          { key: "cendre", label: "Cendre", type: "number", max: 10 }
         ],
         total: true,
-        totalKeys: ["intensiteFumee", "agressivite"]
+        totalKeys: ["intensiteFumee", "agressivite", "cendre"]
       },
       {
         title: "Effet",
@@ -383,7 +384,7 @@ const productStructures = {
         title: "Informations générales",
         fields: [
           { key: "cultivars", label: "Cultivars", type: "text" },
-          { key: "breeder", label: "Breeder", type: "text" },
+          { key: "breeder", label: "Breeder de la graines", type: "text" },
           { key: "farm", label: "Farm", type: "text" },
           {
             key: "typeCulture",
@@ -498,8 +499,8 @@ const productStructures = {
       {
         title: "Informations générales",
         fields: [
-          { key: "cultivars", label: "Cultivars", type: "text" },
-          { key: "farm", label: "Farm / Producteur", type: "text" },
+          { key: "cultivars", label: "Cultivars de la/les matière(s) organique(s)", type: "text" },
+          { key: "farm", label: "Farm(s) / Producteur(s)", type: "text" },
           {
             key: "typeExtraction",
             label: "Type d'extraction",
@@ -582,6 +583,17 @@ const productStructures = {
         totalKeys: ["couleur", "viscosite", "pureteVisuelle", "odeur", "melting", "residus"]
       },
       {
+        title: "Odeur",
+        fields: [
+          { key: "intensiteAromatique", label: "Intensité aromatique", type: "number", max: 10 },
+          { key: "notesDominantesOdeur", label: "Notes dominantes", type: "textarea" },
+          { key: "notesSecondairesOdeur", label: "Notes secondaires", type: "textarea" },
+          { key: "fideliteCultivars", label: "Fidélité au cultivars", type: "number", max: 10 }
+        ],
+        total: true,
+        totalKeys: ["intensiteAromatique", "fideliteCultivars"]
+      },
+      {
         title: "Goût",
         fields: [
           { key: "intensiteAromatique", label: "Intensité aromatique", type: "number", max: 10 },
@@ -593,6 +605,17 @@ const productStructures = {
         ],
         total: true,
         totalKeys: ["intensiteAromatique"]
+      },
+      {
+        title: "Texture",
+        fields: [
+          { key: "durete", label: "Dureté", type: "number", max: 10 },
+          { key: "densiteTexture", label: "Densité", type: "number", max: 10 },
+          { key: "viscositeTexture", label: "Viscosité", type: "number", max: 10 },
+          { key: "collant", label: "Collant", type: "number", max: 10 }
+        ],
+        total: true,
+        totalKeys: ["durete", "densiteTexture", "viscositeTexture", "collant"]
       },
       {
         title: "Expérience Inhalation",
