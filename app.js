@@ -4883,6 +4883,9 @@ function setPreviewMode(mode) {
   generateReview();
 }
 
+// Rendre la fonction accessible globalement
+window.setPreviewMode = setPreviewMode;
+
 function generateReview() {
   if (!dom.reviewContent || !dom.reviewOutput) {
     return;
