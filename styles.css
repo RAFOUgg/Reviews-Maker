@@ -5135,24 +5135,50 @@ kbd {
     display: inline-flex !important;
   }
   
+  /* Interface mobile compacte et fluide */
   body {
     font-size: 15px;
-    line-height: 1.6;
-    padding-top: 0 !important; /* Pas besoin avec sticky */
+    line-height: 1.5;
+    padding-top: 0 !important;
     padding-bottom: 80px; /* Espace pour navigation bottom */
   }
   
-  h1 { 
-    font-size: 1.85rem !important; 
-    font-weight: 700 !important;
-    letter-spacing: -0.02em;
+  /* Workspace ultra-compact */
+  .workspace,
+  .container,
+  .wrap,
+  .main-content {
+    padding: 0.3rem !important; /* Padding minimal */
+    max-width: 100%;
   }
-  h2 { 
-    font-size: 1.5rem !important; 
-    font-weight: 600 !important;
+  
+  /* Panels sans espacement inutile */
+  .panel {
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    border: none !important;
   }
-  h3 { 
-    font-size: 1.25rem !important; 
+  
+  .panel-header {
+    padding: 0.8rem 0.5rem 0.3rem !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-bottom: 1px solid rgba(52, 211, 153, 0.1) !important;
+    border-radius: 0 !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .panel-eyebrow {
+    font-size: 0.7rem !important;
+    margin-bottom: 0.2rem !important;
+    color: var(--primary) !important;
+    opacity: 0.8;
+  }
+  
+  .panel-header h2 {
+    font-size: 1rem !important;
+    margin-bottom: 0 !important;
     font-weight: 600 !important;
   }
   
@@ -5402,36 +5428,30 @@ kbd {
     display: block;
   }
   
-  /* Champs de saisie ultra-visibles sur mobile */
+  /* Champs compacts mais utilisables */
   input,
   textarea,
   select,
   .input {
     font-size: 16px !important;
-    padding: 0.9rem 0.8rem !important; /* Plus de padding pour visibilité */
-    min-height: 48px !important; /* Hauteur optimale tactile */
-    background: rgba(255, 255, 255, 0.15) !important; /* Background plus visible */
-    border: 2px solid rgba(52, 211, 153, 0.4) !important; /* Bordure bien visible */
-    border-radius: 10px !important;
+    padding: 0.7rem 0.6rem !important;
+    min-height: 44px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(52, 211, 153, 0.25) !important;
+    border-radius: 6px !important;
     color: var(--text) !important;
-    font-weight: 600 !important; /* Texte plus gras */
+    font-weight: 500 !important;
     transition: all 0.2s ease !important;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 
-                0 2px 4px rgba(52, 211, 153, 0.1) !important; /* Ombres légères */
-    position: relative !important;
+    box-shadow: none !important;
   }
   
-  /* Focus très visible */
   input:focus,
   textarea:focus,
   select:focus {
-    background: rgba(255, 255, 255, 0.2) !important; /* Background encore plus visible */
+    background: rgba(255, 255, 255, 0.12) !important;
     border-color: var(--primary) !important;
-    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.25), 
-                inset 0 1px 3px rgba(0, 0, 0, 0.1),
-                0 4px 8px rgba(52, 211, 153, 0.15) !important;
+    box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.15) !important;
     outline: none !important;
-    transform: translateY(-1px) !important;
   }
   
   /* Focus simple et net */
@@ -5465,61 +5485,48 @@ kbd {
     cursor: pointer !important;
   }
   
-  /* Placeholders bien visibles */
+  /* Placeholders discrets */
   input::placeholder,
   textarea::placeholder {
-    color: rgba(148, 163, 184, 0.8) !important;
-    font-weight: 500 !important;
-    font-style: normal !important;
-    transition: all 0.2s ease !important;
-  }
-  
-  input:focus::placeholder,
-  textarea:focus::placeholder {
     color: rgba(148, 163, 184, 0.6) !important;
+    font-weight: 400 !important;
   }
   
-  /* Sélecteurs avec flèche visible */
+  /* Select simple */
   select {
-    background-image: linear-gradient(45deg, transparent 50%, var(--primary) 50%), 
-                      linear-gradient(135deg, var(--primary) 50%, transparent 50%) !important;
-    background-position: calc(100% - 20px) calc(1em + 2px), 
-                         calc(100% - 15px) calc(1em + 2px) !important;
-    background-size: 5px 5px, 5px 5px !important;
+    background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), 
+                      linear-gradient(135deg, var(--text-muted) 50%, transparent 50%) !important;
+    background-position: calc(100% - 16px) calc(1em + 2px), 
+                         calc(100% - 12px) calc(1em + 2px) !important;
+    background-size: 4px 4px, 4px 4px !important;
     background-repeat: no-repeat !important;
-    padding-right: 2.5rem !important;
+    padding-right: 2rem !important;
     cursor: pointer !important;
   }
   
-  /* Boutons de fichier améliorés */
+  /* Boutons de fichier simples */
   input[type="file"] {
-    padding: 1rem !important;
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 2px dashed rgba(52, 211, 153, 0.4) !important;
-    border-radius: 10px !important;
+    padding: 0.7rem !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px dashed rgba(52, 211, 153, 0.3) !important;
+    border-radius: 6px !important;
     color: var(--text) !important;
     cursor: pointer !important;
-    transition: all 0.2s ease !important;
   }
   
-  input[type="file"]:hover {
-    background: rgba(255, 255, 255, 0.12) !important;
-    border-color: var(--primary) !important;
-  }
-  
-  /* Groupes boolean bien espacés */
+  /* Groupes boolean compacts */
   .boolean-group {
-    gap: 0.8rem !important;
-    margin: 1rem 0 !important;
+    gap: 0.5rem !important;
+    margin: 0.8rem 0 !important;
   }
   
   .boolean-group .radio {
-    border-radius: 10px !important;
-    min-height: 50px !important;
+    border-radius: 6px !important;
+    min-height: 40px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    padding: 1rem !important;
+    padding: 0.6rem !important;
   }
   
   /* Textarea bien visibles */
@@ -5568,65 +5575,64 @@ kbd {
     transform: translateX(2px) !important;
   }
   
-  /* Groupes de champs bien espacés */
+  /* Groupes ultra-compacts */
   .field-group,
   .field-row {
     grid-template-columns: 1fr !important;
-    gap: 1rem !important; /* Espacement confortable */
-    margin-bottom: 1.2rem !important;
+    gap: 0.6rem !important;
+    margin-bottom: 0.8rem !important;
   }
   
   .field-inline {
     flex-direction: column !important;
     align-items: stretch !important;
-    gap: 0.8rem !important;
+    gap: 0.4rem !important;
   }
   
   /* ────────────────────────────────────────
      AMÉLIORATIONS SUPPLÉMENTAIRES MOBILE
      ──────────────────────────────────────── */
   
-  /* Sections dynamiques optimisées */
+  /* Sections ultra-simplifiées */
   .dynamic-sections {
-    padding: 0.8rem !important;
-    gap: 1rem !important;
+    padding: 0.3rem !important;
+    gap: 0.5rem !important;
   }
   
   .form-section {
-    margin-bottom: 1.2rem !important;
-    padding: 1rem 0.8rem !important;
-    background: rgba(255, 255, 255, 0.04) !important;
-    border-radius: 10px !important;
-    border: 1px solid rgba(52, 211, 153, 0.12) !important;
+    margin-bottom: 0.8rem !important;
+    padding: 0.6rem !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-radius: 6px !important;
+    border: 1px solid rgba(52, 211, 153, 0.08) !important;
   }
   
   .form-section-title {
-    font-size: 1rem !important;
-    font-weight: 700 !important;
-    margin-bottom: 1rem !important;
-    color: var(--primary) !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 0.6rem !important;
+    color: var(--text) !important;
     display: flex !important;
     align-items: center !important;
-    gap: 0.5rem !important;
-    padding-bottom: 0.5rem !important;
-    border-bottom: 1px solid rgba(52, 211, 153, 0.08) !important;
+    gap: 0.3rem !important;
+    padding-bottom: 0.3rem !important;
+    border-bottom: 1px solid rgba(52, 211, 153, 0.06) !important;
   }
   
-  /* Boutons d'action bien visibles */
+  /* Boutons d'action compacts */
   .btn, .pill-btn {
-    min-height: 48px !important; /* Hauteur tactile */
-    padding: 0.8rem 1.5rem !important;
-    font-weight: 700 !important;
-    border-radius: 10px !important;
+    min-height: 42px !important;
+    padding: 0.6rem 1.2rem !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
     transition: all 0.2s ease !important;
-    font-size: 0.95rem !important;
-    border: 2px solid rgba(52, 211, 153, 0.3) !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    font-size: 0.9rem !important;
+    border: 1px solid rgba(52, 211, 153, 0.2) !important;
   }
   
   .btn:hover, .pill-btn:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 12px rgba(52, 211, 153, 0.2) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 8px rgba(52, 211, 153, 0.15) !important;
   }
   
   .btn:hover, .pill-btn:hover {
@@ -5653,39 +5659,38 @@ kbd {
     padding: 0.5rem !important;
   }
   
-  /* États checked bien visibles */
+  /* États checked simples */
   .radio:has(input:checked),
   .checkbox-item:has(input:checked) {
-    background: rgba(52, 211, 153, 0.18) !important;
+    background: rgba(52, 211, 153, 0.12) !important;
     border-color: var(--primary) !important;
-    box-shadow: 0 2px 8px rgba(52, 211, 153, 0.2) !important;
   }
   
-  /* Navigation sections optimisée */
+  /* Navigation ultra-compacte */
   .section-nav {
-    padding: 1.2rem 0.8rem !important;
-    gap: 1rem !important;
-    background: rgba(255, 255, 255, 0.03) !important;
-    border-radius: 0 0 10px 10px !important;
-    border-top: 1px solid rgba(52, 211, 153, 0.1) !important;
+    padding: 0.8rem 0.5rem !important;
+    gap: 0.6rem !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-radius: 0 !important;
+    border-top: 1px solid rgba(52, 211, 153, 0.06) !important;
   }
   
   .section-controls {
-    padding: 1.5rem 0.8rem !important;
-    gap: 1rem !important;
-    background: rgba(255, 255, 255, 0.02) !important;
-    border-radius: 10px !important;
-    margin-top: 1.5rem !important;
-    border: 1px solid rgba(52, 211, 153, 0.08) !important;
+    padding: 1rem 0.5rem !important;
+    gap: 0.8rem !important;
+    background: rgba(255, 255, 255, 0.01) !important;
+    border-radius: 6px !important;
+    margin-top: 1rem !important;
+    border: 1px solid rgba(52, 211, 153, 0.06) !important;
   }
   
   .nav-btn {
-    min-height: 50px !important; /* Hauteur tactile */
-    padding: 1rem 2rem !important;
-    font-size: 1rem !important;
-    font-weight: 700 !important;
-    border-radius: 10px !important;
-    flex: 1 !important; /* Boutons de même taille */
+    min-height: 42px !important;
+    padding: 0.8rem 1.5rem !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    flex: 1 !important;
   }
   
   /* ────────────────────────────────────────
@@ -5730,26 +5735,32 @@ kbd {
     line-height: 1.3 !important;
   }
   
-  /* Boutons radio/checkbox bien visibles */
+  /* Sélecteurs simples et compacts */
   .radio,
   .checkbox-item {
-    padding: 1rem !important; /* Padding confortable */
-    background: rgba(255, 255, 255, 0.12) !important; /* Background visible */
-    border: 2px solid rgba(52, 211, 153, 0.35) !important; /* Bordure visible */
-    border-radius: 10px !important;
-    min-height: 52px !important; /* Hauteur tactile */
+    padding: 0.6rem !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(52, 211, 153, 0.2) !important;
+    border-radius: 6px !important;
+    min-height: 40px !important;
     cursor: pointer !important;
     transition: all 0.2s ease !important;
-    position: relative !important;
-    overflow: hidden !important;
-    margin-bottom: 0.5rem !important;
+    margin-bottom: 0.3rem !important;
   }
   
   .radio:hover,
   .checkbox-item:hover {
-    background: rgba(255, 255, 255, 0.16) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
     border-color: var(--primary) !important;
-    transform: translateY(-1px) !important;
+  }
+  
+  .radio label,
+  .checkbox-item label {
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    color: var(--text) !important;
+    margin: 0 !important;
+    line-height: 1.3 !important;
   }
   
   /* Effet de ripple au clic */
@@ -5793,31 +5804,28 @@ kbd {
     line-height: 1.4 !important;
   }
   
-  /* Multi-select bien visible */
+  /* Multi-select simple */
   .multi-select-button {
-    background: rgba(255, 255, 255, 0.12) !important;
-    border: 2px solid rgba(52, 211, 153, 0.35) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(52, 211, 153, 0.2) !important;
     color: var(--text) !important;
-    font-weight: 600 !important;
-    padding: 1rem !important;
-    min-height: 48px !important;
-    border-radius: 10px !important;
+    font-weight: 500 !important;
+    padding: 0.7rem !important;
+    min-height: 42px !important;
+    border-radius: 6px !important;
     cursor: pointer !important;
     transition: all 0.2s ease !important;
-    position: relative !important;
-    overflow: hidden !important;
   }
   
   .multi-select-button:hover {
-    background: rgba(255, 255, 255, 0.16) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
     border-color: var(--primary) !important;
-    transform: translateY(-1px) !important;
   }
   
   .multi-select-button:focus {
-    background: rgba(255, 255, 255, 0.18) !important;
+    background: rgba(255, 255, 255, 0.12) !important;
     border-color: var(--primary) !important;
-    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2) !important;
+    box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.15) !important;
     outline: none !important;
   }
   
@@ -6485,6 +6493,143 @@ kbd {
   select,
   textarea {
     border-width: 2px;
+  }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OPTIMISATIONS ERGONOMIQUES FINALES MOBILE
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media (max-width: 768px) {
+  
+  /* Interface ultra-compacte et ergonomique */
+  .panel {
+    padding: 0.8rem !important;
+    margin-bottom: 0.8rem !important;
+    background: rgba(255, 255, 255, 0.01) !important;
+    border: 1px solid rgba(52, 211, 153, 0.04) !important;
+    border-radius: 6px !important;
+  }
+  
+  .form-section {
+    margin-bottom: 0.8rem !important;
+    padding: 0.6rem 0.4rem !important;
+    background: transparent !important;
+  }
+  
+  /* Titres et textes compacts */
+  h1, h2, h3 {
+    font-size: 1.1rem !important;
+    margin: 0.6rem 0 !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
+  }
+  
+  label {
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    margin-bottom: 0.3rem !important;
+  }
+  
+  /* Éléments interactifs ergonomiques */
+  .radio,
+  .checkbox-item {
+    padding: 0.5rem !important;
+    min-height: 38px !important;
+    margin-bottom: 0.3rem !important;
+    border-radius: 4px !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(52, 211, 153, 0.15) !important;
+  }
+  
+  .radio:has(input:checked),
+  .checkbox-item:has(input:checked) {
+    background: rgba(52, 211, 153, 0.1) !important;
+    border-color: var(--primary) !important;
+  }
+  
+  /* Boutons optimisés */
+  .btn, .pill-btn {
+    min-height: 40px !important;
+    padding: 0.6rem 1rem !important;
+    font-size: 0.85rem !important;
+    border-radius: 4px !important;
+  }
+  
+  /* Navigation ergonomique */
+  .section-nav {
+    padding: 0.6rem 0.4rem !important;
+    gap: 0.5rem !important;
+  }
+  
+  .nav-btn {
+    min-height: 40px !important;
+    padding: 0.6rem 1rem !important;
+    font-size: 0.85rem !important;
+  }
+  
+  /* Multi-select ergonomique */
+  .multi-select-button {
+    min-height: 40px !important;
+    padding: 0.6rem !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(52, 211, 153, 0.15) !important;
+    border-radius: 4px !important;
+  }
+  
+  /* Espaces ultra-optimisés */
+  .form-row {
+    gap: 0.5rem !important;
+    margin-bottom: 0.6rem !important;
+  }
+  
+  .field-group {
+    margin-bottom: 0.6rem !important;
+  }
+  
+  .input-group {
+    gap: 0.3rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* Messages discrets */
+  .error-message,
+  .success-message {
+    padding: 0.4rem 0.6rem !important;
+    font-size: 0.75rem !important;
+    border-radius: 3px !important;
+    margin: 0.2rem 0 !important;
+  }
+  
+  /* Polices compactes */
+  body {
+    font-size: 0.85rem !important;
+    line-height: 1.3 !important;
+  }
+  
+  p {
+    font-size: 0.8rem !important;
+    margin: 0.3rem 0 !important;
+  }
+  
+  .description,
+  .help-text {
+    font-size: 0.75rem !important;
+    margin: 0.2rem 0 !important;
+  }
+  
+  /* Sections dynamiques */
+  .dynamic-sections .section {
+    margin-bottom: 0.8rem !important;
+    padding: 0.6rem 0.4rem !important;
+    border: 1px solid rgba(52, 211, 153, 0.03) !important;
+    border-radius: 4px !important;
+  }
+  
+  .section-title {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.6rem !important;
+    padding-bottom: 0.2rem !important;
+    border-bottom: 1px solid rgba(52, 211, 153, 0.08) !important;
   }
 }
 
