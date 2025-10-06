@@ -3198,6 +3198,13 @@ function createFieldGroup(field, sectionIndex, section) {
       hidden.value = JSON.stringify(entries);
       renderDisplay(entries);
       updateProgress();
+      
+      // Update all subsequent steps' cultivar options (to include new extractions)
+      list.querySelectorAll('.pipeline-item').forEach(item => {
+        const currentSelected = Array.from(item.querySelectorAll('[data-step-cultivar]:checked')).map(cb => cb.value);
+        updateItemCultivars(item, currentSelected);
+      });
+      
       try { collectFormData(); generateReview(); } catch {}
     }
 
@@ -3342,24 +3349,87 @@ function createFieldGroup(field, sectionIndex, section) {
       checkboxesDiv.innerHTML = '';
       
       const cultivars = getCultivarsList();
-      if (!cultivars.length) {
-        checkboxesDiv.innerHTML = '<em style="opacity:0.6;font-size:0.9em;">Aucun cultivar défini</em>';
+      
+      // Get previous steps (extractions) as potential inputs
+      const previousSteps = [];
+      let current = item.previousElementSibling;
+      while (current && current.classList.contains('pipeline-item')) {
+        const stepName = current.querySelector('.step-label')?.textContent || '';
+        const stepCultivars = Array.from(current.querySelectorAll('[data-step-cultivar]:checked')).map(cb => cb.value);
+        
+        // Build extraction name (e.g., "Dry Critical Kush 220µm")
+        let extractionName = '';
+        if (stepCultivars.length > 0) {
+          const cultivarsPart = stepCultivars.join(' + ');
+          
+          // Get mesh info if available
+          let meshInfo = '';
+          if (current.dataset.sieve === 'true' || current.dataset.rosin === 'true') {
+            const minV = current.querySelector('input[data-mesh-min]')?.value?.trim() || '';
+            const maxV = current.querySelector('input[data-mesh-max]')?.value?.trim() || '';
+            if (minV || maxV) {
+              meshInfo = (minV && maxV) ? ` ${minV}–${maxV}µm` : ` ${minV || maxV}µm`;
+            }
+          }
+          
+          extractionName = `${stepName.split('(')[0].trim()}: ${cultivarsPart}${meshInfo}`;
+        }
+        
+        if (extractionName) {
+          previousSteps.push(extractionName);
+        }
+        current = current.previousElementSibling;
+      }
+      
+      // Show message if no options available
+      if (!cultivars.length && !previousSteps.length) {
+        checkboxesDiv.innerHTML = '<em style="opacity:0.6;font-size:0.9em;">Aucun cultivar ou extraction défini</em>';
         return;
       }
       
-      cultivars.forEach(c => {
-        if (!c.name) return;
-        const lbl = document.createElement('label');
-        lbl.className = 'checkbox-label';
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.value = c.name;
-        cb.dataset.stepCultivar = '';
-        cb.checked = selectedCultivars.includes(c.name);
-        cb.addEventListener('change', serialize);
-        lbl.append(cb, document.createTextNode(c.name));
-        checkboxesDiv.appendChild(lbl);
-      });
+      // Add base cultivars section
+      if (cultivars.length > 0) {
+        const cultivarsTitle = document.createElement('div');
+        cultivarsTitle.className = 'step-cultivars-section-title';
+        cultivarsTitle.textContent = '🌿 Cultivars de base :';
+        checkboxesDiv.appendChild(cultivarsTitle);
+        
+        cultivars.forEach(c => {
+          if (!c.name) return;
+          const lbl = document.createElement('label');
+          lbl.className = 'checkbox-label';
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.value = c.name;
+          cb.dataset.stepCultivar = '';
+          cb.checked = selectedCultivars.includes(c.name);
+          cb.addEventListener('change', serialize);
+          lbl.append(cb, document.createTextNode(c.name));
+          checkboxesDiv.appendChild(lbl);
+        });
+      }
+      
+      // Add previous extractions section
+      if (previousSteps.length > 0) {
+        const extractionsTitle = document.createElement('div');
+        extractionsTitle.className = 'step-cultivars-section-title';
+        extractionsTitle.textContent = '🔬 Extractions précédentes :';
+        extractionsTitle.style.marginTop = '12px';
+        checkboxesDiv.appendChild(extractionsTitle);
+        
+        previousSteps.forEach(extraction => {
+          const lbl = document.createElement('label');
+          lbl.className = 'checkbox-label';
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.value = extraction;
+          cb.dataset.stepCultivar = '';
+          cb.checked = selectedCultivars.includes(extraction);
+          cb.addEventListener('change', serialize);
+          lbl.append(cb, document.createTextNode(extraction));
+          checkboxesDiv.appendChild(lbl);
+        });
+      }
     }
 
     // Build adder menu
