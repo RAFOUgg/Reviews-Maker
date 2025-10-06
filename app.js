@@ -503,6 +503,12 @@ const productStructures = {
           { key: "breeder", label: "Breeder de la/les graine(s)", type: "text" },
           { key: "farm", label: "Farm(s) / Producteur(s)", type: "text" },
           {
+            key: "matiereVegetale",
+            label: "Type de matière végétale",
+            type: "multiple-choice",
+            choices: ["Fleurs fraîches", "Fleurs sèches", "Trim", "Autre"]
+          },
+          {
             key: "typeExtraction",
             label: "Type d'extraction",
             type: "text",
