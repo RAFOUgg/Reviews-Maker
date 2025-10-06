@@ -5138,6 +5138,7 @@ kbd {
   body {
     font-size: 15px;
     line-height: 1.6;
+    padding-top: 70px; /* Espace pour navigation top fixe */
     padding-bottom: 80px; /* Espace pour navigation bottom */
   }
   
@@ -5246,10 +5247,12 @@ kbd {
   }
   
   /* Container principal avec padding adapté */
+  .workspace,
   .container,
   .wrap,
   .main-content {
     padding: 1.25rem !important;
+    padding-top: 0.5rem !important; /* Réduit car top-nav est fixe */
     max-width: 100%;
   }
   
