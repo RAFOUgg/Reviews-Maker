@@ -755,3 +755,53 @@ Vérifications recommandées après nettoyage :
 Si vous préférez conserver des copies historiques, utilisez git (tags/branches) au lieu de fichiers `*_backup.html` dans la racine.
 
 Besoin d'aide ? Je peux scanner le dépôt pour d'autres artefacts non référencés et proposer un nettoyage additionnel ou générer un petit script `scripts/clean.(sh|ps1)` pour automatiser cette étape.
+
+## Avancement V1 — Trame synthétique
+
+Cet espace résume l'état actuel de la V1 (synthèse courte pour suivi et release). Le dépôt a été épuré des notes internes et backups pour être prêt à un packaging simple (hébergement statique + backend optionnel).
+
+Statut actuel (fonctionnalités principales)
+- Sélection du type de produit depuis `index.html` (Hash / Fleur / Concentré / Comestible).
+- Éditeur dynamique `review.html` avec sections adaptatives, sauvegarde automatique (brouillon) et barre de progression.
+- Aperçu en temps réel, export PNG via `html2canvas` (CDN), et option d'enregistrement via modal.
+- Bibliothèque / galerie des reviews + gestion de brouillons.
+- Intégration backend optionnelle disponible dans le dossier `server/` (Express + SQLite).
+
+Fichiers supprimés (nettoyage V1)
+- Divers documents internes, correctifs et notes de travail ont été retirés de la racine afin d'alléger la v1 :
+  - `review_backup.html` (backup supprimé)
+  - `review_propre.html` (backup supprimé)
+  - `REPARATION_REVIEW_HTML.md`
+  - `RECAP_MODIFICATIONS_2.md`
+  - `MODIFICATIONS.md`
+  - `CORRECTIFS_URGENTS.md`
+  - `CORRECTIFS_MOBILE_COMPACT.md`
+  - `CORRECTIFS_CRITIQUES_MOBILE.md`
+  - `CORRECTIFS_APERCU_GALERIE.md`
+  - `CHECKLIST_INTEGRATION.md`
+  - `AUTHENTIFICATION_EMAIL.md`
+  - `VISUELS_MOBILE_UI.md`
+  - `TROUBLESHOOTING.md`
+  - `TROUBLESHOOTING_LAFONCEDALLE.md`
+  - `SYSTEME_APERCU_MULTI_MODES.md`
+  - `NAVIGATION_FIXE_MOBILE.md`
+  - `MISE_A_JOUR_VPS.md`
+  - `RECAP_INTEGRATION.md`
+  - `EXTRACTIONS_SUCCESSIVES.md`
+  - `ENDPOINTS_LAFONCEDALLE.md`
+  - `DOCKER_INTEGRATION.md`
+  - `DESIGN_MOBILE_PRO_V2.md`
+  - `GUIDE_VERSION_MOBILE.md`
+  - `CULTIVARS_MULTIPLES.md`
+
+Remarque : ces fichiers restent dans l'historique Git (si vous avez besoin d'une copie, on peut restaurer via git). Si vous préférez une archive visible, je peux déplacer ces fichiers vers `docs/archived-md/` au lieu de les supprimer définitivement.
+
+Prochaines étapes recommandées
+1. Tests rapides en local : ouvrir `index.html` puis `review.html` et vérifier le flux complet (sélection → saisie → aperçu → export → enregistrement).
+2. Ajouter un script d'automatisation pour la génération d'un build statique ou un petit Dockerfile si vous comptez déployer.
+3. Si vous voulez publier la V1 : créer une branche `release/v1`, tagger et préparer un changelog minimal.
+
+Si vous voulez que je continue, je peux :
+- Archiver les fichiers supprimés dans `docs/archived-md/` au lieu de suppression (sécurisé).
+- Créer la branche `release/v1` et ajouter un petit changelog + tag.
+- Générer un script PowerShell `scripts/clean.ps1` pour reproduire ce nettoyage localement.
