@@ -1385,10 +1385,6 @@ function setupModalEvents() {
         if (dom.authModal) dom.authModal.style.display = 'flex';
         return;
       }
-      if (isHomePage) {
-        const section = dom.myLibrarySection || document.getElementById('myLibrarySection');
-        if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
       openLibraryModal('mine');
     });
   }
@@ -1396,16 +1392,6 @@ function setupModalEvents() {
   if (dom.openFullLibrary) {
     dom.openFullLibrary.addEventListener("click", () => {
       openLibraryModal('public');
-    });
-  }
-  if (dom.openMyFullLibrary && !isEditorPage) {
-    dom.openMyFullLibrary.addEventListener('click', () => {
-      if (!isUserConnected) {
-        showToast('Connectez-vous pour accéder à votre bibliothèque.', 'warning');
-        if (dom.authModal) dom.authModal.style.display = 'flex';
-        return;
-      }
-      openLibraryModal('mine');
     });
   }
   if (dom.closeLibrary) {
@@ -1781,12 +1767,6 @@ async function updateAuthUI() {
   // Show/hide "Ma bibliothèque" entry points
   if (dom.openLibrary) {
     dom.openLibrary.style.display = isConnected ? 'inline-flex' : 'none';
-  }
-  if (dom.openMyFullLibrary) {
-    dom.openMyFullLibrary.style.display = isConnected ? 'inline-flex' : 'none';
-  }
-  if (dom.myLibrarySection) {
-    dom.myLibrarySection.style.display = isConnected ? '' : 'none';
   }
 
   if (dom.libraryModal && dom.libraryModal.style.display === 'flex') {
