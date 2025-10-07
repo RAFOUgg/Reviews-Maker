@@ -729,3 +729,29 @@ TODOLIST :
 - [ ] Activer le bouton Astuce (popover/modal)
 - [ ] Ouvrir la bibliothèque depuis review.html (comme sur l'accueil)
 - [ ] Dans le contenu détaillé, "Informations du produit" inclut le type sélectionné (Hash, Fleur, Concentré, Comestible)
+
+## Nettoyage V1
+
+Dans le cadre de la préparation de la V1, un petit nettoyage a été effectué pour retirer des copies de sauvegarde obsolètes présentes dans la racine du projet. Cela n'affecte aucune fonctionnalité : les fichiers actifs sont toujours `index.html`, `review.html`, `app.js`, `styles.css` et le dossier `server/`.
+
+Fichiers supprimés :
+
+- `review_backup.html`
+- `review_propre.html`
+
+Pourquoi :
+
+- Ces fichiers étaient des copies historiques/non référencées par le code. Les supprimer réduit le bruit dans le dépôt et évite les confusions.
+
+Vérifications recommandées après nettoyage :
+
+1. Rechercher d'éventuelles références : utilisez votre éditeur ou `git grep review_backup.html review_propre.html`.
+2. Ouvrir `index.html` et `review.html` dans un navigateur et vérifier le flux (choisir un type → remplissage → aperçu/export).
+3. Optionnel : si vous utilisez le backend, testez l'API :
+  - cd server
+  - npm install
+  - npm start
+
+Si vous préférez conserver des copies historiques, utilisez git (tags/branches) au lieu de fichiers `*_backup.html` dans la racine.
+
+Besoin d'aide ? Je peux scanner le dépôt pour d'autres artefacts non référencés et proposer un nettoyage additionnel ou générer un petit script `scripts/clean.(sh|ps1)` pour automatiser cette étape.
