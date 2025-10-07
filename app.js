@@ -735,7 +735,6 @@ let remoteBase = '';
 let lastSelectedImageFile = null; // Original File pour upload
 let isUserConnected = false; // Auth state shared across modules
 let currentLibraryMode = 'public';
-let myLibraryLimit = 6;
 
 const LAYOUT_THRESHOLDS = {
   enterWidth: 1200,
@@ -961,15 +960,11 @@ function initHomePage() {
   // Éléments spécifiques à la page d'accueil
   dom.typeCards = Array.from(document.querySelectorAll(".type-card"));
   dom.compactLibraryList = document.getElementById("compactLibraryList");
-  dom.compactMyList = document.getElementById("compactMyList");
   dom.compactLibraryEmpty = document.getElementById("compactLibraryEmpty");
-  dom.compactMyLibraryEmpty = document.getElementById("compactMyLibraryEmpty");
   dom.openTips = document.getElementById("openTips");
   dom.openFullLibrary = document.getElementById("openFullLibrary");
-  dom.openMyFullLibrary = document.getElementById("openMyFullLibrary");
   dom.showMoreLibrary = document.getElementById("showMoreLibrary");
   dom.restoreDraft = document.getElementById("restoreDraft");
-  dom.myLibrarySection = document.getElementById("myLibrarySection");
   // Preview-only modal elements on home page
   dom.previewOverlay = document.getElementById("previewOverlay");
   dom.previewModal = document.getElementById("previewModal");
@@ -1794,15 +1789,6 @@ async function updateAuthUI() {
     dom.myLibrarySection.style.display = isConnected ? '' : 'none';
   }
 
-  if (isConnected) {
-    if (isHomePage) {
-      renderMyCompactLibrary();
-    }
-  } else {
-    if (dom.compactMyList) dom.compactMyList.innerHTML = '';
-    if (dom.compactMyLibraryEmpty) dom.compactMyLibraryEmpty.style.display = 'none';
-  }
-
   if (dom.libraryModal && dom.libraryModal.style.display === 'flex') {
     await renderFullLibrary(currentLibraryMode);
   }
@@ -2403,90 +2389,6 @@ async function renderCompactLibrary() {
   });
 }
 
-// Render "Ma bibliothèque" (server-backed: /api/my/reviews) with same card style
-async function renderMyCompactLibrary() {
-  if (!dom.compactMyList) return;
-
-  // Hide content when user is not connected (remote mode)
-  if (!isUserConnected && remoteEnabled) {
-    dom.compactMyList.innerHTML = '';
-    if (dom.compactMyLibraryEmpty) dom.compactMyLibraryEmpty.style.display = 'none';
-    return;
-  }
-
-  dom.compactMyList.innerHTML = '';
-  let items = [];
-  const token = localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token');
-
-  if (remoteEnabled && token) {
-    try {
-      const headers = { 'X-Auth-Token': token };
-      const r = await fetch(`${remoteBase}/api/my/reviews`, { headers, cache: 'no-store' });
-      if (r.ok) items = await r.json();
-    } catch (e) {
-      console.warn('Remote my compact list error', e);
-    }
-  }
-
-  if (!remoteEnabled) {
-    // Offline mode: rely on local database only
-    try { items = await dbGetAllReviews(); } catch {}
-  } else if (!token) {
-    items = [];
-  } else if (!Array.isArray(items) || items.length === 0) {
-    // Fallback to local drafts if remote empty
-    try { items = await dbGetAllReviews(); } catch {}
-  }
-
-  const list = (items || [])
-    .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
-    .reverse()
-    .slice(0, myLibraryLimit);
-
-  if (list.length === 0) {
-    if (dom.compactMyLibraryEmpty) dom.compactMyLibraryEmpty.style.display = 'block';
-    dom.compactMyList.style.display = 'none';
-    return;
-  }
-
-  if (dom.compactMyLibraryEmpty) dom.compactMyLibraryEmpty.style.display = 'none';
-  dom.compactMyList.style.display = 'grid';
-
-  list.forEach(r => {
-    const item = document.createElement('div');
-    item.className = 'compact-library-item';
-    if (r.isDraft) item.classList.add('is-draft');
-    const title = r.productName || r.cultivars || r.productType || 'Review';
-    const date = new Date(r.date || Date.now()).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-    const holder = r.holderName ? ` • ${r.holderName}` : '';
-    const draftBadge = r.isDraft ? `<span class="draft-badge">Brouillon</span>` : '';
-    const imgHtml = r.image
-      ? `<img src="${r.image}" alt="" class="compact-item-image" />`
-      : `<div class="compact-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.6rem;">📷</div>`;
-
-    item.innerHTML = `${draftBadge}${imgHtml}<div class="compact-item-content"><div class="compact-item-title">${title}</div><div class="compact-item-meta">${r.productType || 'Review'} • ${date}${holder}</div></div><div class="compact-item-actions"><button type="button" class="btn btn-outline btn-xs" data-act="load" title="Aperçu">👀</button><button type="button" class="btn btn-secondary btn-xs" data-act="edit" title="Éditer">✏️</button></div>`;
-
-    const openPreview = async () => { await openPreviewOnly(r); };
-    const loadBtn = item.querySelector('[data-act="load"]');
-    const editBtn = item.querySelector('[data-act="edit"]');
-    if (loadBtn) loadBtn.addEventListener('click', openPreview);
-    item.addEventListener('click', (e) => {
-      const t = e.target;
-      if (t instanceof HTMLElement && t.closest('.btn')) return;
-      openPreview();
-    });
-    if (editBtn) {
-      editBtn.addEventListener('click', () => {
-        if (isHomePage) {
-          navigateToEditor(r.productType, r, r.id ?? null);
-        } else {
-          loadReviewIntoForm(r, 'edit');
-        }
-      });
-    }
-    dom.compactMyList.appendChild(item);
-  });
-}
 
 // Rendu de la bibliothèque complète dans la modal
 async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
@@ -5021,9 +4923,6 @@ async function tryEnableRemote() {
       console.info('[remote] API détectée');
       // Toast supprimé pour ne pas surcharger l'UI
       renderCompactLibrary();
-      if (isUserConnected && isHomePage) {
-        renderMyCompactLibrary();
-      }
     }
   } catch {}
 }
