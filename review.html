@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="export-studio.css" />
     <link rel="icon" type="image/png" href="ink\logo.png" />
   </head>
   <body class="editor-page">
@@ -330,7 +331,167 @@
       </div>
     </div>
 
+    <!-- Export Studio Modal -->
+    <div class="export-config-modal" id="exportStudioModal">
+      <div class="export-config-container">
+        <!-- Sidebar Configuration -->
+        <div class="export-config-sidebar">
+          <div class="export-config-header">
+            <h2>🎨 Export Studio</h2>
+            <p>Personnalisez le rendu final de votre review</p>
+          </div>
+
+          <!-- Templates -->
+          <div class="export-config-group">
+            <h4 class="export-config-group-title">Style de rendu</h4>
+            <div class="export-templates" id="exportTemplates">
+              <!-- Rempli dynamiquement -->
+            </div>
+          </div>
+
+          <!-- Sections à inclure -->
+          <div class="export-config-group">
+            <h4 class="export-config-group-title">Sections affichées</h4>
+            <div class="export-sections-list">
+              <div class="export-section-toggle">
+                <input type="checkbox" id="section-header" checked>
+                <label for="section-header">En-tête & Titre</label>
+              </div>
+              <div class="export-section-toggle">
+                <input type="checkbox" id="section-scores" checked>
+                <label for="section-scores">Scores & Notes</label>
+              </div>
+              <div class="export-section-toggle">
+                <input type="checkbox" id="section-details" checked>
+                <label for="section-details">Détails par section</label>
+              </div>
+              <div class="export-section-toggle">
+                <input type="checkbox" id="section-notes" checked>
+                <label for="section-notes">Notes & Commentaires</label>
+              </div>
+              <div class="export-section-toggle">
+                <input type="checkbox" id="section-branding" checked>
+                <label for="section-branding">Signature & Date</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Couleurs -->
+          <div class="export-config-group">
+            <h4 class="export-config-group-title">Couleurs</h4>
+            <div class="export-option">
+              <label class="export-option-label">Couleur principale</label>
+              <div class="export-color-picker">
+                <input type="color" id="export-accent-color" value="#34d399" class="export-color-input">
+                <div class="export-color-presets">
+                  <div class="color-emerald export-color-preset active" data-color="#34d399"></div>
+                  <div class="color-blue export-color-preset" data-color="#38bdf8"></div>
+                  <div class="color-purple export-color-preset" data-color="#a78bfa"></div>
+                  <div class="color-pink export-color-preset" data-color="#f472b6"></div>
+                  <div class="color-orange export-color-preset" data-color="#fb923c"></div>
+                </div>
+              </div>
+            </div>
+            <div class="export-option">
+              <label class="export-option-label">Thème</label>
+              <select id="export-color-scheme">
+                <option value="dark" selected>Sombre</option>
+                <option value="light">Clair</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Qualité -->
+          <div class="export-config-group">
+            <h4 class="export-config-group-title">Qualité d'export</h4>
+            <div class="export-option">
+              <label class="export-option-label">
+                <span>Échelle</span>
+                <span id="export-scale-value">2x</span>
+              </label>
+              <input type="range" id="export-scale" min="1" max="4" step="0.5" value="2">
+              <p class="export-option-hint">Plus élevé = meilleure qualité mais fichier plus lourd</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Zone d'aperçu centrale -->
+        <div class="export-preview-area">
+          <div class="export-preview-wrapper">
+            <div class="export-preview-controls">
+              <button class="export-zoom-btn" data-zoom="0.5">50%</button>
+              <button class="export-zoom-btn" data-zoom="0.75">75%</button>
+              <button class="export-zoom-btn active" data-zoom="1">100%</button>
+            </div>
+            <div class="export-preview-canvas" id="exportPreviewCanvas">
+              <!-- Le rendu sera injecté ici -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Panneau d'actions -->
+        <div class="export-actions-panel">
+          <div class="export-actions-header">
+            <h3>📥 Export</h3>
+          </div>
+
+          <!-- Stats -->
+          <div class="export-stats">
+            <div class="export-stat">
+              <div class="export-stat-value" id="export-width">1200</div>
+              <div class="export-stat-label">Largeur (px)</div>
+            </div>
+            <div class="export-stat">
+              <div class="export-stat-value" id="export-height">1800</div>
+              <div class="export-stat-label">Hauteur (px)</div>
+            </div>
+          </div>
+
+          <!-- Options de format -->
+          <div class="export-config-group">
+            <h4 class="export-config-group-title">Format d'export</h4>
+            <div class="export-format-options">
+              <button class="export-format-btn" data-format="png">
+                <span>PNG (Haute qualité)</span>
+                <span class="icon">🖼️</span>
+              </button>
+              <button class="export-format-btn" data-format="jpg">
+                <span>JPG (Léger)</span>
+                <span class="icon">📷</span>
+              </button>
+              <button class="export-format-btn" data-format="webp">
+                <span>WebP (Optimal)</span>
+                <span class="icon">✨</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Personnalisation -->
+          <div class="export-config-group">
+            <h4 class="export-config-group-title">Signature</h4>
+            <div class="export-option">
+              <input type="text" id="export-signature" placeholder="Votre signature (optionnel)">
+              <p class="export-option-hint">Ajoutée en bas de l'image</p>
+            </div>
+          </div>
+
+          <!-- Actions principales -->
+          <div class="export-actions-buttons">
+            <button class="export-primary-btn" id="exportDownloadBtn">
+              <span>📥</span>
+              <span>Télécharger l'image</span>
+            </button>
+            <button class="export-secondary-btn" id="exportCancelBtn">
+              Annuler
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="export-studio.js"></script>
+    <script src="export-studio-ui.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

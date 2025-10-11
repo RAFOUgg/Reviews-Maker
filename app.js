@@ -1262,7 +1262,15 @@ function setupFormEvents() {
     dom.togglePreviewBtn.addEventListener("click", togglePreviewMode);
   }
   if (dom.exportImageBtn) {
-    dom.exportImageBtn.addEventListener("click", exportImage);
+    dom.exportImageBtn.addEventListener("click", () => {
+      // Ouvrir le nouveau Export Studio au lieu de l'ancien système
+      if (typeof openExportStudio === 'function') {
+        openExportStudio();
+      } else {
+        // Fallback vers l'ancienne fonction si le module n'est pas chargé
+        exportImage();
+      }
+    });
   }
 
   // Navigation entre sections
