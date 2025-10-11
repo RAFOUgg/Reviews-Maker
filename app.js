@@ -731,7 +731,7 @@ let homeGalleryLimit = 8; // 4x2 grid on the home page, increases with "Voir plu
 let isNonDraftRecord = false; // Track if current review has been explicitly saved as non-draft
 // Remote backend flags
 let remoteEnabled = false; // API détectée
-let remoteBase = '';
+let remoteBase = 'http://51.75.22.192:5001'; // URL de l'API LaFoncedalleBot (VPS)
 const API_KEY = 'reviews_maker_2024_secure_key_lafoncedalle'; // Clé API pour l'authentification LaFoncedalleBot
 let lastSelectedImageFile = null; // Original File pour upload
 let isUserConnected = false; // Auth state shared across modules
