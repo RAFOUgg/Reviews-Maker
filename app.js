@@ -731,8 +731,9 @@ let homeGalleryLimit = 8; // 4x2 grid on the home page, increases with "Voir plu
 let isNonDraftRecord = false; // Track if current review has been explicitly saved as non-draft
 // Remote backend flags
 let remoteEnabled = false; // API détectée
-let remoteBase = 'http://51.75.22.192:5001'; // URL de l'API LaFoncedalleBot (VPS)
-const API_KEY = 'reviews_maker_2024_secure_key_lafoncedalle'; // Clé API pour l'authentification LaFoncedalleBot
+let remoteBase = ''; // Détecté automatiquement
+const AUTH_API_BASE = 'http://51.75.22.192:5001'; // URL fixe pour l'authentification (VPS)
+const API_KEY = '7e5f5c97bf1ea98f0d9be2a4ad0300dc84a5c34d10d5d44f14d85af0ec5efd16'; // Clé API du bot
 let lastSelectedImageFile = null; // Original File pour upload
 let isUserConnected = false; // Auth state shared across modules
 let currentLibraryMode = 'public';
@@ -1461,7 +1462,7 @@ function setupModalEvents() {
       
       try {
         // ÉTAPE 1: Vérifier si l'email existe dans la base Discord
-        const checkResponse = await fetch(remoteBase + '/api/discord/user-by-email', {
+        const checkResponse = await fetch(AUTH_API_BASE + '/api/discord/user-by-email', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -1595,7 +1596,7 @@ function setupModalEvents() {
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         sessionStorage.setItem('pendingCode', code);
         
-        const sendResponse = await fetch(remoteBase + '/api/mail/send-verification', {
+        const sendResponse = await fetch(AUTH_API_BASE + '/api/mail/send-verification', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -1696,10 +1697,10 @@ async function updateHolderDisplay() {
   }
   
   // Si on a l'email, essayer de récupérer les infos Discord
-  if (cachedEmail && remoteBase) {
+  if (cachedEmail && AUTH_API_BASE) {
     try {
       dom.saveHolderDisplay.textContent = 'Récupération...';
-      const response = await fetch(`${remoteBase}/api/discord/user-by-email`, {
+      const response = await fetch(`${AUTH_API_BASE}/api/discord/user-by-email`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
