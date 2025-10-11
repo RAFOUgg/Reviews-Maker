@@ -732,7 +732,7 @@ let isNonDraftRecord = false; // Track if current review has been explicitly sav
 // Remote backend flags
 let remoteEnabled = false; // API détectée
 let remoteBase = ''; // Détecté automatiquement
-const AUTH_API_BASE = 'http://51.75.22.192:5001'; // URL fixe pour l'authentification (VPS)
+const AUTH_API_BASE = window.location.origin; // Utiliser l'origine actuelle (même serveur)
 const API_KEY = '7e5f5c97bf1ea98f0d9be2a4ad0300dc84a5c34d10d5d44f14d85af0ec5efd16'; // Clé API du bot
 let lastSelectedImageFile = null; // Original File pour upload
 let isUserConnected = false; // Auth state shared across modules
