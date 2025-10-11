@@ -727,12 +727,12 @@ let draftSaveTimer = null; // Debounced draft persistence
 let dbSaveTimer = null; // Debounced DB save
 let dbFailedOnce = false; // If IndexedDB fails, fallback to localStorage silently next times
 let isCompactPreview = true; // Track preview mode (compact vs full)
-let homeGalleryLimit = 8; // 4x2 grid on the home page, increases with "Voir plus"
+let homeGalleryLimit = 8; // 4x2 grid on the home page, increases avec "Voir plus"
 let isNonDraftRecord = false; // Track if current review has been explicitly saved as non-draft
 // Remote backend flags
 let remoteEnabled = false; // API détectée
 let remoteBase = ''; // Détecté automatiquement
-const AUTH_API_BASE = window.location.origin; // Utiliser l'origine actuelle (même serveur)
+const AUTH_API_BASE = ''; // Chemin relatif (géré par le même serveur/proxy)
 const API_KEY = '7e5f5c97bf1ea98f0d9be2a4ad0300dc84a5c34d10d5d44f14d85af0ec5efd16'; // Clé API du bot
 let lastSelectedImageFile = null; // Original File pour upload
 let isUserConnected = false; // Auth state shared across modules
