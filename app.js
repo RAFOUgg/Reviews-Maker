@@ -732,6 +732,7 @@ let isNonDraftRecord = false; // Track if current review has been explicitly sav
 // Remote backend flags
 let remoteEnabled = false; // API détectée
 let remoteBase = '';
+const API_KEY = 'reviews_maker_2024_secure_key_lafoncedalle'; // Clé API pour l'authentification LaFoncedalleBot
 let lastSelectedImageFile = null; // Original File pour upload
 let isUserConnected = false; // Auth state shared across modules
 let currentLibraryMode = 'public';
@@ -1456,27 +1457,66 @@ function setupModalEvents() {
       }
       
       dom.authSendCode.disabled = true;
-      dom.authSendCode.textContent = "Envoi en cours...";
+      dom.authSendCode.textContent = "Vérification...";
       
       try {
-        const r = await fetch(remoteBase + '/api/auth/send-code', {
+        // ÉTAPE 1: Vérifier si l'email existe dans la base Discord
+        const checkResponse = await fetch(remoteBase + '/api/discord/user-by-email', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + API_KEY
+          },
           body: JSON.stringify({ email })
         });
         
-        const data = await r.json();
+        const checkData = await checkResponse.json();
         
-        if (r.ok) {
+        if (!checkResponse.ok) {
+          if (checkData.error === 'not_found') {
+            showAuthStatus("Email non lié à un compte Discord. Utilisez /lier_compte sur notre Discord.", "error");
+          } else {
+            showAuthStatus(checkData.message || "Erreur lors de la vérification", "error");
+          }
+          return;
+        }
+        
+        // ÉTAPE 2: L'email existe, envoyer le code de vérification
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        sessionStorage.setItem('pendingCode', code);
+        sessionStorage.setItem('authEmail', email);
+        
+        const sendResponse = await fetch(remoteBase + '/api/mail/send-verification', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + API_KEY
+          },
+          body: JSON.stringify({ 
+            to: email,
+            code: code,
+            subject: '🔐 Code de vérification Reviews Maker',
+            appName: 'Reviews Maker',
+            expiryMinutes: 10
+          })
+        });
+        
+        const sendData = await sendResponse.json();
+        
+        if (sendResponse.ok) {
+          // Stocker les infos Discord
+          localStorage.setItem('discordId', checkData.discordId);
+          if (checkData.username) {
+            localStorage.setItem('discordUsername', checkData.username);
+          }
+          
           showAuthStatus("Code envoyé ! Vérifiez vos emails", "success");
           // Switch to code verification step
           if (dom.authStepEmail) dom.authStepEmail.style.display = 'none';
           if (dom.authStepCode) dom.authStepCode.style.display = 'flex';
           if (dom.authEmailDisplay) dom.authEmailDisplay.textContent = email;
-          // Store email temporarily
-          sessionStorage.setItem('authEmail', email);
         } else {
-          showAuthStatus(data.message || "Erreur lors de l'envoi", "error");
+          showAuthStatus(sendData.message || "Erreur lors de l'envoi du code", "error");
         }
       } catch (err) {
         showAuthStatus("Erreur de connexion au serveur", "error");
@@ -1493,6 +1533,7 @@ function setupModalEvents() {
     dom.authVerifyCode.addEventListener("click", async () => {
       const email = sessionStorage.getItem('authEmail');
       const code = dom.authCodeInput?.value?.trim();
+      const expectedCode = sessionStorage.getItem('pendingCode');
       
       if (!code || code.length !== 6) {
         showAuthStatus("Code invalide (6 chiffres)", "error");
@@ -1503,33 +1544,33 @@ function setupModalEvents() {
       dom.authVerifyCode.textContent = "Vérification...";
       
       try {
-        const r = await fetch(remoteBase + '/api/auth/verify-code', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, code })
-        });
-        
-        const data = await r.json();
-        
-        if (r.ok) {
-          // Save token and email
-          localStorage.setItem('authToken', data.token);
-          localStorage.setItem('authEmail', data.email);
-          sessionStorage.removeItem('authEmail');
-          
-          showAuthStatus("Connexion réussie !", "success");
-          
-          setTimeout(() => {
-            updateAuthUI();
-            if (dom.authModal) dom.authModal.style.display = "none";
-            if (isHomePage) {
-              renderCompactLibrary();
-              setupHomeTabs();
-            }
-          }, 800);
-        } else {
-          showAuthStatus(data.message || "Code incorrect", "error");
+        // Vérifier le code côté client
+        if (code !== expectedCode) {
+          showAuthStatus("Code incorrect", "error");
+          dom.authVerifyCode.disabled = false;
+          dom.authVerifyCode.textContent = "Vérifier";
+          return;
         }
+        
+        // Générer un token simple (timestamp + random)
+        const token = Date.now().toString(36) + Math.random().toString(36);
+        
+        // Save token and email
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('authEmail', email);
+        sessionStorage.removeItem('authEmail');
+        sessionStorage.removeItem('pendingCode');
+        
+        showAuthStatus("Connexion réussie !", "success");
+        
+        setTimeout(() => {
+          updateAuthUI();
+          if (dom.authModal) dom.authModal.style.display = "none";
+          if (isHomePage) {
+            renderCompactLibrary();
+            setupHomeTabs();
+          }
+        }, 800);
       } catch (err) {
         showAuthStatus("Erreur de connexion", "error");
         console.error('Verify code error:', err);
@@ -1550,13 +1591,26 @@ function setupModalEvents() {
       dom.authResendCode.textContent = "Envoi...";
       
       try {
-        const r = await fetch(remoteBase + '/api/auth/send-code', {
+        // Générer un nouveau code
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        sessionStorage.setItem('pendingCode', code);
+        
+        const sendResponse = await fetch(remoteBase + '/api/mail/send-verification', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + API_KEY
+          },
+          body: JSON.stringify({ 
+            to: email,
+            code: code,
+            subject: '🔐 Code de vérification Reviews Maker',
+            appName: 'Reviews Maker',
+            expiryMinutes: 10
+          })
         });
         
-        if (r.ok) {
+        if (sendResponse.ok) {
           showAuthStatus("Nouveau code envoyé", "success");
         } else {
           showAuthStatus("Erreur lors de l'envoi", "error");
@@ -1583,25 +1637,13 @@ function setupModalEvents() {
   // Disconnect
   if (dom.authDisconnect) {
     dom.authDisconnect.addEventListener("click", async () => {
-      const token = localStorage.getItem('authToken');
-      
-      if (token) {
-        try {
-          await fetch(remoteBase + '/api/auth/logout', {
-            method: 'POST',
-            headers: { 'X-Auth-Token': token }
-          });
-        } catch (err) {
-          console.error('Logout error:', err);
-        }
-      }
-      
       // Clear all auth-related data including Discord info
       localStorage.removeItem('authToken');
       localStorage.removeItem('authEmail');
       localStorage.removeItem('discordUsername');
       localStorage.removeItem('discordId');
       sessionStorage.removeItem('authEmail');
+      sessionStorage.removeItem('pendingCode');
       
       showAuthStatus("Déconnecté", "info");
       updateAuthUI();
@@ -1644,7 +1686,6 @@ function setupModalEvents() {
 async function updateHolderDisplay() {
   if (!dom.saveHolderDisplay) return;
   
-  const token = localStorage.getItem('authToken');
   const cachedUsername = localStorage.getItem('discordUsername');
   const cachedEmail = localStorage.getItem('authEmail');
   
@@ -1654,22 +1695,27 @@ async function updateHolderDisplay() {
     return cachedUsername;
   }
   
-  // Sinon, essayer de le récupérer du serveur
-  if (token && remoteBase) {
+  // Si on a l'email, essayer de récupérer les infos Discord
+  if (cachedEmail && remoteBase) {
     try {
       dom.saveHolderDisplay.textContent = 'Récupération...';
-      const response = await fetch(`${remoteBase}/api/auth/me`, {
-        headers: { 'X-Auth-Token': token }
+      const response = await fetch(`${remoteBase}/api/discord/user-by-email`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + API_KEY
+        },
+        body: JSON.stringify({ email: cachedEmail })
       });
       
       if (response.ok) {
         const userData = await response.json();
-        // Essayer différents champs: discordUsername ou user_name (depuis la DB LaFoncedalle)
-        const username = userData.discordUsername || userData.user_name;
+        const username = userData.username || userData.user_name;
         
         // Vérifier qu'on a un vrai pseudo Discord (pas un User#xxxx ou Discord #xxxx)
         if (username && !username.startsWith('User#') && !username.startsWith('Discord #')) {
           localStorage.setItem('discordUsername', username);
+          localStorage.setItem('discordId', userData.discordId);
           dom.saveHolderDisplay.textContent = username;
           return username;
         }
@@ -1679,7 +1725,7 @@ async function updateHolderDisplay() {
     }
   }
   
-  // Fallback sur l'email (solution temporaire en attendant la configuration Discord côté serveur)
+  // Fallback sur l'email
   const holder = cachedEmail || 'Utilisateur non connecté';
   dom.saveHolderDisplay.textContent = holder;
   return holder;
