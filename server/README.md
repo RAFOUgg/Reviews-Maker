@@ -64,6 +64,23 @@ LaFoncedalleBot (API + Service de mailing + Base de données Discord)
 #### Configuration requise
 - `LAFONCEDALLE_API_URL` : URL de l'API LaFoncedalleBot (ex: http://localhost:3001)
 - `LAFONCEDALLE_API_KEY` : Clé API partagée pour sécuriser les requêtes
+- `LAFONCEDALLE_DB_FILE` : **NOUVEAU** - Chemin absolu vers la base de données LaFoncedalleBot (optionnel)
+
+#### Nouvelle architecture de base de données (v2.0)
+Depuis la mise à jour de LaFoncedalleBot, Reviews-Maker peut accéder directement à la base de données du bot pour une vérification plus rapide et fiable.
+
+**Configuration sur VPS :**
+```bash
+# Dans le fichier .env de Reviews-Maker
+LAFONCEDALLE_DB_FILE=/chemin/vers/lafoncedallebot/db/data.db
+```
+
+**Avantages :**
+- ✅ Vérification instantanée (pas d'appel API)
+- ✅ Fonctionne même si l'API LaFoncedalleBot est down
+- ✅ Plus sécurisé (pas de transmission réseau)
+
+**Si non configuré :** Fallback vers l'API comme avant.
 
 Voir [INTEGRATION_LAFONCEDALLE_API.md](../INTEGRATION_LAFONCEDALLE_API.md) pour la documentation complète.
 Voir [DEPLOIEMENT_INTEGRATION_LAFONCEDALLE.md](../DEPLOIEMENT_INTEGRATION_LAFONCEDALLE.md) pour le guide de déploiement.

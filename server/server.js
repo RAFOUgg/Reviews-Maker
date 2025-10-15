@@ -23,7 +23,13 @@ const LAFONCEDALLE_API_URL = process.env.LAFONCEDALLE_API_URL || 'http://localho
 const LAFONCEDALLE_API_KEY = process.env.LAFONCEDALLE_API_KEY || 'your-api-key'; // Clé API pour authentifier les requêtes
 
 // LaFoncedalleBot Database Configuration (nouvelle architecture)
-const LAFONCEDALLE_DB_FILE = process.env.LAFONCEDALLE_DB_FILE || path.join(__dirname, '..', 'docs', 'scripts data LaFoncedalleBot', 'db', 'data.db');
+// IMPORTANT: Sur le VPS, définir LAFONCEDALLE_DB_FILE avec le chemin absolu vers la DB du bot
+// Exemple: /home/user/lafoncedallebot/db/data.db
+const LAFONCEDALLE_DB_FILE = process.env.LAFONCEDALLE_DB_FILE;
+
+if (!LAFONCEDALLE_DB_FILE) {
+  console.warn('[CONFIG] LAFONCEDALLE_DB_FILE non défini - utilisation de la DB directe désactivée');
+}
 
 // Email auth: store verification codes temporarily (in production, use Redis)
 const verificationCodes = new Map(); // email -> {code, expires, attempts, discordUser}
@@ -396,6 +402,12 @@ function generateCode() {
 
 // Helper: Query LaFoncedalleBot database directly (nouvelle architecture)
 async function getDiscordUserFromDB(email) {
+  // Vérifier si la DB est configurée
+  if (!LAFONCEDALLE_DB_FILE) {
+    console.log('[LaFoncedalle][DB] DB path not configured, skipping direct DB query');
+    return null;
+  }
+
   return new Promise((resolve, reject) => {
     const db = new sqlite3.Database(LAFONCEDALLE_DB_FILE, sqlite3.OPEN_READONLY, (err) => {
       if (err) {
