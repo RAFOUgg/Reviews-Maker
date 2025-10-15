@@ -1,5 +1,565 @@
 [
     {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "sqlite3",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sqlite3",
+        "description": "sqlite3",
+        "detail": "sqlite3",
+        "documentation": {}
+    },
+    {
+        "label": "random",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "random",
+        "description": "random",
+        "detail": "random",
+        "documentation": {}
+    },
+    {
+        "label": "time",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "time",
+        "description": "time",
+        "detail": "time",
+        "documentation": {}
+    },
+    {
+        "label": "threading",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "threading",
+        "description": "threading",
+        "detail": "threading",
+        "documentation": {}
+    },
+    {
+        "label": "asyncio",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "asyncio",
+        "description": "asyncio",
+        "detail": "asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "traceback",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "traceback",
+        "description": "traceback",
+        "detail": "traceback",
+        "documentation": {}
+    },
+    {
+        "label": "base64",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "base64",
+        "description": "base64",
+        "detail": "base64",
+        "documentation": {}
+    },
+    {
+        "label": "smtplib,",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "smtplib.",
+        "description": "smtplib.",
+        "detail": "smtplib.",
+        "documentation": {}
+    },
+    {
+        "label": "MIMEText",
+        "importPath": "email.mime.text",
+        "description": "email.mime.text",
+        "isExtraImport": true,
+        "detail": "email.mime.text",
+        "documentation": {}
+    },
+    {
+        "label": "MIMEMultipart",
+        "importPath": "email.mime.multipart",
+        "description": "email.mime.multipart",
+        "isExtraImport": true,
+        "detail": "email.mime.multipart",
+        "documentation": {}
+    },
+    {
+        "label": "Header",
+        "importPath": "email.header",
+        "description": "email.header",
+        "isExtraImport": true,
+        "detail": "email.header",
+        "documentation": {}
+    },
+    {
+        "label": "csv",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "csv",
+        "description": "csv",
+        "detail": "csv",
+        "documentation": {}
+    },
+    {
+        "label": "io",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "io",
+        "description": "io",
+        "detail": "io",
+        "documentation": {}
+    },
+    {
+        "label": "MIMEApplication",
+        "importPath": "email.mime.application",
+        "description": "email.mime.application",
+        "isExtraImport": true,
+        "detail": "email.mime.application",
+        "documentation": {}
+    },
+    {
+        "label": "Flask",
+        "importPath": "flask",
+        "description": "flask",
+        "isExtraImport": true,
+        "detail": "flask",
+        "documentation": {}
+    },
+    {
+        "label": "request",
+        "importPath": "flask",
+        "description": "flask",
+        "isExtraImport": true,
+        "detail": "flask",
+        "documentation": {}
+    },
+    {
+        "label": "jsonify",
+        "importPath": "flask",
+        "description": "flask",
+        "isExtraImport": true,
+        "detail": "flask",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "shopify",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "shopify",
+        "description": "shopify",
+        "detail": "shopify",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timezone",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "json",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "json",
+        "description": "json",
+        "detail": "json",
+        "documentation": {}
+    },
+    {
+        "label": "Logger",
+        "importPath": "utils.shared_utils",
+        "description": "utils.shared_utils",
+        "isExtraImport": true,
+        "detail": "utils.shared_utils",
+        "documentation": {}
+    },
+    {
+        "label": "DB_FILE",
+        "importPath": "utils.shared_utils",
+        "description": "utils.shared_utils",
+        "isExtraImport": true,
+        "detail": "utils.shared_utils",
+        "documentation": {}
+    },
+    {
+        "label": "anonymize_email",
+        "importPath": "utils.shared_utils",
+        "description": "utils.shared_utils",
+        "isExtraImport": true,
+        "detail": "utils.shared_utils",
+        "documentation": {}
+    },
+    {
+        "label": "get_db_connection",
+        "importPath": "utils.shared_utils",
+        "description": "utils.shared_utils",
+        "isExtraImport": true,
+        "detail": "utils.shared_utils",
+        "documentation": {}
+    },
+    {
+        "label": "initialize_db",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def initialize_db():\n    \"\"\"Initialise les tables pour la liaison de comptes, les rappels et la liste noire dans la DB partagée.\"\"\"\n    print(f\"INFO: Initialisation des tables dans la base de données: {DB_FILE}\")\n    with get_db_connection() as conn:\n        cursor = conn.cursor()\n        # Table principale user_links avec toutes les colonnes\n        cursor.execute(\"\"\"\n            CREATE TABLE IF NOT EXISTS user_links (\n                discord_id TEXT PRIMARY KEY,\n                user_email TEXT NOT NULL,",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "health_check",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def health_check():\n    return \"L'application pont Shopify-Discord est en ligne.\", 200\n@app.route('/api/start-verification', methods=['POST'])\ndef start_verification():\n    force = request.args.get('force', 'false').lower() == 'true'\n    data = request.get_json(silent=True) or {}\n    discord_id, email = data.get('discord_id'), data.get('email')\n    if not all([discord_id, email]): return jsonify({\"error\": \"Données manquantes.\"}), 400\n    with get_db_connection() as conn:\n        cursor = conn.cursor()",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "start_verification",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def start_verification():\n    force = request.args.get('force', 'false').lower() == 'true'\n    data = request.get_json(silent=True) or {}\n    discord_id, email = data.get('discord_id'), data.get('email')\n    if not all([discord_id, email]): return jsonify({\"error\": \"Données manquantes.\"}), 400\n    with get_db_connection() as conn:\n        cursor = conn.cursor()\n        if not force:\n            # Vérifier si un compte ACTIF existe déjà pour ce discord_id\n            cursor.execute(\"SELECT user_email, active FROM user_links WHERE discord_id = ?\", (discord_id,))",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "blacklist_user_for_reminders",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def blacklist_user_for_reminders():\n    \"\"\"Ajoute un utilisateur à la liste noire pour les rappels.\"\"\"\n    data = request.get_json(silent=True) or {}\n    discord_id = data.get('discord_id')\n    if not discord_id:\n        return jsonify({\"error\": \"L'ID Discord est manquant.\"}), 400\n    with get_db_connection() as conn:\n        cursor = conn.cursor()\n        try:\n            # On insère ou on remplace s'il existe déjà (ce qui ne devrait pas arriver avec un custom_id unique)",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "is_user_blacklisted",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def is_user_blacklisted():\n    \"\"\"Vérifie si un utilisateur est sur la liste noire pour les rappels.\"\"\"\n    data = request.get_json(silent=True) or {}\n    discord_id = data.get('discord_id')\n    if not discord_id:\n        return jsonify({\"error\": \"L'ID Discord est manquant.\"}), 400\n    with get_db_connection() as conn:\n        cursor = conn.cursor()\n        try:\n            cursor.execute(\"SELECT 1 FROM reminder_blacklist WHERE discord_id = ?\", (discord_id,))",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "test_email",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def test_email():\n    # --- LOG DE DIAGNOSTIC ---\n    data = request.get_json(silent=True) or {}\n    recipient_email = data.get('recipient_email')\n    Logger.info(f\"Appel de /api/test-email reçu pour le destinataire : {recipient_email}\")\n    auth_header = request.headers.get('Authorization')\n    expected_header = f\"Bearer {FLASK_SECRET_KEY}\"\n    if not auth_header or auth_header != expected_header:\n        return jsonify({\"error\": \"Accès non autorisé.\"}), 401\n    if not recipient_email:",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "add_comment",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def add_comment():\n    data = request.get_json(silent=True) or {}\n    user_id = data.get('user_id')\n    product_name = data.get('product_name')\n    comment_text = data.get('comment')\n    if not all([user_id, product_name, comment_text]):\n        return jsonify({\"error\": \"Données manquantes pour ajouter le commentaire.\"}), 400\n    try:\n        with get_db_connection() as conn:\n            c = conn.cursor()",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "confirm_verification",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def confirm_verification():\n    data = request.get_json(silent=True) or {}\n    discord_id = data.get('discord_id')\n    code = data.get('code')\n    user_name = data.get('user_name')  # NOUVEAU: Recevoir depuis le client\n    with get_db_connection() as conn:\n        cursor = conn.cursor()\n        cursor.execute(\"SELECT user_email, expires_at FROM verification_codes WHERE discord_id = ? AND code = ?\", (discord_id, code))\n        result = cursor.fetchone()\n        if not result:",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "unlink_account",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def unlink_account():\n    \"\"\"Délie un compte en le désactivant (active=0) SANS supprimer les métadonnées.\"\"\"\n    data = request.get_json(silent=True) or {}\n    discord_id = data.get('discord_id')\n    if not discord_id: return jsonify({\"error\": \"ID Discord manquant.\"}), 400\n    with get_db_connection() as conn:\n        cursor = conn.cursor()\n        # Vérifier qu'un compte ACTIF existe\n        cursor.execute(\"SELECT user_email FROM user_links WHERE discord_id = ? AND active = 1\", (discord_id,))\n        result = cursor.fetchone()",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "force_link",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def force_link():\n    force = request.args.get('force', 'false').lower() == 'true'\n    auth_header = request.headers.get('Authorization')\n    expected_header = f\"Bearer {FLASK_SECRET_KEY}\"\n    if not auth_header or auth_header != expected_header:\n        return jsonify({\"error\": \"Accès non autorisé.\"}), 401\n    data = request.get_json(silent=True) or {}\n    discord_id, email = data.get('discord_id'), data.get('email')\n    user_name = data.get('user_name')  # NOUVEAU\n    if not all([discord_id, email]): ",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "get_user_email",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def get_user_email(discord_id):\n    \"\"\"\n    Endpoint pour Review-Maker : récupère l'email d'un utilisateur lié.\n    Retourne l'email si le compte est actif, sinon erreur 404.\n    \"\"\"\n    with get_db_connection() as conn:\n        cursor = conn.cursor()\n        cursor.execute(\"SELECT user_email FROM user_links WHERE discord_id = ? AND active = 1\", (discord_id,))\n        result = cursor.fetchone()\n    if not result:",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "get_all_linked_users",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def get_all_linked_users():\n    \"\"\"\n    Endpoint pour Review-Maker : récupère tous les utilisateurs avec comptes liés.\n    Retourne une liste de {discord_id, email, user_name, linked_at}\n    ⚠️ SÉCURISÉ : Requiert une clé API dans les headers\n    \"\"\"\n    # Vérification de la clé API\n    auth_header = request.headers.get('Authorization')\n    expected_header = f\"Bearer {FLASK_SECRET_KEY}\"\n    if not auth_header or auth_header != expected_header:",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "get_purchased_products",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def get_purchased_products(discord_id):\n    with get_db_connection() as conn:\n        cursor = conn.cursor()\n        # Ne retourner que les comptes ACTIFS (verified n'est plus utilisé)\n        cursor.execute(\"SELECT user_email FROM user_links WHERE discord_id = ? AND active = 1\", (discord_id,))\n        result = cursor.fetchone()\n    if not result:\n        return jsonify({\"error\": \"user_not_linked\"}), 404\n    user_email = result[0]\n    session = shopify.Session(SHOP_URL, SHOPIFY_API_VERSION, SHOPIFY_ADMIN_ACCESS_TOKEN)",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "submit_rating",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def submit_rating():\n    data = request.get_json(silent=True) or {}\n    required_keys = ['user_id', 'user_name', 'product_name', 'scores']\n    if not data or not all(key in data for key in required_keys):\n        return jsonify({\"error\": \"Données manquantes.\"}), 400\n    # On récupère toutes les données du payload\n    user_id = data['user_id']\n    user_name = data['user_name']\n    product_name = data['product_name']\n    scores = data['scores']",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "get_user_stats",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def get_user_stats(discord_id):\n    try:\n        user_id_int = int(discord_id)\n        with get_db_connection() as conn:\n            conn.row_factory = sqlite3.Row\n            c = conn.cursor()\n            # Récupérer les notes de l'utilisateur\n            c.execute(\"SELECT * FROM ratings WHERE user_id = ? ORDER BY rating_timestamp DESC\", (user_id_int,))\n            user_ratings = [dict(row) for row in c.fetchall()]\n            # Calculer les statistiques",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "get_shop_ranking",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def get_shop_ranking(discord_id):\n    \"\"\"Récupère le classement d'un utilisateur dans la boutique.\"\"\"\n    try:\n        # Récupérer l'email de l'utilisateur (compte actif uniquement)\n        with get_db_connection() as conn:\n            cursor = conn.cursor()\n            cursor.execute(\"SELECT user_email FROM user_links WHERE discord_id = ? AND active = 1\", (discord_id,))\n            result = cursor.fetchone()\n        if not result:\n            return jsonify({\"error\": \"user_not_linked\", \"shop_rank\": 0, \"total_shoppers\": 0}), 404",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "get_shop_stats",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def get_shop_stats():\n    # Sécurisation de l'endpoint\n    auth_header = request.headers.get('Authorization')\n    expected_header = f\"Bearer {FLASK_SECRET_KEY}\"\n    if not auth_header or auth_header != expected_header:\n        return jsonify({\"error\": \"Accès non autorisé.\"}), 401\n    session = shopify.Session(SHOP_URL, SHOPIFY_API_VERSION, SHOPIFY_ADMIN_ACCESS_TOKEN)\n    shopify.ShopifyResource.activate_session(session)\n    try:\n        now = datetime.utcnow()",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "get_last_order",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def get_last_order(discord_id):\n    # 1. Récupérer l'email de l'utilisateur (compte actif uniquement)\n    with get_db_connection() as conn:\n        cursor = conn.cursor()\n        cursor.execute(\"SELECT user_email FROM user_links WHERE discord_id = ? AND active = 1\", (discord_id,))\n        result = cursor.fetchone()\n    if not result:\n        return jsonify({\"error\": \"Votre compte Discord n'est pas lié. Utilisez d'abord `/lier_compte`.\"}), 404\n    user_email = result[0]\n    # 2. Interroger l'API Shopify",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "get_users_to_notify",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def get_users_to_notify():\n    \"\"\"\n    Scanne tous les utilisateurs liés pour trouver ceux éligibles à un rappel de notation.\n    Un utilisateur est éligible si sa dernière commande a été expédiée il y a entre 3 et 30 jours,\n    et qu'il n'a ni noté les produits de cette commande, ni reçu de rappel pour celle-ci.\n    \"\"\"\n    Logger.info(\"API: Recherche des utilisateurs à notifier pour un rappel de notation.\")\n    with get_db_connection() as conn:\n        conn.row_factory = sqlite3.Row\n        cursor = conn.cursor()",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "mark_reminder_sent",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def mark_reminder_sent():\n    \"\"\"Marque dans la DB qu'un rappel a été envoyé pour une commande spécifique à un utilisateur.\"\"\"\n    data = request.get_json(silent=True) or {}\n    discord_id = data.get('discord_id')\n    order_id = data.get('order_id')\n    if not discord_id or not order_id:\n        return jsonify({\"error\": \"Données manquantes.\"}), 400\n    with get_db_connection() as conn:\n        cursor = conn.cursor()\n        try:",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "get_discord_user_by_email",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def get_discord_user_by_email():\n    \"\"\"Vérifie si un email existe dans la base Discord.\"\"\"\n    auth_header = request.headers.get('Authorization')\n    expected_header = f\"Bearer {REVIEWS_MAKER_API_KEY}\"\n    if not auth_header or auth_header != expected_header:\n        Logger.warning(\"Tentative d'accès non autorisée à /api/discord/user-by-email\")\n        return jsonify({\"error\": \"unauthorized\", \"message\": \"API key manquante ou invalide\"}), 401\n    data = request.get_json(silent=True) or {}\n    email = data.get('email', '').strip().lower()\n    if not email:",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "send_verification_code",
+        "kind": 2,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "def send_verification_code():\n    \"\"\"Envoie un code de vérification par email pour Reviews-Maker.\"\"\"\n    auth_header = request.headers.get('Authorization')\n    expected_header = f\"Bearer {REVIEWS_MAKER_API_KEY}\"\n    if not auth_header or auth_header != expected_header:\n        Logger.warning(\"Tentative d'accès non autorisée à /api/mail/send-verification\")\n        return jsonify({\"error\": \"unauthorized\", \"message\": \"API key manquante ou invalide\"}), 401\n    data = request.get_json(silent=True) or {}\n    to_email = data.get('to', '').strip()\n    code = data.get('code', '').strip()",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "app",
+        "kind": 5,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "app = Flask(__name__)\nFLASK_SECRET_KEY = os.getenv('FLASK_SECRET_KEY') # On lit la variable\napp.secret_key = FLASK_SECRET_KEY # On l'assigne à l'application\nSHOP_URL = os.getenv('SHOPIFY_SHOP_URL')\nSHOPIFY_API_VERSION = os.getenv('SHOPIFY_API_VERSION')\n# Variable critique sans valeur par défaut - doit être dans .env\nREVIEWS_MAKER_API_KEY = os.getenv('REVIEWS_MAKER_API_KEY')\nif not REVIEWS_MAKER_API_KEY:\n    raise ValueError(\"REVIEWS_MAKER_API_KEY est requis dans le fichier .env\")\n# Récupération des secrets depuis les variables d'environnement SMTP",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "FLASK_SECRET_KEY",
+        "kind": 5,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "FLASK_SECRET_KEY = os.getenv('FLASK_SECRET_KEY') # On lit la variable\napp.secret_key = FLASK_SECRET_KEY # On l'assigne à l'application\nSHOP_URL = os.getenv('SHOPIFY_SHOP_URL')\nSHOPIFY_API_VERSION = os.getenv('SHOPIFY_API_VERSION')\n# Variable critique sans valeur par défaut - doit être dans .env\nREVIEWS_MAKER_API_KEY = os.getenv('REVIEWS_MAKER_API_KEY')\nif not REVIEWS_MAKER_API_KEY:\n    raise ValueError(\"REVIEWS_MAKER_API_KEY est requis dans le fichier .env\")\n# Récupération des secrets depuis les variables d'environnement SMTP\nSENDER_EMAIL = os.getenv('SENDER_EMAIL')",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "app.secret_key",
+        "kind": 5,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "app.secret_key = FLASK_SECRET_KEY # On l'assigne à l'application\nSHOP_URL = os.getenv('SHOPIFY_SHOP_URL')\nSHOPIFY_API_VERSION = os.getenv('SHOPIFY_API_VERSION')\n# Variable critique sans valeur par défaut - doit être dans .env\nREVIEWS_MAKER_API_KEY = os.getenv('REVIEWS_MAKER_API_KEY')\nif not REVIEWS_MAKER_API_KEY:\n    raise ValueError(\"REVIEWS_MAKER_API_KEY est requis dans le fichier .env\")\n# Récupération des secrets depuis les variables d'environnement SMTP\nSENDER_EMAIL = os.getenv('SENDER_EMAIL')\nINFOMANIAK_APP_PASSWORD = os.getenv('INFOMANIAK_APP_PASSWORD')",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "SHOP_URL",
+        "kind": 5,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "SHOP_URL = os.getenv('SHOPIFY_SHOP_URL')\nSHOPIFY_API_VERSION = os.getenv('SHOPIFY_API_VERSION')\n# Variable critique sans valeur par défaut - doit être dans .env\nREVIEWS_MAKER_API_KEY = os.getenv('REVIEWS_MAKER_API_KEY')\nif not REVIEWS_MAKER_API_KEY:\n    raise ValueError(\"REVIEWS_MAKER_API_KEY est requis dans le fichier .env\")\n# Récupération des secrets depuis les variables d'environnement SMTP\nSENDER_EMAIL = os.getenv('SENDER_EMAIL')\nINFOMANIAK_APP_PASSWORD = os.getenv('INFOMANIAK_APP_PASSWORD')\nSHOPIFY_ADMIN_ACCESS_TOKEN = os.getenv('SHOPIFY_ADMIN_ACCESS_TOKEN')",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "SHOPIFY_API_VERSION",
+        "kind": 5,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "SHOPIFY_API_VERSION = os.getenv('SHOPIFY_API_VERSION')\n# Variable critique sans valeur par défaut - doit être dans .env\nREVIEWS_MAKER_API_KEY = os.getenv('REVIEWS_MAKER_API_KEY')\nif not REVIEWS_MAKER_API_KEY:\n    raise ValueError(\"REVIEWS_MAKER_API_KEY est requis dans le fichier .env\")\n# Récupération des secrets depuis les variables d'environnement SMTP\nSENDER_EMAIL = os.getenv('SENDER_EMAIL')\nINFOMANIAK_APP_PASSWORD = os.getenv('INFOMANIAK_APP_PASSWORD')\nSHOPIFY_ADMIN_ACCESS_TOKEN = os.getenv('SHOPIFY_ADMIN_ACCESS_TOKEN')\n# On utilise le même chemin que le bot pour avoir une seule DB",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "REVIEWS_MAKER_API_KEY",
+        "kind": 5,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "REVIEWS_MAKER_API_KEY = os.getenv('REVIEWS_MAKER_API_KEY')\nif not REVIEWS_MAKER_API_KEY:\n    raise ValueError(\"REVIEWS_MAKER_API_KEY est requis dans le fichier .env\")\n# Récupération des secrets depuis les variables d'environnement SMTP\nSENDER_EMAIL = os.getenv('SENDER_EMAIL')\nINFOMANIAK_APP_PASSWORD = os.getenv('INFOMANIAK_APP_PASSWORD')\nSHOPIFY_ADMIN_ACCESS_TOKEN = os.getenv('SHOPIFY_ADMIN_ACCESS_TOKEN')\n# On utilise le même chemin que le bot pour avoir une seule DB\nBASE_DIR = os.path.dirname(os.path.abspath(__file__))\nparis_tz = timezone(timedelta(hours=2))",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "SENDER_EMAIL",
+        "kind": 5,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "SENDER_EMAIL = os.getenv('SENDER_EMAIL')\nINFOMANIAK_APP_PASSWORD = os.getenv('INFOMANIAK_APP_PASSWORD')\nSHOPIFY_ADMIN_ACCESS_TOKEN = os.getenv('SHOPIFY_ADMIN_ACCESS_TOKEN')\n# On utilise le même chemin que le bot pour avoir une seule DB\nBASE_DIR = os.path.dirname(os.path.abspath(__file__))\nparis_tz = timezone(timedelta(hours=2))\nCLAIMED_WELCOME_CODES_FILE = os.path.join(BASE_DIR, \"claimed_welcome_codes.json\")\nWELCOME_CODES_FILE = os.path.join(BASE_DIR, \"welcome_codes.txt\")\n# --- Initialisation de la Base de Données ---\n# Dans app.py",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "INFOMANIAK_APP_PASSWORD",
+        "kind": 5,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "INFOMANIAK_APP_PASSWORD = os.getenv('INFOMANIAK_APP_PASSWORD')\nSHOPIFY_ADMIN_ACCESS_TOKEN = os.getenv('SHOPIFY_ADMIN_ACCESS_TOKEN')\n# On utilise le même chemin que le bot pour avoir une seule DB\nBASE_DIR = os.path.dirname(os.path.abspath(__file__))\nparis_tz = timezone(timedelta(hours=2))\nCLAIMED_WELCOME_CODES_FILE = os.path.join(BASE_DIR, \"claimed_welcome_codes.json\")\nWELCOME_CODES_FILE = os.path.join(BASE_DIR, \"welcome_codes.txt\")\n# --- Initialisation de la Base de Données ---\n# Dans app.py\ndef initialize_db():",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "SHOPIFY_ADMIN_ACCESS_TOKEN",
+        "kind": 5,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "SHOPIFY_ADMIN_ACCESS_TOKEN = os.getenv('SHOPIFY_ADMIN_ACCESS_TOKEN')\n# On utilise le même chemin que le bot pour avoir une seule DB\nBASE_DIR = os.path.dirname(os.path.abspath(__file__))\nparis_tz = timezone(timedelta(hours=2))\nCLAIMED_WELCOME_CODES_FILE = os.path.join(BASE_DIR, \"claimed_welcome_codes.json\")\nWELCOME_CODES_FILE = os.path.join(BASE_DIR, \"welcome_codes.txt\")\n# --- Initialisation de la Base de Données ---\n# Dans app.py\ndef initialize_db():\n    \"\"\"Initialise les tables pour la liaison de comptes, les rappels et la liste noire dans la DB partagée.\"\"\"",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "BASE_DIR",
+        "kind": 5,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "BASE_DIR = os.path.dirname(os.path.abspath(__file__))\nparis_tz = timezone(timedelta(hours=2))\nCLAIMED_WELCOME_CODES_FILE = os.path.join(BASE_DIR, \"claimed_welcome_codes.json\")\nWELCOME_CODES_FILE = os.path.join(BASE_DIR, \"welcome_codes.txt\")\n# --- Initialisation de la Base de Données ---\n# Dans app.py\ndef initialize_db():\n    \"\"\"Initialise les tables pour la liaison de comptes, les rappels et la liste noire dans la DB partagée.\"\"\"\n    print(f\"INFO: Initialisation des tables dans la base de données: {DB_FILE}\")\n    with get_db_connection() as conn:",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "paris_tz",
+        "kind": 5,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "paris_tz = timezone(timedelta(hours=2))\nCLAIMED_WELCOME_CODES_FILE = os.path.join(BASE_DIR, \"claimed_welcome_codes.json\")\nWELCOME_CODES_FILE = os.path.join(BASE_DIR, \"welcome_codes.txt\")\n# --- Initialisation de la Base de Données ---\n# Dans app.py\ndef initialize_db():\n    \"\"\"Initialise les tables pour la liaison de comptes, les rappels et la liste noire dans la DB partagée.\"\"\"\n    print(f\"INFO: Initialisation des tables dans la base de données: {DB_FILE}\")\n    with get_db_connection() as conn:\n        cursor = conn.cursor()",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "CLAIMED_WELCOME_CODES_FILE",
+        "kind": 5,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "CLAIMED_WELCOME_CODES_FILE = os.path.join(BASE_DIR, \"claimed_welcome_codes.json\")\nWELCOME_CODES_FILE = os.path.join(BASE_DIR, \"welcome_codes.txt\")\n# --- Initialisation de la Base de Données ---\n# Dans app.py\ndef initialize_db():\n    \"\"\"Initialise les tables pour la liaison de comptes, les rappels et la liste noire dans la DB partagée.\"\"\"\n    print(f\"INFO: Initialisation des tables dans la base de données: {DB_FILE}\")\n    with get_db_connection() as conn:\n        cursor = conn.cursor()\n        # Table principale user_links avec toutes les colonnes",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "WELCOME_CODES_FILE",
+        "kind": 5,
+        "importPath": "docs.scripts data LaFoncedalleBot.app",
+        "description": "docs.scripts data LaFoncedalleBot.app",
+        "peekOfCode": "WELCOME_CODES_FILE = os.path.join(BASE_DIR, \"welcome_codes.txt\")\n# --- Initialisation de la Base de Données ---\n# Dans app.py\ndef initialize_db():\n    \"\"\"Initialise les tables pour la liaison de comptes, les rappels et la liste noire dans la DB partagée.\"\"\"\n    print(f\"INFO: Initialisation des tables dans la base de données: {DB_FILE}\")\n    with get_db_connection() as conn:\n        cursor = conn.cursor()\n        # Table principale user_links avec toutes les colonnes\n        cursor.execute(\"\"\"",
+        "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
         "label": "get_discord_user_by_email",
         "kind": 2,
         "importPath": "code_pour_lafoncedalle",
