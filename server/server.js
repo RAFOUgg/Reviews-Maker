@@ -116,6 +116,21 @@ app.use(express.static(path.join(__dirname, '..'), {
     }
   }
 })); // servir les fichiers front
+// Support hosting the frontend under a base path like /reviews by
+// transparently rewriting requests sent to /reviews/api/* -> /api/*
+// This keeps the frontend code unchanged (it detects basePath=/reviews)
+// while the server continues to register routes at /api/*.
+app.use((req, _res, next) => {
+  try {
+    if (req.path && req.path.startsWith('/reviews/api/')) {
+      // remove the leading /reviews prefix so routes match /api/...
+      req.url = req.url.replace(/^\/reviews/, '');
+      // optionally log for debugging (kept minimal)
+      console.debug('[path-rewrite] Rewrote request to', req.url);
+    }
+  } catch (e) {}
+  next();
+});
 // Auth middleware (optional): accepts X-Auth-Token header; matches file in tokens dir
 function resolveOwnerIdFromToken(token) {
   if (!token) return null;
