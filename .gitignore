@@ -10,3 +10,4 @@ server/package-lock.json
 # Logs
 *.log
 npm-debug.log*
+.env
