@@ -392,63 +392,133 @@ function generateCode() {
 }
 
 // Helper: Verify email against Discord bot database and get Discord user info
+// The LaFoncedalleBot API has evolved over time; to be resilient we try several
+// candidate endpoints/methods and normalize the returned user object.
 async function getDiscordUserByEmail(email) {
-  try {
-    const response = await fetch(`${LAFONCEDALLE_API_URL}/api/discord/user-by-email`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${LAFONCEDALLE_API_KEY}`
-      },
-      body: JSON.stringify({ email })
-    });
-    
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null; // Email not found in Discord database
+  const candidates = [
+    { method: 'POST', path: '/api/discord/user-by-email', body: { email } },
+    { method: 'POST', path: '/api/users/find-by-email', body: { email } },
+    { method: 'GET', path: `/api/users?email=${encodeURIComponent(email)}` },
+    { method: 'POST', path: '/api/user/by-email', body: { email } },
+    // legacy / alternate
+    { method: 'POST', path: '/api/discord/find_user', body: { email } }
+  ];
+
+  let lastError = null;
+  for (const cand of candidates) {
+    try {
+      const url = LAFONCEDALLE_API_URL.replace(/\/$/, '') + cand.path;
+      const opts = { method: cand.method, headers: { 'Authorization': `Bearer ${LAFONCEDALLE_API_KEY}` } };
+      if (cand.method === 'POST') {
+        opts.headers['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(cand.body || {});
       }
-      throw new Error(`LaFoncedalle API error: ${response.status}`);
+
+      const response = await fetch(url, opts);
+
+      // If 404 => not found for this endpoint / email
+      if (response.status === 404) {
+        // try next candidate
+        lastError = new Error('not_found');
+        continue;
+      }
+
+      // Some deployments may return HTML error pages (502/404) — handle gracefully
+      const ct = response.headers.get('content-type') || '';
+      if (!response.ok) {
+        const text = await response.text().catch(() => '');
+        console.warn(`[LaFoncedalle] ${cand.method} ${cand.path} returned ${response.status}: ${String(text).slice(0,200)}`);
+        lastError = new Error(`status_${response.status}`);
+        continue;
+      }
+
+      // Try parse JSON, but accept text and attempt to extract JSON-looking content
+      let data = null;
+      if (ct.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        try { data = JSON.parse(text); } catch (e) { data = null; }
+      }
+
+      if (!data) {
+        // If endpoint returns a wrapped object like { user: { ... } }
+        // attempt to detect JSON-like string in text body
+        lastError = new Error('invalid_json');
+        continue;
+      }
+
+      // Normalize various possible field names to a common shape
+      const user = data.user || data.data || data;
+      const normalized = {
+        discordId: user.discordId || user.discord_id || user.id || user.user_id || user.discord || null,
+        username: user.username || user.user_name || user.displayName || user.name || user.discord_username || null,
+        email: user.email || user.mail || email
+      };
+
+      // If there's no discord id, treat as not found
+      if (!normalized.discordId && !normalized.username) {
+        lastError = new Error('not_found');
+        continue;
+      }
+
+      return normalized;
+    } catch (err) {
+      console.warn('[LaFoncedalle] candidate lookup failed', cand.path, err && err.message ? err.message : err);
+      lastError = err;
+      continue;
     }
-    
-    const data = await response.json();
-    // Expected format: { discordId: "123456", username: "User#1234", email: "..." }
-    return data;
-  } catch (error) {
-    console.error('[Discord] Error verifying email:', error);
-    throw error;
   }
+
+  // If all candidates failed and lastError indicates not_found -> return null
+  if (lastError && lastError.message === 'not_found') return null;
+  // otherwise propagate a generic error
+  if (lastError) {
+    console.error('[Discord] All lookup attempts failed:', lastError.message || lastError);
+    throw lastError;
+  }
+  return null;
 }
 
 // Helper: Send verification email via LaFoncedalle mailing service
 async function sendVerificationEmail(email, code) {
-  try {
-    const response = await fetch(`${LAFONCEDALLE_API_URL}/api/mail/send-verification`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${LAFONCEDALLE_API_KEY}`
-      },
-      body: JSON.stringify({
-        to: email,
-        code: code,
-        subject: 'Code de vérification Reviews Maker',
-        // Optional: custom template parameters
-        appName: 'Reviews Maker',
-        expiryMinutes: 10
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`LaFoncedalle mailing API error: ${response.status}`);
+  // Try several possible mail endpoints (APIs vary across deployments)
+  const candidates = [
+    { method: 'POST', path: '/api/mail/send-verification', body: { to: email, code, subject: 'Code de vérification Reviews Maker', appName: 'Reviews Maker', expiryMinutes: 10 } },
+    { method: 'POST', path: '/api/email/send', body: { to: email, code, subject: 'Code de vérification Reviews Maker' } },
+    { method: 'POST', path: '/api/notify/send-verification', body: { to: email, code } }
+  ];
+
+  let lastErr = null;
+  for (const cand of candidates) {
+    try {
+      const url = LAFONCEDALLE_API_URL.replace(/\/$/, '') + cand.path;
+      const opts = { method: cand.method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${LAFONCEDALLE_API_KEY}` }, body: JSON.stringify(cand.body || {}) };
+      const response = await fetch(url, opts);
+      if (!response.ok) {
+        const txt = await response.text().catch(() => '');
+        console.warn(`[LaFoncedalle][mail] ${cand.path} returned ${response.status}: ${String(txt).slice(0,200)}`);
+        lastErr = new Error(`status_${response.status}`);
+        continue;
+      }
+      const ct = response.headers.get('content-type') || '';
+      let result = null;
+      if (ct.includes('application/json')) result = await response.json();
+      else {
+        const t = await response.text();
+        try { result = JSON.parse(t); } catch { result = { ok: true }; }
+      }
+      console.log(`[EMAIL] Verification code sent to ${email} via LaFoncedalle (${cand.path})`);
+      return result;
+    } catch (err) {
+      console.warn('[EMAIL] candidate failed', cand.path, err && err.message ? err.message : err);
+      lastErr = err;
+      continue;
     }
-    
-    const result = await response.json();
-    console.log(`[EMAIL] Verification code sent to ${email} via LaFoncedalle`);
-    return result;
-  } catch (error) {
-    console.error('[EMAIL] Error sending verification code:', error);
-    throw error;
   }
+
+  console.error('[EMAIL] All mail endpoints failed:', lastErr && (lastErr.message || lastErr));
+  throw lastErr || new Error('mail_failed');
 }
 
 // POST /api/auth/send-code - Request verification code
@@ -607,9 +677,10 @@ app.get('/api/auth/me', async (req, res) => {
   
   // Fetch real username from LaFoncedalle database
   try {
-    const discordUser = await getDiscordUserByEmail(email);
-    if (discordUser && discordUser.user_name) {
-      discordUsername = discordUser.user_name;
+    const discordUser = await getDiscordUserByEmail(email).catch(e => null);
+    if (discordUser) {
+      // accept multiple possible username fields
+      discordUsername = discordUser.username || discordUser.user_name || discordUser.displayName || discordUser.name || discordUsername;
     }
   } catch (error) {
     console.error('[AUTH] Failed to fetch Discord username:', error);

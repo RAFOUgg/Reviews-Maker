@@ -1462,7 +1462,8 @@ function setupModalEvents() {
       
       try {
         // ÉTAPE 1: Vérifier si l'email existe dans la base Discord
-        const checkResponse = await fetch(AUTH_API_BASE + '/api/discord/user-by-email', {
+  const authBase = AUTH_API_BASE || remoteBase;
+  const checkResponse = await fetch(authBase + '/api/discord/user-by-email', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -1487,7 +1488,7 @@ function setupModalEvents() {
         sessionStorage.setItem('pendingCode', code);
         sessionStorage.setItem('authEmail', email);
         
-        const sendResponse = await fetch(remoteBase + '/api/mail/send-verification', {
+  const sendResponse = await fetch((AUTH_API_BASE || remoteBase) + '/api/mail/send-verification', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -1596,7 +1597,7 @@ function setupModalEvents() {
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         sessionStorage.setItem('pendingCode', code);
         
-        const sendResponse = await fetch(AUTH_API_BASE + '/api/mail/send-verification', {
+  const sendResponse = await fetch((AUTH_API_BASE || remoteBase) + '/api/mail/send-verification', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
