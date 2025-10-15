@@ -22,6 +22,9 @@ fs.mkdirSync(TOKENS_DIR, { recursive: true });
 const LAFONCEDALLE_API_URL = process.env.LAFONCEDALLE_API_URL || 'http://localhost:3001'; // URL de l'API LaFoncedalle
 const LAFONCEDALLE_API_KEY = process.env.LAFONCEDALLE_API_KEY || 'your-api-key'; // Clé API pour authentifier les requêtes
 
+// LaFoncedalleBot Database Configuration (nouvelle architecture)
+const LAFONCEDALLE_DB_FILE = process.env.LAFONCEDALLE_DB_FILE || path.join(__dirname, '..', 'docs', 'scripts data LaFoncedalleBot', 'db', 'data.db');
+
 // Email auth: store verification codes temporarily (in production, use Redis)
 const verificationCodes = new Map(); // email -> {code, expires, attempts, discordUser}
 const CODE_EXPIRY = 10 * 60 * 1000; // 10 minutes
@@ -391,10 +394,62 @@ function generateCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+// Helper: Query LaFoncedalleBot database directly (nouvelle architecture)
+async function getDiscordUserFromDB(email) {
+  return new Promise((resolve, reject) => {
+    const db = new sqlite3.Database(LAFONCEDALLE_DB_FILE, sqlite3.OPEN_READONLY, (err) => {
+      if (err) {
+        console.warn('[LaFoncedalle][DB] Could not open LaFoncedalleBot database:', err.message);
+        return resolve(null);
+      }
+      
+      db.get(
+        "SELECT discord_id, user_email, user_name FROM user_links WHERE LOWER(user_email) = ? AND active = 1",
+        [email.toLowerCase()],
+        (err, row) => {
+          db.close();
+          
+          if (err) {
+            console.warn('[LaFoncedalle][DB] Query error:', err.message);
+            return resolve(null);
+          }
+          
+          if (!row) {
+            console.log(`[LaFoncedalle][DB] Email ${email} not found in database`);
+            return resolve(null);
+          }
+          
+          const username = row.user_name || `User#${row.discord_id.slice(-4)}`;
+          
+          console.log(`[LaFoncedalle][DB] Found user: ${username} (${row.discord_id})`);
+          
+          resolve({
+            discordId: row.discord_id,
+            username: username,
+            email: row.user_email
+          });
+        }
+      );
+    });
+  });
+}
+
 // Helper: Verify email against Discord bot database and get Discord user info
 // The LaFoncedalleBot API has evolved over time; to be resilient we try several
 // candidate endpoints/methods and normalize the returned user object.
+// Nouvelle architecture: Try database first, then API as fallback
 async function getDiscordUserByEmail(email) {
+  // 1. Try database first (nouvelle architecture)
+  try {
+    const dbUser = await getDiscordUserFromDB(email);
+    if (dbUser) {
+      return dbUser;
+    }
+  } catch (err) {
+    console.warn('[LaFoncedalle] Database query failed, trying API:', err.message);
+  }
+  
+  // 2. Fallback to API calls (legacy)
   const candidates = [
     { method: 'POST', path: '/api/discord/user-by-email', body: { email } },
     { method: 'POST', path: '/api/users/find-by-email', body: { email } },
