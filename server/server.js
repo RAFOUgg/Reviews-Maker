@@ -30,6 +30,10 @@ const LAFONCEDALLE_DB_FILE = process.env.LAFONCEDALLE_DB_FILE;
 if (!LAFONCEDALLE_DB_FILE) {
   console.warn('[CONFIG] LAFONCEDALLE_DB_FILE non défini - utilisation de la DB directe désactivée');
 }
+else {
+  // explicit startup log to help debugging env issues under PM2
+  console.log(`[CONFIG] LAFONCEDALLE_DB_FILE configuré: ${LAFONCEDALLE_DB_FILE}`);
+}
 
 // Email auth: store verification codes temporarily (in production, use Redis)
 const verificationCodes = new Map(); // email -> {code, expires, attempts, discordUser}
