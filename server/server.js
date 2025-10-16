@@ -3,6 +3,7 @@ import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import 'dotenv/config';
 import sqlite3 from 'sqlite3';
 import { fileURLToPath } from 'url';
@@ -20,7 +21,7 @@ const TOKENS_DIR = path.join(__dirname, '..', 'server', 'tokens');
 fs.mkdirSync(TOKENS_DIR, { recursive: true });
 
 // LaFoncedalle API Configuration
-const LAFONCEDALLE_API_URL = process.env.LAFONCEDALLE_API_URL || 'http://localhost:3001'; // URL de l'API LaFoncedalle
+const LAFONCEDALLE_API_URL = process.env.LAFONCEDALLE_API_URL || 'http://localhost:5000'; // URL de l'API LaFoncedalle
 const LAFONCEDALLE_API_KEY = process.env.LAFONCEDALLE_API_KEY || 'your-api-key'; // Clé API pour authentifier les requêtes
 // Log explicit de la configuration pour faciliter le debug (PM2 / docker / .env)
 console.log(`[CONFIG] LAFONCEDALLE_API_URL=${LAFONCEDALLE_API_URL}`);
@@ -28,7 +29,7 @@ console.log(`[CONFIG] LAFONCEDALLE_API_URL=${LAFONCEDALLE_API_URL}`);
 // LaFoncedalleBot Database Configuration (nouvelle architecture)
 // IMPORTANT: Sur le VPS, définir LAFONCEDALLE_DB_FILE avec le chemin absolu vers la DB du bot
 // Exemple: /home/user/lafoncedallebot/db/data.db
-const LAFONCEDALLE_DB_FILE = process.env.LAFONCEDALLE_DB_FILE;pm2 logs reviews-maker --lines 200
+const LAFONCEDALLE_DB_FILE = process.env.LAFONCEDALLE_DB_FILE;
 
 if (!LAFONCEDALLE_DB_FILE) {
   console.warn('[CONFIG] LAFONCEDALLE_DB_FILE non défini - utilisation de la DB directe désactivée');
@@ -705,8 +706,8 @@ app.post('/api/auth/verify-code', (req, res) => {
     });
   }
   
-  // Success! Generate session token
-  const token = Buffer.from(`${email}:${Date.now()}:${Math.random()}`).toString('base64');
+  // Success! Generate filesystem-safe session token
+  const token = crypto.randomBytes(24).toString('hex');
   
   // Store token with Discord user information
   const tokenFile = path.join(TOKENS_DIR, token);
