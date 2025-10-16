@@ -1868,8 +1868,8 @@ async function updateAuthUI() {
   // Update floating button
   if (dom.floatingAuthBtn) {
     if (isConnected) {
-      dom.floatingAuthBtn.innerHTML = '<span aria-hidden="true">✓</span>';
-      dom.floatingAuthBtn.title = "Compte lié";
+      dom.floatingAuthBtn.innerHTML = '<span aria-hidden="true">👤</span>';
+      dom.floatingAuthBtn.title = "Compte";
       dom.floatingAuthBtn.classList.add('connected');
     } else {
       dom.floatingAuthBtn.innerHTML = '<span aria-hidden="true">🔗</span>';
