@@ -573,10 +573,34 @@ async function getDiscordUserByEmail(email) {
 // Helper: Send verification email via LaFoncedalle mailing service
 async function sendVerificationEmail(email, code) {
   // Try several possible mail endpoints (APIs vary across deployments)
+  // Build an email-safe HTML body (table-based, inline styles) to improve rendering
+  const safeHtml = `<!doctype html>
+  <html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+  <body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="padding:20px 0;">
+    <tr><td align="center">
+      <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;width:100%;background:#ffffff;border-radius:10px;overflow:hidden;">
+        <tr><td style="padding:18px 22px 8px 22px;color:#111;">
+          <h2 style="margin:0;font-size:18px;color:#0f1724;">🔒 Code de vérification Reviews Maker</h2>
+          <p style="margin:8px 0 0 0;color:#4b5563;font-size:14px;">Bonjour, voici votre code de vérification. Il expire dans 10 minutes.</p>
+        </td></tr>
+        <tr><td align="center" style="padding:18px 22px 22px 22px;background:#0f1628;">
+          <table role="presentation" cellpadding="0" cellspacing="0" style="background:#0f1628;border-radius:8px;padding:18px 24px;">
+            <tr><td style="color:#fff;font-size:28px;letter-spacing:4px;text-align:center;font-weight:700;">${code}</td></tr>
+          </table>
+        </td></tr>
+        <tr><td style="padding:14px 22px 20px 22px;color:#555;font-size:13px;line-height:1.4;">Si vous n'avez pas demandé ce code, ignorez ce message.</td></tr>
+      </table>
+    </td></tr>
+  </table>
+  </body></html>`;
+
+  const plainText = `Code de vérification Reviews Maker\n\nVotre code : ${code}\n\nCe code expire dans 10 minutes. Si vous n'avez pas demandé ce code, ignorez ce message.`;
+
   const candidates = [
-    { method: 'POST', path: '/api/mail/send-verification', body: { to: email, code, subject: 'Code de vérification Reviews Maker', appName: 'Reviews Maker', expiryMinutes: 10 } },
-    { method: 'POST', path: '/api/email/send', body: { to: email, code, subject: 'Code de vérification Reviews Maker' } },
-    { method: 'POST', path: '/api/notify/send-verification', body: { to: email, code } }
+    { method: 'POST', path: '/api/mail/send-verification', body: { to: email, code, subject: 'Code de vérification Reviews Maker', appName: 'Reviews Maker', expiryMinutes: 10, html: safeHtml, text: plainText } },
+    { method: 'POST', path: '/api/email/send', body: { to: email, code, subject: 'Code de vérification Reviews Maker', html: safeHtml, text: plainText } },
+    { method: 'POST', path: '/api/notify/send-verification', body: { to: email, code, html: safeHtml, text: plainText } }
   ];
 
   let lastErr = null;
