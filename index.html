@@ -172,6 +172,73 @@
   </div>
 
   <!-- Modal Connexion / Authentification -->
+    <!-- Redesigned Account Modal (same structure as in review.html) -->
+    <div class="modal" id="accountModal" style="display:none;">
+      <div class="modal-overlay" id="accountModalOverlay"></div>
+      <div class="modal-content account-modal-content" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
+        <header class="modal-header">
+          <h2 id="accountTitle">Mon compte</h2>
+          <button type="button" class="modal-close" id="closeAccountModal" aria-label="Fermer">✕</button>
+        </header>
+
+        <div class="modal-body account-modal-inner">
+          <!-- Left column: profile & stats -->
+          <div class="account-left">
+            <div class="account-profile">
+              <div class="account-avatar" aria-hidden="true">👤</div>
+              <div class="account-meta">
+                <div id="accountEmail">—</div>
+                <div class="sub">Membre Reviews Maker</div>
+              </div>
+            </div>
+
+            <div class="account-stats">
+              <div class="stat-card">
+                <div class="num" id="accountTotal">0</div>
+                <div class="label">Total</div>
+              </div>
+              <div class="stat-card">
+                <div class="num" id="statPublic">0</div>
+                <div class="label">Public</div>
+              </div>
+              <div class="stat-card">
+                <div class="num" id="statPrivate">0</div>
+                <div class="label">Privé</div>
+              </div>
+            </div>
+
+            <div>
+              <h4 class="section-title">Répartition par type</h4>
+              <div id="accountStatsByType" class="account-stats-by-type"></div>
+            </div>
+          </div>
+
+          <!-- Right column: actions & preferences -->
+          <aside class="account-right">
+            <div class="account-actions panel-section">
+              <h4 class="section-title">Actions</h4>
+              <div class="action-list">
+                <button class="btn btn-outline" id="openLibraryFromAccount">Ma bibliothèque</button>
+                <button class="btn btn-outline" id="accountDisconnect">Se déconnecter</button>
+              </div>
+            </div>
+
+            <div class="account-preferences panel-section">
+              <h4 class="section-title">Préférences</h4>
+              <div class="form-group">
+                <label for="themeSelect">Thème</label>
+                <select id="themeSelect" class="theme-select">
+                  <option value="auto">Automatique</option>
+                  <option value="dark">Sombre</option>
+                  <option value="light">Clair</option>
+                </select>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+
   <div class="modal" id="authModal" style="display: none;">
     <div class="modal-overlay" id="authModalOverlay"></div>
     <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="authTitle">
