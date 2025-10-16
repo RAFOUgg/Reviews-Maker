@@ -1058,6 +1058,16 @@ function initHomePage() {
   dom.authConnPrivate = document.getElementById('authConnPrivate');
   dom.authConnByType = document.getElementById('authConnByType');
   dom.authOpenLibrary = document.getElementById('authOpenLibrary');
+  // Public profile modal elements
+  dom.publicProfileModal = document.getElementById('publicProfileModal');
+  dom.publicProfileOverlay = document.getElementById('publicProfileOverlay');
+  dom.closePublicProfile = document.getElementById('closePublicProfile');
+  dom.publicProfileEmail = document.getElementById('publicProfileEmail');
+  dom.publicTotal = document.getElementById('publicTotal');
+  dom.publicPublic = document.getElementById('publicPublic');
+  dom.publicPrivate = document.getElementById('publicPrivate');
+  dom.publicByType = document.getElementById('publicByType');
+  dom.publicViewLibrary = document.getElementById('publicViewLibrary');
 
   console.log('DOM elements found:', {
     typeCards: dom.typeCards.length,
@@ -2101,6 +2111,70 @@ function closeAccountModal() {
   dom.accountModal.setAttribute('aria-hidden','true');
   releaseFocusTrap();
   try { document.body.classList.remove('modal-open'); } catch(e){}
+}
+
+// Public profile (read-only) helpers
+async function populatePublicProfile(email) {
+  try {
+    if (dom.publicProfileEmail) dom.publicProfileEmail.textContent = email || '—';
+    // Try to fetch from API first if available
+    let byType = {};
+    let total = 0, pub = 0, priv = 0;
+    try {
+      const token = localStorage.getItem('authToken');
+      if (token && remoteBase) {
+        const resp = await fetch(`${remoteBase}/api/users/stats?email=${encodeURIComponent(email)}`, { headers: { 'X-Auth-Token': token } });
+        if (resp.ok) {
+          const d = await resp.json();
+          total = d.total || 0; pub = d.public || 0; priv = d.private || 0; byType = d.by_type || d.types || {};
+        }
+      }
+    } catch(e) { /* ignore */ }
+    // fallback to local DB if needed
+    if (!total) {
+      try {
+        const all = await dbGetAllReviews();
+        const userReviews = (all || []).filter(r => r.ownerEmail === email || (r.owner && r.owner.email === email));
+        const seen = new Set();
+        const unique = [];
+        userReviews.forEach(r => { if (r && r.id && !seen.has(r.id)) { seen.add(r.id); unique.push(r); } });
+        total = unique.length;
+        pub = unique.filter(r => !r.isPrivate).length;
+        priv = unique.filter(r => !!r.isPrivate).length;
+        const map = {};
+        unique.forEach(r => { const t = r.productType || r.type || 'Autre'; map[t] = (map[t]||0)+1; });
+        byType = map;
+      } catch(e) { /* ignore */ }
+    }
+    if (dom.publicTotal) dom.publicTotal.textContent = total;
+    if (dom.publicPublic) dom.publicPublic.textContent = pub;
+    if (dom.publicPrivate) dom.publicPrivate.textContent = priv;
+    if (dom.publicByType) {
+      dom.publicByType.innerHTML = '';
+      Object.keys(byType || {}).forEach(k => {
+        const el = document.createElement('div'); el.className = 'type-pill'; el.textContent = `${k}: ${byType[k]}`; dom.publicByType.appendChild(el);
+      });
+    }
+  } catch(e) { console.warn('populatePublicProfile', e); }
+}
+
+function openPublicProfile(email) {
+  try {
+    const overlay = document.getElementById('publicProfileOverlay'); if (overlay) overlay.classList.add('show');
+    const modal = document.getElementById('publicProfileModal'); if (modal) { modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); }
+    try { document.body.classList.add('modal-open'); } catch(e){}
+    populatePublicProfile(email).catch(()=>{});
+  } catch(e){}
+}
+
+if (typeof window !== 'undefined') {
+  try { document.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'closePublicProfile') {
+      const overlay = document.getElementById('publicProfileOverlay'); if (overlay) overlay.classList.remove('show');
+      const modal = document.getElementById('publicProfileModal'); if (modal) { modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); }
+      try { document.body.classList.remove('modal-open'); } catch(e){}
+    }
+  }); } catch(e){}
 }
 
 // Focus trap utilities
