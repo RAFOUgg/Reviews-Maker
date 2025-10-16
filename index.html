@@ -271,15 +271,19 @@
           
           <!-- Étape 3: Connecté -->
           <div id="authStepConnected" class="auth-step" style="display:none;">
-            <p class="auth-info">Connecté en tant que <strong id="authConnectedEmail"></strong></p>
-            <div class="auth-account-summary" style="margin-top:10px;">
-              <div style="display:flex; gap:12px; align-items:center;">
-                <div><strong id="authConnTotal">0</strong><div style="font-size:0.85rem;color:var(--text-muted);">Total</div></div>
-                <div><strong id="authConnPublic">0</strong><div style="font-size:0.85rem;color:var(--text-muted);">Public</div></div>
-                <div><strong id="authConnPrivate">0</strong><div style="font-size:0.85rem;color:var(--text-muted);">Privé</div></div>
+            <div class="account-profile" style="margin-bottom:10px;">
+              <div class="account-avatar">👤</div>
+              <div class="account-meta">
+                <div id="authConnectedEmail" class="email">—</div>
+                <div class="sub">Membre Reviews Maker</div>
               </div>
-              <div id="authConnByType" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;"></div>
             </div>
+            <div class="stats-grid" style="margin-bottom:10px;">
+              <div class="stat-card"><div class="num" id="authConnTotal">0</div><div class="label">Total</div></div>
+              <div class="stat-card"><div class="num" id="authConnPublic">0</div><div class="label">Public</div></div>
+              <div class="stat-card"><div class="num" id="authConnPrivate">0</div><div class="label">Privé</div></div>
+            </div>
+            <div style="margin-top:10px;"><h4 class="section-title">Répartition par type</h4><div id="authConnByType" class="account-stats-by-type"></div></div>
             <div class="auth-actions" style="margin-top:12px;">
               <button type="button" class="btn btn-outline" id="authOpenLibrary">Ma bibliothèque</button>
               <button type="button" class="btn btn-outline" id="authDisconnect">Se déconnecter</button>
