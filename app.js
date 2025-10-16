@@ -2117,6 +2117,40 @@ function closeAccountModal() {
 async function populatePublicProfile(email) {
   try {
     if (dom.publicProfileEmail) dom.publicProfileEmail.textContent = email || '—';
+    // Determine ownership: if the profile email matches the signed-in email,
+    // show settings/actions that are only available to the owner.
+    try {
+      const me = (localStorage.getItem('authEmail') || '').toLowerCase();
+      const isOwner = me && email && me === String(email).toLowerCase();
+      // Show/hide the dedicated settings button in the public profile header
+      const hdrSettingsBtn = document.getElementById('publicProfileSettingsBtn');
+      if (hdrSettingsBtn) {
+        hdrSettingsBtn.style.display = isOwner ? 'inline-flex' : 'none';
+        // ensure no duplicate listeners
+        hdrSettingsBtn.onclick = null;
+        if (isOwner) {
+          hdrSettingsBtn.addEventListener('click', () => {
+            // Close public profile and open account modal to settings
+            try {
+              const overlay = document.getElementById('publicProfileOverlay'); if (overlay) overlay.classList.remove('show');
+              const modal = document.getElementById('publicProfileModal'); if (modal) { modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); }
+              try { document.body.classList.remove('modal-open'); } catch(e){}
+            } catch(e){}
+            // Open account modal and reveal settings panel
+            try { openAccountModal(); } catch(e){}
+            try {
+              const settingsPanel = document.getElementById('accountSettingsPanel');
+              const prefs = document.getElementById('accountPreferences');
+              if (settingsPanel) settingsPanel.style.display = 'block';
+              if (prefs) prefs.style.display = 'none';
+            } catch(e){}
+          });
+        }
+      }
+      // Ensure the 'Voir la bibliothèque publique' action remains visible
+      const publicViewLibraryBtn = document.getElementById('publicViewLibrary');
+      if (publicViewLibraryBtn) publicViewLibraryBtn.style.display = 'inline-flex';
+    } catch(e) { /* ignore UI toggle failures */ }
     // Try to fetch from API first if available
     let byType = {};
     let total = 0, pub = 0, priv = 0;
@@ -2875,7 +2909,7 @@ async function renderCompactLibrary() {
       day: 'numeric',
       month: 'short'
     });
-    const holder = r.holderName ? ` • ${r.holderName}` : '';
+  const holder = r.holderName ? ` • ${r.holderName}` : '';
     
     // Image d'aperçu si disponible
     const imageHtml = r.image ? 
@@ -2888,12 +2922,22 @@ async function renderCompactLibrary() {
       <div class="compact-item-content">
         <div class="compact-item-title">${title}</div>
         <div class="compact-item-meta">${r.productType || "Review"} • ${date}${holder}</div>
+        ${r.holderName ? `<button type="button" class="author-link" data-author-email="${(r.holderEmail||'').replace(/\"/g,'')}">${r.holderName}</button>` : ''}
       </div>
     `;
     
     // Click to preview only (read-only)
     const openPreview = async () => { await openPreviewOnly(r); };
     item.addEventListener('click', openPreview);
+    // Make author link open public profile (delegated)
+    const authorBtn = item.querySelector('.author-link');
+    if (authorBtn) {
+      authorBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const email = authorBtn.getAttribute('data-author-email') || authorBtn.textContent || '';
+        if (email) openPublicProfile(email);
+      });
+    }
     
     dom.compactLibraryList.appendChild(item);
   });
