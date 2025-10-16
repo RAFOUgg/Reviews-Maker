@@ -43,9 +43,10 @@
             <span aria-hidden="true">💡</span>
             Astuces
           </span>
-          <button type="button" class="pill-btn" id="openLibrary" title="Consulter les reviews enregistrées">
-            <span aria-hidden="true">📁</span>
-            Ma Bibliothèque
+          <!-- Top account button (hidden by default, shown when connected) -->
+          <button type="button" class="pill-btn" id="topAccountBtn" title="Compte" style="display:none;">
+            <span aria-hidden="true">�</span>
+            Compte
           </button>
         </div>
       </div>
@@ -277,6 +278,48 @@
     <button type="button" class="floating-auth-btn" id="floatingAuthBtn" title="Lier mon compte">
       <span aria-hidden="true">🔗</span>
     </button>
+
+    <!-- Account Modal: shows account summary, stats and theme selector -->
+    <div class="modal" id="accountModal" style="display:none;">
+      <div class="modal-overlay" id="accountModalOverlay"></div>
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
+        <div class="modal-header">
+          <h2 id="accountTitle">Compte</h2>
+          <button type="button" class="modal-close" id="closeAccountModal" aria-label="Fermer">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="accountView">
+            <div class="account-summary">
+              <p>Connecté en tant que <strong id="accountEmail">—</strong></p>
+              <div class="account-stats">
+                <div class="stat"><strong id="statPublic">0</strong><span>Reviews publiques</span></div>
+                <div class="stat"><strong id="statPrivate">0</strong><span>Reviews privées</span></div>
+                <div class="stat"><strong id="statFavType">—</strong><span>Type préféré</span></div>
+              </div>
+            </div>
+
+            <hr />
+
+            <section class="account-preferences">
+              <h3>Apparence</h3>
+              <div class="form-group">
+                <label for="themeSelect">Thème du site</label>
+                <select id="themeSelect" class="input">
+                  <option value="auto">Automatique (système)</option>
+                  <option value="dark">Sombre</option>
+                  <option value="light">Clair</option>
+                </select>
+              </div>
+            </section>
+
+            <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end;">
+              <button type="button" class="btn btn-outline" id="openLibraryFromAccount">Voir ma bibliothèque</button>
+              <button type="button" class="btn btn-primary" id="accountDisconnect">Se déconnecter</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <template id="tipsTemplate">
     <div class="toast" role="status" aria-live="polite">

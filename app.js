@@ -774,6 +774,23 @@ function init() {
   }, 500); // Délai pour s'assurer que les éléments sont chargés
 }
 
+// Apply theme from localStorage (or system) on load
+function applySavedTheme() {
+  const theme = localStorage.getItem('siteTheme') || 'auto';
+  if (theme === 'dark') {
+    document.documentElement.classList.add('theme-dark');
+    document.documentElement.classList.remove('theme-light');
+  } else if (theme === 'light') {
+    document.documentElement.classList.add('theme-light');
+    document.documentElement.classList.remove('theme-dark');
+  } else {
+    // auto: respect system
+    document.documentElement.classList.remove('theme-dark');
+    document.documentElement.classList.remove('theme-light');
+  }
+}
+applySavedTheme();
+
 function createMobileBottomNav() {
   // Vérifier si on est sur mobile
   const isMobile = window.innerWidth <= 768;
@@ -782,6 +799,7 @@ function createMobileBottomNav() {
   // Chercher les boutons de navigation existants
   const openLibrary = document.getElementById('openLibrary');
   const openTips = document.getElementById('openTips');
+  const topAccount = document.getElementById('topAccountBtn');
   
   if (!openLibrary || !openTips) return;
   
@@ -796,6 +814,11 @@ function createMobileBottomNav() {
   // Cloner les boutons et les ajouter à la navigation mobile
   const libraryBtn = openLibrary.cloneNode(true);
   const tipsBtn = openTips.cloneNode(true);
+
+  // Also add account button on mobile by cloning topAccount or floatingAuthBtn
+  let accountBtn = null;
+  if (topAccount) accountBtn = topAccount.cloneNode(true);
+  else if (document.getElementById('floatingAuthBtn')) accountBtn = document.getElementById('floatingAuthBtn').cloneNode(true);
   
   // Ajuster les IDs pour éviter les conflits
   libraryBtn.id = 'mobileOpenLibrary';
@@ -809,6 +832,15 @@ function createMobileBottomNav() {
   mobileNav.innerHTML = '';
   mobileNav.appendChild(libraryBtn);
   mobileNav.appendChild(tipsBtn);
+  if (accountBtn) {
+    accountBtn.id = 'mobileAccountBtn';
+    accountBtn.style.display = 'inline-flex';
+    accountBtn.addEventListener('click', () => {
+      const btn = document.getElementById('topAccountBtn') || document.getElementById('floatingAuthBtn');
+      if (btn) btn.click();
+    });
+    mobileNav.appendChild(accountBtn);
+  }
   
   // Copier les event listeners des boutons originaux
   libraryBtn.addEventListener('click', () => openLibrary.click());
@@ -1006,6 +1038,26 @@ function initHomePage() {
   dom.authStatus = document.getElementById("authStatus");
   dom.floatingAuthBtn = document.getElementById("floatingAuthBtn");
   dom.openLibrary = document.getElementById("openLibrary");
+  dom.topAccountBtn = document.getElementById('topAccountBtn');
+  dom.accountModal = document.getElementById('accountModal');
+  dom.accountModalOverlay = document.getElementById('accountModalOverlay');
+  dom.closeAccountModal = document.getElementById('closeAccountModal');
+  dom.accountEmail = document.getElementById('accountEmail');
+  dom.statPublic = document.getElementById('statPublic');
+  dom.statPrivate = document.getElementById('statPrivate');
+  dom.statFavType = document.getElementById('statFavType');
+  dom.themeSelect = document.getElementById('themeSelect');
+  dom.openLibraryFromAccount = document.getElementById('openLibraryFromAccount');
+  dom.topAccountBtn = document.getElementById('topAccountBtn');
+  dom.accountModal = document.getElementById('accountModal');
+  dom.accountModalOverlay = document.getElementById('accountModalOverlay');
+  dom.closeAccountModal = document.getElementById('closeAccountModal');
+  dom.accountEmail = document.getElementById('accountEmail');
+  dom.statPublic = document.getElementById('statPublic');
+  dom.statPrivate = document.getElementById('statPrivate');
+  dom.statFavType = document.getElementById('statFavType');
+  dom.themeSelect = document.getElementById('themeSelect');
+  dom.openLibraryFromAccount = document.getElementById('openLibraryFromAccount');
 
   console.log('DOM elements found:', {
     typeCards: dom.typeCards.length,
@@ -1429,6 +1481,11 @@ function setupModalEvents() {
   // Modal Auth - Email based
   if (dom.floatingAuthBtn) {
     dom.floatingAuthBtn.addEventListener("click", () => {
+      // If connected, open account modal instead of auth modal
+      if (isUserConnected && dom.accountModal) {
+        openAccountModal();
+        return;
+      }
       if (dom.authModal) {
         dom.authModal.style.display = "flex";
         updateAuthUI();
@@ -1445,6 +1502,44 @@ function setupModalEvents() {
   if (dom.authModalOverlay) {
     dom.authModalOverlay.addEventListener("click", () => {
       if (dom.authModal) dom.authModal.style.display = "none";
+    });
+  }
+
+  // Top account button (visible when connected)
+  if (dom.topAccountBtn) {
+    dom.topAccountBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (!isUserConnected) {
+        if (dom.authModal) dom.authModal.style.display = 'flex';
+        updateAuthUI();
+        return;
+      }
+      openAccountModal();
+    });
+  }
+
+  // Account modal handlers
+  if (dom.closeAccountModal) {
+    dom.closeAccountModal.addEventListener('click', () => closeAccountModal());
+  }
+  if (dom.accountModalOverlay) {
+    dom.accountModalOverlay.addEventListener('click', () => closeAccountModal());
+  }
+  if (dom.openLibraryFromAccount) {
+    dom.openLibraryFromAccount.addEventListener('click', () => {
+      closeAccountModal();
+      if (!isUserConnected) {
+        if (dom.authModal) dom.authModal.style.display = 'flex';
+        return;
+      }
+      openLibraryModal('mine');
+    });
+  }
+  if (dom.themeSelect) {
+    dom.themeSelect.addEventListener('change', (e) => {
+      const v = e.target.value;
+      localStorage.setItem('siteTheme', v);
+      applySavedTheme();
     });
   }
   
@@ -1791,6 +1886,16 @@ async function updateAuthUI() {
     dom.openLibrary.style.display = isConnected ? 'inline-flex' : 'none';
   }
 
+  // Show/hide top account button
+  if (dom.topAccountBtn) {
+    dom.topAccountBtn.style.display = isConnected ? 'inline-flex' : 'none';
+  }
+
+  // If connected, pre-render account summary
+  if (isConnected) {
+    try { await renderAccountView(); } catch (e) { /* ignore */ }
+  }
+
   if (dom.libraryModal && dom.libraryModal.style.display === 'flex') {
     await renderFullLibrary(currentLibraryMode);
   }
@@ -1826,6 +1931,68 @@ function showAuthStatus(message, type = "info") {
       newNotification.style.display = 'none';
     }
   }, 5000);
+}
+
+// Account modal helpers
+function openAccountModal() {
+  if (!dom.accountModal) return;
+  dom.accountModal.style.display = 'flex';
+  // ensure overlay exists
+  if (dom.accountModalOverlay) dom.accountModalOverlay.style.display = 'block';
+  renderAccountView().catch(err => console.warn('Failed to render account view', err));
+}
+
+function closeAccountModal() {
+  if (!dom.accountModal) return;
+  dom.accountModal.style.display = 'none';
+  if (dom.accountModalOverlay) dom.accountModalOverlay.style.display = 'none';
+}
+
+async function renderAccountView() {
+  // Show email
+  const email = localStorage.getItem('authEmail') || '—';
+  if (dom.accountEmail) dom.accountEmail.textContent = email;
+
+  // Default placeholder stats
+  let publicCount = 0;
+  let privateCount = 0;
+  let favType = '—';
+
+  // Try to fetch stats from API when token present
+  const token = localStorage.getItem('authToken');
+  if (token && remoteBase) {
+    try {
+      const resp = await fetch(`${remoteBase}/api/auth/stats`, { headers: { 'X-Auth-Token': token } });
+      if (resp.ok) {
+        const d = await resp.json();
+        publicCount = d.public || 0;
+        privateCount = d.private || 0;
+        favType = d.favorite_type || d.top_type || favType;
+      }
+    } catch (err) {
+      console.warn('Unable to fetch account stats', err);
+    }
+  }
+
+  // Fallback: try to read a cached stats object in localStorage
+  if ((!publicCount && !privateCount) && localStorage.getItem('accountStats')) {
+    try {
+      const cached = JSON.parse(localStorage.getItem('accountStats'));
+      publicCount = cached.public || publicCount;
+      privateCount = cached.private || privateCount;
+      favType = cached.favorite_type || favType;
+    } catch {}
+  }
+
+  if (dom.statPublic) dom.statPublic.textContent = publicCount;
+  if (dom.statPrivate) dom.statPrivate.textContent = privateCount;
+  if (dom.statFavType) dom.statFavType.textContent = favType;
+
+  // Setup theme select
+  if (dom.themeSelect) {
+    const current = localStorage.getItem('siteTheme') || 'auto';
+    dom.themeSelect.value = current;
+  }
 }
 
 function setupHomeTabs() {

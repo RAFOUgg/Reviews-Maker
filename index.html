@@ -22,15 +22,16 @@
         </div>
       </div>
       <div class="top-nav-status">
-        <div class="nav-actions">
-          <button type="button" class="pill-btn" id="openLibrary" title="Ma bibliothèque personnelle" style="display:none;">
-            <span aria-hidden="true">📁</span>
-            Ma bibliothèque
-          </button>
+          <div class="nav-actions">
           <span class="pill-btn" id="openTips" title="Afficher les raccourcis et astuces" tabindex="0" role="button">
-            <span aria-hidden="true">💡</span>
+            <span aria-hidden="true">�</span>
             Astuce
           </span>
+          <!-- Top account button: hidden when not connected; floating button handles link/connect on small screens -->
+          <button type="button" class="pill-btn" id="topAccountBtn" title="Compte" style="display:none;">
+            <span aria-hidden="true">�</span>
+            Compte
+          </button>
         </div>
       </div>
     </header>
