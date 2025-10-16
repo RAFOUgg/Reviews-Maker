@@ -283,53 +283,69 @@
       <span aria-hidden="true">🔗</span>
     </button>
 
-    <!-- Account Modal: shows account summary, stats and theme selector -->
+    <!-- Redesigned Account Modal -->
     <div class="modal" id="accountModal" style="display:none;">
       <div class="modal-overlay" id="accountModalOverlay"></div>
-      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
-        <div class="modal-header">
-          <h2 id="accountTitle">Compte</h2>
-          <div style="display:flex;align-items:center;gap:8px">
-            <button type="button" class="pill-btn" id="accountSettingsBtn" title="Paramètres" aria-label="Paramètres">
-              <span aria-hidden="true">⚙️</span>
-            </button>
-            <button type="button" class="modal-close" id="closeAccountModal" aria-label="Fermer">✕</button>
-          </div>
-        </div>
-        <div class="modal-body">
-          <div id="accountView">
-            <div class="account-summary">
-              <p>Connecté en tant que <strong id="accountEmail">—</strong></p>
-              <div class="account-stats">
-                <div class="stat"><strong id="accountTotal">0</strong><span>Total reviews</span></div>
-                <div class="stat"><strong id="statPublic">0</strong><span>Reviews publiques</span></div>
-                <div class="stat"><strong id="statPrivate">0</strong><span>Reviews privées</span></div>
-                <div class="stat"><strong id="statFavType">—</strong><span>Type préféré</span></div>
-              </div>
-              <div class="account-stats-by-type" id="accountStatsByType" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
-                <!-- per-type stats will be injected here -->
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="accountTitle" style="max-width:920px;">
+        <header class="modal-header" style="display:flex;align-items:center;justify-content:space-between;">
+          <h2 id="accountTitle">Mon compte</h2>
+          <button type="button" class="modal-close" id="closeAccountModal" aria-label="Fermer">✕</button>
+        </header>
+
+        <div class="modal-body" style="display:flex;gap:20px;padding:18px 22px;">
+          <!-- Left column: profile & stats -->
+          <div style="flex:1;min-width:300px;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+              <div style="width:64px;height:64px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.03),transparent);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent);">👤</div>
+              <div>
+                <div style="font-weight:600;" id="accountEmail">—</div>
+                <div style="font-size:0.9rem;color:var(--text-muted);">Membre Reviews Maker</div>
               </div>
             </div>
 
-            <hr />
+            <div style="display:flex;gap:12px;margin-bottom:14px;">
+              <div style="flex:1;background:var(--panel);padding:12px;border-radius:10px;text-align:center;">
+                <div style="font-weight:700;font-size:1.2rem" id="accountTotal">0</div>
+                <div style="font-size:0.85rem;color:var(--text-muted);">Total</div>
+              </div>
+              <div style="flex:1;background:var(--panel);padding:12px;border-radius:10px;text-align:center;">
+                <div style="font-weight:700;font-size:1.2rem" id="statPublic">0</div>
+                <div style="font-size:0.85rem;color:var(--text-muted);">Public</div>
+              </div>
+              <div style="flex:1;background:var(--panel);padding:12px;border-radius:10px;text-align:center;">
+                <div style="font-weight:700;font-size:1.2rem" id="statPrivate">0</div>
+                <div style="font-size:0.85rem;color:var(--text-muted);">Privé</div>
+              </div>
+            </div>
 
-            <section id="accountPreferences" class="account-preferences" style="display:none;">
-              <h3>Apparence</h3>
-              <div class="form-group">
-                <label for="themeSelect">Thème du site</label>
-                <select id="themeSelect" class="input">
-                  <option value="auto">Automatique (système)</option>
+            <div>
+              <h4 style="margin:0 0 8px 0;">Répartition par type</h4>
+              <div id="accountStatsByType" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+            </div>
+          </div>
+
+          <!-- Right column: actions & preferences -->
+          <aside style="width:320px;">
+            <div style="background:var(--panel);padding:12px;border-radius:10px;margin-bottom:12px;">
+              <h4 style="margin:0 0 8px 0;">Actions</h4>
+              <div style="display:flex;gap:8px;flex-direction:column;">
+                <button class="btn btn-outline" id="openLibraryFromAccount">Ma bibliothèque</button>
+                <button class="btn btn-outline" id="accountDisconnect">Se déconnecter</button>
+              </div>
+            </div>
+
+            <div style="background:var(--panel);padding:12px;border-radius:10px;">
+              <h4 style="margin:0 0 8px 0;">Préférences</h4>
+              <div class="form-group" style="margin-top:8px;">
+                <label for="themeSelect">Thème</label>
+                <select id="themeSelect" class="input" style="width:100%;margin-top:6px;">
+                  <option value="auto">Automatique</option>
                   <option value="dark">Sombre</option>
                   <option value="light">Clair</option>
                 </select>
               </div>
-            </section>
-
-            <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end;">
-              <button type="button" class="btn btn-outline" id="openLibraryFromAccount">Voir ma bibliothèque</button>
-              <button type="button" class="btn btn-primary" id="accountDisconnect">Se déconnecter</button>
             </div>
-          </div>
+          </aside>
         </div>
       </div>
     </div>
