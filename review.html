@@ -283,50 +283,50 @@
       <span aria-hidden="true">🔗</span>
     </button>
 
-    <!-- Redesigned Account Modal -->
+    <!-- Redesigned Account Modal (uses account-* classes for styling) -->
     <div class="modal" id="accountModal" style="display:none;">
       <div class="modal-overlay" id="accountModalOverlay"></div>
-      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="accountTitle" style="max-width:920px;">
-        <header class="modal-header" style="display:flex;align-items:center;justify-content:space-between;">
+      <div class="modal-content account-modal-content" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
+        <header class="modal-header">
           <h2 id="accountTitle">Mon compte</h2>
           <button type="button" class="modal-close" id="closeAccountModal" aria-label="Fermer">✕</button>
         </header>
 
-        <div class="modal-body" style="display:flex;gap:20px;padding:18px 22px;">
+        <div class="modal-body account-modal-inner">
           <!-- Left column: profile & stats -->
-          <div style="flex:1;min-width:300px;">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-              <div style="width:64px;height:64px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.03),transparent);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent);">👤</div>
-              <div>
-                <div style="font-weight:600;" id="accountEmail">—</div>
-                <div style="font-size:0.9rem;color:var(--text-muted);">Membre Reviews Maker</div>
+          <div class="account-left">
+            <div class="account-profile">
+              <div class="account-avatar" aria-hidden="true">👤</div>
+              <div class="account-meta">
+                <div id="accountEmail">—</div>
+                <div class="sub">Membre Reviews Maker</div>
               </div>
             </div>
 
-            <div style="display:flex;gap:12px;margin-bottom:14px;">
-              <div style="flex:1;background:var(--panel);padding:12px;border-radius:10px;text-align:center;">
-                <div style="font-weight:700;font-size:1.2rem" id="accountTotal">0</div>
-                <div style="font-size:0.85rem;color:var(--text-muted);">Total</div>
+            <div class="account-stats">
+              <div class="stat-card">
+                <div class="num" id="accountTotal">0</div>
+                <div class="label">Total</div>
               </div>
-              <div style="flex:1;background:var(--panel);padding:12px;border-radius:10px;text-align:center;">
-                <div style="font-weight:700;font-size:1.2rem" id="statPublic">0</div>
-                <div style="font-size:0.85rem;color:var(--text-muted);">Public</div>
+              <div class="stat-card">
+                <div class="num" id="statPublic">0</div>
+                <div class="label">Public</div>
               </div>
-              <div style="flex:1;background:var(--panel);padding:12px;border-radius:10px;text-align:center;">
-                <div style="font-weight:700;font-size:1.2rem" id="statPrivate">0</div>
-                <div style="font-size:0.85rem;color:var(--text-muted);">Privé</div>
+              <div class="stat-card">
+                <div class="num" id="statPrivate">0</div>
+                <div class="label">Privé</div>
               </div>
             </div>
 
             <div>
               <h4 style="margin:0 0 8px 0;">Répartition par type</h4>
-              <div id="accountStatsByType" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+              <div id="accountStatsByType" class="account-stats-by-type"></div>
             </div>
           </div>
 
           <!-- Right column: actions & preferences -->
-          <aside style="width:320px;">
-            <div style="background:var(--panel);padding:12px;border-radius:10px;margin-bottom:12px;">
+          <aside class="account-right">
+            <div class="account-actions panel-section">
               <h4 style="margin:0 0 8px 0;">Actions</h4>
               <div style="display:flex;gap:8px;flex-direction:column;">
                 <button class="btn btn-outline" id="openLibraryFromAccount">Ma bibliothèque</button>
@@ -334,11 +334,11 @@
               </div>
             </div>
 
-            <div style="background:var(--panel);padding:12px;border-radius:10px;">
+            <div class="account-preferences panel-section">
               <h4 style="margin:0 0 8px 0;">Préférences</h4>
               <div class="form-group" style="margin-top:8px;">
                 <label for="themeSelect">Thème</label>
-                <select id="themeSelect" class="input" style="width:100%;margin-top:6px;">
+                <select id="themeSelect" class="theme-select">
                   <option value="auto">Automatique</option>
                   <option value="dark">Sombre</option>
                   <option value="light">Clair</option>
