@@ -340,20 +340,45 @@
             <div class="account-preferences panel-section">
               <h4 class="section-title">Préférences</h4>
               <div class="form-group">
-                <label for="themeOptions">Thème</label>
-                <div id="themeOptions" class="theme-options" role="radiogroup" aria-label="Choix du thème">
-                  <button type="button" class="theme-option" data-theme="violet" title="Violet sombre" aria-checked="false" role="radio">
-                    <span class="theme-swatch swatch-violet" aria-hidden="true"></span>
-                    <span class="sr-only">Violet sombre</span>
-                  </button>
-                  <button type="button" class="theme-option" data-theme="rose" title="Rose pâle" aria-checked="false" role="radio">
-                    <span class="theme-swatch swatch-rose" aria-hidden="true"></span>
-                    <span class="sr-only">Rose pâle</span>
-                  </button>
-                  <button type="button" class="theme-option" data-theme="bluish" title="Bleu foncé" aria-checked="false" role="radio">
-                    <span class="theme-swatch swatch-bluish" aria-hidden="true"></span>
-                    <span class="sr-only">Bleu foncé</span>
-                  </button>
+                <div style="color:var(--text-soft);">Consulter et modifier vos paramètres (confidentialité, thèmes) depuis <strong>Paramètres</strong>.</div>
+                <div style="margin-top:10px;"><button class="btn btn-ghost" id="openAccountSettingsInline">Ouvrir Paramètres</button></div>
+              </div>
+            </div>
+
+            <div id="accountSettingsPanel" class="account-settings-panel" style="display:none;">
+              <div class="settings-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <button type="button" class="btn btn-ghost" id="accountSettingsBack">← Retour</button>
+                  <h4 class="section-title">Paramètres</h4>
+                </div>
+              </div>
+              <div class="settings-body">
+                <div class="settings-block" style="margin-bottom:12px;">
+                  <h5>Confidentialité</h5>
+                  <div style="color:var(--text-soft);margin-top:6px;">Options de partage et visibilité par défaut.</div>
+                  <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+                    <label class="boolean-group" style="gap:8px;">
+                      <input type="checkbox" id="defaultPublic" />
+                      <span>Publier mes nouvelles reviews par défaut</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="settings-block">
+                  <h5>Préférences</h5>
+                  <div style="color:var(--text-soft);margin-top:6px;">Choisissez un thème :</div>
+                  <div style="margin-top:10px;">
+                    <div id="themeOptions" class="theme-options" role="radiogroup" aria-label="Choix du thème">
+                      <button type="button" class="theme-option" data-theme="violet" title="Violet sombre" aria-checked="false" role="radio">
+                        <span class="theme-swatch swatch-violet" aria-hidden="true"></span>
+                      </button>
+                      <button type="button" class="theme-option" data-theme="rose" title="Rose pâle" aria-checked="false" role="radio">
+                        <span class="theme-swatch swatch-rose" aria-hidden="true"></span>
+                      </button>
+                      <button type="button" class="theme-option" data-theme="bluish" title="Bleu foncé" aria-checked="false" role="radio">
+                        <span class="theme-swatch swatch-bluish" aria-hidden="true"></span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

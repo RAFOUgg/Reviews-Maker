@@ -1626,11 +1626,36 @@ function setupModalEvents() {
     // openAccountSettings button (header) focuses preferences section
     if (dom.openAccountSettings) {
       dom.openAccountSettings.addEventListener('click', () => {
-        if (dom.accountPreferences) {
-          dom.accountPreferences.style.display = 'block';
-          // try to focus the select for convenience
-          if (dom.themeSelect) dom.themeSelect.focus();
+        // show dedicated settings panel when Paramètres clicked
+        const panel = document.getElementById('accountSettingsPanel');
+        if (panel) {
+          panel.style.display = 'block';
+          // hide the main preferences area for clarity
+          if (dom.accountPreferences) dom.accountPreferences.style.display = 'none';
+          // focus first interactive element
+          const firstOpt = panel.querySelector('.theme-option');
+          if (firstOpt) firstOpt.focus();
         }
+      });
+    }
+
+    // inline button that opens settings from the preferences tile
+    const inlineBtn = document.getElementById('openAccountSettingsInline');
+    if (inlineBtn) {
+      inlineBtn.addEventListener('click', () => {
+        const panel = document.getElementById('accountSettingsPanel');
+        if (panel) panel.style.display = 'block';
+        if (dom.accountPreferences) dom.accountPreferences.style.display = 'none';
+      });
+    }
+
+    // back button in settings panel
+    const settingsBack = document.getElementById('accountSettingsBack');
+    if (settingsBack) {
+      settingsBack.addEventListener('click', () => {
+        const panel = document.getElementById('accountSettingsPanel');
+        if (panel) panel.style.display = 'none';
+        if (dom.accountPreferences) dom.accountPreferences.style.display = 'block';
       });
     }
   
