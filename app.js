@@ -2053,8 +2053,7 @@ async function renderAccountView() {
     if (byType && Object.keys(byType).length > 0) {
       Object.keys(byType).forEach(t => {
         const el = document.createElement('div');
-        el.className = 'stat-type-pill';
-        el.style.cssText = 'background: rgba(255,255,255,0.03); padding:6px 10px; border-radius:999px; font-size:0.9rem;';
+        el.className = 'type-pill';
         el.textContent = `${t}: ${byType[t]}`;
         container.appendChild(el);
       });
@@ -2068,8 +2067,7 @@ async function renderAccountView() {
         });
         Object.keys(map).forEach(t => {
           const el = document.createElement('div');
-          el.className = 'stat-type-pill';
-          el.style.cssText = 'background: rgba(255,255,255,0.03); padding:6px 10px; border-radius:999px; font-size:0.9rem;';
+          el.className = 'type-pill';
           el.textContent = `${t}: ${map[t]}`;
           container.appendChild(el);
         });
