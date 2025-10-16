@@ -1044,6 +1044,8 @@ function initHomePage() {
   dom.statFavType = document.getElementById('statFavType');
   dom.themeSelect = document.getElementById('themeSelect');
   dom.openLibraryFromAccount = document.getElementById('openLibraryFromAccount');
+  dom.accountSettingsBtn = document.getElementById('accountSettingsBtn');
+  dom.accountPreferences = document.getElementById('accountPreferences');
   // Auth connected small summary (inside auth modal)
   dom.authConnTotal = document.getElementById('authConnTotal');
   dom.authConnPublic = document.getElementById('authConnPublic');
@@ -1525,6 +1527,19 @@ function setupModalEvents() {
       openLibraryModal('mine');
     });
   }
+
+    // Account settings toggle (show/hide preferences)
+    if (dom.accountSettingsBtn) {
+      dom.accountSettingsBtn.addEventListener('click', () => {
+        if (!dom.accountPreferences) return;
+        const shown = dom.accountPreferences.style.display === 'block';
+        dom.accountPreferences.style.display = shown ? 'none' : 'block';
+        // ensure theme select initialized
+        if (!shown && dom.themeSelect) {
+          dom.themeSelect.value = localStorage.getItem('siteTheme') || 'auto';
+        }
+      });
+    }
   if (dom.themeSelect) {
     dom.themeSelect.addEventListener('change', (e) => {
       const v = e.target.value;
