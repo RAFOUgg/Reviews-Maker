@@ -988,6 +988,28 @@ form {
 /* Helper classes to apply theme quickly */
 .theme-violet, .theme-rose, .theme-bluish { transition: background 320ms ease, color 220ms ease; }
 
+/* Theme option buttons (icon-style) */
+.theme-options { display:flex; gap:10px; align-items:center; }
+.theme-option {
+  all: unset;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:48px;
+  height:48px;
+  border-radius:12px;
+  cursor:pointer;
+  border: 2px solid transparent;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.45);
+}
+.theme-option[aria-checked="true"] { border-color: rgba(255,255,255,0.12); box-shadow: 0 8px 22px rgba(0,0,0,0.5); }
+.theme-swatch { width:34px; height:34px; border-radius:8px; display:block; }
+.swatch-violet { background: linear-gradient(135deg,#6e3cff,#2b0f4b); }
+.swatch-rose { background: linear-gradient(135deg,#ffd0e8,#f5c3e6); }
+.swatch-bluish { background: linear-gradient(135deg,#24455a,#0f1724); }
+
+.sr-only { position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+
 /* Close button */
 .account-close {
   position:absolute;

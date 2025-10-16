@@ -289,7 +289,10 @@
       <div class="modal-content account-modal-content" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
         <header class="modal-header">
           <h2 id="accountTitle">Mon compte</h2>
-          <button type="button" class="modal-close" id="closeAccountModal" aria-label="Fermer">✕</button>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button type="button" class="btn btn-ghost" id="openAccountSettings" title="Paramètres">⚙️ Paramètres</button>
+            <button type="button" class="modal-close" id="closeAccountModal" aria-label="Fermer">✕</button>
+          </div>
         </header>
 
         <div class="modal-body account-modal-inner">
@@ -337,12 +340,21 @@
             <div class="account-preferences panel-section">
               <h4 class="section-title">Préférences</h4>
               <div class="form-group">
-                <label for="themeSelect">Thème</label>
-                <select id="themeSelect" class="theme-select">
-                  <option value="auto">Automatique</option>
-                  <option value="dark">Sombre</option>
-                  <option value="light">Clair</option>
-                </select>
+                <label for="themeOptions">Thème</label>
+                <div id="themeOptions" class="theme-options" role="radiogroup" aria-label="Choix du thème">
+                  <button type="button" class="theme-option" data-theme="violet" title="Violet sombre" aria-checked="false" role="radio">
+                    <span class="theme-swatch swatch-violet" aria-hidden="true"></span>
+                    <span class="sr-only">Violet sombre</span>
+                  </button>
+                  <button type="button" class="theme-option" data-theme="rose" title="Rose pâle" aria-checked="false" role="radio">
+                    <span class="theme-swatch swatch-rose" aria-hidden="true"></span>
+                    <span class="sr-only">Rose pâle</span>
+                  </button>
+                  <button type="button" class="theme-option" data-theme="bluish" title="Bleu foncé" aria-checked="false" role="radio">
+                    <span class="theme-swatch swatch-bluish" aria-hidden="true"></span>
+                    <span class="sr-only">Bleu foncé</span>
+                  </button>
+                </div>
               </div>
             </div>
           </aside>

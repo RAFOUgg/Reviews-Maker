@@ -1050,6 +1050,7 @@ function initHomePage() {
   dom.themeSelect = document.getElementById('themeSelect');
   dom.openLibraryFromAccount = document.getElementById('openLibraryFromAccount');
   dom.accountSettingsBtn = document.getElementById('accountSettingsBtn');
+  dom.openAccountSettings = document.getElementById('openAccountSettings');
   dom.accountPreferences = document.getElementById('accountPreferences');
   // Auth connected small summary (inside auth modal)
   dom.authConnTotal = document.getElementById('authConnTotal');
@@ -1064,6 +1065,29 @@ function initHomePage() {
     openTips: !!dom.openTips,
     showMore: !!dom.showMoreLibrary
   });
+
+  // Theme helpers: apply and persist
+  function applyTheme(name) {
+    try {
+      // remove any previous theme classes from root
+      document.documentElement.classList.remove('theme-violet','theme-rose','theme-bluish');
+      if (!name || name === 'auto') {
+        localStorage.removeItem('siteTheme');
+        console.info('Theme set to auto');
+        return;
+      }
+      let cls = null;
+      if (name === 'violet') cls = 'theme-violet';
+      if (name === 'rose') cls = 'theme-rose';
+      if (name === 'bluish') cls = 'theme-bluish';
+      if (cls) document.documentElement.classList.add(cls);
+      localStorage.setItem('siteTheme', name);
+      console.info('Theme applied', name);
+    } catch (e) { console.warn('applyTheme error', e); }
+  }
+
+  // Load saved theme on init
+  try { if (typeof applySavedTheme === 'function') applySavedTheme(); } catch(e){}
 
   // Setup events with error handling
   setTimeout(() => {
@@ -1554,13 +1578,61 @@ function setupModalEvents() {
         }
       });
     }
-  if (dom.themeSelect) {
-    dom.themeSelect.addEventListener('change', (e) => {
-      const v = e.target.value;
-      localStorage.setItem('siteTheme', v);
-      applySavedTheme();
-    });
-  }
+    // applySavedTheme reads localStorage and delegates to applyTheme
+    function applySavedTheme() {
+      try {
+        const v = localStorage.getItem('siteTheme') || 'auto';
+        if (v && v !== 'auto') applyTheme(v);
+        else {
+          // remove classes for auto
+          document.documentElement.classList.remove('theme-violet','theme-rose','theme-bluish');
+        }
+        if (dom.themeSelect) dom.themeSelect.value = v;
+        // mark theme-option buttons if present
+        try {
+          const opts = Array.from(document.querySelectorAll('.theme-option'));
+          opts.forEach(b => {
+            const t = b.getAttribute('data-theme');
+            b.setAttribute('aria-checked', (t === v) ? 'true' : 'false');
+          });
+        } catch(e){}
+      } catch(e){}
+    }
+
+    if (dom.themeSelect) {
+      dom.themeSelect.addEventListener('change', (e) => {
+        const v = e.target.value;
+        localStorage.setItem('siteTheme', v);
+        if (v === 'auto') applyTheme('auto'); else applyTheme(v);
+      });
+    }
+
+    // wire theme-option buttons (icon buttons)
+    try {
+      const themeButtons = Array.from(document.querySelectorAll('.theme-option'));
+      themeButtons.forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+          const t = btn.getAttribute('data-theme');
+          // update aria-checked on group
+          themeButtons.forEach(b => b.setAttribute('aria-checked','false'));
+          btn.setAttribute('aria-checked','true');
+          // apply and persist
+          localStorage.setItem('siteTheme', t);
+          applyTheme(t);
+        });
+      });
+    } catch(e){}
+
+    // openAccountSettings button (header) focuses preferences section
+    if (dom.openAccountSettings) {
+      dom.openAccountSettings.addEventListener('click', () => {
+        if (dom.accountPreferences) {
+          dom.accountPreferences.style.display = 'block';
+          // try to focus the select for convenience
+          if (dom.themeSelect) dom.themeSelect.focus();
+        }
+      });
+    }
   
   // Send verification code
   if (dom.authSendCode) {
