@@ -727,6 +727,10 @@ let draftSaveTimer = null; // Debounced draft persistence
 let dbSaveTimer = null; // Debounced DB save
 let dbFailedOnce = false; // If IndexedDB fails, fallback to localStorage silently next times
 let isCompactPreview = true; // Track preview mode (compact vs full)
+// App version helper (bump when deploying to verify remote update)
+const APP_VERSION = '2025-10-16-accmodal-1';
+
+console.log('App JS version:', APP_VERSION);
 let homeGalleryLimit = 8; // 4x2 grid on the home page, increases avec "Voir plus"
 let isNonDraftRecord = false; // Track if current review has been explicitly saved as non-draft
 // Remote backend flags
@@ -1035,6 +1039,7 @@ function initHomePage() {
   dom.authStatus = document.getElementById("authStatus");
   dom.floatingAuthBtn = document.getElementById("floatingAuthBtn");
   dom.openLibrary = document.getElementById("openLibrary");
+  dom.libraryBackToAccount = document.getElementById('libraryBackToAccount');
   dom.accountModal = document.getElementById('accountModal');
   dom.accountModalOverlay = document.getElementById('accountModalOverlay');
   dom.closeAccountModal = document.getElementById('closeAccountModal');
@@ -1513,7 +1518,7 @@ function setupModalEvents() {
         if (dom.authModal) dom.authModal.style.display = 'flex';
         return;
       }
-      openLibraryModal('mine');
+      openLibraryModal('mine', { fromAccount: true });
     });
   }
   // 'Ma bibliothèque' inside auth modal
@@ -1524,7 +1529,16 @@ function setupModalEvents() {
         if (dom.authModal) dom.authModal.style.display = 'flex';
         return;
       }
-      openLibraryModal('mine');
+      openLibraryModal('mine', { fromAccount: true });
+    });
+  }
+
+  // Back button in library modal to return to account
+  if (dom.libraryBackToAccount) {
+    dom.libraryBackToAccount.addEventListener('click', () => {
+      if (dom.libraryModal) dom.libraryModal.style.display = 'none';
+      // reopen account modal
+      if (dom.accountModal) openAccountModal();
     });
   }
 
@@ -2479,13 +2493,17 @@ function toggleLibrary(open, mode = 'mine') {
   }
 }
 
-function openLibraryModal(mode = 'mine') {
+function openLibraryModal(mode = 'mine', options = {}) {
   currentLibraryMode = mode;
+  const fromAccount = options && options.fromAccount;
   if (dom.libraryDrawer) {
     toggleLibrary(true, mode);
+    // show back button only in modal mode, so nothing to do for drawer
     return;
   }
   if (!dom.libraryModal) return;
+  // show back button if requested
+  if (dom.libraryBackToAccount) dom.libraryBackToAccount.style.display = fromAccount ? 'inline-flex' : 'none';
   dom.libraryModal.style.display = "flex";
   renderFullLibrary(mode);
 }

@@ -104,7 +104,10 @@
       <div class="modal-overlay" id="libraryModalOverlay"></div>
       <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="libraryTitle">
         <div class="modal-header">
-          <h2 id="libraryTitle">🖼️ Galerie publique</h2>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button type="button" class="btn btn-ghost" id="libraryBackToAccount" style="display:none;">← Retour</button>
+            <h2 id="libraryTitle">🖼️ Galerie publique</h2>
+          </div>
           <button type="button" class="modal-close" id="closeLibrary" aria-label="Fermer">
             <span aria-hidden="true">×</span>
           </button>
@@ -251,6 +254,6 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=2025-10-16-accmodal-1"></script>
 </body>
 </html>
