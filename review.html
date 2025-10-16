@@ -134,35 +134,10 @@
 
     <footer class="site-footer">
       <p>© <span id="footerYear"></span> Reviews Maker. Création de reviews premium &amp; export multiformat.</p>
-      <div class="footer-links">
-        <a href="#" aria-label="Guide qualité">Guide qualité</a>
-        <a href="#" aria-label="Support">Support</a>
-        <a href="#" aria-label="Mentions légales">Mentions légales</a>
-      </div>
-    </footer>
-    </div>
-
-    <!-- Library Drawer Templates/Containers -->
-    <div id="libraryOverlay" class="library-overlay" hidden></div>
-    <aside id="libraryDrawer" class="library-drawer" aria-hidden="true" aria-label="Bibliothèque des reviews" hidden>
-    <header class="library-header">
-      <h3>Ma Bibliothèque</h3>
-      <div class="library-actions">
-        <input type="search" id="librarySearch" placeholder="Rechercher par nom, type, producteur…" aria-label="Rechercher une review" />
-        <button type="button" class="pill-btn" id="closeLibrary" title="Fermer la bibliothèque">✕</button>
-      </div>
-    </header>
-    <div class="library-body">
-      <ul id="libraryList" class="library-list" role="list"></ul>
-      <div id="libraryEmpty" class="library-empty" hidden>
-        <p>Aucune review enregistrée pour le moment.</p>
-      </div>
-    </div>
-    </aside>
-
-    <!-- Preview-only Overlay -->
-    <div id="previewOverlay" class="preview-overlay" hidden></div>
-    <div id="previewModal" class="preview-modal" role="dialog" aria-modal="true" aria-label="Aperçu de la review" hidden>
+          <div class="account-left">
+            <div class="account-profile"><div class="account-avatar">👤</div><div class="account-meta"><div id="accountEmail">—</div><div class="sub">Membre Reviews Maker</div></div></div>
+            <div class="stats-grid"><div class="stat-card"><div class="num" id="accountTotal">0</div><div class="label">Total</div></div><div class="stat-card"><div class="num" id="statPublic">0</div><div class="label">Public</div></div><div class="stat-card"><div class="num" id="statPrivate">0</div><div class="label">Privé</div></div></div>
+            <div style="margin-top:10px;"><h4 class="section-title">Répartition par type</h4><div id="accountStatsByType" class="account-stats-by-type"></div></div>
     <header class="preview-modal-header">
       <h3>Aperçu</h3>
       <div class="actions">

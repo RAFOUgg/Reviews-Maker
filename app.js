@@ -2074,20 +2074,31 @@ function showAuthStatus(message, type = "info") {
 // Account modal helpers
 function openAccountModal() {
   if (!dom.accountModal) return;
-  dom.accountModal.style.display = 'flex';
-  // ensure overlay exists
-  if (dom.accountModalOverlay) dom.accountModalOverlay.style.display = 'block';
-  // trap focus
-  trapFocus(dom.accountModal);
-  // prevent background scroll
+  try {
+    // hide any other open modals to avoid visual stacking
+    const others = document.querySelectorAll('.modal, .tips-dialog, .export-config-modal');
+    others.forEach(m => { if (m !== dom.accountModal) m.style.display = 'none'; });
+  } catch(e){}
+  // show overlay and dialog
+  const overlay = document.getElementById('accountModalOverlay');
+  if (overlay) overlay.classList.add('show');
+  dom.accountModal.classList.add('show');
+  dom.accountModal.setAttribute('aria-hidden','false');
+  // trap focus on dialog element
+  const dialog = dom.accountModal.querySelector('.account-dialog') || dom.accountModal;
+  trapFocus(dialog);
   try { document.body.classList.add('modal-open'); } catch(e){}
   renderAccountView().catch(err => console.warn('Failed to render account view', err));
 }
 
 function closeAccountModal() {
   if (!dom.accountModal) return;
-  dom.accountModal.style.display = 'none';
-  if (dom.accountModalOverlay) dom.accountModalOverlay.style.display = 'none';
+  try {
+    const overlay = document.getElementById('accountModalOverlay');
+    if (overlay) overlay.classList.remove('show');
+  } catch(e){}
+  dom.accountModal.classList.remove('show');
+  dom.accountModal.setAttribute('aria-hidden','true');
   releaseFocusTrap();
   try { document.body.classList.remove('modal-open'); } catch(e){}
 }
