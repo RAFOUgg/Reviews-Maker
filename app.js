@@ -1966,6 +1966,8 @@ function openAccountModal() {
   dom.accountModal.style.display = 'flex';
   // ensure overlay exists
   if (dom.accountModalOverlay) dom.accountModalOverlay.style.display = 'block';
+  // trap focus
+  trapFocus(dom.accountModal);
   renderAccountView().catch(err => console.warn('Failed to render account view', err));
 }
 
@@ -1973,6 +1975,41 @@ function closeAccountModal() {
   if (!dom.accountModal) return;
   dom.accountModal.style.display = 'none';
   if (dom.accountModalOverlay) dom.accountModalOverlay.style.display = 'none';
+  releaseFocusTrap();
+}
+
+// Focus trap utilities
+let _accountFocusHandler = null;
+function trapFocus(root) {
+  try {
+    const focusable = Array.from(root.querySelectorAll('a[href], button, textarea, input, select, [tabindex]:not([tabindex="-1"])'))
+      .filter(el => !el.hasAttribute('disabled'));
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    _accountFocusHandler = function(e) {
+      if (e.key === 'Tab') {
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      } else if (e.key === 'Escape' || e.key === 'Esc') {
+        closeAccountModal();
+      }
+    };
+    document.addEventListener('keydown', _accountFocusHandler);
+    setTimeout(() => first.focus(), 40);
+  } catch (err) { console.warn('trapFocus error', err); }
+}
+
+function releaseFocusTrap() {
+  if (_accountFocusHandler) {
+    document.removeEventListener('keydown', _accountFocusHandler);
+    _accountFocusHandler = null;
+  }
 }
 
 async function renderAccountView() {
