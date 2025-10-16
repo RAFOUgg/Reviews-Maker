@@ -645,21 +645,28 @@ app.post('/api/auth/send-code', async (req, res) => {
   
   try {
     // Step 1: Verify email exists in Discord bot database
-    const discordUser = await getDiscordUserByEmail(email);
-    
+    let discordUser = null;
+    try {
+      discordUser = await getDiscordUserByEmail(email);
+    } catch (err) {
+      console.warn('[AUTH] LaFoncedalle lookup failed (will return service_unavailable):', err && err.message ? err.message : err);
+      // Return 503 so client knows the external service is unavailable
+      return res.status(503).json({ error: 'service_unavailable', message: 'Service de vérification externe indisponible. Réessayez plus tard.' });
+    }
+
     if (!discordUser) {
       return res.status(404).json({ 
         error: 'email_not_found', 
         message: 'Cette adresse email n\'est pas liée à un compte Discord. Veuillez d\'abord lier votre email sur le serveur Discord LaFoncedalle.' 
       });
     }
-    
+
     console.log(`[AUTH] Discord user found for ${email}:`, discordUser.username);
-    
+
     // Step 2: Generate verification code
     const code = generateCode();
     const expires = Date.now() + CODE_EXPIRY;
-    
+
     // Step 3: Store code with Discord user info
     verificationCodes.set(email, { 
       code, 
@@ -670,16 +677,22 @@ app.post('/api/auth/send-code', async (req, res) => {
         username: discordUser.username
       }
     });
-    
-    // Step 4: Send verification email via LaFoncedalle
-    await sendVerificationEmail(email, code);
-    
-    res.json({ ok: true, message: 'Code envoyé par email' });
+
+    // Step 4: Try to send email, but if mail service fails, return a recoverable response
+    try {
+      await sendVerificationEmail(email, code);
+      return res.json({ ok: true, message: 'Code envoyé par email' });
+    } catch (mailErr) {
+      console.error('[AUTH] Mail send failed but code stored:', mailErr && (mailErr.message || mailErr));
+      // Keep the code stored so user can still attempt verification if email later arrives
+      // Respond with 202 Accepted and a warning so client shows a retry option
+      return res.status(202).json({ ok: true, warning: 'mail_failed', message: 'Le code a été généré mais l\'envoi d\'email a échoué. Réessayez l\'envoi.' });
+    }
   } catch (err) {
-    console.error('[AUTH] Error in send-code:', err);
+    console.error('[AUTH] Unexpected error in send-code:', err && (err.message || err));
     res.status(500).json({ 
       error: 'server_error', 
-      message: 'Erreur lors de la vérification de l\'email ou de l\'envoi du code' 
+      message: 'Erreur serveur inattendue' 
     });
   }
   

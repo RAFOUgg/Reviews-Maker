@@ -740,7 +740,9 @@ const AUTH_API_BASE = ''; // Chemin relatif (géré par le même serveur/proxy)
 // API_KEY must never be exposed in client-side code. Server handles calls requiring the secret.
 let lastSelectedImageFile = null; // Original File pour upload
 let isUserConnected = false; // Auth state shared across modules
-let currentLibraryMode = 'public';
+// Only keep "mine" (user personal library) as the default/current library mode.
+// The public gallery has been removed from the UI and should not be used.
+let currentLibraryMode = 'mine';
 
 const LAYOUT_THRESHOLDS = {
   enterWidth: 1200,
@@ -1067,7 +1069,9 @@ function initHomePage() {
   dom.publicPublic = document.getElementById('publicPublic');
   dom.publicPrivate = document.getElementById('publicPrivate');
   dom.publicByType = document.getElementById('publicByType');
+  // The public gallery has been removed; hide any button that would open it.
   dom.publicViewLibrary = document.getElementById('publicViewLibrary');
+  if (dom.publicViewLibrary) dom.publicViewLibrary.style.display = 'none';
 
   console.log('DOM elements found:', {
     typeCards: dom.typeCards.length,
@@ -1694,12 +1698,28 @@ function setupModalEvents() {
 
         const data = await resp.json().catch(() => ({}));
 
-        if (!resp.ok) {
+        if (!resp.ok && resp.status !== 202) {
           if (data && data.error === 'email_not_found') {
             showAuthStatus("Email non lié à un compte Discord. Utilisez /lier_compte sur notre Discord.", "error");
+          } else if (resp.status === 503) {
+            showAuthStatus("Service de vérification temporairement indisponible. Réessayez plus tard.", "error");
           } else {
             showAuthStatus(data.message || "Erreur lors de la vérification", "error");
           }
+          dom.authSendCode.disabled = false;
+          dom.authSendCode.textContent = "Envoyer le code";
+          return;
+        }
+
+        // 202 Accepted: code generated but email send failed — inform user and allow retry
+        if (resp.status === 202) {
+          showAuthStatus("Le code a été généré mais l'envoi d'email a échoué. Réessayez l'envoi.", "warning");
+          dom.authSendCode.disabled = false;
+          dom.authSendCode.textContent = "Renvoyer le code";
+          // Still show code input so user can try verifying if they received email by other means
+          dom.authEmailDisplay && (dom.authEmailDisplay.textContent = email);
+          dom.authStepEmail.style.display = 'none';
+          dom.authStepCode.style.display = 'block';
           return;
         }
 
@@ -2878,12 +2898,21 @@ async function duplicateReview(review) {
 async function renderCompactLibrary() {
   if (!dom.compactLibraryList) return;
   
-  // Load only public reviews for public gallery
-  const items = remoteEnabled ? await remoteListPublicReviews() : [];
-  const list = items
+  // Load personal library: prefer remote "my" reviews when available and authenticated,
+  // otherwise fall back to local DB / localStorage stored reviews.
+  let items = [];
+  try {
+    if (remoteEnabled) {
+      items = await remoteListMyReviews();
+    } else {
+      items = await dbGetAllReviews();
+    }
+  } catch (e) { console.warn('renderCompactLibrary load error', e); items = await dbGetAllReviews(); }
+
+  const list = (items || [])
     .sort((a,b) => (a.date || "").localeCompare(b.date || ""))
     .reverse()
-    .slice(0, isHomePage ? homeGalleryLimit : 8); // 4x2 par défaut sur l'accueil
+    .slice(0, isHomePage ? homeGalleryLimit : 8);
 
   dom.compactLibraryList.innerHTML = "";
   
@@ -2894,9 +2923,9 @@ async function renderCompactLibrary() {
   }
   
   if (dom.compactLibraryEmpty) dom.compactLibraryEmpty.style.display = "none";
-  // Afficher ou masquer le bouton "Voir plus"
+  // Afficher ou masquer le bouton "Voir plus" (si plus d'éléments que la limite)
   if (isHomePage && dom.showMoreLibrary) {
-    dom.showMoreLibrary.style.display = items.length > list.length ? 'inline-flex' : 'none';
+    dom.showMoreLibrary.style.display = (items || []).length > list.length ? 'inline-flex' : 'none';
   }
   
   list.forEach(r => {
@@ -2915,7 +2944,7 @@ async function renderCompactLibrary() {
       `<img src="${r.image}" alt="" class="compact-item-image" />` : 
       `<div class="compact-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.6rem;">📷</div>`;
     
-    // Public gallery: NO edit buttons, just preview
+  // Personal library: allow preview and, if owned, open editor when clicking edit
     item.innerHTML = `
       ${imageHtml}
       <div class="compact-item-content">
@@ -2925,9 +2954,20 @@ async function renderCompactLibrary() {
       </div>
     `;
     
-    // Click to preview only (read-only)
-    const openPreview = async () => { await openPreviewOnly(r); };
-    item.addEventListener('click', openPreview);
+    // Click: if review belongs to current user, open editor; otherwise preview
+    const openItem = async () => {
+      const myEmail = (localStorage.getItem('authEmail') || '').toLowerCase();
+      const owner = (r.ownerEmail || r.owner || r.ownerId || '');
+      const ownerLower = String(owner || '').toLowerCase();
+      if (myEmail && ownerLower && ownerLower === myEmail) {
+        // open editor for owned review if id exists
+        if (r.id) navigateToEditor(r.productType || r.type, null, r.id);
+        else navigateToEditor(r.productType || r.type, r, null);
+      } else {
+        await openPreviewOnly(r);
+      }
+    };
+    item.addEventListener('click', openItem);
     // Make author link open public profile (delegated)
     const authorBtn = item.querySelector('.author-link');
     if (authorBtn) {
@@ -5492,17 +5532,9 @@ async function remoteListReviews() {
   } catch (e) { console.warn('Remote list erreur', e); return dbGetAllReviews(); }
 }
 
-// List only public reviews (for public gallery)
+// Public gallery removed: always return empty list for public reviews.
 async function remoteListPublicReviews() {
-  if (!remoteEnabled) return [];
-  try {
-    const r = await fetch(remoteBase + '/api/public/reviews');
-    if (!r.ok) throw new Error('HTTP '+r.status);
-    return await r.json();
-  } catch (e) { 
-    console.warn('Remote public list error', e); 
-    return []; 
-  }
+  return [];
 }
 
 // List only MY reviews (for personal library)
