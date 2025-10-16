@@ -28,7 +28,7 @@ console.log(`[CONFIG] LAFONCEDALLE_API_URL=${LAFONCEDALLE_API_URL}`);
 // LaFoncedalleBot Database Configuration (nouvelle architecture)
 // IMPORTANT: Sur le VPS, définir LAFONCEDALLE_DB_FILE avec le chemin absolu vers la DB du bot
 // Exemple: /home/user/lafoncedallebot/db/data.db
-const LAFONCEDALLE_DB_FILE = process.env.LAFONCEDALLE_DB_FILE;
+const LAFONCEDALLE_DB_FILE = process.env.LAFONCEDALLE_DB_FILE;pm2 logs reviews-maker --lines 200
 
 if (!LAFONCEDALLE_DB_FILE) {
   console.warn('[CONFIG] LAFONCEDALLE_DB_FILE non défini - utilisation de la DB directe désactivée');
