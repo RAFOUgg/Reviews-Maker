@@ -905,6 +905,9 @@ form {
   gap:12px;
 }
 
+.section-title { margin: 0 0 8px 0; font-size: 0.98rem; }
+.action-list { display:flex; gap:8px; flex-direction:column; }
+
 .account-actions {
   display:flex;
   gap:10px;
