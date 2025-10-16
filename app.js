@@ -733,7 +733,7 @@ let isNonDraftRecord = false; // Track if current review has been explicitly sav
 let remoteEnabled = false; // API détectée
 let remoteBase = ''; // Détecté automatiquement
 const AUTH_API_BASE = ''; // Chemin relatif (géré par le même serveur/proxy)
-const API_KEY = '7e5f5c97bf1ea98f0d9be2a4ad0300dc84a5c34d10d5d44f14d85af0ec5efd16'; // Clé API du bot
+// API_KEY must never be exposed in client-side code. Server handles calls requiring the secret.
 let lastSelectedImageFile = null; // Original File pour upload
 let isUserConnected = false; // Auth state shared across modules
 let currentLibraryMode = 'public';
@@ -1461,65 +1461,33 @@ function setupModalEvents() {
       dom.authSendCode.textContent = "Vérification...";
       
       try {
-        // ÉTAPE 1: Vérifier si l'email existe dans la base Discord
-  const authBase = AUTH_API_BASE || remoteBase;
-  const checkResponse = await fetch(authBase + '/api/discord/user-by-email', {
+        // Use server-side endpoint to request verification code.
+        // This avoids exposing the LaFoncedalle API key in the browser and
+        // ensures the server (Reviews-Maker) handles user lookup and email sending.
+        const base = AUTH_API_BASE || remoteBase || '';
+        const resp = await fetch(base + '/api/auth/send-code', {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + API_KEY
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email })
         });
-        
-        const checkData = await checkResponse.json();
-        
-        if (!checkResponse.ok) {
-          if (checkData.error === 'not_found') {
+
+        const data = await resp.json().catch(() => ({}));
+
+        if (!resp.ok) {
+          if (data && data.error === 'email_not_found') {
             showAuthStatus("Email non lié à un compte Discord. Utilisez /lier_compte sur notre Discord.", "error");
           } else {
-            showAuthStatus(checkData.message || "Erreur lors de la vérification", "error");
+            showAuthStatus(data.message || "Erreur lors de la vérification", "error");
           }
           return;
         }
-        
-        // ÉTAPE 2: L'email existe, envoyer le code de vérification
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-        sessionStorage.setItem('pendingCode', code);
+
+        // Server has sent the verification email. Move to code entry step.
         sessionStorage.setItem('authEmail', email);
-        
-  const sendResponse = await fetch((AUTH_API_BASE || remoteBase) + '/api/mail/send-verification', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + API_KEY
-          },
-          body: JSON.stringify({ 
-            to: email,
-            code: code,
-            subject: '🔐 Code de vérification Reviews Maker',
-            appName: 'Reviews Maker',
-            expiryMinutes: 10
-          })
-        });
-        
-        const sendData = await sendResponse.json();
-        
-        if (sendResponse.ok) {
-          // Stocker les infos Discord
-          localStorage.setItem('discordId', checkData.discordId);
-          if (checkData.username) {
-            localStorage.setItem('discordUsername', checkData.username);
-          }
-          
-          showAuthStatus("Code envoyé ! Vérifiez vos emails", "success");
-          // Switch to code verification step
-          if (dom.authStepEmail) dom.authStepEmail.style.display = 'none';
-          if (dom.authStepCode) dom.authStepCode.style.display = 'flex';
-          if (dom.authEmailDisplay) dom.authEmailDisplay.textContent = email;
-        } else {
-          showAuthStatus(sendData.message || "Erreur lors de l'envoi du code", "error");
-        }
+        showAuthStatus("Code envoyé ! Vérifiez vos emails", "success");
+        if (dom.authStepEmail) dom.authStepEmail.style.display = 'none';
+        if (dom.authStepCode) dom.authStepCode.style.display = 'flex';
+        if (dom.authEmailDisplay) dom.authEmailDisplay.textContent = email;
       } catch (err) {
         showAuthStatus("Erreur de connexion au serveur", "error");
         console.error('Send code error:', err);
@@ -1546,33 +1514,41 @@ function setupModalEvents() {
       dom.authVerifyCode.textContent = "Vérification...";
       
       try {
-        // Vérifier le code côté client
-        if (code !== expectedCode) {
-          showAuthStatus("Code incorrect", "error");
+        // Verify the code via server so it can create a proper session token.
+        const base = AUTH_API_BASE || remoteBase || '';
+        const verifyResp = await fetch(base + '/api/auth/verify-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, code })
+        });
+
+        const verifyData = await verifyResp.json().catch(() => ({}));
+        if (!verifyResp.ok) {
+          showAuthStatus(verifyData.message || 'Code incorrect', 'error');
           dom.authVerifyCode.disabled = false;
-          dom.authVerifyCode.textContent = "Vérifier";
+          dom.authVerifyCode.textContent = 'Vérifier';
           return;
         }
-        
-        // Générer un token simple (timestamp + random)
-        const token = Date.now().toString(36) + Math.random().toString(36);
-        
-        // Save token and email
-        localStorage.setItem('authToken', token);
-        localStorage.setItem('authEmail', email);
-        sessionStorage.removeItem('authEmail');
-        sessionStorage.removeItem('pendingCode');
-        
-        showAuthStatus("Connexion réussie !", "success");
-        
-        setTimeout(() => {
-          updateAuthUI();
-          if (dom.authModal) dom.authModal.style.display = "none";
-          if (isHomePage) {
-            renderCompactLibrary();
-            setupHomeTabs();
-          }
-        }, 800);
+
+        // Server returns token and email
+        if (verifyData && verifyData.token) {
+          localStorage.setItem('authToken', verifyData.token);
+          localStorage.setItem('authEmail', verifyData.email || email);
+          sessionStorage.removeItem('authEmail');
+          sessionStorage.removeItem('pendingCode');
+
+          showAuthStatus('Connexion réussie !', 'success');
+          setTimeout(() => {
+            updateAuthUI();
+            if (dom.authModal) dom.authModal.style.display = 'none';
+            if (isHomePage) {
+              renderCompactLibrary();
+              setupHomeTabs();
+            }
+          }, 800);
+        } else {
+          showAuthStatus('Erreur lors de la création de session', 'error');
+        }
       } catch (err) {
         showAuthStatus("Erreur de connexion", "error");
         console.error('Verify code error:', err);
@@ -1597,19 +1573,11 @@ function setupModalEvents() {
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         sessionStorage.setItem('pendingCode', code);
         
-  const sendResponse = await fetch((AUTH_API_BASE || remoteBase) + '/api/mail/send-verification', {
+        // Request server to resend the verification code. Server will call LaFoncedalle/mail endpoint.
+        const sendResponse = await fetch((AUTH_API_BASE || remoteBase) + '/api/auth/resend-code', {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + API_KEY
-          },
-          body: JSON.stringify({ 
-            to: email,
-            code: code,
-            subject: '🔐 Code de vérification Reviews Maker',
-            appName: 'Reviews Maker',
-            expiryMinutes: 10
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
         });
         
         if (sendResponse.ok) {
@@ -1698,15 +1666,13 @@ async function updateHolderDisplay() {
   }
   
   // Si on a l'email, essayer de récupérer les infos Discord
-  if (cachedEmail && AUTH_API_BASE) {
+    if (cachedEmail && AUTH_API_BASE) {
     try {
       dom.saveHolderDisplay.textContent = 'Récupération...';
-      const response = await fetch(`${AUTH_API_BASE}/api/discord/user-by-email`, {
+      // Ask our server for the Discord user linked to this email. Server will use the secret key.
+      const response = await fetch(`${AUTH_API_BASE}/api/auth/user-by-email`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + API_KEY
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: cachedEmail })
       });
       

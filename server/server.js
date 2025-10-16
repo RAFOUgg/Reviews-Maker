@@ -669,6 +669,53 @@ app.post('/api/auth/send-code', async (req, res) => {
   }, CODE_EXPIRY);
 });
 
+// POST /api/auth/resend-code - Resend verification code for an existing pending request
+app.post('/api/auth/resend-code', async (req, res) => {
+  const email = req.body?.email?.trim()?.toLowerCase();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'invalid_email', message: 'Adresse email invalide' });
+  }
+
+  const stored = verificationCodes.get(email);
+  if (!stored) {
+    return res.status(404).json({ error: 'no_pending_code', message: 'Aucun code en attente pour cet email' });
+  }
+
+  if (stored.attempts >= MAX_ATTEMPTS) {
+    return res.status(429).json({ error: 'too_many_attempts', message: 'Trop de tentatives' });
+  }
+
+  try {
+    const code = generateCode();
+    stored.code = code;
+    stored.expires = Date.now() + CODE_EXPIRY;
+    stored.attempts = 0;
+    verificationCodes.set(email, stored);
+    await sendVerificationEmail(email, code);
+    res.json({ ok: true, message: 'Code renvoyé par email' });
+  } catch (err) {
+    console.error('[AUTH] Error in resend-code:', err);
+    res.status(500).json({ error: 'server_error', message: 'Erreur lors de l\'envoi du code' });
+  }
+});
+
+// POST /api/auth/user-by-email - Lookup discord user by email via server
+app.post('/api/auth/user-by-email', async (req, res) => {
+  const email = req.body?.email?.trim()?.toLowerCase();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'invalid_email', message: 'Adresse email invalide' });
+  }
+
+  try {
+    const discordUser = await getDiscordUserByEmail(email);
+    if (!discordUser) return res.status(404).json({ error: 'not_found', message: 'Utilisateur introuvable' });
+    res.json(discordUser);
+  } catch (err) {
+    console.error('[AUTH] Error in user-by-email:', err);
+    res.status(500).json({ error: 'server_error', message: 'Erreur lors de la recherche de l\'utilisateur' });
+  }
+});
+
 // POST /api/auth/verify-code - Verify code and create session
 app.post('/api/auth/verify-code', (req, res) => {
   const email = req.body?.email?.trim()?.toLowerCase();
