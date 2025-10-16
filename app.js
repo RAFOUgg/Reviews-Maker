@@ -1044,6 +1044,12 @@ function initHomePage() {
   dom.statFavType = document.getElementById('statFavType');
   dom.themeSelect = document.getElementById('themeSelect');
   dom.openLibraryFromAccount = document.getElementById('openLibraryFromAccount');
+  // Auth connected small summary (inside auth modal)
+  dom.authConnTotal = document.getElementById('authConnTotal');
+  dom.authConnPublic = document.getElementById('authConnPublic');
+  dom.authConnPrivate = document.getElementById('authConnPrivate');
+  dom.authConnByType = document.getElementById('authConnByType');
+  dom.authOpenLibrary = document.getElementById('authOpenLibrary');
 
   console.log('DOM elements found:', {
     typeCards: dom.typeCards.length,
@@ -1508,6 +1514,17 @@ function setupModalEvents() {
       openLibraryModal('mine');
     });
   }
+  // 'Ma bibliothèque' inside auth modal
+  if (dom.authOpenLibrary) {
+    dom.authOpenLibrary.addEventListener('click', () => {
+      if (dom.authModal) dom.authModal.style.display = 'none';
+      if (!isUserConnected) {
+        if (dom.authModal) dom.authModal.style.display = 'flex';
+        return;
+      }
+      openLibraryModal('mine');
+    });
+  }
   if (dom.themeSelect) {
     dom.themeSelect.addEventListener('change', (e) => {
       const v = e.target.value;
@@ -1829,6 +1846,8 @@ async function updateAuthUI() {
         }
       }
     }
+    // Populate small summary inside auth modal
+    try { await renderAuthConnectedStats(); } catch(e) {}
   } else {
     if (dom.authStepEmail) dom.authStepEmail.style.display = 'flex';
     if (dom.authStepCode) dom.authStepCode.style.display = 'none';
@@ -1871,6 +1890,26 @@ async function updateAuthUI() {
 
   if (dom.libraryModal && dom.libraryModal.style.display === 'flex') {
     await renderFullLibrary(currentLibraryMode);
+  }
+}
+
+// Populate the small connected summary inside the auth modal
+async function renderAuthConnectedStats() {
+  // Reuse renderAccountView to fetch/populate main account modal fields
+  await renderAccountView();
+  // Copy values into auth modal small summary
+  if (dom.accountTotal && dom.authConnTotal) dom.authConnTotal.textContent = dom.accountTotal.textContent || '0';
+  if (dom.statPublic && dom.authConnPublic) dom.authConnPublic.textContent = dom.statPublic.textContent || '0';
+  if (dom.statPrivate && dom.authConnPrivate) dom.authConnPrivate.textContent = dom.statPrivate.textContent || '0';
+  // Copy by-type pills
+  const src = document.getElementById('accountStatsByType');
+  const dst = dom.authConnByType;
+  if (dst) {
+    dst.innerHTML = '';
+    if (src) {
+      // clone pills
+      src.childNodes.forEach(n => dst.appendChild(n.cloneNode(true)));
+    }
   }
 }
 

@@ -258,7 +258,16 @@
             <!-- Étape 3: Connecté -->
             <div id="authStepConnected" class="auth-step" style="display:none;">
               <p class="auth-info">Connecté en tant que <strong id="authConnectedEmail"></strong></p>
-              <div class="auth-actions">
+              <div class="auth-account-summary" style="margin-top:10px;">
+                <div style="display:flex; gap:12px; align-items:center;">
+                  <div><strong id="authConnTotal">0</strong><div style="font-size:0.85rem;color:var(--text-muted);">Total</div></div>
+                  <div><strong id="authConnPublic">0</strong><div style="font-size:0.85rem;color:var(--text-muted);">Public</div></div>
+                  <div><strong id="authConnPrivate">0</strong><div style="font-size:0.85rem;color:var(--text-muted);">Privé</div></div>
+                </div>
+                <div id="authConnByType" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;"></div>
+              </div>
+              <div class="auth-actions" style="margin-top:12px;">
+                <button type="button" class="btn btn-outline" id="authOpenLibrary">Ma bibliothèque</button>
                 <button type="button" class="btn btn-outline" id="authDisconnect">Se déconnecter</button>
               </div>
             </div>
