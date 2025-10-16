@@ -799,8 +799,6 @@ function createMobileBottomNav() {
   // Chercher les boutons de navigation existants
   const openLibrary = document.getElementById('openLibrary');
   const openTips = document.getElementById('openTips');
-  const topAccount = document.getElementById('topAccountBtn');
-  
   if (!openLibrary || !openTips) return;
   
   // Créer le conteneur de navigation mobile s'il n'existe pas
@@ -815,10 +813,9 @@ function createMobileBottomNav() {
   const libraryBtn = openLibrary.cloneNode(true);
   const tipsBtn = openTips.cloneNode(true);
 
-  // Also add account button on mobile by cloning topAccount or floatingAuthBtn
+  // Also add account button on mobile by cloning floatingAuthBtn
   let accountBtn = null;
-  if (topAccount) accountBtn = topAccount.cloneNode(true);
-  else if (document.getElementById('floatingAuthBtn')) accountBtn = document.getElementById('floatingAuthBtn').cloneNode(true);
+  if (document.getElementById('floatingAuthBtn')) accountBtn = document.getElementById('floatingAuthBtn').cloneNode(true);
   
   // Ajuster les IDs pour éviter les conflits
   libraryBtn.id = 'mobileOpenLibrary';
@@ -836,7 +833,7 @@ function createMobileBottomNav() {
     accountBtn.id = 'mobileAccountBtn';
     accountBtn.style.display = 'inline-flex';
     accountBtn.addEventListener('click', () => {
-      const btn = document.getElementById('topAccountBtn') || document.getElementById('floatingAuthBtn');
+      const btn = document.getElementById('floatingAuthBtn');
       if (btn) btn.click();
     });
     mobileNav.appendChild(accountBtn);
@@ -1038,17 +1035,6 @@ function initHomePage() {
   dom.authStatus = document.getElementById("authStatus");
   dom.floatingAuthBtn = document.getElementById("floatingAuthBtn");
   dom.openLibrary = document.getElementById("openLibrary");
-  dom.topAccountBtn = document.getElementById('topAccountBtn');
-  dom.accountModal = document.getElementById('accountModal');
-  dom.accountModalOverlay = document.getElementById('accountModalOverlay');
-  dom.closeAccountModal = document.getElementById('closeAccountModal');
-  dom.accountEmail = document.getElementById('accountEmail');
-  dom.statPublic = document.getElementById('statPublic');
-  dom.statPrivate = document.getElementById('statPrivate');
-  dom.statFavType = document.getElementById('statFavType');
-  dom.themeSelect = document.getElementById('themeSelect');
-  dom.openLibraryFromAccount = document.getElementById('openLibraryFromAccount');
-  dom.topAccountBtn = document.getElementById('topAccountBtn');
   dom.accountModal = document.getElementById('accountModal');
   dom.accountModalOverlay = document.getElementById('accountModalOverlay');
   dom.closeAccountModal = document.getElementById('closeAccountModal');
@@ -1505,19 +1491,6 @@ function setupModalEvents() {
     });
   }
 
-  // Top account button (visible when connected)
-  if (dom.topAccountBtn) {
-    dom.topAccountBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (!isUserConnected) {
-        if (dom.authModal) dom.authModal.style.display = 'flex';
-        updateAuthUI();
-        return;
-      }
-      openAccountModal();
-    });
-  }
-
   // Account modal handlers
   if (dom.closeAccountModal) {
     dom.closeAccountModal.addEventListener('click', () => closeAccountModal());
@@ -1957,6 +1930,8 @@ async function renderAccountView() {
   let publicCount = 0;
   let privateCount = 0;
   let favType = '—';
+  let totalCount = 0;
+  let byType = {};
 
   // Try to fetch stats from API when token present
   const token = localStorage.getItem('authToken');
@@ -1968,6 +1943,8 @@ async function renderAccountView() {
         publicCount = d.public || 0;
         privateCount = d.private || 0;
         favType = d.favorite_type || d.top_type || favType;
+        totalCount = d.total || (publicCount + privateCount) || totalCount;
+        byType = d.by_type || d.types || byType;
       }
     } catch (err) {
       console.warn('Unable to fetch account stats', err);
@@ -1981,12 +1958,47 @@ async function renderAccountView() {
       publicCount = cached.public || publicCount;
       privateCount = cached.private || privateCount;
       favType = cached.favorite_type || favType;
+      totalCount = cached.total || totalCount;
+      byType = cached.by_type || cached.types || byType;
     } catch {}
   }
 
   if (dom.statPublic) dom.statPublic.textContent = publicCount;
   if (dom.statPrivate) dom.statPrivate.textContent = privateCount;
   if (dom.statFavType) dom.statFavType.textContent = favType;
+  if (dom.accountTotal) dom.accountTotal.textContent = totalCount;
+
+  // Render by-type breakdown
+  const container = document.getElementById('accountStatsByType');
+  if (container) {
+    container.innerHTML = '';
+    // If we have a byType map, render it; else try to compute from cached reviews
+    if (byType && Object.keys(byType).length > 0) {
+      Object.keys(byType).forEach(t => {
+        const el = document.createElement('div');
+        el.className = 'stat-type-pill';
+        el.style.cssText = 'background: rgba(255,255,255,0.03); padding:6px 10px; border-radius:999px; font-size:0.9rem;';
+        el.textContent = `${t}: ${byType[t]}`;
+        container.appendChild(el);
+      });
+    } else if (localStorage.getItem('accountReviews')) {
+      try {
+        const reviews = JSON.parse(localStorage.getItem('accountReviews'));
+        const map = {};
+        reviews.forEach(r => {
+          const t = r.type || r.productType || 'Autre';
+          map[t] = (map[t] || 0) + 1;
+        });
+        Object.keys(map).forEach(t => {
+          const el = document.createElement('div');
+          el.className = 'stat-type-pill';
+          el.style.cssText = 'background: rgba(255,255,255,0.03); padding:6px 10px; border-radius:999px; font-size:0.9rem;';
+          el.textContent = `${t}: ${map[t]}`;
+          container.appendChild(el);
+        });
+      } catch(e) { /* ignore */ }
+    }
+  }
 
   // Setup theme select
   if (dom.themeSelect) {

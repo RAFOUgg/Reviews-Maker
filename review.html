@@ -43,11 +43,6 @@
             <span aria-hidden="true">💡</span>
             Astuces
           </span>
-          <!-- Top account button (hidden by default, shown when connected) -->
-          <button type="button" class="pill-btn" id="topAccountBtn" title="Compte" style="display:none;">
-            <span aria-hidden="true">�</span>
-            Compte
-          </button>
         </div>
       </div>
     </header>
@@ -292,9 +287,13 @@
             <div class="account-summary">
               <p>Connecté en tant que <strong id="accountEmail">—</strong></p>
               <div class="account-stats">
+                <div class="stat"><strong id="accountTotal">0</strong><span>Total reviews</span></div>
                 <div class="stat"><strong id="statPublic">0</strong><span>Reviews publiques</span></div>
                 <div class="stat"><strong id="statPrivate">0</strong><span>Reviews privées</span></div>
                 <div class="stat"><strong id="statFavType">—</strong><span>Type préféré</span></div>
+              </div>
+              <div class="account-stats-by-type" id="accountStatsByType" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                <!-- per-type stats will be injected here -->
               </div>
             </div>
 
