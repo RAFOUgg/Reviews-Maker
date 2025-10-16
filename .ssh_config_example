@@ -1,0 +1,9 @@
+# Exemple de fichier SSH config pour Windows
+Host vps-lafoncedalle
+  HostName 51.75.22.192
+  User ubuntu
+  IdentityFile C:\\Users\\Rafi\\.ssh\\id_rsa_lafoncedalle
+  IdentitiesOnly yes
+  ForwardAgent yes
+
+# Vous pouvez ajouter d'autres hôtes réutilisables ici
