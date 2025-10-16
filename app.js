@@ -1982,6 +1982,8 @@ function openAccountModal() {
   if (dom.accountModalOverlay) dom.accountModalOverlay.style.display = 'block';
   // trap focus
   trapFocus(dom.accountModal);
+  // prevent background scroll
+  try { document.body.classList.add('modal-open'); } catch(e){}
   renderAccountView().catch(err => console.warn('Failed to render account view', err));
 }
 
@@ -1990,6 +1992,7 @@ function closeAccountModal() {
   dom.accountModal.style.display = 'none';
   if (dom.accountModalOverlay) dom.accountModalOverlay.style.display = 'none';
   releaseFocusTrap();
+  try { document.body.classList.remove('modal-open'); } catch(e){}
 }
 
 // Focus trap utilities
@@ -2073,11 +2076,21 @@ async function renderAccountView() {
     try {
       const all = await dbGetAllReviews();
       if (all && all.length) {
-        totalCount = all.length;
-        publicCount = all.filter(r => !r.isPrivate).length;
-        privateCount = all.filter(r => !!r.isPrivate).length;
-        const map = {};
+        // Dedupe by id to avoid counting duplicates
+        const seen = new Set();
+        const unique = [];
         all.forEach(r => {
+          if (!r || !r.id) return;
+          if (!seen.has(r.id)) {
+            seen.add(r.id);
+            unique.push(r);
+          }
+        });
+        totalCount = unique.length;
+        publicCount = unique.filter(r => !r.isPrivate).length;
+        privateCount = unique.filter(r => !!r.isPrivate).length;
+        const map = {};
+        unique.forEach(r => {
           const t = r.productType || r.type || 'Autre';
           map[t] = (map[t] || 0) + 1;
         });
@@ -2085,6 +2098,8 @@ async function renderAccountView() {
         // Pick favorite
         let max = 0;
         Object.keys(map).forEach(k => { if (map[k] > max) { max = map[k]; favType = k; } });
+        // Ensure total matches public+private if any mismatch
+        if (!totalCount) totalCount = publicCount + privateCount;
       }
     } catch (err) {
       // ignore
@@ -2108,6 +2123,8 @@ async function renderAccountView() {
         el.textContent = `${t}: ${byType[t]}`;
         container.appendChild(el);
       });
+      // debug: print deduped counts to console for quick verification
+      try { console.info('ACCOUNT_STATS_DEDUPE', { totalCount, publicCount, privateCount, byType }); } catch(e){}
     } else if (localStorage.getItem('accountReviews')) {
       try {
         const reviews = JSON.parse(localStorage.getItem('accountReviews'));
