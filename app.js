@@ -2002,6 +2002,29 @@ async function renderAccountView() {
     } catch {}
   }
 
+  // If still empty, try to compute from local DB / localStorage reviews
+  if ((!publicCount && !privateCount && !totalCount) || (!byType || Object.keys(byType).length === 0)) {
+    try {
+      const all = await dbGetAllReviews();
+      if (all && all.length) {
+        totalCount = all.length;
+        publicCount = all.filter(r => !r.isPrivate).length;
+        privateCount = all.filter(r => !!r.isPrivate).length;
+        const map = {};
+        all.forEach(r => {
+          const t = r.productType || r.type || 'Autre';
+          map[t] = (map[t] || 0) + 1;
+        });
+        byType = map;
+        // Pick favorite
+        let max = 0;
+        Object.keys(map).forEach(k => { if (map[k] > max) { max = map[k]; favType = k; } });
+      }
+    } catch (err) {
+      // ignore
+    }
+  }
+
   if (dom.statPublic) dom.statPublic.textContent = publicCount;
   if (dom.statPrivate) dom.statPrivate.textContent = privateCount;
   if (dom.statFavType) dom.statFavType.textContent = favType;
