@@ -2148,8 +2148,7 @@ async function populatePublicProfile(email) {
         }
       }
       // Ensure the 'Voir la bibliothèque publique' action remains visible
-      const publicViewLibraryBtn = document.getElementById('publicViewLibrary');
-      if (publicViewLibraryBtn) publicViewLibraryBtn.style.display = 'inline-flex';
+  // Suppression de la logique pour 'Voir la bibliothèque publique'
     } catch(e) { /* ignore UI toggle failures */ }
     // Try to fetch from API first if available
     let byType = {};
