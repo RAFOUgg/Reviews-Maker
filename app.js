@@ -2278,21 +2278,7 @@ async function renderAccountView() {
 
   // Try to fetch stats from API when token present
   const token = localStorage.getItem('authToken');
-  if (token && remoteBase) {
-    try {
-      const resp = await fetch(`${remoteBase}/api/auth/stats`, { headers: { 'X-Auth-Token': token } });
-      if (resp.ok) {
-        const d = await resp.json();
-        publicCount = d.public || 0;
-        privateCount = d.private || 0;
-        favType = d.favorite_type || d.top_type || favType;
-        totalCount = d.total || (publicCount + privateCount) || totalCount;
-        byType = d.by_type || d.types || byType;
-      }
-    } catch (err) {
-      console.warn('Unable to fetch account stats', err);
-    }
-  }
+  // Désactivé : ne pas fetch /api/auth/stats, utilise uniquement les stats locales
 
   // Fallback: try to read a cached stats object in localStorage
   if ((!publicCount && !privateCount) && localStorage.getItem('accountStats')) {
