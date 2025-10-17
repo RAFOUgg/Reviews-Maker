@@ -1690,7 +1690,7 @@ function setupModalEvents() {
         // This avoids exposing the LaFoncedalle API key in the browser and
         // ensures the server (Reviews-Maker) handles user lookup and email sending.
         const base = AUTH_API_BASE || remoteBase || '';
-        const resp = await fetch(base + '/api/auth/send-code', {
+        const resp = await fetch(base + '/api/mail/send-verification', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email })
