@@ -5520,7 +5520,15 @@ async function remoteListReviews() {
 
 // Public gallery removed: always return empty list for public reviews.
 async function remoteListPublicReviews() {
-  return [];
+  if (!remoteEnabled) return [];
+  try {
+    const r = await fetch(remoteBase + '/api/public/reviews');
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    return await r.json();
+  } catch (e) {
+    console.warn('Remote public reviews error', e);
+    return [];
+  }
 }
 
 // List only MY reviews (for personal library)
