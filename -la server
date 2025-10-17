@@ -1,0 +1,20 @@
+* [33m4310e9a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m feat(library): Update default library mode to personal and remove public gallery references
+* [33m06d584b[m feat(account): Enhance account summary with avatar and improved stats layout
+* [33m34b3f64[m feat(profile): Remove 'Voir la bibliothèque publique' button from public profile modal
+* [33mf08acf8[m feat(profile): Add settings button to public profile modal for owner actions
+* [33md17cbdb[m feat(profile): Add public profile modal with read-only user statistics and actions
+* [33m9b3a099[m feat(account): Refactor account modal for improved accessibility and visual clarity
+* [33me5e5d94[m feat(account): Redesign account modal and overlay for improved aesthetics and usability
+* [33mc935acc[m feat(account): Add account settings panel with privacy and theme options
+* [33mbaae128[m feat(account): Implement theme selection with button options and add account settings button in modal
+* [33m87a244e[m feat(account): Add account settings button and update theme options in modal
+* [33m18a0f70[m feat(account): Enhance account modal functionality and styles to prevent background scroll and improve layout
+* [33m6b91707[m feat(account): Update account modal styles to remove backdrop blur and ensure content clarity
+* [33mbc47fd0[m feat(account): Add redesigned account modal with profile, stats, and preferences sections
+* [33m32db308[m feat(account): Add back button in library modal and update app version for deployment
+* [33m36722ff[m feat(account): Update section titles and styles for improved layout and consistency
+* [33mc907a80[m feat(account): Implement focus trap for account modal to enhance accessibility
+* [33m7c7214a[m feat(account): Update class names for account view elements to improve consistency
+* [33mc5ad698[m feat(account): Refactor account modal layout and styling for improved clarity and organization
+* [33m0a7a1f2[m feat(account): Add account modal styles and layout for improved user experience
+* [33m5eb2864[m feat(account): Redesign account modal with improved layout and preferences section
