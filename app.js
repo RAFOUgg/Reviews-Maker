@@ -1690,7 +1690,7 @@ function setupModalEvents() {
         // This avoids exposing the LaFoncedalle API key in the browser and
         // ensures the server (Reviews-Maker) handles user lookup and email sending.
         const base = AUTH_API_BASE || remoteBase || '';
-        const resp = await fetch(base + '/api/mail/send-verification', {
+        const resp = await fetch(base + '/api/auth/send-code', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email })
@@ -1757,7 +1757,7 @@ function setupModalEvents() {
       try {
         // Verify the code via server so it can create a proper session token.
         const base = AUTH_API_BASE || remoteBase || '';
-  const verifyResp = await fetch(base + '/api/mail/verify-code', {
+  const verifyResp = await fetch(base + '/api/auth/verify-code', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, code })
@@ -1815,7 +1815,7 @@ function setupModalEvents() {
         sessionStorage.setItem('pendingCode', code);
         
         // Request server to resend the verification code. Server will call LaFoncedalle/mail endpoint.
-  const sendResponse = await fetch((AUTH_API_BASE || remoteBase) + '/api/mail/resend-code', {
+  const sendResponse = await fetch((AUTH_API_BASE || remoteBase) + '/api/auth/resend-code', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email })
