@@ -1757,7 +1757,7 @@ function setupModalEvents() {
       try {
         // Verify the code via server so it can create a proper session token.
         const base = AUTH_API_BASE || remoteBase || '';
-        const verifyResp = await fetch(base + '/api/auth/verify-code', {
+  const verifyResp = await fetch(base + '/api/mail/verify-code', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, code })
@@ -1815,7 +1815,7 @@ function setupModalEvents() {
         sessionStorage.setItem('pendingCode', code);
         
         // Request server to resend the verification code. Server will call LaFoncedalle/mail endpoint.
-        const sendResponse = await fetch((AUTH_API_BASE || remoteBase) + '/api/auth/resend-code', {
+  const sendResponse = await fetch((AUTH_API_BASE || remoteBase) + '/api/mail/resend-code', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email })
@@ -1911,7 +1911,7 @@ async function updateHolderDisplay() {
     try {
       dom.saveHolderDisplay.textContent = 'Récupération...';
       // Ask our server for the Discord user linked to this email. Server will use the secret key.
-      const response = await fetch(`${AUTH_API_BASE}/api/auth/user-by-email`, {
+  const response = await fetch(`${AUTH_API_BASE}/api/discord/user-by-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: cachedEmail })
