@@ -3046,10 +3046,15 @@ async function renderCompactLibrary() {
       authorBtn.addEventListener('click', (ev) => {
         // Debug: trace author clicks to see why public profile may not open
         try { console.log('DEBUG: author-link clicked', { text: authorBtn.textContent, data: authorBtn.getAttribute('data-author-email') }); } catch(e){}
+        // Prevent the parent item click handler from also firing
+        ev.preventDefault();
         ev.stopPropagation();
-        const email = authorBtn.getAttribute('data-author-email') || authorBtn.textContent || '';
+        const email = (authorBtn.getAttribute('data-author-email') || authorBtn.textContent || '').trim();
         try { console.log('DEBUG: resolved author identifier ->', email); } catch(e){}
-        if (email) openPublicProfile(email);
+        if (email) {
+          // Use a small timeout to ensure any ongoing UI transitions finish
+          setTimeout(() => openPublicProfile(email), 10);
+        }
       });
     }
     
