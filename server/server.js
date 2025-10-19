@@ -350,18 +350,15 @@ app.delete('/api/reviews/:id', (req, res) => {
     }
     db.run('DELETE FROM reviews WHERE id=?', [id], (e2) => {
       if (e2) return res.status(500).json({ error: 'db_error' });
-      // Supprimer toutes les images associées à ce review
+      // Supprimer le fichier image référencé par imagePath
       try {
-        const files = fs.readdirSync(IMAGE_DIR);
-        const prefix = String(id);
-        files.forEach(f => {
-          if (f.startsWith(prefix)) {
-            fs.unlink(path.join(IMAGE_DIR, f), () => {});
+        if (row.imagePath) {
+          const imgFile = path.isAbsolute(row.imagePath)
+            ? row.imagePath
+            : path.join(IMAGE_DIR, path.basename(row.imagePath));
+          if (fs.existsSync(imgFile)) {
+            fs.unlink(imgFile, () => {});
           }
-        });
-        // Supprime aussi l'imagePath direct si existant
-        if (row.imagePath && fs.existsSync(row.imagePath)) {
-          fs.unlink(row.imagePath, () => {});
         }
       } catch {}
       res.json({ ok: true });
