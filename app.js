@@ -2136,7 +2136,10 @@ function closeAccountModal() {
 // Public profile (read-only) helpers
 async function populatePublicProfile(email) {
   try {
+    try { console.log('DEBUG: populatePublicProfile called with', email); } catch(e){}
     if (dom.publicProfileEmail) dom.publicProfileEmail.textContent = email || '—';
+    // Ensure modal is displayed (fallback if CSS wasn't applied)
+    try { const modal = document.getElementById('publicProfileModal'); if (modal) modal.style.display = 'block'; } catch(e){}
     // Determine ownership: if the profile email matches the signed-in email,
     // show settings/actions that are only available to the owner.
     try {
@@ -2213,8 +2216,20 @@ async function populatePublicProfile(email) {
 
 function openPublicProfile(email) {
   try {
+    try { console.log('DEBUG: openPublicProfile called with', email); } catch(e){}
+    // Close any account modal or other modals to ensure the public profile appears on top
+    try {
+      // If account modal is open, close it first
+      if (dom && dom.accountModal) {
+        try { closeAccountModal(); } catch(e) { /* ignore */ }
+      }
+      const others = document.querySelectorAll('.modal, .tips-dialog, .export-config-modal');
+      others.forEach(m => { if (m && m.id !== 'publicProfileModal') m.style.display = 'none'; });
+    } catch(e) { /* ignore */ }
+
     const overlay = document.getElementById('publicProfileOverlay'); if (overlay) overlay.classList.add('show');
-    const modal = document.getElementById('publicProfileModal'); if (modal) { modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); }
+    const modal = document.getElementById('publicProfileModal'); if (modal) { modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); modal.style.display = 'block'; }
+    try { console.log('DEBUG: publicProfileOverlay, modal classes ->', { overlayClass: overlay ? overlay.className : null, modalClass: modal ? modal.className : null, modalStyleDisplay: modal ? modal.style.display : null }); } catch(e){}
     try { document.body.classList.add('modal-open'); } catch(e){}
     populatePublicProfile(email).catch(()=>{});
   } catch(e){}
@@ -2936,7 +2951,7 @@ async function renderCompactLibrary() {
       <div class="compact-item-content">
         <div class="compact-item-title">${title}</div>
         <div class="compact-item-meta">${r.productType || "Review"} • ${date}${holder}</div>
-        ${r.holderName ? `<button type="button" class="author-link" data-author-email="${(r.holderEmail||'').replace(/\"/g,'')}">${r.holderName}</button>` : ''}
+  ${r.holderName ? `<button type="button" class="author-link" data-author-email="${String((r.holderEmail || (r.owner && r.owner.email) || r.owner || r.holderName) || '').replace(/\"/g,'')}">${r.holderName}</button>` : ''}
       </div>
     `;
     
@@ -2958,8 +2973,11 @@ async function renderCompactLibrary() {
     const authorBtn = item.querySelector('.author-link');
     if (authorBtn) {
       authorBtn.addEventListener('click', (ev) => {
+        // Debug: trace author clicks to see why public profile may not open
+        try { console.log('DEBUG: author-link clicked', { text: authorBtn.textContent, data: authorBtn.getAttribute('data-author-email') }); } catch(e){}
         ev.stopPropagation();
         const email = authorBtn.getAttribute('data-author-email') || authorBtn.textContent || '';
+        try { console.log('DEBUG: resolved author identifier ->', email); } catch(e){}
         if (email) openPublicProfile(email);
       });
     }
