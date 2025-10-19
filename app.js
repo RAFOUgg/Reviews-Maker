@@ -2301,6 +2301,18 @@ function openPublicProfile(email) {
 
 if (typeof window !== 'undefined') {
   try { document.addEventListener('click', (e) => {
+    // Delegated: author-link click (open public profile)
+    try {
+      const authorBtn = e.target && e.target.closest ? e.target.closest('.author-link') : null;
+      if (authorBtn) {
+        e.stopPropagation();
+        const email = authorBtn.getAttribute('data-author-email') || authorBtn.textContent || '';
+        try { console.log('DEBUG: delegated author-link click ->', email); } catch(e){}
+        if (email) openPublicProfile(email);
+        return;
+      }
+    } catch(e){}
+
     if (e.target && e.target.id === 'closePublicProfile') {
       const overlay = document.getElementById('publicProfileOverlay'); if (overlay) overlay.classList.remove('show');
       const modal = document.getElementById('publicProfileModal'); if (modal) { modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); }
