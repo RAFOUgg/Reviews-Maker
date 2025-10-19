@@ -816,6 +816,15 @@ form {
   z-index: 2501;
 }
 
+/* Ensure dialogs receive pointer events and overlays sit behind them */
+.account-overlay { pointer-events: auto; }
+.account-dialog, #accountModal, #publicProfileModal { pointer-events: auto; }
+.account-overlay.show { pointer-events: auto; }
+
+/* Public profile action buttons styling */
+#publicProfileModal .panel button { cursor: pointer; }
+#publicProfileModal .panel .btn { width: 100%; text-align: center; }
+
 .account-header {
   display:flex;
   align-items:center;

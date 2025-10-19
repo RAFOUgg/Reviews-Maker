@@ -301,18 +301,41 @@
       <div class="account-header">
         <h3 id="publicProfileTitle">Profil public</h3>
         <div style="display:flex;gap:8px;align-items:center;">
-          <button type="button" class="btn btn-ghost" id="publicProfileSettingsBtn" title="Paramètres" style="display:none;">⚙️ Paramètres</button>
           <button type="button" class="modal-close" id="closePublicProfile" aria-label="Fermer">✕</button>
         </div>
       </div>
       <div class="account-body">
         <div class="account-left">
-          <div class="account-profile"><div class="account-avatar">👤</div><div class="account-meta"><div id="publicProfileEmail">—</div><div class="sub" id="publicProfileSub">Membre Reviews Maker</div></div></div>
-          <div class="stats-grid"><div class="stat-card"><div class="num" id="publicTotal">0</div><div class="label">Total</div></div><div class="stat-card"><div class="num" id="publicPublic">0</div><div class="label">Public</div></div><div class="stat-card"><div class="num" id="publicPrivate">0</div><div class="label">Privé</div></div></div>
-          <div style="margin-top:10px;"><h4 class="section-title">Répartition par type</h4><div id="publicByType" class="account-stats-by-type"></div></div>
+          <div class="account-profile">
+            <div class="account-avatar">👤</div>
+            <div class="account-meta">
+              <div id="publicProfileEmail">—</div>
+              <div class="sub" id="publicProfileSub">Membre Reviews Maker</div>
+            </div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card"><div class="num" id="publicTotal">0</div><div class="label">Total</div></div>
+            <div class="stat-card"><div class="num" id="publicPublic">0</div><div class="label">Public</div></div>
+            <div class="stat-card"><div class="num" id="publicPrivate">0</div><div class="label">Privé</div></div>
+          </div>
+          <div style="margin-top:10px;">
+            <h4 class="section-title">Répartition par type</h4>
+            <div id="publicByType" class="account-stats-by-type"></div>
+          </div>
         </div>
         <div class="account-right">
-          <!-- actions placeholder -->
+          <div class="panel">
+            <h4 class="section-title">Actions</h4>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+              <button type="button" class="btn btn-outline" id="publicOpenLibrary">Voir la bibliothèque</button>
+              <button type="button" class="btn btn-outline" id="publicFollowUser">Suivre</button>
+              <button type="button" class="btn btn-outline" id="publicReportUser">Signaler</button>
+            </div>
+          </div>
+          <div class="panel">
+            <h4 class="section-title">À propos</h4>
+            <div style="color:var(--text-soft);">Les reviews publiques de cet utilisateur apparaîtront ici.</div>
+          </div>
         </div>
       </div>
     </div>
