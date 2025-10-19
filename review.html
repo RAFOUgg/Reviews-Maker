@@ -326,23 +326,7 @@
               <div id="accountStatsByType" class="account-stats-by-type"></div>
             </div>
 
-            <!-- Public profile modal (read-only, visible to anyone) -->
-            <div id="publicProfileModal" aria-hidden="true">
-              <div class="account-overlay" id="publicProfileOverlay"></div>
-              <div class="account-dialog" role="dialog" aria-modal="true" aria-labelledby="publicProfileTitle">
-                <div class="account-header">
-                  <h3 id="publicProfileTitle">Profil public</h3>
-                  <div style="display:flex;gap:8px;align-items:center;"><button type="button" class="btn btn-ghost" id="publicProfileSettingsBtn" title="Paramètres" style="display:none;">⚙️ Paramètres</button><button type="button" class="modal-close" id="closePublicProfile" aria-label="Fermer">✕</button></div>
-                </div>
-                <div class="account-body">
-                  <div class="account-left"><div class="account-profile"><div class="account-avatar">👤</div><div class="account-meta"><div id="publicProfileEmail">—</div><div class="sub" id="publicProfileSub">Membre Reviews Maker</div></div></div>
-                    <div class="stats-grid"><div class="stat-card"><div class="num" id="publicTotal">0</div><div class="label">Total</div></div><div class="stat-card"><div class="num" id="publicPublic">0</div><div class="label">Public</div></div><div class="stat-card"><div class="num" id="publicPrivate">0</div><div class="label">Privé</div></div></div>
-                    <div style="margin-top:10px;"><h4 class="section-title">Répartition par type</h4><div id="publicByType" class="account-stats-by-type"></div></div>
-                  </div>
-                  <div class="account-right"><div class="panel"><h4 class="section-title">Actions publiques</h4><div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;"><button class="btn btn-outline" id="publicViewLibrary">Voir la bibliothèque publique</button></div></div></div>
-                </div>
-              </div>
-            </div>
+            <!-- Public profile removed from review.html — profile accessible via floating auth button only -->
           </div>
 
           <!-- Right column: actions & preferences -->
