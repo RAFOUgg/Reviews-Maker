@@ -5552,91 +5552,13 @@ async function remoteListMyReviews() {
 // On préfère les versions serveur lorsqu'elles existent, mais on ne perd pas les brouillons locaux
 // si l'API renvoie une liste vide ou encore non synchronisée.
 async function listUnifiedReviews() {
-  const basePath = (typeof location !== 'undefined' && location.pathname && location.pathname.startsWith('/reviews')) ? '/reviews' : '';
-  const normalizeImage = (img) => {
-    try {
-      if (!img || typeof img !== 'string') return img;
-      if (img.startsWith('data:')) return img; // base64 local
-      if (basePath && img.startsWith('/images/')) return basePath + img;
-      return img;
-    } catch { return img; }
-  };
-
-  let local = [];
-  try { local = await dbGetAllReviews(); } catch {}
-  if (!remoteEnabled) {
-    return (local || []).map(r => ({ ...r, image: normalizeImage(r.image) }));
-  }
+  // Désactivation de la fusion locale/serveur et des brouillons :
+  // On ne retourne que les reviews publiques du serveur
+  if (!remoteEnabled) return [];
   let remote = [];
   try { remote = await remoteListReviews(); } catch {}
-  // Si le serveur ne renvoie rien, ne pas écraser les locales
-  if (!Array.isArray(remote) || remote.length === 0) {
-    return (local || []).map(r => ({ ...r, image: normalizeImage(r.image) }));
-  }
-
-  const strictKey = (r) => (r && (r.correlationKey || computeCorrelationKey(r))) || null;
-  const looseKey = (r) => computeLooseKey(r);
-
-  const localByStrict = new Map();
-  const localByLoose = new Map();
-  for (const r of local || []) {
-    const s = strictKey(r) || `local-${r.id ?? Math.random()}`;
-    localByStrict.set(s, { ...r, image: normalizeImage(r.image) });
-    const l = looseKey(r);
-    if (l && !localByLoose.has(l)) localByLoose.set(l, r);
-  }
-
-  const mergedByStrict = new Map();
-  const usedLocalStrict = new Set();
-
-  // Merge remote entries with local ones by strict key, otherwise by loose key
-  for (const r of remote || []) {
-    const normRemote = { ...r, image: normalizeImage(r.image) };
-    const s = strictKey(r) || `remote-${r.id ?? Math.random()}`;
-    let base = localByStrict.get(s);
-    if (!base) {
-      const l = looseKey(r);
-      if (l && localByLoose.has(l)) {
-        const candidate = localByLoose.get(l);
-        const s2 = strictKey(candidate) || `local-${candidate.id ?? Math.random()}`;
-        base = localByStrict.get(s2);
-        if (base) usedLocalStrict.add(s2);
-      }
-    } else {
-      usedLocalStrict.add(s);
-    }
-    if (base) {
-      const merged = { ...base, ...normRemote };
-      if (!normRemote.image && base.image) merged.image = base.image;
-      mergedByStrict.set(s, merged);
-    } else {
-      mergedByStrict.set(s, normRemote);
-    }
-  }
-
-  // Add remaining local entries not matched by any remote (keep drafts)
-  // But filter out private reviews that are only local (they shouldn't be shown in public gallery)
-  for (const [s, r] of localByStrict.entries()) {
-    if (usedLocalStrict.has(s)) continue;
-    // Don't add local-only private reviews to the unified list
-    // They will only be visible in "Ma bibliothèque" via /api/my/reviews
-    if (r.isPrivate && !r.id) continue; // Skip local-only private reviews
-    if (!mergedByStrict.has(s)) mergedByStrict.set(s, r);
-  }
-
-  // Stable sort: by date desc, then image-first, then name
-  const arr = Array.from(mergedByStrict.values());
-  arr.sort((a, b) => {
-    const da = new Date(a.date || 0).getTime();
-    const db = new Date(b.date || 0).getTime();
-    if (db !== da) return db - da;
-    const ia = a.image ? 1 : 0;
-    const ib = b.image ? 1 : 0;
-    if (ib !== ia) return ib - ia;
-    const na = (a.productName || a.cultivars || '').localeCompare(b.productName || b.cultivars || '');
-    return na;
-  });
-  return arr;
+  // Ne garder que les reviews publiques (ni privées ni brouillons)
+  return (remote || []).filter(r => !r.isPrivate && !r.isDraft);
 }
 
 // Récupération d'une review précise via l'API distante
