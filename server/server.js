@@ -45,8 +45,8 @@ const CODE_EXPIRY = 10 * 60 * 1000; // 10 minutes
 const MAX_ATTEMPTS = 5;
 
 // Storage config for images
-// Expose images for front-end compatibility
-app.use('/reviews/images', express.static(IMAGE_DIR));
+// ...existing code...
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, IMAGE_DIR),
   filename: (req, file, cb) => {
@@ -106,9 +106,12 @@ db.serialize(() => {
   });
 });
 
+
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
+// Expose images for front-end compatibility (corrigé)
+app.use('/reviews/images', express.static(IMAGE_DIR));
 
 app.use('/images', express.static(IMAGE_DIR));
 app.use(express.static(path.join(__dirname, '..'), {
