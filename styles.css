@@ -4264,7 +4264,7 @@ textarea {
   text-align: left;
   max-width: 400px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  z-index: 10000;
+  z-index: 5000;
   cursor: pointer;
   transition: all 0.3s ease;
   animation: slideInLeft 0.4s ease-out;
@@ -4287,6 +4287,9 @@ textarea {
     opacity: 1;
   }
 }
+
+/* Ensure small auth-status notifications don't intercept clicks when a modal is open */
+body.modal-open .auth-status { pointer-events: none; opacity: 0.95; }
 
 .auth-status-success {
   background: linear-gradient(135deg, rgba(52, 211, 153, 0.2) 0%, rgba(52, 211, 153, 0.1) 100%);
