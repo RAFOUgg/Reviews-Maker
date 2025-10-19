@@ -855,7 +855,6 @@ form {
   .account-left { order:2; }
   .account-right { order:1; }
 }
-}
 .pill-action {
   padding:10px 14px;
   border-radius:999px;
@@ -1771,7 +1770,6 @@ button {
   font-size: 0.8rem;
   border-radius: 6px;
 }
-  overflow: visible; /* avoid creating its own scrollbar */
 .review-content {
   background: linear-gradient(145deg, rgba(14, 20, 36, 0.96), rgba(16, 24, 42, 0.88));
   border-radius: var(--radius-lg);
@@ -2128,12 +2126,8 @@ button {
   justify-self: center;
 }
 
-  align-items: flex-start;
-  min-height: 72px;
-  font-size: 1.1rem;
 /* hide default page scrollbar when modal is open (visual improvement) */
 body.modal-open { overflow: hidden; }
-}
 
 .review-header h2 {
   font-size: clamp(2rem, 3vw, 2.5rem);
@@ -4888,6 +4882,7 @@ textarea {
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -5008,6 +5003,21 @@ textarea {
     0 40px 80px -20px rgba(0, 0, 0, 0.8),
     0 0 60px -20px rgba(52, 211, 153, 0.2);
 }
+
+/* Public profile modal: hidden by default and shown when .show is added */
+#publicProfileModal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(900px, 94vw);
+  max-height: 88vh;
+  display: none;
+  z-index: 2450;
+}
+
+#publicProfileModal .account-dialog { max-width: 100%; }
+#publicProfileModal.show { display: block; }
 
 .modal-header {
   padding: 2rem;
