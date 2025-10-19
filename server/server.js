@@ -356,11 +356,21 @@ app.delete('/api/reviews/:id', (req, res) => {
           const imgFile = path.isAbsolute(row.imagePath)
             ? row.imagePath
             : path.join(IMAGE_DIR, path.basename(row.imagePath));
-          if (fs.existsSync(imgFile)) {
-            fs.unlink(imgFile, () => {});
+          try {
+            if (fs.existsSync(imgFile)) {
+              // use synchronous unlink and log any error so ops can diagnose
+              fs.unlinkSync(imgFile);
+              console.log('[DELETE] Removed image:', imgFile);
+            } else {
+              console.debug('[DELETE] Image file not found (already removed?):', imgFile);
+            }
+          } catch (e) {
+            console.warn('[DELETE] Failed to remove image', imgFile, e && e.message ? e.message : e);
           }
         }
-      } catch {}
+      } catch (e) {
+        console.warn('[DELETE] Unexpected error while removing image:', e && e.message ? e.message : e);
+      }
       res.json({ ok: true });
     });
   });

@@ -245,6 +245,23 @@
         "documentation": {}
     },
     {
+        "label": "argparse",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "argparse",
+        "description": "argparse",
+        "detail": "argparse",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
         "label": "initialize_db",
         "kind": 2,
         "importPath": "docs.scripts data LaFoncedalleBot.app",
@@ -557,6 +574,24 @@
         "description": "docs.scripts data LaFoncedalleBot.app",
         "peekOfCode": "WELCOME_CODES_FILE = os.path.join(BASE_DIR, \"welcome_codes.txt\")\n# --- Initialisation de la Base de Données ---\n# Dans app.py\ndef initialize_db():\n    \"\"\"Initialise les tables pour la liaison de comptes, les rappels et la liste noire dans la DB partagée.\"\"\"\n    print(f\"INFO: Initialisation des tables dans la base de données: {DB_FILE}\")\n    with get_db_connection() as conn:\n        cursor = conn.cursor()\n        # Table principale user_links avec toutes les colonnes\n        cursor.execute(\"\"\"",
         "detail": "docs.scripts data LaFoncedalleBot.app",
+        "documentation": {}
+    },
+    {
+        "label": "parse_args",
+        "kind": 2,
+        "importPath": "scripts.clean_review_images",
+        "description": "scripts.clean_review_images",
+        "peekOfCode": "def parse_args():\n    p = argparse.ArgumentParser(description='Detect/delete orphaned images in db/review_images')\n    p.add_argument('--db', default='db/reviews.sqlite')\n    p.add_argument('--images', default='db/review_images')\n    p.add_argument('--dry-run', action='store_true')\n    p.add_argument('--delete', action='store_true')\n    return p.parse_args()\ndef main():\n    args = parse_args()\n    db_path = Path(args.db)",
+        "detail": "scripts.clean_review_images",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "scripts.clean_review_images",
+        "description": "scripts.clean_review_images",
+        "peekOfCode": "def main():\n    args = parse_args()\n    db_path = Path(args.db)\n    images_dir = Path(args.images)\n    if not db_path.exists():\n        print('DB not found at', db_path)\n        return 2\n    if not images_dir.exists():\n        print('Images dir not found at', images_dir)\n        return 2",
+        "detail": "scripts.clean_review_images",
         "documentation": {}
     },
     {
