@@ -1069,10 +1069,6 @@ function initHomePage() {
   dom.publicPublic = document.getElementById('publicPublic');
   dom.publicPrivate = document.getElementById('publicPrivate');
   dom.publicByType = document.getElementById('publicByType');
-  // New public profile action buttons
-  dom.publicOpenLibrary = document.getElementById('publicOpenLibrary');
-  dom.publicFollowUser = document.getElementById('publicFollowUser');
-  dom.publicReportUser = document.getElementById('publicReportUser');
   // The public gallery has been removed; hide any button that would open it.
   dom.publicViewLibrary = document.getElementById('publicViewLibrary');
   if (dom.publicViewLibrary) dom.publicViewLibrary.style.display = 'none';
@@ -1083,32 +1079,6 @@ function initHomePage() {
     openTips: !!dom.openTips,
     showMore: !!dom.showMoreLibrary
   });
-
-  // Ensure public profile action buttons are wired
-  if (dom.publicOpenLibrary) {
-    dom.publicOpenLibrary.addEventListener('click', function(){
-      try { console.log('DEBUG: publicOpenLibrary clicked'); } catch(e){}
-      // Reuse the same handler as account "open library"
-      const libBtn = document.getElementById('openFullLibrary') || document.getElementById('openLibrary') || document.getElementById('openFullLibrary');
-      if (libBtn) libBtn.click();
-      // Close public profile after opening
-      const overlay = document.getElementById('publicProfileOverlay'); if (overlay) overlay.classList.remove('show');
-      const modal = document.getElementById('publicProfileModal'); if (modal) { modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); }
-    });
-  }
-  if (dom.publicFollowUser) {
-    dom.publicFollowUser.addEventListener('click', function(){
-      try { console.log('DEBUG: publicFollowUser clicked'); } catch(e){}
-      // Placeholder: visual feedback
-      alert('Fonction de suivi non implémentée dans cette version.');
-    });
-  }
-  if (dom.publicReportUser) {
-    dom.publicReportUser.addEventListener('click', function(){
-      try { console.log('DEBUG: publicReportUser clicked'); } catch(e){}
-      alert("Merci de nous signaler tout contenu inapproprié. (fonctionnalité non activée)");
-    });
-  }
 
   // Theme helpers: apply and persist
   function applyTheme(name) {
@@ -2331,18 +2301,6 @@ function openPublicProfile(email) {
 
 if (typeof window !== 'undefined') {
   try { document.addEventListener('click', (e) => {
-    // Delegated: author-link click (open public profile)
-    try {
-      const authorBtn = e.target && e.target.closest ? e.target.closest('.author-link') : null;
-      if (authorBtn) {
-        e.stopPropagation();
-        const email = authorBtn.getAttribute('data-author-email') || authorBtn.textContent || '';
-        try { console.log('DEBUG: delegated author-link click ->', email); } catch(e){}
-        if (email) openPublicProfile(email);
-        return;
-      }
-    } catch(e){}
-
     if (e.target && e.target.id === 'closePublicProfile') {
       const overlay = document.getElementById('publicProfileOverlay'); if (overlay) overlay.classList.remove('show');
       const modal = document.getElementById('publicProfileModal'); if (modal) { modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); }
