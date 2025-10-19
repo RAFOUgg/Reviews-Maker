@@ -1551,6 +1551,7 @@ function setupModalEvents() {
   }
   if (dom.openLibraryFromAccount) {
     dom.openLibraryFromAccount.addEventListener('click', () => {
+      try { console.log('DEBUG: openLibraryFromAccount clicked, isUserConnected=', isUserConnected); } catch(e){}
       closeAccountModal();
       if (!isUserConnected) {
         if (dom.authModal) dom.authModal.style.display = 'flex';
@@ -1562,6 +1563,7 @@ function setupModalEvents() {
   // 'Ma bibliothèque' inside auth modal
   if (dom.authOpenLibrary) {
     dom.authOpenLibrary.addEventListener('click', () => {
+      try { console.log('DEBUG: authOpenLibrary clicked, isUserConnected=', isUserConnected); } catch(e){}
       if (dom.authModal) dom.authModal.style.display = 'none';
       if (!isUserConnected) {
         if (dom.authModal) dom.authModal.style.display = 'flex';
@@ -2346,6 +2348,8 @@ async function renderAccountView() {
   if (dom.statPrivate) dom.statPrivate.textContent = privateCount;
   if (dom.statFavType) dom.statFavType.textContent = favType;
   if (dom.accountTotal) dom.accountTotal.textContent = totalCount;
+
+  try { console.log('DEBUG: renderAccountView computed', { totalCount, publicCount, privateCount, byTypeKeys: Object.keys(byType||{}) }); } catch(e){}
 
   // Render by-type breakdown
   const container = document.getElementById('accountStatsByType');
