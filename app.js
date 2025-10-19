@@ -5467,6 +5467,22 @@ function readFileAsDataURL(file) {
   });
 }
 
+// Small helper: fetch with timeout using AbortController
+async function fetchWithTimeout(url, opts = {}, timeoutMs = 5000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const init = { ...opts, signal: controller.signal };
+    const r = await fetch(url, init);
+    clearTimeout(id);
+    return r;
+  } catch (err) {
+    clearTimeout(id);
+    if (err.name === 'AbortError') throw new Error('timeout');
+    throw err;
+  }
+}
+
 // ---- Save modal helpers ----
 function openSaveModal() {
   if (!dom.saveModal) return;
@@ -5493,9 +5509,9 @@ async function tryEnableRemote() {
   const headers = {};
   const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
   if (token) headers['X-Auth-Token'] = token;
-  const r = await fetch(basePath + '/api/ping', { cache: 'no-store', headers });
-    if (!r.ok) return;
-    const js = await r.json();
+  const r = await fetchWithTimeout(basePath + '/api/ping', { cache: 'no-store', headers }, 3000);
+    if (!r.ok) { console.warn('[remote] ping returned', r.status); return; }
+    const js = await r.json().catch(() => null);
     if (js && js.ok) {
       remoteEnabled = true;
       remoteBase = basePath; // ensure subsequent calls hit /reviews/api when relevant
@@ -5512,9 +5528,9 @@ async function remoteListReviews() {
     const headers = {};
     const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
     if (token) headers['X-Auth-Token'] = token;
-    const r = await fetch(remoteBase + '/api/reviews', { headers });
-    if (!r.ok) throw new Error('HTTP '+r.status);
-    return await r.json();
+  const r = await fetchWithTimeout(remoteBase + '/api/reviews', { headers }, 5000);
+  if (!r.ok) throw new Error('HTTP '+r.status);
+  return await r.json();
   } catch (e) { console.warn('Remote list erreur', e); return dbGetAllReviews(); }
 }
 
@@ -5522,9 +5538,9 @@ async function remoteListReviews() {
 async function remoteListPublicReviews() {
   if (!remoteEnabled) return [];
   try {
-    const r = await fetch(remoteBase + '/api/public/reviews');
-    if (!r.ok) throw new Error('HTTP '+r.status);
-    return await r.json();
+  const r = await fetchWithTimeout(remoteBase + '/api/public/reviews', {}, 5000);
+  if (!r.ok) throw new Error('HTTP '+r.status);
+  return await r.json();
   } catch (e) {
     console.warn('Remote public reviews error', e);
     return [];
@@ -5539,9 +5555,9 @@ async function remoteListMyReviews() {
     if (!token) return [];
     
     const headers = { 'X-Auth-Token': token };
-    const r = await fetch(remoteBase + '/api/my/reviews', { headers });
-    if (!r.ok) throw new Error('HTTP '+r.status);
-    return await r.json();
+  const r = await fetchWithTimeout(remoteBase + '/api/my/reviews', { headers }, 5000);
+  if (!r.ok) throw new Error('HTTP '+r.status);
+  return await r.json();
   } catch (e) { 
     console.warn('Remote my reviews error', e); 
     return dbGetAllReviews(); 
@@ -5568,9 +5584,9 @@ async function remoteGetReview(id) {
     const headers = {};
     const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
     if (token) headers['X-Auth-Token'] = token;
-    const r = await fetch(`${remoteBase}/api/reviews/${id}`, { headers });
-    if (!r.ok) throw new Error('HTTP '+r.status);
-    return await r.json();
+  const r = await fetchWithTimeout(`${remoteBase}/api/reviews/${id}`, { headers }, 5000);
+  if (!r.ok) throw new Error('HTTP '+r.status);
+  return await r.json();
   } catch (e) {
     console.warn('Remote get erreur', e);
     return null;
