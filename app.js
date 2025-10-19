@@ -2884,16 +2884,16 @@ async function duplicateReview(review) {
 async function renderCompactLibrary() {
   if (!dom.compactLibraryList) return;
   
-  // Load personal library: prefer remote "my" reviews when available and authenticated,
-  // otherwise fall back to local DB / localStorage stored reviews.
+
+  // Sur la home, on affiche la galerie publique (reviews publiques uniquement)
   let items = [];
   try {
     if (remoteEnabled) {
-      items = await remoteListMyReviews();
+      items = await remoteListPublicReviews();
     } else {
-      items = await dbGetAllReviews();
+      items = (await dbGetAllReviews()).filter(r => !r.isPrivate && !r.isDraft);
     }
-  } catch (e) { console.warn('renderCompactLibrary load error', e); items = await dbGetAllReviews(); }
+  } catch (e) { console.warn('renderCompactLibrary load error', e); items = []; }
 
   const list = (items || [])
     .sort((a,b) => (a.date || "").localeCompare(b.date || ""))
