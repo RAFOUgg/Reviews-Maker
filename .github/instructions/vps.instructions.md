@@ -10,7 +10,7 @@ applyTo: '**'
 - Prendre en compte les instructions spécifiques du projet et les guidelines de codage présentes dans ce dossier.
 
 ## 2. Connexion et gestion du VPS
-- Pour toute action nécessitant un accès serveur, se connecter au VPS cible (`vps-lafoncedalle`) via SSH.
+- Pour toute action nécessitant un accès serveur, se connecter au VPS cible (`vps-lafoncedalle`) via SSH :`ssh vps-lafoncedalle`.
 - Vérifier l'état des services (Node.js, PM2, etc.), relancer ou diagnostiquer en cas de crash.
 - Toujours valider le bon fonctionnement du serveur après déploiement ou modification.
 
