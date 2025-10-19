@@ -1560,6 +1560,68 @@ function setupModalEvents() {
       openLibraryModal('mine', { fromAccount: true });
     });
   }
+
+  // Ensure account-level disconnect (inside the account modal) is wired
+  const accountDisconnectBtn = document.getElementById('accountDisconnect');
+  if (accountDisconnectBtn) {
+    accountDisconnectBtn.addEventListener('click', async () => {
+      try { console.log('DEBUG: accountDisconnect clicked'); } catch(e){}
+      // Mirror authDisconnect behavior but close the account modal
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('authEmail');
+      localStorage.removeItem('discordUsername');
+      localStorage.removeItem('discordId');
+      sessionStorage.removeItem('authEmail');
+      sessionStorage.removeItem('pendingCode');
+      showAuthStatus('Déconnecté', 'info');
+      updateAuthUI();
+      try { if (dom.accountModal) dom.accountModal.style.display = 'none'; } catch(e){}
+      if (isHomePage) {
+        renderCompactLibrary();
+        setupHomeTabs();
+      }
+    });
+  }
+
+  // Delegated click handler inside account modal to handle clicks even if DOM nodes are re-rendered
+  if (dom.accountModal) {
+    dom.accountModal.addEventListener('click', (e) => {
+      const libBtn = e.target.closest('#openLibraryFromAccount');
+      const accDisc = e.target.closest('#accountDisconnect');
+      const openSettings = e.target.closest('#openAccountSettingsInline');
+      if (libBtn) {
+        try { console.log('DEBUG: delegated openLibraryFromAccount'); } catch(e){}
+        e.preventDefault();
+        closeAccountModal();
+        if (!isUserConnected) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
+        openLibraryModal('mine', { fromAccount: true });
+        return;
+      }
+      if (accDisc) {
+        try { console.log('DEBUG: delegated accountDisconnect'); } catch(e){}
+        e.preventDefault();
+        // reuse same disconnect flow
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('authEmail');
+        localStorage.removeItem('discordUsername');
+        localStorage.removeItem('discordId');
+        sessionStorage.removeItem('authEmail');
+        sessionStorage.removeItem('pendingCode');
+        showAuthStatus('Déconnecté', 'info');
+        updateAuthUI();
+        try { dom.accountModal.style.display = 'none'; } catch(e){}
+        if (isHomePage) { renderCompactLibrary(); setupHomeTabs(); }
+        return;
+      }
+      if (openSettings) {
+        try { console.log('DEBUG: delegated openAccountSettingsInline'); } catch(e){}
+        e.preventDefault();
+        const panel = document.getElementById('accountSettingsPanel'); if (panel) panel.style.display = 'block';
+        if (dom.accountPreferences) dom.accountPreferences.style.display = 'none';
+        return;
+      }
+    });
+  }
   // 'Ma bibliothèque' inside auth modal
   if (dom.authOpenLibrary) {
     dom.authOpenLibrary.addEventListener('click', () => {
@@ -2304,9 +2366,14 @@ async function renderAccountView() {
       publicCount = cached.public || publicCount;
       privateCount = cached.private || privateCount;
       favType = cached.favorite_type || favType;
-      totalCount = cached.total || totalCount;
+      totalCount = (typeof cached.total !== 'undefined' && cached.total !== null) ? cached.total : totalCount;
       byType = cached.by_type || cached.types || byType;
     } catch {}
+  }
+
+  // If cached provided public/private counts but no total, compute it
+  if (!totalCount && (publicCount || privateCount)) {
+    totalCount = (publicCount || 0) + (privateCount || 0);
   }
 
   // If still empty, try to compute from local DB / localStorage reviews
