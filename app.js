@@ -2171,11 +2171,22 @@ function openAccountModal() {
   try {
     // hide any other open modals to avoid visual stacking
     const others = document.querySelectorAll('.modal, .tips-dialog, .export-config-modal');
-    others.forEach(m => { if (m !== dom.accountModal) m.style.display = 'none'; });
+    others.forEach(m => {
+      if (m !== dom.accountModal) {
+        try { m.style.display = 'none'; } catch(e){}
+        try { m.classList.remove('show'); } catch(e){}
+      }
+    });
+    // Also ensure any generic modal overlays are hidden so they don't sit above the account dialog
+    const overlays = document.querySelectorAll('.modal-overlay');
+    overlays.forEach(o => { try { o.style.display = 'none'; o.classList.remove('show'); } catch(e){} });
   } catch(e){}
   // show overlay and dialog
   const overlay = document.getElementById('accountModalOverlay');
+  console.log('openAccountModal: preparing to show account modal, hiding other overlays');
   if (overlay) overlay.classList.add('show');
+  // Ensure account modal is above any .modal (which uses z-index:3000)
+  try { dom.accountModal.style.zIndex = 10050; } catch(e){}
   dom.accountModal.classList.add('show');
   dom.accountModal.setAttribute('aria-hidden','false');
   // trap focus on dialog element
@@ -2288,11 +2299,13 @@ function openPublicProfile(email) {
         try { closeAccountModal(); } catch(e) { /* ignore */ }
       }
       const others = document.querySelectorAll('.modal, .tips-dialog, .export-config-modal');
-      others.forEach(m => { if (m && m.id !== 'publicProfileModal') m.style.display = 'none'; });
+      others.forEach(m => { if (m && m.id !== 'publicProfileModal') { try { m.style.display = 'none'; } catch(e){} try { m.classList.remove('show'); } catch(e){} } });
+      // Hide any modal-overlay elements that could sit above the public profile
+      const overlays = document.querySelectorAll('.modal-overlay, .account-overlay');
+      overlays.forEach(o => { try { o.style.display = 'none'; o.classList.remove('show'); } catch(e){} });
     } catch(e) { /* ignore */ }
-
-    const overlay = document.getElementById('publicProfileOverlay'); if (overlay) overlay.classList.add('show');
-    const modal = document.getElementById('publicProfileModal'); if (modal) { modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); modal.style.display = 'block'; }
+    const overlay = document.getElementById('publicProfileOverlay'); if (overlay) { overlay.classList.add('show'); overlay.style.display = 'block'; }
+    const modal = document.getElementById('publicProfileModal'); if (modal) { try { modal.style.zIndex = 10040; } catch(e){} modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); modal.style.display = 'block'; }
     try { console.log('DEBUG: publicProfileOverlay, modal classes ->', { overlayClass: overlay ? overlay.className : null, modalClass: modal ? modal.className : null, modalStyleDisplay: modal ? modal.style.display : null }); } catch(e){}
     try { document.body.classList.add('modal-open'); } catch(e){}
     populatePublicProfile(email).catch(()=>{});
