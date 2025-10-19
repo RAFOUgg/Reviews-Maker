@@ -45,6 +45,8 @@ const CODE_EXPIRY = 10 * 60 * 1000; // 10 minutes
 const MAX_ATTEMPTS = 5;
 
 // Storage config for images
+// Expose images for front-end compatibility
+app.use('/reviews/images', express.static(IMAGE_DIR));
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, IMAGE_DIR),
   filename: (req, file, cb) => {
@@ -345,7 +347,20 @@ app.delete('/api/reviews/:id', (req, res) => {
     }
     db.run('DELETE FROM reviews WHERE id=?', [id], (e2) => {
       if (e2) return res.status(500).json({ error: 'db_error' });
-      if (row.imagePath) fs.unlink(row.imagePath, () => {});
+      // Supprimer toutes les images associées à ce review
+      try {
+        const files = fs.readdirSync(IMAGE_DIR);
+        const prefix = String(id);
+        files.forEach(f => {
+          if (f.startsWith(prefix)) {
+            fs.unlink(path.join(IMAGE_DIR, f), () => {});
+          }
+        });
+        // Supprime aussi l'imagePath direct si existant
+        if (row.imagePath && fs.existsSync(row.imagePath)) {
+          fs.unlink(row.imagePath, () => {});
+        }
+      } catch {}
       res.json({ ok: true });
     });
   });
