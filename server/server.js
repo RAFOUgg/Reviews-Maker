@@ -635,6 +635,55 @@ async function sendVerificationEmail(email, code) {
   throw lastErr || new Error('mail_failed');
 }
 
+// Backwards-compatible mail endpoints
+// Some deployments or older frontends call /api/mail/send-verification or /api/email/send
+// We'll accept these requests and either call sendVerificationEmail (when code provided)
+// or forward the payload to the configured LaFoncedalle API so nginx proxies to Node don't 404/502.
+app.post('/api/mail/send-verification', async (req, res) => {
+  const email = (req.body && (req.body.to || req.body.email || req.body.recipient)) || null;
+  const code = req.body && (req.body.code || req.body.verificationCode || req.body.token) || null;
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email))) {
+    return res.status(400).json({ error: 'invalid_email', message: 'Adresse email invalide' });
+  }
+  if (!code) {
+    return res.status(400).json({ error: 'missing_code', message: 'Code manquant' });
+  }
+  try {
+    await sendVerificationEmail(String(email), String(code));
+    return res.json({ ok: true, message: 'Code envoyé par email' });
+  } catch (err) {
+    console.error('[MAIL] send-verification failed:', err && (err.message || err));
+    return res.status(502).json({ error: 'mail_failed', message: 'Échec lors de l\'envoi du mail' });
+  }
+});
+
+// Generic forwarding endpoints (accept common mail API shapes and forward to LaFoncedalle API)
+async function forwardToLaFoncedalle(path, body, res) {
+  try {
+    const url = LAFONCEDALLE_API_URL.replace(/\/$/, '') + path;
+    const opts = { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${LAFONCEDALLE_API_KEY}` }, body: JSON.stringify(body || {}) };
+    const r = await fetch(url, opts);
+    const ct = r.headers.get('content-type') || '';
+    let payload = null;
+    if (ct.includes('application/json')) payload = await r.json();
+    else payload = await r.text().catch(() => null);
+    return res.status(r.status).send(payload);
+  } catch (err) {
+    console.error('[MAIL] forwardToLaFoncedalle error', err && (err.message || err));
+    return res.status(502).json({ error: 'upstream_error', message: 'Erreur vers le service mail' });
+  }
+}
+
+app.post('/api/email/send', async (req, res) => {
+  // forward body to LaFoncedalle /api/email/send if available
+  return forwardToLaFoncedalle('/api/email/send', req.body, res);
+});
+
+app.post('/api/notify/send-verification', async (req, res) => {
+  // forward to notify/send-verification (some deployments use this path)
+  return forwardToLaFoncedalle('/api/notify/send-verification', req.body, res);
+});
+
 // POST /api/auth/send-code - Request verification code
 app.post('/api/auth/send-code', async (req, res) => {
   const email = req.body?.email?.trim()?.toLowerCase();
