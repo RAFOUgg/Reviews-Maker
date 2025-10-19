@@ -2132,6 +2132,17 @@ button {
 /* hide default page scrollbar when modal is open (visual improvement) */
 body.modal-open { overflow: hidden; }
 
+/* Ensure modals and overlays are interactive and on top when modal-open is set */
+.modal, .modal-overlay, #accountModal, .account-overlay, #publicProfileModal {
+  pointer-events: auto !important;
+}
+
+/* When a modal is open, ensure any bottom navigation or body decoration doesn't intercept clicks */
+body.modal-open::after,
+.mobile-bottom-nav {
+  pointer-events: none !important;
+}
+
 .review-header h2 {
   font-size: clamp(2rem, 3vw, 2.5rem);
   font-weight: 700;
