@@ -1,0 +1,4 @@
+/* components.css - component-specific rules */
+.profile-stats .stats-grid{display:flex;gap:12px}
+.stat-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:10px}
+.account-stats-by-type{display:flex;gap:8px;flex-wrap:wrap}

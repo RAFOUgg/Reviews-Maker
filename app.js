@@ -1,3 +1,50 @@
+// Minimal ModalCompat class (non-module, used by legacy app.js). This
+// centralizes open/close, overlay handling and basic accessibility.
+class ModalCompat {
+  constructor(root) {
+    if (!root) throw new Error('Modal root required');
+    this.root = root;
+    this.overlay = root.querySelector('.modal-overlay') || root.querySelector('.overlay');
+    this.content = root.querySelector('.modal-content') || root;
+    this.handlers = { open: [], close: [] };
+    this._onDocClick = this._onDocClick.bind(this);
+    this._onKey = this._onKey.bind(this);
+  }
+  open() {
+    try {
+      // close other modals
+      document.querySelectorAll('.modal').forEach(m => { if (m !== this.root) { try { m.classList.remove('show'); m.style.display = 'none'; } catch(e){} } });
+      if (this.overlay) { this.overlay.classList.add('show'); this.overlay.style.display = 'block'; }
+      this.root.classList.add('show'); this.root.style.display = 'block';
+      try { document.body.classList.add('modal-open'); } catch(e){}
+      document.addEventListener('click', this._onDocClick, true);
+      document.addEventListener('keydown', this._onKey, true);
+      this._emit('open');
+    } catch(e) { console.warn('ModalCompat.open error', e); }
+  }
+  close() {
+    try {
+      if (this.overlay) { this.overlay.classList.remove('show'); try { this.overlay.style.display = 'none'; } catch(e){} }
+      this.root.classList.remove('show'); try { this.root.style.display = 'none'; } catch(e){}
+      try { document.body.classList.remove('modal-open'); } catch(e){}
+      document.removeEventListener('click', this._onDocClick, true);
+      document.removeEventListener('keydown', this._onKey, true);
+      this._emit('close');
+    } catch(e) { console.warn('ModalCompat.close error', e); }
+  }
+  _onDocClick(e) {
+    if (!this.content.contains(e.target)) this.close();
+  }
+  _onKey(e) {
+    if (e.key === 'Escape' || e.key === 'Esc') this.close();
+  }
+  on(event, fn) { if (!this.handlers[event]) this.handlers[event] = []; this.handlers[event].push(fn); }
+  _emit(event, ...args) { (this.handlers[event] || []).forEach(fn => { try { fn(...args); } catch(e){} }); }
+}
+
+// Expose ModalCompat for other scripts if useful
+try { window.ModalCompat = ModalCompat; } catch(e){}
+
 function setupAccountModalEvents() {
   if (dom.closeAccountModal) {
     dom.closeAccountModal.addEventListener('click', () => closeAccountModal());
@@ -1139,6 +1186,9 @@ function initHomePage() {
   dom.openLibrary = document.getElementById("openLibrary");
   dom.libraryBackToAccount = document.getElementById('libraryBackToAccount');
   dom.accountModal = document.getElementById('accountModal');
+  try {
+    if (dom.accountModal) dom.modalAccount = new ModalCompat(dom.accountModal);
+  } catch(e) { console.warn('Failed to create ModalCompat for accountModal', e); }
   dom.accountModalOverlay = document.getElementById('accountModalOverlay');
   dom.closeAccountModal = document.getElementById('closeAccountModal');
   dom.accountEmail = document.getElementById('accountEmail');
@@ -1159,6 +1209,9 @@ function initHomePage() {
   dom.publicProfileModal = document.getElementById('publicProfileModal');
   dom.publicProfileOverlay = document.getElementById('publicProfileOverlay');
   dom.closePublicProfile = document.getElementById('closePublicProfile');
+  try {
+    if (dom.publicProfileModal) dom.modalPublic = new ModalCompat(dom.publicProfileModal);
+  } catch(e) { console.warn('Failed to create ModalCompat for publicProfileModal', e); }
   dom.publicProfileSettingsBtn = document.getElementById('publicProfileSettingsBtn');
   dom.publicProfileEmail = document.getElementById('publicProfileEmail');
   dom.publicTotal = document.getElementById('publicTotal');
@@ -2216,41 +2269,19 @@ function showAuthStatus(message, type = "info") {
 function openAccountModal() {
   if (!dom.accountModal) return;
   try {
-    // Ensure a clean slate: hide any other modal/overlay before opening account modal
-    try { closeAllModalsExcept(null); } catch(e){}
-  } catch(e){}
-  // show overlay and dialog
-  const overlay = document.getElementById('accountModalOverlay');
-  console.log('openAccountModal: preparing to show account modal, hiding other overlays');
-  if (overlay) {
-    overlay.classList.add('show');
-    overlay.style.display = 'block';
-    overlay.style.zIndex = '10040';
-    overlay.setAttribute('aria-hidden','false');
-  }
-  // Ensure account modal is above any .modal (which uses z-index:3000)
-  dom.accountModal.style.display = 'block';
-  dom.accountModal.style.zIndex = '10050';
-  dom.accountModal.classList.add('show');
-  dom.accountModal.setAttribute('aria-hidden','false');
-  // Ensure the inner dialog sits above the overlay (support .account-dialog or .modal-content)
-  try {
-    const dlg = dom.accountModal.querySelector('.account-dialog') || dom.accountModal.querySelector('.modal-content') || dom.accountModal;
-    if (dlg) {
-      try { dlg.style.zIndex = '10051'; } catch(e){}
-      try { dlg.style.display = 'block'; } catch(e){}
-      try { dlg.setAttribute('aria-hidden','false'); } catch(e){}
+    if (dom.modalAccount) {
+      dom.modalAccount.open();
+      try { trapFocus(dom.modalAccount.content || dom.accountModal); } catch(e){}
+      renderAccountView().catch(err => console.warn('Failed to render account view', err));
+      return;
     }
-  } catch(e){}
-  // Fallback: force modal visible if still hidden
-  setTimeout(() => {
-    if (dom.accountModal && dom.accountModal.style.display !== 'block') dom.accountModal.style.display = 'block';
-    if (overlay && overlay.style.display !== 'block') overlay.style.display = 'block';
-  }, 100);
-  // trap focus on dialog element
-  const dialog = dom.accountModal.querySelector('.account-dialog') || dom.accountModal.querySelector('.modal-content') || dom.accountModal;
-  trapFocus(dialog);
-  try { document.body.classList.add('modal-open'); } catch(e){}
+  } catch(e) { console.warn('modalAccount.open failed', e); }
+  // fallback legacy behaviour
+  try { closeAllModalsExcept(null); } catch(e){}
+  const overlay = document.getElementById('accountModalOverlay');
+  if (overlay) { overlay.classList.add('show'); overlay.style.display = 'block'; overlay.style.zIndex = '10040'; overlay.setAttribute('aria-hidden','false'); }
+  dom.accountModal.style.display = 'block'; dom.accountModal.style.zIndex = '10050'; dom.accountModal.classList.add('show'); dom.accountModal.setAttribute('aria-hidden','false');
+  try { const dialog = dom.accountModal.querySelector('.account-dialog') || dom.accountModal.querySelector('.modal-content') || dom.accountModal; trapFocus(dialog); } catch(e){}
   renderAccountView().catch(err => console.warn('Failed to render account view', err));
 }
 
@@ -2280,17 +2311,11 @@ function closeAllModalsExcept(keepId = null) {
 function closeAccountModal() {
   if (!dom.accountModal) return;
   try {
-    const overlay = document.getElementById('accountModalOverlay');
-    if (overlay) {
-      overlay.classList.remove('show');
-      try { overlay.style.display = 'none'; } catch(e){}
-    }
-  } catch(e){}
-  try { dom.accountModal.classList.remove('show'); } catch(e){}
-  try { dom.accountModal.setAttribute('aria-hidden','true'); } catch(e){}
-  try { dom.accountModal.style.display = 'none'; } catch(e){}
-  releaseFocusTrap();
-  try { document.body.classList.remove('modal-open'); } catch(e){}
+    if (dom.modalAccount) { dom.modalAccount.close(); return; }
+  } catch(e) { console.warn('modalAccount.close failed', e); }
+  try { const overlay = document.getElementById('accountModalOverlay'); if (overlay) { overlay.classList.remove('show'); try { overlay.style.display = 'none'; } catch(e){} } } catch(e){}
+  try { dom.accountModal.classList.remove('show'); dom.accountModal.setAttribute('aria-hidden','true'); dom.accountModal.style.display = 'none'; } catch(e){}
+  releaseFocusTrap(); try { document.body.classList.remove('modal-open'); } catch(e){}
 }
 
 // Public profile (read-only) helpers
@@ -2392,24 +2417,16 @@ function openPublicProfile(email) {
       // Close everything first to avoid stacking
       closeAllModalsExcept(null);
     } catch(e) { /* ignore */ }
-    const overlay = document.getElementById('publicProfileOverlay');
-    if (overlay) {
-      overlay.classList.add('show');
-      overlay.style.display = 'block';
-      overlay.style.zIndex = '10040';
-      overlay.setAttribute('aria-hidden','false');
-    }
-    const modal = document.getElementById('publicProfileModal');
-    if (modal) {
-      modal.style.zIndex = '10050';
-      modal.classList.add('show');
-      modal.setAttribute('aria-hidden','false');
-      modal.style.display = 'block';
-      // Fallback: force modal visible if still hidden
-      setTimeout(() => {
-        if (modal.style.display !== 'block') modal.style.display = 'block';
-        if (overlay && overlay.style.display !== 'block') overlay.style.display = 'block';
-      }, 100);
+    // Prefer ModalCompat instance if present
+    if (dom && dom.modalPublic) {
+      try { dom.modalPublic.open(); } catch(e) { console.warn('modalPublic.open failed', e); }
+    } else {
+      const overlay = document.getElementById('publicProfileOverlay');
+      if (overlay) { overlay.classList.add('show'); overlay.style.display = 'block'; overlay.style.zIndex = '10040'; overlay.setAttribute('aria-hidden','false'); }
+      const modal = document.getElementById('publicProfileModal');
+      if (modal) { modal.style.zIndex = '10050'; modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); modal.style.display = 'block';
+        setTimeout(() => { try { if (modal.style.display !== 'block') modal.style.display = 'block'; if (overlay && overlay.style.display !== 'block') overlay.style.display = 'block'; } catch(e){} }, 100);
+      }
     }
     try { console.log('DEBUG: publicProfileOverlay, modal classes ->', { overlayClass: overlay ? overlay.className : null, modalClass: modal ? modal.className : null, modalStyleDisplay: modal ? modal.style.display : null }); } catch(e){}
     try { document.body.classList.add('modal-open'); } catch(e){}
@@ -2419,6 +2436,7 @@ function openPublicProfile(email) {
 
 function closePublicProfileHandler() {
   try {
+    if (dom && dom.modalPublic) { dom.modalPublic.close(); return; }
     const overlay = document.getElementById('publicProfileOverlay'); if (overlay) { overlay.classList.remove('show'); try { overlay.style.display = 'none'; } catch(e){} }
     const modal = document.getElementById('publicProfileModal'); if (modal) { modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); try { modal.style.display = 'none'; } catch(e){} }
     try { document.body.classList.remove('modal-open'); } catch(e){}
