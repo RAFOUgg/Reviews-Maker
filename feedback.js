@@ -20,7 +20,7 @@
       return;
     }
     modal.style.display = 'flex';
-    if (overlay) overlay.style.display = 'block';
+    if (overlay) try { overlay.style.display = 'block'; } catch(e){}
     modal.classList.add('show');
     try { document.body.classList.add('modal-open'); } catch(e){}
     try { textarea && textarea.focus(); } catch(e){}
@@ -33,7 +33,7 @@
       return;
     }
     modal.style.display = 'none';
-    if (overlay) overlay.style.display = 'none';
+    if (overlay) try { overlay.style.display = 'none'; } catch(e){}
     modal.classList.remove('show');
     try { document.body.classList.remove('modal-open'); } catch(e){}
     if (status) { status.style.display = 'none'; status.textContent = ''; }

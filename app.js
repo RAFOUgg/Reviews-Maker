@@ -2334,27 +2334,43 @@ function showModalById(id, opts = {}) {
   try {
     if (!id) return;
     const modal = document.getElementById(id);
-    const overlay = document.getElementById(id + 'Overlay') || (modal && modal.querySelector('.modal-overlay'));
+    // ensure modal is top-level to avoid stacking/containment by transformed ancestors
+    if (modal && modal.parentElement !== document.body) {
+      try { document.body.appendChild(modal); } catch(e){}
+    }
+    const overlay = document.getElementById(id + 'Overlay') || (modal && modal.querySelector('.modal-overlay')) || null;
+    // If overlay is missing, create one (id will be `${id}Overlay`)
+    let overlayEl = overlay;
+    if (!overlayEl && modal) {
+      try {
+        overlayEl = document.createElement('div');
+        overlayEl.className = 'modal-overlay';
+        overlayEl.id = id + 'Overlay';
+        modal.insertBefore(overlayEl, modal.firstChild);
+      } catch(e) { overlayEl = null; }
+    }
     // Close other modals first
     try { closeAllModalsExcept(id); } catch(e){}
     // Overlay: allow opt-out for preview-only modals
     const hideBackdrop = !!opts.hideBackdrop || id === 'publicProfileModal';
-    if (overlay) {
+    if (overlayEl) {
       if (hideBackdrop) {
-        overlay.classList.remove('show');
-        overlay.style.display = 'none';
-        overlay.setAttribute('aria-hidden', 'true');
+        overlayEl.classList.remove('show');
+        try { overlayEl.style.display = 'none'; } catch(e){}
+        overlayEl.setAttribute('aria-hidden', 'true');
       } else {
-        overlay.classList.add('show');
-        overlay.style.display = 'block';
-        overlay.style.zIndex = opts.overlayZ || '10040';
-        overlay.setAttribute('aria-hidden','false');
+        overlayEl.classList.add('show');
+        try { overlayEl.style.display = 'block'; } catch(e){}
+        overlayEl.style.zIndex = opts.overlayZ || '10040';
+        overlayEl.setAttribute('aria-hidden','false');
       }
+      // ensure clicking overlay hides the modal
+      try { overlayEl.onclick = () => hideModalById(id); } catch(e){}
     }
     if (modal) {
       modal.classList.add('show');
-      modal.style.display = opts.display || 'flex';
-      modal.style.zIndex = opts.modalZ || '10050';
+      try { modal.style.display = opts.display || 'flex'; } catch(e){}
+      try { modal.style.zIndex = opts.modalZ || '10050'; } catch(e){}
       modal.setAttribute('aria-hidden','false');
       try { document.body.classList.add('modal-open'); } catch(e){}
       // trap focus if possible
@@ -2383,8 +2399,15 @@ function closeAccountModal() {
   try {
     if (dom.modalAccount) { dom.modalAccount.close(); return; }
   } catch(e) { console.warn('modalAccount.close failed', e); }
-  try { const overlay = document.getElementById('accountModalOverlay'); if (overlay) { overlay.classList.remove('show'); try { overlay.style.display = 'none'; } catch(e){} } } catch(e){}
-  try { dom.accountModal.classList.remove('show'); dom.accountModal.setAttribute('aria-hidden','true'); dom.accountModal.style.display = 'none'; } catch(e){}
+  try {
+    if (window && typeof window.hideModalById === 'function') {
+      try { window.hideModalById('accountModal'); }
+      catch(e) { /* fallthrough to manual hide */ }
+    } else {
+      const overlay = document.getElementById('accountModalOverlay'); if (overlay) { overlay.classList.remove('show'); try { overlay.style.display = 'none'; } catch(e){} }
+      try { dom.accountModal.classList.remove('show'); dom.accountModal.setAttribute('aria-hidden','true'); dom.accountModal.style.display = 'none'; } catch(e){}
+    }
+  } catch(e) { console.warn('closeAccountModal hide failed', e); }
   releaseFocusTrap(); try { document.body.classList.remove('modal-open'); } catch(e){}
 }
 
