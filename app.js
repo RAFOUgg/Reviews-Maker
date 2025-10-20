@@ -65,18 +65,24 @@ function setupAccountModalEvents() {
   const accountDisconnectBtn = document.getElementById('accountDisconnect');
   if (accountDisconnectBtn) {
     accountDisconnectBtn.addEventListener('click', async () => {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('authEmail');
-      localStorage.removeItem('discordUsername');
-      localStorage.removeItem('discordId');
-      sessionStorage.removeItem('authEmail');
-      sessionStorage.removeItem('pendingCode');
-      showAuthStatus('Déconnecté', 'info');
-      updateAuthUI();
-      if (dom.accountModal) dom.accountModal.style.display = 'none';
+      try {
+        if (window.Auth && typeof window.Auth.logout === 'function') {
+          window.Auth.logout();
+        } else {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authEmail');
+          localStorage.removeItem('discordUsername');
+          localStorage.removeItem('discordId');
+          sessionStorage.removeItem('authEmail');
+          sessionStorage.removeItem('pendingCode');
+        }
+      } catch(e) { console.warn('accountDisconnect logout failed', e); }
+      try { showAuthStatus('Déconnecté', 'info'); } catch(e){}
+      try { updateAuthUI(); } catch(e){}
+      try { if (dom.accountModal) dom.accountModal.style.display = 'none'; } catch(e){}
       if (isHomePage) {
-        renderCompactLibrary();
-        setupHomeTabs();
+        try { renderCompactLibrary(); } catch(e){}
+        try { setupHomeTabs(); } catch(e){}
       }
     });
   }
@@ -2097,6 +2103,24 @@ async function updateHolderDisplay() {
       console.warn('Failed to fetch Discord username:', err);
     }
   }
+  // Wire defaultPublic checkbox to Auth prefs when available
+  try {
+    const defaultPublicCb = document.getElementById('defaultPublic');
+    if (defaultPublicCb) {
+      // initialize from Auth prefs if present
+      try {
+        const pref = (window.Auth && typeof window.Auth.getPref === 'function') ? window.Auth.getPref('defaultPublic', false) : null;
+        if (pref !== null && pref !== undefined) {
+          defaultPublicCb.checked = !!pref;
+        }
+      } catch(e){}
+      defaultPublicCb.addEventListener('change', (ev) => {
+        const val = !!defaultPublicCb.checked;
+        try { if (window.Auth && typeof window.Auth.setPref === 'function') window.Auth.setPref('defaultPublic', val); } catch(e){}
+        try { localStorage.setItem('defaultPublic', val ? '1' : '0'); } catch(e){}
+      });
+    }
+  } catch(e){}
   
   // Fallback sur l'email
   const holder = cachedEmail || 'Utilisateur non connecté';
