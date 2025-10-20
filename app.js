@@ -3452,15 +3452,17 @@ async function downloadPreviewAsPng() {
 
 function loadReviewIntoForm(review, mode = 'view') {
   if (!review) return;
-  // Reset and set current type
-  // Use a non-navigating reset to avoid redirecting to index.html
-  handleReset('soft');
+  // Prepare to load review: determine type first so reset keeps correct form structure
   const type = review.productType;
   if (!type || !productStructures[type]) {
     showToast("Type de produit inconnu pour cette review", "error");
     return;
   }
+  // Set the current type before doing a soft reset so renderForm will build the right sections
   currentType = type;
+  // Soft-reset clears fields but preserves currentType so the form structure remains correct
+  handleReset('soft');
+  // Now populate formData from the review we are editing
   formData = { ...review };
   totals = review.totals || {}; // Restaurer les totaux sauvegardés
   imageUrl = review.image || "";
