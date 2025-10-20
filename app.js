@@ -2373,7 +2373,7 @@ function showModalById(id, opts = {}) {
       } else {
         overlayEl.classList.add('show');
         try { overlayEl.style.setProperty('display','block','important'); } catch(e){}
-        try { overlayEl.style.setProperty('z-index', opts.overlayZ || '10040', 'important'); } catch(e){}
+  try { overlayEl.style.setProperty('z-index', opts.overlayZ || '100500', 'important'); } catch(e){}
         overlayEl.setAttribute('aria-hidden','false');
       }
       // ensure clicking overlay hides the modal
@@ -2393,7 +2393,7 @@ function showModalById(id, opts = {}) {
         modal.style.setProperty('bottom','0','important');
       } catch(e){}
       try { modal.style.setProperty('display', opts.display || 'flex', 'important'); } catch(e){}
-      try { modal.style.setProperty('z-index', opts.modalZ || '10050', 'important'); } catch(e){}
+  try { modal.style.setProperty('z-index', opts.modalZ || '100510', 'important'); } catch(e){}
       modal.setAttribute('aria-hidden','false');
       // Mark modal-content as centered to force transform centering fallback
       try {

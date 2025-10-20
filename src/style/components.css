@@ -188,6 +188,16 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
   gap: 12px;
 }
 
+/* Account modal specific: contain scroll and avoid horizontal overflow */
+#accountModal .modal-content, .account-modal-content {
+  overflow: hidden;
+}
+#accountModal .modal-body, .account-modal-inner {
+  overflow: auto;
+  max-height: calc(84vh - 80px);
+  padding: 14px;
+}
+
 .account-header .title { font-size:1.18rem; font-weight:700; color:var(--text); }
 .account-header .controls { display:flex; gap:10px; align-items:center; }
 
@@ -309,8 +319,10 @@ button:focus, .input:focus, .modal-close:focus { outline: 3px solid rgba(52,211,
    (styles.css and src/style/base.css) that define other modal defaults. */
 body .modal { position: fixed !important; inset: 0 !important; display: none !important; align-items: center !important; justify-content: center !important; }
 body .modal.show { display: flex !important; pointer-events: auto !important; }
-body .modal-overlay { position: absolute !important; inset: 0 !important; background: var(--rm-modal-overlay) !important; backdrop-filter: blur(8px) !important; z-index: 10040 !important; }
-body .modal-content { position: relative !important; z-index: 10060 !important; }
+/* Ensure overlay fully covers viewport and sits above legacy UI */
+body .modal-overlay { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; background: var(--rm-modal-overlay) !important; backdrop-filter: blur(8px) !important; z-index: 100500 !important; }
+/* Keep modal content above the overlay */
+body .modal-content { position: relative !important; z-index: 100510 !important; }
 
 /* Ensure preview-only modals or those explicitly hidden via helper will not show an overlay */
 .modal.preview-only .modal-overlay, .modal[data-backdrop="none"] .modal-overlay { display: none !important; pointer-events: none !important; background: transparent !important; }
