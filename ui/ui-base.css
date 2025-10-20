@@ -88,3 +88,7 @@ button:focus, .input:focus, [role='button']:focus{outline:none;box-shadow:var(--
 /* Small utility classes */
 .hidden{display:none!important}
 .muted{color:var(--muted)}
+
+/* Defensive: hide action buttons in public/read-only library modal */
+.modal.read-only .library-item-actions,
+.read-only .library-item-actions{display:none!important}

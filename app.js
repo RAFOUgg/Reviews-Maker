@@ -3130,18 +3130,9 @@ async function renderCompactLibrary() {
       </div>
     `;
     
-    // Click: if review belongs to current user, open editor; otherwise preview
+    // Click: always preview when shown in the public/compact gallery
     const openItem = async () => {
-      const myEmail = (localStorage.getItem('authEmail') || '').toLowerCase();
-      const owner = (r.ownerEmail || r.owner || r.ownerId || '');
-      const ownerLower = String(owner || '').toLowerCase();
-      if (myEmail && ownerLower && ownerLower === myEmail) {
-        // open editor for owned review if id exists
-        if (r.id) navigateToEditor(r.productType || r.type, null, r.id);
-        else navigateToEditor(r.productType || r.type, r, null);
-      } else {
-        await openPreviewOnly(r);
-      }
+      await openPreviewOnly(r);
     };
     item.addEventListener('click', openItem);
     // Make author link open public profile (delegated)
@@ -3167,7 +3158,10 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
   if (!dom.libraryGrid) return;
 
   currentLibraryMode = mode;
-  if (dom.libraryModal) dom.libraryModal.setAttribute('data-mode', mode);
+  if (dom.libraryModal) {
+    dom.libraryModal.setAttribute('data-mode', mode);
+    if (mode === 'public') dom.libraryModal.classList.add('read-only'); else dom.libraryModal.classList.remove('read-only');
+  }
   if (dom.libraryTitle) {
     dom.libraryTitle.textContent = mode === 'public' ? '🖼️ Galerie publique' : '📁 Ma bibliothèque';
   }
