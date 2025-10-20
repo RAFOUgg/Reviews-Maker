@@ -2369,12 +2369,14 @@ function showModalById(id, opts = {}) {
     }
     if (modal) {
       modal.classList.add('show');
+      // Force top-level fixed positioning to avoid ancestor stacking contexts
+      try { modal.style.position = 'fixed'; modal.style.inset = '0'; modal.style.top = '0'; modal.style.left = '0'; modal.style.right = '0'; modal.style.bottom = '0'; } catch(e){}
       try { modal.style.display = opts.display || 'flex'; } catch(e){}
       try { modal.style.zIndex = opts.modalZ || '10050'; } catch(e){}
       modal.setAttribute('aria-hidden','false');
       try { document.body.classList.add('modal-open'); } catch(e){}
       // trap focus if possible
-      try { const dialog = modal.querySelector('.account-dialog') || modal.querySelector('.modal-content') || modal; trapFocus(dialog); } catch(e){}
+      try { const dialog = modal.querySelector('.account-dialog') || modal.querySelector('.modal-content') || modal; setTimeout(()=>{ try{ trapFocus(dialog); }catch(e){} }, 40); } catch(e){}
     }
   } catch(e) { console.warn('showModalById error', e); }
 }
@@ -2542,8 +2544,8 @@ function showProfileModal(identifier, options = {}) {
         try { openAccountModal(); } catch(e){}
         try { renderAccountView().catch(()=>{}); } catch(e){}
       } else {
-        // show auth modal to encourage sign-in
-        if (dom && dom.authModal) dom.authModal.style.display = 'flex';
+        // show auth modal to encourage sign-in using central helper
+        try { showModalById('authModal'); } catch(e) { if (dom && dom.authModal) try { dom.authModal.style.display = 'flex'; } catch(e){} }
       }
       return;
     }
