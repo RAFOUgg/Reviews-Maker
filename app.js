@@ -1,6 +1,17 @@
   // Correction JS : pointer-events et focus
-  try { dom.accountModal.style.pointerEvents = 'auto'; } catch(e){}
-  try { const dlg = dom.accountModal.querySelector('.account-dialog'); if (dlg) dlg.style.pointerEvents = 'auto'; } catch(e){}
+  try {
+    dom.accountModal.classList.add('show');
+    dom.accountModal.setAttribute('aria-hidden', 'false');
+    dom.accountModal.style.display = 'block';
+    dom.accountModal.style.pointerEvents = 'auto';
+    const dlg = dom.accountModal.querySelector('.account-dialog');
+    if (dlg) {
+      dlg.classList.add('show');
+      dlg.style.pointerEvents = 'auto';
+      dlg.style.display = 'block';
+    }
+    document.body.classList.add('modal-open');
+  } catch(e){}
   // Correction JS : pointer-events et focus
   try {
     const modal = document.getElementById('publicProfileModal');
