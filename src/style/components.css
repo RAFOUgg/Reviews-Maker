@@ -100,6 +100,58 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
   margin: 0; /* ensure no extra offset from margins */
   max-height: 86vh; /* keep the same max-height behavior as the modal */
 }
+
+/* Entrance animation for modals */
+@keyframes rm-modal-fade {
+  from { opacity: 0; transform: translateY(-6px) scale(0.995); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal.show { animation: rm-modal-fade 180ms var(--rm-ease) both; }
+
+/* Improve modal content visuals and ergonomics */
+.modal-content {
+  transition: transform 180ms var(--rm-ease), opacity 160ms ease;
+  border-radius: 14px;
+  padding: 18px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* When content is taller than viewport allow internal scrolling while keeping header visible */
+.modal-content .modal-body {
+  max-height: calc(86vh - 120px);
+  overflow: auto;
+  padding-right: 8px; /* space for scrollbar */
+}
+
+/* Bigger, more accessible close button */
+.modal-close { padding: 8px; border-radius: 10px; font-size: 1.05rem; }
+
+/* Desktop: keep centered dialog absolute; Mobile: switch to sheet-style */
+@media (max-width: 880px) {
+  .modal-content.centered {
+    position: relative; /* sheet style inside modal */
+    top: auto;
+    left: auto;
+    transform: none;
+    width: calc(100% - 28px);
+    max-height: 92vh;
+    margin: 0 auto;
+    border-radius: 12px;
+  }
+  .modal { align-items: flex-end; padding: 12px; }
+}
+
+/* Focus styles inside modal for keyboard users */
+.modal:focus { outline: none; }
+.modal-content :where(button, a, input, textarea, [tabindex]) :focus {
+  outline: 3px solid rgba(52,211,153,0.14);
+  outline-offset: 2px;
+}
+
+/* Subtle drop shadow for overlay to separate modal from page */
+.modal-overlay { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02); }
 .modal:not(.show) { display: none !important; }
 
 /* Account dialog: allow internal scrolling so content isn't clipped */
