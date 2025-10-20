@@ -2305,6 +2305,7 @@ function openAccountModal() {
   const overlay = document.getElementById('accountModalOverlay');
   if (overlay) { overlay.classList.add('show'); overlay.style.display = 'block'; overlay.style.zIndex = '10040'; overlay.setAttribute('aria-hidden','false'); }
   dom.accountModal.style.display = 'block'; dom.accountModal.style.zIndex = '10050'; dom.accountModal.classList.add('show'); dom.accountModal.setAttribute('aria-hidden','false');
+  try { document.body.classList.add('modal-open'); } catch(e){}
   try { const dialog = dom.accountModal.querySelector('.account-dialog') || dom.accountModal.querySelector('.modal-content') || dom.accountModal; trapFocus(dialog); } catch(e){}
   renderAccountView().catch(err => console.warn('Failed to render account view', err));
 }

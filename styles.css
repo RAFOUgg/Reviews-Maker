@@ -812,7 +812,7 @@ form {
   border-radius: 14px;
   border: 1px solid rgba(255,255,255,0.03);
   box-shadow: 0 18px 40px rgba(2,6,23,0.6);
-  overflow: hidden;
+  overflow: auto;
   /* Ensure the dialog is above the overlay so clicks reach buttons inside the dialog */
   position: relative;
   z-index: 2501;
