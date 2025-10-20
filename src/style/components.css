@@ -48,9 +48,28 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
 .stat-card { padding: 10px 12px; min-width:72px; border-radius:12px; background:rgba(255,255,255,0.02); }
 .stat-card .num { font-size:1.05rem; color:var(--text); }
 
-/* Unified modal styles (overrides to ensure same sizing and header layout) */
-.modal { z-index: 1200; }
-.modal-overlay { background: var(--rm-modal-overlay); backdrop-filter: blur(8px); position: absolute; inset: 0; z-index: 1; }
+/* Unified modal styles (stacking & interaction fixes)
+   Use fixed positioning for modals to ensure overlays sit behind the modal
+   content and to avoid invisible overlays stealing pointer events. */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: none; /* toggled via .show */
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* disabled when hidden */
+}
+.modal.show {
+  display: flex;
+  pointer-events: auto;
+}
+.modal-overlay {
+  background: var(--rm-modal-overlay);
+  backdrop-filter: blur(8px);
+  position: absolute;
+  inset: 0;
+  z-index: 10040; /* under modal content */
+}
 .modal-content {
   width: min(960px, calc(100% - 56px));
   max-height: 86vh;
@@ -60,7 +79,8 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
   background: var(--rm-modal-bg);
   box-shadow: 0 30px 80px rgba(2,6,23,0.6);
   position: relative;
-  z-index: 2;
+  z-index: 10060; /* above overlay */
+  overflow: hidden;
 }
 .modal:not(.show) { display: none !important; }
 
@@ -80,6 +100,7 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
   border-radius: 16px;
   background: linear-gradient(180deg, rgba(8,12,18,0.96), rgba(6,8,12,0.96));
   border: 1px solid rgba(148,163,184,0.04);
+  z-index: 10070; /* ensure account modal sits above other modal content */
 }
 
 #accountModal .modal-header, .account-header {
@@ -140,8 +161,10 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
 }
 
 /* When a modal is open, force only the shown modal to be interactive */
-body.modal-open .modal { pointer-events: none; }
-body.modal-open .modal.show { pointer-events: auto; }
+/* Do not use a global body.modal-open pointer-events rule: it can block
+  overlays or nested modals. Each modal controls its own pointer-events via
+  the .modal and .modal.show rules above. */
+.modal:not(.show) { pointer-events: none; }
 .modal-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:8px; border-bottom:1px solid rgba(148,163,184,0.03); }
 .modal-header h2, .modal-header h3 { margin:0; font-size:1.15rem; }
 .modal-close { background:transparent; border:0; color:var(--text-muted); padding:6px; border-radius:8px; }
@@ -183,3 +206,13 @@ button:focus, .input:focus, .modal-close:focus { outline: 3px solid rgba(52,211,
 .profile-stats .stats-grid{display:flex;gap:12px}
 .stat-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:10px}
 .account-stats-by-type{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Override legacy rules in styles.css that forcibly hide #publicProfileModal
+   Ensure the public profile modal follows the .modal/.modal.show flex behavior */
+#publicProfileModal { display: none !important; visibility: hidden !important; }
+#publicProfileModal.show {
+  display: flex !important;
+  visibility: visible !important;
+  align-items: center;
+  justify-content: center;
+}
