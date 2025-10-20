@@ -2335,21 +2335,10 @@ async function populatePublicProfile(email) {
         // If identifier is an email, match by ownerEmail/holderEmail; otherwise match by holderName or stored discordUsername
         let userReviews = [];
         if (identifier.includes('@')) {
-          const idLower = identifier.toLowerCase();
-          // Prefer exact email matches but also accept contains
-          userReviews = (all || []).filter(r => {
-            const oe = (r.ownerEmail || r.holderEmail || '').toString().toLowerCase();
-            return oe === idLower || oe.includes(idLower) || idLower.includes(oe);
-          });
+          userReviews = (all || []).filter(r => (r.ownerEmail && String(r.ownerEmail).toLowerCase() === identifier.toLowerCase()) || (r.holderEmail && String(r.holderEmail).toLowerCase() === identifier.toLowerCase()));
         } else {
           const idLower = identifier.toLowerCase();
-          // Fuzzy match: contains rather than strict equality to handle formatting differences
-          userReviews = (all || []).filter(r => {
-            const holder = (r.holderName || '').toString().toLowerCase();
-            const ownerName = (r.owner && (r.owner.username || r.owner.discordUsername) || '').toString().toLowerCase();
-            const ownerEmail = (r.ownerEmail || r.holderEmail || '').toString().toLowerCase();
-            return (holder && holder.includes(idLower)) || (ownerName && ownerName.includes(idLower)) || (ownerEmail && ownerEmail.includes(idLower));
-          });
+          userReviews = (all || []).filter(r => (r.holderName && String(r.holderName).toLowerCase() === idLower) || (r.owner && r.owner.username && String(r.owner.username).toLowerCase() === idLower) || (r.owner && r.owner.discordUsername && String(r.owner.discordUsername).toLowerCase() === idLower));
         }
         const seen = new Set();
         const unique = [];
@@ -2367,14 +2356,9 @@ async function populatePublicProfile(email) {
     if (dom.publicPrivate) dom.publicPrivate.textContent = priv;
     if (dom.publicByType) {
       dom.publicByType.innerHTML = '';
-        const keys = Object.keys(byType || {});
-        if (keys.length === 0) {
-          const hint = document.createElement('div'); hint.className = 'type-pill'; hint.textContent = 'Aucune review trouvée'; dom.publicByType.appendChild(hint);
-        } else {
-          keys.forEach(k => {
-            const el = document.createElement('div'); el.className = 'type-pill'; el.textContent = `${k}: ${byType[k]}`; dom.publicByType.appendChild(el);
-          });
-        }
+      Object.keys(byType || {}).forEach(k => {
+        const el = document.createElement('div'); el.className = 'type-pill'; el.textContent = `${k}: ${byType[k]}`; dom.publicByType.appendChild(el);
+      });
     }
   } catch(e) { console.warn('populatePublicProfile', e); }
 }
