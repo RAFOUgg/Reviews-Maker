@@ -216,3 +216,11 @@ button:focus, .input:focus, .modal-close:focus { outline: 3px solid rgba(52,211,
   align-items: center;
   justify-content: center;
 }
+
+/* Public profile is preview-only: hide its dark backdrop so only the modal content shows */
+#publicProfileModal .modal-overlay,
+#publicProfileOverlay {
+  display: none !important;
+  background: transparent !important;
+  pointer-events: none !important;
+}
