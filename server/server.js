@@ -199,7 +199,6 @@ function rowToReview(row) {
   payload.createdAt = row.createdAt;
   payload.updatedAt = row.updatedAt;
   if (row.ownerId) payload.ownerId = row.ownerId;
-  if (row.isDraft != null) payload.isDraft = !!row.isDraft;
   if (row.isPrivate != null) payload.isPrivate = !!row.isPrivate;
   return payload;
 }
@@ -221,10 +220,11 @@ app.get('/api/reviews', (req, res) => {
     sql = 'SELECT * FROM reviews ORDER BY updatedAt DESC LIMIT 500';
     params = [];
   } else if (me) {
-    sql = 'SELECT * FROM reviews WHERE (isDraft=0 AND isPrivate=0) OR (ownerId=?) ORDER BY updatedAt DESC LIMIT 500';
+    // Visibility no longer depends on a draft flag; owners always see their records, others see non-private
+    sql = 'SELECT * FROM reviews WHERE (isPrivate=0) OR (ownerId=?) ORDER BY updatedAt DESC LIMIT 500';
     params = [me];
   } else {
-    sql = 'SELECT * FROM reviews WHERE isDraft=0 AND isPrivate=0 ORDER BY updatedAt DESC LIMIT 500';
+    sql = 'SELECT * FROM reviews WHERE isPrivate=0 ORDER BY updatedAt DESC LIMIT 500';
     params = [];
   }
   db.all(sql, params, (err, rows) => {
@@ -237,15 +237,8 @@ app.get('/api/reviews/:id', (req, res) => {
   db.get('SELECT * FROM reviews WHERE id=?', [req.params.id], (err, row) => {
     if (err) return res.status(500).json({ error: 'db_error' });
     if (!row) return res.status(404).json({ error: 'not_found' });
-    // Enforce draft visibility: only owner may view drafts
+    // Private visibility: non-staff must be owner to view private reviews
     const isStaff = req.auth?.roles?.includes('staff');
-    if (!isStaff && row.isDraft && req.auth?.ownerId && row.ownerId && row.ownerId !== req.auth.ownerId) {
-      return res.status(403).json({ error: 'forbidden' });
-    }
-    if (!isStaff && row.isDraft && !req.auth?.ownerId) {
-      return res.status(403).json({ error: 'forbidden' });
-    }
-    // Private visibility
     if (!isStaff && row.isPrivate && (!req.auth?.ownerId || row.ownerId !== req.auth.ownerId)) {
       return res.status(403).json({ error: 'forbidden' });
     }
@@ -267,7 +260,8 @@ app.post('/api/reviews', upload.single('image'), (req, res) => {
   }
   // Owner scoping
   const ownerId = req.auth?.ownerId || null;
-  const isDraft = incoming.isDraft ? 1 : 0;
+  // Draft flag is deprecated on the server; force saved records to non-draft
+  const isDraft = 0;
   const isPrivate = incoming.isPrivate ? 1 : 0;
   if (req.file) {
     incoming.image = '/images/' + req.file.filename;
@@ -314,7 +308,8 @@ app.put('/api/reviews/:id', upload.single('image'), (req, res) => {
     if (req.file) incoming.image = '/images/' + req.file.filename;
 
     // Preserve/override draft status
-  const nextIsDraft = incoming.isDraft != null ? (incoming.isDraft ? 1 : 0) : row.isDraft;
+  // Draft flag is deprecated: always store as non-draft on update as well
+  const nextIsDraft = 0;
   const nextIsPrivate = incoming.isPrivate != null ? (incoming.isPrivate ? 1 : 0) : row.isPrivate;
     const nextOwnerId = row.ownerId || ownerId || null;
 
@@ -378,7 +373,8 @@ app.delete('/api/reviews/:id', (req, res) => {
 
 // Public gallery (explicit) — identical to GET /api/reviews without token
 app.get('/api/public/reviews', (req, res) => {
-  db.all('SELECT * FROM reviews WHERE isDraft=0 AND isPrivate=0 ORDER BY updatedAt DESC LIMIT 500', [], (err, rows) => {
+  // Serve non-private reviews; draft concept deprecated
+  db.all('SELECT * FROM reviews WHERE isPrivate=0 ORDER BY updatedAt DESC LIMIT 500', [], (err, rows) => {
     if (err) return res.status(500).json({ error: 'db_error' });
     res.json(rows.map(rowToReview));
   });
@@ -399,10 +395,9 @@ app.get('/api/admin/stats', (req, res) => {
   const isStaff = req.auth?.roles?.includes('staff');
   if (!isStaff) return res.status(403).json({ error: 'forbidden' });
   db.get('SELECT COUNT(*) as total FROM reviews', [], (e1, r1) => {
-    db.get('SELECT COUNT(*) as drafts FROM reviews WHERE isDraft=1', [], (e2, r2) => {
-      db.get('SELECT COUNT(*) as privates FROM reviews WHERE isPrivate=1', [], (e3, r3) => {
-        res.json({ total: r1?.total || 0, drafts: r2?.drafts || 0, privates: r3?.privates || 0 });
-      });
+    // Drafts no longer tracked separately in stats (frontend saves non-draft)
+    db.get('SELECT COUNT(*) as privates FROM reviews WHERE isPrivate=1', [], (e3, r3) => {
+      res.json({ total: r1?.total || 0, privates: r3?.privates || 0 });
     });
   });
 });
