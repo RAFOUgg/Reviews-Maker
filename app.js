@@ -1,3 +1,66 @@
+function setupAccountModalEvents() {
+  if (dom.closeAccountModal) {
+    dom.closeAccountModal.addEventListener('click', () => closeAccountModal());
+  }
+  if (dom.accountModalOverlay) {
+    dom.accountModalOverlay.addEventListener('click', () => closeAccountModal());
+  }
+  if (dom.openLibraryFromAccount) {
+    dom.openLibraryFromAccount.addEventListener('click', () => {
+      closeAccountModal();
+      if (!isUserConnected) {
+        if (dom.authModal) dom.authModal.style.display = 'flex';
+        return;
+      }
+      openLibraryModal('mine', { fromAccount: true });
+    });
+  }
+  const accountDisconnectBtn = document.getElementById('accountDisconnect');
+  if (accountDisconnectBtn) {
+    accountDisconnectBtn.addEventListener('click', async () => {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('authEmail');
+      localStorage.removeItem('discordUsername');
+      localStorage.removeItem('discordId');
+      sessionStorage.removeItem('authEmail');
+      sessionStorage.removeItem('pendingCode');
+      showAuthStatus('Déconnecté', 'info');
+      updateAuthUI();
+      if (dom.accountModal) dom.accountModal.style.display = 'none';
+      if (isHomePage) {
+        renderCompactLibrary();
+        setupHomeTabs();
+      }
+    });
+  }
+  if (dom.openAccountSettings) {
+    dom.openAccountSettings.addEventListener('click', () => {
+      const panel = document.getElementById('accountSettingsPanel');
+      if (panel) {
+        panel.style.display = 'block';
+        if (dom.accountPreferences) dom.accountPreferences.style.display = 'none';
+        const firstOpt = panel.querySelector('.theme-option');
+        if (firstOpt) firstOpt.focus();
+      }
+    });
+  }
+  const inlineBtn = document.getElementById('openAccountSettingsInline');
+  if (inlineBtn) {
+    inlineBtn.addEventListener('click', () => {
+      const panel = document.getElementById('accountSettingsPanel');
+      if (panel) panel.style.display = 'block';
+      if (dom.accountPreferences) dom.accountPreferences.style.display = 'none';
+    });
+  }
+  const settingsBack = document.getElementById('accountSettingsBack');
+  if (settingsBack) {
+    settingsBack.addEventListener('click', () => {
+      const panel = document.getElementById('accountSettingsPanel');
+      if (panel) panel.style.display = 'none';
+      if (dom.accountPreferences) dom.accountPreferences.style.display = 'block';
+    });
+  }
+}
   // Correction JS : pointer-events et focus
   try {
     dom.accountModal.classList.add('show');
@@ -1572,41 +1635,7 @@ function setupModalEvents() {
   if (dom.accountModalOverlay) {
     dom.accountModalOverlay.addEventListener('click', () => closeAccountModal());
   }
-  document.addEventListener('DOMContentLoaded', function() {
-    if (dom.openLibraryFromAccount) {
-      dom.openLibraryFromAccount.addEventListener('click', () => {
-        try { console.log('DEBUG: openLibraryFromAccount clicked, isUserConnected=', isUserConnected); } catch(e){}
-        closeAccountModal();
-        if (!isUserConnected) {
-          if (dom.authModal) dom.authModal.style.display = 'flex';
-          return;
-        }
-        openLibraryModal('mine', { fromAccount: true });
-      });
-    }
-
-    // Ensure account-level disconnect (inside the account modal) is wired
-    const accountDisconnectBtn = document.getElementById('accountDisconnect');
-    if (accountDisconnectBtn) {
-      accountDisconnectBtn.addEventListener('click', async () => {
-        try { console.log('DEBUG: accountDisconnect clicked'); } catch(e){}
-        // Mirror authDisconnect behavior but close the account modal
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('authEmail');
-        localStorage.removeItem('discordUsername');
-        localStorage.removeItem('discordId');
-        sessionStorage.removeItem('authEmail');
-        sessionStorage.removeItem('pendingCode');
-        showAuthStatus('Déconnecté', 'info');
-        updateAuthUI();
-        try { if (dom.accountModal) dom.accountModal.style.display = 'none'; } catch(e){}
-        if (isHomePage) {
-          renderCompactLibrary();
-          setupHomeTabs();
-        }
-      });
-    }
-  });
+  document.addEventListener('DOMContentLoaded', setupAccountModalEvents);
 
   // Delegated click handler inside account modal to handle clicks even if DOM nodes are re-rendered
   if (dom.accountModal) {
