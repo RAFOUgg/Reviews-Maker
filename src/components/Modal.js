@@ -15,10 +15,11 @@ export default class Modal {
 
   open() {
     try {
-      // Close any other modals on page
-      document.querySelectorAll('.modal').forEach(m => { try { m.classList.remove('show'); m.style.display = 'none'; } catch(e){} });
+  // Close any other modals on page (do not set inline display; CSS controls layout)
+  document.querySelectorAll('.modal').forEach(m => { try { m.classList.remove('show'); } catch(e){} });
   if (this.overlay) { this.overlay.classList.add('show'); this.overlay.style.display = 'block'; }
-  this.root.classList.add('show'); this.root.style.display = 'flex';
+  if (this.overlay) { this.overlay.classList.add('show'); }
+  this.root.classList.add('show');
       try { document.body.classList.add('modal-open'); } catch(e){}
       document.addEventListener('click', this._boundOnDoc, true);
       document.addEventListener('keydown', this._boundOnKey, true);
@@ -28,8 +29,8 @@ export default class Modal {
 
   close() {
     try {
-  if (this.overlay) { this.overlay.classList.remove('show'); this.overlay.style.display = 'none'; }
-  this.root.classList.remove('show'); this.root.style.display = 'none';
+  if (this.overlay) { this.overlay.classList.remove('show'); }
+  this.root.classList.remove('show');
       try { document.body.classList.remove('modal-open'); } catch(e){}
       document.removeEventListener('click', this._boundOnDoc, true);
       document.removeEventListener('keydown', this._boundOnKey, true);

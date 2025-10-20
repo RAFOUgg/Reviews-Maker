@@ -224,3 +224,14 @@ button:focus, .input:focus, .modal-close:focus { outline: 3px solid rgba(52,211,
   background: transparent !important;
   pointer-events: none !important;
 }
+
+/* Strong overrides to make components.css authoritative for modal visuals
+   These rules deliberately use higher specificity to neutralize legacy files
+   (styles.css and src/style/base.css) that define other modal defaults. */
+body .modal { position: fixed !important; inset: 0 !important; display: none !important; align-items: center !important; justify-content: center !important; }
+body .modal.show { display: flex !important; pointer-events: auto !important; }
+body .modal-overlay { position: absolute !important; inset: 0 !important; background: var(--rm-modal-overlay) !important; backdrop-filter: blur(8px) !important; z-index: 10040 !important; }
+body .modal-content { position: relative !important; z-index: 10060 !important; }
+
+/* Ensure preview-only modals or those explicitly hidden via helper will not show an overlay */
+.modal.preview-only .modal-overlay, .modal[data-backdrop="none"] .modal-overlay { display: none !important; pointer-events: none !important; background: transparent !important; }

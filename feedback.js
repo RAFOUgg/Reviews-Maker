@@ -13,6 +13,12 @@
 
   function showModal() {
     if (!modal) return;
+    // Prefer centralized helper when available
+    if (typeof window !== 'undefined' && typeof window.showModalById === 'function') {
+      try { window.showModalById('feedbackModal'); } catch(e){}
+      try { textarea && textarea.focus(); } catch(e){}
+      return;
+    }
     modal.style.display = 'flex';
     if (overlay) overlay.style.display = 'block';
     modal.classList.add('show');
@@ -21,6 +27,11 @@
   }
   function hideModal() {
     if (!modal) return;
+    if (typeof window !== 'undefined' && typeof window.hideModalById === 'function') {
+      try { window.hideModalById('feedbackModal'); } catch(e){}
+      if (status) { status.style.display = 'none'; status.textContent = ''; }
+      return;
+    }
     modal.style.display = 'none';
     if (overlay) overlay.style.display = 'none';
     modal.classList.remove('show');

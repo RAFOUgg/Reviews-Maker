@@ -13,9 +13,9 @@ class ModalCompat {
   open() {
     try {
       // close other modals
-      document.querySelectorAll('.modal').forEach(m => { if (m !== this.root) { try { m.classList.remove('show'); m.style.display = 'none'; } catch(e){} } });
-      if (this.overlay) { this.overlay.classList.add('show'); this.overlay.style.display = 'block'; }
-      this.root.classList.add('show'); this.root.style.display = 'flex';
+      document.querySelectorAll('.modal').forEach(m => { if (m !== this.root) { try { m.classList.remove('show'); } catch(e){} } });
+      if (this.overlay) { this.overlay.classList.add('show'); }
+      this.root.classList.add('show');
       try { document.body.classList.add('modal-open'); } catch(e){}
       document.addEventListener('click', this._onDocClick, true);
       document.addEventListener('keydown', this._onKey, true);
@@ -24,8 +24,8 @@ class ModalCompat {
   }
   close() {
     try {
-      if (this.overlay) { this.overlay.classList.remove('show'); try { this.overlay.style.display = 'none'; } catch(e){} }
-      this.root.classList.remove('show'); try { this.root.style.display = 'none'; } catch(e){}
+      if (this.overlay) { this.overlay.classList.remove('show'); }
+      this.root.classList.remove('show');
       try { document.body.classList.remove('modal-open'); } catch(e){}
       document.removeEventListener('click', this._onDocClick, true);
       document.removeEventListener('keydown', this._onKey, true);
@@ -56,7 +56,7 @@ function setupAccountModalEvents() {
     dom.openLibraryFromAccount.addEventListener('click', () => {
       closeAccountModal();
       if (!isUserConnected) {
-        if (dom.authModal) dom.authModal.style.display = 'flex';
+        if (dom.authModal) showModalById('authModal');
         return;
       }
       openLibraryModal('mine', { fromAccount: true });
@@ -79,7 +79,7 @@ function setupAccountModalEvents() {
       } catch(e) { console.warn('accountDisconnect logout failed', e); }
       try { showAuthStatus('Déconnecté', 'info'); } catch(e){}
       try { updateAuthUI(); } catch(e){}
-      try { if (dom.accountModal) dom.accountModal.style.display = 'none'; } catch(e){}
+  try { if (dom.accountModal) hideModalById('accountModal'); } catch(e){}
       if (isHomePage) {
         try { renderCompactLibrary(); } catch(e){}
         try { setupHomeTabs(); } catch(e){}
@@ -1601,7 +1601,7 @@ function setupModalEvents() {
         dom.tipsModal = document.getElementById("tipsModal");
       }
       if (dom.tipsModal) {
-        dom.tipsModal.style.display = 'flex'; 
+  showModalById('tipsModal');
       } else {
         console.error('Modal tipsModal introuvable dans le DOM');
         showToast('Modal astuces non disponible', 'warning');
@@ -1618,14 +1618,14 @@ function setupModalEvents() {
   }
   if (dom.closeTips) {
     dom.closeTips.addEventListener("click", () => {
-      if (dom.tipsModal) dom.tipsModal.style.display = "none";
+  if (dom.tipsModal) hideModalById('tipsModal');
       const pop = document.getElementById('activeTipsPopover');
       if (pop) pop.remove();
     });
   }
   if (dom.tipsModalOverlay) {
     dom.tipsModalOverlay.addEventListener("click", () => {
-      if (dom.tipsModal) dom.tipsModal.style.display = "none";
+      if (dom.tipsModal) hideModalById('tipsModal');
       const pop = document.getElementById('activeTipsPopover');
       if (pop) pop.remove();
     });
@@ -1636,7 +1636,7 @@ function setupModalEvents() {
     dom.openLibrary.addEventListener("click", () => {
       if (!isUserConnected) {
         showToast('Connectez-vous pour accéder à votre bibliothèque.', 'warning');
-        if (dom.authModal) dom.authModal.style.display = 'flex';
+          if (dom.authModal) showModalById('authModal');
         return;
       }
       openLibraryModal('mine');
@@ -1650,7 +1650,7 @@ function setupModalEvents() {
   }
   if (dom.closeLibrary) {
     dom.closeLibrary.addEventListener("click", () => {
-      if (dom.libraryModal) dom.libraryModal.style.display = "none";
+      if (dom.libraryModal) hideModalById('libraryModal');
       if (dom.libraryDrawer) toggleLibrary(false);
     });
   }
@@ -1659,7 +1659,7 @@ function setupModalEvents() {
   }
   if (dom.libraryModalOverlay) {
     dom.libraryModalOverlay.addEventListener("click", () => {
-      if (dom.libraryModal) dom.libraryModal.style.display = "none";
+      if (dom.libraryModal) hideModalById('libraryModal');
     });
   }
 
@@ -1681,13 +1681,13 @@ function setupModalEvents() {
   
   if (dom.closeAuth) {
     dom.closeAuth.addEventListener("click", () => {
-      if (dom.authModal) dom.authModal.style.display = "none";
+      if (dom.authModal) hideModalById('authModal');
     });
   }
   
   if (dom.authModalOverlay) {
     dom.authModalOverlay.addEventListener("click", () => {
-      if (dom.authModal) dom.authModal.style.display = "none";
+      if (dom.authModal) hideModalById('authModal');
     });
   }
 
@@ -1709,8 +1709,8 @@ function setupModalEvents() {
       if (libBtn) {
         try { console.log('DEBUG: delegated openLibraryFromAccount'); } catch(e){}
         e.preventDefault();
-        closeAccountModal();
-        if (!isUserConnected) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
+  closeAccountModal();
+  if (!isUserConnected) { if (dom.authModal) showModalById('authModal'); return; }
         openLibraryModal('mine', { fromAccount: true });
         return;
       }
@@ -1726,7 +1726,7 @@ function setupModalEvents() {
         sessionStorage.removeItem('pendingCode');
         showAuthStatus('Déconnecté', 'info');
         updateAuthUI();
-        try { dom.accountModal.style.display = 'none'; } catch(e){}
+  try { hideModalById('accountModal'); } catch(e){}
         if (isHomePage) { renderCompactLibrary(); setupHomeTabs(); }
         return;
       }
@@ -1743,9 +1743,9 @@ function setupModalEvents() {
   if (dom.authOpenLibrary) {
     dom.authOpenLibrary.addEventListener('click', () => {
       try { console.log('DEBUG: authOpenLibrary clicked, isUserConnected=', isUserConnected); } catch(e){}
-      if (dom.authModal) dom.authModal.style.display = 'none';
+      if (dom.authModal) hideModalById('authModal');
       if (!isUserConnected) {
-        if (dom.authModal) dom.authModal.style.display = 'flex';
+        if (dom.authModal) showModalById('authModal');
         return;
       }
       openLibraryModal('mine', { fromAccount: true });
@@ -2042,8 +2042,8 @@ function setupModalEvents() {
   // Fermeture par Échap
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
-      if (dom.tipsModal && dom.tipsModal.style.display === "flex") {
-        dom.tipsModal.style.display = "none";
+      if (dom.tipsModal && dom.tipsModal.classList.contains('show')) {
+        hideModalById('tipsModal');
       }
       if (dom.libraryModal && dom.libraryModal.style.display === "flex") {
         dom.libraryModal.style.display = "none";
@@ -2055,7 +2055,7 @@ function setupModalEvents() {
       if (pop) pop.remove();
       const tipsOverlay = document.getElementById('tipsOverlay');
       if (tipsOverlay) tipsOverlay.remove();
-      if (dom.saveModal && dom.saveModal.style.display === 'flex') closeSaveModal();
+  if (dom.saveModal && dom.saveModal.classList.contains('show')) closeSaveModal();
       if (dom.libraryDrawer && !dom.libraryDrawer.hasAttribute('hidden')) {
         toggleLibrary(false);
       }
@@ -2232,7 +2232,7 @@ async function updateAuthUI() {
     try { await renderAccountView(); } catch (e) { /* ignore */ }
   }
 
-  if (dom.libraryModal && dom.libraryModal.style.display === 'flex') {
+  if (dom.libraryModal && dom.libraryModal.classList.contains('show')) {
     await renderFullLibrary(currentLibraryMode);
   }
 }
@@ -2300,13 +2300,8 @@ function openAccountModal() {
       return;
     }
   } catch(e) { console.warn('modalAccount.open failed', e); }
-  // fallback legacy behaviour
-  try { closeAllModalsExcept(null); } catch(e){}
-  const overlay = document.getElementById('accountModalOverlay');
-  if (overlay) { overlay.classList.add('show'); overlay.style.display = 'block'; overlay.style.zIndex = '10040'; overlay.setAttribute('aria-hidden','false'); }
-  dom.accountModal.style.display = 'flex'; dom.accountModal.style.zIndex = '10050'; dom.accountModal.classList.add('show'); dom.accountModal.setAttribute('aria-hidden','false');
-  try { document.body.classList.add('modal-open'); } catch(e){}
-  try { const dialog = dom.accountModal.querySelector('.account-dialog') || dom.accountModal.querySelector('.modal-content') || dom.accountModal; trapFocus(dialog); } catch(e){}
+  // fallback legacy behaviour -> use central helper
+  showModalById('accountModal', { hideBackdrop: false, modalZ: '10050', overlayZ: '10040' });
   renderAccountView().catch(err => console.warn('Failed to render account view', err));
 }
 
@@ -2333,6 +2328,56 @@ function closeAllModalsExcept(keepId = null) {
   } catch(e) { /* ignore */ }
 }
 
+// Central helpers to show/hide modals in a consistent way.
+// Use these to avoid scattered inline style.display manipulations.
+function showModalById(id, opts = {}) {
+  try {
+    if (!id) return;
+    const modal = document.getElementById(id);
+    const overlay = document.getElementById(id + 'Overlay') || (modal && modal.querySelector('.modal-overlay'));
+    // Close other modals first
+    try { closeAllModalsExcept(id); } catch(e){}
+    // Overlay: allow opt-out for preview-only modals
+    const hideBackdrop = !!opts.hideBackdrop || id === 'publicProfileModal';
+    if (overlay) {
+      if (hideBackdrop) {
+        overlay.classList.remove('show');
+        overlay.style.display = 'none';
+        overlay.setAttribute('aria-hidden', 'true');
+      } else {
+        overlay.classList.add('show');
+        overlay.style.display = 'block';
+        overlay.style.zIndex = opts.overlayZ || '10040';
+        overlay.setAttribute('aria-hidden','false');
+      }
+    }
+    if (modal) {
+      modal.classList.add('show');
+      modal.style.display = opts.display || 'flex';
+      modal.style.zIndex = opts.modalZ || '10050';
+      modal.setAttribute('aria-hidden','false');
+      try { document.body.classList.add('modal-open'); } catch(e){}
+      // trap focus if possible
+      try { const dialog = modal.querySelector('.account-dialog') || modal.querySelector('.modal-content') || modal; trapFocus(dialog); } catch(e){}
+    }
+  } catch(e) { console.warn('showModalById error', e); }
+}
+
+function hideModalById(id) {
+  try {
+    if (!id) return;
+    const modal = document.getElementById(id);
+    const overlay = document.getElementById(id + 'Overlay') || (modal && modal.querySelector('.modal-overlay'));
+    if (overlay) { overlay.classList.remove('show'); overlay.setAttribute('aria-hidden','true'); try { overlay.style.display = 'none'; } catch(e){} }
+    if (modal) { modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); try { modal.style.display = 'none'; } catch(e){} }
+    try { document.body.classList.remove('modal-open'); } catch(e){}
+    try { releaseFocusTrap(); } catch(e){}
+  } catch(e) { console.warn('hideModalById error', e); }
+}
+
+// Expose globally for legacy scripts
+try { if (typeof window !== 'undefined') { window.showModalById = showModalById; window.hideModalById = hideModalById; } } catch(e){}
+
 function closeAccountModal() {
   if (!dom.accountModal) return;
   try {
@@ -2351,7 +2396,7 @@ async function populatePublicProfile(email) {
     const identifier = String(email || '').trim();
     if (dom.publicProfileEmail) dom.publicProfileEmail.textContent = identifier || '—';
     // Ensure modal is displayed (fallback if CSS wasn't applied)
-  try { const modal = document.getElementById('publicProfileModal'); if (modal) modal.style.display = 'flex'; } catch(e){}
+  try { const modal = document.getElementById('publicProfileModal'); if (modal) showModalById('publicProfileModal'); } catch(e){}
     // Determine ownership: if the profile email matches the signed-in email,
     // show settings/actions that are only available to the owner.
     try {
@@ -2446,15 +2491,9 @@ function openPublicProfile(email) {
     if (dom && dom.modalPublic) {
       try { dom.modalPublic.open(); } catch(e) { console.warn('modalPublic.open failed', e); }
     } else {
-      const overlay = document.getElementById('publicProfileOverlay');
-      if (overlay) { overlay.classList.add('show'); overlay.style.display = 'block'; overlay.style.zIndex = '10040'; overlay.setAttribute('aria-hidden','false'); }
-      const modal = document.getElementById('publicProfileModal');
-      if (modal) { modal.style.zIndex = '10050'; modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); modal.style.display = 'flex';
-        setTimeout(() => { try { if (modal.style.display !== 'flex') modal.style.display = 'flex'; if (overlay && overlay.style.display !== 'block') overlay.style.display = 'block'; } catch(e){} }, 100);
-      }
+      // public profile should be preview-only: hide backdrop by default
+      showModalById('publicProfileModal', { hideBackdrop: true, modalZ: '10050' });
     }
-    try { console.log('DEBUG: publicProfileOverlay, modal classes ->', { overlayClass: overlay ? overlay.className : null, modalClass: modal ? modal.className : null, modalStyleDisplay: modal ? modal.style.display : null }); } catch(e){}
-    try { document.body.classList.add('modal-open'); } catch(e){}
     populatePublicProfile(email).catch(()=>{});
   } catch(e){}
 }
@@ -2462,9 +2501,7 @@ function openPublicProfile(email) {
 function closePublicProfileHandler() {
   try {
     if (dom && dom.modalPublic) { dom.modalPublic.close(); return; }
-    const overlay = document.getElementById('publicProfileOverlay'); if (overlay) { overlay.classList.remove('show'); try { overlay.style.display = 'none'; } catch(e){} }
-    const modal = document.getElementById('publicProfileModal'); if (modal) { modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); try { modal.style.display = 'none'; } catch(e){} }
-    try { document.body.classList.remove('modal-open'); } catch(e){}
+    hideModalById('publicProfileModal');
   } catch(e) { /* ignore */ }
 }
 
@@ -3029,7 +3066,7 @@ function openLibraryModal(mode = 'mine', options = {}) {
   if (!dom.libraryModal) return;
   // show back button if requested
   if (dom.libraryBackToAccount) dom.libraryBackToAccount.style.display = fromAccount ? 'inline-flex' : 'none';
-  dom.libraryModal.style.display = "flex";
+  showModalById('libraryModal');
   renderFullLibrary(mode);
 }
 
@@ -5777,14 +5814,14 @@ function openSaveModal() {
     dom.previewOverlay?.setAttribute('hidden','');
     dom.previewModal?.setAttribute('hidden','');
   } catch {}
-  dom.saveModal.style.display = 'flex';
+  showModalById('saveModal');
   // In case some global style toggled visibility via hidden attr
-  dom.saveModal.removeAttribute('hidden');
+  try { dom.saveModal.removeAttribute('hidden'); } catch(e){}
   console.debug('[ui] Save modal opened');
 }
 function closeSaveModal() {
   if (!dom.saveModal) return;
-  dom.saveModal.style.display = 'none';
+  hideModalById('saveModal');
 }
 
 // -------- Backend distant (API REST) --------
