@@ -88,10 +88,17 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
 .modal.show .modal-content { transform: translateY(0); }
 .modal .modal-content { margin: 0 auto; }
 .modal-content.centered {
-  position: relative;
+  /* Use absolute positioning so top/left:50% centers the dialog
+     inside the fixed-positioned .modal container. Relative positioning
+     was shifting the dialog incorrectly in some layouts (transformed
+     ancestors / flex containers), causing it to appear off-center.
+  */
+  position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  margin: 0; /* ensure no extra offset from margins */
+  max-height: 86vh; /* keep the same max-height behavior as the modal */
 }
 .modal:not(.show) { display: none !important; }
 
