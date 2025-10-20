@@ -1061,7 +1061,6 @@ function initHomePage() {
   dom.statFavType = document.getElementById('statFavType');
   dom.themeSelect = document.getElementById('themeSelect');
   dom.openLibraryFromAccount = document.getElementById('openLibraryFromAccount');
-  dom.accountSettingsBtn = document.getElementById('accountSettingsBtn');
   dom.openAccountSettings = document.getElementById('openAccountSettings');
   dom.accountPreferences = document.getElementById('accountPreferences');
   // Auth connected small summary (inside auth modal)
@@ -1657,18 +1656,7 @@ function setupModalEvents() {
     });
   }
 
-    // Account settings toggle (show/hide preferences)
-    if (dom.accountSettingsBtn) {
-      dom.accountSettingsBtn.addEventListener('click', () => {
-        if (!dom.accountPreferences) return;
-        const shown = dom.accountPreferences.style.display === 'block';
-        dom.accountPreferences.style.display = shown ? 'none' : 'block';
-        // ensure theme select initialized
-        if (!shown && dom.themeSelect) {
-          dom.themeSelect.value = localStorage.getItem('siteTheme') || 'auto';
-        }
-      });
-    }
+    // (Supprimé: gestion du bouton accountSettingsBtn, non présent dans le HTML)
     // applySavedTheme reads localStorage and delegates to applyTheme
     function applySavedTheme() {
       try {
