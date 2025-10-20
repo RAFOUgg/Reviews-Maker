@@ -12,7 +12,13 @@ class ModalCompat {
   }
   open() {
     try {
-      // close other modals
+      // Prefer centralized modal helper if available (ensures consistent positioning)
+      if (typeof window !== 'undefined' && typeof window.showModalById === 'function' && this.root && this.root.id) {
+        try { window.showModalById(this.root.id); } catch(e) { /* fallthrough */ }
+        this._emit('open');
+        return;
+      }
+      // Fallback legacy behavior
       document.querySelectorAll('.modal').forEach(m => { if (m !== this.root) { try { m.classList.remove('show'); } catch(e){} } });
       if (this.overlay) { this.overlay.classList.add('show'); }
       this.root.classList.add('show');
@@ -24,6 +30,12 @@ class ModalCompat {
   }
   close() {
     try {
+      // Prefer centralized hide helper if available
+      if (typeof window !== 'undefined' && typeof window.hideModalById === 'function' && this.root && this.root.id) {
+        try { window.hideModalById(this.root.id); } catch(e) { /* fallthrough */ }
+        this._emit('close');
+        return;
+      }
       if (this.overlay) { this.overlay.classList.remove('show'); }
       this.root.classList.remove('show');
       try { document.body.classList.remove('modal-open'); } catch(e){}
@@ -2383,6 +2395,11 @@ function showModalById(id, opts = {}) {
       try { modal.style.setProperty('display', opts.display || 'flex', 'important'); } catch(e){}
       try { modal.style.setProperty('z-index', opts.modalZ || '10050', 'important'); } catch(e){}
       modal.setAttribute('aria-hidden','false');
+      // Mark modal-content as centered to force transform centering fallback
+      try {
+        const dlg = modal.querySelector('.modal-content');
+        if (dlg) dlg.classList.add('centered');
+      } catch(e){}
       try { document.body.classList.add('modal-open'); } catch(e){}
       // trap focus if possible
       try { const dialog = modal.querySelector('.account-dialog') || modal.querySelector('.modal-content') || modal; setTimeout(()=>{ try{ trapFocus(dialog); }catch(e){} }, 40); } catch(e){}
@@ -2396,8 +2413,15 @@ function hideModalById(id) {
     const modal = document.getElementById(id);
     const overlay = document.getElementById(id + 'Overlay') || (modal && modal.querySelector('.modal-overlay'));
     if (overlay) { overlay.classList.remove('show'); overlay.setAttribute('aria-hidden','true'); try { overlay.style.display = 'none'; } catch(e){} }
-    if (modal) { modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); try { modal.style.display = 'none'; } catch(e){} }
+    if (modal) {
+      modal.classList.remove('show');
+      modal.setAttribute('aria-hidden','true');
+      try { modal.style.display = 'none'; } catch(e){}
+      try { const dlg = modal.querySelector('.modal-content'); if (dlg) dlg.classList.remove('centered'); } catch(e){}
+    }
     try { document.body.classList.remove('modal-open'); } catch(e){}
+    // If any element inside the modal had focus, blur it to avoid WAI-ARIA warnings
+    try { if (document.activeElement && modal && modal.contains(document.activeElement)) { document.activeElement.blur(); } } catch(e){}
     try { releaseFocusTrap(); } catch(e){}
   } catch(e) { console.warn('hideModalById error', e); }
 }
