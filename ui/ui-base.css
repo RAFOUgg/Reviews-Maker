@@ -1,0 +1,90 @@
+:root{
+  /* Colors (dark theme primary) */
+  --bg: #071325;
+  --panel: linear-gradient(180deg,#0b1b2b 0%, #071325 100%);
+  --muted: #8b97a6;
+  --text: #e6eef6;
+  --accent: #35d07a;
+  --accent-2: #6fb7ff;
+  --glass: rgba(255,255,255,0.04);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow-elev: 0 10px 30px rgba(2,6,23,0.6);
+  --focus: 0 0 0 4px rgba(53,208,122,0.12);
+  --transition-fast: 160ms cubic-bezier(.2,.9,.2,1);
+}
+
+/* Base layout helpers */
+html,body{height:100%;}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,'Helvetica Neue',Arial;line-height:1.4}
+.app-shell{min-height:100vh;display:flex;flex-direction:column}
+main.workspace{flex:1;max-width:1200px;margin:0 auto;padding:28px}
+
+/* Container & grid */
+.container{width:100%;max-width:1100px;margin:0 auto;padding:0 18px}
+.row{display:flex;flex-wrap:wrap;gap:18px}
+.col{flex:1 1 0}
+
+/* Buttons */
+.btn{appearance:none;border:0;padding:12px 16px;border-radius:10px;background:transparent;color:var(--text);cursor:pointer;transition:transform var(--transition-fast),box-shadow var(--transition-fast);}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#04202a;font-weight:600}
+.btn-secondary{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.03)}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04)}
+.btn-outline{background:transparent;border:1px solid rgba(255,255,255,0.06)}
+.btn-sm{padding:6px 10px;border-radius:8px;font-size:0.85rem}
+.pill-btn{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03)}
+
+/* Inputs */
+.input{width:100%;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:var(--text)}
+.form-group{margin-bottom:12px}
+
+/* Focus & accessibility */
+button:focus, .input:focus, [role='button']:focus{outline:none;box-shadow:var(--focus);border-color:transparent}
+
+/* Cards / panels */
+.panel{background:var(--panel);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow-elev);border:1px solid rgba(255,255,255,0.02)}
+.section-title{font-size:1.1rem;margin:0 0 8px 0}
+
+/* Modal system (lightweight, accessible) */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:1200}
+.modal[aria-hidden="false"],.modal.show{display:flex}
+.modal-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(1,7,18,0.6),rgba(1,7,18,0.85));backdrop-filter:blur(6px)}
+.modal-content{position:relative;z-index:2;width:min(920px,calc(100% - 48px));max-height:88vh;overflow:auto;border-radius:14px;padding:18px;background:linear-gradient(180deg, rgba(17,23,30,0.92), rgba(7,12,18,0.96));box-shadow:var(--shadow-elev)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.modal-body{color:var(--muted)}
+.modal-close{background:transparent;border:0;color:var(--muted);padding:6px;border-radius:8px}
+.modal-close:hover{color:var(--text)}
+
+/* Preview overlay/modal small tweaks */
+.preview-modal{width:80%;max-width:980px}
+.preview-modal .review-content{background:transparent}
+
+/* Floating auth button */
+.floating-auth-btn{position:fixed;right:18px;bottom:18px;border-radius:999px;padding:12px;background:linear-gradient(180deg,var(--accent),var(--accent-2));border:0;color:#04202a;box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:1300}
+
+/* Stat grid */
+.stats-grid{display:flex;gap:8px;margin-top:8px}
+.stat-card{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;min-width:66px;text-align:center}
+.stat-card .num{font-weight:700}
+
+/* Small responsive helpers */
+@media (max-width:900px){
+  main.workspace{padding:18px}
+  .modal-content{width:calc(100% - 28px)}
+}
+
+/* Micro-interactions */
+.type-card{transition:transform var(--transition-fast),box-shadow var(--transition-fast);border-radius:12px;padding:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03)}
+.type-card:hover{transform:translateY(-6px);box-shadow:0 16px 40px rgba(2,6,23,0.6)}
+
+/* Toast & status */
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:28px;background:rgba(0,0,0,0.6);padding:10px 14px;border-radius:10px}
+
+/* minimal animation for entry */
+.fade-in{animation:fadeIn .28s ease both}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* Small utility classes */
+.hidden{display:none!important}
+.muted{color:var(--muted)}
