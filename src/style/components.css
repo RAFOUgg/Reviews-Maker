@@ -60,6 +60,21 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
   background: var(--rm-modal-bg);
   box-shadow: 0 30px 80px rgba(2,6,23,0.6);
 }
+.modal:not(.show) { display: none !important; }
+
+/* Ensure overlays sit above any other modal content so background panels are fully dimmed */
+.modal-overlay { z-index: 2490; position: absolute; inset: 0; }
+
+/* Account dialog: allow internal scrolling so content isn't clipped */
+.account-dialog {
+  overflow: auto !important;
+  max-height: calc(86vh);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* When a modal is open, force only the shown modal to be interactive */
+body.modal-open .modal { pointer-events: none; }
+body.modal-open .modal.show { pointer-events: auto; }
 .modal-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:8px; border-bottom:1px solid rgba(148,163,184,0.03); }
 .modal-header h2, .modal-header h3 { margin:0; font-size:1.15rem; }
 .modal-close { background:transparent; border:0; color:var(--text-muted); padding:6px; border-radius:8px; }
