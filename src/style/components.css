@@ -1,3 +1,102 @@
+/* Harmonized components for Reviews-Maker
+   Provides modal, button, card and small component overrides to align with the design tokens
+   placed in `styles.css` and `ui/ui-base.css`.
+*/
+:root {
+  /* Fallback tokens when needed */
+  --rm-radius-xl: 22px;
+  --rm-radius-lg: 14px;
+  --rm-radius-md: 10px;
+  --rm-radius-sm: 8px;
+  --rm-ease: cubic-bezier(.2,.9,.2,1);
+  --rm-modal-overlay: linear-gradient(180deg, rgba(1,7,18,0.64), rgba(1,7,18,0.88));
+  --rm-modal-bg: linear-gradient(180deg, rgba(8,14,22,0.92), rgba(6,10,16,0.98));
+  --rm-panel-border: rgba(148,163,184,0.06);
+}
+
+/* Global harmonization tweaks */
+button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
+
+/* Primary / secondary / outline unified look */
+.btn-primary, .btn.btn-primary {
+  background: linear-gradient(90deg,var(--primary,#34d399),var(--accent,#38bdf8));
+  color: #04202a;
+  border: 0;
+  box-shadow: 0 8px 30px rgba(2,6,23,0.45), 0 8px 24px rgba(56,189,248,0.06);
+  transition: transform 180ms var(--rm-ease), box-shadow 180ms var(--rm-ease);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(2,6,23,0.5); }
+.btn-secondary, .btn.btn-secondary {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--rm-panel-border);
+}
+.btn-outline { border: 1px solid rgba(148,163,184,0.06); background: transparent; }
+.btn-ghost { background: transparent; border: 1px solid transparent; }
+
+/* Pill buttons consistent */
+.pill-btn { padding: 10px 16px; border-radius: 999px; gap:10px; }
+
+/* Card & panel harmonization */
+.panel, .card, .library-item, .compact-library-item {
+  border-radius: var(--rm-radius-lg);
+  border: 1px solid var(--rm-panel-border);
+  background: linear-gradient(180deg, rgba(10,18,34,0.6), rgba(6,12,18,0.6));
+  box-shadow: 0 20px 60px rgba(2,6,23,0.48);
+}
+
+/* Stat cards more compact and uniform */
+.stat-card { padding: 10px 12px; min-width:72px; border-radius:12px; background:rgba(255,255,255,0.02); }
+.stat-card .num { font-size:1.05rem; color:var(--text); }
+
+/* Unified modal styles (overrides to ensure same sizing and header layout) */
+.modal { z-index: 1200; }
+.modal-overlay { background: var(--rm-modal-overlay); backdrop-filter: blur(8px); }
+.modal-content {
+  width: min(960px, calc(100% - 56px));
+  max-height: 86vh;
+  padding: 18px;
+  border-radius: var(--rm-radius-lg);
+  border: 1px solid var(--rm-panel-border);
+  background: var(--rm-modal-bg);
+  box-shadow: 0 30px 80px rgba(2,6,23,0.6);
+}
+.modal-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:8px; border-bottom:1px solid rgba(148,163,184,0.03); }
+.modal-header h2, .modal-header h3 { margin:0; font-size:1.15rem; }
+.modal-close { background:transparent; border:0; color:var(--text-muted); padding:6px; border-radius:8px; }
+.modal-close:hover { color:var(--text); background: rgba(255,255,255,0.02); }
+
+/* Public profile specific tweaks */
+#publicProfileModal .account-profile, #accountModal .account-profile { display:flex; gap:12px; align-items:center; }
+#publicProfileModal .account-avatar, #accountModal .account-avatar { width:48px; height:48px; border-radius:12px; display:grid; place-items:center; background:rgba(255,255,255,0.03); }
+
+/* Ensure owner settings button is visually elevated */
+#publicProfileModal .btn-ghost, #publicProfileModal .btn { border-radius:10px; }
+#publicProfileModal #publicProfileSettingsBtn { display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:12px; }
+
+/* Library cards compacter and uniform */
+.compact-library-list .compact-library-item { padding:14px; border-radius:14px; border:1px solid rgba(148,163,184,0.04); background: linear-gradient(180deg, rgba(8,14,22,0.36), rgba(6,10,16,0.28)); }
+.compact-library-list .compact-library-item .title { font-weight:700; margin-bottom:6px; }
+
+/* Editor form inputs and panels */
+.review-form .form-content { background: transparent; }
+.input, input[type="text"], textarea { background: rgba(10,18,34,0.5); border: 1px solid var(--rm-panel-border); padding:10px 12px; border-radius:10px; color:var(--text); }
+.input:focus, textarea:focus { box-shadow: 0 8px 30px rgba(52,211,153,0.08); outline:none; }
+
+/* Quick visual for segmented privacy control */
+.segmented button { padding:8px 12px; border-radius:10px; }
+.segmented button[aria-pressed="true"] { background: linear-gradient(90deg,var(--primary,#34d399),var(--accent,#38bdf8)); color:#04202a; }
+
+/* Floating auth button alignment */
+.floating-auth-btn { right:22px; bottom:22px; box-shadow:0 14px 40px rgba(2,6,23,0.6); }
+
+/* Accessibility: visible focus ring for keyboard users */
+button:focus, .input:focus, .modal-close:focus { outline: 3px solid rgba(52,211,153,0.14); }
+
+/* Mobile tweaks */
+@media (max-width:700px) {
+  .modal-content { width: calc(100% - 28px); border-radius: 12px; }
+  .top-nav { padding: 12px; }
+}
 /* components.css - component-specific rules */
 .profile-stats .stats-grid{display:flex;gap:12px}
 .stat-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:10px}
