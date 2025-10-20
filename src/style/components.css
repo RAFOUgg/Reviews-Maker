@@ -116,6 +116,9 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
   padding: 18px;
   box-sizing: border-box;
   overflow: hidden;
+  /* Slightly smaller footprint so underlying content remains visible */
+  width: min(900px, calc(100% - 96px));
+  max-height: 84vh;
 }
 
 /* When content is taller than viewport allow internal scrolling while keeping header visible */
@@ -141,6 +144,12 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
     border-radius: 12px;
   }
   .modal { align-items: flex-end; padding: 12px; }
+}
+
+/* Desktop: leave a small top margin so header doesn't sit flush to viewport top */
+@media (min-width: 881px) {
+  .modal { padding-top: 36px; }
+  .modal-content { margin-top: 8px; }
 }
 
 /* Focus styles inside modal for keyboard users */

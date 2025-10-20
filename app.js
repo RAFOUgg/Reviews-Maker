@@ -2401,17 +2401,31 @@ function showModalById(id, opts = {}) {
         if (dlg) dlg.classList.add('centered');
       } catch(e){}
       try { document.body.classList.add('modal-open'); } catch(e){}
-      // mark the rest of the page inert (where supported) and set aria-hidden
+      // trap focus: move focus into the modal first (avoids aria-hidden on focused element)
+      let dialog = null;
       try {
-        Array.from(document.body.children).forEach(ch => {
-          if (ch === modal) return;
-          try { ch.setAttribute('aria-hidden', 'true'); ch.inert = true; } catch(e){}
-        });
-      } catch(e){}
-      // trap focus if possible and move focus into the modal
-      try {
-        const dialog = modal.querySelector('.account-dialog') || modal.querySelector('.modal-content') || modal;
+        dialog = modal.querySelector('.account-dialog') || modal.querySelector('.modal-content') || modal;
         setTimeout(()=>{ try{ if (dialog && dialog.focus) dialog.focus(); trapFocus(dialog); }catch(e){} }, 40);
+      } catch(e){}
+      // mark the rest of the page inert (where supported) and set aria-hidden
+      // only on elements we actually modify — tag them with data-modal-hidden so
+      // we can later restore exactly those elements. Skip scripts/styles and the modal itself.
+      try {
+        const active = document.activeElement;
+        Array.from(document.body.children).forEach(ch => {
+          try {
+            if (ch === modal) return;
+            // skip if this element contains the currently focused element (defensive)
+            if (active && ch.contains && ch.contains(active)) return;
+            const tag = (ch.tagName || '').toUpperCase();
+            if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'LINK') return;
+            // keep floating auth button and other global widgets interactive
+            if (ch.classList && ch.classList.contains && ch.classList.contains('floating-auth-btn')) return;
+            ch.setAttribute('data-modal-hidden','true');
+            try { ch.setAttribute('aria-hidden', 'true'); } catch(e){}
+            try { ch.inert = true; } catch(e){}
+          } catch(e){}
+        });
       } catch(e){}
     }
   } catch(e) { console.warn('showModalById error', e); }
@@ -2430,11 +2444,12 @@ function hideModalById(id) {
       try { const dlg = modal.querySelector('.modal-content'); if (dlg) dlg.classList.remove('centered'); } catch(e){}
     }
     try { document.body.classList.remove('modal-open'); } catch(e){}
-    // restore inert/aria-hidden on background elements
+    // restore inert/aria-hidden on elements we modified
     try {
-      Array.from(document.body.children).forEach(ch => {
-        if (ch === modal) return;
-        try { ch.removeAttribute('aria-hidden'); ch.inert = false; } catch(e){}
+      Array.from(document.body.querySelectorAll('[data-modal-hidden]')).forEach(ch => {
+        try { ch.removeAttribute('data-modal-hidden'); } catch(e){}
+        try { ch.removeAttribute('aria-hidden'); } catch(e){}
+        try { ch.inert = false; } catch(e){}
       });
     } catch(e){}
     // If any element inside the modal had focus, blur it to avoid WAI-ARIA warnings
