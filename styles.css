@@ -787,6 +787,7 @@ form {
   backdrop-filter: blur(6px) saturate(110%);
   display: none;
   z-index: 2400;
+  pointer-events: auto !important;
 }
 
 .account-overlay.show { display: block; }
@@ -800,6 +801,7 @@ form {
   max-height: 88vh;
   display: none;
   z-index: 2500;
+  pointer-events: auto !important;
 }
 
 #accountModal.show { display: block; }
@@ -814,6 +816,7 @@ form {
   /* Ensure the dialog is above the overlay so clicks reach buttons inside the dialog */
   position: relative;
   z-index: 2501;
+  pointer-events: auto !important;
 }
 
 .account-header {
