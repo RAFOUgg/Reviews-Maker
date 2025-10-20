@@ -146,6 +146,14 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
   .modal { align-items: flex-end; padding: 12px; }
 }
 
+/* Sheet mode for tall modals on larger viewports. When JS detects the
+   content is taller than available viewport space we switch to .modal.sheet
+   so the dialog pins to the bottom and becomes scrollable internally.
+*/
+.modal.sheet { align-items: flex-end !important; padding: 12px !important; }
+.modal.sheet .modal-content { position: relative !important; width: min(920px, calc(100% - 48px)); max-height: 92vh !important; border-radius: 12px; transform: none !important; margin: 0 auto; }
+.modal.sheet .modal-body, .modal.sheet .account-modal-inner { max-height: calc(92vh - 120px); overflow: auto; }
+
 /* Desktop: leave a small top margin so header doesn't sit flush to viewport top */
 @media (min-width: 881px) {
   /* Desktop: center modals vertically */

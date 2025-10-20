@@ -2389,10 +2389,6 @@ function showModalById(id, opts = {}) {
       try {
         modal.style.setProperty('position','fixed','important');
         modal.style.setProperty('inset','0','important');
-        modal.style.setProperty('top','0','important');
-        modal.style.setProperty('left','0','important');
-        modal.style.setProperty('right','0','important');
-        modal.style.setProperty('bottom','0','important');
       } catch(e){}
       try { modal.style.setProperty('display', opts.display || 'flex', 'important'); } catch(e){}
   try { modal.style.setProperty('z-index', opts.modalZ || '100510', 'important'); } catch(e){}
@@ -2401,6 +2397,27 @@ function showModalById(id, opts = {}) {
       try {
         const dlg = modal.querySelector('.modal-content');
         if (dlg) dlg.classList.add('centered');
+      } catch(e){}
+      // Determine if modal content fits within viewport; if not, switch to sheet mode
+      try {
+        const dlg = modal.querySelector('.modal-content');
+        // allow render to settle so measurements are accurate
+        setTimeout(() => {
+          try {
+            if (!dlg) return;
+            const rect = dlg.getBoundingClientRect();
+            // If the content height would exceed available viewport space, prefer sheet layout
+            const available = Math.max(window.innerHeight * 0.86, 320);
+            const contentHeight = Math.max(dlg.scrollHeight || 0, rect.height || 0);
+            if (contentHeight > available) {
+              modal.classList.add('sheet');
+              try { dlg.classList.remove('centered'); } catch(e){}
+            } else {
+              modal.classList.remove('sheet');
+              try { dlg.classList.add('centered'); } catch(e){}
+            }
+          } catch(e){}
+        }, 40);
       } catch(e){}
       // If account modal, set a CSS variable to nudge it slightly upward
       try {
@@ -2450,6 +2467,7 @@ function hideModalById(id) {
       modal.setAttribute('aria-hidden','true');
       try { modal.style.display = 'none'; } catch(e){}
       try { const dlg = modal.querySelector('.modal-content'); if (dlg) dlg.classList.remove('centered'); } catch(e){}
+      try { modal.classList.remove('sheet'); } catch(e){}
     
     // Clear the account offset variable when hiding account modal
     try { if (id === 'accountModal') { document.documentElement.style.removeProperty('--rm-account-offset'); } } catch(e){}
@@ -2468,6 +2486,38 @@ function hideModalById(id) {
     try { releaseFocusTrap(); } catch(e){}
   } catch(e) { console.warn('hideModalById error', e); }
 }
+
+// Utility: adjust modal layout (centered vs sheet) based on content vs viewport
+function adjustModalLayout(modal) {
+  try {
+    if (!modal) return;
+    const dlg = modal.querySelector('.modal-content');
+    if (!dlg) return;
+    // measure after style changes
+    const rect = dlg.getBoundingClientRect();
+    const contentHeight = Math.max(dlg.scrollHeight || 0, rect.height || 0);
+    // available height is viewport height minus a comfortable margin (header/footer)
+    const available = Math.max(window.innerHeight - 160, 320);
+    if (contentHeight > available) {
+      modal.classList.add('sheet');
+      dlg.classList.remove('centered');
+    } else {
+      modal.classList.remove('sheet');
+      dlg.classList.add('centered');
+    }
+  } catch(e) { /* ignore measurement errors */ }
+}
+
+// Recompute layout for all currently shown modals on resize/orientation change
+let _rm_modal_resize_timer = null;
+window.addEventListener('resize', () => {
+  try {
+    if (_rm_modal_resize_timer) clearTimeout(_rm_modal_resize_timer);
+    _rm_modal_resize_timer = setTimeout(() => {
+      Array.from(document.querySelectorAll('.modal.show')).forEach(m => adjustModalLayout(m));
+    }, 120);
+  } catch(e){}
+});
 
 // Expose globally for legacy scripts
 try { if (typeof window !== 'undefined') { window.showModalById = showModalById; window.hideModalById = hideModalById; } } catch(e){}
@@ -2862,7 +2912,16 @@ async function initDatabase() {
       const privVal = (dom.savePrivacy?.value || 'public');
       formData.isPrivate = privVal === 'private';
       try {
-  const res = await saveReview();
+        const res = await saveReview();
+        // If remote returned an error object, keep the modal open and display it
+        if (res && res.remoteError) {
+          console.warn('Remote save returned error', res.remoteError);
+          const msg = res.remoteError.message || res.remoteError.error || 'Erreur serveur lors de la sauvegarde';
+          showToast(`Sauvegarde locale OK — échec sync distante : ${msg}`, 'warning');
+          // Keep save modal open so user can retry or be informed
+          return;
+        }
+        // Otherwise close the modal and show success (local save already done)
         closeSaveModal();
       }
       catch(e){ console.error(e); showToast("Impossible d'enregistrer.", 'error'); }
@@ -6037,9 +6096,13 @@ async function remoteSave(reviewObj) {
     }
     const status = resp.status;
     let js = null;
-    try { js = await resp.json(); } catch {}
+    let text = null;
+    try { js = await resp.json(); } catch (err) { try { text = await resp.text(); } catch (e){} }
     if (!resp.ok) {
-      return { ok: false, status, ...(js || {}), message: js?.message || ('HTTP '+status) };
+      let message = js?.message || text || ('HTTP ' + status);
+      if (status === 413) message = 'Fichier trop volumineux pour le serveur (413)';
+      if (status === 400 && js && js.error) message = js.error || message;
+      return { ok: false, status, ...(js || {}), message };
     }
     return { ok: true, review: js?.review || js };
   } catch (e) {
