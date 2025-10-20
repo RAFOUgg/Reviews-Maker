@@ -19,9 +19,9 @@
       try { textarea && textarea.focus(); } catch(e){}
       return;
     }
-    modal.style.display = 'flex';
-    if (overlay) try { overlay.style.display = 'block'; } catch(e){}
-    modal.classList.add('show');
+  modal.style.display = 'flex';
+  if (overlay) try { overlay.classList.add('show'); overlay.classList.add('visible'); } catch(e){}
+  modal.classList.add('show');
     try { document.body.classList.add('modal-open'); } catch(e){}
     try { textarea && textarea.focus(); } catch(e){}
   }
@@ -32,9 +32,9 @@
       if (status) { status.style.display = 'none'; status.textContent = ''; }
       return;
     }
-    modal.style.display = 'none';
-    if (overlay) try { overlay.style.display = 'none'; } catch(e){}
-    modal.classList.remove('show');
+  modal.style.display = 'none';
+  if (overlay) try { overlay.classList.remove('show'); overlay.classList.remove('visible'); } catch(e){}
+  modal.classList.remove('show');
     try { document.body.classList.remove('modal-open'); } catch(e){}
     if (status) { status.style.display = 'none'; status.textContent = ''; }
   }

@@ -162,7 +162,6 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
 
 /* Subtle drop shadow for overlay to separate modal from page */
 .modal-overlay { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02); }
-.modal:not(.show) { display: none !important; }
 
 /* Account dialog: allow internal scrolling so content isn't clipped */
 .account-dialog {
@@ -330,3 +329,31 @@ body .modal-content { position: relative !important; z-index: 100510 !important;
 
 /* Ensure preview-only modals or those explicitly hidden via helper will not show an overlay */
 .modal.preview-only .modal-overlay, .modal[data-backdrop="none"] .modal-overlay { display: none !important; pointer-events: none !important; background: transparent !important; }
+
+/* Ensure overlays are only visible when their modal is explicitly shown.
+  This prevents orphaned overlay elements (left in the DOM or created
+  programmatically) from appearing as small grey blocks in the viewport.
+*/
+body .modal:not(.show) > .modal-overlay { display: none !important; visibility: hidden !important; pointer-events: none !important; }
+body .modal.show > .modal-overlay { display: block !important; visibility: visible !important; pointer-events: auto !important; }
+.modal-overlay:not(.show) { display: none !important; }
+
+/* Defensive: if preview elements end up without the `hidden` attribute,
+  force them hidden unless explicitly opened via script. This avoids the
+  small grey preview panel showing in the top-left when not in use. */
+#previewOverlay[hidden], #previewModal[hidden] { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }
+
+/* Position account modal slightly higher than center so the full dialog
+  header is visible on typical laptop viewports and users don't have to
+  scroll immediately. Keep mobile/sheet behavior intact. */
+#accountModal .modal-content.centered { /* subtle upward shift */
+  top: calc(42% + var(--rm-account-offset, 0)) !important;
+  /* keep translate to center horizontally and mostly vertically */
+  transform: translate(-50%, -50%) !important;
+}
+
+/* In case an overlay was accidentally inserted outside a modal, ensure
+  any standalone .modal-overlay can't appear above the UI unless it has
+  an explicit .show class and belongs to a shown modal. */
+.modal-overlay { box-sizing: border-box; }
+

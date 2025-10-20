@@ -2372,6 +2372,8 @@ function showModalById(id, opts = {}) {
         overlayEl.setAttribute('aria-hidden', 'true');
       } else {
         overlayEl.classList.add('show');
+        // Also ensure overlay has visible state class used by CSS guards
+        try { overlayEl.classList.add('visible'); } catch(e){}
         try { overlayEl.style.setProperty('display','block','important'); } catch(e){}
   try { overlayEl.style.setProperty('z-index', opts.overlayZ || '100500', 'important'); } catch(e){}
         overlayEl.setAttribute('aria-hidden','false');
@@ -2399,6 +2401,12 @@ function showModalById(id, opts = {}) {
       try {
         const dlg = modal.querySelector('.modal-content');
         if (dlg) dlg.classList.add('centered');
+      } catch(e){}
+      // If account modal, set a CSS variable to nudge it slightly upward
+      try {
+        if (id === 'accountModal') {
+          try { document.documentElement.style.setProperty('--rm-account-offset', '-8vh'); } catch(e){}
+        }
       } catch(e){}
       try { document.body.classList.add('modal-open'); } catch(e){}
       // trap focus: move focus into the modal first (avoids aria-hidden on focused element)
@@ -2436,12 +2444,15 @@ function hideModalById(id) {
     if (!id) return;
     const modal = document.getElementById(id);
     const overlay = document.getElementById(id + 'Overlay') || (modal && modal.querySelector('.modal-overlay'));
-    if (overlay) { overlay.classList.remove('show'); overlay.setAttribute('aria-hidden','true'); try { overlay.style.display = 'none'; } catch(e){} }
+  if (overlay) { overlay.classList.remove('show'); overlay.setAttribute('aria-hidden','true'); try { overlay.classList.remove('visible'); } catch(e){} }
     if (modal) {
       modal.classList.remove('show');
       modal.setAttribute('aria-hidden','true');
       try { modal.style.display = 'none'; } catch(e){}
       try { const dlg = modal.querySelector('.modal-content'); if (dlg) dlg.classList.remove('centered'); } catch(e){}
+    
+    // Clear the account offset variable when hiding account modal
+    try { if (id === 'accountModal') { document.documentElement.style.removeProperty('--rm-account-offset'); } } catch(e){}
     }
     try { document.body.classList.remove('modal-open'); } catch(e){}
     // restore inert/aria-hidden on elements we modified
@@ -2471,7 +2482,7 @@ function closeAccountModal() {
       try { window.hideModalById('accountModal'); }
       catch(e) { /* fallthrough to manual hide */ }
     } else {
-      const overlay = document.getElementById('accountModalOverlay'); if (overlay) { overlay.classList.remove('show'); try { overlay.style.display = 'none'; } catch(e){} }
+  const overlay = document.getElementById('accountModalOverlay'); if (overlay) { overlay.classList.remove('show'); try { overlay.classList.remove('visible'); } catch(e){} }
       try { dom.accountModal.classList.remove('show'); dom.accountModal.setAttribute('aria-hidden','true'); dom.accountModal.style.display = 'none'; } catch(e){}
     }
   } catch(e) { console.warn('closeAccountModal hide failed', e); }
