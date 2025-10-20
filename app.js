@@ -2216,18 +2216,8 @@ function showAuthStatus(message, type = "info") {
 function openAccountModal() {
   if (!dom.accountModal) return;
   try {
-    // hide any other open modals to avoid visual stacking
-    const others = document.querySelectorAll('.modal, .tips-dialog, .export-config-modal');
-    others.forEach(m => {
-      if (m !== dom.accountModal) {
-        try { m.style.display = 'none'; } catch(e){}
-        try { m.classList.remove('show'); } catch(e){}
-        try { m.setAttribute('aria-hidden','true'); } catch(e){}
-      }
-    });
-    // Also ensure any generic modal overlays are hidden so they don't sit above the account dialog
-    const overlays = document.querySelectorAll('.modal-overlay');
-    overlays.forEach(o => { try { o.style.display = 'none'; o.classList.remove('show'); o.setAttribute('aria-hidden','true'); } catch(e){} });
+    // Ensure a clean slate: hide any other modal/overlay before opening account modal
+    try { closeAllModalsExcept(null); } catch(e){}
   } catch(e){}
   // show overlay and dialog
   const overlay = document.getElementById('accountModalOverlay');
@@ -2262,6 +2252,29 @@ function openAccountModal() {
   trapFocus(dialog);
   try { document.body.classList.add('modal-open'); } catch(e){}
   renderAccountView().catch(err => console.warn('Failed to render account view', err));
+}
+
+// Utility: hide all modals and overlays. If keepId is provided, it will not
+// unhide that id (caller is expected to show it explicitly). This ensures
+// we never have multiple visible modals/overlays stacked.
+function closeAllModalsExcept(keepId = null) {
+  try {
+    const mods = document.querySelectorAll('.modal');
+    mods.forEach(m => {
+      try {
+        if (!m.id) return;
+        if (keepId && m.id === keepId) return;
+        m.classList.remove('show');
+        m.setAttribute('aria-hidden', 'true');
+        try { m.style.display = 'none'; } catch(e){}
+      } catch(e){}
+    });
+    const overlays = document.querySelectorAll('.modal-overlay, .account-overlay');
+    overlays.forEach(o => {
+      try { o.classList.remove('show'); o.setAttribute('aria-hidden','true'); o.style.display = 'none'; } catch(e){}
+    });
+    try { document.body.classList.remove('modal-open'); } catch(e){}
+  } catch(e) { /* ignore */ }
 }
 
 function closeAccountModal() {
@@ -2376,15 +2389,8 @@ function openPublicProfile(email) {
     try { console.log('DEBUG: openPublicProfile called with', email); } catch(e){}
     // Close any account modal or other modals to ensure the public profile appears on top
     try {
-      // If account modal is open, close it first
-      if (dom && dom.accountModal) {
-        try { closeAccountModal(); } catch(e) { /* ignore */ }
-      }
-      const others = document.querySelectorAll('.modal, .tips-dialog, .export-config-modal');
-      others.forEach(m => { if (m && m.id !== 'publicProfileModal') { try { m.style.display = 'none'; } catch(e){} try { m.classList.remove('show'); } catch(e){} } });
-      // Hide any modal-overlay elements that could sit above the public profile
-      const overlays = document.querySelectorAll('.modal-overlay, .account-overlay');
-      overlays.forEach(o => { try { o.style.display = 'none'; o.classList.remove('show'); } catch(e){} });
+      // Close everything first to avoid stacking
+      closeAllModalsExcept(null);
     } catch(e) { /* ignore */ }
     const overlay = document.getElementById('publicProfileOverlay');
     if (overlay) {
