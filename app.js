@@ -1572,39 +1572,41 @@ function setupModalEvents() {
   if (dom.accountModalOverlay) {
     dom.accountModalOverlay.addEventListener('click', () => closeAccountModal());
   }
-  if (dom.openLibraryFromAccount) {
-    dom.openLibraryFromAccount.addEventListener('click', () => {
-      try { console.log('DEBUG: openLibraryFromAccount clicked, isUserConnected=', isUserConnected); } catch(e){}
-      closeAccountModal();
-      if (!isUserConnected) {
-        if (dom.authModal) dom.authModal.style.display = 'flex';
-        return;
-      }
-      openLibraryModal('mine', { fromAccount: true });
-    });
-  }
+  document.addEventListener('DOMContentLoaded', function() {
+    if (dom.openLibraryFromAccount) {
+      dom.openLibraryFromAccount.addEventListener('click', () => {
+        try { console.log('DEBUG: openLibraryFromAccount clicked, isUserConnected=', isUserConnected); } catch(e){}
+        closeAccountModal();
+        if (!isUserConnected) {
+          if (dom.authModal) dom.authModal.style.display = 'flex';
+          return;
+        }
+        openLibraryModal('mine', { fromAccount: true });
+      });
+    }
 
-  // Ensure account-level disconnect (inside the account modal) is wired
-  const accountDisconnectBtn = document.getElementById('accountDisconnect');
-  if (accountDisconnectBtn) {
-    accountDisconnectBtn.addEventListener('click', async () => {
-      try { console.log('DEBUG: accountDisconnect clicked'); } catch(e){}
-      // Mirror authDisconnect behavior but close the account modal
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('authEmail');
-      localStorage.removeItem('discordUsername');
-      localStorage.removeItem('discordId');
-      sessionStorage.removeItem('authEmail');
-      sessionStorage.removeItem('pendingCode');
-      showAuthStatus('Déconnecté', 'info');
-      updateAuthUI();
-      try { if (dom.accountModal) dom.accountModal.style.display = 'none'; } catch(e){}
-      if (isHomePage) {
-        renderCompactLibrary();
-        setupHomeTabs();
-      }
-    });
-  }
+    // Ensure account-level disconnect (inside the account modal) is wired
+    const accountDisconnectBtn = document.getElementById('accountDisconnect');
+    if (accountDisconnectBtn) {
+      accountDisconnectBtn.addEventListener('click', async () => {
+        try { console.log('DEBUG: accountDisconnect clicked'); } catch(e){}
+        // Mirror authDisconnect behavior but close the account modal
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('authEmail');
+        localStorage.removeItem('discordUsername');
+        localStorage.removeItem('discordId');
+        sessionStorage.removeItem('authEmail');
+        sessionStorage.removeItem('pendingCode');
+        showAuthStatus('Déconnecté', 'info');
+        updateAuthUI();
+        try { if (dom.accountModal) dom.accountModal.style.display = 'none'; } catch(e){}
+        if (isHomePage) {
+          renderCompactLibrary();
+          setupHomeTabs();
+        }
+      });
+    }
+  });
 
   // Delegated click handler inside account modal to handle clicks even if DOM nodes are re-rendered
   if (dom.accountModal) {
