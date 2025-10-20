@@ -60,6 +60,19 @@ function setupAccountModalEvents() {
       if (dom.accountPreferences) dom.accountPreferences.style.display = 'block';
     });
   }
+  // Public profile header settings button (owner-only) — also wire close button
+  if (dom.publicProfileSettingsBtn) {
+    dom.publicProfileSettingsBtn.addEventListener('click', () => {
+      try { closePublicProfileHandler(); } catch(e){}
+      try { openAccountModal(); } catch(e){}
+      try { const settingsPanel = document.getElementById('accountSettingsPanel'); if (settingsPanel) settingsPanel.style.display = 'block'; } catch(e){}
+    });
+  }
+  if (dom.closePublicProfile) {
+    dom.closePublicProfile.addEventListener('click', () => {
+      try { closePublicProfileHandler(); } catch(e){}
+    });
+  }
 }
   // Correction JS : pointer-events et focus
   try {
@@ -1151,6 +1164,7 @@ function initHomePage() {
   dom.publicProfileModal = document.getElementById('publicProfileModal');
   dom.publicProfileOverlay = document.getElementById('publicProfileOverlay');
   dom.closePublicProfile = document.getElementById('closePublicProfile');
+  dom.publicProfileSettingsBtn = document.getElementById('publicProfileSettingsBtn');
   dom.publicProfileEmail = document.getElementById('publicProfileEmail');
   dom.publicTotal = document.getElementById('publicTotal');
   dom.publicPublic = document.getElementById('publicPublic');
@@ -1605,18 +1619,9 @@ function setupModalEvents() {
   // Modal Auth - Email based
   if (dom.floatingAuthBtn) {
     dom.floatingAuthBtn.addEventListener("click", () => {
-      console.log('DEBUG: floatingAuthBtn clicked; isUserConnected=', isUserConnected, 'dom.accountModal=', !!dom.accountModal, 'dom.authModal=', !!dom.authModal);
-      // If connected, open account modal instead of auth modal
-      if (isUserConnected && dom.accountModal) {
-        console.log('DEBUG: Opening account modal');
-        openAccountModal();
-        return;
-      }
-      if (dom.authModal) {
-        console.log('DEBUG: Opening auth modal');
-        dom.authModal.style.display = "flex";
-        updateAuthUI();
-      }
+      console.log('DEBUG: floatingAuthBtn clicked; delegating to showProfileModal');
+      // Centralize behavior: show profile modal for current user (or auth if not connected)
+      try { showProfileModal(); } catch(e) { console.warn('showProfileModal failed', e); }
     });
   }
   
@@ -2411,6 +2416,46 @@ function openPublicProfile(email) {
   } catch(e){}
 }
 
+function closePublicProfileHandler() {
+  try {
+    const overlay = document.getElementById('publicProfileOverlay'); if (overlay) { overlay.classList.remove('show'); try { overlay.style.display = 'none'; } catch(e){} }
+    const modal = document.getElementById('publicProfileModal'); if (modal) { modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); try { modal.style.display = 'none'; } catch(e){} }
+    try { document.body.classList.remove('modal-open'); } catch(e){}
+  } catch(e) { /* ignore */ }
+}
+
+// Centralized entrypoint to show a profile. If identifier matches the
+// signed-in user, open the account modal (owner view). Otherwise show
+// the public profile modal. If no identifier is provided, open the
+// account modal when logged-in, else show the auth modal.
+function showProfileModal(identifier, options = {}) {
+  try {
+    const id = String(identifier || '').trim();
+    const me = (localStorage.getItem('authEmail') || '').trim();
+    // No identifier -> prefer account modal when connected
+    if (!id) {
+      if (me) {
+        try { openAccountModal(); } catch(e){}
+        try { renderAccountView().catch(()=>{}); } catch(e){}
+      } else {
+        // show auth modal to encourage sign-in
+        if (dom && dom.authModal) dom.authModal.style.display = 'flex';
+      }
+      return;
+    }
+
+    // If the identifier equals current user's email (case-insensitive), open account modal
+    if (me && id.toLowerCase() === me.toLowerCase()) {
+      try { openAccountModal(); } catch(e){}
+      try { renderAccountView().catch(()=>{}); } catch(e){}
+      return;
+    }
+
+    // Otherwise open the public profile (read-only)
+    try { openPublicProfile(id); } catch(e) { console.warn('showProfileModal openPublicProfile failed', e); }
+  } catch(e) { console.warn('showProfileModal', e); }
+}
+
 if (typeof window !== 'undefined') {
   try { document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'closePublicProfile') {
@@ -3154,7 +3199,7 @@ async function renderCompactLibrary() {
         ev.stopPropagation();
         const email = authorBtn.getAttribute('data-author-email') || authorBtn.textContent || '';
         try { console.log('DEBUG: resolved author identifier ->', email); } catch(e){}
-        if (email) openPublicProfile(email);
+        if (email) showProfileModal(email);
       });
     }
     

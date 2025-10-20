@@ -280,7 +280,10 @@
                 <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="publicProfileTitle">
                   <div class="modal-header">
                     <h2 id="publicProfileTitle">Profil public</h2>
-                    <button type="button" class="modal-close" id="closePublicProfile" aria-label="Fermer">✕</button>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                      <button type="button" class="btn btn-ghost" id="publicProfileSettingsBtn" style="display:none;">⚙️ Paramètres</button>
+                      <button type="button" class="modal-close" id="closePublicProfile" aria-label="Fermer">✕</button>
+                    </div>
                   </div>
                   <div class="modal-body">
                     <div class="account-profile" style="margin-bottom:10px;">
