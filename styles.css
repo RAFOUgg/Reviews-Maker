@@ -5068,40 +5068,9 @@ body.modal-open .auth-status { pointer-events: none; opacity: 0.95; }
     0 0 60px -20px rgba(52, 211, 153, 0.2);
 }
 
-/* Public profile modal: hidden by default and shown when .show is added */
-#publicProfileModal {
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: min(900px, 94vw);
-  max-height: 88vh;
-  display: none;
-  z-index: 2450;
-}
-
-#publicProfileModal .account-dialog { max-width: 100%; }
-#publicProfileModal.show { display: block; }
-
-/* Strong override: prevent the public profile from being rendered as a bottom-docked bar.
-   It must remain hidden until explicitly opened with the .show class. Use !important
-   to override any inline styles or other rules that placed it at the bottom. */
-#publicProfileModal {
-  bottom: auto !important;
-  right: auto !important;
-  width: min(900px, 94vw) !important;
-  max-width: 100% !important;
-  display: none !important;
-  visibility: hidden !important;
-}
-
-#publicProfileModal.show {
-  display: block !important;
-  visibility: visible !important;
-  left: 50% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-}
+/* Public profile modal rules were moved to src/style/components.css to avoid
+   duplication and conflicts. Keep this file clean so components.css controls
+   the modal stacking/visibility. */
 
 .modal-header {
   padding: 2rem;
