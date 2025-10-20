@@ -74,27 +74,22 @@ function setupAccountModalEvents() {
     });
   }
 }
-  // Correction JS : pointer-events et focus
+  // Ensure modal elements accept pointer events but do NOT force display on load
   try {
-    dom.accountModal.classList.add('show');
-    dom.accountModal.setAttribute('aria-hidden', 'false');
-    dom.accountModal.style.display = 'block';
-    dom.accountModal.style.pointerEvents = 'auto';
-    // prefer explicit inner dialog (.account-dialog) but fall back to .modal-content
-    const dlg = dom.accountModal.querySelector('.account-dialog') || dom.accountModal.querySelector('.modal-content') || dom.accountModal;
-    if (dlg) {
-      try { dlg.classList.add('show'); } catch(e){}
-      try { dlg.style.pointerEvents = 'auto'; } catch(e){}
-      try { dlg.style.display = 'block'; } catch(e){}
+    if (dom && dom.accountModal) {
+      try { dom.accountModal.style.pointerEvents = 'auto'; } catch(e){}
+      const dlg = dom.accountModal.querySelector('.account-dialog') || dom.accountModal.querySelector('.modal-content') || dom.accountModal;
+      if (dlg) {
+        try { dlg.style.pointerEvents = 'auto'; } catch(e){}
+      }
     }
-    document.body.classList.add('modal-open');
   } catch(e){}
   // Correction JS : pointer-events et focus
   try {
     const modal = document.getElementById('publicProfileModal');
-    if (modal) modal.style.pointerEvents = 'auto';
-  const dlg = modal ? (modal.querySelector('.account-dialog') || modal.querySelector('.modal-content') || modal) : null;
-  if (dlg) try { dlg.style.pointerEvents = 'auto'; } catch(e){}
+    if (modal) try { modal.style.pointerEvents = 'auto'; } catch(e){}
+    const dlg = modal ? (modal.querySelector('.account-dialog') || modal.querySelector('.modal-content') || modal) : null;
+    if (dlg) try { dlg.style.pointerEvents = 'auto'; } catch(e){}
   } catch(e){}
 // --- Hosting base-path support -------------------------------------------
 // If the app is served under /reviews, transparently prefix any absolute
