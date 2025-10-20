@@ -3549,10 +3549,9 @@ function loadReviewIntoForm(review, mode = 'view') {
   // View or edit mode
   if (mode === 'edit') {
     setReadOnly(false);
-    setDraftFlag(true);
+    // edit mode: keep form editable (draft flag removed)
   } else {
     setReadOnly(true);
-    setDraftFlag(false);
   }
   
   // S'assurer que les boutons sont bien réactivés après le chargement
@@ -3692,7 +3691,7 @@ function handleTypeSelection(card) {
   formPanel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   // Marquer comme brouillon en édition
-  setDraftFlag(true);
+  // draft flag removed; editor is simply editable
 }
 
 // Alias pour la compatibilité
@@ -3733,7 +3732,7 @@ function selectProductType(type) {
     document.body.classList.add('assistant-hidden');
     formPanel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-    setDraftFlag(true);
+    // draft flag removed
   }
 }
 
@@ -6840,9 +6839,9 @@ async function exportImage(event) {
     link.click();
     
     console.log('Téléchargement déclenché');
-    showToast("Image exportée avec succès.");
-    clearDraftFlag();
-    clearSavedDraft();
+  showToast("Image exportée avec succès.");
+  // clear draft remnants
+  clearSavedDraft();
   } catch (error) {
     console.error("Erreur export image détaillée:", error);
     console.error("Type d'erreur:", error.name);
@@ -6889,14 +6888,14 @@ function handleReset(mode = 'full', preserveDraft = false) {
     updateProgress(0);
     updateSectionControls();
     showToast("Champs réinitialisés pour cette review.", "info");
-    setDraftFlag(true);
+    // Draft flag removed; clear any saved draft remnants
     clearSavedDraft();
     return;
   }
 
   // Full reset: go back to step 1
   // Redirect to home to ensure a clean step-1 state (avoids legacy UI remnants)
-  if (!preserveDraft) { setDraftFlag(false); clearSavedDraft(); } else { setDraftFlag(true); }
+  if (!preserveDraft) { clearSavedDraft(); } else { /* preserve draft removed */ }
   navigateToHome();
 }
 
@@ -6936,14 +6935,6 @@ function showToast(message, type = "success") {
   }, 4200);
 }
 
-function setDraftFlag(on) {
-  if (!dom.draftBadge) return;
-  dom.draftBadge.style.display = on ? 'inline-flex' : 'none';
-}
-
-function clearDraftFlag() { setDraftFlag(false); }
-
-// Draft persistence API
 // Vérifie si le formulaire contient du contenu significatif
 function hasSignificantContent() {
   if (!currentType) return false;
@@ -6974,21 +6965,6 @@ function hasSignificantContent() {
   return hasText || hasImage || hasRatings;
 }
 
-function scheduleDraftSave() {
-  if (isReadOnlyView) return;
-  if (draftSaveTimer) clearTimeout(draftSaveTimer);
-  
-  // Vérifier s'il y a du contenu significatif avant de planifier la sauvegarde
-  draftSaveTimer = setTimeout(() => {
-    if (hasSignificantContent()) {
-      persistDraftImmediate();
-    } else {
-      // Si le contenu est vide, supprimer le brouillon existant s'il y en a un
-      clearSavedDraft();
-    }
-  }, 1500); // Augmenté de 600ms à 1500ms pour réduire la fréquence des sauvegardes
-}
-
 function serializeCurrentForm() {
   const data = { productType: currentType };
   const sections = getSections();
@@ -7007,12 +6983,12 @@ function serializeCurrentForm() {
 }
 
 function persistDraftImmediate() {
-  // Draft autosave removed - no-op for backward compatibility
+  // Draft autosave removed - kept for backward compatibility but intentionally no-op
   return;
 }
 
 function restoreDraftIfAny() {
-  // Draft restore removed
+  // Draft restore removed - no-op
   return null;
 }
 
