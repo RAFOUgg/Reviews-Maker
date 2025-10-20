@@ -71,6 +71,74 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
   -webkit-overflow-scrolling: touch;
 }
 
+/* Specific visual polish for Account modal */
+#accountModal .modal-content,
+.account-modal-content,
+.account-dialog {
+  width: min(820px, calc(100% - 48px));
+  padding: 0; /* header/body control padding separately */
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(8,12,18,0.96), rgba(6,8,12,0.96));
+  border: 1px solid rgba(148,163,184,0.04);
+}
+
+#accountModal .modal-header, .account-header {
+  padding: 18px 20px;
+  align-items: center;
+  gap: 12px;
+}
+
+.account-header .title { font-size:1.18rem; font-weight:700; color:var(--text); }
+.account-header .controls { display:flex; gap:10px; align-items:center; }
+
+/* Header settings button styling */
+#accountModal #openAccountSettings, #accountModal .btn-ghost, .account-header .btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(148,163,184,0.06);
+  padding:8px 12px;
+  border-radius:10px;
+  color:var(--text);
+}
+#accountModal #openAccountSettings:hover { background: rgba(255,255,255,0.02); }
+
+/* Modal body grid and panels */
+.account-body {
+  display:grid;
+  grid-template-columns: 320px 1fr;
+  gap: 18px;
+  padding: 18px;
+}
+.account-left { padding: 14px; }
+.account-right { padding: 14px; }
+
+/* Avatar and meta */
+.account-avatar { width:56px; height:56px; border-radius:12px; font-size:22px; }
+.account-meta .email { font-weight:700; font-size:0.95rem; }
+.account-meta .sub { font-size:0.88rem; color:var(--text-soft); }
+
+/* Stat cards: subtle elevation and spacing */
+.stat-card { padding: 12px 10px; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00)); border:1px solid rgba(255,255,255,0.02); }
+.stat-card .num { font-size:1.15rem; }
+
+/* Actions panel */
+.account-right .panel { padding: 12px; }
+.account-right .action-list { display:flex; gap:10px; flex-wrap:wrap; }
+.account-right .action-list .btn { padding:8px 12px; }
+
+/* Preferences panel */
+.account-preferences { padding:12px; }
+
+/* Scrollbar inside modal (subtle) */
+.account-dialog::-webkit-scrollbar, .modal-content::-webkit-scrollbar { width: 10px; }
+.account-dialog::-webkit-scrollbar-track, .modal-content::-webkit-scrollbar-track { background: rgba(6,8,12,0.6); border-radius:999px; }
+.account-dialog::-webkit-scrollbar-thumb, .modal-content::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.18); border-radius:999px; }
+
+/* Mobile: full width sheet for comfortable reading */
+@media (max-width:880px) {
+  #accountModal .modal-content, .account-modal-content { width: calc(100% - 24px); border-radius: 12px; }
+  .account-body { grid-template-columns: 1fr; }
+}
+
 /* When a modal is open, force only the shown modal to be interactive */
 body.modal-open .modal { pointer-events: none; }
 body.modal-open .modal.show { pointer-events: auto; }
