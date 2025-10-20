@@ -2795,12 +2795,10 @@ async function dedupeDatabase() {
       return list
         .slice()
         .sort((a, b) => {
-          // Prefer non-draft
-          if (!!a.isDraft !== !!b.isDraft) return a.isDraft ? 1 : -1;
-          // Newest date first
-          const da = new Date(a.date || 0).getTime();
-          const dbt = new Date(b.date || 0).getTime();
-          return dbt - da;
+          // Prefer newest date first (draft flag removed)
+          const ta = new Date(a.date || 0).getTime();
+          const tb = new Date(b.date || 0).getTime();
+          return tb - ta;
         })[0];
     };
 
@@ -3257,7 +3255,7 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
       month: 'long',
       year: 'numeric'
     });
-    const draftBadge = r.isDraft ? `<span class="draft-badge" style="position: absolute; top: 8px; left: 8px; z-index: 10;">Draft</span>` : '';
+  const draftBadge = '';
     const holder = r.holderName ? `<div class="library-item-farm">${r.holderName}</div>` : '';
     
     // Image d'aperçu si disponible
@@ -6740,11 +6738,9 @@ async function saveReview(isDraft = true) {
     }
     
     // Feedback pour sauvegarde explicite
-    if (!isDraft) {
-      showToast("Review enregistrée avec succès!", "success");
-    }
-  // Mémoriser l'état non-brouillon
-  isNonDraftRecord = true;
+    showToast("Review enregistrée avec succès!", "success");
+    // Mémoriser l'état non-brouillon
+    isNonDraftRecord = true;
     
     // Rafraîchir la bibliothèque compacte
     renderCompactLibrary();
@@ -6755,16 +6751,14 @@ async function saveReview(isDraft = true) {
     try {
       let reviews = [];
       try { reviews = JSON.parse(localStorage.getItem("cannaReviews") || "[]"); } catch {}
-      // Cleanup matching drafts even on error path if saving a final
-      if (!isDraft && Array.isArray(reviews) && reviews.length) {
-        reviews = reviews.filter(r => {
-          if (!r || !r.isDraft) return true;
-          const key = r.correlationKey || computeCorrelationKey(r);
-          const keyLoose = computeLooseKey(r);
-          return key !== reviewToSave.correlationKey && keyLoose !== computeLooseKey(reviewToSave);
-        });
+      // Offline fallback: just append/update the review
+      if (currentReviewId != null) {
+        const idx = reviews.findIndex(r => r && r.id === currentReviewId);
+        if (idx >= 0) reviews.splice(idx, 1, reviewToSave);
+        else reviews.push(reviewToSave);
+      } else {
+        reviews.push(reviewToSave);
       }
-      reviews.push(reviewToSave);
       localStorage.setItem("cannaReviews", JSON.stringify(reviews));
       if (!document.body.dataset.lsInfoShown) {
         showToast("Sauvegarde locale activée (offline)", "info");
