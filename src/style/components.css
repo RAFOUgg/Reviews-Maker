@@ -12,6 +12,9 @@
   --rm-modal-overlay: linear-gradient(180deg, rgba(1,7,18,0.64), rgba(1,7,18,0.88));
   --rm-modal-bg: linear-gradient(180deg, rgba(8,14,22,0.92), rgba(6,10,16,0.98));
   --rm-panel-border: rgba(148,163,184,0.06);
+  /* fluid design tokens */
+  --rm-fluid-padding: clamp(12px, 1.6vw, 28px);
+  --rm-modal-maxwidth: clamp(640px, 48vw, 960px);
 }
 
 /* Global harmonization tweaks */
@@ -71,9 +74,11 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
   z-index: 10040; /* under modal content */
 }
 .modal-content {
-  width: min(960px, calc(100% - 56px));
+  /* Use fluid max width and padding so modal scales gracefully */
+  width: min(var(--rm-modal-maxwidth), calc(100% - 56px));
+  max-width: var(--rm-modal-maxwidth);
   max-height: 86vh;
-  padding: 18px;
+  padding: var(--rm-fluid-padding);
   border-radius: var(--rm-radius-lg);
   border: 1px solid var(--rm-panel-border);
   background: var(--rm-modal-bg);
@@ -113,11 +118,10 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
 .modal-content {
   transition: transform 180ms var(--rm-ease), opacity 160ms ease;
   border-radius: 14px;
-  padding: 18px;
   box-sizing: border-box;
   overflow: hidden;
   /* Slightly smaller footprint so underlying content remains visible */
-  width: min(900px, calc(100% - 96px));
+  width: min(var(--rm-modal-maxwidth), calc(100% - 96px));
   max-height: 84vh;
 }
 
@@ -126,6 +130,8 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
   max-height: calc(86vh - 120px);
   overflow: auto;
   padding-right: 8px; /* space for scrollbar */
+  padding-left: 6px;
+  padding-bottom: 8px;
 }
 
 /* Bigger, more accessible close button */
@@ -176,6 +182,7 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
   overflow: auto !important;
   max-height: calc(86vh);
   -webkit-overflow-scrolling: touch;
+  padding: 6px 0;
 }
 
 /* Specific visual polish for Account modal */
@@ -225,20 +232,25 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
 /* Modal body grid and panels */
 .account-body {
   display:grid;
-  grid-template-columns: 320px 1fr;
-  gap: 18px;
-  padding: 18px;
+  grid-template-columns: clamp(220px, 26%, 340px) 1fr;
+  gap: clamp(10px, 2.2vw, 22px);
+  padding: clamp(12px, 1.6vw, 20px);
 }
 .account-left { padding: 14px; }
 .account-right { padding: 14px; }
 
 /* Avatar and meta */
-.account-avatar { width:56px; height:56px; border-radius:12px; font-size:22px; }
+.account-avatar { width:clamp(44px, 4.2vw, 72px); height:clamp(44px, 4.2vw, 72px); border-radius:12px; font-size:22px; }
+
+/* Override reference avatar sizes from styles.css to scale down on narrow viewports */
+@media (max-width: 760px) {
+  .account-avatar { width: clamp(40px, 8vw, 56px) !important; height: clamp(40px, 8vw, 56px) !important; }
+}
 .account-meta .email { font-weight:700; font-size:0.95rem; }
 .account-meta .sub { font-size:0.88rem; color:var(--text-soft); }
 
 /* Stat cards: subtle elevation and spacing */
-.stat-card { padding: 12px 10px; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00)); border:1px solid rgba(255,255,255,0.02); }
+.stat-card { padding: clamp(8px,1.2vw,14px) clamp(10px,1.4vw,14px); border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00)); border:1px solid rgba(255,255,255,0.02); }
 .stat-card .num { font-size:1.15rem; }
 
 /* Actions panel */
@@ -292,7 +304,7 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
 .segmented button[aria-pressed="true"] { background: linear-gradient(90deg,var(--primary,#34d399),var(--accent,#38bdf8)); color:#04202a; }
 
 /* Floating auth button alignment */
-.floating-auth-btn { right:22px; bottom:22px; box-shadow:0 14px 40px rgba(2,6,23,0.6); }
+.floating-auth-btn { right:clamp(12px,2.2vw,36px); bottom:clamp(12px,2.2vw,36px); box-shadow:0 14px 40px rgba(2,6,23,0.6); }
 
 /* Accessibility: visible focus ring for keyboard users */
 button:focus, .input:focus, .modal-close:focus { outline: 3px solid rgba(52,211,153,0.14); }
@@ -306,6 +318,13 @@ button:focus, .input:focus, .modal-close:focus { outline: 3px solid rgba(52,211,
 .profile-stats .stats-grid{display:flex;gap:12px}
 .stat-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:10px}
 .account-stats-by-type{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Responsive small thumbnail used in lists */
+.rm-thumb { width: clamp(36px, 6.2vw, 56px); height: clamp(36px, 6.2vw, 56px); border-radius: 8px; overflow: hidden; border: 1px solid var(--glass-border); display:inline-grid; vertical-align:middle; }
+.rm-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+
+/* Ensure titles with thumbs align nicely */
+.meta .title { display:flex; align-items:center; gap: clamp(8px, 1.2vw, 12px); }
 
 /* Override legacy rules in styles.css that forcibly hide #publicProfileModal
    Ensure the public profile modal follows the .modal/.modal.show flex behavior */

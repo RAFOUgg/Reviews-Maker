@@ -3278,7 +3278,7 @@ async function renderLibraryList(mode = 'mine') {
     li.className = "library-item";
     const title = r.productName || r.cultivars || r.productType || "review";
     const date = new Date(r.date || Date.now()).toLocaleString("fr-FR");
-    const thumb = r.image ? `<div style="width:44px;height:44px;border-radius:8px;overflow:hidden;border:1px solid var(--glass-border)"><img src="${r.image}" alt="" style="width:100%;height:100%;object-fit:cover"/></div>` : '';
+  const thumb = r.image ? `<div class="rm-thumb"><img src="${r.image}" alt=""/></div>` : '';
   // Drafts removed: no draft badge
   const draftBadge = '';
     
