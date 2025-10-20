@@ -2712,11 +2712,13 @@ async function migrateLocalStorageToDB() {
   if (!Array.isArray(reviews) || reviews.length === 0) return;
   // 1) Normalize and deduplicate local entries by correlation/loose key
   const pickBetter = (a, b) => {
-    // Prefer non-draft over draft; if equal, prefer most recent date
-    if (!!a.isDraft !== !!b.isDraft) return a.isDraft ? b : a;
-    const da = new Date(a.date || 0).getTime();
-    const dbt = new Date(b.date || 0).getTime();
-    return da >= dbt ? a : b;
+  // Prefer most recent date (draft flag removed)
+  const da = new Date(a.date || 0).getTime();
+  const dbt = new Date(b.date || 0).getTime();
+  return da >= dbt ? a : b;
+  const ta = new Date(a.date || 0).getTime();
+  const tb = new Date(b.date || 0).getTime();
+  return ta >= tb ? a : b;
   };
   const chosenByStrict = new Map();
   const chosenByLoose = new Map();
@@ -3081,7 +3083,7 @@ async function renderCompactLibrary() {
     if (remoteEnabled) {
       items = await remoteListPublicReviews();
     } else {
-      items = (await dbGetAllReviews()).filter(r => !r.isPrivate && !r.isDraft);
+    items = (await dbGetAllReviews()).filter(r => !r.isPrivate);
     }
   } catch (e) { console.warn('renderCompactLibrary load error', e); items = []; }
 
@@ -5761,7 +5763,7 @@ async function listUnifiedReviews() {
   let remote = [];
   try { remote = await remoteListReviews(); } catch {}
   // Ne garder que les reviews publiques (ni privées ni brouillons)
-  return (remote || []).filter(r => !r.isPrivate && !r.isDraft);
+  return (remote || []).filter(r => !r.isPrivate);
 }
 
 // Récupération d'une review précise via l'API distante
