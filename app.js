@@ -1951,7 +1951,7 @@ function setupModalEvents() {
           showAuthStatus('Connexion réussie !', 'success');
           setTimeout(() => {
             updateAuthUI();
-            if (dom.authModal) dom.authModal.style.display = 'none';
+            if (dom.authModal) hideModalById('authModal');
             if (isHomePage) {
               renderCompactLibrary();
               setupHomeTabs();
@@ -2030,7 +2030,7 @@ function setupModalEvents() {
       updateAuthUI();
       
       setTimeout(() => {
-        if (dom.authModal) dom.authModal.style.display = "none";
+        if (dom.authModal) hideModalById('authModal');
         if (isHomePage) {
           renderCompactLibrary();
           setupHomeTabs();
@@ -2045,11 +2045,11 @@ function setupModalEvents() {
       if (dom.tipsModal && dom.tipsModal.classList.contains('show')) {
         hideModalById('tipsModal');
       }
-      if (dom.libraryModal && dom.libraryModal.style.display === "flex") {
-        dom.libraryModal.style.display = "none";
+      if (dom.libraryModal && dom.libraryModal.classList.contains('show')) {
+        hideModalById('libraryModal');
       }
-      if (dom.authModal && dom.authModal.style.display === "flex") {
-        dom.authModal.style.display = "none";
+      if (dom.authModal && dom.authModal.classList.contains('show')) {
+        hideModalById('authModal');
       }
       const pop = document.getElementById('activeTipsPopover');
       if (pop) pop.remove();

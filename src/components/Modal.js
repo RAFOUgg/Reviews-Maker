@@ -17,7 +17,6 @@ export default class Modal {
     try {
   // Close any other modals on page (do not set inline display; CSS controls layout)
   document.querySelectorAll('.modal').forEach(m => { try { m.classList.remove('show'); } catch(e){} });
-  if (this.overlay) { this.overlay.classList.add('show'); this.overlay.style.display = 'block'; }
   if (this.overlay) { this.overlay.classList.add('show'); }
   this.root.classList.add('show');
       try { document.body.classList.add('modal-open'); } catch(e){}
