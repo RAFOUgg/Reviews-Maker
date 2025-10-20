@@ -862,6 +862,9 @@ function init() {
   setTimeout(() => {
     enhanceFormFields();
   }, 500); // Délai pour s'assurer que les éléments sont chargés
+
+  // Ensure auth UI reflects stored session on load (floating button, library visibility)
+  try { if (typeof updateAuthUI === 'function') updateAuthUI(); } catch(e) { console.warn('updateAuthUI init error', e); }
 }
 
 // Apply theme from localStorage (or system) on load
@@ -2273,7 +2276,9 @@ function closeAccountModal() {
 async function populatePublicProfile(email) {
   try {
     try { console.log('DEBUG: populatePublicProfile called with', email); } catch(e){}
-    if (dom.publicProfileEmail) dom.publicProfileEmail.textContent = email || '—';
+    // Accept either email or a display name (pseudo)
+    const identifier = String(email || '').trim();
+    if (dom.publicProfileEmail) dom.publicProfileEmail.textContent = identifier || '—';
     // Ensure modal is displayed (fallback if CSS wasn't applied)
     try { const modal = document.getElementById('publicProfileModal'); if (modal) modal.style.display = 'block'; } catch(e){}
     // Determine ownership: if the profile email matches the signed-in email,
@@ -2314,8 +2319,9 @@ async function populatePublicProfile(email) {
     let total = 0, pub = 0, priv = 0;
     try {
       const token = localStorage.getItem('authToken');
-      if (token && remoteBase) {
-        const resp = await fetch(`${remoteBase}/api/users/stats?email=${encodeURIComponent(email)}`, { headers: { 'X-Auth-Token': token } });
+      // If identifier looks like an email, prefer server lookup
+      if (token && remoteBase && identifier.includes('@')) {
+        const resp = await fetch(`${remoteBase}/api/users/stats?email=${encodeURIComponent(identifier)}`, { headers: { 'X-Auth-Token': token } });
         if (resp.ok) {
           const d = await resp.json();
           total = d.total || 0; pub = d.public || 0; priv = d.private || 0; byType = d.by_type || d.types || {};
@@ -2326,7 +2332,14 @@ async function populatePublicProfile(email) {
     if (!total) {
       try {
         const all = await dbGetAllReviews();
-        const userReviews = (all || []).filter(r => r.ownerEmail === email || (r.owner && r.owner.email === email));
+        // If identifier is an email, match by ownerEmail/holderEmail; otherwise match by holderName or stored discordUsername
+        let userReviews = [];
+        if (identifier.includes('@')) {
+          userReviews = (all || []).filter(r => (r.ownerEmail && String(r.ownerEmail).toLowerCase() === identifier.toLowerCase()) || (r.holderEmail && String(r.holderEmail).toLowerCase() === identifier.toLowerCase()));
+        } else {
+          const idLower = identifier.toLowerCase();
+          userReviews = (all || []).filter(r => (r.holderName && String(r.holderName).toLowerCase() === idLower) || (r.owner && r.owner.username && String(r.owner.username).toLowerCase() === idLower) || (r.owner && r.owner.discordUsername && String(r.owner.discordUsername).toLowerCase() === idLower));
+        }
         const seen = new Set();
         const unique = [];
         userReviews.forEach(r => { if (r && r.id && !seen.has(r.id)) { seen.add(r.id); unique.push(r); } });
