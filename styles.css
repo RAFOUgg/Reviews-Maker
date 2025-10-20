@@ -5389,6 +5389,21 @@ kbd {
   .home-page .compact-library-list { grid-template-columns: 1fr; }
 }
 
+  /* Ensure author buttons in compact items are visible and clickable */
+  .compact-library-item .author-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 6px 8px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.03);
+    cursor: pointer;
+    z-index: 50;
+    position: relative;
+  }
+
 /* ========================================
    📱 MOBILE RESPONSIVE DESIGN
    ======================================== */
