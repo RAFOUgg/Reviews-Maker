@@ -2356,23 +2356,32 @@ function showModalById(id, opts = {}) {
     if (overlayEl) {
       if (hideBackdrop) {
         overlayEl.classList.remove('show');
-        try { overlayEl.style.display = 'none'; } catch(e){}
+        try { overlayEl.style.setProperty('display','none','important'); } catch(e){}
         overlayEl.setAttribute('aria-hidden', 'true');
       } else {
         overlayEl.classList.add('show');
-        try { overlayEl.style.display = 'block'; } catch(e){}
-        overlayEl.style.zIndex = opts.overlayZ || '10040';
+        try { overlayEl.style.setProperty('display','block','important'); } catch(e){}
+        try { overlayEl.style.setProperty('z-index', opts.overlayZ || '10040', 'important'); } catch(e){}
         overlayEl.setAttribute('aria-hidden','false');
       }
       // ensure clicking overlay hides the modal
       try { overlayEl.onclick = () => hideModalById(id); } catch(e){}
     }
     if (modal) {
+      // remove stale inline display property that other code might have left
+      try { modal.style.removeProperty('display'); } catch(e){}
       modal.classList.add('show');
       // Force top-level fixed positioning to avoid ancestor stacking contexts
-      try { modal.style.position = 'fixed'; modal.style.inset = '0'; modal.style.top = '0'; modal.style.left = '0'; modal.style.right = '0'; modal.style.bottom = '0'; } catch(e){}
-      try { modal.style.display = opts.display || 'flex'; } catch(e){}
-      try { modal.style.zIndex = opts.modalZ || '10050'; } catch(e){}
+      try {
+        modal.style.setProperty('position','fixed','important');
+        modal.style.setProperty('inset','0','important');
+        modal.style.setProperty('top','0','important');
+        modal.style.setProperty('left','0','important');
+        modal.style.setProperty('right','0','important');
+        modal.style.setProperty('bottom','0','important');
+      } catch(e){}
+      try { modal.style.setProperty('display', opts.display || 'flex', 'important'); } catch(e){}
+      try { modal.style.setProperty('z-index', opts.modalZ || '10050', 'important'); } catch(e){}
       modal.setAttribute('aria-hidden','false');
       try { document.body.classList.add('modal-open'); } catch(e){}
       // trap focus if possible

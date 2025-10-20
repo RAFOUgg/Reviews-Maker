@@ -82,6 +82,17 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
   z-index: 10060; /* above overlay */
   overflow: hidden;
 }
+/* Fallback centering: ensure the dialog box is centered inside fixed modal
+   even if some layout rules interfere. Using transform centering avoids
+   reliance on flex in edge cases. */
+.modal.show .modal-content { transform: translateY(0); }
+.modal .modal-content { margin: 0 auto; }
+.modal-content.centered {
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
 .modal:not(.show) { display: none !important; }
 
 /* Account dialog: allow internal scrolling so content isn't clipped */
