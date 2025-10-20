@@ -2987,7 +2987,8 @@ async function renderLibraryList(mode = 'mine') {
     const title = r.productName || r.cultivars || r.productType || "review";
     const date = new Date(r.date || Date.now()).toLocaleString("fr-FR");
     const thumb = r.image ? `<div style="width:44px;height:44px;border-radius:8px;overflow:hidden;border:1px solid var(--glass-border)"><img src="${r.image}" alt="" style="width:100%;height:100%;object-fit:cover"/></div>` : '';
-    const draftBadge = r.isDraft ? `<span style="background:#f59e0b;color:white;font-size:11px;padding:2px 6px;border-radius:4px;margin-left:8px;">Brouillon</span>` : '';
+  // Drafts removed: no draft badge
+  const draftBadge = '';
     
     // Show actions only in 'mine' mode
     const actionsHtml = mode === 'mine' ? `
@@ -3248,8 +3249,7 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
   
   list.forEach(r => {
     const item = document.createElement("div");
-    item.className = "library-item";
-    if (r.isDraft) item.classList.add("is-draft");
+  item.className = "library-item";
     
     const title = r.productName || r.cultivars || r.productType || "Review";
     const date = new Date(r.date || Date.now()).toLocaleDateString("fr-FR", {
@@ -7014,52 +7014,16 @@ function serializeCurrentForm() {
 }
 
 function persistDraftImmediate() {
-  if (!currentType) return;
-  
-  // Ne pas sauvegarder si le contenu n'est pas significatif
-  if (!hasSignificantContent()) {
-    clearSavedDraft(); // Supprimer le brouillon existant s'il y en a un
-    return;
-  }
-  
-  try {
-    const payload = {
-      id: currentReviewId || null,
-      productType: currentType,
-      formData: serializeCurrentForm(),
-      image: imageUrl || null,
-      date: new Date().toISOString(),
-      isDraft: true // Marquer comme brouillon
-    };
-    localStorage.setItem('reviewsMakerDraft', JSON.stringify(payload));
-    // Pas de renderCompactLibrary() ici car c'est juste un brouillon local
-  } catch {}
+  // Draft autosave removed - no-op for backward compatibility
+  return;
 }
 
 function restoreDraftIfAny() {
-  try {
-    const raw = localStorage.getItem('reviewsMakerDraft');
-    if (!raw) return;
-    const d = JSON.parse(raw);
-    if (!d || !d.productType) return;
-    const reviewLike = {
-      ...d.formData,
-      productType: d.productType,
-      image: d.image || null,
-      id: d.id || null,
-      productName: d.formData?.cultivars || d.productType,
-      date: d.date || new Date().toISOString(),
-      totals: d.totals || {},
-      isDraft: true // Conserver le statut de brouillon
-    };
-    loadReviewIntoForm(reviewLike, 'edit');
-    showToast('Brouillon restauré.', 'info');
-  } catch {}
+  // Draft restore removed
+  return null;
 }
 
 // Check if a draft exists in localStorage (top-level, used during init)
-function hasSavedDraft() {
-  try { return !!localStorage.getItem('reviewsMakerDraft'); } catch { return false; }
-}
+function hasSavedDraft() { return false; }
 
 function clearSavedDraft() { try { localStorage.removeItem('reviewsMakerDraft'); } catch {} }
