@@ -1,3 +1,13 @@
+  // Correction JS : pointer-events et focus
+  try { dom.accountModal.style.pointerEvents = 'auto'; } catch(e){}
+  try { const dlg = dom.accountModal.querySelector('.account-dialog'); if (dlg) dlg.style.pointerEvents = 'auto'; } catch(e){}
+  // Correction JS : pointer-events et focus
+  try {
+    const modal = document.getElementById('publicProfileModal');
+    if (modal) modal.style.pointerEvents = 'auto';
+    const dlg = modal ? modal.querySelector('.account-dialog') : null;
+    if (dlg) dlg.style.pointerEvents = 'auto';
+  } catch(e){}
 // --- Hosting base-path support -------------------------------------------
 // If the app is served under /reviews, transparently prefix any absolute
 // API calls starting with /api/ so they hit /reviews/api/... behind Nginx.
