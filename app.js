@@ -1518,12 +1518,15 @@ function setupModalEvents() {
   // Modal Auth - Email based
   if (dom.floatingAuthBtn) {
     dom.floatingAuthBtn.addEventListener("click", () => {
+      console.log('DEBUG: floatingAuthBtn clicked; isUserConnected=', isUserConnected, 'dom.accountModal=', !!dom.accountModal, 'dom.authModal=', !!dom.authModal);
       // If connected, open account modal instead of auth modal
       if (isUserConnected && dom.accountModal) {
+        console.log('DEBUG: Opening account modal');
         openAccountModal();
         return;
       }
       if (dom.authModal) {
+        console.log('DEBUG: Opening auth modal');
         dom.authModal.style.display = "flex";
         updateAuthUI();
       }
@@ -2185,10 +2188,14 @@ function openAccountModal() {
   const overlay = document.getElementById('accountModalOverlay');
   console.log('openAccountModal: preparing to show account modal, hiding other overlays');
   if (overlay) overlay.classList.add('show');
+  // Ensure overlay is definitely visible and above page content but below dialog
+  try { if (overlay) { overlay.style.display = 'block'; overlay.style.zIndex = '10040'; } } catch(e){}
   // Ensure account modal is above any .modal (which uses z-index:3000)
-  try { dom.accountModal.style.zIndex = 10050; } catch(e){}
+  try { dom.accountModal.style.display = 'block'; dom.accountModal.style.zIndex = '10050'; } catch(e){}
   dom.accountModal.classList.add('show');
   dom.accountModal.setAttribute('aria-hidden','false');
+  // Ensure the inner dialog sits above the overlay
+  try { const dlg = dom.accountModal.querySelector('.account-dialog'); if (dlg) { dlg.style.zIndex = '10051'; } } catch(e){}
   // trap focus on dialog element
   const dialog = dom.accountModal.querySelector('.account-dialog') || dom.accountModal;
   trapFocus(dialog);
@@ -2200,10 +2207,14 @@ function closeAccountModal() {
   if (!dom.accountModal) return;
   try {
     const overlay = document.getElementById('accountModalOverlay');
-    if (overlay) overlay.classList.remove('show');
+    if (overlay) {
+      overlay.classList.remove('show');
+      try { overlay.style.display = 'none'; } catch(e){}
+    }
   } catch(e){}
-  dom.accountModal.classList.remove('show');
-  dom.accountModal.setAttribute('aria-hidden','true');
+  try { dom.accountModal.classList.remove('show'); } catch(e){}
+  try { dom.accountModal.setAttribute('aria-hidden','true'); } catch(e){}
+  try { dom.accountModal.style.display = 'none'; } catch(e){}
   releaseFocusTrap();
   try { document.body.classList.remove('modal-open'); } catch(e){}
 }
