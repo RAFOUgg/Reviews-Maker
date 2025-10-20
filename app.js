@@ -2178,24 +2178,34 @@ function openAccountModal() {
       if (m !== dom.accountModal) {
         try { m.style.display = 'none'; } catch(e){}
         try { m.classList.remove('show'); } catch(e){}
+        try { m.setAttribute('aria-hidden','true'); } catch(e){}
       }
     });
     // Also ensure any generic modal overlays are hidden so they don't sit above the account dialog
     const overlays = document.querySelectorAll('.modal-overlay');
-    overlays.forEach(o => { try { o.style.display = 'none'; o.classList.remove('show'); } catch(e){} });
+    overlays.forEach(o => { try { o.style.display = 'none'; o.classList.remove('show'); o.setAttribute('aria-hidden','true'); } catch(e){} });
   } catch(e){}
   // show overlay and dialog
   const overlay = document.getElementById('accountModalOverlay');
   console.log('openAccountModal: preparing to show account modal, hiding other overlays');
-  if (overlay) overlay.classList.add('show');
-  // Ensure overlay is definitely visible and above page content but below dialog
-  try { if (overlay) { overlay.style.display = 'block'; overlay.style.zIndex = '10040'; } } catch(e){}
+  if (overlay) {
+    overlay.classList.add('show');
+    overlay.style.display = 'block';
+    overlay.style.zIndex = '10040';
+    overlay.setAttribute('aria-hidden','false');
+  }
   // Ensure account modal is above any .modal (which uses z-index:3000)
-  try { dom.accountModal.style.display = 'block'; dom.accountModal.style.zIndex = '10050'; } catch(e){}
+  dom.accountModal.style.display = 'block';
+  dom.accountModal.style.zIndex = '10050';
   dom.accountModal.classList.add('show');
   dom.accountModal.setAttribute('aria-hidden','false');
   // Ensure the inner dialog sits above the overlay
-  try { const dlg = dom.accountModal.querySelector('.account-dialog'); if (dlg) { dlg.style.zIndex = '10051'; } } catch(e){}
+  try { const dlg = dom.accountModal.querySelector('.account-dialog'); if (dlg) { dlg.style.zIndex = '10051'; dlg.style.display = 'block'; dlg.setAttribute('aria-hidden','false'); } } catch(e){}
+  // Fallback: force modal visible if still hidden
+  setTimeout(() => {
+    if (dom.accountModal && dom.accountModal.style.display !== 'block') dom.accountModal.style.display = 'block';
+    if (overlay && overlay.style.display !== 'block') overlay.style.display = 'block';
+  }, 100);
   // trap focus on dialog element
   const dialog = dom.accountModal.querySelector('.account-dialog') || dom.accountModal;
   trapFocus(dialog);
@@ -2315,8 +2325,25 @@ function openPublicProfile(email) {
       const overlays = document.querySelectorAll('.modal-overlay, .account-overlay');
       overlays.forEach(o => { try { o.style.display = 'none'; o.classList.remove('show'); } catch(e){} });
     } catch(e) { /* ignore */ }
-    const overlay = document.getElementById('publicProfileOverlay'); if (overlay) { overlay.classList.add('show'); overlay.style.display = 'block'; }
-    const modal = document.getElementById('publicProfileModal'); if (modal) { try { modal.style.zIndex = 10040; } catch(e){} modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); modal.style.display = 'block'; }
+    const overlay = document.getElementById('publicProfileOverlay');
+    if (overlay) {
+      overlay.classList.add('show');
+      overlay.style.display = 'block';
+      overlay.style.zIndex = '10040';
+      overlay.setAttribute('aria-hidden','false');
+    }
+    const modal = document.getElementById('publicProfileModal');
+    if (modal) {
+      modal.style.zIndex = '10050';
+      modal.classList.add('show');
+      modal.setAttribute('aria-hidden','false');
+      modal.style.display = 'block';
+      // Fallback: force modal visible if still hidden
+      setTimeout(() => {
+        if (modal.style.display !== 'block') modal.style.display = 'block';
+        if (overlay && overlay.style.display !== 'block') overlay.style.display = 'block';
+      }, 100);
+    }
     try { console.log('DEBUG: publicProfileOverlay, modal classes ->', { overlayClass: overlay ? overlay.className : null, modalClass: modal ? modal.className : null, modalStyleDisplay: modal ? modal.style.display : null }); } catch(e){}
     try { document.body.classList.add('modal-open'); } catch(e){}
     populatePublicProfile(email).catch(()=>{});
