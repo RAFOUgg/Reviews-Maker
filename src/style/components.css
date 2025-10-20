@@ -148,8 +148,9 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
 
 /* Desktop: leave a small top margin so header doesn't sit flush to viewport top */
 @media (min-width: 881px) {
-  .modal { padding-top: 36px; }
-  .modal-content { margin-top: 8px; }
+  /* Desktop: center modals vertically */
+  .modal { align-items: center !important; padding-top: 0; }
+  .modal-content { margin-top: 0; }
 }
 
 /* Focus styles inside modal for keyboard users */
@@ -174,28 +175,31 @@ button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
 #accountModal .modal-content,
 .account-modal-content,
 .account-dialog {
-  width: min(820px, calc(100% - 48px));
+  width: min(800px, calc(100% - 48px));
+  max-height: 84vh;
+  display: flex;
+  flex-direction: column;
   padding: 0; /* header/body control padding separately */
   border-radius: 16px;
-  background: linear-gradient(180deg, rgba(8,12,18,0.96), rgba(6,8,12,0.96));
+  background: rgba(6,10,12,0.98); /* near-opaque to avoid heavy double overlay */
   border: 1px solid rgba(148,163,184,0.04);
+  box-shadow: 0 30px 80px rgba(2,6,23,0.6);
   z-index: 10070; /* ensure account modal sits above other modal content */
 }
 
 #accountModal .modal-header, .account-header {
-  padding: 18px 20px;
+  padding: 16px 18px;
   align-items: center;
   gap: 12px;
+  flex: 0 0 auto; /* keep header fixed */
 }
 
 /* Account modal specific: contain scroll and avoid horizontal overflow */
-#accountModal .modal-content, .account-modal-content {
-  overflow: hidden;
-}
+#accountModal .modal-content, .account-modal-content { overflow: hidden; }
 #accountModal .modal-body, .account-modal-inner {
   overflow: auto;
-  max-height: calc(84vh - 80px);
   padding: 14px;
+  flex: 1 1 auto; /* take remaining height */
 }
 
 .account-header .title { font-size:1.18rem; font-weight:700; color:var(--text); }
