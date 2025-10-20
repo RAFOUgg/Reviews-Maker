@@ -4231,7 +4231,9 @@ textarea {
   cursor: pointer;
   box-shadow: 0 8px 24px -4px rgba(52, 211, 153, 0.4), 0 4px 12px -2px rgba(15, 23, 42, 0.6);
   transition: all 0.3s ease;
-  z-index: 1500;
+  /* Keep the floating account button above modal overlays (modals use z-index ~3000+)
+     Use a very high z-index so it's always reachable. */
+  z-index: 11060;
 }
 
 .floating-auth-btn:hover {
@@ -4241,6 +4243,11 @@ textarea {
 
 .floating-auth-btn.connected {
   background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+}
+
+/* Mobile clone of the floating account button should keep same stacking order */
+#mobileAccountBtn {
+  z-index: 11060;
 }
 
 /* Auth Modal Content */
