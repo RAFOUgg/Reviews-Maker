@@ -242,6 +242,35 @@
       <span aria-hidden="true">🔗</span>
     </button>
 
+  <!-- Public profile modal (read-only) -->
+  <div class="modal" id="publicProfileModal" style="display:none;">
+    <div class="modal-overlay" id="publicProfileOverlay"></div>
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="publicProfileTitle">
+      <div class="modal-header">
+        <h2 id="publicProfileTitle">Profil public</h2>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button type="button" class="btn btn-ghost" id="publicProfileSettingsBtn" style="display:none;">⚙️ Paramètres</button>
+          <button type="button" class="modal-close" id="closePublicProfile" aria-label="Fermer">✕</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="account-profile" style="margin-bottom:10px;">
+          <div class="account-avatar">👤</div>
+          <div class="account-meta">
+            <div id="publicProfileEmail">—</div>
+            <div class="sub">Membre Reviews Maker</div>
+          </div>
+        </div>
+        <div class="stats-grid" style="margin-bottom:10px;">
+          <div class="stat-card"><div class="num" id="publicTotal">0</div><div class="label">Total</div></div>
+          <div class="stat-card"><div class="num" id="publicPublic">0</div><div class="label">Public</div></div>
+          <div class="stat-card"><div class="num" id="publicPrivate">0</div><div class="label">Privé</div></div>
+        </div>
+        <div id="publicByType" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+      </div>
+    </div>
+  </div>
+
     <!-- Redesigned Account Modal (uses account-* classes for styling) -->
     <div class="modal" id="accountModal" style="display:none;">
       <div class="modal-overlay" id="accountModalOverlay"></div>
@@ -275,34 +304,7 @@
                 <div class="label">Public</div>
               </div>
               <div class="stat-card">
-              <!-- Public profile modal (read-only) - moved here so editor page can show public profiles -->
-              <div class="modal" id="publicProfileModal" style="display:none;">
-                <div class="modal-overlay" id="publicProfileOverlay"></div>
-                <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="publicProfileTitle">
-                  <div class="modal-header">
-                    <h2 id="publicProfileTitle">Profil public</h2>
-                    <div style="display:flex;gap:8px;align-items:center;">
-                      <button type="button" class="btn btn-ghost" id="publicProfileSettingsBtn" style="display:none;">⚙️ Paramètres</button>
-                      <button type="button" class="modal-close" id="closePublicProfile" aria-label="Fermer">✕</button>
-                    </div>
-                  </div>
-                  <div class="modal-body">
-                    <div class="account-profile" style="margin-bottom:10px;">
-                      <div class="account-avatar">👤</div>
-                      <div class="account-meta">
-                        <div id="publicProfileEmail">—</div>
-                        <div class="sub">Membre Reviews Maker</div>
-                      </div>
-                    </div>
-                    <div class="stats-grid" style="margin-bottom:10px;">
-                      <div class="stat-card"><div class="num" id="publicTotal">0</div><div class="label">Total</div></div>
-                      <div class="stat-card"><div class="num" id="publicPublic">0</div><div class="label">Public</div></div>
-                      <div class="stat-card"><div class="num" id="publicPrivate">0</div><div class="label">Privé</div></div>
-                    </div>
-                    <div id="publicByType" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
-                  </div>
-                </div>
-              </div>
+                <div class="num" id="statPrivate">0</div>
                 <div class="label">Privé</div>
               </div>
             </div>
