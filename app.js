@@ -67,11 +67,12 @@ function setupAccountModalEvents() {
     dom.accountModal.setAttribute('aria-hidden', 'false');
     dom.accountModal.style.display = 'block';
     dom.accountModal.style.pointerEvents = 'auto';
-    const dlg = dom.accountModal.querySelector('.account-dialog');
+    // prefer explicit inner dialog (.account-dialog) but fall back to .modal-content
+    const dlg = dom.accountModal.querySelector('.account-dialog') || dom.accountModal.querySelector('.modal-content') || dom.accountModal;
     if (dlg) {
-      dlg.classList.add('show');
-      dlg.style.pointerEvents = 'auto';
-      dlg.style.display = 'block';
+      try { dlg.classList.add('show'); } catch(e){}
+      try { dlg.style.pointerEvents = 'auto'; } catch(e){}
+      try { dlg.style.display = 'block'; } catch(e){}
     }
     document.body.classList.add('modal-open');
   } catch(e){}
@@ -79,8 +80,8 @@ function setupAccountModalEvents() {
   try {
     const modal = document.getElementById('publicProfileModal');
     if (modal) modal.style.pointerEvents = 'auto';
-    const dlg = modal ? modal.querySelector('.account-dialog') : null;
-    if (dlg) dlg.style.pointerEvents = 'auto';
+  const dlg = modal ? (modal.querySelector('.account-dialog') || modal.querySelector('.modal-content') || modal) : null;
+  if (dlg) try { dlg.style.pointerEvents = 'auto'; } catch(e){}
   } catch(e){}
 // --- Hosting base-path support -------------------------------------------
 // If the app is served under /reviews, transparently prefix any absolute
@@ -2242,15 +2243,22 @@ function openAccountModal() {
   dom.accountModal.style.zIndex = '10050';
   dom.accountModal.classList.add('show');
   dom.accountModal.setAttribute('aria-hidden','false');
-  // Ensure the inner dialog sits above the overlay
-  try { const dlg = dom.accountModal.querySelector('.account-dialog'); if (dlg) { dlg.style.zIndex = '10051'; dlg.style.display = 'block'; dlg.setAttribute('aria-hidden','false'); } } catch(e){}
+  // Ensure the inner dialog sits above the overlay (support .account-dialog or .modal-content)
+  try {
+    const dlg = dom.accountModal.querySelector('.account-dialog') || dom.accountModal.querySelector('.modal-content') || dom.accountModal;
+    if (dlg) {
+      try { dlg.style.zIndex = '10051'; } catch(e){}
+      try { dlg.style.display = 'block'; } catch(e){}
+      try { dlg.setAttribute('aria-hidden','false'); } catch(e){}
+    }
+  } catch(e){}
   // Fallback: force modal visible if still hidden
   setTimeout(() => {
     if (dom.accountModal && dom.accountModal.style.display !== 'block') dom.accountModal.style.display = 'block';
     if (overlay && overlay.style.display !== 'block') overlay.style.display = 'block';
   }, 100);
   // trap focus on dialog element
-  const dialog = dom.accountModal.querySelector('.account-dialog') || dom.accountModal;
+  const dialog = dom.accountModal.querySelector('.account-dialog') || dom.accountModal.querySelector('.modal-content') || dom.accountModal;
   trapFocus(dialog);
   try { document.body.classList.add('modal-open'); } catch(e){}
   renderAccountView().catch(err => console.warn('Failed to render account view', err));
