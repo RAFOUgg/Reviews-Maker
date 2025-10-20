@@ -807,7 +807,7 @@ let isLandscapeMode = null;
 let db = null; // IndexedDB handle
 let currentReviewId = null; // Track loaded review for editing
 let isReadOnlyView = false; // View mode vs edit mode
-let draftSaveTimer = null; // Debounced draft persistence
+let draftSaveTimer = null; // kept for legacy hooks but no-op
 let dbSaveTimer = null; // Debounced DB save
 let dbFailedOnce = false; // If IndexedDB fails, fallback to localStorage silently next times
 let isCompactPreview = true; // Track preview mode (compact vs full)
@@ -1161,7 +1161,7 @@ function initHomePage() {
 
   console.log('DOM elements found:', {
     typeCards: dom.typeCards.length,
-    restoreDraft: !!dom.restoreDraft,
+  restoreDraft: !!dom.restoreDraft,
     openTips: !!dom.openTips,
     showMore: !!dom.showMoreLibrary
   });
