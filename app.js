@@ -3048,7 +3048,8 @@ async function duplicateReview(review) {
       ...review,
       id: undefined, // Nouvel ID sera généré
       date: new Date().toISOString(),
-      isDraft: true, // La duplication crée un brouillon
+    // Draft flag removed: duplicates are full records by default
+    isDraft: false,
       productName: (review.productName || review.cultivars || review.productType) + " (Copie)"
     };
     // Recompute correlation key for the duplicated draft
@@ -6694,6 +6695,8 @@ function togglePreviewMode() {
 }
 
 async function saveReview(isDraft = true) {
+  // Draft system removed: force all saves to be non-draft (visibility handled via isPrivate)
+  isDraft = false;
   const reviewToSave = {
     ...formData,
     image: imageUrl,
@@ -6707,31 +6710,7 @@ async function saveReview(isDraft = true) {
   reviewToSave.correlationKey = computeCorrelationKey(reviewToSave);
   try {
     if (db && !dbFailedOnce) {
-      // If saving a final version, cleanup existing drafts with same correlationKey
-      if (!isDraft) {
-        try {
-          const all = await dbGetAllReviews();
-          const strictKey = reviewToSave.correlationKey;
-          const looseKey = computeLooseKey(reviewToSave);
-          const sameDrafts = (all || []).filter(r => {
-            if (!r || !r.isDraft) return false;
-            const key = r.correlationKey || computeCorrelationKey(r);
-            const keyLoose = computeLooseKey(r);
-            return key === strictKey || keyLoose === looseKey;
-          });
-          // If we don't already track an id, convert one of the drafts in place
-          if (!currentReviewId && sameDrafts.length) {
-            const chosen = sameDrafts[0];
-            reviewToSave.id = chosen.id;
-            currentReviewId = chosen.id;
-          }
-          for (const d of sameDrafts) {
-            // If we're updating this very draft to a final, don't delete it; we'll update in place
-            if (currentReviewId && d.id === currentReviewId) continue;
-            await dbDeleteReview(d.id);
-          }
-        } catch {}
-      }
+      // Simple save: update if id known, otherwise add new record
       if (currentReviewId) {
         await dbUpdateReview(reviewToSave);
       } else {
@@ -6745,61 +6724,16 @@ async function saveReview(isDraft = true) {
       if (Array.isArray(reviews)) {
         const strictKey = reviewToSave.correlationKey;
         const looseKey = computeLooseKey(reviewToSave);
-        if (!isDraft) {
-          // Final save: convert a matching draft in place and remove any other matching drafts
-          let convertedIndex = -1;
-          for (let i = 0; i < reviews.length; i++) {
-            const r = reviews[i];
-            if (!r || !r.isDraft) continue;
-            const key = r.correlationKey || computeCorrelationKey(r);
-            const lk = computeLooseKey(r);
-            if (key === strictKey || lk === looseKey) { convertedIndex = i; break; }
-          }
-          if (convertedIndex >= 0) {
-            reviews.splice(convertedIndex, 1, { ...reviewToSave });
-          } else {
-            reviews.push(reviewToSave);
-          }
-          // Always remove any remaining matching drafts besides the converted one
-          reviews = reviews.filter((r, idx) => {
-            if (!r || !r.isDraft) return true;
-            if (convertedIndex >= 0 && idx === convertedIndex) return true;
-            const key = r.correlationKey || computeCorrelationKey(r);
-            const lk = computeLooseKey(r);
-            return !(key === strictKey || lk === looseKey);
-          });
+        // Offline fallback simple save: replace if id known, otherwise push
+        if (currentReviewId != null) {
+          const idx = reviews.findIndex(r => r && r.id === currentReviewId);
+          if (idx >= 0) reviews.splice(idx, 1, { ...reviewToSave, id: currentReviewId });
+          else reviews.push({ ...reviewToSave, id: currentReviewId });
         } else {
-          // Draft autosave: update existing matching draft (by id if any, else by correlation/loose key), otherwise add new
-          let updated = false;
-          // Try by currentReviewId first (if we managed one in localStorage)
-          if (currentReviewId != null) {
-            const idx = reviews.findIndex(r => r && r.id === currentReviewId);
-            if (idx >= 0) {
-              reviews.splice(idx, 1, { ...reviewToSave, id: currentReviewId });
-              updated = true;
-            }
-          }
-          if (!updated) {
-            for (let i = 0; i < reviews.length; i++) {
-              const r = reviews[i];
-              if (!r || !r.isDraft) continue;
-              const key = r.correlationKey || computeCorrelationKey(r);
-              const lk = computeLooseKey(r);
-              if (key === strictKey || lk === looseKey) {
-                const keepId = r.id != null ? r.id : undefined;
-                reviews.splice(i, 1, { ...reviewToSave, id: keepId });
-                if (keepId != null) currentReviewId = keepId;
-                updated = true;
-                break;
-              }
-            }
-          }
-          if (!updated) {
-            // Create a synthetic id so next autosave updates this record
-            const syntheticId = Date.now();
-            reviews.push({ ...reviewToSave, id: syntheticId });
-            currentReviewId = syntheticId;
-          }
+          // synthetic id for local storage
+          const syntheticId = Date.now();
+          reviews.push({ ...reviewToSave, id: syntheticId });
+          currentReviewId = syntheticId;
         }
       }
       localStorage.setItem("cannaReviews", JSON.stringify(reviews));
@@ -6809,11 +6743,8 @@ async function saveReview(isDraft = true) {
     if (!isDraft) {
       showToast("Review enregistrée avec succès!", "success");
     }
-    // Mémoriser l'état non-brouillon si sauvegarde explicite
-    isNonDraftRecord = !isDraft;
-    
-    // Supprimer le brouillon localStorage une fois sauvegardé en base (même pour les drafts)
-    clearSavedDraft(); 
+  // Mémoriser l'état non-brouillon
+  isNonDraftRecord = true;
     
     // Rafraîchir la bibliothèque compacte
     renderCompactLibrary();
