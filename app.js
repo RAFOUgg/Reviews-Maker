@@ -2627,7 +2627,7 @@ async function initDatabase() {
       const privVal = (dom.savePrivacy?.value || 'public');
       formData.isPrivate = privVal === 'private';
       try {
-        const res = await saveReview(false);
+  const res = await saveReview();
         closeSaveModal();
       }
       catch(e){ console.error(e); showToast("Impossible d'enregistrer.", 'error'); }
@@ -5529,7 +5529,7 @@ function collectFormData() {
       // Sauvegarder automatiquement seulement si le contenu est significatif
       if (hasSignificantContent()) {
         // Si la review a déjà été enregistrée explicitement, ne pas la repasser en brouillon
-        await saveReview(isNonDraftRecord ? false : true);
+  await saveReview();
         // Rafraîchir la bibliothèque compacte immédiatement après sauvegarde
         renderCompactLibrary();
       }
@@ -6692,9 +6692,8 @@ function togglePreviewMode() {
   }
 }
 
-async function saveReview(isDraft = true) {
-  // Draft system removed: force all saves to be non-draft (visibility handled via isPrivate)
-  isDraft = false;
+async function saveReview() {
+  // Draft system removed: all saves persist full records. Visibility is handled via isPrivate.
   const reviewToSave = {
     ...formData,
     image: imageUrl,
@@ -6702,7 +6701,7 @@ async function saveReview(isDraft = true) {
     productName: formData.productName || formData.cultivars || formData.productType,
     totals,
     id: currentReviewId || undefined,
-    isDraft: isDraft // Utiliser le paramètre pour déterminer le statut
+  isDraft: false
   };
   // Attach correlation key for dedupe
   reviewToSave.correlationKey = computeCorrelationKey(reviewToSave);
