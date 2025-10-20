@@ -3708,6 +3708,40 @@ svg defs {
   margin-top: auto;
   display: flex;
   flex-wrap: wrap;
+
+/* Strong override: hide any remaining draft visuals and pseudo elements.
+   This is appended at the end to win over earlier rules and browser caching. */
+*[class*="draft"],
+*[id*="draft"],
+.draft-badge,
+.compact-library-item .draft-badge,
+.library-item .draft-badge,
+.compact-library-item.is-draft,
+.library-item.is-draft,
+.is-draft,
+.compact-library-item.is-draft::before,
+.compact-library-item.is-draft::after,
+.library-item.is-draft::before,
+.library-item.is-draft::after {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Defensive: remove any 'Brouillon' / 'Draft' pseudo-content */
+.compact-library-item.is-draft::after,
+.compact-library-item.is-draft::before,
+.library-item.is-draft::after,
+.library-item.is-draft::before {
+  content: none !important;
+}
+
+/* Prevent accidental focus on hidden draft controls */
+[id^="draft"],
+[data-draft],
+[aria-draft] {
+  pointer-events: none !important;
+}
   gap: 12px 24px;
   align-items: center;
   justify-content: space-between;
