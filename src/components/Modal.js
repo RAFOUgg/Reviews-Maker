@@ -15,7 +15,6 @@ export default class Modal {
     this._overlayOriginalParent = this.overlay ? this.overlay.parentNode : null;
     this._overlayOriginalNextSibling = this.overlay ? this.overlay.nextSibling : null;
     this._overlayMoved = false;
-    this._rootOriginalStyle = { position: root.style.position || '', inset: root.style.inset || '', left: root.style.left || '', top: root.style.top || '', transform: root.style.transform || '' };
   }
 
   open() {
@@ -41,15 +40,6 @@ export default class Modal {
     } catch (err) { /* non-fatal */ }
     this.overlay.classList.add('show');
   }
-  // Force modal root into fixed full-viewport stacking context to avoid
-  // being clipped by transformed ancestors. Store previous inline styles.
-  try {
-    this.root.style.position = 'fixed';
-    this.root.style.inset = '0';
-    this.root.style.left = '0';
-    this.root.style.top = '0';
-    this.root.style.transform = 'none';
-  } catch (err) {}
   this.root.classList.add('show');
       try { document.body.classList.add('modal-open'); } catch(e){}
       document.addEventListener('click', this._boundOnDoc, true);
@@ -81,16 +71,6 @@ export default class Modal {
     } catch (err) { /* non-fatal */ }
   }
   this.root.classList.remove('show');
-    try {
-      // Restore root inline styles that were present before opening
-      if (this._rootOriginalStyle) {
-        this.root.style.position = this._rootOriginalStyle.position || '';
-        this.root.style.inset = this._rootOriginalStyle.inset || '';
-        this.root.style.left = this._rootOriginalStyle.left || '';
-        this.root.style.top = this._rootOriginalStyle.top || '';
-        this.root.style.transform = this._rootOriginalStyle.transform || '';
-      }
-    } catch (err) {}
       try { document.body.classList.remove('modal-open'); } catch(e){}
       document.removeEventListener('click', this._boundOnDoc, true);
       document.removeEventListener('keydown', this._boundOnKey, true);

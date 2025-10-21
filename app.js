@@ -2374,9 +2374,8 @@ function showModalById(id, opts = {}) {
         overlayEl.classList.add('show');
         // Also ensure overlay has visible state class used by CSS guards
         try { overlayEl.classList.add('visible'); } catch(e){}
-    try { overlayEl.style.setProperty('display','block','important'); } catch(e){}
-  // Ensure overlay sits above typical UI (increase default z-index)
-  try { overlayEl.style.setProperty('z-index', opts.overlayZ || '100600', 'important'); } catch(e){}
+        try { overlayEl.style.setProperty('display','block','important'); } catch(e){}
+  try { overlayEl.style.setProperty('z-index', opts.overlayZ || '100500', 'important'); } catch(e){}
         overlayEl.setAttribute('aria-hidden','false');
       }
       // ensure clicking overlay hides the modal
@@ -2392,8 +2391,7 @@ function showModalById(id, opts = {}) {
         modal.style.setProperty('inset','0','important');
       } catch(e){}
       try { modal.style.setProperty('display', opts.display || 'flex', 'important'); } catch(e){}
-      // Ensure modal sits above overlay and other UI (increase default z-index)
-      try { modal.style.setProperty('z-index', opts.modalZ || '100610', 'important'); } catch(e){}
+  try { modal.style.setProperty('z-index', opts.modalZ || '100510', 'important'); } catch(e){}
       modal.setAttribute('aria-hidden','false');
       // Mark modal-content as centered to force transform centering fallback
       try {
@@ -2438,13 +2436,12 @@ function showModalById(id, opts = {}) {
       // only on elements we actually modify — tag them with data-modal-hidden so
       // we can later restore exactly those elements. Skip scripts/styles and the modal itself.
       try {
-        // If some element outside the modal currently has focus, blur it so
-        // we can safely hide/mark the rest of the page. This avoids leaving
-        // side panels or drawers visible because they contained the focused element.
-        try { if (document.activeElement && !modal.contains(document.activeElement)) { try { document.activeElement.blur(); } catch(e){} } } catch(e){}
+        const active = document.activeElement;
         Array.from(document.body.children).forEach(ch => {
           try {
             if (ch === modal) return;
+            // skip if this element contains the currently focused element (defensive)
+            if (active && ch.contains && ch.contains(active)) return;
             const tag = (ch.tagName || '').toUpperCase();
             if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'LINK') return;
             // keep floating auth button and other global widgets interactive
