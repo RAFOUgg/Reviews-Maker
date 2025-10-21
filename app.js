@@ -2659,24 +2659,26 @@ try { if (typeof window !== 'undefined') { window.showModalById = showModalById;
         // Log diagnostic info with a short stack so we can trace the setter
         try { console.warn(`[rm-modal-guard] detected visible modal without .show -> ${id} @ ${now()}\n${shortStack()}`); } catch(e){}
 
-        // Prefer the centralized helper to ensure proper overlay/centering
-        if (typeof window !== 'undefined' && typeof window.showModalById === 'function' && modal.id) {
-          try { window.showModalById(modal.id); return; } catch(e) { /* fallback below */ }
-        }
-
-        // Fallback: add .show and restore aria attributes and overlay state
-        try { modal.classList.add('show'); } catch(e){}
-        try { modal.setAttribute('aria-hidden', 'false'); } catch(e){}
-        try { document.body.classList.add('modal-open'); } catch(e){}
+        // Do NOT auto-show here: prefer to force-hide the stray element and
+        // log diagnostic info. In practice, the most common cause is a late
+        // cleanup or a legacy script that leaves inline styles — forcing a
+        // centralized show here can make the modal visible when it shouldn't.
         try {
+          try { console.warn(`[rm-modal-guard] forcing hide for stray modal -> ${id} @ ${now()}\n${shortStack()}`); } catch(e){}
+          try { modal.classList.remove('show'); } catch(e){}
+          try { modal.setAttribute('aria-hidden', 'true'); } catch(e){}
+          try { modal.style.setProperty('display','none','important'); } catch(e){}
+          try { document.body.classList.remove('modal-open'); } catch(e){}
           const overlay = document.getElementById((modal.id || '') + 'Overlay') || modal.querySelector('.modal-overlay');
           if (overlay) {
-            overlay.classList.add('show');
-            try { overlay.classList.add('visible'); } catch(e){}
-            try { overlay.setAttribute('aria-hidden','false'); } catch(e){}
-            try { overlay.style.setProperty('display','block','important'); } catch(e){}
+            try { overlay.classList.remove('show'); } catch(e){}
+            try { overlay.classList.remove('visible'); } catch(e){}
+            try { overlay.setAttribute('aria-hidden','true'); } catch(e){}
+            try { overlay.style.setProperty('display','none','important'); } catch(e){}
           }
-        } catch(e){}
+          // done
+          return;
+        } catch(e) { /* ignore hide failures */ }
       } catch(e) { /* ignore */ }
     };
 
