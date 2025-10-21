@@ -1035,6 +1035,10 @@ function init() {
       try { if (typeof closeAllModalsExcept === 'function') closeAllModalsExcept(null); } catch(e) { /* ignore */ }
     }, 200);
   } catch(e){}
+
+  // Signal that modal system is initialized and it's safe for modals to render.
+  // This removes the inline CSS guard we injected to prevent flashes on hard reload.
+  try { document.documentElement.classList.add('rm-modal-ready'); } catch(e){}
 }
 
 // Apply theme from localStorage (or system) on load

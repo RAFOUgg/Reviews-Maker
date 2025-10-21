@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr">
   <head>
+    <!-- Prevent modal flash: keep modals and overlays hidden until app initializes -->
+    <style id="rm-inline-modal-guard">html:not(.rm-modal-ready) .modal, html:not(.rm-modal-ready) .modal-overlay { display: none !important; visibility: hidden !important; pointer-events: none !important; }</style>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Studio professionnel pour composer, prévisualiser et exporter des reviews produits cannabis." />
