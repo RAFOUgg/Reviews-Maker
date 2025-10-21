@@ -2634,6 +2634,89 @@ window.addEventListener('resize', () => {
 // Expose globally for legacy scripts
 try { if (typeof window !== 'undefined') { window.showModalById = showModalById; window.hideModalById = hideModalById; } } catch(e){}
 
+// Guard: watch for stray inline style/class changes on modal elements and
+// correct them if a modal becomes visible without the expected `.show`
+// class. This helps catch late/third-party scripts that set `style.display`
+// directly and leave the modal un-centered or without an overlay.
+(function installModalGuard() {
+  try {
+    if (typeof MutationObserver === 'undefined' || typeof document === 'undefined') return;
+
+    const now = () => new Date().toISOString();
+    const shortStack = () => {
+      try { return new Error().stack.split('\n').slice(2,8).join('\n'); } catch(e) { return '(no stack)'; }
+    };
+
+    const correctModal = (modal) => {
+      try {
+        if (!modal) return;
+        const id = modal.id || '(no-id)';
+        const comp = window.getComputedStyle ? window.getComputedStyle(modal) : null;
+        const display = (modal.style && modal.style.display) || (comp && comp.display) || '';
+        if (!display || display === 'none') return; // not visible
+        if (modal.classList && modal.classList.contains && modal.classList.contains('show')) return; // already managed
+
+        // Log diagnostic info with a short stack so we can trace the setter
+        try { console.warn(`[rm-modal-guard] detected visible modal without .show -> ${id} @ ${now()}\n${shortStack()}`); } catch(e){}
+
+        // Prefer the centralized helper to ensure proper overlay/centering
+        if (typeof window !== 'undefined' && typeof window.showModalById === 'function' && modal.id) {
+          try { window.showModalById(modal.id); return; } catch(e) { /* fallback below */ }
+        }
+
+        // Fallback: add .show and restore aria attributes and overlay state
+        try { modal.classList.add('show'); } catch(e){}
+        try { modal.setAttribute('aria-hidden', 'false'); } catch(e){}
+        try { document.body.classList.add('modal-open'); } catch(e){}
+        try {
+          const overlay = document.getElementById((modal.id || '') + 'Overlay') || modal.querySelector('.modal-overlay');
+          if (overlay) {
+            overlay.classList.add('show');
+            try { overlay.classList.add('visible'); } catch(e){}
+            try { overlay.setAttribute('aria-hidden','false'); } catch(e){}
+            try { overlay.style.setProperty('display','block','important'); } catch(e){}
+          }
+        } catch(e){}
+      } catch(e) { /* ignore */ }
+    };
+
+    const observer = new MutationObserver(mutations => {
+      try {
+        for (const m of mutations) {
+          const target = m.target;
+          if (!(target instanceof Element)) continue;
+          // Only care about elements with class 'modal'
+          try {
+            if (target.classList && target.classList.contains && target.classList.contains('modal')) {
+              // attribute mutations may indicate style/class changes
+              if (m.attributeName === 'style' || m.attributeName === 'class' || m.attributeName === 'aria-hidden') {
+                correctModal(target);
+              }
+            }
+            // Also watch overlays being made visible without matching modal state
+            if (target.classList && (target.classList.contains('modal-overlay') || target.classList.contains('account-overlay'))) {
+              const comp = window.getComputedStyle ? window.getComputedStyle(target) : null;
+              const display = (target.style && target.style.display) || (comp && comp.display) || '';
+              if (display && display !== 'none') {
+                // find nearest modal sibling or parent
+                const siblings = document.querySelectorAll('.modal');
+                siblings.forEach(s => correctModal(s));
+              }
+            }
+          } catch(e) { /* ignore per-mutation errors */ }
+        }
+      } catch(e) { /* no-op */ }
+    });
+
+    observer.observe(document.documentElement || document.body, { subtree: true, attributes: true, attributeFilter: ['style','class','aria-hidden'] });
+
+    // Turn off the guard after 30s to avoid long-term perf impact
+    setTimeout(() => {
+      try { observer.disconnect(); } catch(e){}
+    }, 30000);
+  } catch(e) { /* ignore installation failures */ }
+})();
+
 function closeAccountModal() {
   if (!dom.accountModal) return;
   try {
