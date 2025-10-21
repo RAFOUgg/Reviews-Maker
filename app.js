@@ -240,6 +240,7 @@ try {
               // remove marker after DOM settled
               try { setTimeout(() => { dom.authModal.removeAttribute('data-rm-opening'); }, 300); } catch(e){}
             }
+  } catch(e){}
 // API calls starting with /api/ so they hit /reviews/api/... behind Nginx.
 // This keeps the frontend code unchanged while allowing path-based hosting.
 (() => {
