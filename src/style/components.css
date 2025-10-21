@@ -548,3 +548,65 @@ body .modal.show > .modal-overlay { display: block !important; visibility: visib
   display: none !important; visibility: hidden !important; pointer-events: none !important;
 }
 
+/* Ensure key modals are perfectly centered on desktop (override legacy offsets)
+   Targets the specific modal IDs used across the app: auth, account, public profile,
+   save modal, settings and library modal. Use high-specificity and !important to
+   neutralize older conflicting rules in styles.css. */
+@media (min-width: 881px) {
+  #authModal, #accountModal, #publicProfileModal, #saveModal, #settingsModal, #libraryModal {
+    position: fixed !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    max-width: var(--rm-modal-maxwidth) !important;
+    z-index: 10070 !important; /* above overlay */
+    pointer-events: auto !important;
+  }
+
+  /* Ensure their modal-content is positioned relative inside the centered modal container
+     and cancel any earlier top/calc-based nudges. This avoids the dialog being shifted up. */
+  #authModal .modal-content, #accountModal .modal-content, #publicProfileModal .modal-content, #saveModal .modal-content, #settingsModal .modal-content, #libraryModal .modal-content {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+    margin: 0 auto !important;
+    z-index: 10080 !important; /* ensure content above overlay as well */
+  }
+
+  /* Cancel the subtle upward shift that was applied to account modal in some rules */
+  #accountModal .modal-content.centered {
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+  }
+}
+
+/* Centered-modal container: use flex centering and allow content to decide sheet vs centered
+   This avoids putting modal dialog itself at absolute top/left which sometimes causes
+   the dialog to be misaligned when parent contexts are transformed. */
+@media (min-width: 881px) {
+  .centered-modal {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 10070 !important;
+    pointer-events: auto !important;
+  }
+  .centered-modal .modal-content {
+    position: relative !important;
+    transform: translateY(0) !important;
+    margin: 0 auto !important;
+    max-height: 86vh !important;
+    overflow: hidden !important;
+  }
+  /* If content height > available, script will add .sheet to the modal which
+     should keep it pinned to bottom — keep that behavior intact */
+  .centered-modal.sheet { align-items: flex-end !important; }
+}
+

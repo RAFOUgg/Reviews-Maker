@@ -2393,10 +2393,18 @@ function showModalById(id, opts = {}) {
       try { modal.style.setProperty('display', opts.display || 'flex', 'important'); } catch(e){}
   try { modal.style.setProperty('z-index', opts.modalZ || '100510', 'important'); } catch(e){}
       modal.setAttribute('aria-hidden','false');
-      // Mark modal-content as centered to force transform centering fallback
+      // For key modals we prefer flex centering on the modal container to avoid
+      // conflicts with other styles that set absolute/top offsets. Use the
+      // 'centered-modal' class on the modal itself for these cases.
       try {
+        const keyModals = ['authModal','accountModal','publicProfileModal','saveModal','settingsModal','libraryModal'];
         const dlg = modal.querySelector('.modal-content');
-        if (dlg) dlg.classList.add('centered');
+        if (keyModals.includes(id)) {
+          try { modal.classList.add('centered-modal'); } catch(e){}
+          try { if (dlg) dlg.classList.remove('centered'); } catch(e){}
+        } else {
+          try { if (dlg) dlg.classList.add('centered'); } catch(e){}
+        }
       } catch(e){}
       // Determine if modal content fits within viewport; if not, switch to sheet mode
       try {
@@ -2466,7 +2474,8 @@ function hideModalById(id) {
       modal.classList.remove('show');
       modal.setAttribute('aria-hidden','true');
       try { modal.style.display = 'none'; } catch(e){}
-      try { const dlg = modal.querySelector('.modal-content'); if (dlg) dlg.classList.remove('centered'); } catch(e){}
+  try { const dlg = modal.querySelector('.modal-content'); if (dlg) dlg.classList.remove('centered'); } catch(e){}
+  try { modal.classList.remove('centered-modal'); } catch(e){}
       try { modal.classList.remove('sheet'); } catch(e){}
     
     // Clear the account offset variable when hiding account modal
