@@ -939,6 +939,8 @@ function init() {
 
   // Ensure auth UI reflects stored session on load (floating button, library visibility)
   try { if (typeof updateAuthUI === 'function') updateAuthUI(); } catch(e) { console.warn('updateAuthUI init error', e); }
+  // Defensive: ensure no modals are accidentally left visible on startup
+  try { if (typeof closeAllModalsExcept === 'function') closeAllModalsExcept(null); } catch(e) { console.warn('closeAllModalsExcept init error', e); }
 }
 
 // Apply theme from localStorage (or system) on load
@@ -2346,6 +2348,13 @@ function showModalById(id, opts = {}) {
   try {
     if (!id) return;
     const modal = document.getElementById(id);
+    // If this modal is already visible, ensure others are closed and bail out.
+    try {
+      if (modal && modal.classList && modal.classList.contains && modal.classList.contains('show')) {
+        try { closeAllModalsExcept(id); } catch(e){}
+        return;
+      }
+    } catch(e){}
     // ensure modal is top-level to avoid stacking/containment by transformed ancestors
     if (modal && modal.parentElement !== document.body) {
       try { document.body.appendChild(modal); } catch(e){}
