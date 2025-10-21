@@ -89,7 +89,8 @@ function setupAccountModalEvents() {
     dom.openLibraryFromAccount.addEventListener('click', () => {
       closeAccountModal();
       if (!isUserConnected) {
-        if (dom.authModal) showModalById('authModal');
+        // Don't auto-open the auth modal here — require explicit user action.
+        showToast('Connectez-vous pour accéder à votre bibliothèque.', 'warning');
         return;
       }
       openLibraryModal('mine', { fromAccount: true });
@@ -1680,8 +1681,9 @@ function setupModalEvents() {
   if (dom.openLibrary) {
     dom.openLibrary.addEventListener("click", () => {
       if (!isUserConnected) {
+        // Do not auto-open the auth modal here. Prompt the user to sign in
+        // and let them open the auth modal explicitly if they choose to.
         showToast('Connectez-vous pour accéder à votre bibliothèque.', 'warning');
-        if (dom.authModal) showModalById('authModal');
         return;
       }
       openLibraryModal('mine');
@@ -1755,7 +1757,7 @@ function setupModalEvents() {
         try { console.log('DEBUG: delegated openLibraryFromAccount'); } catch(e){}
         e.preventDefault();
         closeAccountModal();
-        if (!isUserConnected) { if (dom.authModal) showModalById('authModal'); return; }
+        if (!isUserConnected) { showToast('Connectez-vous pour accéder à votre bibliothèque.', 'warning'); return; }
         openLibraryModal('mine', { fromAccount: true });
         return;
       }
@@ -2714,8 +2716,8 @@ function showProfileModal(identifier, options = {}) {
         try { openAccountModal(); } catch(e){}
         try { renderAccountView().catch(()=>{}); } catch(e){}
       } else {
-        // show auth modal to encourage sign-in using central helper
-  try { /* auth modal not auto-shown */ } catch(e) { if (dom && dom.authModal) try { dom.authModal.style.display = 'flex'; } catch(e){} }
+        // No identifier and not signed-in: do NOT auto-show the auth modal here.
+        // The auth modal should be opened only on explicit user action.
       }
       return;
     }
