@@ -305,8 +305,20 @@ function initializeExportStudio() {
       return;
     }
 
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    // Prefer centralized modal helper if available
+    if (typeof window !== 'undefined' && typeof window.showModalById === 'function' && modal && modal.id) {
+      try { showModalById(modal.id); } catch(e) { /* fallthrough */ }
+    } else {
+      // Fallback: ensure the panel is fixed to viewport to avoid transform stacking issues
+      try { if (modal.parentElement !== document.body) document.body.appendChild(modal); } catch(e){}
+      try { modal.style.setProperty('position','fixed','important'); } catch(e){}
+      try { modal.style.setProperty('inset','0','important'); } catch(e){}
+      try { modal.style.setProperty('display','flex','important'); } catch(e){}
+      try { modal.style.setProperty('z-index','100700','important'); } catch(e){}
+      try { modal.setAttribute('role','dialog'); modal.setAttribute('aria-modal','true'); modal.setAttribute('aria-hidden','false'); } catch(e){}
+      try { document.body.classList.add('modal-open'); } catch(e){}
+      try { document.body.style.overflow = 'hidden'; } catch(e){}
+    }
     
     // Sélectionner le template par défaut et générer l'aperçu
     selectTemplate(currentConfig.template);

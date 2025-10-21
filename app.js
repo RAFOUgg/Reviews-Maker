@@ -6231,18 +6231,23 @@ function openSaveModal() {
     if (typeof showModalById === 'function') {
       showModalById('saveModal');
     } else if (dom && dom.saveModal) {
-      try { dom.saveModal.style.setProperty('display','flex','important'); } catch(e){}
-      try { dom.saveModal.classList.add('show'); dom.saveModal.setAttribute('aria-hidden','false'); } catch(e){}
-      try { document.body.classList.add('modal-open'); } catch(e){}
-      try {
-        const overlay = document.getElementById('saveModalOverlay') || dom.saveModal.querySelector('.modal-overlay');
-        if (overlay) {
-          try { overlay.classList.add('show'); } catch(e){}
-          try { overlay.classList.add('visible'); } catch(e){}
-          try { overlay.style.setProperty('display','block','important'); } catch(e){}
-          try { overlay.setAttribute('aria-hidden','false'); } catch(e){}
-        }
-      } catch(e){}
+      // Prefer centralized helper for opening save modal
+      if (typeof showModalById === 'function') {
+        try { showModalById('saveModal'); } catch(e){}
+      } else {
+        try { dom.saveModal.style.setProperty('display','flex','important'); } catch(e){}
+        try { dom.saveModal.classList.add('show'); dom.saveModal.setAttribute('aria-hidden','false'); } catch(e){}
+        try { document.body.classList.add('modal-open'); } catch(e){}
+        try {
+          const overlay = document.getElementById('saveModalOverlay') || dom.saveModal.querySelector('.modal-overlay');
+          if (overlay) {
+            try { overlay.classList.add('show'); } catch(e){}
+            try { overlay.classList.add('visible'); } catch(e){}
+            try { overlay.style.setProperty('display','block','important'); } catch(e){}
+            try { overlay.setAttribute('aria-hidden','false'); } catch(e){}
+          }
+        } catch(e){}
+      }
     }
   } catch(e){}
   console.debug('[ui] Save modal opened');
