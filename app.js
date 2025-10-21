@@ -2842,9 +2842,29 @@ function openPublicProfile(email) {
       // public profile should be preview-only: hide backdrop by default
       // If ModalCompat isn't available, use the centralized helper to show
       // the modal without backdrop so it behaves consistently.
-      try { if (typeof showModalById === 'function') showModalById('publicProfileModal', { hideBackdrop: true }); else {
-        const m = document.getElementById('publicProfileModal'); if (m) { m.style.display = 'flex'; m.classList.add('show'); document.body.classList.add('modal-open'); }
-      } } catch(e){}
+      try {
+        if (typeof showModalById === 'function') {
+          showModalById('publicProfileModal', { hideBackdrop: true });
+        } else {
+          // Legacy fallback: still ensure overlay and centered class
+          const m = document.getElementById('publicProfileModal');
+          if (m) {
+            try { m.style.setProperty('display','flex','important'); } catch(e){}
+            try { m.classList.add('show'); m.setAttribute('aria-hidden','false'); } catch(e){}
+            try { document.body.classList.add('modal-open'); } catch(e){}
+            try {
+              const overlay = document.getElementById('publicProfileOverlay') || m.querySelector('.modal-overlay');
+              if (overlay) {
+                // public profile is preview-only: ensure backdrop remains hidden in legacy fallback
+                try { overlay.classList.remove('show'); } catch(e){}
+                try { overlay.classList.remove('visible'); } catch(e){}
+                try { overlay.style.setProperty('display','none','important'); } catch(e){}
+                try { overlay.setAttribute('aria-hidden','true'); } catch(e){}
+              }
+            } catch(e){}
+          }
+        }
+      } catch(e){}
     }
     populatePublicProfile(email).catch(()=>{});
   } catch(e){}
@@ -6205,7 +6225,24 @@ function openSaveModal() {
   // no auto-open for saveModal by default, but when explicitly requested
   // ensure we use the centralized showModalById so overlay/centering is correct
   try { dom.saveModal.removeAttribute('hidden'); } catch(e){}
-  try { if (typeof showModalById === 'function') showModalById('saveModal'); else { dom.saveModal.style.display = 'flex'; dom.saveModal.classList.add('show'); document.body.classList.add('modal-open'); } } catch(e){}
+  try {
+    if (typeof showModalById === 'function') {
+      showModalById('saveModal');
+    } else if (dom && dom.saveModal) {
+      try { dom.saveModal.style.setProperty('display','flex','important'); } catch(e){}
+      try { dom.saveModal.classList.add('show'); dom.saveModal.setAttribute('aria-hidden','false'); } catch(e){}
+      try { document.body.classList.add('modal-open'); } catch(e){}
+      try {
+        const overlay = document.getElementById('saveModalOverlay') || dom.saveModal.querySelector('.modal-overlay');
+        if (overlay) {
+          try { overlay.classList.add('show'); } catch(e){}
+          try { overlay.classList.add('visible'); } catch(e){}
+          try { overlay.style.setProperty('display','block','important'); } catch(e){}
+          try { overlay.setAttribute('aria-hidden','false'); } catch(e){}
+        }
+      } catch(e){}
+    }
+  } catch(e){}
   console.debug('[ui] Save modal opened');
 }
 function closeSaveModal() {

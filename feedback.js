@@ -19,10 +19,11 @@
       try { textarea && textarea.focus(); } catch(e){}
       return;
     }
-  modal.style.display = 'flex';
-  if (overlay) try { overlay.classList.add('show'); overlay.classList.add('visible'); } catch(e){}
-  modal.classList.add('show');
-    try { document.body.classList.add('modal-open'); } catch(e){}
+  // Legacy fallback: keep behavior but ensure overlay, centering and important display
+  try { modal.style.setProperty('display','flex','important'); } catch(e){}
+  if (overlay) try { overlay.classList.add('show'); overlay.classList.add('visible'); overlay.style.setProperty('display','block','important'); } catch(e){}
+  try { modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); } catch(e){}
+  try { document.body.classList.add('modal-open'); } catch(e){}
     try { textarea && textarea.focus(); } catch(e){}
   }
   function hideModal() {
@@ -32,10 +33,11 @@
       if (status) { status.style.display = 'none'; status.textContent = ''; }
       return;
     }
-  modal.style.display = 'none';
-  if (overlay) try { overlay.classList.remove('show'); overlay.classList.remove('visible'); } catch(e){}
-  modal.classList.remove('show');
-    try { document.body.classList.remove('modal-open'); } catch(e){}
+  // Legacy fallback: ensure consistent hide (use important to override competing styles)
+  try { modal.style.setProperty('display','none','important'); } catch(e){}
+  if (overlay) try { overlay.classList.remove('show'); overlay.classList.remove('visible'); overlay.style.setProperty('display','none','important'); } catch(e){}
+  try { modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); } catch(e){}
+  try { document.body.classList.remove('modal-open'); } catch(e){}
     if (status) { status.style.display = 'none'; status.textContent = ''; }
   }
 
