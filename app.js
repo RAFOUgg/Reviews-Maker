@@ -220,23 +220,26 @@ try {
 } catch(e){}
   // Ensure modal elements accept pointer events but do NOT force display on load
   try {
-    if (dom && dom.accountModal) {
-      try { dom.accountModal.style.pointerEvents = 'auto'; } catch(e){}
-      const dlg = dom.accountModal.querySelector('.account-dialog') || dom.accountModal.querySelector('.modal-content') || dom.accountModal;
-      if (dlg) {
-        try { dlg.style.pointerEvents = 'auto'; } catch(e){}
-      }
-    }
-  } catch(e){}
-  // Correction JS : pointer-events et focus
-  try {
-    const modal = document.getElementById('publicProfileModal');
-    if (modal) try { modal.style.pointerEvents = 'auto'; } catch(e){}
-    const dlg = modal ? (modal.querySelector('.account-dialog') || modal.querySelector('.modal-content') || modal) : null;
-    if (dlg) try { dlg.style.pointerEvents = 'auto'; } catch(e){}
-  } catch(e){}
-// --- Hosting base-path support -------------------------------------------
-// If the app is served under /reviews, transparently prefix any absolute
+            if (dom && dom.authModal) {
+              // Legacy fallback: mark opening so guard ignores transients
+              try { dom.authModal.setAttribute('data-rm-opening','true'); } catch(e){}
+              try { if (dom.authModal.parentElement !== document.body) document.body.appendChild(dom.authModal); } catch(e){}
+              try { dom.authModal.style.setProperty('position','fixed','important'); } catch(e){}
+              try { dom.authModal.style.setProperty('inset','0','important'); } catch(e){}
+              try { dom.authModal.style.setProperty('display','flex','important'); } catch(e){}
+              try { dom.authModal.style.setProperty('z-index','100510','important'); } catch(e){}
+              try { dom.authModal.classList.add('show'); dom.authModal.setAttribute('aria-hidden','false'); } catch(e){}
+              const overlay = document.getElementById('authModalOverlay') || dom.authModal.querySelector('.modal-overlay');
+              if (overlay) {
+                try { if (overlay.parentElement !== document.body) document.body.appendChild(overlay); } catch(e){}
+                try { overlay.style.setProperty('position','fixed','important'); } catch(e){}
+                try { overlay.style.setProperty('inset','0','important'); } catch(e){}
+                try { overlay.style.setProperty('display','block','important'); } catch(e){}
+                try { overlay.classList.add('show'); overlay.classList.add('visible'); overlay.setAttribute('aria-hidden','false'); } catch(e){}
+              }
+              // remove marker after DOM settled
+              try { setTimeout(() => { dom.authModal.removeAttribute('data-rm-opening'); }, 300); } catch(e){}
+            }
 // API calls starting with /api/ so they hit /reviews/api/... behind Nginx.
 // This keeps the frontend code unchanged while allowing path-based hosting.
 (() => {
@@ -1787,9 +1790,36 @@ function setupModalEvents() {
   // Modal Auth - Email based
   if (dom.floatingAuthBtn) {
     dom.floatingAuthBtn.addEventListener("click", () => {
-      console.log('DEBUG: floatingAuthBtn clicked; delegating to showProfileModal');
-      // Centralize behavior: show profile modal for current user (or auth if not connected)
-      try { showProfileModal(); } catch(e) { console.warn('showProfileModal failed', e); }
+      try { console.log('DEBUG: floatingAuthBtn clicked; opening account/auth modal'); } catch(e){}
+      // If user is connected, open the account modal; otherwise open auth modal.
+      try {
+        if (isUserConnected) {
+          try { openAccountModal(); } catch(e) { console.warn('openAccountModal failed', e); }
+        } else {
+          // Open auth modal via central helper when available
+          try {
+            if (typeof showModalById === 'function') {
+              showModalById('authModal');
+            } else if (dom && dom.authModal) {
+              // Legacy fallback: reparent + fix positioning to avoid off-screen placement
+              try { if (dom.authModal.parentElement !== document.body) document.body.appendChild(dom.authModal); } catch(e){}
+              try { dom.authModal.style.setProperty('position','fixed','important'); } catch(e){}
+              try { dom.authModal.style.setProperty('inset','0','important'); } catch(e){}
+              try { dom.authModal.style.setProperty('display','flex','important'); } catch(e){}
+              try { dom.authModal.style.setProperty('z-index','100510','important'); } catch(e){}
+              try { dom.authModal.classList.add('show'); dom.authModal.setAttribute('aria-hidden','false'); } catch(e){}
+              const overlay = document.getElementById('authModalOverlay') || dom.authModal.querySelector('.modal-overlay');
+              if (overlay) {
+                try { if (overlay.parentElement !== document.body) document.body.appendChild(overlay); } catch(e){}
+                try { overlay.style.setProperty('position','fixed','important'); } catch(e){}
+                try { overlay.style.setProperty('inset','0','important'); } catch(e){}
+                try { overlay.style.setProperty('display','block','important'); } catch(e){}
+                try { overlay.classList.add('show'); overlay.classList.add('visible'); overlay.setAttribute('aria-hidden','false'); } catch(e){}
+              }
+            }
+          } catch(e) { console.warn('Failed to open auth modal', e); }
+        }
+      } catch(e) { console.warn('floatingAuthBtn click handler failed', e); }
     });
   }
   
@@ -2453,6 +2483,9 @@ function showModalById(id, opts = {}) {
     // Modals are always handled on-demand. No init queueing is performed.
     const modal = document.getElementById(id);
     try { if (window && window.__RM_MODAL_DEBUG) console.debug('[showModalById] called for', id, { opts }, new Error().stack.split('\n').slice(1,6).join('\n')); } catch(e){}
+    // Mark modal as intentionally opening so the modal guard ignores transient
+    // visible states created during the open sequence.
+    try { if (modal) modal.setAttribute('data-rm-opening','true'); } catch(e){}
     // If this modal is already visible, ensure others are closed and bail out.
     try {
       if (modal && modal.classList && modal.classList.contains && modal.classList.contains('show')) {
@@ -2570,6 +2603,8 @@ function showModalById(id, opts = {}) {
     }
   } catch(e) { console.warn('showModalById error', e); }
 }
+      // clear opening marker shortly after DOM updates settle
+      try { setTimeout(() => { if (modal) modal.removeAttribute('data-rm-opening'); }, 300); } catch(e){}
 
 function hideModalById(id) {
   try {
@@ -2654,6 +2689,8 @@ try { if (typeof window !== 'undefined') { window.showModalById = showModalById;
     const correctModal = (modal) => {
       try {
         if (!modal) return;
+        // if modal is actively opening, ignore transient visible state
+        try { if (modal.getAttribute && modal.getAttribute('data-rm-opening') === 'true') return; } catch(e){}
         const id = modal.id || '(no-id)';
         const comp = window.getComputedStyle ? window.getComputedStyle(modal) : null;
         const display = (modal.style && modal.style.display) || (comp && comp.display) || '';
@@ -6235,23 +6272,30 @@ function openSaveModal() {
     if (typeof showModalById === 'function') {
       showModalById('saveModal');
     } else if (dom && dom.saveModal) {
-      // Prefer centralized helper for opening save modal
-      if (typeof showModalById === 'function') {
-        try { showModalById('saveModal'); } catch(e){}
-      } else {
-        try { dom.saveModal.style.setProperty('display','flex','important'); } catch(e){}
-        try { dom.saveModal.classList.add('show'); dom.saveModal.setAttribute('aria-hidden','false'); } catch(e){}
-        try { document.body.classList.add('modal-open'); } catch(e){}
-        try {
-          const overlay = document.getElementById('saveModalOverlay') || dom.saveModal.querySelector('.modal-overlay');
-          if (overlay) {
-            try { overlay.classList.add('show'); } catch(e){}
-            try { overlay.classList.add('visible'); } catch(e){}
-            try { overlay.style.setProperty('display','block','important'); } catch(e){}
-            try { overlay.setAttribute('aria-hidden','false'); } catch(e){}
-          }
-        } catch(e){}
-      }
+        // Prefer centralized helper for opening save modal
+        if (typeof showModalById === 'function') {
+          try { showModalById('saveModal'); } catch(e){}
+        } else {
+          // Legacy fallback: reparent to body and force fixed centering so the
+          // modal cannot be affected by transformed ancestors or layout quirks.
+          try { if (dom.saveModal.parentElement !== document.body) document.body.appendChild(dom.saveModal); } catch(e){}
+          try { dom.saveModal.style.setProperty('position','fixed','important'); } catch(e){}
+          try { dom.saveModal.style.setProperty('inset','0','important'); } catch(e){}
+          try { dom.saveModal.style.setProperty('display','flex','important'); } catch(e){}
+          try { dom.saveModal.style.setProperty('z-index','100510','important'); } catch(e){}
+          try { dom.saveModal.classList.add('show'); dom.saveModal.setAttribute('aria-hidden','false'); } catch(e){}
+          try { document.body.classList.add('modal-open'); } catch(e){}
+          try {
+            const overlay = document.getElementById('saveModalOverlay') || dom.saveModal.querySelector('.modal-overlay');
+            if (overlay) {
+              try { if (overlay.parentElement !== document.body) document.body.appendChild(overlay); } catch(e){}
+              try { overlay.style.setProperty('position','fixed','important'); } catch(e){}
+              try { overlay.style.setProperty('inset','0','important'); } catch(e){}
+              try { overlay.style.setProperty('display','block','important'); } catch(e){}
+              try { overlay.classList.add('show'); overlay.classList.add('visible'); overlay.setAttribute('aria-hidden','false'); } catch(e){}
+            }
+          } catch(e){}
+        }
     }
   } catch(e){}
   console.debug('[ui] Save modal opened');
@@ -7581,4 +7625,4 @@ function restoreDraftIfAny() {
 // Check if a draft exists in localStorage (top-level, used during init)
 function hasSavedDraft() { return false; }
 
-function clearSavedDraft() { try { localStorage.removeItem('reviewsMakerDraft'); } catch {} }
+function clearSavedDraft() { try { localStorage.removeItem('reviewsMakerDraft'); } catch (e) {} }
