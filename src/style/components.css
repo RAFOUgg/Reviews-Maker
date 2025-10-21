@@ -398,6 +398,67 @@ panel, .card, .library-item, .compact-library-item {
 .account-dialog::-webkit-scrollbar-thumb, .modal-content::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.18); border-radius:999px; }
 
 /* Mobile: full width sheet for comfortable reading */
+
+/* Strong viewport-centering safety net for all modal/dialog UI
+   Some modals were rendered outside the visible viewport due to
+   conflicting rules (absolute positioning, transformed ancestors or
+   id-specific offsets). The rules below are deliberately specific
+   and use !important where necessary to override legacy styles and
+   ensure every modal stays centered and fits the viewport.
+
+   Notes:
+   - This block prefers the .modal fixed/flex centering model and
+     also applies to native <dialog> and common id selectors like
+     #accountModal. It constrains modal content to viewport height
+     so internal scrolling works reliably.
+*/
+.modal, dialog[open], [role="dialog"], #accountModal {
+  /* fixed to viewport and use flex centering */
+  position: fixed !important;
+  inset: 0 !important; /* top:0; right:0; bottom:0; left:0 */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999 !important;
+  pointer-events: auto !important;
+  padding: 12px !important; /* breathing room on narrow viewports */
+  box-sizing: border-box !important;
+}
+
+/* Ensure overlay always covers viewport and sits behind modal content */
+.modal-overlay, .account-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 99990 !important;
+  pointer-events: auto !important;
+}
+
+/* Constrain modal content to viewport and allow internal scrolling */
+.modal-content, #accountModal .modal-content, dialog .modal-content, [role="dialog"] .modal-content {
+  position: relative !important;
+  z-index: 99995 !important;
+  width: min(var(--rm-modal-maxwidth, 920px), calc(100% - 48px)) !important;
+  max-width: var(--rm-modal-maxwidth, 920px) !important;
+  max-height: calc(100vh - 48px) !important;
+  margin: 0 auto !important;
+  overflow: auto !important;
+  transform: none !important;
+  top: auto !important;
+  left: auto !important;
+}
+
+/* Disable sheet mode forcing bottom pinning - keep modals centered */
+.modal.sheet {
+  --rm-sheet-disabled: 1;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Extra: ensure native dialog elements also center */
+dialog[open] { display: flex !important; align-items: center !important; justify-content: center !important; }
+
 @media (max-width:880px) {
   #accountModal .modal-content, .account-modal-content { width: calc(100% - 24px); border-radius: 12px; }
   .account-body { grid-template-columns: 1fr; }
