@@ -539,7 +539,11 @@ body .modal.show > .modal-overlay { display: block !important; visibility: visib
    save modal, settings and library modal. Use high-specificity and !important to
    neutralize older conflicting rules in styles.css. */
 @media (min-width: 881px) {
-  #authModal, #accountModal, #publicProfileModal, #saveModal, #settingsModal, #libraryModal {
+  /* Only show key modals when they have been opened (.show) or when
+     the centered-modal container class is applied. This prevents CSS from
+     forcing modals visible at page load. */
+  #authModal.show, #accountModal.show, #publicProfileModal.show, #saveModal.show, #settingsModal.show, #libraryModal.show,
+  .centered-modal {
     position: fixed !important;
     left: 50% !important;
     top: 50% !important;
@@ -555,7 +559,8 @@ body .modal.show > .modal-overlay { display: block !important; visibility: visib
 
   /* Ensure their modal-content is positioned relative inside the centered modal container
      and cancel any earlier top/calc-based nudges. This avoids the dialog being shifted up. */
-  #authModal .modal-content, #accountModal .modal-content, #publicProfileModal .modal-content, #saveModal .modal-content, #settingsModal .modal-content, #libraryModal .modal-content {
+  #authModal.show .modal-content, #accountModal.show .modal-content, #publicProfileModal.show .modal-content, #saveModal.show .modal-content, #settingsModal.show .modal-content, #libraryModal.show .modal-content,
+  .centered-modal .modal-content {
     position: relative !important;
     top: auto !important;
     left: auto !important;
@@ -565,7 +570,7 @@ body .modal.show > .modal-overlay { display: block !important; visibility: visib
   }
 
   /* Cancel the subtle upward shift that was applied to account modal in some rules */
-  #accountModal .modal-content.centered {
+  #accountModal.show .modal-content.centered, .centered-modal .modal-content.centered {
     top: 50% !important;
     transform: translate(-50%, -50%) !important;
   }

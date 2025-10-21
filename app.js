@@ -972,6 +972,12 @@ function init() {
   try { if (typeof closeAllModalsExcept === 'function') closeAllModalsExcept(null); } catch(e) { console.warn('closeAllModalsExcept init error', e); }
 
   // No queued modal work to release — modals are handled on-demand by handlers.
+  // Extra defensive pass shortly after init to catch any racey open calls
+  try {
+    setTimeout(() => {
+      try { if (typeof closeAllModalsExcept === 'function') closeAllModalsExcept(null); } catch(e) { /* ignore */ }
+    }, 200);
+  } catch(e){}
 }
 
 // Apply theme from localStorage (or system) on load
