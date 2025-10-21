@@ -186,6 +186,38 @@ function setupAccountModalEvents() {
     });
   }
 }
+
+// Extra hard cleanup once the full page (and any late scripts) loaded.
+// Some environments (VPS, cached assets, service workers) can cause a modal
+// to become visible after DOMContentLoaded. Run a final defensive pass on
+// window.load to guarantee no modal is shown by default.
+try {
+  window.addEventListener('load', () => {
+    try {
+      // small delay to allow other onload handlers to run first
+      setTimeout(() => {
+        try { closeAllModalsExcept(null); } catch(e){}
+        // also force-hide any overlays or inline styles that may have been set
+        try {
+          Array.from(document.querySelectorAll('.modal')).forEach(m => {
+            try {
+              m.classList.remove('show');
+              m.classList.remove('centered-modal');
+              m.classList.remove('sheet');
+              m.setAttribute('aria-hidden','true');
+              try { m.style.removeProperty('display'); } catch(e){}
+              try { m.style.removeProperty('position'); m.style.removeProperty('inset'); m.style.removeProperty('z-index'); } catch(e){}
+            } catch(e){}
+          });
+          Array.from(document.querySelectorAll('.modal-overlay, .account-overlay')).forEach(o => {
+            try { o.classList.remove('show'); o.classList.remove('visible'); o.setAttribute('aria-hidden','true'); try { o.style.removeProperty('display'); } catch(e){} } catch(e){}
+          });
+          try { document.body.classList.remove('modal-open'); } catch(e){}
+        } catch(e){}
+      }, 240);
+    } catch(e){}
+  });
+} catch(e){}
   // Ensure modal elements accept pointer events but do NOT force display on load
   try {
     if (dom && dom.accountModal) {
@@ -2380,7 +2412,10 @@ function openAccountModal() {
   } catch(e) { console.warn('modalAccount.open failed', e); }
   // fallback legacy behaviour -> use central helper
   // no automatic account modal on load
+  // Render view and explicitly show modal using the centralized helper so
+  // positioning/overlay logic is consistent even when ModalCompat failed
   renderAccountView().catch(err => console.warn('Failed to render account view', err));
+  try { if (typeof showModalById === 'function') showModalById('accountModal'); } catch(e){}
 }
 
 // Utility: hide all modals and overlays. If keepId is provided, it will not
@@ -2722,7 +2757,11 @@ function openPublicProfile(email) {
       try { dom.modalPublic.open(); } catch(e) { console.warn('modalPublic.open failed', e); }
     } else {
       // public profile should be preview-only: hide backdrop by default
-  // no auto-open for publicProfileModal
+      // If ModalCompat isn't available, use the centralized helper to show
+      // the modal without backdrop so it behaves consistently.
+      try { if (typeof showModalById === 'function') showModalById('publicProfileModal', { hideBackdrop: true }); else {
+        const m = document.getElementById('publicProfileModal'); if (m) { m.style.display = 'flex'; m.classList.add('show'); document.body.classList.add('modal-open'); }
+      } } catch(e){}
     }
     populatePublicProfile(email).catch(()=>{});
   } catch(e){}
@@ -6080,9 +6119,10 @@ function openSaveModal() {
     dom.previewOverlay?.setAttribute('hidden','');
     dom.previewModal?.setAttribute('hidden','');
   } catch {}
-  // no auto-open for saveModal
-  // In case some global style toggled visibility via hidden attr
+  // no auto-open for saveModal by default, but when explicitly requested
+  // ensure we use the centralized showModalById so overlay/centering is correct
   try { dom.saveModal.removeAttribute('hidden'); } catch(e){}
+  try { if (typeof showModalById === 'function') showModalById('saveModal'); else { dom.saveModal.style.display = 'flex'; dom.saveModal.classList.add('show'); document.body.classList.add('modal-open'); } } catch(e){}
   console.debug('[ui] Save modal opened');
 }
 function closeSaveModal() {
