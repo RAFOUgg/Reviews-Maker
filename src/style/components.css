@@ -243,13 +243,30 @@ panel, .card, .library-item, .compact-library-item {
 @media (min-width: 881px) {
   /* Desktop: center modals vertically and horizontally, limit width */
   .modal { align-items: center !important; justify-content: center !important; padding-top: 0; }
-  .modal-content, #accountModal .modal-content, .account-modal-content {
+  .modal-content {
     margin-top: 0;
     max-width: 520px;
     width: 100%;
     left: 50%;
+    top: 50%;
     transform: translate(-50%, -50%);
     right: auto;
+    position: absolute;
+  }
+  #accountModal .modal-content, .account-modal-content {
+    max-width: 420px !important;
+    width: 100% !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    position: absolute !important;
+    margin: 0 !important;
+  }
+  .modal-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
   }
 }
 
