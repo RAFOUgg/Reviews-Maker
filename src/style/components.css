@@ -418,6 +418,30 @@ panel, .card, .library-item, .compact-library-item {
 }
 
 /* When a modal is open, force only the shown modal to be interactive */
+/* Ensure modals are not visible by default (defensive) */
+.modal { display: none !important; }
+.modal.show { display: flex !important; pointer-events: auto !important; }
+
+/* Overlay should capture pointer events when visible and be visually subtle */
+.modal-overlay { pointer-events: auto; opacity: 1; transition: opacity 180ms var(--rm-ease); }
+.modal-overlay:not(.show) { opacity: 0; pointer-events: none; }
+
+/* Improve sheet drag affordance on mobile: add a small grabber */
+.modal.sheet .modal-header::before,
+.modal .modal-header::before {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(255,255,255,0.06);
+  margin: 8px auto 10px auto;
+}
+
+/* Slightly increase contrast for modal content on small screens */
+@media (max-width:880px) {
+  .modal .modal-content { box-shadow: 0 30px 90px rgba(2,6,23,0.6); }
+}
 /* Do not use a global body.modal-open pointer-events rule: it can block
   overlays or nested modals. Each modal controls its own pointer-events via
   the .modal and .modal.show rules above. */
