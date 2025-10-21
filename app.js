@@ -2481,24 +2481,17 @@ function showModalById(id, opts = {}) {
           try { if (dlg) dlg.classList.add('centered'); } catch(e){}
         }
       } catch(e){}
-      // Determine if modal content fits within viewport; if not, switch to sheet mode
+      // Always use centered layout for modals. This avoids unpredictable
+      // bottom-sheet behavior and ensures consistent UX across devices.
       try {
         const dlg = modal.querySelector('.modal-content');
         // allow render to settle so measurements are accurate
         setTimeout(() => {
           try {
             if (!dlg) return;
-            const rect = dlg.getBoundingClientRect();
-            // If the content height would exceed available viewport space, prefer sheet layout
-            const available = Math.max(window.innerHeight * 0.86, 320);
-            const contentHeight = Math.max(dlg.scrollHeight || 0, rect.height || 0);
-            if (contentHeight > available) {
-              modal.classList.add('sheet');
-              try { dlg.classList.remove('centered'); } catch(e){}
-            } else {
-              modal.classList.remove('sheet');
-              try { dlg.classList.add('centered'); } catch(e){}
-            }
+            // Remove sheet variant and ensure centered class is present
+            modal.classList.remove('sheet');
+            try { dlg.classList.add('centered'); } catch(e){}
           } catch(e){}
         }, 40);
       } catch(e){}

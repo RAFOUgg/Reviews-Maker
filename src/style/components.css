@@ -216,100 +216,62 @@ panel, .card, .library-item, .compact-library-item {
 /* Bigger, more accessible close button */
 .modal-close { padding: 8px; border-radius: 10px; font-size: 1.05rem; }
 
-/* Desktop: keep centered dialog absolute; Mobile: switch to sheet-style */
-@media (max-width: 880px) {
-  .modal-content.centered {
-    position: relative; /* sheet style inside modal */
-    top: auto;
-    left: auto;
-    transform: none;
-    width: calc(100% - 28px);
-    max-height: 92vh;
-    margin: 0 auto;
-    border-radius: 12px;
-  }
-  .modal { align-items: flex-end; padding: 12px; }
+/* Force centered dialog for all viewports */
+.modal { align-items: center !important; justify-content: center !important; }
+.modal-content.centered {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
 }
 
 /* Sheet mode for tall modals on larger viewports. When JS detects the
    content is taller than available viewport space we switch to .modal.sheet
    so the dialog pins to the bottom and becomes scrollable internally.
 */
-.modal.sheet { align-items: flex-end !important; padding: 12px !important; }
-.modal.sheet .modal-content { position: relative !important; width: min(920px, calc(100% - 48px)); max-height: 92vh !important; border-radius: 12px; transform: none !important; margin: 0 auto; }
-.modal.sheet .modal-body, .modal.sheet .account-modal-inner { max-height: calc(92vh - 120px); overflow: auto; }
+/* Remove sheet mode — center modals instead */
+.modal.sheet { --rm-sheet-disabled: 1; }
+.modal.sheet .modal-content { box-sizing: border-box; }
 
 /* Desktop: leave a small top margin so header doesn't sit flush to viewport top */
-@media (min-width: 881px) {
-  /* Desktop: modal centré, largeur max, overlay full */
-  .modal { align-items: center !important; justify-content: center !important; padding: 0 !important; }
-  #accountModal .modal-content, .account-modal-content {
-    position: absolute !important;
-    left: 50% !important;
-    top: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    max-width: 420px !important;
-    width: 100% !important;
-    min-width: 320px !important;
-    border-radius: 18px !important;
-    padding: clamp(22px, 3vw, 36px) !important;
-    box-shadow: 0 24px 80px rgba(2,6,23,0.32);
-    margin: 0 !important;
-    overflow: hidden !important;
-    display: flex;
-    flex-direction: column;
-  }
-  #accountModal .modal-header, .account-header {
-    position: sticky;
-    top: 0;
-    background: inherit;
-    z-index: 2;
-    padding-bottom: 10px;
-    border-bottom: 1px solid rgba(148,163,184,0.06);
-  }
-  .modal-overlay {
-    position: fixed !important;
-    inset: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    z-index: 10060 !important;
-  }
+/* Account modal sizing — keep centered and sized for desktop */
+#accountModal .modal-content, .account-modal-content {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  max-width: 640px !important;
+  width: 100% !important;
+  min-width: 320px !important;
+  border-radius: 18px !important;
+  padding: clamp(18px, 2.5vw, 30px) !important;
+  box-shadow: 0 24px 80px rgba(2,6,23,0.32);
+  margin: 0 !important;
+  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
+}
+#accountModal .modal-header, .account-header {
+  position: sticky;
+  top: 0;
+  background: inherit;
+  z-index: 2;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(148,163,184,0.06);
+}
+.modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 10060 !important;
 }
 
+/* Mobile adjustments: keep centered but fit screen */
 @media (max-width: 880px) {
-  /* Mobile: bottom sheet, full width, arrondi haut */
-  #accountModal .modal-content, .account-modal-content {
-    position: fixed !important;
-    left: 50% !important;
-    bottom: 0 !important;
-    top: auto !important;
-    transform: translateX(-50%) !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    min-width: 0 !important;
-    border-radius: 18px 18px 0 0 !important;
-    padding: clamp(14px, 5vw, 22px) !important;
-    box-shadow: 0 -4px 40px rgba(2,6,23,0.22);
-    margin: 0 !important;
-    overflow: hidden !important;
-    display: flex;
-    flex-direction: column;
-  }
-  #accountModal .modal-header, .account-header {
-    position: sticky;
-    top: 0;
-    background: inherit;
-    z-index: 2;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(148,163,184,0.06);
-  }
-  .modal-overlay {
-    position: fixed !important;
-    inset: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    z-index: 10060 !important;
-  }
+  .modal-content.centered { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: calc(100% - 32px); }
+  .account-body { grid-template-columns: 1fr; }
 }
 
 /* Focus styles inside modal for keyboard users */
