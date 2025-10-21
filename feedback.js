@@ -110,11 +110,12 @@
 
   // Wire events
   try {
-    if (openBtn) openBtn.addEventListener('click', showModal);
-    if (closeBtn) closeBtn.addEventListener('click', hideModal);
-    if (cancelBtn) cancelBtn.addEventListener('click', hideModal);
-    if (overlay) overlay.addEventListener('click', hideModal);
-    if (sendBtn) sendBtn.addEventListener('click', sendFeedback);
+    try { if (modal.parentElement !== document.body) document.body.appendChild(modal); } catch(e){}
+    try { modal.setAttribute('data-rm-opening','true'); } catch(e){}
+    try { modal.style.setProperty('position','fixed','important'); } catch(e){}
+    try { modal.style.setProperty('inset','0','important'); } catch(e){}
+    try { modal.style.setProperty('display','flex','important'); } catch(e){}
+    try { modal.style.setProperty('z-index','100510','important'); } catch(e){}
     document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') hideModal(); });
   } catch (e) { console.warn('Feedback widget init failed', e); }
 })();

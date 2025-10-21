@@ -7623,6 +7623,14 @@ function restoreDraftIfAny() {
 }
 
 // Check if a draft exists in localStorage (top-level, used during init)
-function hasSavedDraft() { return false; }
+function hasSavedDraft() {
+  return false;
+}
 
-function clearSavedDraft() { try { localStorage.removeItem('reviewsMakerDraft'); } catch (e) {} }
+function clearSavedDraft() {
+  try {
+    localStorage.removeItem('reviewsMakerDraft');
+  } catch (e) {
+    // ignore failures (e.g., blocked storage)
+  }
+}
