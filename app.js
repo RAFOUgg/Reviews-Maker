@@ -74,6 +74,29 @@ try {
   }
 } catch(e) {}
 
+// Extra defensive cleanup once the DOM is ready: ensure no modal is visible on load.
+try {
+  if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+      try { closeAllModalsExcept(null); } catch(e){}
+      try {
+        const am = document.getElementById('accountModal');
+        if (am) { am.classList.remove('show'); am.setAttribute('aria-hidden','true'); am.style.display = 'none'; }
+      } catch(e){}
+      try {
+        const ao = document.getElementById('accountModalOverlay');
+        if (ao) { ao.classList.remove('show'); ao.setAttribute('aria-hidden','true'); ao.style.display = 'none'; }
+      } catch(e){}
+      // second pass a bit later to catch late-invoked scripts
+      setTimeout(() => {
+        try { closeAllModalsExcept(null); } catch(e){}
+        try { const am2 = document.getElementById('accountModal'); if (am2) { am2.classList.remove('show'); am2.setAttribute('aria-hidden','true'); am2.style.display = 'none'; } } catch(e){}
+        try { const ao2 = document.getElementById('accountModalOverlay'); if (ao2) { ao2.classList.remove('show'); ao2.setAttribute('aria-hidden','true'); ao2.style.display = 'none'; } } catch(e){}
+      }, 220);
+    });
+  }
+} catch(e) {}
+
 // NOTE: Removed DOMTokenList interception and init-block queueing to simplify
 // modal behavior. Modals will now only be displayed when explicitly requested
 // via showModalById or ModalCompat.open() from user-triggered handlers.
@@ -151,7 +174,9 @@ function setupAccountModalEvents() {
   if (dom.publicProfileSettingsBtn) {
     dom.publicProfileSettingsBtn.addEventListener('click', () => {
       try { closePublicProfileHandler(); } catch(e){}
-      try { openAccountModal(); } catch(e){}
+      // openAccountModal should only be triggered by explicit user actions
+  // Do not auto-open account modal during page init. Only open on explicit user action.
+  // try { openAccountModal(); } catch(e){}
       try { const settingsPanel = document.getElementById('accountSettingsPanel'); if (settingsPanel) settingsPanel.style.display = 'block'; } catch(e){}
     });
   }
@@ -2620,7 +2645,9 @@ async function populatePublicProfile(email) {
               try { document.body.classList.remove('modal-open'); } catch(e){}
             } catch(e){}
             // Open account modal and reveal settings panel
-            try { openAccountModal(); } catch(e){}
+          // Removed unconditional open. If this was meant to open on a specific user flow,
+          // call `openAccountModal()` from the explicit event handler that requires it.
+          // try { openAccountModal(); } catch(e){}
             try {
               const settingsPanel = document.getElementById('accountSettingsPanel');
               const prefs = document.getElementById('accountPreferences');
@@ -2719,7 +2746,8 @@ function showProfileModal(identifier, options = {}) {
     // No identifier -> prefer account modal when connected
     if (!id) {
       if (me) {
-        try { openAccountModal(); } catch(e){}
+            // Disabled auto-open to avoid modal popping on load
+            // try { openAccountModal(); } catch(e){}
         try { renderAccountView().catch(()=>{}); } catch(e){}
       } else {
         // No identifier and not signed-in: do NOT auto-show the auth modal here.
@@ -2730,7 +2758,8 @@ function showProfileModal(identifier, options = {}) {
 
     // If the identifier equals current user's email (case-insensitive), open account modal
     if (me && id.toLowerCase() === me.toLowerCase()) {
-      try { openAccountModal(); } catch(e){}
+  // Disabled auto-open to avoid modal popping on load
+  // try { openAccountModal(); } catch(e){}
       try { renderAccountView().catch(()=>{}); } catch(e){}
       return;
     }
