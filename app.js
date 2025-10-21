@@ -59,6 +59,8 @@ class ModalCompat {
 
 // Expose ModalCompat for other scripts if useful
 try { window.ModalCompat = ModalCompat; } catch(e){}
+// Enable debug logging for one session to trace unwanted modal opens
+try { if (typeof window !== 'undefined') window.__RM_MODAL_DEBUG = true; } catch(e){}
 
 function setupAccountModalEvents() {
   if (dom.closeAccountModal) {
