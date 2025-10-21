@@ -241,9 +241,16 @@ panel, .card, .library-item, .compact-library-item {
 
 /* Desktop: leave a small top margin so header doesn't sit flush to viewport top */
 @media (min-width: 881px) {
-  /* Desktop: center modals vertically */
-  .modal { align-items: center !important; padding-top: 0; }
-  .modal-content { margin-top: 0; }
+  /* Desktop: center modals vertically and horizontally, limit width */
+  .modal { align-items: center !important; justify-content: center !important; padding-top: 0; }
+  .modal-content, #accountModal .modal-content, .account-modal-content {
+    margin-top: 0;
+    max-width: 520px;
+    width: 100%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    right: auto;
+  }
 }
 
 /* Focus styles inside modal for keyboard users */
@@ -459,24 +466,14 @@ body .modal.show > .modal-overlay { display: block !important; visibility: visib
 /* Position account modal slightly higher than center so the full dialog
   header is visible on typical laptop viewports and users don't have to
   scroll immediately. Keep mobile/sheet behavior intact. */
-#accountModal .modal-content.centered {
-  /* Desktop: centré, largeur max raisonnable, légèrement plus haut */
-  top: calc(38% + var(--rm-account-offset, 0)) !important;
+#accountModal .modal-content.centered { /* subtle upward shift */
+  /* Move slightly higher on most laptop screens but stay flexible for
+     very short viewports (phones). The JS helper sets --rm-account-offset
+     when necessary; keep this as a gentle default uplift. */
+  top: calc(40% + var(--rm-account-offset, 0)) !important;
   transform: translate(-50%, -50%) !important;
-  max-width: 540px;
-  width: min(540px, calc(100% - 32px));
-  margin: 0 auto;
-}
-
-@media (max-width: 700px) {
-  #accountModal .modal-content.centered {
-    top: auto !important;
-    left: auto !important;
-    transform: none !important;
-    width: calc(100% - 12px);
-    max-width: 98vw;
-    margin: 0 auto;
-  }
+  /* cap width so the dialog does not become overly large on wide screens */
+  max-width: 820px; width: min(820px, calc(100% - 56px));
 }
 
 /* In case an overlay was accidentally inserted outside a modal, ensure
