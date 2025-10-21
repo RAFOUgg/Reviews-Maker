@@ -74,28 +74,9 @@ try {
   }
 } catch(e) {}
 
-// Temporary: intercept DOMTokenList.add to log when 'show' is added to any element's classList
-try {
-  if (typeof DOMTokenList !== 'undefined') {
-    (function(){
-      const origAdd = DOMTokenList.prototype.add;
-      DOMTokenList.prototype.add = function(...tokens) {
-        try {
-          // If we're in the init modal-block window, silently ignore attempts to add 'show'
-          if (window && window.__rm_modal_init_block && tokens && tokens.indexOf && tokens.indexOf('show') !== -1) {
-            try { if (window && window.__RM_MODAL_DEBUG) console.warn('[DOMTokenList.add] blocked adding "show" during init to', this); } catch(e){}
-            return; // skip adding 'show' during init
-          }
-          if (window && window.__RM_MODAL_DEBUG && tokens && tokens.indexOf && tokens.indexOf('show') !== -1) {
-            try { console.log('[DOMTokenList.add] adding "show" to', this); } catch(e){}
-            try { console.trace(); } catch(e){}
-          }
-        } catch(e){}
-        return origAdd.apply(this, tokens);
-      };
-    })();
-  }
-} catch(e) {}
+// NOTE: Removed DOMTokenList interception and init-block queueing to simplify
+// modal behavior. Modals will now only be displayed when explicitly requested
+// via showModalById or ModalCompat.open() from user-triggered handlers.
 
 function setupAccountModalEvents() {
   if (dom.closeAccountModal) {
@@ -931,7 +912,8 @@ const APP_VERSION = '2025-10-16-accmodal-1';
 // Toggle for automatic modal displays on page load. Default false to require
 // explicit user actions (buttons, links) to open modals. Enable only for
 // debugging or onboarding flows by setting window.RM_ALLOW_AUTO_MODALS = true;
-const AUTO_SHOW_MODALS = (typeof window !== 'undefined' && !!window.RM_ALLOW_AUTO_MODALS);
+// All automatic modal-open behavior removed. Modals open only when explicitly
+// requested by handlers (showModalById / ModalCompat.open).
 
 console.log('App JS version:', APP_VERSION);
 let homeGalleryLimit = 8; // 4x2 grid on the home page, increases avec "Voir plus"
@@ -956,12 +938,11 @@ const LAYOUT_THRESHOLDS = {
 };
 
 // Initialize app once DOM is ready; if already ready, run immediately
-// Prevent automatic modal shows during init: block and queue them briefly.
-try { if (typeof window !== 'undefined') { window.__rm_modal_init_block = true; window.__rm_modal_queue = []; } } catch(e){}
+// No init-blocking or queuing is used for modals. Modals must be opened
+// explicitly by user actions (showModalById / ModalCompat.open).
 if (document.readyState === 'loading') {
   document.addEventListener("DOMContentLoaded", init, { once: true });
 } else {
-  // DOM is already parsed
   init();
 }
 
@@ -989,15 +970,7 @@ function init() {
   // Defensive: ensure no modals are accidentally left visible on startup
   try { if (typeof closeAllModalsExcept === 'function') closeAllModalsExcept(null); } catch(e) { console.warn('closeAllModalsExcept init error', e); }
 
-  // Release init modal-block after a short grace period and discard any queued modal shows.
-  try {
-    setTimeout(() => {
-      try {
-        // Simply clear the queue and allow normal modal behavior afterwards.
-        try { if (window) { window.__rm_modal_queue = []; window.__rm_modal_init_block = false; } } catch(e){}
-      } catch(e){}
-    }, 350);
-  } catch(e){}
+  // No queued modal work to release — modals are handled on-demand by handlers.
 }
 
 // Apply theme from localStorage (or system) on load
@@ -1817,7 +1790,7 @@ function setupModalEvents() {
       try { console.log('DEBUG: authOpenLibrary clicked, isUserConnected=', isUserConnected); } catch(e){}
       if (dom.authModal) hideModalById('authModal');
       if (!isUserConnected) {
-  if (AUTO_SHOW_MODALS && dom.authModal) { if (!(window && window.__rm_modal_init_block)) showModalById('authModal'); }
+  // no automatic auth modal on load
         return;
       }
       openLibraryModal('mine', { fromAccount: true });
@@ -2373,7 +2346,7 @@ function openAccountModal() {
     }
   } catch(e) { console.warn('modalAccount.open failed', e); }
   // fallback legacy behaviour -> use central helper
-  if (AUTO_SHOW_MODALS && !(window && window.__rm_modal_init_block)) { showModalById('accountModal', { hideBackdrop: false, modalZ: '10050', overlayZ: '10040' }); }
+  // no automatic account modal on load
   renderAccountView().catch(err => console.warn('Failed to render account view', err));
 }
 
@@ -2405,13 +2378,7 @@ function closeAllModalsExcept(keepId = null) {
 function showModalById(id, opts = {}) {
   try {
     if (!id) return;
-    // If we're in init-block mode, queue modal opens unless caller explicitly allows it
-    try {
-      if (window && window.__rm_modal_init_block && !(opts && opts.allowDuringInit)) {
-        try { window.__rm_modal_queue = window.__rm_modal_queue || []; window.__rm_modal_queue.push({ id, opts }); } catch(e){}
-        return;
-      }
-    } catch(e){}
+    // Modals are always handled on-demand. No init queueing is performed.
     const modal = document.getElementById(id);
     try { if (window && window.__RM_MODAL_DEBUG) console.debug('[showModalById] called for', id, { opts }, new Error().stack.split('\n').slice(1,6).join('\n')); } catch(e){}
     // If this modal is already visible, ensure others are closed and bail out.
@@ -2624,7 +2591,7 @@ async function populatePublicProfile(email) {
     const identifier = String(email || '').trim();
     if (dom.publicProfileEmail) dom.publicProfileEmail.textContent = identifier || '—';
     // Ensure modal is displayed (fallback if CSS wasn't applied)
-  try { const modal = document.getElementById('publicProfileModal'); if (modal) { if (AUTO_SHOW_MODALS && !(window && window.__rm_modal_init_block)) showModalById('publicProfileModal'); } } catch(e){}
+  try { /* no auto-open for publicProfileModal */ } catch(e){}
     // Determine ownership: if the profile email matches the signed-in email,
     // show settings/actions that are only available to the owner.
     try {
@@ -2720,7 +2687,7 @@ function openPublicProfile(email) {
       try { dom.modalPublic.open(); } catch(e) { console.warn('modalPublic.open failed', e); }
     } else {
       // public profile should be preview-only: hide backdrop by default
-  if (AUTO_SHOW_MODALS && !(window && window.__rm_modal_init_block)) { showModalById('publicProfileModal', { hideBackdrop: true, modalZ: '10050' }); }
+  // no auto-open for publicProfileModal
     }
     populatePublicProfile(email).catch(()=>{});
   } catch(e){}
@@ -2748,7 +2715,7 @@ function showProfileModal(identifier, options = {}) {
         try { renderAccountView().catch(()=>{}); } catch(e){}
       } else {
         // show auth modal to encourage sign-in using central helper
-  try { if (AUTO_SHOW_MODALS && !(window && window.__rm_modal_init_block)) showModalById('authModal'); } catch(e) { if (dom && dom.authModal) try { dom.authModal.style.display = 'flex'; } catch(e){} }
+  try { /* auth modal not auto-shown */ } catch(e) { if (dom && dom.authModal) try { dom.authModal.style.display = 'flex'; } catch(e){} }
       }
       return;
     }
@@ -3328,7 +3295,7 @@ function openLibraryModal(mode = 'mine', options = {}) {
   if (!dom.libraryModal) return;
   // show back button if requested
   if (dom.libraryBackToAccount) dom.libraryBackToAccount.style.display = fromAccount ? 'inline-flex' : 'none';
-  if (AUTO_SHOW_MODALS && !(window && window.__rm_modal_init_block)) { showModalById('libraryModal'); }
+  // no auto-open for libraryModal
   renderFullLibrary(mode);
 }
 
@@ -6076,7 +6043,7 @@ function openSaveModal() {
     dom.previewOverlay?.setAttribute('hidden','');
     dom.previewModal?.setAttribute('hidden','');
   } catch {}
-  if (AUTO_SHOW_MODALS && !(window && window.__rm_modal_init_block)) { showModalById('saveModal'); }
+  // no auto-open for saveModal
   // In case some global style toggled visibility via hidden attr
   try { dom.saveModal.removeAttribute('hidden'); } catch(e){}
   console.debug('[ui] Save modal opened');
