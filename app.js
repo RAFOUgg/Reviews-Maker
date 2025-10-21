@@ -3136,9 +3136,20 @@ async function dedupeDatabase() {
 function dbAddReview(review) {
   return new Promise((resolve, reject) => {
     if (!db) { resolve(null); return; }
+    // Defensive clone and sanitize to avoid IndexedDB DataError (invalid key path values)
+    const safe = JSON.parse(JSON.stringify(review, (_k, v) => {
+      // Strip undefined and functions
+      if (typeof v === 'function' || typeof v === 'symbol') return undefined;
+      return v;
+    }));
+    // Ensure add() does not send an invalid `id` (autoIncrement store uses numeric keys)
+    if (typeof safe.id !== 'undefined') {
+      // remove id to let IDB auto-generate numeric key
+      delete safe.id;
+    }
     const tx = db.transaction("reviews", "readwrite");
     const store = tx.objectStore("reviews");
-    const req = store.add(review);
+    const req = store.add(safe);
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
@@ -3147,9 +3158,23 @@ function dbAddReview(review) {
 function dbUpdateReview(review) {
   return new Promise((resolve, reject) => {
     if (!db) { resolve(false); return; }
+    // Defensive clone and sanitize
+    const safe = JSON.parse(JSON.stringify(review, (_k, v) => {
+      if (typeof v === 'function' || typeof v === 'symbol') return undefined;
+      return v;
+    }));
+    // Ensure id is a valid key type (number or string). If not present, reject early.
+    if (typeof safe.id === 'undefined' || safe.id === null) { resolve(false); return; }
+    const validId = (typeof safe.id === 'number' || typeof safe.id === 'string');
+    if (!validId) {
+      // try to coerce numeric-ish strings
+      const coerced = Number(safe.id);
+      if (!Number.isNaN(coerced)) safe.id = coerced;
+      else { resolve(false); return; }
+    }
     const tx = db.transaction("reviews", "readwrite");
     const store = tx.objectStore("reviews");
-    const req = store.put(review);
+    const req = store.put(safe);
     req.onsuccess = () => resolve(true);
     req.onerror = () => reject(req.error);
   });
@@ -6086,11 +6111,20 @@ async function remoteSave(reviewObj) {
     let resp;
     if (lastSelectedImageFile instanceof File) {
       const fd = new FormData();
-      fd.append('data', JSON.stringify(reviewObj));
+      // Ensure holderName exists (server validation) before sending
+      const rcopy = { ...reviewObj };
+      if (!rcopy.holderName || String(rcopy.holderName).trim().length === 0) {
+        const storedName = localStorage.getItem('discordUsername') || localStorage.getItem('authEmail') || 'Utilisateur';
+        rcopy.holderName = storedName;
+      }
+      fd.append('data', JSON.stringify(rcopy));
       fd.append('image', lastSelectedImageFile, lastSelectedImageFile.name);
       resp = await fetch(url, { method, body: fd, headers });
     } else {
       const copy = { ...reviewObj };
+      if (!copy.holderName || String(copy.holderName).trim().length === 0) {
+        copy.holderName = localStorage.getItem('discordUsername') || localStorage.getItem('authEmail') || 'Utilisateur';
+      }
       if (copy.image && copy.image.length > 50000) delete copy.image; // éviter gros base64
       resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json', ...(token ? { 'X-Auth-Token': token } : {}) }, body: JSON.stringify(copy) });
     }
