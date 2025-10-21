@@ -270,7 +270,7 @@ panel, .card, .library-item, .compact-library-item {
 
 /* Mobile adjustments: keep centered but fit screen */
 @media (max-width: 880px) {
-  .modal-content.centered { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: calc(100% - 32px); }
+  .modal:not(.centered-modal) .modal-content.centered { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: calc(100% - 32px); }
   .account-body { grid-template-columns: 1fr; }
 }
 
@@ -313,6 +313,26 @@ panel, .card, .library-item, .compact-library-item {
   align-items: center;
   gap: 12px;
   flex: 0 0 auto; /* keep header fixed */
+}
+
+/* Ensure account modal is perfectly centered on screen when visible. Use
+   high-specificity and !important to override legacy positioning. */
+#accountModal.show, .centered-modal#accountModal, .centered-modal {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  inset: auto !important;
+}
+#accountModal.show .modal-content, .centered-modal#accountModal .modal-content, .centered-modal .modal-content {
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  margin: 0 auto !important;
 }
 
 /* Account modal specific: contain scroll and avoid horizontal overflow */
