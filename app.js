@@ -14,6 +14,9 @@ class ModalCompat {
     try {
       // Prefer centralized modal helper if available (ensures consistent positioning)
       if (typeof window !== 'undefined' && typeof window.showModalById === 'function' && this.root && this.root.id) {
+        try {
+          if (window && window.__RM_MODAL_DEBUG) console.debug('[ModalCompat] open -> delegating to showModalById', this.root.id, new Error().stack.split('\n').slice(1,6).join('\n'));
+        } catch(e){}
         try { window.showModalById(this.root.id); } catch(e) { /* fallthrough */ }
         this._emit('open');
         return;
@@ -2348,6 +2351,7 @@ function showModalById(id, opts = {}) {
   try {
     if (!id) return;
     const modal = document.getElementById(id);
+    try { if (window && window.__RM_MODAL_DEBUG) console.debug('[showModalById] called for', id, { opts }, new Error().stack.split('\n').slice(1,6).join('\n')); } catch(e){}
     // If this modal is already visible, ensure others are closed and bail out.
     try {
       if (modal && modal.classList && modal.classList.contains && modal.classList.contains('show')) {
