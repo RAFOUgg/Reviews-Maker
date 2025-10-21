@@ -548,3 +548,44 @@ body .modal.show > .modal-overlay { display: block !important; visibility: visib
   display: none !important; visibility: hidden !important; pointer-events: none !important;
 }
 
+/* Force desktop centering for primary modals to avoid legacy layout issues
+   These rules are intentionally specific and only apply on desktop where
+   centered dialogs are expected. On small viewports we preserve sheet behavior. */
+@media (min-width: 881px) {
+  /* List of known modal IDs used across the app */
+  #authModal, #accountModal, #publicProfileModal, #saveModal, #settingsModal {
+    position: fixed !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    max-width: min(920px, 94vw) !important;
+    max-height: 88vh !important;
+    z-index: 10070 !important; /* above overlay defined in components.css */
+    pointer-events: auto !important;
+  }
+
+  /* Ensure modal content inside those modals is centered and constrained */
+  #authModal .modal-content, #accountModal .modal-content, #publicProfileModal .modal-content, #saveModal .modal-content, #settingsModal .modal-content {
+    position: relative !important;
+    margin: 0 !important;
+    transform: none !important;
+    z-index: 10080 !important;
+    max-height: 84vh !important;
+    overflow: auto !important;
+  }
+
+  /* Ensure overlay for these modals sits under content and covers viewport */
+  #authModal > .modal-overlay, #accountModal > .modal-overlay, #publicProfileModal > .modal-overlay, #saveModal > .modal-overlay, #settingsModal > .modal-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 10060 !important;
+    display: block !important;
+  }
+}
+
