@@ -21,7 +21,7 @@
     }
   // Legacy fallback: keep behavior but ensure overlay, centering and important display
   try { if (modal.parentElement !== document.body) document.body.appendChild(modal); } catch(e){}
-  try { modal.setAttribute('data-rm-opening','true'); } catch(e){}
+  try { if (typeof window !== 'undefined' && window.markOpening) window.markOpening(modal); else modal.setAttribute('data-rm-opening','true'); } catch(e){}
   try { modal.style.setProperty('position','fixed','important'); } catch(e){}
   try { modal.style.setProperty('inset','0','important'); } catch(e){}
   try { modal.style.setProperty('display','flex','important'); } catch(e){}
@@ -30,7 +30,7 @@
   if (overlay) try { overlay.style.setProperty('position','fixed','important'); overlay.style.setProperty('inset','0','important'); overlay.classList.add('show'); overlay.classList.add('visible'); overlay.style.setProperty('display','block','important'); } catch(e){}
   try { modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); } catch(e){}
   try { document.body.classList.add('modal-open'); } catch(e){}
-  try { setTimeout(() => { modal.removeAttribute('data-rm-opening'); }, 300); } catch(e){}
+  // markOpening already schedules removal; nothing else to do here
     try { textarea && textarea.focus(); } catch(e){}
   }
   function hideModal() {

@@ -24,8 +24,8 @@ class ModalCompat {
       // Fallback legacy behavior
       document.querySelectorAll('.modal').forEach(m => { if (m !== this.root) { try { m.classList.remove('show'); } catch(e){} } });
       if (this.overlay) { this.overlay.classList.add('show'); }
-        try { this.root.setAttribute('data-rm-opening','true'); } catch(e){}
-        this.root.classList.add('show');
+    try { markOpening(this.root); } catch(e){}
+    this.root.classList.add('show');
       try { document.body.classList.add('modal-open'); } catch(e){}
       document.addEventListener('click', this._onDocClick, true);
       document.addEventListener('keydown', this._onKey, true);
@@ -62,6 +62,17 @@ class ModalCompat {
 try { window.ModalCompat = ModalCompat; } catch(e){}
 // Enable debug logging for one session to trace unwanted modal opens
 try { if (typeof window !== 'undefined') window.__RM_MODAL_DEBUG = true; } catch(e){}
+
+// markOpening helper: tag an element as an intentional modal opening so
+// the MutationObserver guard ignores it. Removes the marker after 300ms.
+function markOpening(el) {
+  try {
+    if (!el || !el.setAttribute) return;
+    try { el.setAttribute('data-rm-opening','true'); } catch(e){}
+    setTimeout(() => { try { if (el && el.removeAttribute) el.removeAttribute('data-rm-opening'); } catch(e){} }, 300);
+  } catch(e){}
+}
+try { if (typeof window !== 'undefined') window.markOpening = markOpening; } catch(e){}
 // Defensive immediate cleanup: remove any .show left on modals/overlays when the script loads.
 try {
   if (typeof document !== 'undefined') {
@@ -2492,7 +2503,7 @@ function showModalById(id, opts = {}) {
     try { if (window && window.__RM_MODAL_DEBUG) console.debug('[showModalById] called for', id, { opts }, new Error().stack.split('\n').slice(1,6).join('\n')); } catch(e){}
     // Mark modal as intentionally opening so the modal guard ignores transient
     // visible states created during the open sequence.
-    try { if (modal) modal.setAttribute('data-rm-opening','true'); } catch(e){}
+  try { if (modal) markOpening(modal); } catch(e){}
     // If this modal is already visible, ensure others are closed and bail out.
     try {
       if (modal && modal.classList && modal.classList.contains && modal.classList.contains('show')) {
@@ -2538,7 +2549,7 @@ function showModalById(id, opts = {}) {
     if (modal) {
       // remove stale inline display property that other code might have left
       try { modal.style.removeProperty('display'); } catch(e){}
-  try { modal.setAttribute('data-rm-opening','true'); } catch(e){}
+  try { markOpening(modal); } catch(e){}
   modal.classList.add('show');
       // Force top-level fixed positioning to avoid ancestor stacking contexts
       try {
