@@ -585,7 +585,7 @@ body .modal-overlay { position: fixed !important; inset: 0 !important; width: 10
 body .modal-content { position: relative !important; z-index: 10070 !important; }
 
 /* Ensure preview-only modals or those explicitly hidden via helper will not show an overlay */
-.modal.preview-only .modal-overlay, .modal[data-backdrop="none"] .modal-overlay { display: none !important; pointer-events: none !important; background: transparent !important; }
+.modal.preview-only .modal-overlay, .modal[data-backdrop="none"] > .modal-overlay, #accountModal[data-backdrop="none"] > .account-overlay { display: none !important; pointer-events: none !important; background: transparent !important; }
 
 /* Ensure overlays are only visible when their modal is explicitly shown.
   This prevents orphaned overlay elements (left in the DOM or created
