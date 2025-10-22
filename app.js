@@ -2532,26 +2532,37 @@ async function populatePublicProfile(email) {
         // If identifier is an email, match by ownerEmail/holderEmail; otherwise match by holderName or stored discordUsername
         let userReviews = [];
         if (identifier.includes('@')) {
+          // exact email matching on common email fields
           const idLow = identifier.toLowerCase();
           userReviews = (all || []).filter(r => {
             try {
-              if (r.ownerEmail && String(r.ownerEmail).toLowerCase() === idLow) return true;
-              if (r.holderEmail && String(r.holderEmail).toLowerCase() === idLow) return true;
-              if (r.owner && r.owner.email && String(r.owner.email).toLowerCase() === idLow) return true;
+              const candidates = [r.ownerEmail, r.holderEmail, r.owner && r.owner.email, r.authorEmail, r.email, r.contact && r.contact.email];
+              return candidates.some(c => c && String(c).toLowerCase() === idLow);
             } catch(e){}
             return false;
           });
         } else {
+          // permissive matching for display names / pseudos
           const idLower = identifier.toLowerCase();
           userReviews = (all || []).filter(r => {
             try {
-              if (r.holderName && String(r.holderName).toLowerCase() === idLower) return true;
-              if (r.holder && String(r.holder).toLowerCase() === idLower) return true;
-              if (r.owner && typeof r.owner === 'string' && String(r.owner).toLowerCase() === idLower) return true;
+              // collect possible name strings from various schemas
+              const cand = [];
+              if (r.holderName) cand.push(r.holderName);
+              if (r.holder) cand.push(r.holder);
+              if (r.owner && typeof r.owner === 'string') cand.push(r.owner);
               if (r.owner && typeof r.owner === 'object') {
-                if (r.owner.username && String(r.owner.username).toLowerCase() === idLower) return true;
-                if (r.owner.discordUsername && String(r.owner.discordUsername).toLowerCase() === idLower) return true;
-                if (r.owner.user_name && String(r.owner.user_name).toLowerCase() === idLower) return true;
+                cand.push(r.owner.username || r.owner.user_name || r.owner.discordUsername || r.owner.displayName || r.owner.name || r.owner.nick || r.owner.handle);
+              }
+              cand.push(r.author || r.authorName || r.createdBy || r.submitter || r.uploader || r.creator || (r.meta && r.meta.author));
+              // flatten and normalize
+              const flat = (cand.filter(Boolean).map(x => String(x).toLowerCase()));
+              // match if any candidate equals or includes the identifier or vice-versa (handle variations)
+              for (const s of flat) {
+                if (!s) continue;
+                if (s === idLower) return true;
+                if (s.includes(idLower)) return true;
+                if (idLower.includes(s) && s.length > 2) return true; // avoid tiny matches
               }
             } catch(e){}
             return false;
@@ -2610,9 +2621,16 @@ async function populatePublicProfile(email) {
         try {
           const sample = unique && unique.length ? unique[0] : null;
           if (sample) {
-            // Prefer explicit owner fields
-            if (!memberMeta.displayName) memberMeta.displayName = (sample.owner && (sample.owner.displayName || sample.owner.username || sample.owner.user_name || sample.owner.discordUsername)) || sample.holderName || null;
-            if (!memberMeta.email) memberMeta.email = sample.ownerEmail || sample.holderEmail || (sample.owner && sample.owner.email) || null;
+            // Prefer explicit owner fields and common alternates
+            const dispCandidates = [
+              sample.owner && (sample.owner.displayName || sample.owner.name || sample.owner.username || sample.owner.user_name || sample.owner.discordUsername || sample.owner.nick || sample.owner.handle),
+              sample.author || sample.authorName || sample.holderName || sample.holder || sample.creator || (sample.meta && sample.meta.author)
+            ];
+            for (const d of dispCandidates) {
+              if (d && !memberMeta.displayName) memberMeta.displayName = String(d);
+            }
+            const emailCandidates = [sample.ownerEmail, sample.holderEmail, sample.owner && sample.owner.email, sample.authorEmail, sample.email];
+            for (const e of emailCandidates) { if (e && !memberMeta.email) memberMeta.email = String(e); }
           }
         } catch(e){}
       } catch(e) { /* ignore */ }
