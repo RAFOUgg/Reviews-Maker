@@ -2550,6 +2550,46 @@ async function populatePublicProfile(email) {
         const map = {};
         unique.forEach(r => { const t = r.productType || r.type || 'Autre'; map[t] = (map[t]||0)+1; });
         byType = map;
+        // Attach matched reviews for debug and display in modal if requested
+        try {
+          const mEl = document.getElementById('publicProfileModal');
+          if (mEl) {
+            mEl.dataset.matchedReviews = JSON.stringify(unique || []);
+          }
+          try { console.log('DEBUG: populatePublicProfile matchedReviews ->', unique); } catch(e){}
+          // Create a small debug panel in the modal (collapsible)
+          const modalBody = document.querySelector('#publicProfileModal .modal-body');
+          if (modalBody) {
+            let dbgBtn = document.getElementById('showPublicProfileDebug');
+            let dbg = document.getElementById('publicProfileDebug');
+            if (!dbgBtn) {
+              dbgBtn = document.createElement('button');
+              dbgBtn.id = 'showPublicProfileDebug';
+              dbgBtn.className = 'btn-ghost';
+              dbgBtn.style.cssText = 'margin-top:8px; font-size:13px;';
+              dbgBtn.textContent = 'Afficher reviews (debug)';
+              dbgBtn.addEventListener('click', () => {
+                dbg = document.getElementById('publicProfileDebug');
+                if (!dbg) return;
+                dbg.classList.toggle('hidden');
+                dbgBtn.textContent = dbg.classList.contains('hidden') ? 'Afficher reviews (debug)' : 'Masquer debug';
+              });
+              modalBody.appendChild(dbgBtn);
+            }
+            if (!dbg) {
+              dbg = document.createElement('div');
+              dbg.id = 'publicProfileDebug';
+              dbg.style.cssText = 'max-height:200px; overflow:auto; background:rgba(0,0,0,0.08); padding:8px; margin-top:8px; border-radius:8px; font-size:12px;';
+              dbg.classList.add('hidden');
+              modalBody.appendChild(dbg);
+            }
+            // Populate debug panel (limit size)
+            try {
+              const limited = (unique || []).slice(0,50).map(r => ({ id: r.id, owner: r.owner || r.ownerName || r.ownerEmail || null, holderName: r.holderName || r.holder || null, isPrivate: !!r.isPrivate }));
+              dbg.innerHTML = '<pre style="white-space:pre-wrap">' + JSON.stringify(limited, null, 2) + '</pre>' + ( (unique||[]).length > 50 ? '<div style="font-size:12px;color:#aaa">...plus de 50 entrées, tronqué</div>' : '' );
+            } catch(e) { dbg.innerHTML = '<div style="color:#f88">Erreur debug</div>'; }
+          }
+        } catch(e) { console.warn('populatePublicProfile debug attach failed', e); }
         // Derive display name / email from a sample review when remote lookup isn't available
         try {
           const sample = unique && unique.length ? unique[0] : null;
