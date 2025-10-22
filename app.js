@@ -2307,6 +2307,8 @@ function openAccountModal() {
     if (dom.accountModal && dom.accountModal.style.display !== 'block') dom.accountModal.style.display = 'block';
     if (overlay && overlay.style.display !== 'block') overlay.style.display = 'block';
   }, 100);
+  // Mark body so CSS can disable global overlays while account modal is focused
+  try { document.body.classList.add('account-modal-open'); } catch(e){}
   // trap focus on dialog element
   const dialog = dom.accountModal.querySelector('.account-dialog') || dom.accountModal;
   trapFocus(dialog);
@@ -2326,6 +2328,7 @@ function closeAccountModal() {
   try { dom.accountModal.classList.remove('show'); } catch(e){}
   try { dom.accountModal.setAttribute('aria-hidden','true'); } catch(e){}
   try { dom.accountModal.style.display = 'none'; } catch(e){}
+  try { document.body.classList.remove('account-modal-open'); } catch(e){}
   releaseFocusTrap();
   try { document.body.classList.remove('modal-open'); } catch(e){}
 }

@@ -421,6 +421,31 @@ panel, .card, .library-item, .compact-library-item {
   pointer-events: auto !important;
 }
 
+/* When account modal is open explicitly, hide any modal overlays to show only the account dialog */
+body.account-modal-open .modal-overlay,
+body.account-modal-open .account-overlay,
+body.account-modal-open #accountModalOverlay,
+body.account-modal-open #publicProfileOverlay,
+body.account-modal-open .preview-modal .modal-overlay {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  background: transparent !important;
+}
+
+/* Force account dialog rounded corners and consistent padding when shown */
+#accountModal .modal-content, #accountModal > .account-dialog, .account-modal-content, .account-dialog {
+  border-radius: var(--rm-radius-xl) !important;
+  overflow: hidden !important;
+}
+
+/* Remove any page-specific overlay behind editor input areas (review.html) */
+.editor-page .workspace::before,
+.editor-page .workspace::after,
+.editor-page .panel::before {
+  display: none !important;
+}
+
 /* Constrain modal content to viewport and allow internal scrolling */
 .modal-content, #accountModal .modal-content, dialog .modal-content, [role="dialog"] .modal-content {
   position: relative !important;
