@@ -2493,6 +2493,21 @@ async function populatePublicProfile(email) {
   let total = 0, pub = 0, priv = 0;
   // member metadata we want to display: displayName, email
   let memberMeta = { displayName: null, email: null };
+
+  // Normalize display names: remove emojis/controls, normalize unicode, remove diacritics
+  function normalizeString(v) {
+    try {
+      if (!v) return '';
+      let s = String(v);
+      // normalize unicode and remove diacritics
+      s = s.normalize('NFKD').replace(/\p{Diacritic}/gu, '');
+      // remove emoji and symbols (keep letters, numbers, spaces, - and _)
+      s = s.replace(/[^\p{L}\p{N}\s\-_]/gu, '');
+      // collapse whitespace
+      s = s.replace(/\s+/g, ' ').trim();
+      return s.toLowerCase();
+    } catch (e) { return String(v || '').toLowerCase(); }
+  }
     try {
       const token = localStorage.getItem('authToken');
       // If identifier looks like an email, prefer server lookup
@@ -2542,8 +2557,8 @@ async function populatePublicProfile(email) {
             return false;
           });
         } else {
-          // permissive matching for display names / pseudos
-          const idLower = identifier.toLowerCase();
+          // permissive matching for display names / pseudos (use normalized strings)
+          const idNorm = normalizeString(identifier);
           userReviews = (all || []).filter(r => {
             try {
               // collect possible name strings from various schemas
@@ -2555,14 +2570,14 @@ async function populatePublicProfile(email) {
                 cand.push(r.owner.username || r.owner.user_name || r.owner.discordUsername || r.owner.displayName || r.owner.name || r.owner.nick || r.owner.handle);
               }
               cand.push(r.author || r.authorName || r.createdBy || r.submitter || r.uploader || r.creator || (r.meta && r.meta.author));
-              // flatten and normalize
-              const flat = (cand.filter(Boolean).map(x => String(x).toLowerCase()));
+              // normalize candidates
+              const flat = cand.filter(Boolean).map(x => normalizeString(x));
               // match if any candidate equals or includes the identifier or vice-versa (handle variations)
               for (const s of flat) {
                 if (!s) continue;
-                if (s === idLower) return true;
-                if (s.includes(idLower)) return true;
-                if (idLower.includes(s) && s.length > 2) return true; // avoid tiny matches
+                if (s === idNorm) return true;
+                if (s.includes(idNorm)) return true;
+                if (idNorm.includes(s) && s.length > 2) return true; // avoid tiny matches
               }
             } catch(e){}
             return false;
