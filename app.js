@@ -24,7 +24,8 @@ class ModalCompat {
       // Fallback legacy behavior
       document.querySelectorAll('.modal').forEach(m => { if (m !== this.root) { try { m.classList.remove('show'); } catch(e){} } });
       if (this.overlay) { this.overlay.classList.add('show'); }
-      this.root.classList.add('show');
+        try { this.root.setAttribute('data-rm-opening','true'); } catch(e){}
+        this.root.classList.add('show');
       try { document.body.classList.add('modal-open'); } catch(e){}
       document.addEventListener('click', this._onDocClick, true);
       document.addEventListener('keydown', this._onKey, true);
@@ -1802,7 +1803,9 @@ function setupModalEvents() {
             if (typeof showModalById === 'function') {
               showModalById('authModal');
             } else if (dom && dom.authModal) {
-              // Legacy fallback: reparent + fix positioning to avoid off-screen placement
+              // Legacy fallback: mark intentional opening so the mutation guard ignores it,
+              // reparent and force fixed positioning to avoid off-screen placement
+              try { dom.authModal.setAttribute('data-rm-opening','true'); } catch(e){}
               try { if (dom.authModal.parentElement !== document.body) document.body.appendChild(dom.authModal); } catch(e){}
               try { dom.authModal.style.setProperty('position','fixed','important'); } catch(e){}
               try { dom.authModal.style.setProperty('inset','0','important'); } catch(e){}
@@ -1811,12 +1814,15 @@ function setupModalEvents() {
               try { dom.authModal.classList.add('show'); dom.authModal.setAttribute('aria-hidden','false'); } catch(e){}
               const overlay = document.getElementById('authModalOverlay') || dom.authModal.querySelector('.modal-overlay');
               if (overlay) {
+                try { overlay.setAttribute('data-rm-opening','true'); } catch(e){}
                 try { if (overlay.parentElement !== document.body) document.body.appendChild(overlay); } catch(e){}
                 try { overlay.style.setProperty('position','fixed','important'); } catch(e){}
                 try { overlay.style.setProperty('inset','0','important'); } catch(e){}
                 try { overlay.style.setProperty('display','block','important'); } catch(e){}
                 try { overlay.classList.add('show'); overlay.classList.add('visible'); overlay.setAttribute('aria-hidden','false'); } catch(e){}
               }
+              // remove marker after DOM settled
+              try { setTimeout(() => { try { if (dom && dom.authModal) dom.authModal.removeAttribute('data-rm-opening'); if (overlay) overlay.removeAttribute('data-rm-opening'); } catch(e){} }, 300); } catch(e){}
             }
           } catch(e) { console.warn('Failed to open auth modal', e); }
         }
@@ -2532,7 +2538,8 @@ function showModalById(id, opts = {}) {
     if (modal) {
       // remove stale inline display property that other code might have left
       try { modal.style.removeProperty('display'); } catch(e){}
-      modal.classList.add('show');
+  try { modal.setAttribute('data-rm-opening','true'); } catch(e){}
+  modal.classList.add('show');
       // Force top-level fixed positioning to avoid ancestor stacking contexts
       try {
         modal.style.setProperty('position','fixed','important');
@@ -2893,8 +2900,9 @@ function openPublicProfile(email) {
           // Legacy fallback: still ensure overlay and centered class
           const m = document.getElementById('publicProfileModal');
           if (m) {
+            try { m.setAttribute('data-rm-opening','true'); } catch(e){}
             try { m.style.setProperty('display','flex','important'); } catch(e){}
-            try { m.classList.add('show'); m.setAttribute('aria-hidden','false'); } catch(e){}
+            try { m.setAttribute('data-rm-opening','true'); m.classList.add('show'); m.setAttribute('aria-hidden','false'); } catch(e){}
             try { document.body.classList.add('modal-open'); } catch(e){}
             try {
               const overlay = document.getElementById('publicProfileOverlay') || m.querySelector('.modal-overlay');
@@ -2906,6 +2914,7 @@ function openPublicProfile(email) {
                 try { overlay.setAttribute('aria-hidden','true'); } catch(e){}
               }
             } catch(e){}
+            try { setTimeout(() => { if (m) m.removeAttribute('data-rm-opening'); }, 300); } catch(e){}
           }
         }
       } catch(e){}
@@ -6280,6 +6289,7 @@ function openSaveModal() {
           // Legacy fallback: reparent to body and force fixed centering so the
           // modal cannot be affected by transformed ancestors or layout quirks.
           try { if (dom.saveModal.parentElement !== document.body) document.body.appendChild(dom.saveModal); } catch(e){}
+          try { dom.saveModal.setAttribute('data-rm-opening','true'); } catch(e){}
           try { dom.saveModal.style.setProperty('position','fixed','important'); } catch(e){}
           try { dom.saveModal.style.setProperty('inset','0','important'); } catch(e){}
           try { dom.saveModal.style.setProperty('display','flex','important'); } catch(e){}
@@ -6296,6 +6306,7 @@ function openSaveModal() {
               try { overlay.classList.add('show'); overlay.classList.add('visible'); overlay.setAttribute('aria-hidden','false'); } catch(e){}
             }
           } catch(e){}
+          try { setTimeout(() => { dom.saveModal.removeAttribute('data-rm-opening'); }, 300); } catch(e){}
         }
     }
   } catch(e){}
