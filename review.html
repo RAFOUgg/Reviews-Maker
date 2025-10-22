@@ -259,8 +259,8 @@
         </div>
       </div>
 
-    <!-- Redesigned Account Modal (uses account-* classes for styling) -->
-  <div id="accountModal" data-backdrop="none" aria-hidden="true" style="display:none;">
+    <!-- Redesigned Account Modal (same structure as in index.html) -->
+  <div id="accountModal" data-backdrop="none" aria-hidden="true">
       <div class="account-overlay" id="accountModalOverlay"></div>
       <div class="account-dialog" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
         <div class="account-header">
@@ -270,90 +270,33 @@
             <button type="button" class="modal-close" id="closeAccountModal" aria-label="Fermer">✕</button>
           </div>
         </div>
-
-        <div class="account-body account-modal-inner">
-          <!-- Left column: profile & stats -->
+        <div class="account-body">
           <div class="account-left">
             <div class="account-profile">
-              <div class="account-avatar" aria-hidden="true">👤</div>
+              <div class="account-avatar">👤</div>
               <div class="account-meta">
                 <div id="accountEmail">—</div>
                 <div class="sub">Membre Reviews Maker</div>
               </div>
             </div>
-
-            <div class="account-stats">
-              <div class="stat-card">
-                <div class="num" id="accountTotal">0</div>
-                <div class="label">Total</div>
-              </div>
-              <div class="stat-card">
-                <div class="num" id="statPublic">0</div>
-                <div class="label">Public</div>
-              </div>
-              <div class="stat-card">
-                <div class="label">Privé</div>
-              </div>
+            <div class="stats-grid" aria-hidden="false">
+              <div class="stat-card"><div class="num" id="accountTotal">0</div><div class="label">Total</div></div>
+              <div class="stat-card"><div class="num" id="statPublic">0</div><div class="label">Public</div></div>
+              <div class="stat-card"><div class="num" id="statPrivate">0</div><div class="label">Privé</div></div>
             </div>
-
-            <div>
-              <h4 class="section-title">Répartition par type</h4>
+            <div style="margin-top:10px;"><h4 class="section-title">Répartition par type</h4>
               <div id="accountStatsByType" class="account-stats-by-type"></div>
             </div>
-
-            <!-- Public profile removed from review.html — profile accessible via floating auth button only -->
           </div>
-
-          <!-- Right column: actions & preferences -->
-          <aside class="account-right">
-            <div class="account-actions panel-section">
-              <h4 class="section-title">Actions</h4>
-              <div class="action-list">
-                <button class="btn btn-outline" id="openLibraryFromAccount">Ma bibliothèque</button>
-                <button class="btn btn-outline" id="accountDisconnect">Se déconnecter</button>
+          <div class="account-right">
+            <div class="panel">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <h4 class="section-title">Actions</h4>
               </div>
+              <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;"><button class="btn btn-outline" id="openLibraryFromAccount">Ma bibliothèque</button><button class="btn btn-outline" id="accountDisconnect">Se déconnecter</button></div>
             </div>
-
             </div>
-
-            <div id="accountSettingsPanel" class="account-settings-panel" style="display:none;">
-              <div class="settings-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
-                <div style="display:flex;align-items:center;gap:10px;">
-                  <button type="button" class="btn btn-ghost" id="accountSettingsBack">← Retour</button>
-                  <h4 class="section-title">Paramètres</h4>
-                </div>
-              </div>
-              <div class="settings-body">
-                <div class="settings-block" style="margin-bottom:12px;">
-                  <h5>Confidentialité</h5>
-                  <div style="color:var(--text-soft);margin-top:6px;">Options de partage et visibilité par défaut.</div>
-                  <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
-                    <label class="boolean-group" style="gap:8px;">
-                      <input type="checkbox" id="defaultPublic" />
-                      <span>Publier mes nouvelles reviews par défaut</span>
-                    </label>
-                  </div>
-                </div>
-                <div class="settings-block">
-                  <h5>Préférences</h5>
-                  <div style="color:var(--text-soft);margin-top:6px;">Choisissez un thème :</div>
-                  <div style="margin-top:10px;">
-                    <div id="themeOptions" class="theme-options" role="radiogroup" aria-label="Choix du thème">
-                      <button type="button" class="theme-option" data-theme="violet" title="Violet sombre" aria-checked="false" role="radio">
-                        <span class="theme-swatch swatch-violet" aria-hidden="true"></span>
-                      </button>
-                      <button type="button" class="theme-option" data-theme="rose" title="Rose pâle" aria-checked="false" role="radio">
-                        <span class="theme-swatch swatch-rose" aria-hidden="true"></span>
-                      </button>
-                      <button type="button" class="theme-option" data-theme="bluish" title="Bleu foncé" aria-checked="false" role="radio">
-                        <span class="theme-swatch swatch-bluish" aria-hidden="true"></span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </aside>
+          </div>
         </div>
       </div>
     </div>

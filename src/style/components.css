@@ -332,6 +332,42 @@ html #accountModal[data-backdrop="none"] .modal-overlay {
   background: transparent !important;
 }
 
+/* Ensure account modal positioning & responsive behavior are identical
+   across pages (index.html and review.html). These rules are deliberately
+   specific and placed in components.css so they override page-scoped
+   variations in styles.css. */
+#accountModal, html #accountModal {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10050 !important;
+  width: auto !important;
+}
+
+#accountModal .account-dialog, #accountModal .account-modal-content {
+  width: min(820px, calc(100% - 48px)) !important;
+  max-width: 820px !important;
+  border-radius: 16px !important;
+  padding: clamp(12px, 2.2vw, 22px) !important;
+  box-shadow: 0 30px 80px rgba(2,6,23,0.6) !important;
+}
+
+@media (max-width: 820px) {
+  /* mobile: collapse columns and match index.html layout */
+  #accountModal .account-body, #accountModal .account-modal-inner {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  #accountModal .account-left { order: 2 !important; }
+  #accountModal .account-right { order: 1 !important; }
+  #accountModal .account-dialog, #accountModal .account-modal-content { width: min(96vw, 520px) !important; }
+}
+
 /* Mobile adjustments: keep centered but fit screen */
 @media (max-width: 880px) {
   .modal:not(.centered-modal) .modal-content.centered { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: calc(100% - 32px); }
