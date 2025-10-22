@@ -2579,7 +2579,17 @@ async function populatePublicProfile(email) {
       const subEl = document.querySelector('#publicProfileModal .account-meta .sub');
       if (subEl) subEl.textContent = memberMeta.email ? memberMeta.email : 'Membre Reviews Maker';
       // store metadata on the modal for debug / further actions
-      try { const m = dom.publicProfileModal; if (m) { m.dataset.memberMeta = JSON.stringify(memberMeta); } } catch(e){}
+      try {
+        // prefer the DOM element directly to avoid stale dom.* refs
+        const mEl = document.getElementById('publicProfileModal');
+        if (mEl) {
+          mEl.dataset.memberMeta = JSON.stringify(memberMeta || {});
+        } else if (dom.publicProfileModal) {
+          dom.publicProfileModal.dataset.memberMeta = JSON.stringify(memberMeta || {});
+        }
+      } catch(e){}
+      // explicit debug log so you can see what was matched in console
+      try { console.log('DEBUG: populatePublicProfile memberMeta ->', memberMeta); } catch(e){}
     } catch(e) {}
   } catch(e) { console.warn('populatePublicProfile', e); }
 }
