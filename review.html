@@ -241,6 +241,24 @@
       <span aria-hidden="true">🔗</span>
     </button>
 
+      <!-- Confirmation de suppression (global) -->
+      <div class="modal small" id="confirmDeleteModal" style="display:none;" aria-hidden="true">
+        <div class="modal-overlay" id="confirmDeleteOverlay"></div>
+        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="confirmDeleteTitle">
+          <div class="modal-header">
+            <h2 id="confirmDeleteTitle">Confirmer la suppression</h2>
+            <button type="button" class="modal-close" id="closeConfirmDelete" aria-label="Fermer">✕</button>
+          </div>
+          <div class="modal-body">
+            <p>Êtes-vous sûr(e) de vouloir supprimer cette review ? Cette action est irréversible.</p>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline" id="cancelDelete">Annuler</button>
+            <button type="button" class="btn btn-danger" id="confirmDelete">Supprimer</button>
+          </div>
+        </div>
+      </div>
+
     <!-- Redesigned Account Modal (uses account-* classes for styling) -->
     <div class="modal" id="accountModal" style="display:none;">
       <div class="modal-overlay" id="accountModalOverlay"></div>

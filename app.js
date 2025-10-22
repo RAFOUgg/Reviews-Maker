@@ -182,6 +182,54 @@ function getEditorParams() {
   return { type, reviewData: null, reviewId };
 }
 
+// ---------- Modal utilities (global) ----------
+function lockBodyScroll() {
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
+}
+function unlockBodyScroll() {
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
+}
+
+// Confirm delete modal handlers
+function openConfirmDelete(message) {
+  const modal = document.getElementById('confirmDeleteModal');
+  const bodyMsg = modal ? modal.querySelector('.modal-body p') : null;
+  if (bodyMsg && message) bodyMsg.textContent = message;
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+    modal.classList.add('active');
+    lockBodyScroll();
+  }
+}
+
+function closeConfirmDelete() {
+  const modal = document.getElementById('confirmDeleteModal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    modal.classList.remove('active');
+    unlockBodyScroll();
+  }
+}
+
+// Wire confirm delete buttons (if present)
+document.addEventListener('click', function(e){
+  const target = e.target;
+  if (!target) return;
+  if (target.id === 'closeConfirmDelete' || target.id === 'cancelDelete') {
+    closeConfirmDelete();
+  }
+  // confirmDelete button can dispatch an app-level event to actually delete
+  if (target.id === 'confirmDelete') {
+    // dispatch a CustomEvent so caller code can listen and perform the deletion
+    document.dispatchEvent(new CustomEvent('reviews:confirm-delete')); 
+    closeConfirmDelete();
+  }
+});
+
 // Catalogues de choix thématiques pour accélérer la saisie
 const choiceCatalog = {
   // WEED : Cannabis
