@@ -2594,21 +2594,37 @@ async function openPublicProfile(email) {
     try { ensurePublicProfileDomReady(); } catch(e){}
     // Wait for data population to complete (will not show the modal yet)
     try { await populatePublicProfile(email); } catch(e) { console.warn('openPublicProfile: populate failed', e); }
+    // Defensive: remove any account-modal specific body class which can elevate other overlays
+    try { document.body.classList.remove('account-modal-open'); } catch(e){}
+    // Also hide any lingering overlays which may have !important z-index rules
+    try {
+      const lingering = document.querySelectorAll('.modal-overlay, .account-overlay, #previewOverlay, .preview-overlay');
+      lingering.forEach(o => {
+        try { o.classList.remove('show'); o.style.display = 'none'; o.style.visibility = 'hidden'; o.style.pointerEvents = 'none'; } catch(e){}
+      });
+    } catch(e){}
 
     // Now show overlay/modal after data is ready
     const overlay = document.getElementById('publicProfileOverlay');
     if (overlay) {
       overlay.classList.add('show');
       overlay.style.display = 'block';
-      overlay.style.zIndex = '10040';
+      // prefer a z-index that sits under the modal content but above page UI
+      try { overlay.style.zIndex = '10040'; } catch(e){}
       overlay.setAttribute('aria-hidden','false');
     }
     const modal = document.getElementById('publicProfileModal');
     if (modal) {
-      modal.style.zIndex = '10050';
+      // ensure modal content sits above overlays; inline styles are used as a defensive override
+      try { modal.style.zIndex = '10080'; } catch(e){}
       modal.classList.add('show');
       modal.setAttribute('aria-hidden','false');
       modal.style.display = 'block';
+      // ensure inner modal-content is above overlay (some CSS rules set content z-index via classes)
+      try {
+        const content = modal.querySelector('.modal-content') || modal.querySelector('.account-dialog') || modal.firstElementChild;
+        if (content) content.style.zIndex = '10090';
+      } catch(e){}
       setTimeout(() => {
         if (modal.style.display !== 'block') modal.style.display = 'block';
         if (overlay && overlay.style.display !== 'block') overlay.style.display = 'block';
