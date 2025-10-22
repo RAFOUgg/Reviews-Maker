@@ -311,7 +311,7 @@ function initializeExportStudio() {
     } else {
       // Fallback: ensure the panel is fixed to viewport to avoid transform stacking issues
       try { if (modal.parentElement !== document.body) document.body.appendChild(modal); } catch(e){}
-      try { modal.setAttribute('data-rm-opening','true'); } catch(e){}
+  try { if (typeof window !== 'undefined' && window.markOpening) window.markOpening(modal); else modal.setAttribute('data-rm-opening','true'); } catch(e){}
       try { modal.style.setProperty('position','fixed','important'); } catch(e){}
       try { modal.style.setProperty('inset','0','important'); } catch(e){}
       try { modal.style.setProperty('display','flex','important'); } catch(e){}
@@ -319,7 +319,7 @@ function initializeExportStudio() {
       try { modal.setAttribute('role','dialog'); modal.setAttribute('aria-modal','true'); modal.setAttribute('aria-hidden','false'); } catch(e){}
       try { document.body.classList.add('modal-open'); } catch(e){}
       try { document.body.style.overflow = 'hidden'; } catch(e){}
-      try { setTimeout(() => { modal.removeAttribute('data-rm-opening'); }, 300); } catch(e){}
+  // markOpening manages removal of the marker
     }
     
     // Sélectionner le template par défaut et générer l'aperçu

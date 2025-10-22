@@ -234,7 +234,7 @@ try {
   try {
             if (dom && dom.authModal) {
               // Legacy fallback: mark opening so guard ignores transients
-              try { dom.authModal.setAttribute('data-rm-opening','true'); } catch(e){}
+              try { if (typeof window !== 'undefined' && window.markOpening) window.markOpening(dom.authModal); else dom.authModal.setAttribute('data-rm-opening','true'); } catch(e){}
               try { if (dom.authModal.parentElement !== document.body) document.body.appendChild(dom.authModal); } catch(e){}
               try { dom.authModal.style.setProperty('position','fixed','important'); } catch(e){}
               try { dom.authModal.style.setProperty('inset','0','important'); } catch(e){}
@@ -244,13 +244,14 @@ try {
               const overlay = document.getElementById('authModalOverlay') || dom.authModal.querySelector('.modal-overlay');
               if (overlay) {
                 try { if (overlay.parentElement !== document.body) document.body.appendChild(overlay); } catch(e){}
+                try { if (typeof window !== 'undefined' && window.markOpening) window.markOpening(overlay); else overlay.setAttribute('data-rm-opening','true'); } catch(e){}
                 try { overlay.style.setProperty('position','fixed','important'); } catch(e){}
                 try { overlay.style.setProperty('inset','0','important'); } catch(e){}
                 try { overlay.style.setProperty('display','block','important'); } catch(e){}
                 try { overlay.classList.add('show'); overlay.classList.add('visible'); overlay.setAttribute('aria-hidden','false'); } catch(e){}
               }
               // remove marker after DOM settled
-              try { setTimeout(() => { dom.authModal.removeAttribute('data-rm-opening'); }, 300); } catch(e){}
+              // markOpening manages removal of the marker
             }
   } catch(e){}
 // API calls starting with /api/ so they hit /reviews/api/... behind Nginx.
@@ -1816,7 +1817,7 @@ function setupModalEvents() {
             } else if (dom && dom.authModal) {
               // Legacy fallback: mark intentional opening so the mutation guard ignores it,
               // reparent and force fixed positioning to avoid off-screen placement
-              try { dom.authModal.setAttribute('data-rm-opening','true'); } catch(e){}
+              try { if (typeof window !== 'undefined' && window.markOpening) window.markOpening(dom.authModal); else dom.authModal.setAttribute('data-rm-opening','true'); } catch(e){}
               try { if (dom.authModal.parentElement !== document.body) document.body.appendChild(dom.authModal); } catch(e){}
               try { dom.authModal.style.setProperty('position','fixed','important'); } catch(e){}
               try { dom.authModal.style.setProperty('inset','0','important'); } catch(e){}
@@ -1825,7 +1826,7 @@ function setupModalEvents() {
               try { dom.authModal.classList.add('show'); dom.authModal.setAttribute('aria-hidden','false'); } catch(e){}
               const overlay = document.getElementById('authModalOverlay') || dom.authModal.querySelector('.modal-overlay');
               if (overlay) {
-                try { overlay.setAttribute('data-rm-opening','true'); } catch(e){}
+                try { if (typeof window !== 'undefined' && window.markOpening) window.markOpening(overlay); else overlay.setAttribute('data-rm-opening','true'); } catch(e){}
                 try { if (overlay.parentElement !== document.body) document.body.appendChild(overlay); } catch(e){}
                 try { overlay.style.setProperty('position','fixed','important'); } catch(e){}
                 try { overlay.style.setProperty('inset','0','important'); } catch(e){}
@@ -1833,7 +1834,7 @@ function setupModalEvents() {
                 try { overlay.classList.add('show'); overlay.classList.add('visible'); overlay.setAttribute('aria-hidden','false'); } catch(e){}
               }
               // remove marker after DOM settled
-              try { setTimeout(() => { try { if (dom && dom.authModal) dom.authModal.removeAttribute('data-rm-opening'); if (overlay) overlay.removeAttribute('data-rm-opening'); } catch(e){} }, 300); } catch(e){}
+              // markOpening manages removal of the marker
             }
           } catch(e) { console.warn('Failed to open auth modal', e); }
         }
@@ -2536,6 +2537,7 @@ function showModalById(id, opts = {}) {
         try { overlayEl.style.setProperty('display','none','important'); } catch(e){}
         overlayEl.setAttribute('aria-hidden', 'true');
       } else {
+        try { if (typeof window !== 'undefined' && window.markOpening) window.markOpening(overlayEl); } catch(e){}
         overlayEl.classList.add('show');
         // Also ensure overlay has visible state class used by CSS guards
         try { overlayEl.classList.add('visible'); } catch(e){}
@@ -2623,7 +2625,7 @@ function showModalById(id, opts = {}) {
   } catch(e) { console.warn('showModalById error', e); }
 }
       // clear opening marker shortly after DOM updates settle
-      try { setTimeout(() => { if (modal) modal.removeAttribute('data-rm-opening'); }, 300); } catch(e){}
+  // markOpening manages removal of the marker
 
 function hideModalById(id) {
   try {
@@ -2911,9 +2913,9 @@ function openPublicProfile(email) {
           // Legacy fallback: still ensure overlay and centered class
           const m = document.getElementById('publicProfileModal');
           if (m) {
-            try { m.setAttribute('data-rm-opening','true'); } catch(e){}
+            try { if (typeof window !== 'undefined' && window.markOpening) window.markOpening(m); else m.setAttribute('data-rm-opening','true'); } catch(e){}
             try { m.style.setProperty('display','flex','important'); } catch(e){}
-            try { m.setAttribute('data-rm-opening','true'); m.classList.add('show'); m.setAttribute('aria-hidden','false'); } catch(e){}
+            try { m.classList.add('show'); m.setAttribute('aria-hidden','false'); } catch(e){}
             try { document.body.classList.add('modal-open'); } catch(e){}
             try {
               const overlay = document.getElementById('publicProfileOverlay') || m.querySelector('.modal-overlay');
@@ -2925,7 +2927,7 @@ function openPublicProfile(email) {
                 try { overlay.setAttribute('aria-hidden','true'); } catch(e){}
               }
             } catch(e){}
-            try { setTimeout(() => { if (m) m.removeAttribute('data-rm-opening'); }, 300); } catch(e){}
+            // markOpening manages removal of the marker
           }
         }
       } catch(e){}
@@ -6300,7 +6302,7 @@ function openSaveModal() {
           // Legacy fallback: reparent to body and force fixed centering so the
           // modal cannot be affected by transformed ancestors or layout quirks.
           try { if (dom.saveModal.parentElement !== document.body) document.body.appendChild(dom.saveModal); } catch(e){}
-          try { dom.saveModal.setAttribute('data-rm-opening','true'); } catch(e){}
+          try { if (typeof window !== 'undefined' && window.markOpening) window.markOpening(dom.saveModal); else dom.saveModal.setAttribute('data-rm-opening','true'); } catch(e){}
           try { dom.saveModal.style.setProperty('position','fixed','important'); } catch(e){}
           try { dom.saveModal.style.setProperty('inset','0','important'); } catch(e){}
           try { dom.saveModal.style.setProperty('display','flex','important'); } catch(e){}
@@ -6317,7 +6319,7 @@ function openSaveModal() {
               try { overlay.classList.add('show'); overlay.classList.add('visible'); overlay.setAttribute('aria-hidden','false'); } catch(e){}
             }
           } catch(e){}
-          try { setTimeout(() => { dom.saveModal.removeAttribute('data-rm-opening'); }, 300); } catch(e){}
+          // markOpening manages removal of the marker
         }
     }
   } catch(e){}

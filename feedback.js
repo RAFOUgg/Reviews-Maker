@@ -27,7 +27,7 @@
   try { modal.style.setProperty('display','flex','important'); } catch(e){}
   try { modal.style.setProperty('z-index','100510','important'); } catch(e){}
   if (overlay) try { if (overlay.parentElement !== document.body) document.body.appendChild(overlay); } catch(e){}
-  if (overlay) try { overlay.style.setProperty('position','fixed','important'); overlay.style.setProperty('inset','0','important'); overlay.classList.add('show'); overlay.classList.add('visible'); overlay.style.setProperty('display','block','important'); } catch(e){}
+  if (overlay) try { overlay.style.setProperty('position','fixed','important'); overlay.style.setProperty('inset','0','important'); try { if (typeof window !== 'undefined' && window.markOpening) window.markOpening(overlay); } catch(e){} overlay.classList.add('show'); overlay.classList.add('visible'); overlay.style.setProperty('display','block','important'); } catch(e){}
   try { modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); } catch(e){}
   try { document.body.classList.add('modal-open'); } catch(e){}
   // markOpening already schedules removal; nothing else to do here
@@ -110,8 +110,8 @@
 
   // Wire events
   try {
-    try { if (modal.parentElement !== document.body) document.body.appendChild(modal); } catch(e){}
-    try { modal.setAttribute('data-rm-opening','true'); } catch(e){}
+  try { if (modal.parentElement !== document.body) document.body.appendChild(modal); } catch(e){}
+  try { if (typeof window !== 'undefined' && window.markOpening) window.markOpening(modal); else modal.setAttribute('data-rm-opening','true'); } catch(e){}
     try { modal.style.setProperty('position','fixed','important'); } catch(e){}
     try { modal.style.setProperty('inset','0','important'); } catch(e){}
     try { modal.style.setProperty('display','flex','important'); } catch(e){}

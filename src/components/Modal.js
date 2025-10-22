@@ -38,8 +38,10 @@ export default class Modal {
       this.overlay.style.height = '100%';
       this.overlay.style.zIndex = '10060';
     } catch (err) { /* non-fatal */ }
+    try { if (typeof window !== 'undefined' && window.markOpening) window.markOpening(this.overlay); } catch(e){}
     this.overlay.classList.add('show');
   }
+  try { if (typeof window !== 'undefined' && window.markOpening) window.markOpening(this.root); } catch(e){}
   this.root.classList.add('show');
       try { document.body.classList.add('modal-open'); } catch(e){}
       document.addEventListener('click', this._boundOnDoc, true);
