@@ -1,0 +1,828 @@
+/* ========================================
+   EXPORT STUDIO - Styles pour l'interface
+   ======================================== */
+
+/* Modal de configuration d'export */
+.export-config-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 22, 43, 0.95);
+  backdrop-filter: blur(12px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.export-config-modal.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.export-config-container {
+  width: 95%;
+  max-width: 1400px;
+  height: 90vh;
+  background: var(--surface-elevated);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-lg);
+  display: grid;
+  grid-template-columns: 380px 1fr 450px;
+  overflow: hidden;
+  transform: scale(0.95);
+  transition: transform 0.3s ease;
+}
+
+.export-config-modal.active .export-config-container {
+  transform: scale(1);
+}
+
+/* Sidebar de configuration */
+.export-config-sidebar {
+  background: var(--surface-primary);
+  border-right: 1px solid var(--border-subtle);
+  padding: 32px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.export-config-header {
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.export-config-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: var(--text);
+}
+
+.export-config-header p {
+  font-size: 14px;
+  color: var(--text-soft);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.export-config-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.export-config-group-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Templates de style */
+.export-templates {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.export-template-option {
+  padding: 16px;
+  background: var(--surface-muted);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.export-template-option:hover {
+  background: var(--surface-elevated);
+  border-color: var(--primary);
+  transform: translateX(4px);
+}
+
+.export-template-option.active {
+  background: var(--accent-soft);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.1);
+}
+
+.export-template-icon {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.export-template-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.export-template-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 4px 0;
+}
+
+.export-template-desc {
+  font-size: 13px;
+  color: var(--text-soft);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.export-template-meta {
+  font-size: 11px;
+  color: var(--text-soft);
+  margin-top: 6px;
+  display: flex;
+  gap: 8px;
+}
+
+/* Options de configuration */
+.export-option {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.export-option-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.export-option-hint {
+  font-size: 12px;
+  color: var(--text-soft);
+  line-height: 1.4;
+}
+
+.export-option input[type="range"] {
+  width: 100%;
+  height: 6px;
+  background: var(--surface-muted);
+  border-radius: 3px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.export-option input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.export-option input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.export-option select,
+.export-option input[type="text"],
+.export-option input[type="number"] {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.export-option select:focus,
+.export-option input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--surface-elevated);
+}
+
+/* Checkboxes de sections */
+.export-sections-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.export-section-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.export-section-toggle:hover {
+  background: var(--surface-elevated);
+}
+
+.export-section-toggle input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.export-section-toggle label {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Zone centrale - Aperçu */
+.export-preview-area {
+  background: linear-gradient(135deg, #0a1628 0%, #0f1628 100%);
+  padding: 40px;
+  overflow-y: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.export-preview-wrapper {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.export-preview-canvas {
+  background: white;
+  box-shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.8),
+              0 0 0 1px rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  transform-origin: top center;
+}
+
+.export-preview-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.export-zoom-btn {
+  padding: 8px 16px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.export-zoom-btn:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* Panneau d'actions */
+.export-actions-panel {
+  background: var(--surface-primary);
+  border-left: 1px solid var(--border-subtle);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+}
+
+.export-actions-header {
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.export-actions-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: var(--text);
+}
+
+.export-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.export-stat {
+  padding: 16px;
+  background: var(--surface-muted);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.export-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0 0 4px 0;
+}
+
+.export-stat-label {
+  font-size: 12px;
+  color: var(--text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.export-format-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.export-format-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--surface-elevated);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.export-format-btn:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -8px rgba(52, 211, 153, 0.5);
+}
+
+.export-format-btn .icon {
+  font-size: 20px;
+}
+
+.export-actions-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.export-primary-btn {
+  width: 100%;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.export-primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -12px rgba(52, 211, 153, 0.6);
+}
+
+.export-primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.export-secondary-btn {
+  width: 100%;
+  padding: 12px 20px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.export-secondary-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Styles pour les rendus d'export */
+.export-render {
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.export-render * {
+  box-sizing: border-box;
+}
+
+/* Loading state */
+.export-generating {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.export-generating .spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(52, 211, 153, 0.2);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.export-generating-text {
+  font-size: 16px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+  .export-config-container {
+    grid-template-columns: 320px 1fr 380px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .export-config-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+  
+  .export-config-sidebar,
+  .export-actions-panel {
+    border: none;
+    border-bottom: 1px solid var(--border-subtle);
+    max-height: 40vh;
+  }
+  
+  .export-preview-area {
+    order: 2;
+  }
+}
+
+/* Color picker personnalisé */
+.export-color-picker {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.export-color-input {
+  width: 50px;
+  height: 50px;
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.export-color-input:hover {
+  border-color: var(--primary);
+  transform: scale(1.05);
+}
+
+.export-color-presets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.export-color-preset {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.export-color-preset:hover {
+  transform: scale(1.1);
+  border-color: white;
+}
+
+.export-color-preset.active {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2);
+}
+
+/* Presets de couleurs communes */
+.color-emerald { background: #34d399; }
+.color-blue { background: #38bdf8; }
+.color-purple { background: #a78bfa; }
+.color-pink { background: #f472b6; }
+.color-orange { background: #fb923c; }
+.color-yellow { background: #fbbf24; }
+
+/* ========================================
+   STYLES DES RENDUS D'EXPORT
+   ======================================== */
+
+/* Base pour tous les exports */
+.export-render {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Template: Minimal */
+.export-minimal .export-header {
+  text-align: center;
+}
+
+.export-minimal .export-badge {
+  display: inline-flex !important;
+  margin: 0 auto 32px !important;
+}
+
+.export-minimal h1 {
+  font-size: 64px !important;
+  margin-bottom: 24px !important;
+}
+
+.export-minimal .export-scores {
+  grid-template-columns: 1fr !important;
+  text-align: center;
+  padding: 60px 40px !important;
+}
+
+.export-minimal .export-details {
+  display: none; /* Pas de détails en mode minimal */
+}
+
+/* Template: Card */
+.export-card {
+  border-radius: 32px;
+  padding: 60px !important;
+}
+
+.export-card .export-header {
+  border-bottom: 3px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 40px;
+  margin-bottom: 40px;
+}
+
+.export-card .export-scores {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  border-radius: 24px;
+  padding: 40px !important;
+}
+
+.export-card .detail-section {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Template: Studio */
+.export-studio {
+  background: linear-gradient(135deg, #0a162b 0%, #0f1628 50%, #0a1628 100%);
+}
+
+.export-studio::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 300px;
+  background: radial-gradient(circle at 50% 0%, rgba(52, 211, 153, 0.15), transparent 70%);
+  pointer-events: none;
+}
+
+.export-studio .export-header,
+.export-studio .export-scores,
+.export-studio .export-details,
+.export-studio .export-notes,
+.export-studio .export-branding {
+  position: relative;
+  z-index: 1;
+}
+
+.export-studio h1 {
+  background: linear-gradient(135deg, #f8fafc, #94a3b8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Template: Social */
+.export-social {
+  padding: 100px 80px !important;
+}
+
+.export-social .export-badge {
+  transform: scale(1.2);
+  margin-bottom: 40px !important;
+}
+
+.export-social h1 {
+  font-size: 72px !important;
+  line-height: 0.95 !important;
+  letter-spacing: -0.02em;
+}
+
+.export-social .export-scores {
+  grid-template-columns: 1fr !important;
+  gap: 40px !important;
+  padding: 60px !important;
+}
+
+.export-social .export-scores > div:first-child {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.export-social .export-scores > div:first-child > div:first-child {
+  width: 220px !important;
+  height: 220px !important;
+  margin-bottom: 24px !important;
+}
+
+.export-social .export-details h2 {
+  font-size: 36px !important;
+  margin-bottom: 32px !important;
+}
+
+.export-social .detail-section {
+  padding: 32px !important;
+  margin-bottom: 24px;
+}
+
+/* Template: Magazine */
+.export-magazine {
+  background: #f8fafc;
+  color: #0a162b;
+  padding: 140px 120px !important;
+}
+
+.export-magazine .export-badge {
+  background: linear-gradient(135deg, rgba(10, 22, 43, 0.08), rgba(10, 22, 43, 0.04)) !important;
+  border-color: rgba(10, 22, 43, 0.2) !important;
+  padding: 18px 32px !important;
+}
+
+.export-magazine h1 {
+  font-size: 68px !important;
+  color: #0a162b !important;
+  text-shadow: none !important;
+  font-family: 'Manrope', serif;
+  letter-spacing: -0.03em;
+  margin-bottom: 32px !important;
+}
+
+.export-magazine .export-scores {
+  background: white !important;
+  border: 2px solid rgba(10, 22, 43, 0.1) !important;
+  box-shadow: 0 20px 60px -20px rgba(10, 22, 43, 0.15);
+  grid-template-columns: auto 1fr !important;
+  gap: 60px !important;
+  padding: 60px !important;
+  margin: 60px 0 !important;
+}
+
+.export-magazine .export-details h2 {
+  font-size: 32px !important;
+  color: #0a162b !important;
+  border-bottom-color: rgba(10, 22, 43, 0.2) !important;
+  font-family: 'Manrope', serif;
+  letter-spacing: -0.02em;
+}
+
+.export-magazine .detail-section {
+  background: white !important;
+  border-left-width: 6px !important;
+  box-shadow: 0 4px 20px -8px rgba(10, 22, 43, 0.15);
+  padding: 32px !important;
+}
+
+.export-magazine .detail-section h3 {
+  color: #0a162b !important;
+  font-family: 'Manrope', serif;
+}
+
+.export-magazine .export-notes {
+  background: rgba(56, 189, 248, 0.08) !important;
+  border-color: rgba(56, 189, 248, 0.4) !important;
+  padding: 40px !important;
+}
+
+.export-magazine .export-notes h3 {
+  color: #0369a1 !important;
+}
+
+.export-magazine .export-notes p {
+  color: #334155 !important;
+}
+
+.export-magazine .export-branding {
+  border-top-color: rgba(10, 22, 43, 0.2) !important;
+  padding-top: 40px !important;
+}
+
+/* Animations subtiles */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.export-render.animating .export-header {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.export-render.animating .export-scores {
+  animation: fadeInUp 0.6s ease-out 0.1s both;
+}
+
+.export-render.animating .export-details {
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+/* Mode sombre spécifique */
+.export-render[data-theme="dark"] {
+  background: #0f1628;
+  color: #f8fafc;
+}
+
+/* Mode clair spécifique */
+.export-render[data-theme="light"] {
+  background: #f8fafc;
+  color: #0a162b;
+}
+
+.export-render[data-theme="light"] .export-badge {
+  background: linear-gradient(135deg, rgba(10, 22, 43, 0.08), rgba(10, 22, 43, 0.04));
+  border-color: rgba(10, 22, 43, 0.2);
+}
+
+.export-render[data-theme="light"] h1,
+.export-render[data-theme="light"] h2,
+.export-render[data-theme="light"] h3 {
+  color: #0a162b;
+}
+
+.export-render[data-theme="light"] .export-scores {
+  background: rgba(10, 22, 43, 0.03);
+  border-color: rgba(10, 22, 43, 0.1);
+}
+
+.export-render[data-theme="light"] .detail-section {
+  background: rgba(10, 22, 43, 0.02);
+}

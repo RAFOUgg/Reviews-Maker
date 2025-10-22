@@ -1,0 +1,15 @@
+{
+  // Tell Remote-SSH which SSH config file to use on this machine (adjust if needed)
+  "remote.SSH.configFile": "C:\\Users\\Rafi\\.ssh\\config",
+  // Optional: disable local server helper if you have issues
+  "remote.SSH.useLocalServer": false
+}
+{
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+  "github.copilot.chat.promptFiles": true,
+  "github.copilot.enable": {
+    "*": true,
+    "yaml": true,
+    "plaintext": false
+  }
+}

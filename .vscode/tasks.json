@@ -1,0 +1,40 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Open index.html in default browser (Windows)",
+			"type": "shell",
+			"command": "start msedge \"c:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker\\index.html\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Open index.html in default browser (Windows)",
+			"type": "shell",
+			"command": "start msedge \"c:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker\\index.html\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Open review.html with type param",
+			"type": "shell",
+			"command": "start msedge \"c:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker\\review.html?type=Concentr%C3%A9\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Reload index.html",
+			"type": "shell",
+			"command": "start msedge \"c:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker\\index.html\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Reload index.html",
+			"type": "shell",
+			"command": "start msedge \"c:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker\\index.html\"",
+			"isBackground": false,
+			"group": "build"
+		}
+	]
+}

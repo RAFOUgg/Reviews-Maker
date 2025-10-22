@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Export Studio - Test</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="export-studio.css">
+  <style>
+    body {
+      padding: 40px;
+      background: #0a162b;
+      color: white;
+    }
+    .test-section {
+      margin-bottom: 40px;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+    }
+    .test-section h2 {
+      color: #34d399;
+      margin-bottom: 20px;
+    }
+    .test-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .test-btn {
+      padding: 12px 24px;
+      background: #34d399;
+      border: none;
+      border-radius: 8px;
+      color: #0a162b;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .test-btn:hover {
+      background: #10b981;
+      transform: translateY(-2px);
+    }
+    .test-result {
+      margin-top: 20px;
+      padding: 16px;
+      background: rgba(52, 211, 153, 0.1);
+      border-radius: 8px;
+      border-left: 4px solid #34d399;
+    }
+    .preview-container {
+      margin-top: 20px;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      max-width: 600px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎨 Export Studio - Tests</h1>
+  
+  <!-- Test 1: Chargement des modules -->
+  <div class="test-section">
+    <h2>1. Vérification des modules</h2>
+    <div id="module-status"></div>
+  </div>
+
+  <!-- Test 2: Génération d'aperçu -->
+  <div class="test-section">
+    <h2>2. Génération d'aperçu</h2>
+    <div class="test-buttons">
+      <button class="test-btn" onclick="testPreview('minimal')">Minimal</button>
+      <button class="test-btn" onclick="testPreview('card')">Carte</button>
+      <button class="test-btn" onclick="testPreview('studio')">Studio</button>
+      <button class="test-btn" onclick="testPreview('social')">Social</button>
+      <button class="test-btn" onclick="testPreview('magazine')">Magazine</button>
+    </div>
+    <div id="preview-result" class="preview-container" style="display: none;"></div>
+  </div>
+
+  <!-- Test 3: Export d'image -->
+  <div class="test-section">
+    <h2>3. Export d'image</h2>
+    <div class="test-buttons">
+      <button class="test-btn" onclick="testExport('png')">PNG</button>
+      <button class="test-btn" onclick="testExport('jpg')">JPG</button>
+      <button class="test-btn" onclick="testExport('webp')">WebP</button>
+    </div>
+    <div id="export-result"></div>
+  </div>
+
+  <!-- Test 4: Interface Export Studio -->
+  <div class="test-section">
+    <h2>4. Interface complète</h2>
+    <button class="test-btn" onclick="testOpenStudio()">Ouvrir Export Studio</button>
+    <div id="studio-result"></div>
+  </div>
+
+  <!-- Données de test -->
+  <script>
+    // Mock des données globales pour les tests
+    window.formData = {
+      cultivars: 'Gelato 41 × Wedding Cake',
+      productType: 'Hash',
+      cultivarsList: JSON.stringify([
+        { name: 'Gelato 41', percentage: 60 },
+        { name: 'Wedding Cake', percentage: 40 }
+      ]),
+      notes: 'Excellente qualité, arômes fruités et terreux. Effet relaxant et créatif.',
+      technique: 'Ice Water Hash',
+      micronage: '90-120μ',
+      terpenes: 'Limonène, Caryophyllène, Myrcène'
+    };
+
+    window.currentType = 'Hash';
+
+    window.totals = {
+      'section-0': { sum: 8.5, max: 10 },
+      'section-1': { sum: 9.0, max: 10 },
+      'section-2': { sum: 8.8, max: 10 }
+    };
+
+    window.productStructures = {
+      'Hash': {
+        sections: [
+          {
+            title: 'Apparence',
+            fields: [
+              { key: 'couleur', label: 'Couleur', type: 'text' },
+              { key: 'texture', label: 'Texture', type: 'text' }
+            ]
+          },
+          {
+            title: 'Arômes',
+            fields: [
+              { key: 'terpenes', label: 'Terpènes', type: 'text' }
+            ]
+          },
+          {
+            title: 'Effets',
+            fields: [
+              { key: 'notes', label: 'Notes', type: 'textarea' }
+            ]
+          }
+        ]
+      }
+    };
+  </script>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="export-studio.js"></script>
+  <script src="export-studio-ui.js"></script>
+
+  <script>
+    // Test 1: Vérification des modules
+    function checkModules() {
+      const results = [];
+      
+      results.push({
+        name: 'ExportRenderer',
+        loaded: typeof ExportRenderer !== 'undefined'
+      });
+      
+      results.push({
+        name: 'exportTemplates',
+        loaded: typeof exportTemplates !== 'undefined'
+      });
+      
+      results.push({
+        name: 'exportConfig',
+        loaded: typeof exportConfig !== 'undefined'
+      });
+      
+      results.push({
+        name: 'html2canvas',
+        loaded: typeof html2canvas !== 'undefined'
+      });
+
+      const container = document.getElementById('module-status');
+      container.innerHTML = results.map(r => `
+        <div style="padding: 8px; margin: 4px 0; background: ${r.loaded ? 'rgba(52, 211, 153, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; border-radius: 6px;">
+          ${r.loaded ? '✅' : '❌'} ${r.name}
+        </div>
+      `).join('');
+    }
+
+    // Test 2: Génération d'aperçu
+    function testPreview(templateId) {
+      try {
+        const data = {
+          formData: window.formData,
+          currentType: window.currentType,
+          totals: window.totals,
+          cultivarInfo: {
+            title: 'Gelato 41 × Wedding Cake',
+            details: JSON.parse(window.formData.cultivarsList)
+          },
+          productIcon: '🧊',
+          structure: window.productStructures[window.currentType],
+          globalScore: 26.3,
+          maxGlobalScore: 30,
+          scoreOutOf10: 8.77,
+          percentage: 87.7,
+          sectionsWithData: 3
+        };
+
+        const config = {
+          template: templateId,
+          dimensions: exportTemplates[templateId].dimensions
+        };
+
+        const renderer = new ExportRenderer(config, data);
+        const html = renderer.generateHTML();
+
+        const container = document.getElementById('preview-result');
+        container.style.display = 'block';
+        container.innerHTML = `
+          <div style="margin-bottom: 16px; color: #0a162b;">
+            <strong>Template:</strong> ${exportTemplates[templateId].name}<br>
+            <strong>Dimensions:</strong> ${config.dimensions.width}×${config.dimensions.height}px
+          </div>
+          <div style="transform: scale(0.5); transform-origin: top left; width: 200%;">
+            ${html}
+          </div>
+        `;
+
+        console.log('✅ Aperçu généré:', templateId);
+      } catch (error) {
+        console.error('❌ Erreur aperçu:', error);
+        alert('Erreur: ' + error.message);
+      }
+    }
+
+    // Test 3: Export d'image
+    async function testExport(format) {
+      try {
+        const resultDiv = document.getElementById('export-result');
+        resultDiv.innerHTML = '<div class="test-result">⏳ Génération en cours...</div>';
+
+        const data = {
+          formData: window.formData,
+          currentType: window.currentType,
+          totals: window.totals,
+          cultivarInfo: {
+            title: 'Gelato 41 × Wedding Cake',
+            details: JSON.parse(window.formData.cultivarsList)
+          },
+          productIcon: '🧊',
+          structure: window.productStructures[window.currentType],
+          globalScore: 26.3,
+          maxGlobalScore: 30,
+          scoreOutOf10: 8.77,
+          percentage: 87.7,
+          sectionsWithData: 3
+        };
+
+        const config = {
+          template: 'studio',
+          dimensions: {
+            ...exportTemplates.studio.dimensions,
+            scale: 2,
+            format: format
+          }
+        };
+
+        const renderer = new ExportRenderer(config, data);
+        await renderer.downloadImage(`test_export.${format}`);
+
+        resultDiv.innerHTML = `<div class="test-result">✅ Export ${format.toUpperCase()} réussi!</div>`;
+        console.log('✅ Export réussi:', format);
+      } catch (error) {
+        const resultDiv = document.getElementById('export-result');
+        resultDiv.innerHTML = `<div class="test-result" style="border-color: #ef4444;">❌ Erreur: ${error.message}</div>`;
+        console.error('❌ Erreur export:', error);
+      }
+    }
+
+    // Test 4: Interface Export Studio
+    function testOpenStudio() {
+      if (typeof openExportStudio === 'function') {
+        openExportStudio();
+        document.getElementById('studio-result').innerHTML = 
+          '<div class="test-result">✅ Export Studio ouvert</div>';
+      } else {
+        document.getElementById('studio-result').innerHTML = 
+          '<div class="test-result" style="border-color: #ef4444;">❌ Fonction openExportStudio non disponible</div>';
+      }
+    }
+
+    // Fonction showToast mock
+    window.showToast = function(message, type) {
+      console.log(`[${type}] ${message}`);
+    };
+
+    // Lancer les tests au chargement
+    window.addEventListener('load', () => {
+      checkModules();
+      console.log('🧪 Page de test chargée');
+      console.log('💡 Utilisez les boutons pour tester chaque fonctionnalité');
+    });
+  </script>
+</body>
+</html>

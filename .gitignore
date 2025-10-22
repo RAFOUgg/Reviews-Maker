@@ -1,0 +1,13 @@
+# Node
+server/node_modules/
+server/package-lock.json
+
+# SQLite DB & uploaded images
+/db/*.sqlite
+/db/review_images/*
+!db/review_images/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+.env
