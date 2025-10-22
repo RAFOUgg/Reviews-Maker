@@ -2907,7 +2907,8 @@ function debounce(func, wait) {
 async function initDatabase() {
   try {
     await setupDatabase();
-    await migrateLocalStorageToDB();
+    // Legacy localStorage migration removed (cannaReviews deprecated)
+    // await migrateLocalStorageToDB();
     if (shouldDedupeOnStart()) {
       await dedupeDatabase();
     }
@@ -3024,72 +3025,9 @@ function setupDatabase() {
   });
 }
 
-async function migrateLocalStorageToDB() {
-  if (!db) return; // Nothing to do if no DB
-  let reviews = [];
-  try { reviews = JSON.parse(localStorage.getItem("cannaReviews") || "[]"); } catch {}
-  if (!Array.isArray(reviews) || reviews.length === 0) return;
-  // 1) Normalize and deduplicate local entries by correlation/loose key
-  const pickBetter = (a, b) => {
-  // Prefer most recent date (draft flag removed)
-  const da = new Date(a.date || 0).getTime();
-  const dbt = new Date(b.date || 0).getTime();
-  return da >= dbt ? a : b;
-  const ta = new Date(a.date || 0).getTime();
-  const tb = new Date(b.date || 0).getTime();
-  return ta >= tb ? a : b;
-  };
-  const chosenByStrict = new Map();
-  const chosenByLoose = new Map();
-  for (const r0 of reviews) {
-    const r = { ...r0 };
-    r.correlationKey = r.correlationKey || computeCorrelationKey(r);
-    const loose = computeLooseKey(r);
-    // Merge by strict key first
-    const prevS = chosenByStrict.get(r.correlationKey);
-    if (prevS) {
-      chosenByStrict.set(r.correlationKey, pickBetter(prevS, r));
-    } else {
-      chosenByStrict.set(r.correlationKey, r);
-    }
-    // Also keep best per loose key to collapse records that only differ by empty breeder/farm
-    const prevL = chosenByLoose.get(loose);
-    if (prevL) {
-      chosenByLoose.set(loose, pickBetter(prevL, r));
-    } else {
-      chosenByLoose.set(loose, r);
-    }
-  }
-  // Build a final list of winners ensuring uniqueness by strict key
-  const winners = new Map();
-  // Start with loose winners (covers early drafts without breeder/farm)
-  for (const [lk, r] of chosenByLoose.entries()) {
-    winners.set(r.correlationKey, r);
-  }
-  // Overlay strict winners (they are more precise)
-  for (const [sk, r] of chosenByStrict.entries()) {
-    winners.set(sk, r);
-  }
-  const locals = Array.from(winners.values());
-
-  // 2) Avoid importing duplicates already present in DB and within this batch
-  let existing = [];
-  try { existing = await dbGetAllReviews(); } catch {}
-  const seenKeys = new Set((existing || []).map(x => x.correlationKey || computeCorrelationKey(x)));
-  let migrated = 0;
-  for (const r of locals) {
-    try {
-      const k = r.correlationKey || computeCorrelationKey(r);
-      const exists = seenKeys.has(k) || (existing || []).some(x => computeLooseKey(x) === computeLooseKey(r));
-      if (exists) continue;
-      await dbAddReview(r);
-      seenKeys.add(k);
-      migrated++;
-    } catch (e) { console.warn("Migration entry failed", e); }
-  }
-  localStorage.removeItem("cannaReviews");
-  if (migrated > 0) showToast(`Migration de ${migrated} review(s) vers la base`, "success");
-}
+// Legacy localStorage migration removed (cannaReviews deprecated).
+// All read/write operations now prefer IndexedDB; if IndexedDB is unavailable
+// the functions will resolve to empty lists or fail gracefully.
 
 // Deduplicate records already in DB by correlation key (strict and loose)
 async function dedupeDatabase() {
@@ -3194,9 +3132,9 @@ function dbDeleteReview(id) {
 function dbGetAllReviews() {
   return new Promise((resolve, reject) => {
     if (!db) {
-      // Fallback read from legacy localStorage
-      try { resolve(JSON.parse(localStorage.getItem("cannaReviews") || "[]")); }
-      catch { resolve([]); }
+      // IndexedDB unavailable: return empty list (legacy localStorage removed)
+      try { console.warn('dbGetAllReviews: IndexedDB unavailable and localStorage fallback removed'); } catch(e){}
+      resolve([]);
       return;
     }
     const tx = db.transaction("reviews", "readonly");
@@ -3210,12 +3148,8 @@ function dbGetAllReviews() {
 function dbGetReviewById(id) {
   return new Promise((resolve, reject) => {
     if (!db) {
-      try {
-        const all = JSON.parse(localStorage.getItem('cannaReviews') || '[]');
-        resolve(all.find(r => r && r.id === id) || null);
-      } catch {
-        resolve(null);
-      }
+      try { console.warn('dbGetReviewById: IndexedDB unavailable and localStorage fallback removed'); } catch(e){}
+      resolve(null);
       return;
     }
     const tx = db.transaction('reviews', 'readonly');
@@ -3381,10 +3315,10 @@ async function duplicateReview(review) {
     if (db && !dbFailedOnce) {
       await dbAddReview(duplicatedReview);
     } else {
-      let reviews = [];
-      try { reviews = JSON.parse(localStorage.getItem("cannaReviews") || "[]"); } catch {}
-      reviews.push(duplicatedReview);
-      localStorage.setItem("cannaReviews", JSON.stringify(reviews));
+      // Fallback: queue in-memory for this session (non-persistent).
+      window.__localFallbackQueue = window.__localFallbackQueue || [];
+      window.__localFallbackQueue.push(duplicatedReview);
+      console.warn('Duplicated review queued in-memory; IndexedDB unavailable.');
     }
     
     showToast("Review dupliquée avec succès!", "success");
@@ -7041,25 +6975,12 @@ async function saveReview() {
         currentReviewId = id;
       }
     } else {
-      // Fallback to localStorage if DB not available
-      let reviews = [];
-      try { reviews = JSON.parse(localStorage.getItem("cannaReviews") || "[]"); } catch {}
-      if (Array.isArray(reviews)) {
-        const strictKey = reviewToSave.correlationKey;
-        const looseKey = computeLooseKey(reviewToSave);
-        // Offline fallback simple save: replace if id known, otherwise push
-        if (currentReviewId != null) {
-          const idx = reviews.findIndex(r => r && r.id === currentReviewId);
-          if (idx >= 0) reviews.splice(idx, 1, { ...reviewToSave, id: currentReviewId });
-          else reviews.push({ ...reviewToSave, id: currentReviewId });
-        } else {
-          // synthetic id for local storage
-          const syntheticId = Date.now();
-          reviews.push({ ...reviewToSave, id: syntheticId });
-          currentReviewId = syntheticId;
-        }
-      }
-      localStorage.setItem("cannaReviews", JSON.stringify(reviews));
+      // Fallback: keep reviewToSave in an in-memory queue (non-persistent)
+      window.__localFallbackQueue = window.__localFallbackQueue || [];
+      // assign a synthetic id if needed
+      if (currentReviewId == null) currentReviewId = Date.now();
+      window.__localFallbackQueue.push({ ...reviewToSave, id: currentReviewId });
+      console.warn('saveReview: IndexedDB unavailable, queued in-memory (non-persistent).');
     }
     
     // Feedback pour sauvegarde explicite
@@ -7074,19 +6995,17 @@ async function saveReview() {
     // Mark DB as failed and fallback to localStorage silently next times
     dbFailedOnce = true;
     try {
-      let reviews = [];
-      try { reviews = JSON.parse(localStorage.getItem("cannaReviews") || "[]"); } catch {}
-      // Offline fallback: just append/update the review
+      // Queue in-memory for this session instead of persisting to localStorage
+      window.__localFallbackQueue = window.__localFallbackQueue || [];
       if (currentReviewId != null) {
-        const idx = reviews.findIndex(r => r && r.id === currentReviewId);
-        if (idx >= 0) reviews.splice(idx, 1, reviewToSave);
-        else reviews.push(reviewToSave);
+        const idx = window.__localFallbackQueue.findIndex(r => r && r.id === currentReviewId);
+        if (idx >= 0) window.__localFallbackQueue.splice(idx, 1, reviewToSave);
+        else window.__localFallbackQueue.push(reviewToSave);
       } else {
-        reviews.push(reviewToSave);
+        window.__localFallbackQueue.push(reviewToSave);
       }
-      localStorage.setItem("cannaReviews", JSON.stringify(reviews));
       if (!document.body.dataset.lsInfoShown) {
-        showToast("Sauvegarde locale activée (offline)", "info");
+        showToast("Sauvegarde locale temporaire en mémoire (offline)", "info");
         document.body.dataset.lsInfoShown = "1";
       }
     } catch (e2) {
