@@ -260,18 +260,18 @@
       </div>
 
     <!-- Redesigned Account Modal (uses account-* classes for styling) -->
-  <div class="modal" id="accountModal" data-backdrop="none" style="display:none;">
-      <div class="modal-overlay" id="accountModalOverlay"></div>
-      <div class="modal-content account-modal-content account-dialog" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
-        <header class="modal-header">
-          <h2 id="accountTitle">Mon compte</h2>
+  <div id="accountModal" data-backdrop="none" aria-hidden="true" style="display:none;">
+      <div class="account-overlay" id="accountModalOverlay"></div>
+      <div class="account-dialog" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
+        <div class="account-header">
+          <h3 id="accountTitle">Mon compte</h3>
           <div style="display:flex;gap:8px;align-items:center;">
             <button type="button" class="btn btn-ghost" id="openAccountSettings" title="Paramètres">⚙️ Paramètres</button>
             <button type="button" class="modal-close" id="closeAccountModal" aria-label="Fermer">✕</button>
           </div>
-        </header>
+        </div>
 
-        <div class="modal-body account-modal-inner">
+        <div class="account-body account-modal-inner">
           <!-- Left column: profile & stats -->
           <div class="account-left">
             <div class="account-profile">
@@ -292,31 +292,6 @@
                 <div class="label">Public</div>
               </div>
               <div class="stat-card">
-              <!-- Public profile modal (read-only) - moved here so editor page can show public profiles -->
-              <div class="modal" id="publicProfileModal" style="display:none;">
-                <div class="modal-overlay" id="publicProfileOverlay"></div>
-                <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="publicProfileTitle">
-                  <div class="modal-header">
-                    <h2 id="publicProfileTitle">Profil public</h2>
-                    <button type="button" class="modal-close" id="closePublicProfile" aria-label="Fermer">✕</button>
-                  </div>
-                  <div class="modal-body">
-                    <div class="account-profile" style="margin-bottom:10px;">
-                      <div class="account-avatar">👤</div>
-                      <div class="account-meta">
-                        <div id="publicProfileEmail">—</div>
-                        <div class="sub">Membre Reviews Maker</div>
-                      </div>
-                    </div>
-                    <div class="stats-grid" style="margin-bottom:10px;">
-                      <div class="stat-card"><div class="num" id="publicTotal">0</div><div class="label">Total</div></div>
-                      <div class="stat-card"><div class="num" id="publicPublic">0</div><div class="label">Public</div></div>
-                      <div class="stat-card"><div class="num" id="publicPrivate">0</div><div class="label">Privé</div></div>
-                    </div>
-                    <div id="publicByType" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
-                  </div>
-                </div>
-              </div>
                 <div class="label">Privé</div>
               </div>
             </div>
@@ -441,6 +416,32 @@
         </div>
       </div>
     </div>
+
+  <!-- Public profile modal (read-only) - moved to top-level for correct stacking -->
+  <div class="modal" id="publicProfileModal" style="display:none;">
+    <div class="modal-overlay" id="publicProfileOverlay"></div>
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="publicProfileTitle">
+      <div class="modal-header">
+        <h2 id="publicProfileTitle">Profil public</h2>
+        <button type="button" class="modal-close" id="closePublicProfile" aria-label="Fermer">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="account-profile" style="margin-bottom:10px;">
+          <div class="account-avatar">👤</div>
+          <div class="account-meta">
+            <div id="publicProfileEmail">—</div>
+            <div class="sub">Membre Reviews Maker</div>
+          </div>
+        </div>
+        <div class="stats-grid" style="margin-bottom:10px;">
+          <div class="stat-card"><div class="num" id="publicTotal">0</div><div class="label">Total</div></div>
+          <div class="stat-card"><div class="num" id="publicPublic">0</div><div class="label">Public</div></div>
+          <div class="stat-card"><div class="num" id="publicPrivate">0</div><div class="label">Privé</div></div>
+        </div>
+        <div id="publicByType" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+      </div>
+    </div>
+  </div>
 
     <!-- Export Studio Modal -->
     <div class="export-config-modal" id="exportStudioModal">
