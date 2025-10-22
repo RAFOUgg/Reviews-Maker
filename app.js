@@ -3061,20 +3061,25 @@ async function renderLibraryList(mode = 'mine') {
       li.querySelector('[data-act="edit"]').addEventListener('click', () => { loadReviewIntoForm(r, 'edit'); toggleLibrary(false, mode); });
       li.querySelector('[data-act="dup"]').addEventListener('click', async () => { await duplicateReview(r); });
       li.querySelector('[data-act="delete"]').addEventListener('click', async () => {
-        if (!r.id) { showToast("Suppression non disponible (entrée ancienne)", "warning"); return; }
-        const ok = confirm(`Supprimer « ${title} » ?`);
-        if (!ok) return;
-        try {
-          let remoteOk = true;
-          if (remoteEnabled) {
-            remoteOk = await remoteDeleteReview(r.id);
+        if (!r.id) { showToast('Suppression non disponible (entrée ancienne)', 'warning'); return; }
+        // Open unified confirmation modal
+        openConfirmDelete(`Supprimer « ${title} » ?`);
+        const onConfirm = async () => {
+          try {
+            let remoteOk = true;
+            if (remoteEnabled) {
+              remoteOk = await remoteDeleteReview(r.id);
+            }
+            try { await dbDeleteReview(r.id); } catch {}
+            showToast(remoteOk ? 'Review supprimée.' : 'Supprimée localement, échec serveur', remoteOk ? 'success' : 'warning');
+            renderLibraryList(mode);
+            renderCompactLibrary();
+          } catch(e) {
+            showToast('Échec de la suppression', 'error');
           }
-          try { await dbDeleteReview(r.id); } catch {}
-          showToast(remoteOk ? "Review supprimée." : "Supprimée localement, échec serveur", remoteOk ? 'success' : 'warning');
-          renderLibraryList(mode);
-          renderCompactLibrary();
-        }
-        catch(e){ showToast("Échec de la suppression", "error"); }
+          document.removeEventListener('reviews:confirm-delete', onConfirm);
+        };
+        document.addEventListener('reviews:confirm-delete', onConfirm, { once: true });
       });
       li.addEventListener('dblclick', previewAction);
     } else {
