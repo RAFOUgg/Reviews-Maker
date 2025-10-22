@@ -2509,10 +2509,30 @@ async function populatePublicProfile(email) {
         // If identifier is an email, match by ownerEmail/holderEmail; otherwise match by holderName or stored discordUsername
         let userReviews = [];
         if (identifier.includes('@')) {
-          userReviews = (all || []).filter(r => (r.ownerEmail && String(r.ownerEmail).toLowerCase() === identifier.toLowerCase()) || (r.holderEmail && String(r.holderEmail).toLowerCase() === identifier.toLowerCase()));
+          const idLow = identifier.toLowerCase();
+          userReviews = (all || []).filter(r => {
+            try {
+              if (r.ownerEmail && String(r.ownerEmail).toLowerCase() === idLow) return true;
+              if (r.holderEmail && String(r.holderEmail).toLowerCase() === idLow) return true;
+              if (r.owner && r.owner.email && String(r.owner.email).toLowerCase() === idLow) return true;
+            } catch(e){}
+            return false;
+          });
         } else {
           const idLower = identifier.toLowerCase();
-          userReviews = (all || []).filter(r => (r.holderName && String(r.holderName).toLowerCase() === idLower) || (r.owner && r.owner.username && String(r.owner.username).toLowerCase() === idLower) || (r.owner && r.owner.discordUsername && String(r.owner.discordUsername).toLowerCase() === idLower));
+          userReviews = (all || []).filter(r => {
+            try {
+              if (r.holderName && String(r.holderName).toLowerCase() === idLower) return true;
+              if (r.holder && String(r.holder).toLowerCase() === idLower) return true;
+              if (r.owner && typeof r.owner === 'string' && String(r.owner).toLowerCase() === idLower) return true;
+              if (r.owner && typeof r.owner === 'object') {
+                if (r.owner.username && String(r.owner.username).toLowerCase() === idLower) return true;
+                if (r.owner.discordUsername && String(r.owner.discordUsername).toLowerCase() === idLower) return true;
+                if (r.owner.user_name && String(r.owner.user_name).toLowerCase() === idLower) return true;
+              }
+            } catch(e){}
+            return false;
+          });
         }
         const seen = new Set();
         const unique = [];
@@ -2720,27 +2740,52 @@ async function renderAccountView() {
   // If still empty, try to compute from local DB / localStorage reviews
   if ((!publicCount && !privateCount && !totalCount) || (!byType || Object.keys(byType).length === 0)) {
     try {
-      const all = await dbGetAllReviews();
-      if (all && all.length) {
-        // Dedupe by id to avoid counting duplicates
-        const seen = new Set();
-        const unique = [];
-        all.forEach(r => {
-          if (!r || !r.id) return;
-          if (!seen.has(r.id)) {
-            seen.add(r.id);
-            unique.push(r);
-          }
-        });
-        totalCount = unique.length;
-        publicCount = unique.filter(r => !r.isPrivate).length;
-        privateCount = unique.filter(r => !!r.isPrivate).length;
-        const map = {};
-        unique.forEach(r => {
-          const t = r.productType || r.type || 'Autre';
-          map[t] = (map[t] || 0) + 1;
-        });
-        byType = map;
+        const all = await dbGetAllReviews();
+        if (all && all.length) {
+          // Determine current user identity (email + possible username)
+          const meEmail = (localStorage.getItem('authEmail') || '').toLowerCase();
+          const meName = (localStorage.getItem('discordUsername') || localStorage.getItem('authUsername') || '').toLowerCase();
+          // Filter reviews owned by current user to avoid global counts
+          const owned = (all || []).filter(r => {
+            if (!r) return false;
+            try {
+              // Email based matches
+              if (meEmail) {
+                if ((r.ownerEmail && String(r.ownerEmail).toLowerCase() === meEmail) || (r.holderEmail && String(r.holderEmail).toLowerCase() === meEmail)) return true;
+                if (r.owner && typeof r.owner === 'object' && r.owner.email && String(r.owner.email).toLowerCase() === meEmail) return true;
+              }
+              // Name / username based matches
+              if (meName) {
+                const hn = r.holderName && String(r.holderName).toLowerCase();
+                if (hn && hn === meName) return true;
+                if (r.holder && String(r.holder).toLowerCase() === meName) return true;
+                if (r.owner && typeof r.owner === 'string' && String(r.owner).toLowerCase() === meName) return true;
+                if (r.owner && typeof r.owner === 'object') {
+                  if ((r.owner.username && String(r.owner.username).toLowerCase() === meName) || (r.owner.discordUsername && String(r.owner.discordUsername).toLowerCase() === meName) || (r.owner.user_name && String(r.owner.user_name).toLowerCase() === meName)) return true;
+                }
+              }
+            } catch(e) { /* ignore */ }
+            return false;
+          });
+          // Dedupe owned reviews by id to avoid counting duplicates
+          const seen = new Set();
+          const unique = [];
+          owned.forEach(r => {
+            if (!r || !r.id) return;
+            if (!seen.has(r.id)) {
+              seen.add(r.id);
+              unique.push(r);
+            }
+          });
+          totalCount = unique.length;
+          publicCount = unique.filter(r => !r.isPrivate).length;
+          privateCount = unique.filter(r => !!r.isPrivate).length;
+          const map = {};
+          unique.forEach(r => {
+            const t = r.productType || r.type || 'Autre';
+            map[t] = (map[t] || 0) + 1;
+          });
+          byType = map;
         // Pick favorite
         let max = 0;
         Object.keys(map).forEach(k => { if (map[k] > max) { max = map[k]; favType = k; } });
