@@ -1654,10 +1654,18 @@ function setupModalEvents() {
     dom.floatingAuthBtn.addEventListener("click", () => {
       console.log('DEBUG: floatingAuthBtn clicked; isUserConnected=', isUserConnected, 'dom.accountModal=', !!dom.accountModal, 'dom.authModal=', !!dom.authModal);
       // If connected, open account modal instead of auth modal
-      if (isUserConnected && dom.accountModal) {
-        console.log('DEBUG: Opening account modal');
-        openAccountModal();
-        return;
+      if (isUserConnected) {
+        // Ensure dom.accountModal reference is available (fallback for pages where initial DOM scan ran too early)
+        if (!dom.accountModal) {
+          try { dom.accountModal = document.getElementById('accountModal'); } catch(e){}
+          try { dom.accountModalOverlay = document.getElementById('accountModalOverlay'); } catch(e){}
+        }
+        if (dom.accountModal) {
+          console.log('DEBUG: Opening account modal (fallback lookup successful)');
+          openAccountModal();
+          return;
+        }
+        // otherwise fallthrough to auth modal as a safe fallback
       }
       if (dom.authModal) {
         console.log('DEBUG: Opening auth modal');
