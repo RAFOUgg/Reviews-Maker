@@ -2512,7 +2512,23 @@ async function populatePublicProfile(email) {
     // fallback to local DB if needed
     if (!total) {
       try {
-        const all = await dbGetAllReviews();
+        let all = await dbGetAllReviews();
+        // If IndexedDB is unavailable or empty (e.g. private mode), try remote fallback
+        if ((!all || all.length === 0) && typeof remoteBase === 'string' && remoteBase) {
+          try {
+            try { console.log('DEBUG: populatePublicProfile: IndexedDB empty, attempting remote fetch'); } catch(e){}
+            const token = localStorage.getItem('authToken');
+            const headers = token ? { 'X-Auth-Token': token } : {};
+            const resp = await fetch(`${remoteBase.replace(/\/$/, '')}/api/reviews`, { headers });
+            if (resp && resp.ok) {
+              const remoteList = await resp.json();
+              if (Array.isArray(remoteList) && remoteList.length) {
+                all = remoteList;
+                try { console.log('DEBUG: populatePublicProfile: remote reviews fetched', all.length); } catch(e){}
+              }
+            }
+          } catch (e) { try { console.warn('populatePublicProfile: remote fetch failed', e); } catch(ignore){} }
+        }
         // If identifier is an email, match by ownerEmail/holderEmail; otherwise match by holderName or stored discordUsername
         let userReviews = [];
         if (identifier.includes('@')) {
