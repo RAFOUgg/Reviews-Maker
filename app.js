@@ -2309,6 +2309,15 @@ function openAccountModal() {
   }, 100);
   // Mark body so CSS can disable global overlays while account modal is focused
   try { document.body.classList.add('account-modal-open'); } catch(e){}
+  // Defensive runtime: forcibly hide any overlay elements that might remain
+  try {
+    setTimeout(() => {
+      const overlays = document.querySelectorAll('.modal-overlay, .account-overlay, #previewOverlay, .preview-overlay');
+      overlays.forEach(o => {
+        try { o.style.display = 'none'; o.style.visibility = 'hidden'; o.style.pointerEvents = 'none'; } catch(e){}
+      });
+    }, 8);
+  } catch(e) {}
   // trap focus on dialog element
   const dialog = dom.accountModal.querySelector('.account-dialog') || dom.accountModal;
   trapFocus(dialog);
