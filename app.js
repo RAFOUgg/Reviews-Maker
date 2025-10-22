@@ -2479,6 +2479,9 @@ function closeAllModalsExcept(keepId = null) {
     const mods = document.querySelectorAll('.modal');
     mods.forEach(m => {
       try {
+        // Tag element as an intentional modal state change so the modal guard
+        // (MutationObserver) ignores these programmatic hide operations.
+        try { if (typeof window !== 'undefined' && window.markOpening) window.markOpening(m); } catch(e){}
         if (!m.id) return;
         if (keepId && m.id === keepId) return;
         m.classList.remove('show');
@@ -2488,6 +2491,7 @@ function closeAllModalsExcept(keepId = null) {
     });
     const overlays = document.querySelectorAll('.modal-overlay, .account-overlay');
     overlays.forEach(o => {
+      try { if (typeof window !== 'undefined' && window.markOpening) window.markOpening(o); } catch(e){}
       try { o.classList.remove('show'); o.setAttribute('aria-hidden','true'); o.style.display = 'none'; } catch(e){}
     });
     try { document.body.classList.remove('modal-open'); } catch(e){}
