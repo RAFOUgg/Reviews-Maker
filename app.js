@@ -148,6 +148,22 @@ function setupAccountModalEvents() {
 const isHomePage = document.body.classList.contains('home-page');
 const isEditorPage = document.body.classList.contains('editor-page');
 
+// Temporarily disable floating auth button to avoid accidental click-throughs
+function disableFloatingAuthBtnTemporarily(ms = 350) {
+  try {
+    const btn = document.getElementById('floatingAuthBtn') || dom.floatingAuthBtn;
+    if (!btn) return;
+    if (btn._disabledTemporarily) return; // already disabled
+    btn._disabledTemporarily = true;
+    const prev = btn.getAttribute('aria-disabled');
+    try { btn.setAttribute('aria-disabled', 'true'); btn.style.pointerEvents = 'none'; } catch(e){}
+    setTimeout(() => {
+      try { if (prev == null) btn.removeAttribute('aria-disabled'); else btn.setAttribute('aria-disabled', prev); btn.style.pointerEvents = ''; } catch(e){}
+      btn._disabledTemporarily = false;
+    }, ms);
+  } catch(e) { /* ignore */ }
+}
+
 // Navigation entre les pages
 function navigateToEditor(productType = null, reviewData = null, reviewId = null) {
   const url = new URL('review.html', window.location.href);
@@ -2269,6 +2285,12 @@ function showAuthStatus(message, type = "info") {
 
 // Account modal helpers
 function openAccountModal() {
+  try { console.log('openAccountModal called', { ts: Date.now() }); } catch(e){}
+  // If another modal (like public profile) is being opened, block account modal to avoid race/flash
+  if (window.__modalOpenLock) {
+    try { console.log('openAccountModal: blocked by modal lock', window.__modalOpenLock); } catch(e){}
+    return;
+  }
   if (!dom.accountModal) return;
   // Ensure internal DOM refs and event handlers are up-to-date (in case modal was injected late)
   try { ensureAccountDomReady(); } catch(e){}
@@ -2550,7 +2572,15 @@ function ensurePublicProfileDomReady() {
 
 async function openPublicProfile(email) {
   try {
-    try { console.log('DEBUG: openPublicProfile called with', email); } catch(e){}
+    try { console.log('DEBUG: openPublicProfile called with', email, { ts: Date.now() }); } catch(e){}
+    // prevent other modals from opening while we load public profile
+    if (window.__modalOpenLock) {
+      try { console.log('openPublicProfile: another modal open lock present, aborting', window.__modalOpenLock); } catch(e){}
+      return;
+    }
+    window.__modalOpenLock = { reason: 'publicProfile', ts: Date.now() };
+    // briefly disable floating auth button to avoid accidental account modal opens via clickthrough
+    try { disableFloatingAuthBtnTemporarily(400); } catch(e){}
     // Close any account modal or other modals to ensure the public profile appears on top
     try {
       try { if (typeof dom !== 'undefined' && dom && dom.accountModal) { closeAccountModal(); } } catch(e) {}
@@ -2586,7 +2616,12 @@ async function openPublicProfile(email) {
     }
     try { console.log('DEBUG: publicProfileOverlay, modal classes ->', { overlayClass: overlay ? overlay.className : null, modalClass: modal ? modal.className : null, modalStyleDisplay: modal ? modal.style.display : null }); } catch(e){}
     try { document.body.classList.add('modal-open'); } catch(e){}
-  } catch(e){}
+  } catch(e) {
+    try { console.warn('openPublicProfile error', e); } catch(ignore){}
+  } finally {
+    // release lock shortly after modal is visible
+    setTimeout(() => { try { window.__modalOpenLock = null; } catch(e){} }, 600);
+  }
 }
 
 if (typeof window !== 'undefined') {
@@ -3334,7 +3369,10 @@ async function renderCompactLibrary() {
       authorBtn.addEventListener('click', (ev) => {
         // Debug: trace author clicks to see why public profile may not open
         try { console.log('DEBUG: author-link clicked', { text: authorBtn.textContent, data: authorBtn.getAttribute('data-author-email') }); } catch(e){}
-        ev.stopPropagation();
+        // Prevent any other click handlers (or accidental click-throughs) from firing
+        try { ev.preventDefault(); ev.stopPropagation(); ev.stopImmediatePropagation(); } catch(e){}
+        // Temporarily disable the floating auth button to avoid accidental openAccountModal
+        try { disableFloatingAuthBtnTemporarily(); } catch(e){}
         const email = authorBtn.getAttribute('data-author-email') || authorBtn.textContent || '';
         try { console.log('DEBUG: resolved author identifier ->', email); } catch(e){}
         if (email) openPublicProfile(email);
