@@ -577,6 +577,78 @@
         "documentation": {}
     },
     {
+        "label": "p",
+        "kind": 5,
+        "importPath": "scripts.check_braces",
+        "description": "scripts.check_braces",
+        "peekOfCode": "p = r'c:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker\\app.js'\nwith open(p, 'r', encoding='utf8') as f:\n    s = f.read()\nopen_count = s.count('{')\nclose_count = s.count('}')\nprint('braces:', open_count, 'open,', close_count, 'close')\nlines = s.splitlines()\nln = 7636\nstart = max(0, ln-15)\nend = min(len(lines)-1, ln+15)",
+        "detail": "scripts.check_braces",
+        "documentation": {}
+    },
+    {
+        "label": "open_count",
+        "kind": 5,
+        "importPath": "scripts.check_braces",
+        "description": "scripts.check_braces",
+        "peekOfCode": "open_count = s.count('{')\nclose_count = s.count('}')\nprint('braces:', open_count, 'open,', close_count, 'close')\nlines = s.splitlines()\nln = 7636\nstart = max(0, ln-15)\nend = min(len(lines)-1, ln+15)\nprint('--- context lines', start+1, '-', end+1, '---')\nfor i in range(start, end+1):\n    print(f'{i+1:5}: {lines[i]}')",
+        "detail": "scripts.check_braces",
+        "documentation": {}
+    },
+    {
+        "label": "close_count",
+        "kind": 5,
+        "importPath": "scripts.check_braces",
+        "description": "scripts.check_braces",
+        "peekOfCode": "close_count = s.count('}')\nprint('braces:', open_count, 'open,', close_count, 'close')\nlines = s.splitlines()\nln = 7636\nstart = max(0, ln-15)\nend = min(len(lines)-1, ln+15)\nprint('--- context lines', start+1, '-', end+1, '---')\nfor i in range(start, end+1):\n    print(f'{i+1:5}: {lines[i]}')\n# Find first unmatched close bracket",
+        "detail": "scripts.check_braces",
+        "documentation": {}
+    },
+    {
+        "label": "lines",
+        "kind": 5,
+        "importPath": "scripts.check_braces",
+        "description": "scripts.check_braces",
+        "peekOfCode": "lines = s.splitlines()\nln = 7636\nstart = max(0, ln-15)\nend = min(len(lines)-1, ln+15)\nprint('--- context lines', start+1, '-', end+1, '---')\nfor i in range(start, end+1):\n    print(f'{i+1:5}: {lines[i]}')\n# Find first unmatched close bracket\nbal = 0\nfor idx, ch in enumerate(s):",
+        "detail": "scripts.check_braces",
+        "documentation": {}
+    },
+    {
+        "label": "ln",
+        "kind": 5,
+        "importPath": "scripts.check_braces",
+        "description": "scripts.check_braces",
+        "peekOfCode": "ln = 7636\nstart = max(0, ln-15)\nend = min(len(lines)-1, ln+15)\nprint('--- context lines', start+1, '-', end+1, '---')\nfor i in range(start, end+1):\n    print(f'{i+1:5}: {lines[i]}')\n# Find first unmatched close bracket\nbal = 0\nfor idx, ch in enumerate(s):\n    if ch == '{': bal += 1",
+        "detail": "scripts.check_braces",
+        "documentation": {}
+    },
+    {
+        "label": "start",
+        "kind": 5,
+        "importPath": "scripts.check_braces",
+        "description": "scripts.check_braces",
+        "peekOfCode": "start = max(0, ln-15)\nend = min(len(lines)-1, ln+15)\nprint('--- context lines', start+1, '-', end+1, '---')\nfor i in range(start, end+1):\n    print(f'{i+1:5}: {lines[i]}')\n# Find first unmatched close bracket\nbal = 0\nfor idx, ch in enumerate(s):\n    if ch == '{': bal += 1\n    elif ch == '}': bal -= 1",
+        "detail": "scripts.check_braces",
+        "documentation": {}
+    },
+    {
+        "label": "end",
+        "kind": 5,
+        "importPath": "scripts.check_braces",
+        "description": "scripts.check_braces",
+        "peekOfCode": "end = min(len(lines)-1, ln+15)\nprint('--- context lines', start+1, '-', end+1, '---')\nfor i in range(start, end+1):\n    print(f'{i+1:5}: {lines[i]}')\n# Find first unmatched close bracket\nbal = 0\nfor idx, ch in enumerate(s):\n    if ch == '{': bal += 1\n    elif ch == '}': bal -= 1\n    if bal < 0:",
+        "detail": "scripts.check_braces",
+        "documentation": {}
+    },
+    {
+        "label": "bal",
+        "kind": 5,
+        "importPath": "scripts.check_braces",
+        "description": "scripts.check_braces",
+        "peekOfCode": "bal = 0\nfor idx, ch in enumerate(s):\n    if ch == '{': bal += 1\n    elif ch == '}': bal -= 1\n    if bal < 0:\n        upto = s[:idx+1]\n        lnum = upto.count('\\n') + 1\n        print('First unmatched } at line', lnum)\n        break\nif bal > 0:",
+        "detail": "scripts.check_braces",
+        "documentation": {}
+    },
+    {
         "label": "parse_args",
         "kind": 2,
         "importPath": "scripts.clean_review_images",
@@ -592,6 +664,15 @@
         "description": "scripts.clean_review_images",
         "peekOfCode": "def main():\n    args = parse_args()\n    db_path = Path(args.db)\n    images_dir = Path(args.images)\n    if not db_path.exists():\n        print('DB not found at', db_path)\n        return 2\n    if not images_dir.exists():\n        print('Images dir not found at', images_dir)\n        return 2",
         "detail": "scripts.clean_review_images",
+        "documentation": {}
+    },
+    {
+        "label": "p",
+        "kind": 5,
+        "importPath": "scripts.find_unmatched_open",
+        "description": "scripts.find_unmatched_open",
+        "peekOfCode": "p = r'c:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker\\app.js'\nwith open(p,'r',encoding='utf8') as f:\n    lines=f.readlines()\nbalance=0\nstack=[]\nfor i,l in enumerate(lines):\n    for ch in l:\n        if ch=='{':\n            balance+=1\n            stack.append((i+1,l.strip()))",
+        "detail": "scripts.find_unmatched_open",
         "documentation": {}
     },
     {

@@ -2432,8 +2432,7 @@ async function populatePublicProfile(email) {
     // Accept either email or a display name (pseudo)
     const identifier = String(email || '').trim();
     if (dom.publicProfileEmail) dom.publicProfileEmail.textContent = identifier || '—';
-    // Ensure modal is displayed (fallback if CSS wasn't applied)
-    try { const modal = document.getElementById('publicProfileModal'); if (modal) modal.style.display = 'block'; } catch(e){}
+  // Do NOT force-show the modal here — leave presentation to caller (openPublicProfile)
     // Determine ownership: if the profile email matches the signed-in email,
     // show settings/actions that are only available to the owner.
     try {
@@ -2549,21 +2548,24 @@ function ensurePublicProfileDomReady() {
   } catch(e) { /* ignore */ }
 }
 
-function openPublicProfile(email) {
+async function openPublicProfile(email) {
   try {
     try { console.log('DEBUG: openPublicProfile called with', email); } catch(e){}
     // Close any account modal or other modals to ensure the public profile appears on top
     try {
-      // If account modal exists and is visible, close it first (but don't require it)
       try { if (typeof dom !== 'undefined' && dom && dom.accountModal) { closeAccountModal(); } } catch(e) {}
       const others = document.querySelectorAll('.modal, .tips-dialog, .export-config-modal');
       others.forEach(m => { if (m && m.id !== 'publicProfileModal') { try { m.style.display = 'none'; } catch(e){} try { m.classList.remove('show'); } catch(e){} } });
-      // Hide any modal-overlay elements that could sit above the public profile
       const overlays = document.querySelectorAll('.modal-overlay, .account-overlay');
       overlays.forEach(o => { try { o.style.display = 'none'; o.classList.remove('show'); } catch(e){} });
     } catch(e) { /* ignore */ }
-    // Ensure public profile DOM refs and handlers are ready
+
+    // Ensure DOM refs and populate data before showing modal to avoid empty flash
     try { ensurePublicProfileDomReady(); } catch(e){}
+    // Wait for data population to complete (will not show the modal yet)
+    try { await populatePublicProfile(email); } catch(e) { console.warn('openPublicProfile: populate failed', e); }
+
+    // Now show overlay/modal after data is ready
     const overlay = document.getElementById('publicProfileOverlay');
     if (overlay) {
       overlay.classList.add('show');
@@ -2577,7 +2579,6 @@ function openPublicProfile(email) {
       modal.classList.add('show');
       modal.setAttribute('aria-hidden','false');
       modal.style.display = 'block';
-      // Fallback: force modal visible if still hidden
       setTimeout(() => {
         if (modal.style.display !== 'block') modal.style.display = 'block';
         if (overlay && overlay.style.display !== 'block') overlay.style.display = 'block';
@@ -2585,7 +2586,6 @@ function openPublicProfile(email) {
     }
     try { console.log('DEBUG: publicProfileOverlay, modal classes ->', { overlayClass: overlay ? overlay.className : null, modalClass: modal ? modal.className : null, modalStyleDisplay: modal ? modal.style.display : null }); } catch(e){}
     try { document.body.classList.add('modal-open'); } catch(e){}
-    populatePublicProfile(email).catch(()=>{});
   } catch(e){}
 }
 
