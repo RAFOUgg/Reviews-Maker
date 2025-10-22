@@ -2427,6 +2427,8 @@ function ensureAccountDomReady() {
 async function populatePublicProfile(email) {
   try {
     try { console.log('DEBUG: populatePublicProfile called with', email); } catch(e){}
+    // Ensure public profile DOM refs are available (allow opening without having opened account modal first)
+    try { ensurePublicProfileDomReady(); } catch(e){}
     // Accept either email or a display name (pseudo)
     const identifier = String(email || '').trim();
     if (dom.publicProfileEmail) dom.publicProfileEmail.textContent = identifier || '—';
@@ -2514,21 +2516,54 @@ async function populatePublicProfile(email) {
   } catch(e) { console.warn('populatePublicProfile', e); }
 }
 
+// Ensure public profile modal DOM refs and handlers exist
+function ensurePublicProfileDomReady() {
+  try {
+    if (!dom.publicProfileModal) dom.publicProfileModal = document.getElementById('publicProfileModal');
+    if (!dom.publicProfileOverlay) dom.publicProfileOverlay = document.getElementById('publicProfileOverlay');
+    if (!dom.closePublicProfile) dom.closePublicProfile = document.getElementById('closePublicProfile');
+    if (!dom.publicProfileEmail) dom.publicProfileEmail = document.getElementById('publicProfileEmail');
+    if (!dom.publicTotal) dom.publicTotal = document.getElementById('publicTotal');
+    if (!dom.publicPublic) dom.publicPublic = document.getElementById('publicPublic');
+    if (!dom.publicPrivate) dom.publicPrivate = document.getElementById('publicPrivate');
+    if (!dom.publicByType) dom.publicByType = document.getElementById('publicByType');
+
+    // Attach a close handler if needed
+    if (dom.closePublicProfile && !dom.closePublicProfile._hasBound) {
+      dom.closePublicProfile.addEventListener('click', () => {
+        try { if (dom.publicProfileOverlay) dom.publicProfileOverlay.classList.remove('show'); } catch(e){}
+        try { if (dom.publicProfileModal) { dom.publicProfileModal.classList.remove('show'); dom.publicProfileModal.setAttribute('aria-hidden','true'); dom.publicProfileModal.style.display = 'none'; } } catch(e){}
+        try { document.body.classList.remove('modal-open'); } catch(e){}
+      });
+      dom.closePublicProfile._hasBound = true;
+    }
+    // Also allow clicking on overlay to close
+    if (dom.publicProfileOverlay && !dom.publicProfileOverlay._hasBound) {
+      dom.publicProfileOverlay.addEventListener('click', () => {
+        try { dom.publicProfileOverlay.classList.remove('show'); } catch(e){}
+        try { if (dom.publicProfileModal) { dom.publicProfileModal.classList.remove('show'); dom.publicProfileModal.setAttribute('aria-hidden','true'); dom.publicProfileModal.style.display = 'none'; } } catch(e){}
+        try { document.body.classList.remove('modal-open'); } catch(e){}
+      });
+      dom.publicProfileOverlay._hasBound = true;
+    }
+  } catch(e) { /* ignore */ }
+}
+
 function openPublicProfile(email) {
   try {
     try { console.log('DEBUG: openPublicProfile called with', email); } catch(e){}
     // Close any account modal or other modals to ensure the public profile appears on top
     try {
-      // If account modal is open, close it first
-      if (dom && dom.accountModal) {
-        try { closeAccountModal(); } catch(e) { /* ignore */ }
-      }
+      // If account modal exists and is visible, close it first (but don't require it)
+      try { if (typeof dom !== 'undefined' && dom && dom.accountModal) { closeAccountModal(); } } catch(e) {}
       const others = document.querySelectorAll('.modal, .tips-dialog, .export-config-modal');
       others.forEach(m => { if (m && m.id !== 'publicProfileModal') { try { m.style.display = 'none'; } catch(e){} try { m.classList.remove('show'); } catch(e){} } });
       // Hide any modal-overlay elements that could sit above the public profile
       const overlays = document.querySelectorAll('.modal-overlay, .account-overlay');
       overlays.forEach(o => { try { o.style.display = 'none'; o.classList.remove('show'); } catch(e){} });
     } catch(e) { /* ignore */ }
+    // Ensure public profile DOM refs and handlers are ready
+    try { ensurePublicProfileDomReady(); } catch(e){}
     const overlay = document.getElementById('publicProfileOverlay');
     if (overlay) {
       overlay.classList.add('show');
