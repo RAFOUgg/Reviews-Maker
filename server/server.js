@@ -11,6 +11,10 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Create the express app early to avoid TDZ / initialization-order issues
+// where other startup code or imported modules might reference `app`.
+const app = express();
+
 // Config
 const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, '..', 'db', 'reviews.sqlite');
@@ -107,7 +111,7 @@ db.serialize(() => {
 });
 
 
-const app = express();
+// app already created above. Continue configuring middleware.
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
 // Expose images for front-end compatibility (corrigé)
