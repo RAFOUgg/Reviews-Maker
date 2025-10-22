@@ -2270,6 +2270,8 @@ function showAuthStatus(message, type = "info") {
 // Account modal helpers
 function openAccountModal() {
   if (!dom.accountModal) return;
+  // Ensure internal DOM refs and event handlers are up-to-date (in case modal was injected late)
+  try { ensureAccountDomReady(); } catch(e){}
   try {
     // hide any other open modals to avoid visual stacking
     const others = document.querySelectorAll('.modal, .tips-dialog, .export-config-modal');
@@ -2326,6 +2328,46 @@ function closeAccountModal() {
   try { dom.accountModal.style.display = 'none'; } catch(e){}
   releaseFocusTrap();
   try { document.body.classList.remove('modal-open'); } catch(e){}
+}
+
+// Ensure account modal DOM refs and handlers are ready (useful when modal markup is injected late)
+function ensureAccountDomReady() {
+  try {
+    // Re-query core elements if missing
+    if (!dom.accountModal) dom.accountModal = document.getElementById('accountModal');
+    if (!dom.accountModalOverlay) dom.accountModalOverlay = document.getElementById('accountModalOverlay');
+    if (!dom.closeAccountModal) dom.closeAccountModal = document.getElementById('closeAccountModal');
+    if (!dom.openLibraryFromAccount) dom.openLibraryFromAccount = document.getElementById('openLibraryFromAccount');
+    if (!dom.accountDisconnect) dom.accountDisconnect = document.getElementById('accountDisconnect');
+    if (!dom.openAccountSettings) dom.openAccountSettings = document.getElementById('openAccountSettings');
+    if (!dom.accountEmail) dom.accountEmail = document.getElementById('accountEmail');
+    if (!dom.statPublic) dom.statPublic = document.getElementById('statPublic');
+    if (!dom.statPrivate) dom.statPrivate = document.getElementById('statPrivate');
+    if (!dom.accountTotal) dom.accountTotal = document.getElementById('accountTotal');
+    if (!dom.accountStatsByType) dom.accountStatsByType = document.getElementById('accountStatsByType');
+
+    // Re-attach event wiring for known buttons
+    try { setupAccountModalEvents(); } catch(e){}
+
+    // Delegated click handler: ensure attached once
+    if (dom.accountModal && !dom.accountModal._hasDelegatedListener) {
+      dom.accountModal.addEventListener('click', (e) => {
+        const libBtn = e.target.closest('#openLibraryFromAccount');
+        const accDisc = e.target.closest('#accountDisconnect');
+        const openSettings = e.target.closest('#openAccountSettingsInline');
+        if (libBtn) {
+          try { console.log('DEBUG: delegated openLibraryFromAccount (ensured)'); } catch(e){}
+          e.preventDefault(); closeAccountModal(); if (!isUserConnected) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; } openLibraryModal('mine', { fromAccount: true }); return;
+        }
+        if (accDisc) {
+          try { console.log('DEBUG: delegated accountDisconnect (ensured)'); } catch(e){}
+          e.preventDefault(); localStorage.removeItem('authToken'); localStorage.removeItem('authEmail'); localStorage.removeItem('discordUsername'); localStorage.removeItem('discordId'); sessionStorage.removeItem('authEmail'); sessionStorage.removeItem('pendingCode'); showAuthStatus('Déconnecté', 'info'); updateAuthUI(); try { dom.accountModal.style.display = 'none'; } catch(e){} if (isHomePage) { renderCompactLibrary(); setupHomeTabs(); } return;
+        }
+        if (openSettings) { try { console.log('DEBUG: delegated openAccountSettingsInline (ensured)'); } catch(e){} e.preventDefault(); const panel = document.getElementById('accountSettingsPanel'); if (panel) panel.style.display = 'block'; if (dom.accountPreferences) dom.accountPreferences.style.display = 'none'; return; }
+      });
+      dom.accountModal._hasDelegatedListener = true;
+    }
+  } catch(e) { /* ignore */ }
 }
 
 // Public profile (read-only) helpers
