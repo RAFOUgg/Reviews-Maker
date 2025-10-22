@@ -2488,9 +2488,11 @@ async function populatePublicProfile(email) {
       // Ensure the 'Voir la bibliothèque publique' action remains visible
   // Suppression de la logique pour 'Voir la bibliothèque publique'
     } catch(e) { /* ignore UI toggle failures */ }
-    // Try to fetch from API first if available
-    let byType = {};
-    let total = 0, pub = 0, priv = 0;
+  // Try to fetch from API first if available
+  let byType = {};
+  let total = 0, pub = 0, priv = 0;
+  // member metadata we want to display: displayName, email
+  let memberMeta = { displayName: null, email: null };
     try {
       const token = localStorage.getItem('authToken');
       // If identifier looks like an email, prefer server lookup
@@ -2499,6 +2501,11 @@ async function populatePublicProfile(email) {
         if (resp.ok) {
           const d = await resp.json();
           total = d.total || 0; pub = d.public || 0; priv = d.private || 0; byType = d.by_type || d.types || {};
+          // remote API might return user metadata
+          try {
+            memberMeta.displayName = d.displayName || d.username || d.discordUsername || memberMeta.displayName;
+            memberMeta.email = d.email || memberMeta.email;
+          } catch(e){}
         }
       }
     } catch(e) { /* ignore */ }
@@ -2543,8 +2550,18 @@ async function populatePublicProfile(email) {
         const map = {};
         unique.forEach(r => { const t = r.productType || r.type || 'Autre'; map[t] = (map[t]||0)+1; });
         byType = map;
+        // Derive display name / email from a sample review when remote lookup isn't available
+        try {
+          const sample = unique && unique.length ? unique[0] : null;
+          if (sample) {
+            // Prefer explicit owner fields
+            if (!memberMeta.displayName) memberMeta.displayName = (sample.owner && (sample.owner.displayName || sample.owner.username || sample.owner.user_name || sample.owner.discordUsername)) || sample.holderName || null;
+            if (!memberMeta.email) memberMeta.email = sample.ownerEmail || sample.holderEmail || (sample.owner && sample.owner.email) || null;
+          }
+        } catch(e){}
       } catch(e) { /* ignore */ }
     }
+    // Update DOM counts
     if (dom.publicTotal) dom.publicTotal.textContent = total;
     if (dom.publicPublic) dom.publicPublic.textContent = pub;
     if (dom.publicPrivate) dom.publicPrivate.textContent = priv;
@@ -2554,6 +2571,16 @@ async function populatePublicProfile(email) {
         const el = document.createElement('div'); el.className = 'type-pill'; el.textContent = `${k}: ${byType[k]}`; dom.publicByType.appendChild(el);
       });
     }
+    // Prefer showing a friendly display name when available; fall back to the identifier
+    try {
+      const display = memberMeta.displayName || identifier || '—';
+      if (dom.publicProfileEmail) dom.publicProfileEmail.textContent = display;
+      // Update the secondary line to show email when possible
+      const subEl = document.querySelector('#publicProfileModal .account-meta .sub');
+      if (subEl) subEl.textContent = memberMeta.email ? memberMeta.email : 'Membre Reviews Maker';
+      // store metadata on the modal for debug / further actions
+      try { const m = dom.publicProfileModal; if (m) { m.dataset.memberMeta = JSON.stringify(memberMeta); } } catch(e){}
+    } catch(e) {}
   } catch(e) { console.warn('populatePublicProfile', e); }
 }
 
