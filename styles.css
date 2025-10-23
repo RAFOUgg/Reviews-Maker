@@ -2042,7 +2042,9 @@ file-input-multi .file-info { display:flex; gap:12px; align-items:center; }
 @media (max-width:900px) {
   .library-image-grid.one { height:140px; }
   .library-image-grid.two, .library-image-grid.three, .library-image-grid.four { height:110px; }
-  .library-item > .library-image-grid { padding: 0 10px 10px 10px; }
+  /* On small screens still keep a small horizontal inset so text doesn't touch edges */
+  #libraryModal .library-item > .library-image-grid { padding: 0 8px 8px 8px; height: 160px; }
+  #libraryModal .library-item .library-item-image { height: 160px; }
 }
 .file-count { color: var(--text-soft); font-size: 0.95rem; }
 .file-name { color: var(--text-soft); font-size: .9rem; }
@@ -3817,14 +3819,23 @@ svg defs {
   border-color: var(--primary);
 }
 #libraryModal .library-item .library-item-content {
-  padding: 12px;
+  padding: 16px;
 }
-#libraryModal .library-item .library-item-image,
+/* Make the image grid flush with the card edges for maximum visibility */
 #libraryModal .library-item > .library-image-grid {
-  border-radius: 12px;
-  margin-bottom: 0.85rem;
+  width: 100%;
+  margin: 0;
+  padding: 0; /* remove horizontal padding so images go edge-to-edge */
+  box-sizing: border-box;
+  border-bottom: 0; /* visual separation handled by card background */
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  overflow: hidden;
+  height: 220px; /* make images larger */
 }
-#libraryModal .library-item .library-item-image { height: 200px; }
+#libraryModal .library-item > .library-image-grid > div {
+  border-radius: 0; /* child tiles flush to container corners */
+}
+#libraryModal .library-item .library-item-image { height: 220px; width:100%; object-fit:cover; display:block; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
 
 /* Ensure actions area aligns like the gallery cards */
 #libraryModal .library-item .library-item-actions {
