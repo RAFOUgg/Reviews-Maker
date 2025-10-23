@@ -7493,8 +7493,9 @@ async function saveReview() {
   if (remoteEnabled) {
     try {
       const remoteCopy = { ...reviewToSave };
-      if (!(lastSelectedImageFile instanceof File) && remoteCopy.image && remoteCopy.image.length > 50000) {
-        delete remoteCopy.image; // éviter envoi base64 lourd
+      // If explicit file attachments exist, avoid sending large base64 in `image` field
+      if (remoteCopy.files && Object.keys(remoteCopy.files).length) {
+        if (remoteCopy.image && remoteCopy.image.length > 50000) delete remoteCopy.image;
       }
       const remoteRes = await remoteSave(remoteCopy);
       if (remoteRes?.ok && remoteRes.review?.id) {
