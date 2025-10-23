@@ -4019,8 +4019,6 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
 // -------- Preview-only modal (no form) --------
 async function openPreviewOnly(review) {
   if (!review) return;
-  // Revoke any previously created object URLs before rendering new preview
-  try { revokeAllTrackedObjectURLs(); } catch {}
   // Ensure correlationKey exists for legacy entries
   if (!review.correlationKey) { review.correlationKey = computeCorrelationKey(review); }
   // Render review HTML into modal without enabling the form panels
@@ -4036,27 +4034,7 @@ async function openPreviewOnly(review) {
   const date = new Date(review.date || Date.now()).toLocaleDateString("fr-FR", { day:'2-digit', month:'long', year:'numeric' });
   let html = `<div class="review-header"><h2>${title}</h2><div class="review-meta">${formData.productType} • ${date}</div></div>`;
   if (imageUrl) {
-    html += `<div class="review-image">`;
-    // If formData.files exists prefer rendering those (images/videos)
-    if (formData && formData.files) {
-      const keys = Object.keys(formData.files);
-      // flatten array and show up to 4
-      const all = [];
-      keys.forEach(k => (formData.files[k]||[]).forEach(f => all.push(f)));
-      all.slice(0,4).forEach(f => {
-        if (typeof f === 'string') {
-          html += `<img src="${f}" alt="Photo du produit ${title}">`;
-        } else if (f && f.type && f.type.startsWith('image/')) {
-          // display file preview via tracked object URL
-          try { const src = createTrackedObjectURL(f); html += `<img src="${src}" alt="Photo du produit ${title}">`; } catch { }
-        } else if (f && f.type && f.type.startsWith('video/')) {
-          try { const src = createTrackedObjectURL(f); html += `<video src="${src}" muted playsinline loop></video>`; } catch {}
-        }
-      });
-    } else {
-      html += `<img src="${imageUrl}" alt="Photo du produit ${title}">`;
-    }
-    html += `</div>`;
+    html += `<div class="review-image"><img src="${imageUrl}" alt="Photo du produit ${title}"></div>`;
   }
   html += '<div class="review-grid">';
   structure.sections.forEach((section, index) => {
@@ -4100,8 +4078,6 @@ async function openPreviewOnly(review) {
 function closePreviewOnly() {
   dom.previewOverlay?.setAttribute('hidden','');
   dom.previewModal?.setAttribute('hidden','');
-  // Revoke any tracked object URLs created for the preview
-  try { revokeAllTrackedObjectURLs(); } catch {}
   // Le bouton garde toujours le même texte (pas besoin de le changer)
 }
 
@@ -5547,25 +5523,6 @@ function createFieldGroup(field, sectionIndex, section) {
         arr.slice(0,4).forEach((f, idx) => {
           const thumb = document.createElement('div');
           thumb.className = 'thumb';
-          // remove button
-          const rem = document.createElement('button');
-          rem.type = 'button';
-          rem.className = 'thumb-remove';
-          rem.setAttribute('aria-label','Supprimer ce fichier');
-          rem.textContent = '✕';
-          rem.addEventListener('click', (ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            // remove file at index from stored array
-            formData.files = formData.files || {};
-            const keyArr = formData.files[field.key] || [];
-            keyArr.splice(idx,1);
-            formData.files[field.key] = keyArr;
-            // re-render
-            renderFiles(keyArr);
-            updateProgress();
-          });
-
           if (f.type.startsWith('image/')) {
             const img = document.createElement('img');
             readFileAsDataURL(f).then(d => img.src = d).catch(()=>{});
@@ -5578,42 +5535,36 @@ function createFieldGroup(field, sectionIndex, section) {
           } else {
             const span = document.createElement('span'); span.textContent = f.name; thumb.appendChild(span);
           }
-          thumb.appendChild(rem);
           thumbList.appendChild(thumb);
         });
       }
 
       fileInput.addEventListener('change', async () => {
-        const newFiles = fileInput.files ? Array.from(fileInput.files) : [];
-        formData.files = formData.files || {};
-        const existing = formData.files[field.key] ? Array.from(formData.files[field.key]) : [];
-        // Append new files while avoiding trivial duplicates (same name+size)
-        const merged = existing.slice();
-        for (const nf of newFiles) {
-          const dup = merged.find(m => m.name === nf.name && m.size === nf.size && m.type === nf.type);
-          if (!dup) merged.push(nf);
-        }
-        // Validation: cap at 4
-        if (merged.length > 4) {
-          showToast('Maximum 4 fichiers par produit. Les fichiers supplémentaires ont été ignorés.', 'warning');
-          merged.splice(4);
+        const files = fileInput.files ? Array.from(fileInput.files) : [];
+        // Validation: max 4 files
+        if (files.length > 4) {
+          showToast('Maximum 4 fichiers par produit.', 'warning');
+          // keep only first 4
+          files.splice(4);
         }
         // Validate video durations (<=10s)
-        // Validate video durations (<=10s) on merged set; remove invalids
-        for (const f of merged.slice()) {
+        for (const f of files) {
           if (f.type.startsWith('video/')) {
             const ok = await validateVideoDuration(f, 10);
             if (!ok) {
               showToast(`La vidéo ${f.name} dépasse 10 secondes et a été refusée.`, 'error');
-              const idx = merged.indexOf(f); if (idx >= 0) merged.splice(idx,1);
+              // remove that file from list
+              const idx = files.indexOf(f); if (idx >= 0) files.splice(idx,1);
             }
           }
         }
-        // store merged files
-        formData.files[field.key] = merged;
-        lastSelectedFiles = merged;
-        await renderFiles(merged);
-        fileCount.textContent = merged.length ? `${merged.length} fichier(s)` : 'Aucun fichier';
+        // store selected files for upload (override previous for this field)
+        // Here we map by field.key in formData.files (object of arrays)
+        formData.files = formData.files || {};
+        formData.files[field.key] = files;
+        lastSelectedFiles = files;
+        await renderFiles(files);
+        fileCount.textContent = files.length ? `${files.length} fichier(s)` : 'Aucun fichier';
         updateProgress();
       });
 
@@ -6425,25 +6376,6 @@ function readFileAsDataURL(file) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
-}
-
-// Track object URLs created for previews so we can revoke them when no longer needed
-const trackedObjectURLs = new Set();
-function createTrackedObjectURL(file) {
-  try {
-    const url = URL.createObjectURL(file);
-    trackedObjectURLs.add(url);
-    return url;
-  } catch (e) {
-    return '';
-  }
-}
-function revokeAllTrackedObjectURLs() {
-  try {
-    trackedObjectURLs.forEach(u => { try { URL.revokeObjectURL(u); } catch {} });
-  } finally {
-    trackedObjectURLs.clear();
-  }
 }
 
 // Validate video duration (seconds) by loading it into a temporary video element
