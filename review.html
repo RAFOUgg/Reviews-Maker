@@ -12,6 +12,24 @@
   <link rel="stylesheet" href="ui/ui-base.css" />
     <link rel="stylesheet" href="export-studio.css" />
   <link rel="icon" type="image/png" href="ink/logo.png" />
+    <style>
+      /* Inline override to remove the decorative grey frame behind the editor content.
+         Placed here so it loads after all stylesheet files and cannot easily be overridden. */
+      .editor-page .workspace::before,
+      .editor-page .workspace::after,
+      .editor-page .panel::before {
+        display: none !important;
+        background: transparent !important;
+      }
+      .editor-page .workspace,
+      .editor-page .workspace .panel,
+      .app-shell .panel {
+        background: transparent !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        border: none !important;
+      }
+    </style>
   </head>
   <body class="editor-page">
     <div class="app-shell">

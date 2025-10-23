@@ -126,6 +126,21 @@ body::before {
   z-index: -2;
 }
 
+/* Strong override specifically for review editor page to remove any
+   decorative framed panel that may sit behind the main form. This
+   ensures no semi-opaque rounded rectangle appears behind the content. */
+.editor-page .workspace::before,
+.editor-page .workspace::after,
+.editor-page .panel::before,
+.editor-page .workspace,
+.editor-page .workspace .panel {
+  display: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  border: none !important;
+}
+
 .app-shell {
   min-height: 100vh;
   padding: clamp(24px, 4vw, 48px);
