@@ -3622,6 +3622,7 @@ async function renderCompactLibrary() {
       `<div class="compact-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.6rem;">📷</div>`;
     
   // Personal library: allow preview and, if owned, open editor when clicking edit
+    const authorLabel = (r.holderName || (r.owner && (r.owner.displayName || r.owner.username || r.owner.user_name)) || r.holder || '').toString();
     item.innerHTML = `
       <div class="compact-image-wrap" style="position:relative; border-radius:8px; overflow:hidden">
         ${imageHtml}
@@ -3633,6 +3634,7 @@ async function renderCompactLibrary() {
       <div class="compact-item-content">
         <div class="compact-item-title">${title}</div>
         <div class="compact-item-meta">${r.productType || "Review"} • ${date}${holder}</div>
+        <button type="button" class="author-link">${authorLabel || 'Auteur'}</button>
       </div>
     `;
     
