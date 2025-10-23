@@ -3178,8 +3178,8 @@ async function renderCompactLibrary() {
     // Votes UI (positionnée entre l'image et le titre, affichée si remote API disponible)
     const votesHtml = (r && remoteEnabled && r.id != null) ? `
       <div class="compact-item-votes vote-controls" data-review-id="${r.id}">
-        <button type="button" class="vote-btn vote-like" title="Like">👍 <span class="vote-count like-count">0</span></button>
-        <button type="button" class="vote-btn vote-dislike" title="Dislike">👎 <span class="vote-count dislike-count">0</span></button>
+        <button type="button" class="vote-pill vote-like" title="Like"><span class="icon">👍</span><span class="count like-count">0</span></button>
+        <button type="button" class="vote-pill vote-dislike" title="Dislike"><span class="icon">👎</span><span class="count dislike-count">0</span></button>
       </div>
     ` : `<div class="compact-item-votes vote-controls" aria-hidden="true"></div>`;
 
@@ -3217,13 +3217,13 @@ async function renderCompactLibrary() {
     try {
       const voteBox = item.querySelector('.vote-controls');
       if (voteBox && remoteEnabled && r.id != null) {
-        const likeBtn = voteBox.querySelector('.vote-like');
-        const dislikeBtn = voteBox.querySelector('.vote-dislike');
-        const likeCountEl = voteBox.querySelector('.like-count');
-        const dislikeCountEl = voteBox.querySelector('.dislike-count');
+  const likeBtn = voteBox.querySelector('.vote-like');
+  const dislikeBtn = voteBox.querySelector('.vote-dislike');
+  const likeCountEl = voteBox.querySelector('.like-count');
+  const dislikeCountEl = voteBox.querySelector('.dislike-count');
         let currentMyVote = 0;
         // Prevent parent click when interacting with buttons
-        [likeBtn, dislikeBtn].forEach(b => { if (b) b.addEventListener('click', (ev)=>ev.stopPropagation()); });
+  [likeBtn, dislikeBtn].forEach(b => { if (b) b.addEventListener('click', (ev)=>ev.stopPropagation()); });
 
         // Load current votes
         (async () => {
@@ -3239,7 +3239,7 @@ async function renderCompactLibrary() {
         })();
 
         // Click handlers
-        if (likeBtn) likeBtn.addEventListener('click', async (ev) => {
+  if (likeBtn) likeBtn.addEventListener('click', async (ev) => {
           ev.stopPropagation();
           if (!isUserConnected) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
           try {
@@ -3260,7 +3260,7 @@ async function renderCompactLibrary() {
           } catch(e) { console.warn(e); showToast('Erreur vote', 'error'); }
         });
 
-        if (dislikeBtn) dislikeBtn.addEventListener('click', async (ev) => {
+  if (dislikeBtn) dislikeBtn.addEventListener('click', async (ev) => {
           ev.stopPropagation();
           if (!isUserConnected) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
           try {

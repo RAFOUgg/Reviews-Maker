@@ -426,44 +426,55 @@ body::before {
   backdrop-filter: blur(8px);
 }
 
-/* Vote buttons (like/dislike) animation and styles */
-.vote-controls { z-index: 50; }
-.vote-btn {
-  cursor: pointer;
-  transition: transform 180ms cubic-bezier(.2,.9,.2,1), box-shadow 180ms ease, background-color 180ms ease;
-  will-change: transform, box-shadow;
-  user-select: none;
-}
-.vote-btn:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.45), 0 6px 24px rgba(56,189,248,0.08);
-}
-.vote-btn:active {
-  transform: translateY(0) scale(0.98);
-}
-.vote-btn.disabled, .vote-btn[disabled] {
-  opacity: 0.6;
-  cursor: default;
-  transform: none !important;
-}
-.vote-btn.active {
-  background: linear-gradient(135deg, rgba(255,215,110,0.18), rgba(52,211,153,0.14));
-  border: 1px solid rgba(52,211,153,0.16);
-  color: #ffd166 !important;
+/* Vote buttons (like/dislike) — compact pill overlays on images */
+.vote-controls {
+  z-index: 50;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
-/* Small pop-like pulse on hover for better affordance */
-.vote-btn::after {
-  content: '';
+/* Compact view: place pills at bottom-right of thumbnail */
+.compact-item-votes.vote-controls {
   position: absolute;
-  inset: -6px;
-  border-radius: 8px;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 160ms ease, transform 260ms ease;
-  transform: scale(0.98);
+  right: 12px;
+  bottom: 10px;
+  z-index: 40;
 }
-.vote-btn:hover::after { opacity: 1; transform: scale(1.03); }
+
+/* Full library item: place slightly inset from bottom-right of image area */
+.library-item-votes.vote-controls {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 40;
+}
+
+/* Individual pill/button */
+.vote-pill {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(2,6,23,0.86);
+  color: var(--text);
+  border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.6), 0 4px 10px rgba(56,189,248,0.06);
+  font-weight: 700;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.vote-pill .icon { font-size: 0.95rem; display:inline-block; }
+.vote-pill .count { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 8px; font-weight:800; margin-left:2px; color:var(--text); font-size:0.82rem; }
+
+.vote-pill:hover { transform: translateY(-2px); }
+
+/* Active state */
+.vote-pill.active-vote { background: linear-gradient(135deg, var(--primary), var(--accent)); color: #012; }
+
+/* Accessibility: make sure hidden controls don't capture focus */
+.vote-controls[aria-hidden="true"] { pointer-events: none; opacity: 0.0001; }
 
 .modal-content,
 .export-config-container,
