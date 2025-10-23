@@ -553,6 +553,54 @@ app.get('/api/users/leaderboard', (req, res) => {
   });
 });
 
+// User stats by email/ownerId
+app.get('/api/users/stats', async (req, res) => {
+  const email = req.query.email || req.query.ownerId || null;
+  const tokenOwner = req.auth?.ownerId || null;
+  if (!email) return res.status(400).json({ error: 'missing_param', message: 'email or ownerId required' });
+  const owner = String(email).toLowerCase();
+  try {
+    // Basic review counts
+    db.get('SELECT COUNT(*) as total, SUM(CASE WHEN isPrivate=0 THEN 1 ELSE 0 END) as pub, SUM(CASE WHEN isPrivate=1 THEN 1 ELSE 0 END) as priv FROM reviews WHERE LOWER(ownerId)=?', [owner], (err, agg) => {
+      if (err) return res.status(500).json({ error: 'db_error' });
+      const total = agg?.total || 0;
+      const pub = agg?.pub || 0;
+      const priv = agg?.priv || 0;
+      // by_type
+      db.all('SELECT COALESCE(r.productType, "Autre") as type, COUNT(*) as cnt FROM reviews r WHERE LOWER(r.ownerId)=? GROUP BY type', [owner], (e2, rows) => {
+        if (e2) return res.status(500).json({ error: 'db_error' });
+        const by_type = {};
+        (rows || []).forEach(r => by_type[r.type || 'Autre'] = r.cnt || 0);
+        // likes/dislikes RECEIVED on their reviews (only public reviews counted)
+        const sqlReceived = `SELECT SUM(CASE WHEN rl.vote=1 THEN 1 ELSE 0 END) as likes, SUM(CASE WHEN rl.vote=-1 THEN 1 ELSE 0 END) as dislikes FROM review_likes rl JOIN reviews r ON r.id=rl.reviewId WHERE LOWER(r.ownerId)=? AND r.isPrivate=0`;
+        db.get(sqlReceived, [owner], (e3, agg2) => {
+          if (e3) return res.status(500).json({ error: 'db_error' });
+          const likesReceived = agg2?.likes || 0;
+          const dislikesReceived = agg2?.dislikes || 0;
+          // votes given by this owner
+          db.get('SELECT SUM(CASE WHEN vote=1 THEN 1 ELSE 0 END) as givenLikes, SUM(CASE WHEN vote=-1 THEN 1 ELSE 0 END) as givenDislikes FROM review_likes WHERE LOWER(ownerId)=?', [owner], (e4, agg3) => {
+            if (e4) return res.status(500).json({ error: 'db_error' });
+            const votesGivenLikes = agg3?.givenLikes || 0;
+            const votesGivenDislikes = agg3?.givenDislikes || 0;
+            // Try to resolve displayName via LaFoncedalle (best-effort)
+            (async () => {
+              let displayName = null;
+              try {
+                const discord = await getDiscordUserByEmail(owner).catch(() => null);
+                if (discord) displayName = discord.username || null;
+              } catch (e) {}
+              return res.json({ total, public: pub, private: priv, by_type, displayName, email: owner, likesReceived, dislikesReceived, votesGivenLikes, votesGivenDislikes });
+            })();
+          });
+        });
+      });
+    });
+  } catch (e) {
+    console.warn('users/stats error', e && e.message ? e.message : e);
+    res.status(500).json({ error: 'server_error' });
+  }
+});
+
 // ============================================================================
 // EMAIL AUTHENTICATION ROUTES
 // ============================================================================

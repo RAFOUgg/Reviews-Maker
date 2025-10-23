@@ -2521,6 +2521,9 @@ async function populatePublicProfile(email, memberMetaArg) {
           try {
             memberMeta.displayName = d.displayName || d.username || d.discordUsername || memberMeta.displayName;
             memberMeta.email = d.email || memberMeta.email;
+            // likes/dislikes and votes given
+            try { if (dom.publicLikesReceived) dom.publicLikesReceived.textContent = (d.likesReceived || 0); } catch(e){}
+            try { if (dom.publicVotesGiven) dom.publicVotesGiven.textContent = ((d.votesGivenLikes||0) + (d.votesGivenDislikes||0)); } catch(e){}
           } catch(e){}
         }
       }
@@ -2731,6 +2734,8 @@ function ensurePublicProfileDomReady() {
     if (!dom.publicTotal) dom.publicTotal = document.getElementById('publicTotal');
     if (!dom.publicPublic) dom.publicPublic = document.getElementById('publicPublic');
     if (!dom.publicPrivate) dom.publicPrivate = document.getElementById('publicPrivate');
+  if (!dom.publicLikesReceived) dom.publicLikesReceived = document.getElementById('publicLikesReceived');
+  if (!dom.publicVotesGiven) dom.publicVotesGiven = document.getElementById('publicVotesGiven');
     if (!dom.publicByType) dom.publicByType = document.getElementById('publicByType');
 
     // Attach a close handler if needed
@@ -3527,6 +3532,10 @@ async function renderCompactLibrary() {
         <div class="compact-item-title">${title}</div>
         <div class="compact-item-meta">${r.productType || "Review"} • ${date}${holder}</div>
   ${r.holderName ? `<button type="button" class="author-link" data-author-email="${String((r.holderEmail || (r.owner && r.owner.email) || r.owner || r.holderName) || '').replace(/\"/g,'')}" data-member-meta='${String(JSON.stringify({ displayName: (r.holderName || (r.owner && r.owner.displayName) || null), email: (r.holderEmail || (r.owner && r.owner.email) || null) })).replace(/\"/g,'"') }'>${r.holderName}</button>` : ''}
+      <div class="vote-controls" data-review-id="${r.id || ''}" style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+        <button type="button" class="vote-btn like" title="Like">👍 <span class="vote-count">0</span></button>
+        <button type="button" class="vote-btn dislike" title="Dislike">👎 <span class="vote-count">0</span></button>
+      </div>
       </div>
     `;
     
@@ -3567,6 +3576,59 @@ async function renderCompactLibrary() {
     }
     
     dom.compactLibraryList.appendChild(item);
+    // Wire vote controls (only when remote enabled)
+    try {
+      const vc = item.querySelector('.vote-controls');
+      if (vc) {
+        const reviewId = vc.getAttribute('data-review-id');
+        const likeBtn = vc.querySelector('.vote-btn.like');
+        const dislikeBtn = vc.querySelector('.vote-btn.dislike');
+        const likeCountEl = likeBtn && likeBtn.querySelector('.vote-count');
+        const dislikeCountEl = dislikeBtn && dislikeBtn.querySelector('.vote-count');
+        const refreshVotes = async () => {
+          if (!remoteEnabled || !reviewId) return;
+          try {
+            const resp = await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/votes`, { headers: {} });
+            if (!resp.ok) return;
+            const js = await resp.json();
+            if (likeCountEl) likeCountEl.textContent = js.likes || 0;
+            if (dislikeCountEl) dislikeCountEl.textContent = js.dislikes || 0;
+            // highlight user's vote if present
+            if (js.myVote === 1) { likeBtn.classList.add('active'); dislikeBtn.classList.remove('active'); }
+            else if (js.myVote === -1) { dislikeBtn.classList.add('active'); likeBtn.classList.remove('active'); }
+            else { likeBtn.classList.remove('active'); dislikeBtn.classList.remove('active'); }
+          } catch (e) {}
+        };
+        // initial load
+        refreshVotes();
+        // click handlers
+        likeBtn && likeBtn.addEventListener('click', async (ev) => {
+          ev.preventDefault(); ev.stopPropagation();
+          if (!remoteEnabled) { showToast('Feature requires remote API', 'info'); return; }
+          const token = localStorage.getItem('authToken');
+          if (!token) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
+          // If already liked, remove vote
+          if (likeBtn.classList.contains('active')) {
+            await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/vote`, { method: 'DELETE', headers: { 'X-Auth-Token': token } });
+          } else {
+            await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/vote`, { method: 'POST', headers: { 'Content-Type':'application/json', 'X-Auth-Token': token }, body: JSON.stringify({ vote: 1 }) });
+          }
+          refreshVotes();
+        });
+        dislikeBtn && dislikeBtn.addEventListener('click', async (ev) => {
+          ev.preventDefault(); ev.stopPropagation();
+          if (!remoteEnabled) { showToast('Feature requires remote API', 'info'); return; }
+          const token = localStorage.getItem('authToken');
+          if (!token) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
+          if (dislikeBtn.classList.contains('active')) {
+            await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/vote`, { method: 'DELETE', headers: { 'X-Auth-Token': token } });
+          } else {
+            await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/vote`, { method: 'POST', headers: { 'Content-Type':'application/json', 'X-Auth-Token': token }, body: JSON.stringify({ vote: -1 }) });
+          }
+          refreshVotes();
+        });
+      }
+    } catch(e) { console.warn('vote controls attach failed', e); }
   });
 }
 
