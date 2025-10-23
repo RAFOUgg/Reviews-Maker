@@ -304,81 +304,12 @@ app.post('/api/reviews', upload.any(), (req, res) => {
   const name = incoming.name || incoming.cultivars || incoming.productName || null;
   const json = JSON.stringify(incoming);
   db.run('INSERT INTO reviews (productType, name, data, imagePath, ownerId, isDraft, isPrivate) VALUES (?,?,?,?,?,?,?)',
-    [productType, name, json, req.file ? req.file.path : null, ownerId, isDraft, isPrivate],
+    [productType, name, json, incoming.image ? path.join(IMAGE_DIR, path.basename(incoming.image)) : null, ownerId, isDraft, isPrivate],
     function(err) {
       if (err) return res.status(500).json({ error: 'db_error' });
       db.get('SELECT * FROM reviews WHERE id=?', [this.lastID], (e2, row) => {
         if (e2) return res.status(500).json({ error: 'db_error' });
         res.json({ review: rowToReview(row) });
-      });
-    });
-    // If no direct owner stats were found (total === 0), attempt a fallback by matching display/holder names
-    // This helps when callers pass a display name (pseudo) instead of an email/ownerId.
-    // We'll scan recent reviews, extract candidate names and match loosely.
-    db.get('SELECT COUNT(*) as total FROM reviews WHERE LOWER(ownerId)=?', [owner], (err2, cRow) => {
-      if (err2) return; // nothing we can do
-      const foundTotal = cRow && cRow.total ? Number(cRow.total) : 0;
-      if (foundTotal > 0) return; // we already have data
-      // Scan reviews (limit to 1000 to avoid OOM) and try to match by name tokens
-      db.all('SELECT id, data, ownerId, isPrivate FROM reviews ORDER BY updatedAt DESC LIMIT 1000', [], (eR, rowsR) => {
-        if (eR || !rowsR || rowsR.length === 0) return;
-        try {
-          const q = owner.toLowerCase();
-          const matches = [];
-          for (const rr of rowsR) {
-            try {
-              const payload = JSON.parse(rr.data || '{}');
-              // candidate fields
-              const candidates = [];
-              if (payload.holderName) candidates.push(String(payload.holderName).toLowerCase());
-              if (payload.holder) candidates.push(String(payload.holder).toLowerCase());
-              if (payload.owner && typeof payload.owner === 'object') {
-                if (payload.owner.displayName) candidates.push(String(payload.owner.displayName).toLowerCase());
-                if (payload.owner.username) candidates.push(String(payload.owner.username).toLowerCase());
-                if (payload.owner.user_name) candidates.push(String(payload.owner.user_name).toLowerCase());
-              }
-              if (payload.author) candidates.push(String(payload.author).toLowerCase());
-              if (payload.authorName) candidates.push(String(payload.authorName).toLowerCase());
-              // normalization: simple includes check
-              for (const c of candidates) {
-                if (!c) continue;
-                if (c === q || c.includes(q) || q.includes(c)) {
-                  matches.push(rr);
-                  break;
-                }
-              }
-            } catch (ie) { /* ignore per-row parse errors */ }
-          }
-          if (matches.length === 0) return;
-          // Derive stats from matched reviews
-          const unique = new Map();
-          matches.forEach(r => { try { unique.set(r.id, r); } catch(e){} });
-          const uniqArr = Array.from(unique.values());
-          const total = uniqArr.length;
-          const pub = uniqArr.filter(r => !r.isPrivate).length;
-          const priv = uniqArr.filter(r => !!r.isPrivate).length;
-          const by_type = {};
-          uniqArr.forEach(r => {
-            try {
-              const p = JSON.parse(r.data || '{}');
-              const t = p.productType || p.type || 'Autre';
-              by_type[t] = (by_type[t] || 0) + 1;
-            } catch(e) {}
-          });
-          // likes/dislikes received only for public reviews
-          const ids = uniqArr.map(u => u.id).filter(Boolean);
-          if (ids.length === 0) return;
-          const placeholders = ids.map(()=>'?').join(',');
-          const sqlReceived = `SELECT SUM(CASE WHEN rl.vote=1 THEN 1 ELSE 0 END) as likes, SUM(CASE WHEN rl.vote=-1 THEN 1 ELSE 0 END) as dislikes FROM review_likes rl WHERE rl.reviewId IN (${placeholders})`;
-          db.get(sqlReceived, ids, (erx, agg2) => {
-            if (erx) return;
-            const likesReceived = agg2?.likes || 0;
-            const dislikesReceived = agg2?.dislikes || 0;
-            // votes given by these owners is not well-defined here; keep 0
-            // return a best-effort response
-            return res.json({ total, public: pub, private: priv, by_type, displayName: ownerParam, email: null, likesReceived, dislikesReceived, votesGivenLikes: 0, votesGivenDislikes: 0, note: 'matched_by_name' });
-          });
-        } catch(e) { /* ignore fallback errors */ }
       });
     });
 });
@@ -430,7 +361,7 @@ app.put('/api/reviews/:id', upload.any(), (req, res) => {
 
     const merged = { ...JSON.parse(row.data), ...incoming };
     const json = JSON.stringify(merged);
-    const newImagePath = req.file ? req.file.path : row.imagePath;
+  const newImagePath = (incoming.image ? path.join(IMAGE_DIR, path.basename(incoming.image)) : row.imagePath);
 
     db.run('UPDATE reviews SET productType=?, name=?, data=?, imagePath=?, ownerId=?, isDraft=?, isPrivate=?, updatedAt=datetime(\'now\') WHERE id=?',
       [merged.productType || null, merged.name || merged.cultivars || merged.productName || null, json, newImagePath, nextOwnerId, nextIsDraft, nextIsPrivate, id],
