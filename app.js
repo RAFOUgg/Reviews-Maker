@@ -2541,7 +2541,25 @@ async function populatePublicProfile(email, memberMetaArg) {
     // fallback to local DB if needed
     if (!total) {
       try {
-        let all = await dbGetAllReviews();
+        // If IndexedDB is not available but a remote backend exists, try the remote reviews
+        let all = [];
+        try {
+          if (!db && typeof remoteBase === 'string' && remoteBase) {
+            try { console.log('DEBUG: populatePublicProfile: IndexedDB missing, attempting remote fetch early'); } catch(e){}
+            const token = localStorage.getItem('authToken');
+            const headers = token ? { 'X-Auth-Token': token } : {};
+            const resp = await fetch(`${remoteBase.replace(/\/$/, '')}/api/reviews`, { headers });
+            if (resp && resp.ok) {
+              const remoteList = await resp.json();
+              if (Array.isArray(remoteList) && remoteList.length) {
+                all = remoteList;
+                try { console.log('DEBUG: populatePublicProfile: remote reviews fetched (early)', all.length); } catch(e){}
+              }
+            }
+          }
+        } catch (e) { try { console.warn('populatePublicProfile: early remote fetch failed', e); } catch(ignore){} }
+        // If early remote fetch didn't populate 'all', try IndexedDB as usual
+        if (!all || all.length === 0) all = await dbGetAllReviews();
         // If IndexedDB is unavailable or empty (e.g. private mode), try remote fallback
         if ((!all || all.length === 0) && typeof remoteBase === 'string' && remoteBase) {
           try {
@@ -2558,7 +2576,7 @@ async function populatePublicProfile(email, memberMetaArg) {
             }
           } catch (e) { try { console.warn('populatePublicProfile: remote fetch failed', e); } catch(ignore){} }
         }
-        // If identifier is an email, match by ownerEmail/holderEmail; otherwise match by holderName or stored discordUsername
+  // If identifier is an email, match by ownerEmail/holderEmail; otherwise match by holderName or stored discordUsername
         let userReviews = [];
         if (identifier.includes('@')) {
           // exact email matching on common email fields
@@ -3585,7 +3603,6 @@ async function renderCompactLibrary() {
       <div class="compact-item-content">
         <div class="compact-item-title">${title}</div>
         <div class="compact-item-meta">${r.productType || "Review"} • ${date}${holder}</div>
-        ${r.holderName ? `<button type="button" class="author-link" data-author-email="${String((r.holderEmail || (r.owner && r.owner.email) || r.owner || r.holderName) || '').replace(/\"/g,'')}" data-member-meta='${String(JSON.stringify({ displayName: (r.holderName || (r.owner && r.owner.displayName) || null), email: (r.holderEmail || (r.owner && r.owner.email) || null) })).replace(/\"/g,'"') }'>${r.holderName}</button>` : ''}
       </div>
     `;
     
@@ -3597,30 +3614,32 @@ async function renderCompactLibrary() {
     // Make author link open public profile (delegated)
     const authorBtn = item.querySelector('.author-link');
     if (authorBtn) {
+      // Ensure data-author-email contains an email if available (prefer holderEmail / owner.email)
+      try {
+        const explicitEmail = (r.holderEmail || (r.owner && r.owner.email)) || '';
+        if (explicitEmail) {
+          authorBtn.dataset.authorEmail = String(explicitEmail).trim();
+        } else {
+          // If no email, leave dataset.authorEmail empty and rely on text content for name matching
+          authorBtn.dataset.authorEmail = '';
+        }
+        // Set memberMeta safely via dataset (stringified but not injected into HTML template)
+        const mm = { displayName: (r.holderName || (r.owner && r.owner.displayName) || null), email: explicitEmail || null };
+        authorBtn.dataset.memberMeta = JSON.stringify(mm);
+      } catch(e) { /* ignore dataset set failures */ }
+
       authorBtn.addEventListener('click', (ev) => {
-        // Debug: trace author clicks to see why public profile may not open
-        try { console.log('DEBUG: author-link clicked', { text: authorBtn.textContent, data: authorBtn.getAttribute('data-author-email') }); } catch(e){}
-        // Prevent any other click handlers (or accidental click-throughs) from firing
+        try { console.log('DEBUG: author-link clicked', { text: authorBtn.textContent, data: authorBtn.dataset.authorEmail }); } catch(e){}
         try { ev.preventDefault(); ev.stopPropagation(); ev.stopImmediatePropagation(); } catch(e){}
-        // Temporarily disable the floating auth button to avoid accidental openAccountModal
         try { disableFloatingAuthBtnTemporarily(); } catch(e){}
-        const email = authorBtn.getAttribute('data-author-email') || authorBtn.textContent || '';
-        // prefer immediate metadata when available to avoid remote/indexeddb lookup
+        const email = authorBtn.dataset.authorEmail || (authorBtn.textContent || '').trim();
         let meta = null;
         try {
-          const dm = authorBtn.getAttribute('data-member-meta');
-          if (dm) {
-            meta = JSON.parse(dm);
-          }
+          meta = authorBtn.dataset.memberMeta ? JSON.parse(authorBtn.dataset.memberMeta) : null;
         } catch(e) { meta = null; }
         try { console.log('DEBUG: resolved author identifier ->', email); } catch(e){}
         if (email) {
-          if (meta) {
-            // pass meta as second parameter
-            openPublicProfile(email, meta);
-          } else {
-            openPublicProfile(email);
-          }
+          if (meta) openPublicProfile(email, meta); else openPublicProfile(email);
         }
       });
     }
