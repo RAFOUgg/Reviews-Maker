@@ -552,6 +552,16 @@ body.account-modal-open .preview-modal .modal-overlay {
   display: none !important;
 }
 
+/* Defensive override: neutralize any decorative backdrop/frame behind the
+   editor content to avoid a floating grey panel showing behind the form. */
+.editor-page .workspace,
+.editor-page .workspace .panel {
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  border: none !important;
+}
+
 /* Constrain modal content to viewport and allow internal scrolling */
 .modal-content, #accountModal .modal-content, dialog .modal-content, [role="dialog"] .modal-content {
   position: relative !important;
