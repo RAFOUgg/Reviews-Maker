@@ -3793,6 +3793,46 @@ svg defs {
   overflow: hidden;
 }
 
+/* Library modal: use gallery-style grid and card appearance to match public gallery */
+#libraryModal .library-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 1rem 0 2rem 0;
+}
+#libraryModal .library-item {
+  background: var(--surface-elevated);
+  border: 2px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 0.9rem;
+  transition: var(--transition);
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 20px 35px -30px rgba(15, 23, 42, 0.8);
+  overflow: hidden;
+}
+#libraryModal .library-item:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--primary);
+}
+#libraryModal .library-item .library-item-content {
+  padding: 12px;
+}
+#libraryModal .library-item .library-item-image,
+#libraryModal .library-item > .library-image-grid {
+  border-radius: 12px;
+  margin-bottom: 0.85rem;
+}
+#libraryModal .library-item .library-item-image { height: 200px; }
+
+/* Ensure actions area aligns like the gallery cards */
+#libraryModal .library-item .library-item-actions {
+  display:flex;
+  gap:8px;
+  margin-top:12px;
+}
+
 .compact-library-item:hover {
   border-color: var(--primary);
   background: rgba(52, 211, 153, 0.15);
