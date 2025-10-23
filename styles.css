@@ -2013,6 +2013,16 @@ file-input-multi .file-info { display:flex; gap:12px; align-items:center; }
 .library-image-grid { display:flex; gap:8px; align-items:center; }
 .library-image-grid > div { width:120px; height:76px; border-radius:8px; overflow:hidden; border:1px solid var(--glass-border); }
 .library-image-grid img { width:100%; height:100%; object-fit:cover; display:block; }
+/* Library card image grid variants (larger than compact) */
+.library-image-grid.one { display:grid; grid-template-columns: 1fr; grid-auto-rows: 1fr; height:160px; gap:6px; }
+.library-image-grid.two { display:grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 1fr; height:120px; gap:6px; }
+.library-image-grid.three { display:grid; grid-template-columns: 1fr 1fr; grid-template-areas: "a b" "c b"; height:140px; gap:6px; }
+.library-image-grid.three > div:nth-child(1) { grid-area: a; }
+.library-image-grid.three > div:nth-child(2) { grid-area: b; }
+.library-image-grid.three > div:nth-child(3) { grid-area: c; }
+.library-image-grid.four { display:grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 1fr; height:140px; gap:6px; }
+.library-image-grid > div { overflow:hidden; border-radius:8px; border:1px solid var(--glass-border); }
+.library-image-grid > div img { width:100%; height:100%; object-fit:cover; display:block; }
 .file-count { color: var(--text-soft); font-size: 0.95rem; }
 .file-name { color: var(--text-soft); font-size: .9rem; }
 .file-select-btn { white-space: nowrap; }
