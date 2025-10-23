@@ -2446,7 +2446,7 @@ function ensureAccountDomReady() {
 }
 
 // Public profile (read-only) helpers
-async function populatePublicProfile(email) {
+async function populatePublicProfile(email, memberMetaArg) {
   try {
     try { console.log('DEBUG: populatePublicProfile called with', email); } catch(e){}
     // Ensure public profile DOM refs are available (allow opening without having opened account modal first)
@@ -2492,7 +2492,8 @@ async function populatePublicProfile(email) {
   let byType = {};
   let total = 0, pub = 0, priv = 0;
   // member metadata we want to display: displayName, email
-  let memberMeta = { displayName: null, email: null };
+  // allow caller to pass a small pre-seeded metadata object to avoid expensive lookups
+  let memberMeta = Object.assign({ displayName: null, email: null }, (memberMetaArg && typeof memberMetaArg === 'object') ? memberMetaArg : {});
 
   // Normalize display names: remove emojis/controls, normalize unicode, remove diacritics
   function normalizeString(v) {
@@ -2592,11 +2593,48 @@ async function populatePublicProfile(email) {
         const map = {};
         unique.forEach(r => { const t = r.productType || r.type || 'Autre'; map[t] = (map[t]||0)+1; });
         byType = map;
+        // Derive member metadata (displayName/email) from matched reviews by majority vote
+        try {
+          const nameCounts = new Map();
+          const emailCounts = new Map();
+          const extractName = (r) => {
+            try {
+              if (r.owner && typeof r.owner === 'object') return r.owner.displayName || r.owner.username || r.owner.user_name || r.owner.discordUsername || r.owner.name || null;
+              return r.holderName || r.holder || r.author || r.authorName || r.creator || null;
+            } catch(e) { return null; }
+          };
+          unique.forEach(r => {
+            const n = extractName(r);
+            if (n) {
+              const k = normalizeString(n) || String(n).toLowerCase();
+              const prev = nameCounts.get(k) || { raw: n, count: 0 };
+              prev.count++;
+              nameCounts.set(k, prev);
+            }
+            try {
+              const e = r.ownerEmail || r.holderEmail || (r.owner && r.owner.email) || null;
+              if (e) {
+                const ek = String(e).toLowerCase();
+                emailCounts.set(ek, (emailCounts.get(ek) || 0) + 1);
+              }
+            } catch(e){}
+          });
+          // pick most frequent name
+          let bestName = null; let bestCount = 0;
+          for (const [k, v] of nameCounts.entries()) { if (v.count > bestCount) { bestCount = v.count; bestName = v.raw; } }
+          if (bestName && !memberMeta.displayName) memberMeta.displayName = bestName;
+          // pick most frequent email
+          let bestEmail = null; let bestEmailCount = 0;
+          for (const [k, v] of emailCounts.entries()) { if (v > bestEmailCount) { bestEmailCount = v; bestEmail = k; } }
+          if (bestEmail && !memberMeta.email) memberMeta.email = bestEmail;
+        } catch(e) {}
+
         // Attach matched reviews for debug and display in modal if requested
         try {
           const mEl = document.getElementById('publicProfileModal');
           if (mEl) {
             mEl.dataset.matchedReviews = JSON.stringify(unique || []);
+            try { mEl.dataset.memberMeta = JSON.stringify(memberMeta || {}); } catch(e){}
           }
           try { console.log('DEBUG: populatePublicProfile matchedReviews ->', unique); } catch(e){}
           // Create a small debug panel in the modal (collapsible)
@@ -2650,7 +2688,7 @@ async function populatePublicProfile(email) {
         } catch(e){}
       } catch(e) { /* ignore */ }
     }
-    // Update DOM counts
+  // Update DOM counts
     if (dom.publicTotal) dom.publicTotal.textContent = total;
     if (dom.publicPublic) dom.publicPublic.textContent = pub;
     if (dom.publicPrivate) dom.publicPrivate.textContent = priv;
@@ -2716,7 +2754,7 @@ function ensurePublicProfileDomReady() {
   } catch(e) { /* ignore */ }
 }
 
-async function openPublicProfile(email) {
+async function openPublicProfile(email, memberMeta) {
   try {
     try { console.log('DEBUG: openPublicProfile called with', email, { ts: Date.now() }); } catch(e){}
     // prevent other modals from opening while we load public profile
@@ -2739,7 +2777,9 @@ async function openPublicProfile(email) {
     // Ensure DOM refs and populate data before showing modal to avoid empty flash
     try { ensurePublicProfileDomReady(); } catch(e){}
     // Wait for data population to complete (will not show the modal yet)
-    try { await populatePublicProfile(email); } catch(e) { console.warn('openPublicProfile: populate failed', e); }
+  // Allow callers to pass an already-known memberMeta by encoding it in the email parameter
+  // (openPublicProfile callers that know metadata can pass an object via second param)
+  try { await populatePublicProfile(email, memberMeta); } catch(e) { console.warn('openPublicProfile: populate failed', e); }
     // Defensive: remove any account-modal specific body class which can elevate other overlays
     try { document.body.classList.remove('account-modal-open'); } catch(e){}
     // Also hide any lingering overlays which may have !important z-index rules
@@ -3475,7 +3515,7 @@ async function renderCompactLibrary() {
       <div class="compact-item-content">
         <div class="compact-item-title">${title}</div>
         <div class="compact-item-meta">${r.productType || "Review"} • ${date}${holder}</div>
-  ${r.holderName ? `<button type="button" class="author-link" data-author-email="${String((r.holderEmail || (r.owner && r.owner.email) || r.owner || r.holderName) || '').replace(/\"/g,'')}">${r.holderName}</button>` : ''}
+  ${r.holderName ? `<button type="button" class="author-link" data-author-email="${String((r.holderEmail || (r.owner && r.owner.email) || r.owner || r.holderName) || '').replace(/\"/g,'')}" data-member-meta='${String(JSON.stringify({ displayName: (r.holderName || (r.owner && r.owner.displayName) || null), email: (r.holderEmail || (r.owner && r.owner.email) || null) })).replace(/\"/g,'"') }'>${r.holderName}</button>` : ''}
       </div>
     `;
     
@@ -3495,8 +3535,23 @@ async function renderCompactLibrary() {
         // Temporarily disable the floating auth button to avoid accidental openAccountModal
         try { disableFloatingAuthBtnTemporarily(); } catch(e){}
         const email = authorBtn.getAttribute('data-author-email') || authorBtn.textContent || '';
+        // prefer immediate metadata when available to avoid remote/indexeddb lookup
+        let meta = null;
+        try {
+          const dm = authorBtn.getAttribute('data-member-meta');
+          if (dm) {
+            meta = JSON.parse(dm);
+          }
+        } catch(e) { meta = null; }
         try { console.log('DEBUG: resolved author identifier ->', email); } catch(e){}
-        if (email) openPublicProfile(email);
+        if (email) {
+          if (meta) {
+            // pass meta as second parameter
+            openPublicProfile(email, meta);
+          } else {
+            openPublicProfile(email);
+          }
+        }
       });
     }
     
