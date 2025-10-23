@@ -3195,6 +3195,11 @@ async function renderCompactLibrary() {
         <div class="compact-item-meta">${r.productType || "Review"} • ${date}${holder}</div>
   ${r.holderName ? `<button type="button" class="author-link" data-author-email="${String((r.holderEmail || (r.owner && r.owner.email) || r.owner || r.holderName) || '').replace(/\"/g,'')}">${r.holderName}</button>` : ''}
       </div>
+      <div class="compact-item-votes" data-review-id="${r.id || ''}">
+        <!-- vote counts will be loaded lazily -->
+        <button type="button" class="vote-btn vote-like" title="J'aime">👍 <span class="vote-count">0</span></button>
+        <button type="button" class="vote-btn vote-dislike" title="Je n'aime pas">👎 <span class="vote-count">0</span></button>
+      </div>
     `;
     
     // Click: always preview when shown in the public/compact gallery
@@ -3216,6 +3221,52 @@ async function renderCompactLibrary() {
     }
     
     dom.compactLibraryList.appendChild(item);
+    // wire vote handlers for compact item
+    try {
+      const voteWrap = item.querySelector('.compact-item-votes');
+      if (voteWrap && r.id != null) {
+        const likeBtn = voteWrap.querySelector('.vote-like');
+        const dislikeBtn = voteWrap.querySelector('.vote-dislike');
+        const countEls = voteWrap.querySelectorAll('.vote-count');
+        // helper to refresh counts
+        const refreshCounts = async () => {
+          try {
+            const resp = await fetch(`/api/reviews/${encodeURIComponent(r.id)}/votes`);
+            if (!resp.ok) return;
+            const data = await resp.json();
+            const likes = data.likes || 0; const dislikes = data.dislikes || 0; const myVote = data.myVote || 0;
+            if (countEls[0]) countEls[0].textContent = String(likes);
+            if (countEls[1]) countEls[1].textContent = String(dislikes);
+            // toggle active class
+            if (likeBtn) likeBtn.classList.toggle('active', myVote === 1);
+            if (dislikeBtn) dislikeBtn.classList.toggle('active', myVote === -1);
+          } catch (e) { /* ignore */ }
+        };
+        // click handlers
+        if (likeBtn) likeBtn.addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          const token = localStorage.getItem('authToken');
+          if (!token) { showToast('Connectez-vous pour voter', 'info'); return; }
+          try {
+            const resp = await fetch(`/api/reviews/${encodeURIComponent(r.id)}/vote`, { method: 'POST', headers: { 'Content-Type':'application/json', 'X-Auth-Token': token }, body: JSON.stringify({ vote: 1 }) });
+            if (!resp.ok) throw new Error('vote failed');
+            await refreshCounts();
+          } catch (e) { showToast('Impossible d\'envoyer le vote', 'error'); }
+        });
+        if (dislikeBtn) dislikeBtn.addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          const token = localStorage.getItem('authToken');
+          if (!token) { showToast('Connectez-vous pour voter', 'info'); return; }
+          try {
+            const resp = await fetch(`/api/reviews/${encodeURIComponent(r.id)}/vote`, { method: 'POST', headers: { 'Content-Type':'application/json', 'X-Auth-Token': token }, body: JSON.stringify({ vote: -1 }) });
+            if (!resp.ok) throw new Error('vote failed');
+            await refreshCounts();
+          } catch (e) { showToast('Impossible d\'envoyer le vote', 'error'); }
+        });
+        // initial load
+        setTimeout(refreshCounts, 50);
+      }
+    } catch (e) { /* non-fatal */ }
   });
 }
 
@@ -3365,6 +3416,10 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
         ${holder}
         <div class="library-item-date">${date}</div>
       </div>
+      <div class="library-item-votes" data-review-id="${r.id || ''}">
+        <button type="button" class="vote-btn vote-like" title="J'aime">👍 <span class="vote-count">0</span></button>
+        <button type="button" class="vote-btn vote-dislike" title="Je n'aime pas">👎 <span class="vote-count">0</span></button>
+      </div>
       ${actionsHtml}
     `;
     
@@ -3437,6 +3492,47 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
     }
     
     dom.libraryGrid.appendChild(item);
+    // wire vote handlers for library item (both modes)
+    try {
+      const voteWrap = item.querySelector('.library-item-votes');
+      if (voteWrap && r.id != null) {
+        const likeBtn = voteWrap.querySelector('.vote-like');
+        const dislikeBtn = voteWrap.querySelector('.vote-dislike');
+        const counts = voteWrap.querySelectorAll('.vote-count');
+        const refresh = async () => {
+          try {
+            const resp = await fetch(`/api/reviews/${encodeURIComponent(r.id)}/votes`);
+            if (!resp.ok) return;
+            const data = await resp.json();
+            if (counts[0]) counts[0].textContent = String(data.likes || 0);
+            if (counts[1]) counts[1].textContent = String(data.dislikes || 0);
+            if (likeBtn) likeBtn.classList.toggle('active', data.myVote === 1);
+            if (dislikeBtn) dislikeBtn.classList.toggle('active', data.myVote === -1);
+          } catch (e) {}
+        };
+        if (likeBtn) likeBtn.addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          const token = localStorage.getItem('authToken');
+          if (!token) { showToast('Connectez-vous pour voter', 'info'); return; }
+          try {
+            const resp = await fetch(`/api/reviews/${encodeURIComponent(r.id)}/vote`, { method: 'POST', headers: { 'Content-Type':'application/json', 'X-Auth-Token': token }, body: JSON.stringify({ vote: 1 }) });
+            if (!resp.ok) throw new Error('vote failed');
+            await refresh();
+          } catch (e) { showToast('Impossible d\'envoyer le vote', 'error'); }
+        });
+        if (dislikeBtn) dislikeBtn.addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          const token = localStorage.getItem('authToken');
+          if (!token) { showToast('Connectez-vous pour voter', 'info'); return; }
+          try {
+            const resp = await fetch(`/api/reviews/${encodeURIComponent(r.id)}/vote`, { method: 'POST', headers: { 'Content-Type':'application/json', 'X-Auth-Token': token }, body: JSON.stringify({ vote: -1 }) });
+            if (!resp.ok) throw new Error('vote failed');
+            await refresh();
+          } catch (e) { showToast('Impossible d\'envoyer le vote', 'error'); }
+        });
+        setTimeout(refresh, 50);
+      }
+    } catch (e) {}
   });
 }
 

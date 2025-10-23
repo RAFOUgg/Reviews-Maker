@@ -465,6 +465,27 @@ body::before {
 }
 .vote-btn:hover::after { opacity: 1; transform: scale(1.03); }
 
+/* Layout for inline vote controls inside cards */
+.compact-item-votes,
+.library-item-votes {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: 8px;
+}
+.compact-item-votes .vote-btn,
+.library-item-votes .vote-btn {
+  position: relative;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.03);
+  color: var(--text-muted, #cbd5e1);
+  font-size: 0.95rem;
+}
+.compact-item-votes .vote-count,
+.library-item-votes .vote-count { margin-left: 6px; font-weight: 600; }
+
 .modal-content,
 .export-config-container,
 .account-dialog,
