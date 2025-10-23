@@ -273,8 +273,11 @@ app.post('/api/reviews', upload.single('image'), (req, res) => {
   if (!incoming.holderName || String(incoming.holderName).trim().length === 0) {
     return res.status(400).json({ error: 'validation_error', field: 'holderName', message: 'Titulaire requis' });
   }
-  // Owner scoping
+  // Owner scoping - require authenticated owner to create reviews
   const ownerId = req.auth?.ownerId || null;
+  if (!ownerId) {
+    return res.status(401).json({ error: 'unauthorized', message: 'Authentication required to create reviews' });
+  }
   // Draft flag is deprecated on the server; force saved records to non-draft
   const isDraft = 0;
   const isPrivate = incoming.isPrivate ? 1 : 0;
