@@ -2511,16 +2511,20 @@ async function populatePublicProfile(email, memberMetaArg) {
   }
     try {
       const token = localStorage.getItem('authToken');
-      // If identifier looks like an email, prefer server lookup
-      if (token && remoteBase && identifier.includes('@')) {
-        const resp = await fetch(`${remoteBase}/api/users/stats?email=${encodeURIComponent(identifier)}`, { headers: { 'X-Auth-Token': token } });
-        if (resp.ok) {
+      // Prefer to call server stats when we have an email to query.
+      // Use memberMeta.email if passed by caller (more reliable), otherwise use identifier when it looks like an email.
+      const statsEmail = (memberMeta && memberMeta.email) ? String(memberMeta.email).trim() : (identifier && identifier.includes('@') ? identifier : null);
+      if (remoteBase && statsEmail) {
+        const headers = {};
+        if (token) headers['X-Auth-Token'] = token;
+        const resp = await fetch(`${remoteBase}/api/users/stats?email=${encodeURIComponent(statsEmail)}`, { headers });
+        if (resp && resp.ok) {
           const d = await resp.json();
           total = d.total || 0; pub = d.public || 0; priv = d.private || 0; byType = d.by_type || d.types || {};
           // remote API might return user metadata
           try {
             memberMeta.displayName = d.displayName || d.username || d.discordUsername || memberMeta.displayName;
-            memberMeta.email = d.email || memberMeta.email;
+            memberMeta.email = d.email || memberMeta.email || statsEmail;
             // likes/dislikes and votes given
             try { if (dom.publicLikesReceived) dom.publicLikesReceived.textContent = (d.likesReceived || 0); } catch(e){}
             try { if (dom.publicVotesGiven) dom.publicVotesGiven.textContent = ((d.votesGivenLikes||0) + (d.votesGivenDislikes||0)); } catch(e){}
