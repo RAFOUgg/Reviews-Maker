@@ -3527,15 +3527,17 @@ async function renderCompactLibrary() {
     
   // Personal library: allow preview and, if owned, open editor when clicking edit
     item.innerHTML = `
-      ${imageHtml}
+      <div class="compact-image-wrap" style="position:relative; border-radius:8px; overflow:hidden">
+        ${imageHtml}
+        <div class="vote-controls" data-review-id="${r.id || ''}" style="position:absolute; right:10px; bottom:10px; display:flex; gap:6px; align-items:center;">
+          <button type="button" class="vote-btn like" title="Like" style="background:rgba(0,0,0,0.6); color:#fff; border:0; padding:6px 8px; border-radius:6px; display:flex; gap:6px; align-items:center; box-shadow: 0 2px 8px rgba(0,0,0,0.45);">👍 <span class="vote-count" style="font-weight:600; margin-left:4px;">0</span></button>
+          <button type="button" class="vote-btn dislike" title="Dislike" style="background:rgba(0,0,0,0.6); color:#fff; border:0; padding:6px 8px; border-radius:6px; display:flex; gap:6px; align-items:center; box-shadow: 0 2px 8px rgba(0,0,0,0.45);">👎 <span class="vote-count" style="font-weight:600; margin-left:4px;">0</span></button>
+        </div>
+      </div>
       <div class="compact-item-content">
         <div class="compact-item-title">${title}</div>
         <div class="compact-item-meta">${r.productType || "Review"} • ${date}${holder}</div>
-  ${r.holderName ? `<button type="button" class="author-link" data-author-email="${String((r.holderEmail || (r.owner && r.owner.email) || r.owner || r.holderName) || '').replace(/\"/g,'')}" data-member-meta='${String(JSON.stringify({ displayName: (r.holderName || (r.owner && r.owner.displayName) || null), email: (r.holderEmail || (r.owner && r.owner.email) || null) })).replace(/\"/g,'"') }'>${r.holderName}</button>` : ''}
-      <div class="vote-controls" data-review-id="${r.id || ''}" style="margin-top:8px; display:flex; gap:8px; align-items:center;">
-        <button type="button" class="vote-btn like" title="Like">👍 <span class="vote-count">0</span></button>
-        <button type="button" class="vote-btn dislike" title="Dislike">👎 <span class="vote-count">0</span></button>
-      </div>
+        ${r.holderName ? `<button type="button" class="author-link" data-author-email="${String((r.holderEmail || (r.owner && r.owner.email) || r.owner || r.holderName) || '').replace(/\"/g,'')}" data-member-meta='${String(JSON.stringify({ displayName: (r.holderName || (r.owner && r.owner.displayName) || null), email: (r.holderEmail || (r.owner && r.owner.email) || null) })).replace(/\"/g,'"') }'>${r.holderName}</button>` : ''}
       </div>
     `;
     
