@@ -3227,6 +3227,9 @@ async function dedupeDatabase() {
 
 function dbAddReview(review) {
   return new Promise((resolve, reject) => {
+    // When remote API is enabled we no longer persist reviews locally to avoid
+    // mixing local drafts with the remote DB. Return a noop.
+    if (remoteEnabled) { resolve(null); return; }
     if (!db) { resolve(null); return; }
     const tx = db.transaction("reviews", "readwrite");
     const store = tx.objectStore("reviews");
@@ -3238,6 +3241,8 @@ function dbAddReview(review) {
 
 function dbUpdateReview(review) {
   return new Promise((resolve, reject) => {
+    // No local updates when remote is active
+    if (remoteEnabled) { resolve(false); return; }
     if (!db) { resolve(false); return; }
     const tx = db.transaction("reviews", "readwrite");
     const store = tx.objectStore("reviews");
@@ -3249,6 +3254,7 @@ function dbUpdateReview(review) {
 
 function dbDeleteReview(id) {
   return new Promise((resolve, reject) => {
+    if (remoteEnabled) { resolve(false); return; }
     if (!db) { resolve(false); return; }
     const tx = db.transaction("reviews", "readwrite");
     const store = tx.objectStore("reviews");
@@ -3260,6 +3266,8 @@ function dbDeleteReview(id) {
 
 function dbGetAllReviews() {
   return new Promise((resolve, reject) => {
+    // If remote is enabled prefer remote data and avoid returning local DB entries
+    if (remoteEnabled) { resolve([]); return; }
     if (!db) {
       // IndexedDB unavailable: return empty list (legacy localStorage removed)
       try { console.warn('dbGetAllReviews: IndexedDB unavailable and localStorage fallback removed'); } catch(e){}
@@ -3276,6 +3284,7 @@ function dbGetAllReviews() {
 
 function dbGetReviewById(id) {
   return new Promise((resolve, reject) => {
+    if (remoteEnabled) { resolve(null); return; }
     if (!db) {
       try { console.warn('dbGetReviewById: IndexedDB unavailable and localStorage fallback removed'); } catch(e){}
       resolve(null);
@@ -3441,13 +3450,15 @@ async function duplicateReview(review) {
     // Recompute correlation key for the duplicated draft
     duplicatedReview.correlationKey = computeCorrelationKey(duplicatedReview);
     
-    if (db && !dbFailedOnce) {
-      await dbAddReview(duplicatedReview);
-    } else {
-      // Fallback: queue in-memory for this session (non-persistent).
-      window.__localFallbackQueue = window.__localFallbackQueue || [];
-      window.__localFallbackQueue.push(duplicatedReview);
-      console.warn('Duplicated review queued in-memory; IndexedDB unavailable.');
+    if (!remoteEnabled) {
+      if (db && !dbFailedOnce) {
+        await dbAddReview(duplicatedReview);
+      } else {
+        // Fallback: queue in-memory for this session (non-persistent).
+        window.__localFallbackQueue = window.__localFallbackQueue || [];
+        window.__localFallbackQueue.push(duplicatedReview);
+        console.warn('Duplicated review queued in-memory; IndexedDB unavailable.');
+      }
     }
     
     showToast("Review dupliquée avec succès!", "success");
@@ -7110,21 +7121,26 @@ async function saveReview() {
   // Attach correlation key for dedupe
   reviewToSave.correlationKey = computeCorrelationKey(reviewToSave);
   try {
-    if (db && !dbFailedOnce) {
-      // Simple save: update if id known, otherwise add new record
-      if (currentReviewId) {
-        await dbUpdateReview(reviewToSave);
+    if (!remoteEnabled) {
+      if (db && !dbFailedOnce) {
+        // Simple save: update if id known, otherwise add new record
+        if (currentReviewId) {
+          await dbUpdateReview(reviewToSave);
+        } else {
+          const id = await dbAddReview(reviewToSave);
+          currentReviewId = id;
+        }
       } else {
-        const id = await dbAddReview(reviewToSave);
-        currentReviewId = id;
+        // Fallback: keep reviewToSave in an in-memory queue (non-persistent)
+        window.__localFallbackQueue = window.__localFallbackQueue || [];
+        // assign a synthetic id if needed
+        if (currentReviewId == null) currentReviewId = Date.now();
+        window.__localFallbackQueue.push({ ...reviewToSave, id: currentReviewId });
+        console.warn('saveReview: IndexedDB unavailable, queued in-memory (non-persistent).');
       }
     } else {
-      // Fallback: keep reviewToSave in an in-memory queue (non-persistent)
-      window.__localFallbackQueue = window.__localFallbackQueue || [];
-      // assign a synthetic id if needed
-      if (currentReviewId == null) currentReviewId = Date.now();
-      window.__localFallbackQueue.push({ ...reviewToSave, id: currentReviewId });
-      console.warn('saveReview: IndexedDB unavailable, queued in-memory (non-persistent).');
+      // Remote is enabled: do not persist locally to avoid conflicts with remote DB.
+      // We'll still proceed to remote sync below.
     }
     
     // Feedback pour sauvegarde explicite
@@ -7140,13 +7156,15 @@ async function saveReview() {
     dbFailedOnce = true;
     try {
       // Queue in-memory for this session instead of persisting to localStorage
-      window.__localFallbackQueue = window.__localFallbackQueue || [];
-      if (currentReviewId != null) {
-        const idx = window.__localFallbackQueue.findIndex(r => r && r.id === currentReviewId);
-        if (idx >= 0) window.__localFallbackQueue.splice(idx, 1, reviewToSave);
-        else window.__localFallbackQueue.push(reviewToSave);
-      } else {
-        window.__localFallbackQueue.push(reviewToSave);
+      if (!remoteEnabled) {
+        window.__localFallbackQueue = window.__localFallbackQueue || [];
+        if (currentReviewId != null) {
+          const idx = window.__localFallbackQueue.findIndex(r => r && r.id === currentReviewId);
+          if (idx >= 0) window.__localFallbackQueue.splice(idx, 1, reviewToSave);
+          else window.__localFallbackQueue.push(reviewToSave);
+        } else {
+          window.__localFallbackQueue.push(reviewToSave);
+        }
       }
       if (!document.body.dataset.lsInfoShown) {
         showToast("Sauvegarde locale temporaire en mémoire (offline)", "info");

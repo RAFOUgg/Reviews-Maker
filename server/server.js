@@ -97,6 +97,21 @@ db.serialize(() => {
       await addCol('isPrivate', "isPrivate INTEGER DEFAULT 0");
       await addCol('createdAt', "createdAt TEXT");
       await addCol('updatedAt', "updatedAt TEXT");
+      // Ensure review_likes table exists (idempotent)
+      try {
+        db.run(`CREATE TABLE IF NOT EXISTS review_likes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          reviewId INTEGER NOT NULL,
+          ownerId TEXT NOT NULL,
+          vote INTEGER NOT NULL,
+          createdAt TEXT DEFAULT (datetime('now')),
+          updatedAt TEXT DEFAULT (datetime('now'))
+        );`, [], (e) => {
+          if (e) console.warn('[db] create review_likes failed', e.message);
+          else console.log('[db] ensured review_likes table');
+        });
+        db.run('CREATE UNIQUE INDEX IF NOT EXISTS idx_review_owner ON review_likes(reviewId, ownerId)', [], () => {});
+      } catch (e) { console.warn('[db] review_likes migration error', e && e.message ? e.message : e); }
       // Backfill sensible defaults for existing rows (NULLs only)
       db.run("UPDATE reviews SET isDraft=0 WHERE isDraft IS NULL", () => {});
       db.run("UPDATE reviews SET isPrivate=0 WHERE isPrivate IS NULL", () => {});
@@ -431,6 +446,110 @@ app.put('/api/reviews/:id/privacy', (req, res) => {
         res.json({ review: rowToReview(row2) });
       });
     });
+  });
+});
+
+// Votes: get totals and my vote
+app.get('/api/reviews/:id/votes', (req, res) => {
+  const id = Number(req.params.id);
+  if (!id) return res.status(400).json({ error: 'invalid_id' });
+  const tokenOwner = req.auth?.ownerId || null;
+  db.get('SELECT SUM(CASE WHEN vote=1 THEN 1 ELSE 0 END) as likes, SUM(CASE WHEN vote=-1 THEN 1 ELSE 0 END) as dislikes FROM review_likes WHERE reviewId=?', [id], (err, agg) => {
+    if (err) return res.status(500).json({ error: 'db_error' });
+    const likes = (agg && agg.likes) ? agg.likes : 0;
+    const dislikes = (agg && agg.dislikes) ? agg.dislikes : 0;
+    if (!tokenOwner) {
+      return res.json({ likes, dislikes, score: (likes - dislikes), myVote: 0 });
+    }
+    db.get('SELECT vote FROM review_likes WHERE reviewId=? AND ownerId=?', [id, tokenOwner], (e2, row) => {
+      if (e2) return res.status(500).json({ error: 'db_error' });
+      const myVote = row && typeof row.vote === 'number' ? row.vote : 0;
+      res.json({ likes, dislikes, score: (likes - dislikes), myVote });
+    });
+  });
+});
+
+// Cast or change vote (auth required)
+app.post('/api/reviews/:id/vote', (req, res) => {
+  const id = Number(req.params.id);
+  const me = req.auth?.ownerId || null;
+  if (!me) return res.status(401).json({ error: 'unauthorized' });
+  if (!id) return res.status(400).json({ error: 'invalid_id' });
+  let vote = Number(req.body && req.body.vote);
+  if (![1, -1].includes(vote)) return res.status(400).json({ error: 'invalid_vote' });
+  // Can't vote own review
+  db.get('SELECT ownerId FROM reviews WHERE id=?', [id], (err, row) => {
+    if (err) return res.status(500).json({ error: 'db_error' });
+    if (!row) return res.status(404).json({ error: 'not_found' });
+    if (row.ownerId && row.ownerId === me) return res.status(403).json({ error: 'forbidden', message: 'Cannot vote own review' });
+    // Upsert logic: try update, else insert
+    db.run('INSERT INTO review_likes (reviewId, ownerId, vote, createdAt, updatedAt) VALUES (?,?,?,?,datetime(\'now\')) ON CONFLICT(reviewId, ownerId) DO UPDATE SET vote=excluded.vote, updatedAt=datetime(\'now\')', [id, me, vote, new Date().toISOString()], function(e) {
+      // Fallback for SQLite versions without INSERT ... ON CONFLICT DO UPDATE use manual upsert
+      if (e) {
+        // manual upsert
+        db.get('SELECT id FROM review_likes WHERE reviewId=? AND ownerId=?', [id, me], (e2, r2) => {
+          if (e2) return res.status(500).json({ error: 'db_error' });
+          if (r2) {
+            db.run('UPDATE review_likes SET vote=?, updatedAt=datetime(\'now\') WHERE id=?', [vote, r2.id], (eu) => {
+              if (eu) return res.status(500).json({ error: 'db_error' });
+              // return totals
+              db.get('SELECT SUM(CASE WHEN vote=1 THEN 1 ELSE 0 END) as likes, SUM(CASE WHEN vote=-1 THEN 1 ELSE 0 END) as dislikes FROM review_likes WHERE reviewId=?', [id], (er, agg) => {
+                if (er) return res.status(500).json({ error: 'db_error' });
+                res.json({ ok: true, myVote: vote, likes: agg.likes || 0, dislikes: agg.dislikes || 0 });
+              });
+            });
+          } else {
+            db.run('INSERT INTO review_likes (reviewId, ownerId, vote) VALUES (?,?,?)', [id, me, vote], (ei) => {
+              if (ei) return res.status(500).json({ error: 'db_error' });
+              db.get('SELECT SUM(CASE WHEN vote=1 THEN 1 ELSE 0 END) as likes, SUM(CASE WHEN vote=-1 THEN 1 ELSE 0 END) as dislikes FROM review_likes WHERE reviewId=?', [id], (er, agg) => {
+                if (er) return res.status(500).json({ error: 'db_error' });
+                res.json({ ok: true, myVote: vote, likes: agg.likes || 0, dislikes: agg.dislikes || 0 });
+              });
+            });
+          }
+        });
+        return;
+      }
+      // If we reach here, INSERT ... ON CONFLICT succeeded
+      db.get('SELECT SUM(CASE WHEN vote=1 THEN 1 ELSE 0 END) as likes, SUM(CASE WHEN vote=-1 THEN 1 ELSE 0 END) as dislikes FROM review_likes WHERE reviewId=?', [id], (er, agg) => {
+        if (er) return res.status(500).json({ error: 'db_error' });
+        res.json({ ok: true, myVote: vote, likes: agg.likes || 0, dislikes: agg.dislikes || 0 });
+      });
+    });
+  });
+});
+
+// Remove vote (auth required)
+app.delete('/api/reviews/:id/vote', (req, res) => {
+  const id = Number(req.params.id);
+  const me = req.auth?.ownerId || null;
+  if (!me) return res.status(401).json({ error: 'unauthorized' });
+  if (!id) return res.status(400).json({ error: 'invalid_id' });
+  db.run('DELETE FROM review_likes WHERE reviewId=? AND ownerId=?', [id, me], function(err) {
+    if (err) return res.status(500).json({ error: 'db_error' });
+    db.get('SELECT SUM(CASE WHEN vote=1 THEN 1 ELSE 0 END) as likes, SUM(CASE WHEN vote=-1 THEN 1 ELSE 0 END) as dislikes FROM review_likes WHERE reviewId=?', [id], (er, agg) => {
+      if (er) return res.status(500).json({ error: 'db_error' });
+      res.json({ ok: true, myVote: 0, likes: agg.likes || 0, dislikes: agg.dislikes || 0 });
+    });
+  });
+});
+
+// Leaderboard (owners ranked by score on public reviews)
+app.get('/api/users/leaderboard', (req, res) => {
+  const limit = Number(req.query.limit) || 50;
+  // Sum votes on reviews joined with reviews table to limit to public reviews
+  const sql = `SELECT r.ownerId as ownerId, SUM(rl.vote) as score, COUNT(DISTINCT r.id) as reviewCount,
+    SUM(CASE WHEN rl.vote=1 THEN 1 ELSE 0 END) as likesReceived,
+    SUM(CASE WHEN rl.vote=-1 THEN 1 ELSE 0 END) as dislikesReceived
+    FROM review_likes rl
+    JOIN reviews r ON r.id = rl.reviewId
+    WHERE r.isPrivate=0 AND r.ownerId IS NOT NULL
+    GROUP BY r.ownerId
+    ORDER BY score DESC
+    LIMIT ?`;
+  db.all(sql, [limit], (err, rows) => {
+    if (err) return res.status(500).json({ error: 'db_error' });
+    res.json(rows || []);
   });
 });
 
