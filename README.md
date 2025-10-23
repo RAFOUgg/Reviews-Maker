@@ -11,7 +11,6 @@ Studio web ergonomique pour composer, visualiser et exporter des fiches de revie
 - **Formulaires Détaillés et Dynamiques** : Des sections et des champs spécifiques à chaque type de produit, avec des listes de choix prédéfinis pour accélérer la saisie.
 - **Prévisualisation en Temps Réel** : Visualisez le rendu final de votre review au fur et à mesure que vous remplissez les informations.
 - **Export Studio** : Personnalisez et exportez vos reviews en images PNG haute définition, prêtes à être partagées.
-- **Sauvegarde Automatique** : Ne perdez jamais votre travail grâce à la sauvegarde automatique des brouillons.
 - **Gestion des Reviews** : Une galerie publique pour découvrir les créations de la communauté et une bibliothèque personnelle pour gérer vos propres reviews (publiques ou privées).
 - **Comptes Utilisateurs** : Liez votre compte via un système d'authentification par e-mail (intégré avec Discord) pour synchroniser vos reviews et accéder à vos statistiques.
 - **Profils Publics** : Consultez les statistiques et les reviews publiques d'autres utilisateurs.
@@ -25,7 +24,7 @@ Studio web ergonomique pour composer, visualiser et exporter des fiches de revie
     - Parcourez la galerie des dernières reviews publiques.
 
 2.  **Studio de Création (`review.html`)**
-    - Remplissez les champs du formulaire. Votre progression est sauvegardée automatiquement.
+    - Remplissez les champs du formulaire.
     - Utilisez l'aperçu en direct pour voir le résultat.
     - Une fois terminé, enregistrez votre review.
     - Exportez votre fiche en tant qu'image PNG via l'Export Studio.
