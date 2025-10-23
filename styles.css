@@ -465,31 +465,6 @@ body::before {
 }
 .vote-btn:hover::after { opacity: 1; transform: scale(1.03); }
 
-/* Layout for inline vote controls inside cards */
-.compact-item-votes,
-.library-item-votes {
-  position: absolute;
-  right: 6px;
-  bottom: 6px;
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
-  z-index: 30;
-  pointer-events: auto;
-}
-.compact-item-votes .vote-btn,
-.library-item-votes .vote-btn {
-  position: relative;
-  padding: 4px 6px;
-  border-radius: 6px;
-  background: rgba(0,0,0,0.5);
-  border: 1px solid rgba(255,255,255,0.05);
-  color: var(--text-muted, #e6eef8);
-  font-size: 0.92rem;
-}
-.compact-item-votes .vote-count,
-.library-item-votes .vote-count { margin-left: 6px; font-weight: 600; }
-
 .modal-content,
 .export-config-container,
 .account-dialog,
@@ -2013,7 +1988,6 @@ file-input-multi .file-info { display:flex; gap:12px; align-items:center; }
 
 /* Compact card image grid (up to 4 images): 1 -> full, 2 -> two columns, 3 -> L-shape, 4 -> 2x2 */
 .compact-image-grid {
-  position: relative;
   display:grid;
   gap:6px;
   width:100%;
@@ -2023,7 +1997,6 @@ file-input-multi .file-info { display:flex; gap:12px; align-items:center; }
 }
 .compact-image-grid .compact-thumb-slot { overflow:hidden; border-radius:8px; border:1px solid var(--glass-border); background: rgba(0,0,0,0.03); }
 .compact-image-grid .compact-thumb-slot img { width:100%; height:100%; object-fit:cover; display:block; }
-.compact-image-grid .compact-thumb-slot { position: relative; }
 .compact-image-grid.one { grid-template-columns: 1fr; grid-auto-rows: 1fr; height:140px; }
 .compact-image-grid.two { grid-template-columns: repeat(2, 1fr); height:120px; }
 .compact-image-grid.three { grid-template-columns: 1fr 1fr; grid-template-areas: "a b" "c b"; height:120px; }
@@ -2038,10 +2011,8 @@ file-input-multi .file-info { display:flex; gap:12px; align-items:center; }
 
 /* library image grid for list view */
 .library-image-grid { display:flex; gap:8px; align-items:center; }
-.library-image-grid { position: relative; }
 .library-image-grid > div { width:120px; height:76px; border-radius:8px; overflow:hidden; border:1px solid var(--glass-border); }
 .library-image-grid img { width:100%; height:100%; object-fit:cover; display:block; }
-.library-image-grid > div { position: relative; }
 /* Library card image grid variants (larger than compact) */
 .library-image-grid.one { display:grid; grid-template-columns: 1fr; grid-auto-rows: 1fr; height:200px; gap:8px; }
 .library-image-grid.two { display:grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 1fr; height:200px; gap:8px; }

@@ -3170,27 +3170,10 @@ async function renderCompactLibrary() {
     });
   const holder = r.holderName ? ` • ${r.holderName}` : '';
     
-    // Build up to 4 preview images (use r.files if present, otherwise fallback to r.image)
-    const gatherMedia = () => {
-      const out = [];
-      try {
-        if (r.files && typeof r.files === 'object') {
-          Object.values(r.files).forEach(arr => { if (Array.isArray(arr)) arr.forEach(u => u && out.push(u)); });
-        }
-      } catch (e) {}
-      if (!out.length && r.image) out.push(r.image);
-      return out.slice(0,4);
-    };
-    const thumbs = gatherMedia();
-    const sizeClass = ['one','two','three','four'][Math.max(0, Math.min(3, thumbs.length - 1))] || 'one';
-    const imageHtml = (thumbs.length > 0) ?
-  `<div class="compact-image-grid ${sizeClass}">${thumbs.map((u,i)=>`<div class="compact-thumb-slot"><img src="${u}" alt="thumb-${i}" loading="lazy"><div class="compact-item-votes" data-review-id="${r.id || ''}"><button type="button" class="vote-btn vote-like" title="J'aime">👍 <span class="vote-count">0</span></button><button type="button" class="vote-btn vote-dislike" title="Je n'aime pas">👎 <span class="vote-count">0</span></button></div></div>`).join('')}</div>` :
-      `<div class="compact-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.6rem; position: relative;">📷
-        <div class="compact-item-votes" data-review-id="${r.id || ''}" style="position:absolute; right:8px; bottom:8px;">
-          <button type="button" class="vote-btn vote-like" title="J'aime">👍 <span class="vote-count">0</span></button>
-          <button type="button" class="vote-btn vote-dislike" title="Je n'aime pas">👎 <span class="vote-count">0</span></button>
-        </div>
-      </div>`;
+    // Image d'aperçu si disponible
+    const imageHtml = r.image ? 
+      `<img src="${r.image}" alt="" class="compact-item-image" />` : 
+      `<div class="compact-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.6rem;">📷</div>`;
     
   // Personal library: allow preview and, if owned, open editor when clicking edit
     item.innerHTML = `
@@ -3221,57 +3204,6 @@ async function renderCompactLibrary() {
     }
     
     dom.compactLibraryList.appendChild(item);
-    // wire vote handlers for compact item (support multiple thumbnail overlays)
-    try {
-      const voteWraps = item.querySelectorAll('.compact-item-votes');
-      if (voteWraps && voteWraps.length && r.id != null) {
-        const refreshAll = async () => {
-          try {
-            const resp = await fetch(`/api/reviews/${encodeURIComponent(r.id)}/votes`);
-            if (!resp.ok) return;
-            const data = await resp.json();
-            const likes = data.likes || 0; const dislikes = data.dislikes || 0; const myVote = data.myVote || 0;
-            voteWraps.forEach(vw => {
-              const cnts = vw.querySelectorAll('.vote-count');
-              if (cnts[0]) cnts[0].textContent = String(likes);
-              if (cnts[1]) cnts[1].textContent = String(dislikes);
-              const likeBtn = vw.querySelector('.vote-like');
-              const dislikeBtn = vw.querySelector('.vote-dislike');
-              if (likeBtn) likeBtn.classList.toggle('active', myVote === 1);
-              if (dislikeBtn) dislikeBtn.classList.toggle('active', myVote === -1);
-            });
-          } catch (e) { /* ignore */ }
-        };
-
-        voteWraps.forEach(vw => {
-          const likeBtn = vw.querySelector('.vote-like');
-          const dislikeBtn = vw.querySelector('.vote-dislike');
-          if (likeBtn) likeBtn.addEventListener('click', async (ev) => {
-            ev.stopPropagation();
-            const token = localStorage.getItem('authToken');
-            if (!token) { showToast('Connectez-vous pour voter', 'info'); return; }
-            try {
-              const resp = await fetch(`/api/reviews/${encodeURIComponent(r.id)}/vote`, { method: 'POST', headers: { 'Content-Type':'application/json', 'X-Auth-Token': token }, body: JSON.stringify({ vote: 1 }) });
-              if (!resp.ok) throw new Error('vote failed');
-              await refreshAll();
-            } catch (e) { showToast('Impossible d\'envoyer le vote', 'error'); }
-          });
-          if (dislikeBtn) dislikeBtn.addEventListener('click', async (ev) => {
-            ev.stopPropagation();
-            const token = localStorage.getItem('authToken');
-            if (!token) { showToast('Connectez-vous pour voter', 'info'); return; }
-            try {
-              const resp = await fetch(`/api/reviews/${encodeURIComponent(r.id)}/vote`, { method: 'POST', headers: { 'Content-Type':'application/json', 'X-Auth-Token': token }, body: JSON.stringify({ vote: -1 }) });
-              if (!resp.ok) throw new Error('vote failed');
-              await refreshAll();
-            } catch (e) { showToast('Impossible d\'envoyer le vote', 'error'); }
-          });
-        });
-
-        // initial load
-        setTimeout(refreshAll, 50);
-      }
-    } catch (e) { /* non-fatal */ }
   });
 }
 
@@ -3379,27 +3311,10 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
   const draftBadge = '';
     const holder = r.holderName ? `<div class="library-item-farm">${r.holderName}</div>` : '';
     
-    // Build up to 4 preview images for the library card
-    const collectMedia = () => {
-      const out = [];
-      try {
-        if (r.files && typeof r.files === 'object') {
-          Object.values(r.files).forEach(arr => { if (Array.isArray(arr)) arr.forEach(u => u && out.push(u)); });
-        }
-      } catch(e) {}
-      if (!out.length && r.image) out.push(r.image);
-      return out.slice(0,4);
-    };
-    const libThumbs = collectMedia();
-    const libSizeClass = ['one','two','three','four'][Math.max(0, Math.min(3, libThumbs.length - 1))] || 'one';
-    const imageHtml = libThumbs.length > 0 ?
-  `<div class="library-image-grid ${libSizeClass}">${libThumbs.map((u,i)=>`<div><img src="${u}" alt="${title}-thumb-${i}"><div class="library-item-votes" data-review-id="${r.id || ''}"><button type="button" class="vote-btn vote-like" title="J'aime">👍 <span class="vote-count">0</span></button><button type="button" class="vote-btn vote-dislike" title="Je n'aime pas">👎 <span class="vote-count">0</span></button></div></div>`).join('')}</div>` :
-      `<div class="library-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; position: relative;">📷
-         <div class="library-item-votes" data-review-id="${r.id || ''}" style="position:absolute; right:8px; bottom:8px;">
-           <button type="button" class="vote-btn vote-like" title="J'aime">👍 <span class="vote-count">0</span></button>
-           <button type="button" class="vote-btn vote-dislike" title="Je n'aime pas">👎 <span class="vote-count">0</span></button>
-         </div>
-       </div>`;
+    // Image d'aperçu si disponible
+    const imageHtml = r.image ? 
+      `<img src="${r.image}" alt="${title}" class="library-item-image" />` : 
+      `<div class="library-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">📷</div>`;
     
     // Show actions only in 'mine' mode
     const actionsHtml = mode === 'mine' ? `
@@ -3426,7 +3341,6 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
         ${holder}
         <div class="library-item-date">${date}</div>
       </div>
-      <!-- votes overlay placed near thumbnails via CSS: library-image-grid contains it -->
       ${actionsHtml}
     `;
     
@@ -3499,56 +3413,6 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
     }
     
     dom.libraryGrid.appendChild(item);
-    // wire vote handlers for library item (both modes) - support multiple thumbnail overlays
-    try {
-      const voteWraps = item.querySelectorAll('.library-item-votes');
-      if (voteWraps && voteWraps.length && r.id != null) {
-        const refreshAll = async () => {
-          try {
-            const resp = await fetch(`/api/reviews/${encodeURIComponent(r.id)}/votes`);
-            if (!resp.ok) return;
-            const data = await resp.json();
-            const likes = data.likes || 0; const dislikes = data.dislikes || 0; const myVote = data.myVote || 0;
-            voteWraps.forEach(vw => {
-              const cnts = vw.querySelectorAll('.vote-count');
-              if (cnts[0]) cnts[0].textContent = String(likes);
-              if (cnts[1]) cnts[1].textContent = String(dislikes);
-              const likeBtn = vw.querySelector('.vote-like');
-              const dislikeBtn = vw.querySelector('.vote-dislike');
-              if (likeBtn) likeBtn.classList.toggle('active', myVote === 1);
-              if (dislikeBtn) dislikeBtn.classList.toggle('active', myVote === -1);
-            });
-          } catch (e) {}
-        };
-
-        voteWraps.forEach(vw => {
-          const likeBtn = vw.querySelector('.vote-like');
-          const dislikeBtn = vw.querySelector('.vote-dislike');
-          if (likeBtn) likeBtn.addEventListener('click', async (ev) => {
-            ev.stopPropagation();
-            const token = localStorage.getItem('authToken');
-            if (!token) { showToast('Connectez-vous pour voter', 'info'); return; }
-            try {
-              const resp = await fetch(`/api/reviews/${encodeURIComponent(r.id)}/vote`, { method: 'POST', headers: { 'Content-Type':'application/json', 'X-Auth-Token': token }, body: JSON.stringify({ vote: 1 }) });
-              if (!resp.ok) throw new Error('vote failed');
-              await refreshAll();
-            } catch (e) { showToast('Impossible d\'envoyer le vote', 'error'); }
-          });
-          if (dislikeBtn) dislikeBtn.addEventListener('click', async (ev) => {
-            ev.stopPropagation();
-            const token = localStorage.getItem('authToken');
-            if (!token) { showToast('Connectez-vous pour voter', 'info'); return; }
-            try {
-              const resp = await fetch(`/api/reviews/${encodeURIComponent(r.id)}/vote`, { method: 'POST', headers: { 'Content-Type':'application/json', 'X-Auth-Token': token }, body: JSON.stringify({ vote: -1 }) });
-              if (!resp.ok) throw new Error('vote failed');
-              await refreshAll();
-            } catch (e) { showToast('Impossible d\'envoyer le vote', 'error'); }
-          });
-        });
-
-        setTimeout(refreshAll, 50);
-      }
-    } catch (e) {}
   });
 }
 
