@@ -6261,12 +6261,33 @@ function collectFormData() {
       if (input.type === "file") {
         // collect all files for this input into formData.files[fieldKey] = [File...]
         formData.files = formData.files || {};
-        const filesArr = input.files ? Array.from(input.files).slice(0,4) : [];
-        // Keep only up to 4 files per field
-        formData.files[input.id] = filesArr;
-        if (filesArr.length && filesArr[0]) {
+        const existing = formData.files[input.id] || [];
+        const selected = input.files ? Array.from(input.files) : [];
+
+        // If the user just selected files in the input, merge them with existing stored files
+        let merged;
+        if (selected.length) {
+          merged = existing.concat(selected);
+          // dedupe by name/size/lastModified
+          const seen = new Set();
+          merged = merged.filter(f => {
+            const id = `${f.name}_${f.size}_${f.lastModified}`;
+            if (seen.has(id)) return false;
+            seen.add(id);
+            return true;
+          });
+        } else {
+          // no new selection in the input; keep what we have stored
+          merged = existing.slice();
+        }
+
+        // enforce max 4 files per field
+        if (merged.length > 4) merged = merged.slice(0,4);
+
+        formData.files[input.id] = merged;
+        if (merged.length && merged[0]) {
           // prepare first file preview (image/video) for generateReview
-          fileReaders.push(readFileAsDataURL(filesArr[0]));
+          fileReaders.push(readFileAsDataURL(merged[0]));
         }
         return;
       }
