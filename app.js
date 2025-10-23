@@ -3384,7 +3384,7 @@ async function renderLibraryList(mode = 'mine') {
   // Drafts removed: no draft badge
   const draftBadge = '';
     
-    // Show actions only in 'mine' mode
+  // Show actions only in 'mine' mode
     const actionsHtml = mode === 'mine' ? `
       <div class="actions">
         <button type="button" class="btn btn-outline btn-sm" data-act="load">👀</button>
@@ -3529,7 +3529,7 @@ async function renderCompactLibrary() {
     item.innerHTML = `
       <div class="compact-image-wrap" style="position:relative; border-radius:8px; overflow:hidden">
         ${imageHtml}
-        <div class="vote-controls" data-review-id="${r.id || ''}" style="position:absolute; right:10px; bottom:10px; display:flex; gap:6px; align-items:center;">
+          <div class="vote-controls" data-review-id="${r.id || ''}" data-owner-email="${String((r.owner && r.owner.email) || r.holderEmail || '')}" style="position:absolute; right:10px; bottom:10px; display:flex; gap:6px; align-items:center;">
           <button type="button" class="vote-btn like" title="Like" style="background:rgba(0,0,0,0.6); color:#fff; border:0; padding:6px 8px; border-radius:6px; display:flex; gap:6px; align-items:center; box-shadow: 0 2px 8px rgba(0,0,0,0.45);">👍 <span class="vote-count" style="font-weight:600; margin-left:4px;">0</span></button>
           <button type="button" class="vote-btn dislike" title="Dislike" style="background:rgba(0,0,0,0.6); color:#fff; border:0; padding:6px 8px; border-radius:6px; display:flex; gap:6px; align-items:center; box-shadow: 0 2px 8px rgba(0,0,0,0.45);">👎 <span class="vote-count" style="font-weight:600; margin-left:4px;">0</span></button>
         </div>
@@ -3582,7 +3582,9 @@ async function renderCompactLibrary() {
     try {
       const vc = item.querySelector('.vote-controls');
       if (vc) {
-        const reviewId = vc.getAttribute('data-review-id');
+  const reviewId = vc.getAttribute('data-review-id');
+  const ownerEmail = (vc.getAttribute('data-owner-email') || '').toLowerCase();
+  const authEmail = (localStorage.getItem('authEmail') || sessionStorage.getItem('authEmail') || '').toLowerCase();
         const likeBtn = vc.querySelector('.vote-btn.like');
         const dislikeBtn = vc.querySelector('.vote-btn.dislike');
         const likeCountEl = likeBtn && likeBtn.querySelector('.vote-count');
@@ -3603,9 +3605,14 @@ async function renderCompactLibrary() {
         };
         // initial load
         refreshVotes();
+        // disable buttons if this is the user's own review
+        if (ownerEmail && authEmail && ownerEmail === authEmail) {
+          try { likeBtn.setAttribute('disabled','disabled'); dislikeBtn.setAttribute('disabled','disabled'); likeBtn.title = 'Vous ne pouvez pas noter votre propre review'; dislikeBtn.title = likeBtn.title; likeBtn.classList.add('disabled'); dislikeBtn.classList.add('disabled'); } catch(e){}
+        }
         // click handlers
         likeBtn && likeBtn.addEventListener('click', async (ev) => {
           ev.preventDefault(); ev.stopPropagation();
+          if (ownerEmail && authEmail && ownerEmail === authEmail) return; // no self-vote
           if (!remoteEnabled) { showToast('Feature requires remote API', 'info'); return; }
           const token = localStorage.getItem('authToken');
           if (!token) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
@@ -3619,6 +3626,7 @@ async function renderCompactLibrary() {
         });
         dislikeBtn && dislikeBtn.addEventListener('click', async (ev) => {
           ev.preventDefault(); ev.stopPropagation();
+          if (ownerEmail && authEmail && ownerEmail === authEmail) return; // no self-vote
           if (!remoteEnabled) { showToast('Feature requires remote API', 'info'); return; }
           const token = localStorage.getItem('authToken');
           if (!token) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
@@ -3761,6 +3769,10 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
     item.innerHTML = `
       ${draftBadge}
       ${imageHtml}
+      <div class="vote-controls" data-review-id="${r.id || ''}" data-owner-email="${String((r.owner && r.owner.email) || r.holderEmail || '')}" style="position:absolute; right:12px; bottom:12px; display:flex; gap:6px; align-items:center; z-index:3;">
+        <button type="button" class="vote-btn like" title="Like" style="background:rgba(0,0,0,0.6); color:#fff; border:0; padding:5px 7px; border-radius:6px; display:flex; gap:6px; align-items:center; box-shadow: 0 2px 8px rgba(0,0,0,0.45);">👍 <span class="vote-count" style="font-weight:600; margin-left:4px;">0</span></button>
+        <button type="button" class="vote-btn dislike" title="Dislike" style="background:rgba(0,0,0,0.6); color:#fff; border:0; padding:5px 7px; border-radius:6px; display:flex; gap:6px; align-items:center; box-shadow: 0 2px 8px rgba(0,0,0,0.45);">👎 <span class="vote-count" style="font-weight:600; margin-left:4px;">0</span></button>
+      </div>
       <div class="library-item-content">
         <div class="library-item-type">${r.productType || "Review"}</div>
         <div class="library-item-title">${title}</div>
@@ -3840,6 +3852,63 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
     }
     
     dom.libraryGrid.appendChild(item);
+    // Wire vote controls for library item (show counts even for owner's items)
+    try {
+      const vc = item.querySelector('.vote-controls');
+      if (vc) {
+        const reviewId = vc.getAttribute('data-review-id');
+        const ownerEmail = (vc.getAttribute('data-owner-email') || '').toLowerCase();
+        const authEmail = (localStorage.getItem('authEmail') || sessionStorage.getItem('authEmail') || '').toLowerCase();
+        const likeBtn = vc.querySelector('.vote-btn.like');
+        const dislikeBtn = vc.querySelector('.vote-btn.dislike');
+        const likeCountEl = likeBtn && likeBtn.querySelector('.vote-count');
+        const dislikeCountEl = dislikeBtn && dislikeBtn.querySelector('.vote-count');
+        const refreshVotes = async () => {
+          if (!remoteEnabled || !reviewId) return;
+          try {
+            const resp = await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/votes`);
+            if (!resp.ok) return;
+            const js = await resp.json();
+            if (likeCountEl) likeCountEl.textContent = js.likes || 0;
+            if (dislikeCountEl) dislikeCountEl.textContent = js.dislikes || 0;
+            if (js.myVote === 1) { likeBtn.classList.add('active'); dislikeBtn.classList.remove('active'); }
+            else if (js.myVote === -1) { dislikeBtn.classList.add('active'); likeBtn.classList.remove('active'); }
+            else { likeBtn.classList.remove('active'); dislikeBtn.classList.remove('active'); }
+          } catch (e) { }
+        };
+        refreshVotes();
+        // Disable voting buttons when viewing own review
+        if (ownerEmail && authEmail && ownerEmail === authEmail) {
+          try { likeBtn.setAttribute('disabled','disabled'); dislikeBtn.setAttribute('disabled','disabled'); likeBtn.title = 'Vous ne pouvez pas noter votre propre review'; dislikeBtn.title = likeBtn.title; } catch(e){}
+        }
+        likeBtn && likeBtn.addEventListener('click', async (ev) => {
+          ev.preventDefault(); ev.stopPropagation();
+          if (ownerEmail && authEmail && ownerEmail === authEmail) return;
+          if (!remoteEnabled) { showToast('Feature requires remote API', 'info'); return; }
+          const token = localStorage.getItem('authToken');
+          if (!token) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
+          if (likeBtn.classList.contains('active')) {
+            await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/vote`, { method: 'DELETE', headers: { 'X-Auth-Token': token } });
+          } else {
+            await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/vote`, { method: 'POST', headers: { 'Content-Type':'application/json', 'X-Auth-Token': token }, body: JSON.stringify({ vote: 1 }) });
+          }
+          refreshVotes();
+        });
+        dislikeBtn && dislikeBtn.addEventListener('click', async (ev) => {
+          ev.preventDefault(); ev.stopPropagation();
+          if (ownerEmail && authEmail && ownerEmail === authEmail) return;
+          if (!remoteEnabled) { showToast('Feature requires remote API', 'info'); return; }
+          const token = localStorage.getItem('authToken');
+          if (!token) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
+          if (dislikeBtn.classList.contains('active')) {
+            await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/vote`, { method: 'DELETE', headers: { 'X-Auth-Token': token } });
+          } else {
+            await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/vote`, { method: 'POST', headers: { 'Content-Type':'application/json', 'X-Auth-Token': token }, body: JSON.stringify({ vote: -1 }) });
+          }
+          refreshVotes();
+        });
+      }
+    } catch(e) { console.warn('library vote attach failed', e); }
   });
 }
 
