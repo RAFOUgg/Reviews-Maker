@@ -141,6 +141,20 @@ body::before {
   border: none !important;
 }
 
+/* Global defensive overrides: in case runtime classes differ, ensure any
+   workspace/panel pseudo-elements or decorative frames are hidden. */
+.workspace::before,
+.workspace::after,
+.panel::before,
+.app-shell > .panel,
+.workspace > .panel {
+  display: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  border: none !important;
+}
+
 .app-shell {
   min-height: 100vh;
   padding: clamp(24px, 4vw, 48px);
