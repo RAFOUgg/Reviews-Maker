@@ -4019,6 +4019,8 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
 // -------- Preview-only modal (no form) --------
 async function openPreviewOnly(review) {
   if (!review) return;
+  // Revoke any previously created object URLs before rendering new preview
+  try { revokeAllTrackedObjectURLs(); } catch {}
   // Ensure correlationKey exists for legacy entries
   if (!review.correlationKey) { review.correlationKey = computeCorrelationKey(review); }
   // Render review HTML into modal without enabling the form panels
@@ -4045,10 +4047,10 @@ async function openPreviewOnly(review) {
         if (typeof f === 'string') {
           html += `<img src="${f}" alt="Photo du produit ${title}">`;
         } else if (f && f.type && f.type.startsWith('image/')) {
-          // display file preview via object URL
-          try { const src = URL.createObjectURL(f); html += `<img src="${src}" alt="Photo du produit ${title}">`; } catch { }
+          // display file preview via tracked object URL
+          try { const src = createTrackedObjectURL(f); html += `<img src="${src}" alt="Photo du produit ${title}">`; } catch { }
         } else if (f && f.type && f.type.startsWith('video/')) {
-          try { const src = URL.createObjectURL(f); html += `<video src="${src}" muted playsinline loop></video>`; } catch {}
+          try { const src = createTrackedObjectURL(f); html += `<video src="${src}" muted playsinline loop></video>`; } catch {}
         }
       });
     } else {
@@ -4098,6 +4100,8 @@ async function openPreviewOnly(review) {
 function closePreviewOnly() {
   dom.previewOverlay?.setAttribute('hidden','');
   dom.previewModal?.setAttribute('hidden','');
+  // Revoke any tracked object URLs created for the preview
+  try { revokeAllTrackedObjectURLs(); } catch {}
   // Le bouton garde toujours le même texte (pas besoin de le changer)
 }
 
@@ -6421,6 +6425,25 @@ function readFileAsDataURL(file) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+// Track object URLs created for previews so we can revoke them when no longer needed
+const trackedObjectURLs = new Set();
+function createTrackedObjectURL(file) {
+  try {
+    const url = URL.createObjectURL(file);
+    trackedObjectURLs.add(url);
+    return url;
+  } catch (e) {
+    return '';
+  }
+}
+function revokeAllTrackedObjectURLs() {
+  try {
+    trackedObjectURLs.forEach(u => { try { URL.revokeObjectURL(u); } catch {} });
+  } finally {
+    trackedObjectURLs.clear();
+  }
 }
 
 // Validate video duration (seconds) by loading it into a temporary video element
