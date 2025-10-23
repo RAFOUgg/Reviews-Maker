@@ -2529,22 +2529,10 @@ async function populatePublicProfile(email, memberMetaArg) {
             try { if (dom.publicLikesReceived) dom.publicLikesReceived.textContent = (d.likesReceived || 0); } catch(e){}
             try { if (dom.publicDislikesReceived) dom.publicDislikesReceived.textContent = (d.dislikesReceived || 0); } catch(e){}
             try { if (dom.publicVotesGiven) dom.publicVotesGiven.textContent = ((d.votesGivenLikes||0) + (d.votesGivenDislikes||0)); } catch(e){}
-            // fetch leaderboard to compute rank (best-effort)
+            // fetch exact rank from server (preferred)
             try {
-              if (remoteBase) {
-                const lbResp = await fetch(`${remoteBase}/api/users/leaderboard?limit=200`);
-                if (lbResp && lbResp.ok) {
-                  const lb = await lbResp.json();
-                  const lowerEmail = (memberMeta.email || '').toLowerCase();
-                  let rank = '—';
-                  if (Array.isArray(lb)) {
-                    for (let i=0;i<lb.length;i++) {
-                      if ((lb[i].ownerId || '').toLowerCase() === lowerEmail) { rank = i+1; break; }
-                    }
-                  }
-                  try { if (dom.publicRank) dom.publicRank.textContent = rank; } catch(e){}
-                }
-              }
+              const rank = await getUserRankByEmail(memberMeta.email || statsEmail);
+              try { if (dom.publicRank) dom.publicRank.textContent = rank || '—'; } catch(e){}
             } catch(e) {}
           } catch(e){}
         }
@@ -2750,16 +2738,18 @@ async function populatePublicProfile(email, memberMetaArg) {
 async function getUserRankByEmail(email) {
   try {
     if (!remoteBase || !email) return null;
-    const resp = await fetch(`${remoteBase}/api/users/leaderboard?limit=500`);
+    const token = localStorage.getItem('authToken');
+    const headers = token ? { 'X-Auth-Token': token } : {};
+    const resp = await fetch(`${remoteBase.replace(/\/$/, '')}/api/users/rank?email=${encodeURIComponent(String(email))}`, { headers });
+    if (!resp) return null;
+    if (resp.status === 404) return null;
     if (!resp.ok) return null;
-    const lb = await resp.json();
-    if (!Array.isArray(lb)) return null;
-    const lower = String(email).toLowerCase();
-    for (let i=0;i<lb.length;i++) {
-      if ((lb[i].ownerId || '').toLowerCase() === lower) return i+1;
-    }
+    const d = await resp.json();
+    if (!d) return null;
+    return (typeof d.rank === 'number' && d.rank > 0) ? d.rank : null;
+  } catch (e) {
     return null;
-  } catch(e) { return null; }
+  }
 }
 
 // Ensure public profile modal DOM refs and handlers exist
@@ -3024,15 +3014,8 @@ async function renderAccountView() {
         try { if (dom.accountDislikesReceived) dom.accountDislikesReceived.textContent = (s.dislikesReceived || 0); } catch(e){}
         // compute rank via leaderboard (best-effort)
         try {
-          const lbResp = await fetch(`${remoteBase}/api/users/leaderboard?limit=500`);
-          if (lbResp && lbResp.ok) {
-            const lb = await lbResp.json();
-            let rank = '—';
-            for (let i=0;i<lb.length;i++) {
-              if ((lb[i].ownerId || '').toLowerCase() === meEmail.toLowerCase()) { rank = i+1; break; }
-            }
-            const rankEl = document.getElementById('accountRankDisplay'); if (rankEl) rankEl.textContent = `Classement: ${rank}`;
-          }
+          const rank = await getUserRankByEmail(meEmail);
+          const rankEl = document.getElementById('accountRankDisplay'); if (rankEl) rankEl.textContent = `Classement: ${rank || '—'}`;
         } catch(e) {}
       }
     }

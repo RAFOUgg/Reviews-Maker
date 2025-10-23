@@ -553,6 +553,40 @@ app.get('/api/users/leaderboard', (req, res) => {
   });
 });
 
+// Exact rank for a specific owner (by email or ownerId)
+app.get('/api/users/rank', (req, res) => {
+  const ownerParam = req.query.email || req.query.ownerId || null;
+  if (!ownerParam) return res.status(400).json({ error: 'missing_param', message: 'email or ownerId required' });
+  const owner = String(ownerParam).toLowerCase();
+
+  // Build scores including owners who have public reviews but no votes (score 0)
+  const sql = `WITH scores AS (
+    SELECT LOWER(r.ownerId) as ownerId, COALESCE(SUM(rl.vote),0) as score
+    FROM reviews r
+    LEFT JOIN review_likes rl ON r.id = rl.reviewId
+    WHERE r.isPrivate=0 AND r.ownerId IS NOT NULL
+    GROUP BY LOWER(r.ownerId)
+  )
+  SELECT
+    (SELECT COUNT(*) FROM scores WHERE score > (SELECT score FROM scores WHERE ownerId=?)) + 1 as rank,
+    (SELECT score FROM scores WHERE ownerId=?) as score,
+    (SELECT COUNT(*) FROM scores) as totalOwners
+  `;
+
+  db.get(sql, [owner, owner], (err, row) => {
+    if (err) return res.status(500).json({ error: 'db_error' });
+    // If the owner is not present in the scores (no public reviews), return not_found
+    if (!row || row.score === null) {
+      return res.status(404).json({ error: 'not_found', message: 'owner not found or no public reviews' });
+    }
+    // Normalize numeric values
+    const rank = Number(row.rank) || 0;
+    const score = Number(row.score) || 0;
+    const totalOwners = Number(row.totalOwners) || 0;
+    res.json({ owner: owner, rank, score, totalOwners });
+  });
+});
+
 // User stats by email/ownerId
 app.get('/api/users/stats', async (req, res) => {
   const email = req.query.email || req.query.ownerId || null;
