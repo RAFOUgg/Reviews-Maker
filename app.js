@@ -3205,11 +3205,6 @@ async function renderCompactLibrary() {
         <div class="compact-item-meta">${r.productType || "Review"} • ${date}${holder}</div>
   ${r.holderName ? `<button type="button" class="author-link" data-author-email="${String((r.holderEmail || (r.owner && r.owner.email) || r.owner || r.holderName) || '').replace(/\"/g,'')}">${r.holderName}</button>` : ''}
       </div>
-      <div class="compact-item-votes" data-review-id="${r.id || ''}">
-        <!-- vote counts will be loaded lazily -->
-        <button type="button" class="vote-btn vote-like" title="J'aime">👍 <span class="vote-count">0</span></button>
-        <button type="button" class="vote-btn vote-dislike" title="Je n'aime pas">👎 <span class="vote-count">0</span></button>
-      </div>
     `;
     
     // Click: always preview when shown in the public/compact gallery
