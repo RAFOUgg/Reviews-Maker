@@ -2527,7 +2527,25 @@ async function populatePublicProfile(email, memberMetaArg) {
             memberMeta.email = d.email || memberMeta.email || statsEmail;
             // likes/dislikes and votes given
             try { if (dom.publicLikesReceived) dom.publicLikesReceived.textContent = (d.likesReceived || 0); } catch(e){}
+            try { if (dom.publicDislikesReceived) dom.publicDislikesReceived.textContent = (d.dislikesReceived || 0); } catch(e){}
             try { if (dom.publicVotesGiven) dom.publicVotesGiven.textContent = ((d.votesGivenLikes||0) + (d.votesGivenDislikes||0)); } catch(e){}
+            // fetch leaderboard to compute rank (best-effort)
+            try {
+              if (remoteBase) {
+                const lbResp = await fetch(`${remoteBase}/api/users/leaderboard?limit=200`);
+                if (lbResp && lbResp.ok) {
+                  const lb = await lbResp.json();
+                  const lowerEmail = (memberMeta.email || '').toLowerCase();
+                  let rank = '—';
+                  if (Array.isArray(lb)) {
+                    for (let i=0;i<lb.length;i++) {
+                      if ((lb[i].ownerId || '').toLowerCase() === lowerEmail) { rank = i+1; break; }
+                    }
+                  }
+                  try { if (dom.publicRank) dom.publicRank.textContent = rank; } catch(e){}
+                }
+              }
+            } catch(e) {}
           } catch(e){}
         }
       }
@@ -2726,6 +2744,22 @@ async function populatePublicProfile(email, memberMetaArg) {
       try { console.log('DEBUG: populatePublicProfile memberMeta ->', memberMeta); } catch(e){}
     } catch(e) {}
   } catch(e) { console.warn('populatePublicProfile', e); }
+}
+
+// Helper: fetch leaderboard and compute rank for an ownerId (email)
+async function getUserRankByEmail(email) {
+  try {
+    if (!remoteBase || !email) return null;
+    const resp = await fetch(`${remoteBase}/api/users/leaderboard?limit=500`);
+    if (!resp.ok) return null;
+    const lb = await resp.json();
+    if (!Array.isArray(lb)) return null;
+    const lower = String(email).toLowerCase();
+    for (let i=0;i<lb.length;i++) {
+      if ((lb[i].ownerId || '').toLowerCase() === lower) return i+1;
+    }
+    return null;
+  } catch(e) { return null; }
 }
 
 // Ensure public profile modal DOM refs and handlers exist
@@ -2976,6 +3010,33 @@ async function renderAccountView() {
   if (dom.statPrivate) dom.statPrivate.textContent = privateCount;
   if (dom.statFavType) dom.statFavType.textContent = favType;
   if (dom.accountTotal) dom.accountTotal.textContent = totalCount;
+
+  // Fetch server-side aggregates (likes/dislikes and leaderboard rank) when possible
+  try {
+    const meEmail = (localStorage.getItem('authEmail') || '').trim();
+    if (remoteBase && meEmail) {
+      const headers = {};
+      const token = localStorage.getItem('authToken'); if (token) headers['X-Auth-Token'] = token;
+      const resp = await fetch(`${remoteBase}/api/users/stats?email=${encodeURIComponent(meEmail)}`, { headers });
+      if (resp && resp.ok) {
+        const s = await resp.json();
+        try { if (dom.accountLikesReceived) dom.accountLikesReceived.textContent = (s.likesReceived || 0); } catch(e){}
+        try { if (dom.accountDislikesReceived) dom.accountDislikesReceived.textContent = (s.dislikesReceived || 0); } catch(e){}
+        // compute rank via leaderboard (best-effort)
+        try {
+          const lbResp = await fetch(`${remoteBase}/api/users/leaderboard?limit=500`);
+          if (lbResp && lbResp.ok) {
+            const lb = await lbResp.json();
+            let rank = '—';
+            for (let i=0;i<lb.length;i++) {
+              if ((lb[i].ownerId || '').toLowerCase() === meEmail.toLowerCase()) { rank = i+1; break; }
+            }
+            const rankEl = document.getElementById('accountRankDisplay'); if (rankEl) rankEl.textContent = `Classement: ${rank}`;
+          }
+        } catch(e) {}
+      }
+    }
+  } catch(e) { /* ignore */ }
 
   try { console.log('DEBUG: renderAccountView computed', { totalCount, publicCount, privateCount, byTypeKeys: Object.keys(byType||{}) }); } catch(e){}
 
