@@ -3174,10 +3174,19 @@ async function renderCompactLibrary() {
     const imageHtml = r.image ? 
       `<img src="${r.image}" alt="" class="compact-item-image" />` : 
       `<div class="compact-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.6rem;">📷</div>`;
-    
+
+    // Votes UI (positionnée entre l'image et le titre, affichée si remote API disponible)
+    const votesHtml = (r && remoteEnabled && r.id != null) ? `
+      <div class="compact-item-votes vote-controls" data-review-id="${r.id}">
+        <button type="button" class="vote-btn vote-like" title="Like">👍 <span class="vote-count like-count">0</span></button>
+        <button type="button" class="vote-btn vote-dislike" title="Dislike">👎 <span class="vote-count dislike-count">0</span></button>
+      </div>
+    ` : `<div class="compact-item-votes vote-controls" aria-hidden="true"></div>`;
+
   // Personal library: allow preview and, if owned, open editor when clicking edit
     item.innerHTML = `
       ${imageHtml}
+      ${votesHtml}
       <div class="compact-item-content">
         <div class="compact-item-title">${title}</div>
         <div class="compact-item-meta">${r.productType || "Review"} • ${date}${holder}</div>
@@ -3204,6 +3213,75 @@ async function renderCompactLibrary() {
     }
     
     dom.compactLibraryList.appendChild(item);
+    // Wire vote controls (if present)
+    try {
+      const voteBox = item.querySelector('.vote-controls');
+      if (voteBox && remoteEnabled && r.id != null) {
+        const likeBtn = voteBox.querySelector('.vote-like');
+        const dislikeBtn = voteBox.querySelector('.vote-dislike');
+        const likeCountEl = voteBox.querySelector('.like-count');
+        const dislikeCountEl = voteBox.querySelector('.dislike-count');
+        let currentMyVote = 0;
+        // Prevent parent click when interacting with buttons
+        [likeBtn, dislikeBtn].forEach(b => { if (b) b.addEventListener('click', (ev)=>ev.stopPropagation()); });
+
+        // Load current votes
+        (async () => {
+          try {
+            const js = await remoteGetReviewVotes(r.id);
+            if (!js) return;
+            likeCountEl.textContent = String(js.likes || 0);
+            dislikeCountEl.textContent = String(js.dislikes || 0);
+            currentMyVote = js.myVote || 0;
+            if (currentMyVote === 1) likeBtn.classList.add('active-vote');
+            if (currentMyVote === -1) dislikeBtn.classList.add('active-vote');
+          } catch(e){ console.warn('vote load err', e); }
+        })();
+
+        // Click handlers
+        if (likeBtn) likeBtn.addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          if (!isUserConnected) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
+          try {
+            if (currentMyVote === 1) {
+              const js = await remoteDeleteVote(r.id);
+              currentMyVote = 0;
+              likeBtn.classList.remove('active-vote');
+              likeCountEl.textContent = String(js.likes || 0);
+              dislikeCountEl.textContent = String(js.dislikes || 0);
+            } else {
+              const js = await remoteCastVote(r.id, 1);
+              currentMyVote = js.myVote || 0;
+              likeBtn.classList.toggle('active-vote', currentMyVote === 1);
+              dislikeBtn.classList.toggle('active-vote', currentMyVote === -1);
+              likeCountEl.textContent = String(js.likes || 0);
+              dislikeCountEl.textContent = String(js.dislikes || 0);
+            }
+          } catch(e) { console.warn(e); showToast('Erreur vote', 'error'); }
+        });
+
+        if (dislikeBtn) dislikeBtn.addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          if (!isUserConnected) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
+          try {
+            if (currentMyVote === -1) {
+              const js = await remoteDeleteVote(r.id);
+              currentMyVote = 0;
+              dislikeBtn.classList.remove('active-vote');
+              likeCountEl.textContent = String(js.likes || 0);
+              dislikeCountEl.textContent = String(js.dislikes || 0);
+            } else {
+              const js = await remoteCastVote(r.id, -1);
+              currentMyVote = js.myVote || 0;
+              likeBtn.classList.toggle('active-vote', currentMyVote === 1);
+              dislikeBtn.classList.toggle('active-vote', currentMyVote === -1);
+              likeCountEl.textContent = String(js.likes || 0);
+              dislikeCountEl.textContent = String(js.dislikes || 0);
+            }
+          } catch(e) { console.warn(e); showToast('Erreur vote', 'error'); }
+        });
+      }
+    } catch(e){ console.warn('vote wiring failed', e); }
   });
 }
 
@@ -3330,10 +3408,19 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
         </button>
       </div>
     ` : '';
-    
+
+    // Votes UI (shows for remote reviews)
+    const votesHtml = (r && remoteEnabled && r.id != null) ? `
+      <div class="library-item-votes vote-controls" data-review-id="${r.id}">
+        <button type="button" class="vote-btn vote-like" title="Like">👍 <span class="vote-count like-count">0</span></button>
+        <button type="button" class="vote-btn vote-dislike" title="Dislike">👎 <span class="vote-count dislike-count">0</span></button>
+      </div>
+    ` : `<div class="library-item-votes vote-controls" aria-hidden="true"></div>`;
+
     item.innerHTML = `
       ${draftBadge}
       ${imageHtml}
+      ${votesHtml}
       <div class="library-item-content">
         <div class="library-item-type">${r.productType || "Review"}</div>
         <div class="library-item-title">${title}</div>
@@ -3412,6 +3499,73 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
       });
     }
     
+    // Wire votes if present
+    try {
+      const voteBox = item.querySelector('.vote-controls');
+      if (voteBox && remoteEnabled && r.id != null) {
+        const likeBtn = voteBox.querySelector('.vote-like');
+        const dislikeBtn = voteBox.querySelector('.vote-dislike');
+        const likeCountEl = voteBox.querySelector('.like-count');
+        const dislikeCountEl = voteBox.querySelector('.dislike-count');
+        let currentMyVote = 0;
+        [likeBtn, dislikeBtn].forEach(b => { if (b) b.addEventListener('click', (ev)=>ev.stopPropagation()); });
+
+        (async () => {
+          try {
+            const js = await remoteGetReviewVotes(r.id);
+            if (!js) return;
+            likeCountEl.textContent = String(js.likes || 0);
+            dislikeCountEl.textContent = String(js.dislikes || 0);
+            currentMyVote = js.myVote || 0;
+            if (currentMyVote === 1) likeBtn.classList.add('active-vote');
+            if (currentMyVote === -1) dislikeBtn.classList.add('active-vote');
+          } catch(e){ console.warn('vote load err', e); }
+        })();
+
+        if (likeBtn) likeBtn.addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          if (!isUserConnected) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
+          try {
+            if (currentMyVote === 1) {
+              const js = await remoteDeleteVote(r.id);
+              currentMyVote = 0;
+              likeBtn.classList.remove('active-vote');
+              likeCountEl.textContent = String(js.likes || 0);
+              dislikeCountEl.textContent = String(js.dislikes || 0);
+            } else {
+              const js = await remoteCastVote(r.id, 1);
+              currentMyVote = js.myVote || 0;
+              likeBtn.classList.toggle('active-vote', currentMyVote === 1);
+              dislikeBtn.classList.toggle('active-vote', currentMyVote === -1);
+              likeCountEl.textContent = String(js.likes || 0);
+              dislikeCountEl.textContent = String(js.dislikes || 0);
+            }
+          } catch(e) { console.warn(e); showToast('Erreur vote', 'error'); }
+        });
+
+        if (dislikeBtn) dislikeBtn.addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          if (!isUserConnected) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
+          try {
+            if (currentMyVote === -1) {
+              const js = await remoteDeleteVote(r.id);
+              currentMyVote = 0;
+              dislikeBtn.classList.remove('active-vote');
+              likeCountEl.textContent = String(js.likes || 0);
+              dislikeCountEl.textContent = String(js.dislikes || 0);
+            } else {
+              const js = await remoteCastVote(r.id, -1);
+              currentMyVote = js.myVote || 0;
+              likeBtn.classList.toggle('active-vote', currentMyVote === 1);
+              dislikeBtn.classList.toggle('active-vote', currentMyVote === -1);
+              likeCountEl.textContent = String(js.likes || 0);
+              dislikeCountEl.textContent = String(js.dislikes || 0);
+            }
+          } catch(e) { console.warn(e); showToast('Erreur vote', 'error'); }
+        });
+      }
+    } catch(e){ console.warn('vote wiring failed', e); }
+
     dom.libraryGrid.appendChild(item);
   });
 }
@@ -5897,6 +6051,54 @@ async function remoteTogglePrivacy(id, isPrivate) {
   } catch (e) {
     console.warn('Remote privacy erreur', e);
     return false;
+  }
+}
+
+// Votes helper: get totals and myVote
+async function remoteGetReviewVotes(id) {
+  if (!remoteEnabled || id == null) return { likes: 0, dislikes: 0, myVote: 0 };
+  try {
+    const headers = {};
+    const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
+    if (token) headers['X-Auth-Token'] = token;
+    const r = await fetchWithTimeout(`${remoteBase}/api/reviews/${id}/votes`, { headers }, 5000);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } catch (e) {
+    console.warn('remoteGetReviewVotes error', e);
+    return { likes: 0, dislikes: 0, myVote: 0 };
+  }
+}
+
+// Cast/change a vote (1 or -1)
+async function remoteCastVote(id, vote) {
+  if (!remoteEnabled || id == null) return { ok: false };
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
+    if (token) headers['X-Auth-Token'] = token;
+    const r = await fetch(`${remoteBase}/api/reviews/${id}/vote`, { method: 'POST', headers, body: JSON.stringify({ vote: Number(vote) }) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } catch (e) {
+    console.warn('remoteCastVote error', e);
+    return { ok: false };
+  }
+}
+
+// Remove current vote
+async function remoteDeleteVote(id) {
+  if (!remoteEnabled || id == null) return { ok: false };
+  try {
+    const headers = {};
+    const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
+    if (token) headers['X-Auth-Token'] = token;
+    const r = await fetch(`${remoteBase}/api/reviews/${id}/vote`, { method: 'DELETE', headers });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } catch (e) {
+    console.warn('remoteDeleteVote error', e);
+    return { ok: false };
   }
 }
 

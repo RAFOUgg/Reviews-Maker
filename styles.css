@@ -7586,6 +7586,52 @@ kbd {
   }
 }
 
+/* Vote controls for reviews (like / dislike) */
+.vote-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+.compact-item-votes.vote-controls {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  z-index: 3;
+}
+.library-item-votes.vote-controls {
+  position: absolute;
+  right: 20px;
+  top: 16px;
+  z-index: 3;
+}
+.vote-btn {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.04);
+  color: var(--text);
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 0.9rem;
+}
+.vote-btn .vote-count {
+  margin-left: 6px;
+  font-weight: 700;
+  color: var(--text-soft);
+  font-size: 0.85rem;
+}
+.vote-btn.active-vote {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: #022;
+  border-color: rgba(0,0,0,0.08);
+  box-shadow: 0 8px 20px rgba(2,6,23,0.6);
+}
+.vote-btn:hover { transform: translateY(-2px); }
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    REDUCED MOTION
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
