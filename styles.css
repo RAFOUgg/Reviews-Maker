@@ -126,29 +126,17 @@ body::before {
   z-index: -2;
 }
 
-/* Strong override specifically for review editor page to remove any
-   decorative framed panel that may sit behind the main form. This
-   ensures no semi-opaque rounded rectangle appears behind the content. */
+/* Limit decorative-frame suppression to pseudo-elements only. Do not hide
+   the real `.workspace` or `.panel` elements — those contain interactive
+   completion zones and inputs. */
 .editor-page .workspace::before,
 .editor-page .workspace::after,
 .editor-page .panel::before,
-.editor-page .workspace,
-.editor-page .workspace .panel {
-  display: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  border: none !important;
-}
-
-/* Global defensive overrides: in case runtime classes differ, ensure any
-   workspace/panel pseudo-elements or decorative frames are hidden. */
 .workspace::before,
 .workspace::after,
-.panel::before,
-.app-shell > .panel,
-.workspace > .panel {
+.panel::before {
   display: none !important;
+  content: none !important;
   background: transparent !important;
   box-shadow: none !important;
   backdrop-filter: none !important;

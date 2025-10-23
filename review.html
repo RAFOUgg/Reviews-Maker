@@ -24,14 +24,18 @@
         content: none !important;
       }
 
+      /* Do NOT hide the actual workspace or panel containers; they hold
+         the interactive completion zones and inputs. Only neutralize
+         pseudo-elements and overlays. */
       .editor-page .workspace,
       .editor-page .workspace .panel,
       .app-shell .panel {
-        background: transparent !important;
-        box-shadow: none !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        border: none !important;
+        /* Keep original visuals — do not force transparent background here. */
+        background: unset !important;
+        box-shadow: unset !important;
+        backdrop-filter: unset !important;
+        -webkit-backdrop-filter: unset !important;
+        border: unset !important;
       }
 
       /* Force-hide any modal/backdrop elements that could be injected or toggled at runtime. */
