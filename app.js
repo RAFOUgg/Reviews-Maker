@@ -148,22 +148,6 @@ function setupAccountModalEvents() {
 const isHomePage = document.body.classList.contains('home-page');
 const isEditorPage = document.body.classList.contains('editor-page');
 
-// Temporarily disable floating auth button to avoid accidental click-throughs
-function disableFloatingAuthBtnTemporarily(ms = 350) {
-  try {
-    const btn = document.getElementById('floatingAuthBtn') || dom.floatingAuthBtn;
-    if (!btn) return;
-    if (btn._disabledTemporarily) return; // already disabled
-    btn._disabledTemporarily = true;
-    const prev = btn.getAttribute('aria-disabled');
-    try { btn.setAttribute('aria-disabled', 'true'); btn.style.pointerEvents = 'none'; } catch(e){}
-    setTimeout(() => {
-      try { if (prev == null) btn.removeAttribute('aria-disabled'); else btn.setAttribute('aria-disabled', prev); btn.style.pointerEvents = ''; } catch(e){}
-      btn._disabledTemporarily = false;
-    }, ms);
-  } catch(e) { /* ignore */ }
-}
-
 // Navigation entre les pages
 function navigateToEditor(productType = null, reviewData = null, reviewId = null) {
   const url = new URL('review.html', window.location.href);
@@ -886,7 +870,7 @@ let remoteEnabled = false; // API détectée
 let remoteBase = ''; // Détecté automatiquement
 const AUTH_API_BASE = ''; // Chemin relatif (géré par le même serveur/proxy)
 // API_KEY must never be exposed in client-side code. Server handles calls requiring the secret.
-let lastSelectedFiles = []; // Array<File> pour upload (max 4)
+let lastSelectedImageFile = null; // Original File pour upload
 let isUserConnected = false; // Auth state shared across modules
 // Only keep "mine" (user personal library) as the default/current library mode.
 // The public gallery has been removed from the UI and should not be used.
@@ -1273,7 +1257,7 @@ async function initEditorPage() {
   dom.generateBtn = document.getElementById("generateBtn");
   dom.newReviewBtn = document.getElementById("newReviewBtn");
   dom.brandLogo = document.getElementById("brandLogo");
-  // reset button removed from markup — keep compatibility by leaving out lookup
+  dom.resetBtn = document.getElementById("resetBtn");
   dom.saveBtn = document.getElementById("saveBtn");
   dom.prevSection = document.getElementById("prevSection");
   dom.nextSection = document.getElementById("nextSection");
@@ -1474,20 +1458,18 @@ function setupFormEvents() {
   if (!isEditorPage) return;
 
   // Boutons de formulaire
-  // Note: the explicit Reset button was removed from the UI; programmatic resets
-  // should still call handleReset() where needed.
+  if (dom.resetBtn) {
+    dom.resetBtn.addEventListener("click", () => {
+      const hasContent = hasSignificantContent();
+      if (hasContent && !confirm("Réinitialiser le formulaire ? Les données saisies seront effacées.")) {
+        return;
+      }
+      // Soft reset: efface tous les champs (y compris pipelines) et reste dans la page
+      handleReset('soft');
+    });
+  }
   if (dom.saveBtn) {
     dom.saveBtn.addEventListener("click", async () => {
-      // Block save modal and any local save when user is not authenticated or remote backend is unavailable
-      if (!isUserConnected) {
-        showToast('Connectez-vous pour enregistrer une review.', 'warning');
-        if (dom.authModal) dom.authModal.style.display = 'flex';
-        return;
-      }
-      if (!remoteEnabled) {
-        showToast('La sauvegarde locale est désactivée. Veuillez vous connecter au serveur pour enregistrer votre review.', 'warning');
-        return;
-      }
       // Ouvrir la modale immédiatement pour ne pas bloquer l'UX
       openSaveModal();
       // Pré-remplir ensuite (si une erreur survient, on ignore, la modale reste ouverte)
@@ -1538,13 +1520,20 @@ function setupFormEvents() {
   // Événements de formulaire
   if (dom.reviewForm) {
     dom.reviewForm.addEventListener('submit', handleSubmit);
-    // Note: file inputs are handled per-field to support multiple files, thumbnails
+    // Live image preview: intercept file inputs to update preview immediately
     dom.reviewForm.addEventListener('change', async (ev) => {
       const t = ev.target;
       if (!(t instanceof HTMLInputElement)) return;
-      // Skip generic file handling — individual file inputs handle their previews
-      if (t.type === 'file') return;
-      try { collectFormData(); generateReview(); } catch {}
+      if (t.type !== 'file' || !t.files || !t.files[0]) return;
+      try {
+          lastSelectedImageFile = t.files[0];
+          imageUrl = await readFileAsDataURL(t.files[0]);
+        collectFormData();
+        generateReview();
+      } catch (e) {
+        console.error('Image preview error', e);
+        showToast("Impossible d'afficher la photo sélectionnée.", 'error');
+      }
     }, true);
 
     // Auto-generate preview whenever inputs change
@@ -1563,22 +1552,12 @@ function setupFormEvents() {
   updateSectionControls();
 
   // Fallback: delegated listener to ensure the Save modal opens even if direct binding failed
-  // Block save modal for unauthenticated users or when remote backend is disabled.
   document.addEventListener('click', async (e) => {
     const el = e.target;
     if (!(el instanceof Element)) return;
     const btn = el.closest('#saveBtn');
     if (!btn) return;
     try {
-      if (!isUserConnected) {
-        showToast('Connectez-vous pour enregistrer une review.', 'warning');
-        if (dom.authModal) dom.authModal.style.display = 'flex';
-        return;
-      }
-      if (!remoteEnabled) {
-        showToast('La sauvegarde locale est désactivée. Connectez-vous au serveur pour enregistrer.', 'warning');
-        return;
-      }
       openSaveModal();
       // Prefill best-effort
       try {
@@ -1675,18 +1654,10 @@ function setupModalEvents() {
     dom.floatingAuthBtn.addEventListener("click", () => {
       console.log('DEBUG: floatingAuthBtn clicked; isUserConnected=', isUserConnected, 'dom.accountModal=', !!dom.accountModal, 'dom.authModal=', !!dom.authModal);
       // If connected, open account modal instead of auth modal
-      if (isUserConnected) {
-        // Ensure dom.accountModal reference is available (fallback for pages where initial DOM scan ran too early)
-        if (!dom.accountModal) {
-          try { dom.accountModal = document.getElementById('accountModal'); } catch(e){}
-          try { dom.accountModalOverlay = document.getElementById('accountModalOverlay'); } catch(e){}
-        }
-        if (dom.accountModal) {
-          console.log('DEBUG: Opening account modal (fallback lookup successful)');
-          openAccountModal();
-          return;
-        }
-        // otherwise fallthrough to auth modal as a safe fallback
+      if (isUserConnected && dom.accountModal) {
+        console.log('DEBUG: Opening account modal');
+        openAccountModal();
+        return;
       }
       if (dom.authModal) {
         console.log('DEBUG: Opening auth modal');
@@ -2290,15 +2261,7 @@ function showAuthStatus(message, type = "info") {
 
 // Account modal helpers
 function openAccountModal() {
-  try { console.log('openAccountModal called', { ts: Date.now() }); } catch(e){}
-  // If another modal (like public profile) is being opened, block account modal to avoid race/flash
-  if (window.__modalOpenLock) {
-    try { console.log('openAccountModal: blocked by modal lock', window.__modalOpenLock); } catch(e){}
-    return;
-  }
   if (!dom.accountModal) return;
-  // Ensure internal DOM refs and event handlers are up-to-date (in case modal was injected late)
-  try { ensureAccountDomReady(); } catch(e){}
   try {
     // hide any other open modals to avoid visual stacking
     const others = document.querySelectorAll('.modal, .tips-dialog, .export-config-modal');
@@ -2334,26 +2297,6 @@ function openAccountModal() {
     if (dom.accountModal && dom.accountModal.style.display !== 'block') dom.accountModal.style.display = 'block';
     if (overlay && overlay.style.display !== 'block') overlay.style.display = 'block';
   }, 100);
-  // Mark body so CSS can disable global overlays while account modal is focused
-  try { document.body.classList.add('account-modal-open'); } catch(e){}
-  // Defensive runtime: forcibly hide any overlay elements that might remain
-  try {
-    const hideOverlays = () => {
-      const overlays = document.querySelectorAll('.modal-overlay, .account-overlay, #previewOverlay, .preview-overlay');
-      overlays.forEach(o => {
-        try {
-          o.classList.remove('show');
-          o.style.display = 'none';
-          o.style.visibility = 'hidden';
-          o.style.pointerEvents = 'none';
-          o.style.opacity = '0';
-        } catch(e){}
-      });
-    };
-    // Immediate hide and a delayed second pass to catch later inline changes
-    try { hideOverlays(); } catch(e){}
-    setTimeout(() => { try { hideOverlays(); } catch(e){} }, 80);
-  } catch(e) {}
   // trap focus on dialog element
   const dialog = dom.accountModal.querySelector('.account-dialog') || dom.accountModal;
   trapFocus(dialog);
@@ -2373,93 +2316,19 @@ function closeAccountModal() {
   try { dom.accountModal.classList.remove('show'); } catch(e){}
   try { dom.accountModal.setAttribute('aria-hidden','true'); } catch(e){}
   try { dom.accountModal.style.display = 'none'; } catch(e){}
-  try { document.body.classList.remove('account-modal-open'); } catch(e){}
   releaseFocusTrap();
   try { document.body.classList.remove('modal-open'); } catch(e){}
 }
 
-// Ensure account modal DOM refs and handlers are ready (useful when modal markup is injected late)
-function ensureAccountDomReady() {
-  try {
-    // Re-query core elements if missing
-    if (!dom.accountModal) dom.accountModal = document.getElementById('accountModal');
-    if (!dom.accountModalOverlay) dom.accountModalOverlay = document.getElementById('accountModalOverlay');
-    if (!dom.closeAccountModal) dom.closeAccountModal = document.getElementById('closeAccountModal');
-    if (!dom.openLibraryFromAccount) dom.openLibraryFromAccount = document.getElementById('openLibraryFromAccount');
-    if (!dom.accountDisconnect) dom.accountDisconnect = document.getElementById('accountDisconnect');
-    if (!dom.openAccountSettings) dom.openAccountSettings = document.getElementById('openAccountSettings');
-    if (!dom.accountEmail) dom.accountEmail = document.getElementById('accountEmail');
-    if (!dom.statPublic) dom.statPublic = document.getElementById('statPublic');
-    if (!dom.statPrivate) dom.statPrivate = document.getElementById('statPrivate');
-    if (!dom.accountTotal) dom.accountTotal = document.getElementById('accountTotal');
-    if (!dom.accountStatsByType) dom.accountStatsByType = document.getElementById('accountStatsByType');
-
-    // Re-attach event wiring for known buttons
-    try { setupAccountModalEvents(); } catch(e){}
-
-    // Also ensure direct bindings for core actions if elements exist now
-    try {
-      const btnSettings = document.getElementById('openAccountSettings');
-      if (btnSettings && !btnSettings._hasBound) {
-        btnSettings.addEventListener('click', (ev) => {
-          ev.preventDefault();
-          const panel = document.getElementById('accountSettingsPanel');
-          if (panel) {
-            panel.style.display = 'block';
-            if (dom.accountPreferences) dom.accountPreferences.style.display = 'none';
-            const firstOpt = panel.querySelector('.theme-option'); if (firstOpt) firstOpt.focus();
-          }
-        });
-        btnSettings._hasBound = true;
-      }
-      const btnLibrary = document.getElementById('openLibraryFromAccount');
-      if (btnLibrary && !btnLibrary._hasBound) {
-        btnLibrary.addEventListener('click', (ev) => {
-          ev.preventDefault(); closeAccountModal(); if (!isUserConnected) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; } openLibraryModal('mine', { fromAccount: true });
-        });
-        btnLibrary._hasBound = true;
-      }
-      const btnDisconnect = document.getElementById('accountDisconnect');
-      if (btnDisconnect && !btnDisconnect._hasBound) {
-        btnDisconnect.addEventListener('click', (ev) => {
-          ev.preventDefault(); localStorage.removeItem('authToken'); localStorage.removeItem('authEmail'); localStorage.removeItem('discordUsername'); localStorage.removeItem('discordId'); sessionStorage.removeItem('authEmail'); sessionStorage.removeItem('pendingCode'); showAuthStatus('Déconnecté', 'info'); updateAuthUI(); try { dom.accountModal.style.display = 'none'; } catch(e){} if (isHomePage) { renderCompactLibrary(); setupHomeTabs(); }
-        });
-        btnDisconnect._hasBound = true;
-      }
-    } catch(e) { /* ignore */ }
-
-    // Delegated click handler: ensure attached once
-    if (dom.accountModal && !dom.accountModal._hasDelegatedListener) {
-      dom.accountModal.addEventListener('click', (e) => {
-        const libBtn = e.target.closest('#openLibraryFromAccount');
-        const accDisc = e.target.closest('#accountDisconnect');
-        const openSettingsInline = e.target.closest('#openAccountSettingsInline');
-        const openSettingsMain = e.target.closest('#openAccountSettings');
-        if (libBtn) {
-          try { console.log('DEBUG: delegated openLibraryFromAccount (ensured)'); } catch(e){}
-          e.preventDefault(); closeAccountModal(); if (!isUserConnected) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; } openLibraryModal('mine', { fromAccount: true }); return;
-        }
-        if (accDisc) {
-          try { console.log('DEBUG: delegated accountDisconnect (ensured)'); } catch(e){}
-          e.preventDefault(); localStorage.removeItem('authToken'); localStorage.removeItem('authEmail'); localStorage.removeItem('discordUsername'); localStorage.removeItem('discordId'); sessionStorage.removeItem('authEmail'); sessionStorage.removeItem('pendingCode'); showAuthStatus('Déconnecté', 'info'); updateAuthUI(); try { dom.accountModal.style.display = 'none'; } catch(e){} if (isHomePage) { renderCompactLibrary(); setupHomeTabs(); } return;
-        }
-        if (openSettingsInline || openSettingsMain) { try { console.log('DEBUG: delegated openAccountSettings (ensured)'); } catch(e){} e.preventDefault(); const panel = document.getElementById('accountSettingsPanel'); if (panel) panel.style.display = 'block'; if (dom.accountPreferences) dom.accountPreferences.style.display = 'none'; return; }
-      });
-      dom.accountModal._hasDelegatedListener = true;
-    }
-  } catch(e) { /* ignore */ }
-}
-
 // Public profile (read-only) helpers
-async function populatePublicProfile(email, memberMetaArg) {
+async function populatePublicProfile(email) {
   try {
     try { console.log('DEBUG: populatePublicProfile called with', email); } catch(e){}
-    // Ensure public profile DOM refs are available (allow opening without having opened account modal first)
-    try { ensurePublicProfileDomReady(); } catch(e){}
     // Accept either email or a display name (pseudo)
     const identifier = String(email || '').trim();
     if (dom.publicProfileEmail) dom.publicProfileEmail.textContent = identifier || '—';
-  // Do NOT force-show the modal here — leave presentation to caller (openPublicProfile)
+    // Ensure modal is displayed (fallback if CSS wasn't applied)
+    try { const modal = document.getElementById('publicProfileModal'); if (modal) modal.style.display = 'block'; } catch(e){}
     // Determine ownership: if the profile email matches the signed-in email,
     // show settings/actions that are only available to the owner.
     try {
@@ -2493,145 +2362,31 @@ async function populatePublicProfile(email, memberMetaArg) {
       // Ensure the 'Voir la bibliothèque publique' action remains visible
   // Suppression de la logique pour 'Voir la bibliothèque publique'
     } catch(e) { /* ignore UI toggle failures */ }
-  // Try to fetch from API first if available
-  let byType = {};
-  let total = 0, pub = 0, priv = 0;
-  // member metadata we want to display: displayName, email
-  // allow caller to pass a small pre-seeded metadata object to avoid expensive lookups
-  let memberMeta = Object.assign({ displayName: null, email: null }, (memberMetaArg && typeof memberMetaArg === 'object') ? memberMetaArg : {});
-
-  // Normalize display names: remove emojis/controls, normalize unicode, remove diacritics
-  function normalizeString(v) {
-    try {
-      if (!v) return '';
-      let s = String(v);
-      // normalize unicode and remove diacritics
-      s = s.normalize('NFKD').replace(/\p{Diacritic}/gu, '');
-      // remove emoji and symbols (keep letters, numbers, spaces, - and _)
-      s = s.replace(/[^\p{L}\p{N}\s\-_]/gu, '');
-      // collapse whitespace
-      s = s.replace(/\s+/g, ' ').trim();
-      return s.toLowerCase();
-    } catch (e) { return String(v || '').toLowerCase(); }
-  }
+    // Try to fetch from API first if available
+    let byType = {};
+    let total = 0, pub = 0, priv = 0;
     try {
       const token = localStorage.getItem('authToken');
-      // Prefer to call server stats when we have an email to query.
-      // Use memberMeta.email if passed by caller (more reliable), otherwise use identifier when it looks like an email.
-      const statsEmail = (memberMeta && memberMeta.email) ? String(memberMeta.email).trim() : (identifier && identifier.includes('@') ? identifier : null);
-      // If we have a remote backend, first try the new convenience endpoint /api/users/:ownerId
-      if (remoteBase && (statsEmail || identifier)) {
-        const headers = {};
-        if (token) headers['X-Auth-Token'] = token;
-        try {
-          const key = encodeURIComponent(statsEmail || identifier);
-          const respUser = await fetch(`${remoteBase.replace(/\/$/, '')}/api/users/${key}`, { headers });
-          if (respUser && respUser.ok) {
-            const d = await respUser.json();
-            total = d.total || 0; pub = d.public || d.pub || 0; priv = d.private || d.priv || 0; byType = d.by_type || d.byType || d.types || {};
-            try { memberMeta.displayName = d.displayName || d.username || d.discordUsername || memberMeta.displayName; } catch(e){}
-            try { memberMeta.email = d.email || memberMeta.email || statsEmail || identifier; } catch(e){}
-            try { if (dom.publicLikesReceived) dom.publicLikesReceived.textContent = (d.likesReceived || 0); } catch(e){}
-            try { if (dom.publicDislikesReceived) dom.publicDislikesReceived.textContent = (d.dislikesReceived || 0); } catch(e){}
-            try { if (dom.publicVotesGiven) dom.publicVotesGiven.textContent = ((d.votesGivenLikes||0) + (d.votesGivenDislikes||0)); } catch(e){}
-            try { if (dom.publicRank) dom.publicRank.textContent = (d.rank || '—'); } catch(e){}
-          } else {
-            // fallback to legacy stats endpoint by email if available
-            if (statsEmail) {
-              const resp = await fetch(`${remoteBase}/api/users/stats?email=${encodeURIComponent(statsEmail)}`, { headers });
-              if (resp && resp.ok) {
-                const d = await resp.json();
-                total = d.total || 0; pub = d.public || 0; priv = d.private || 0; byType = d.by_type || d.types || {};
-                try { memberMeta.displayName = d.displayName || d.username || d.discordUsername || memberMeta.displayName; } catch(e){}
-                try { memberMeta.email = d.email || memberMeta.email || statsEmail; } catch(e){}
-                try { if (dom.publicLikesReceived) dom.publicLikesReceived.textContent = (d.likesReceived || 0); } catch(e){}
-                try { if (dom.publicDislikesReceived) dom.publicDislikesReceived.textContent = (d.dislikesReceived || 0); } catch(e){}
-                try { if (dom.publicVotesGiven) dom.publicVotesGiven.textContent = ((d.votesGivenLikes||0) + (d.votesGivenDislikes||0)); } catch(e){}
-                try { const rank = await getUserRankByEmail(memberMeta.email || statsEmail); if (dom.publicRank) dom.publicRank.textContent = rank || '—'; } catch(e){}
-              }
-            }
-          }
-        } catch (e) {
-          try { console.warn('populatePublicProfile: user endpoint fetch error', e); } catch(ignore){}
+      // If identifier looks like an email, prefer server lookup
+      if (token && remoteBase && identifier.includes('@')) {
+        const resp = await fetch(`${remoteBase}/api/users/stats?email=${encodeURIComponent(identifier)}`, { headers: { 'X-Auth-Token': token } });
+        if (resp.ok) {
+          const d = await resp.json();
+          total = d.total || 0; pub = d.public || 0; priv = d.private || 0; byType = d.by_type || d.types || {};
         }
       }
     } catch(e) { /* ignore */ }
     // fallback to local DB if needed
     if (!total) {
       try {
-        // If IndexedDB is not available but a remote backend exists, try the remote reviews
-        let all = [];
-        try {
-          if (!db && typeof remoteBase === 'string' && remoteBase) {
-            try { console.log('DEBUG: populatePublicProfile: IndexedDB missing, attempting remote fetch early'); } catch(e){}
-            const token = localStorage.getItem('authToken');
-            const headers = token ? { 'X-Auth-Token': token } : {};
-            const resp = await fetch(`${remoteBase.replace(/\/$/, '')}/api/reviews`, { headers });
-            if (resp && resp.ok) {
-              const remoteList = await resp.json();
-              if (Array.isArray(remoteList) && remoteList.length) {
-                all = remoteList;
-                try { console.log('DEBUG: populatePublicProfile: remote reviews fetched (early)', all.length); } catch(e){}
-              }
-            }
-          }
-        } catch (e) { try { console.warn('populatePublicProfile: early remote fetch failed', e); } catch(ignore){} }
-        // If early remote fetch didn't populate 'all', try IndexedDB as usual
-        if (!all || all.length === 0) all = await dbGetAllReviews();
-        // If IndexedDB is unavailable or empty (e.g. private mode), try remote fallback
-        if ((!all || all.length === 0) && typeof remoteBase === 'string' && remoteBase) {
-          try {
-            try { console.log('DEBUG: populatePublicProfile: IndexedDB empty, attempting remote fetch'); } catch(e){}
-            const token = localStorage.getItem('authToken');
-            const headers = token ? { 'X-Auth-Token': token } : {};
-            const resp = await fetch(`${remoteBase.replace(/\/$/, '')}/api/reviews`, { headers });
-            if (resp && resp.ok) {
-              const remoteList = await resp.json();
-              if (Array.isArray(remoteList) && remoteList.length) {
-                all = remoteList;
-                try { console.log('DEBUG: populatePublicProfile: remote reviews fetched', all.length); } catch(e){}
-              }
-            }
-          } catch (e) { try { console.warn('populatePublicProfile: remote fetch failed', e); } catch(ignore){} }
-        }
-  // If identifier is an email, match by ownerEmail/holderEmail; otherwise match by holderName or stored discordUsername
+        const all = await dbGetAllReviews();
+        // If identifier is an email, match by ownerEmail/holderEmail; otherwise match by holderName or stored discordUsername
         let userReviews = [];
         if (identifier.includes('@')) {
-          // exact email matching on common email fields
-          const idLow = identifier.toLowerCase();
-          userReviews = (all || []).filter(r => {
-            try {
-              const candidates = [r.ownerEmail, r.holderEmail, r.owner && r.owner.email, r.authorEmail, r.email, r.contact && r.contact.email];
-              return candidates.some(c => c && String(c).toLowerCase() === idLow);
-            } catch(e){}
-            return false;
-          });
+          userReviews = (all || []).filter(r => (r.ownerEmail && String(r.ownerEmail).toLowerCase() === identifier.toLowerCase()) || (r.holderEmail && String(r.holderEmail).toLowerCase() === identifier.toLowerCase()));
         } else {
-          // permissive matching for display names / pseudos (use normalized strings)
-          const idNorm = normalizeString(identifier);
-          userReviews = (all || []).filter(r => {
-            try {
-              // collect possible name strings from various schemas
-              const cand = [];
-              if (r.holderName) cand.push(r.holderName);
-              if (r.holder) cand.push(r.holder);
-              if (r.owner && typeof r.owner === 'string') cand.push(r.owner);
-              if (r.owner && typeof r.owner === 'object') {
-                cand.push(r.owner.username || r.owner.user_name || r.owner.discordUsername || r.owner.displayName || r.owner.name || r.owner.nick || r.owner.handle);
-              }
-              cand.push(r.author || r.authorName || r.createdBy || r.submitter || r.uploader || r.creator || (r.meta && r.meta.author));
-              // normalize candidates
-              const flat = cand.filter(Boolean).map(x => normalizeString(x));
-              // match if any candidate equals or includes the identifier or vice-versa (handle variations)
-              for (const s of flat) {
-                if (!s) continue;
-                if (s === idNorm) return true;
-                if (s.includes(idNorm)) return true;
-                if (idNorm.includes(s) && s.length > 2) return true; // avoid tiny matches
-              }
-            } catch(e){}
-            return false;
-          });
+          const idLower = identifier.toLowerCase();
+          userReviews = (all || []).filter(r => (r.holderName && String(r.holderName).toLowerCase() === idLower) || (r.owner && r.owner.username && String(r.owner.username).toLowerCase() === idLower) || (r.owner && r.owner.discordUsername && String(r.owner.discordUsername).toLowerCase() === idLower));
         }
         const seen = new Set();
         const unique = [];
@@ -2642,102 +2397,8 @@ async function populatePublicProfile(email, memberMetaArg) {
         const map = {};
         unique.forEach(r => { const t = r.productType || r.type || 'Autre'; map[t] = (map[t]||0)+1; });
         byType = map;
-        // Derive member metadata (displayName/email) from matched reviews by majority vote
-        try {
-          const nameCounts = new Map();
-          const emailCounts = new Map();
-          const extractName = (r) => {
-            try {
-              if (r.owner && typeof r.owner === 'object') return r.owner.displayName || r.owner.username || r.owner.user_name || r.owner.discordUsername || r.owner.name || null;
-              return r.holderName || r.holder || r.author || r.authorName || r.creator || null;
-            } catch(e) { return null; }
-          };
-          unique.forEach(r => {
-            const n = extractName(r);
-            if (n) {
-              const k = normalizeString(n) || String(n).toLowerCase();
-              const prev = nameCounts.get(k) || { raw: n, count: 0 };
-              prev.count++;
-              nameCounts.set(k, prev);
-            }
-            try {
-              const e = r.ownerEmail || r.holderEmail || (r.owner && r.owner.email) || null;
-              if (e) {
-                const ek = String(e).toLowerCase();
-                emailCounts.set(ek, (emailCounts.get(ek) || 0) + 1);
-              }
-            } catch(e){}
-          });
-          // pick most frequent name
-          let bestName = null; let bestCount = 0;
-          for (const [k, v] of nameCounts.entries()) { if (v.count > bestCount) { bestCount = v.count; bestName = v.raw; } }
-          if (bestName && !memberMeta.displayName) memberMeta.displayName = bestName;
-          // pick most frequent email
-          let bestEmail = null; let bestEmailCount = 0;
-          for (const [k, v] of emailCounts.entries()) { if (v > bestEmailCount) { bestEmailCount = v; bestEmail = k; } }
-          if (bestEmail && !memberMeta.email) memberMeta.email = bestEmail;
-        } catch(e) {}
-
-        // Attach matched reviews for debug and display in modal if requested
-        try {
-          const mEl = document.getElementById('publicProfileModal');
-          if (mEl) {
-            mEl.dataset.matchedReviews = JSON.stringify(unique || []);
-            try { mEl.dataset.memberMeta = JSON.stringify(memberMeta || {}); } catch(e){}
-          }
-          try { console.log('DEBUG: populatePublicProfile matchedReviews ->', unique); } catch(e){}
-          // Create a small debug panel in the modal (collapsible)
-          const modalBody = document.querySelector('#publicProfileModal .modal-body');
-          if (modalBody) {
-            let dbgBtn = document.getElementById('showPublicProfileDebug');
-            let dbg = document.getElementById('publicProfileDebug');
-            if (!dbgBtn) {
-              dbgBtn = document.createElement('button');
-              dbgBtn.id = 'showPublicProfileDebug';
-              dbgBtn.className = 'btn-ghost';
-              dbgBtn.style.cssText = 'margin-top:8px; font-size:13px;';
-              dbgBtn.textContent = 'Afficher reviews (debug)';
-              dbgBtn.addEventListener('click', () => {
-                dbg = document.getElementById('publicProfileDebug');
-                if (!dbg) return;
-                dbg.classList.toggle('hidden');
-                dbgBtn.textContent = dbg.classList.contains('hidden') ? 'Afficher reviews (debug)' : 'Masquer debug';
-              });
-              modalBody.appendChild(dbgBtn);
-            }
-            if (!dbg) {
-              dbg = document.createElement('div');
-              dbg.id = 'publicProfileDebug';
-              dbg.style.cssText = 'max-height:200px; overflow:auto; background:rgba(0,0,0,0.08); padding:8px; margin-top:8px; border-radius:8px; font-size:12px;';
-              dbg.classList.add('hidden');
-              modalBody.appendChild(dbg);
-            }
-            // Populate debug panel (limit size)
-            try {
-              const limited = (unique || []).slice(0,50).map(r => ({ id: r.id, owner: r.owner || r.ownerName || r.ownerEmail || null, holderName: r.holderName || r.holder || null, isPrivate: !!r.isPrivate }));
-              dbg.innerHTML = '<pre style="white-space:pre-wrap">' + JSON.stringify(limited, null, 2) + '</pre>' + ( (unique||[]).length > 50 ? '<div style="font-size:12px;color:#aaa">...plus de 50 entrées, tronqué</div>' : '' );
-            } catch(e) { dbg.innerHTML = '<div style="color:#f88">Erreur debug</div>'; }
-          }
-        } catch(e) { console.warn('populatePublicProfile debug attach failed', e); }
-        // Derive display name / email from a sample review when remote lookup isn't available
-        try {
-          const sample = unique && unique.length ? unique[0] : null;
-          if (sample) {
-            // Prefer explicit owner fields and common alternates
-            const dispCandidates = [
-              sample.owner && (sample.owner.displayName || sample.owner.name || sample.owner.username || sample.owner.user_name || sample.owner.discordUsername || sample.owner.nick || sample.owner.handle),
-              sample.author || sample.authorName || sample.holderName || sample.holder || sample.creator || (sample.meta && sample.meta.author)
-            ];
-            for (const d of dispCandidates) {
-              if (d && !memberMeta.displayName) memberMeta.displayName = String(d);
-            }
-            const emailCandidates = [sample.ownerEmail, sample.holderEmail, sample.owner && sample.owner.email, sample.authorEmail, sample.email];
-            for (const e of emailCandidates) { if (e && !memberMeta.email) memberMeta.email = String(e); }
-          }
-        } catch(e){}
       } catch(e) { /* ignore */ }
     }
-  // Update DOM counts
     if (dom.publicTotal) dom.publicTotal.textContent = total;
     if (dom.publicPublic) dom.publicPublic.textContent = pub;
     if (dom.publicPrivate) dom.publicPrivate.textContent = priv;
@@ -2747,139 +2408,38 @@ async function populatePublicProfile(email, memberMetaArg) {
         const el = document.createElement('div'); el.className = 'type-pill'; el.textContent = `${k}: ${byType[k]}`; dom.publicByType.appendChild(el);
       });
     }
-    // Prefer showing a friendly display name when available; fall back to the identifier
-    try {
-      const display = memberMeta.displayName || identifier || '—';
-      if (dom.publicProfileEmail) dom.publicProfileEmail.textContent = display;
-      // Update the secondary line to show email when possible
-      const subEl = document.querySelector('#publicProfileModal .account-meta .sub');
-      if (subEl) subEl.textContent = memberMeta.email ? memberMeta.email : 'Membre Reviews Maker';
-      // store metadata on the modal for debug / further actions
-      try {
-        // prefer the DOM element directly to avoid stale dom.* refs
-        const mEl = document.getElementById('publicProfileModal');
-        if (mEl) {
-          mEl.dataset.memberMeta = JSON.stringify(memberMeta || {});
-        } else if (dom.publicProfileModal) {
-          dom.publicProfileModal.dataset.memberMeta = JSON.stringify(memberMeta || {});
-        }
-      } catch(e){}
-      // explicit debug log so you can see what was matched in console
-      try { console.log('DEBUG: populatePublicProfile memberMeta ->', memberMeta); } catch(e){}
-    } catch(e) {}
   } catch(e) { console.warn('populatePublicProfile', e); }
 }
 
-// Helper: fetch leaderboard and compute rank for an ownerId (email)
-async function getUserRankByEmail(email) {
+function openPublicProfile(email) {
   try {
-    if (!remoteBase || !email) return null;
-    const token = localStorage.getItem('authToken');
-    const headers = token ? { 'X-Auth-Token': token } : {};
-    const resp = await fetch(`${remoteBase.replace(/\/$/, '')}/api/users/rank?email=${encodeURIComponent(String(email))}`, { headers });
-    if (!resp) return null;
-    if (resp.status === 404) return null;
-    if (!resp.ok) return null;
-    const d = await resp.json();
-    if (!d) return null;
-    return (typeof d.rank === 'number' && d.rank > 0) ? d.rank : null;
-  } catch (e) {
-    return null;
-  }
-}
-
-// Ensure public profile modal DOM refs and handlers exist
-function ensurePublicProfileDomReady() {
-  try {
-    if (!dom.publicProfileModal) dom.publicProfileModal = document.getElementById('publicProfileModal');
-    if (!dom.publicProfileOverlay) dom.publicProfileOverlay = document.getElementById('publicProfileOverlay');
-    if (!dom.closePublicProfile) dom.closePublicProfile = document.getElementById('closePublicProfile');
-    if (!dom.publicProfileEmail) dom.publicProfileEmail = document.getElementById('publicProfileEmail');
-    if (!dom.publicTotal) dom.publicTotal = document.getElementById('publicTotal');
-    if (!dom.publicPublic) dom.publicPublic = document.getElementById('publicPublic');
-    if (!dom.publicPrivate) dom.publicPrivate = document.getElementById('publicPrivate');
-  if (!dom.publicLikesReceived) dom.publicLikesReceived = document.getElementById('publicLikesReceived');
-  if (!dom.publicVotesGiven) dom.publicVotesGiven = document.getElementById('publicVotesGiven');
-    if (!dom.publicByType) dom.publicByType = document.getElementById('publicByType');
-
-    // Attach a close handler if needed
-    if (dom.closePublicProfile && !dom.closePublicProfile._hasBound) {
-      dom.closePublicProfile.addEventListener('click', () => {
-        try { if (dom.publicProfileOverlay) dom.publicProfileOverlay.classList.remove('show'); } catch(e){}
-        try { if (dom.publicProfileModal) { dom.publicProfileModal.classList.remove('show'); dom.publicProfileModal.setAttribute('aria-hidden','true'); dom.publicProfileModal.style.display = 'none'; } } catch(e){}
-        try { document.body.classList.remove('modal-open'); } catch(e){}
-      });
-      dom.closePublicProfile._hasBound = true;
-    }
-    // Also allow clicking on overlay to close
-    if (dom.publicProfileOverlay && !dom.publicProfileOverlay._hasBound) {
-      dom.publicProfileOverlay.addEventListener('click', () => {
-        try { dom.publicProfileOverlay.classList.remove('show'); } catch(e){}
-        try { if (dom.publicProfileModal) { dom.publicProfileModal.classList.remove('show'); dom.publicProfileModal.setAttribute('aria-hidden','true'); dom.publicProfileModal.style.display = 'none'; } } catch(e){}
-        try { document.body.classList.remove('modal-open'); } catch(e){}
-      });
-      dom.publicProfileOverlay._hasBound = true;
-    }
-  } catch(e) { /* ignore */ }
-}
-
-async function openPublicProfile(email, memberMeta) {
-  try {
-    try { console.log('DEBUG: openPublicProfile called with', email, { ts: Date.now() }); } catch(e){}
-    // prevent other modals from opening while we load public profile
-    if (window.__modalOpenLock) {
-      try { console.log('openPublicProfile: another modal open lock present, aborting', window.__modalOpenLock); } catch(e){}
-      return;
-    }
-    window.__modalOpenLock = { reason: 'publicProfile', ts: Date.now() };
-    // briefly disable floating auth button to avoid accidental account modal opens via clickthrough
-    try { disableFloatingAuthBtnTemporarily(400); } catch(e){}
+    try { console.log('DEBUG: openPublicProfile called with', email); } catch(e){}
     // Close any account modal or other modals to ensure the public profile appears on top
     try {
-      try { if (typeof dom !== 'undefined' && dom && dom.accountModal) { closeAccountModal(); } } catch(e) {}
+      // If account modal is open, close it first
+      if (dom && dom.accountModal) {
+        try { closeAccountModal(); } catch(e) { /* ignore */ }
+      }
       const others = document.querySelectorAll('.modal, .tips-dialog, .export-config-modal');
       others.forEach(m => { if (m && m.id !== 'publicProfileModal') { try { m.style.display = 'none'; } catch(e){} try { m.classList.remove('show'); } catch(e){} } });
+      // Hide any modal-overlay elements that could sit above the public profile
       const overlays = document.querySelectorAll('.modal-overlay, .account-overlay');
       overlays.forEach(o => { try { o.style.display = 'none'; o.classList.remove('show'); } catch(e){} });
     } catch(e) { /* ignore */ }
-
-    // Ensure DOM refs and populate data before showing modal to avoid empty flash
-    try { ensurePublicProfileDomReady(); } catch(e){}
-    // Wait for data population to complete (will not show the modal yet)
-  // Allow callers to pass an already-known memberMeta by encoding it in the email parameter
-  // (openPublicProfile callers that know metadata can pass an object via second param)
-  try { await populatePublicProfile(email, memberMeta); } catch(e) { console.warn('openPublicProfile: populate failed', e); }
-    // Defensive: remove any account-modal specific body class which can elevate other overlays
-    try { document.body.classList.remove('account-modal-open'); } catch(e){}
-    // Also hide any lingering overlays which may have !important z-index rules
-    try {
-      const lingering = document.querySelectorAll('.modal-overlay, .account-overlay, #previewOverlay, .preview-overlay');
-      lingering.forEach(o => {
-        try { o.classList.remove('show'); o.style.display = 'none'; o.style.visibility = 'hidden'; o.style.pointerEvents = 'none'; } catch(e){}
-      });
-    } catch(e){}
-
-    // Now show overlay/modal after data is ready
     const overlay = document.getElementById('publicProfileOverlay');
     if (overlay) {
       overlay.classList.add('show');
       overlay.style.display = 'block';
-      // prefer a z-index that sits under the modal content but above page UI
-      try { overlay.style.zIndex = '10040'; } catch(e){}
+      overlay.style.zIndex = '10040';
       overlay.setAttribute('aria-hidden','false');
     }
     const modal = document.getElementById('publicProfileModal');
     if (modal) {
-      // ensure modal content sits above overlays; inline styles are used as a defensive override
-      try { modal.style.zIndex = '10080'; } catch(e){}
+      modal.style.zIndex = '10050';
       modal.classList.add('show');
       modal.setAttribute('aria-hidden','false');
       modal.style.display = 'block';
-      // ensure inner modal-content is above overlay (some CSS rules set content z-index via classes)
-      try {
-        const content = modal.querySelector('.modal-content') || modal.querySelector('.account-dialog') || modal.firstElementChild;
-        if (content) content.style.zIndex = '10090';
-      } catch(e){}
+      // Fallback: force modal visible if still hidden
       setTimeout(() => {
         if (modal.style.display !== 'block') modal.style.display = 'block';
         if (overlay && overlay.style.display !== 'block') overlay.style.display = 'block';
@@ -2887,12 +2447,8 @@ async function openPublicProfile(email, memberMeta) {
     }
     try { console.log('DEBUG: publicProfileOverlay, modal classes ->', { overlayClass: overlay ? overlay.className : null, modalClass: modal ? modal.className : null, modalStyleDisplay: modal ? modal.style.display : null }); } catch(e){}
     try { document.body.classList.add('modal-open'); } catch(e){}
-  } catch(e) {
-    try { console.warn('openPublicProfile error', e); } catch(ignore){}
-  } finally {
-    // release lock shortly after modal is visible
-    setTimeout(() => { try { window.__modalOpenLock = null; } catch(e){} }, 600);
-  }
+    populatePublicProfile(email).catch(()=>{});
+  } catch(e){}
 }
 
 if (typeof window !== 'undefined') {
@@ -2975,52 +2531,27 @@ async function renderAccountView() {
   // If still empty, try to compute from local DB / localStorage reviews
   if ((!publicCount && !privateCount && !totalCount) || (!byType || Object.keys(byType).length === 0)) {
     try {
-        const all = await dbGetAllReviews();
-        if (all && all.length) {
-          // Determine current user identity (email + possible username)
-          const meEmail = (localStorage.getItem('authEmail') || '').toLowerCase();
-          const meName = (localStorage.getItem('discordUsername') || localStorage.getItem('authUsername') || '').toLowerCase();
-          // Filter reviews owned by current user to avoid global counts
-          const owned = (all || []).filter(r => {
-            if (!r) return false;
-            try {
-              // Email based matches
-              if (meEmail) {
-                if ((r.ownerEmail && String(r.ownerEmail).toLowerCase() === meEmail) || (r.holderEmail && String(r.holderEmail).toLowerCase() === meEmail)) return true;
-                if (r.owner && typeof r.owner === 'object' && r.owner.email && String(r.owner.email).toLowerCase() === meEmail) return true;
-              }
-              // Name / username based matches
-              if (meName) {
-                const hn = r.holderName && String(r.holderName).toLowerCase();
-                if (hn && hn === meName) return true;
-                if (r.holder && String(r.holder).toLowerCase() === meName) return true;
-                if (r.owner && typeof r.owner === 'string' && String(r.owner).toLowerCase() === meName) return true;
-                if (r.owner && typeof r.owner === 'object') {
-                  if ((r.owner.username && String(r.owner.username).toLowerCase() === meName) || (r.owner.discordUsername && String(r.owner.discordUsername).toLowerCase() === meName) || (r.owner.user_name && String(r.owner.user_name).toLowerCase() === meName)) return true;
-                }
-              }
-            } catch(e) { /* ignore */ }
-            return false;
-          });
-          // Dedupe owned reviews by id to avoid counting duplicates
-          const seen = new Set();
-          const unique = [];
-          owned.forEach(r => {
-            if (!r || !r.id) return;
-            if (!seen.has(r.id)) {
-              seen.add(r.id);
-              unique.push(r);
-            }
-          });
-          totalCount = unique.length;
-          publicCount = unique.filter(r => !r.isPrivate).length;
-          privateCount = unique.filter(r => !!r.isPrivate).length;
-          const map = {};
-          unique.forEach(r => {
-            const t = r.productType || r.type || 'Autre';
-            map[t] = (map[t] || 0) + 1;
-          });
-          byType = map;
+      const all = await dbGetAllReviews();
+      if (all && all.length) {
+        // Dedupe by id to avoid counting duplicates
+        const seen = new Set();
+        const unique = [];
+        all.forEach(r => {
+          if (!r || !r.id) return;
+          if (!seen.has(r.id)) {
+            seen.add(r.id);
+            unique.push(r);
+          }
+        });
+        totalCount = unique.length;
+        publicCount = unique.filter(r => !r.isPrivate).length;
+        privateCount = unique.filter(r => !!r.isPrivate).length;
+        const map = {};
+        unique.forEach(r => {
+          const t = r.productType || r.type || 'Autre';
+          map[t] = (map[t] || 0) + 1;
+        });
+        byType = map;
         // Pick favorite
         let max = 0;
         Object.keys(map).forEach(k => { if (map[k] > max) { max = map[k]; favType = k; } });
@@ -3036,35 +2567,6 @@ async function renderAccountView() {
   if (dom.statPrivate) dom.statPrivate.textContent = privateCount;
   if (dom.statFavType) dom.statFavType.textContent = favType;
   if (dom.accountTotal) dom.accountTotal.textContent = totalCount;
-
-  // Fetch server-side aggregates (likes/dislikes and leaderboard rank) when possible
-  try {
-    const meEmail = (localStorage.getItem('authEmail') || '').trim();
-    if (remoteBase && meEmail) {
-      const headers = {};
-      const token = localStorage.getItem('authToken'); if (token) headers['X-Auth-Token'] = token;
-      try {
-        // prefer convenience endpoint
-        const meKey = encodeURIComponent(meEmail);
-        const respUser = await fetch(`${remoteBase.replace(/\/$/, '')}/api/users/${meKey}`, { headers });
-        if (respUser && respUser.ok) {
-          const s = await respUser.json();
-          try { if (dom.accountLikesReceived) dom.accountLikesReceived.textContent = (s.likesReceived || 0); } catch(e){}
-          try { if (dom.accountDislikesReceived) dom.accountDislikesReceived.textContent = (s.dislikesReceived || 0); } catch(e){}
-          try { const rankEl = document.getElementById('accountRankDisplay'); if (rankEl) rankEl.textContent = `Classement: ${s.rank || '—'}`; } catch(e) {}
-        } else {
-          // fallback to legacy stats endpoint
-          const resp = await fetch(`${remoteBase}/api/users/stats?email=${encodeURIComponent(meEmail)}`, { headers });
-          if (resp && resp.ok) {
-            const s = await resp.json();
-            try { if (dom.accountLikesReceived) dom.accountLikesReceived.textContent = (s.likesReceived || 0); } catch(e){}
-            try { if (dom.accountDislikesReceived) dom.accountDislikesReceived.textContent = (s.dislikesReceived || 0); } catch(e){}
-            try { const rank = await getUserRankByEmail(meEmail); const rankEl = document.getElementById('accountRankDisplay'); if (rankEl) rankEl.textContent = `Classement: ${rank || '—'}`; } catch(e) {}
-          }
-        }
-      } catch(e) { console.warn('renderAccountView: user fetch error', e); }
-    }
-  } catch(e) { /* ignore */ }
 
   try { console.log('DEBUG: renderAccountView computed', { totalCount, publicCount, privateCount, byTypeKeys: Object.keys(byType||{}) }); } catch(e){}
 
@@ -3134,8 +2636,7 @@ function debounce(func, wait) {
 async function initDatabase() {
   try {
     await setupDatabase();
-    // Legacy localStorage migration removed (cannaReviews deprecated)
-    // await migrateLocalStorageToDB();
+    await migrateLocalStorageToDB();
     if (shouldDedupeOnStart()) {
       await dedupeDatabase();
     }
@@ -3252,9 +2753,72 @@ function setupDatabase() {
   });
 }
 
-// Legacy localStorage migration removed (cannaReviews deprecated).
-// All read/write operations now prefer IndexedDB; if IndexedDB is unavailable
-// the functions will resolve to empty lists or fail gracefully.
+async function migrateLocalStorageToDB() {
+  if (!db) return; // Nothing to do if no DB
+  let reviews = [];
+  try { reviews = JSON.parse(localStorage.getItem("cannaReviews") || "[]"); } catch {}
+  if (!Array.isArray(reviews) || reviews.length === 0) return;
+  // 1) Normalize and deduplicate local entries by correlation/loose key
+  const pickBetter = (a, b) => {
+  // Prefer most recent date (draft flag removed)
+  const da = new Date(a.date || 0).getTime();
+  const dbt = new Date(b.date || 0).getTime();
+  return da >= dbt ? a : b;
+  const ta = new Date(a.date || 0).getTime();
+  const tb = new Date(b.date || 0).getTime();
+  return ta >= tb ? a : b;
+  };
+  const chosenByStrict = new Map();
+  const chosenByLoose = new Map();
+  for (const r0 of reviews) {
+    const r = { ...r0 };
+    r.correlationKey = r.correlationKey || computeCorrelationKey(r);
+    const loose = computeLooseKey(r);
+    // Merge by strict key first
+    const prevS = chosenByStrict.get(r.correlationKey);
+    if (prevS) {
+      chosenByStrict.set(r.correlationKey, pickBetter(prevS, r));
+    } else {
+      chosenByStrict.set(r.correlationKey, r);
+    }
+    // Also keep best per loose key to collapse records that only differ by empty breeder/farm
+    const prevL = chosenByLoose.get(loose);
+    if (prevL) {
+      chosenByLoose.set(loose, pickBetter(prevL, r));
+    } else {
+      chosenByLoose.set(loose, r);
+    }
+  }
+  // Build a final list of winners ensuring uniqueness by strict key
+  const winners = new Map();
+  // Start with loose winners (covers early drafts without breeder/farm)
+  for (const [lk, r] of chosenByLoose.entries()) {
+    winners.set(r.correlationKey, r);
+  }
+  // Overlay strict winners (they are more precise)
+  for (const [sk, r] of chosenByStrict.entries()) {
+    winners.set(sk, r);
+  }
+  const locals = Array.from(winners.values());
+
+  // 2) Avoid importing duplicates already present in DB and within this batch
+  let existing = [];
+  try { existing = await dbGetAllReviews(); } catch {}
+  const seenKeys = new Set((existing || []).map(x => x.correlationKey || computeCorrelationKey(x)));
+  let migrated = 0;
+  for (const r of locals) {
+    try {
+      const k = r.correlationKey || computeCorrelationKey(r);
+      const exists = seenKeys.has(k) || (existing || []).some(x => computeLooseKey(x) === computeLooseKey(r));
+      if (exists) continue;
+      await dbAddReview(r);
+      seenKeys.add(k);
+      migrated++;
+    } catch (e) { console.warn("Migration entry failed", e); }
+  }
+  localStorage.removeItem("cannaReviews");
+  if (migrated > 0) showToast(`Migration de ${migrated} review(s) vers la base`, "success");
+}
 
 // Deduplicate records already in DB by correlation key (strict and loose)
 async function dedupeDatabase() {
@@ -3325,9 +2889,6 @@ async function dedupeDatabase() {
 
 function dbAddReview(review) {
   return new Promise((resolve, reject) => {
-    // When remote API is enabled we no longer persist reviews locally to avoid
-    // mixing local drafts with the remote DB. Return a noop.
-    if (remoteEnabled) { resolve(null); return; }
     if (!db) { resolve(null); return; }
     const tx = db.transaction("reviews", "readwrite");
     const store = tx.objectStore("reviews");
@@ -3339,8 +2900,6 @@ function dbAddReview(review) {
 
 function dbUpdateReview(review) {
   return new Promise((resolve, reject) => {
-    // No local updates when remote is active
-    if (remoteEnabled) { resolve(false); return; }
     if (!db) { resolve(false); return; }
     const tx = db.transaction("reviews", "readwrite");
     const store = tx.objectStore("reviews");
@@ -3352,7 +2911,6 @@ function dbUpdateReview(review) {
 
 function dbDeleteReview(id) {
   return new Promise((resolve, reject) => {
-    if (remoteEnabled) { resolve(false); return; }
     if (!db) { resolve(false); return; }
     const tx = db.transaction("reviews", "readwrite");
     const store = tx.objectStore("reviews");
@@ -3364,12 +2922,10 @@ function dbDeleteReview(id) {
 
 function dbGetAllReviews() {
   return new Promise((resolve, reject) => {
-    // If remote is enabled prefer remote data and avoid returning local DB entries
-    if (remoteEnabled) { resolve([]); return; }
     if (!db) {
-      // IndexedDB unavailable: return empty list (legacy localStorage removed)
-      try { console.warn('dbGetAllReviews: IndexedDB unavailable and localStorage fallback removed'); } catch(e){}
-      resolve([]);
+      // Fallback read from legacy localStorage
+      try { resolve(JSON.parse(localStorage.getItem("cannaReviews") || "[]")); }
+      catch { resolve([]); }
       return;
     }
     const tx = db.transaction("reviews", "readonly");
@@ -3382,10 +2938,13 @@ function dbGetAllReviews() {
 
 function dbGetReviewById(id) {
   return new Promise((resolve, reject) => {
-    if (remoteEnabled) { resolve(null); return; }
     if (!db) {
-      try { console.warn('dbGetReviewById: IndexedDB unavailable and localStorage fallback removed'); } catch(e){}
-      resolve(null);
+      try {
+        const all = JSON.parse(localStorage.getItem('cannaReviews') || '[]');
+        resolve(all.find(r => r && r.id === id) || null);
+      } catch {
+        resolve(null);
+      }
       return;
     }
     const tx = db.transaction('reviews', 'readonly');
@@ -3473,24 +3032,11 @@ async function renderLibraryList(mode = 'mine') {
     li.className = "library-item";
     const title = r.productName || r.cultivars || r.productType || "review";
     const date = new Date(r.date || Date.now()).toLocaleString("fr-FR");
-    // build small thumbnails for library list (prefer r.files map, fallback to r.image)
-    let thumbsList = [];
-    try {
-      if (r.files && typeof r.files === 'object') {
-        Object.keys(r.files).forEach(k => {
-          const arr = Array.isArray(r.files[k]) ? r.files[k] : [];
-          arr.forEach(p => { if (p) thumbsList.push(p); });
-        });
-      } else if (Array.isArray(r.files)) {
-        thumbsList = thumbsList.concat(r.files);
-      }
-    } catch(e) { thumbsList = []; }
-    if (thumbsList.length === 0 && r.image) thumbsList.push(r.image);
-    const thumb = thumbsList.length ? `<div style="display:flex;gap:6px;align-items:center">${thumbsList.slice(0,3).map(s=>`<div style=\"width:44px;height:44px;border-radius:8px;overflow:hidden;border:1px solid var(--glass-border)\"><img src=\"${s}\" alt=\"\" style=\"width:100%;height:100%;object-fit:cover\"/></div>`).join('')}</div>` : '';
+    const thumb = r.image ? `<div style="width:44px;height:44px;border-radius:8px;overflow:hidden;border:1px solid var(--glass-border)"><img src="${r.image}" alt="" style="width:100%;height:100%;object-fit:cover"/></div>` : '';
   // Drafts removed: no draft badge
   const draftBadge = '';
     
-  // Show actions only in 'mine' mode
+    // Show actions only in 'mine' mode
     const actionsHtml = mode === 'mine' ? `
       <div class="actions">
         <button type="button" class="btn btn-outline btn-sm" data-act="load">👀</button>
@@ -3500,10 +3046,7 @@ async function renderLibraryList(mode = 'mine') {
       </div>
     ` : '';
     
-    // Prepare a safe author label (prefer holderName, then owner.displayName/username, then owner/raw holder)
-    const authorLabel = (r.holderName || (r.owner && (r.owner.displayName || r.owner.username || r.owner.user_name)) || r.holder || '').toString();
-
-    item.innerHTML = `
+    li.innerHTML = `
       <div class="meta">
         <div class="title" style="display:flex;align-items:center;gap:10px;">${thumb}${title}${draftBadge}</div>
         <div class="sub">${r.productType || ""} • ${r.farm || ""} • ${date}</div>
@@ -3514,15 +3057,10 @@ async function renderLibraryList(mode = 'mine') {
     const previewAction = async () => { await openPreviewOnly(r); toggleLibrary(false, mode); };
     
     if (mode === 'mine') {
-      // wire actions
-      const loadBtn = li.querySelector('[data-act="load"]');
-      if (loadBtn) loadBtn.addEventListener('click', previewAction);
-      const editBtn = li.querySelector('[data-act="edit"]');
-      if (editBtn) editBtn.addEventListener('click', () => { loadReviewIntoForm(r, 'edit'); toggleLibrary(false, mode); });
-      const dupBtn = li.querySelector('[data-act="dup"]');
-      if (dupBtn) dupBtn.addEventListener('click', async () => { await duplicateReview(r); });
-      const delBtn = li.querySelector('[data-act="delete"]');
-      if (delBtn) delBtn.addEventListener('click', async () => {
+      li.querySelector('[data-act="load"]').addEventListener('click', previewAction);
+      li.querySelector('[data-act="edit"]').addEventListener('click', () => { loadReviewIntoForm(r, 'edit'); toggleLibrary(false, mode); });
+      li.querySelector('[data-act="dup"]').addEventListener('click', async () => { await duplicateReview(r); });
+      li.querySelector('[data-act="delete"]').addEventListener('click', async () => {
         if (!r.id) { showToast('Suppression non disponible (entrée ancienne)', 'warning'); return; }
         // Open unified confirmation modal
         openConfirmDelete(`Supprimer « ${title} » ?`);
@@ -3569,15 +3107,13 @@ async function duplicateReview(review) {
     // Recompute correlation key for the duplicated draft
     duplicatedReview.correlationKey = computeCorrelationKey(duplicatedReview);
     
-    if (!remoteEnabled) {
-      if (db && !dbFailedOnce) {
-        await dbAddReview(duplicatedReview);
-      } else {
-        // Fallback: queue in-memory for this session (non-persistent).
-        window.__localFallbackQueue = window.__localFallbackQueue || [];
-        window.__localFallbackQueue.push(duplicatedReview);
-        console.warn('Duplicated review queued in-memory; IndexedDB unavailable.');
-      }
+    if (db && !dbFailedOnce) {
+      await dbAddReview(duplicatedReview);
+    } else {
+      let reviews = [];
+      try { reviews = JSON.parse(localStorage.getItem("cannaReviews") || "[]"); } catch {}
+      reviews.push(duplicatedReview);
+      localStorage.setItem("cannaReviews", JSON.stringify(reviews));
     }
     
     showToast("Review dupliquée avec succès!", "success");
@@ -3634,39 +3170,30 @@ async function renderCompactLibrary() {
     });
   const holder = r.holderName ? ` • ${r.holderName}` : '';
     
-    // Build thumbnails: prefer r.files (object of arrays), else fallback to r.image
-    let thumbs = [];
-    try {
-      if (r.files && typeof r.files === 'object') {
-        Object.keys(r.files).forEach(k => {
-          const arr = Array.isArray(r.files[k]) ? r.files[k] : [];
-          arr.forEach(p => { if (p) thumbs.push(p); });
-        });
-      } else if (Array.isArray(r.files)) {
-        thumbs = thumbs.concat(r.files);
-      }
-    } catch(e) { thumbs = []; }
-    if (thumbs.length === 0 && r.image) thumbs.push(r.image);
-
-    const limited = thumbs.slice(0,4);
-    const imageHtml = limited.length ?
-      `<div class="compact-thumb-grid" style="display:flex;gap:6px;align-items:center">${limited.map(s=>`<div style=\"width:64px;height:40px;border-radius:8px;overflow:hidden;border:1px solid var(--glass-border)\"><img src=\"${s}\" alt=\"\" style=\"width:100%;height:100%;object-fit:cover\"/></div>`).join('')}</div>` :
+    // Build up to 4 preview images (use r.files if present, otherwise fallback to r.image)
+    const gatherMedia = () => {
+      const out = [];
+      try {
+        if (r.files && typeof r.files === 'object') {
+          Object.values(r.files).forEach(arr => { if (Array.isArray(arr)) arr.forEach(u => u && out.push(u)); });
+        }
+      } catch (e) {}
+      if (!out.length && r.image) out.push(r.image);
+      return out.slice(0,4);
+    };
+    const thumbs = gatherMedia();
+    const sizeClass = ['one','two','three','four'][Math.max(0, Math.min(3, thumbs.length - 1))] || 'one';
+    const imageHtml = (thumbs.length > 0) ?
+      `<div class="compact-image-grid ${sizeClass}">${thumbs.map((u,i)=>`<div class="compact-thumb-slot"><img src="${u}" alt="thumb-${i}" loading="lazy"></div>`).join('')}</div>` :
       `<div class="compact-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.6rem;">📷</div>`;
     
   // Personal library: allow preview and, if owned, open editor when clicking edit
-    const authorLabel = (r.holderName || (r.owner && (r.owner.displayName || r.owner.username || r.owner.user_name)) || r.holder || '').toString();
     item.innerHTML = `
-      <div class="compact-image-wrap" style="position:relative; border-radius:8px; overflow:hidden">
-        ${imageHtml}
-          <div class="vote-controls" data-review-id="${r.id || ''}" data-owner-email="${String((r.owner && r.owner.email) || r.holderEmail || '')}" style="position:absolute; right:10px; bottom:10px; display:flex; gap:6px; align-items:center;">
-          <button type="button" class="vote-btn like" title="Like" style="background:rgba(0,0,0,0.6); color:#fff; border:0; padding:6px 8px; border-radius:6px; display:flex; gap:6px; align-items:center; box-shadow: 0 2px 8px rgba(0,0,0,0.45);">👍 <span class="vote-count" style="font-weight:600; margin-left:4px;">0</span></button>
-          <button type="button" class="vote-btn dislike" title="Dislike" style="background:rgba(0,0,0,0.6); color:#fff; border:0; padding:6px 8px; border-radius:6px; display:flex; gap:6px; align-items:center; box-shadow: 0 2px 8px rgba(0,0,0,0.45);">👎 <span class="vote-count" style="font-weight:600; margin-left:4px;">0</span></button>
-        </div>
-      </div>
+      ${imageHtml}
       <div class="compact-item-content">
         <div class="compact-item-title">${title}</div>
         <div class="compact-item-meta">${r.productType || "Review"} • ${date}${holder}</div>
-        <button type="button" class="author-link">${authorLabel || 'Auteur'}</button>
+  ${r.holderName ? `<button type="button" class="author-link" data-author-email="${String((r.holderEmail || (r.owner && r.owner.email) || r.owner || r.holderName) || '').replace(/\"/g,'')}">${r.holderName}</button>` : ''}
       </div>
     `;
     
@@ -3678,98 +3205,17 @@ async function renderCompactLibrary() {
     // Make author link open public profile (delegated)
     const authorBtn = item.querySelector('.author-link');
     if (authorBtn) {
-      // Ensure data-author-email contains an email if available (prefer holderEmail / owner.email)
-      try {
-        const explicitEmail = (r.holderEmail || (r.owner && r.owner.email)) || '';
-        if (explicitEmail) {
-          authorBtn.dataset.authorEmail = String(explicitEmail).trim();
-        } else {
-          // If no email, leave dataset.authorEmail empty and rely on text content for name matching
-          authorBtn.dataset.authorEmail = '';
-        }
-        // Set memberMeta safely via dataset (stringified but not injected into HTML template)
-        const mm = { displayName: (r.holderName || (r.owner && r.owner.displayName) || null), email: explicitEmail || null };
-        authorBtn.dataset.memberMeta = JSON.stringify(mm);
-      } catch(e) { /* ignore dataset set failures */ }
-
       authorBtn.addEventListener('click', (ev) => {
-        try { console.log('DEBUG: author-link clicked', { text: authorBtn.textContent, data: authorBtn.dataset.authorEmail }); } catch(e){}
-        try { ev.preventDefault(); ev.stopPropagation(); ev.stopImmediatePropagation(); } catch(e){}
-        try { disableFloatingAuthBtnTemporarily(); } catch(e){}
-        const email = authorBtn.dataset.authorEmail || (authorBtn.textContent || '').trim();
-        let meta = null;
-        try {
-          meta = authorBtn.dataset.memberMeta ? JSON.parse(authorBtn.dataset.memberMeta) : null;
-        } catch(e) { meta = null; }
+        // Debug: trace author clicks to see why public profile may not open
+        try { console.log('DEBUG: author-link clicked', { text: authorBtn.textContent, data: authorBtn.getAttribute('data-author-email') }); } catch(e){}
+        ev.stopPropagation();
+        const email = authorBtn.getAttribute('data-author-email') || authorBtn.textContent || '';
         try { console.log('DEBUG: resolved author identifier ->', email); } catch(e){}
-        if (email) {
-          if (meta) openPublicProfile(email, meta); else openPublicProfile(email);
-        }
+        if (email) openPublicProfile(email);
       });
     }
     
     dom.compactLibraryList.appendChild(item);
-    // Wire vote controls (only when remote enabled)
-    try {
-      const vc = item.querySelector('.vote-controls');
-      if (vc) {
-  const reviewId = vc.getAttribute('data-review-id');
-  const ownerEmail = (vc.getAttribute('data-owner-email') || '').toLowerCase();
-  const authEmail = (localStorage.getItem('authEmail') || sessionStorage.getItem('authEmail') || '').toLowerCase();
-        const likeBtn = vc.querySelector('.vote-btn.like');
-        const dislikeBtn = vc.querySelector('.vote-btn.dislike');
-        const likeCountEl = likeBtn && likeBtn.querySelector('.vote-count');
-        const dislikeCountEl = dislikeBtn && dislikeBtn.querySelector('.vote-count');
-        const refreshVotes = async () => {
-          if (!remoteEnabled || !reviewId) return;
-          try {
-            const resp = await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/votes`, { headers: {} });
-            if (!resp.ok) return;
-            const js = await resp.json();
-            if (likeCountEl) likeCountEl.textContent = js.likes || 0;
-            if (dislikeCountEl) dislikeCountEl.textContent = js.dislikes || 0;
-            // highlight user's vote if present
-            if (js.myVote === 1) { likeBtn.classList.add('active'); dislikeBtn.classList.remove('active'); }
-            else if (js.myVote === -1) { dislikeBtn.classList.add('active'); likeBtn.classList.remove('active'); }
-            else { likeBtn.classList.remove('active'); dislikeBtn.classList.remove('active'); }
-          } catch (e) {}
-        };
-        // initial load
-        refreshVotes();
-        // disable buttons if this is the user's own review
-        if (ownerEmail && authEmail && ownerEmail === authEmail) {
-          try { likeBtn.setAttribute('disabled','disabled'); dislikeBtn.setAttribute('disabled','disabled'); likeBtn.title = 'Vous ne pouvez pas noter votre propre review'; dislikeBtn.title = likeBtn.title; likeBtn.classList.add('disabled'); dislikeBtn.classList.add('disabled'); } catch(e){}
-        }
-        // click handlers
-        likeBtn && likeBtn.addEventListener('click', async (ev) => {
-          ev.preventDefault(); ev.stopPropagation();
-          if (ownerEmail && authEmail && ownerEmail === authEmail) return; // no self-vote
-          if (!remoteEnabled) { showToast('Feature requires remote API', 'info'); return; }
-          const token = localStorage.getItem('authToken');
-          if (!token) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
-          // If already liked, remove vote
-          if (likeBtn.classList.contains('active')) {
-            await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/vote`, { method: 'DELETE', headers: { 'X-Auth-Token': token } });
-          } else {
-            await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/vote`, { method: 'POST', headers: { 'Content-Type':'application/json', 'X-Auth-Token': token }, body: JSON.stringify({ vote: 1 }) });
-          }
-          refreshVotes();
-        });
-        dislikeBtn && dislikeBtn.addEventListener('click', async (ev) => {
-          ev.preventDefault(); ev.stopPropagation();
-          if (ownerEmail && authEmail && ownerEmail === authEmail) return; // no self-vote
-          if (!remoteEnabled) { showToast('Feature requires remote API', 'info'); return; }
-          const token = localStorage.getItem('authToken');
-          if (!token) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
-          if (dislikeBtn.classList.contains('active')) {
-            await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/vote`, { method: 'DELETE', headers: { 'X-Auth-Token': token } });
-          } else {
-            await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/vote`, { method: 'POST', headers: { 'Content-Type':'application/json', 'X-Auth-Token': token }, body: JSON.stringify({ vote: -1 }) });
-          }
-          refreshVotes();
-        });
-      }
-    } catch(e) { console.warn('vote controls attach failed', e); }
   });
 }
 
@@ -3877,20 +3323,10 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
   const draftBadge = '';
     const holder = r.holderName ? `<div class="library-item-farm">${r.holderName}</div>` : '';
     
-    // Build preview thumbnails (prefer r.files map, fallback to r.image)
-    let libThumbs = [];
-    try {
-      if (r.files && typeof r.files === 'object') {
-        Object.keys(r.files).forEach(k => {
-          const arr = Array.isArray(r.files[k]) ? r.files[k] : [];
-          arr.forEach(p => { if (p) libThumbs.push(p); });
-        });
-      } else if (Array.isArray(r.files)) {
-        libThumbs = libThumbs.concat(r.files);
-      }
-    } catch(e) { libThumbs = []; }
-    if (libThumbs.length === 0 && r.image) libThumbs.push(r.image);
-    const imageHtml = libThumbs.length ? `<div class="library-image-grid" style="display:flex;gap:8px;align-items:center">${libThumbs.slice(0,3).map(s=>`<div style=\"width:120px;height:76px;border-radius:8px;overflow:hidden;border:1px solid var(--glass-border)\"><img src=\"${s}\" alt=\"${title}\" style=\"width:100%;height:100%;object-fit:cover\"/></div>`).join('')}</div>` : `<div class="library-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">📷</div>`;
+    // Image d'aperçu si disponible
+    const imageHtml = r.image ? 
+      `<img src="${r.image}" alt="${title}" class="library-item-image" />` : 
+      `<div class="library-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">📷</div>`;
     
     // Show actions only in 'mine' mode
     const actionsHtml = mode === 'mine' ? `
@@ -3910,10 +3346,6 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
     item.innerHTML = `
       ${draftBadge}
       ${imageHtml}
-      <div class="vote-controls" data-review-id="${r.id || ''}" data-owner-email="${String((r.owner && r.owner.email) || r.holderEmail || '')}" style="position:absolute; right:12px; bottom:12px; display:flex; gap:6px; align-items:center; z-index:3;">
-        <button type="button" class="vote-btn like" title="Like" style="background:rgba(0,0,0,0.6); color:#fff; border:0; padding:5px 7px; border-radius:6px; display:flex; gap:6px; align-items:center; box-shadow: 0 2px 8px rgba(0,0,0,0.45);">👍 <span class="vote-count" style="font-weight:600; margin-left:4px;">0</span></button>
-        <button type="button" class="vote-btn dislike" title="Dislike" style="background:rgba(0,0,0,0.6); color:#fff; border:0; padding:5px 7px; border-radius:6px; display:flex; gap:6px; align-items:center; box-shadow: 0 2px 8px rgba(0,0,0,0.45);">👎 <span class="vote-count" style="font-weight:600; margin-left:4px;">0</span></button>
-      </div>
       <div class="library-item-content">
         <div class="library-item-type">${r.productType || "Review"}</div>
         <div class="library-item-title">${title}</div>
@@ -3993,63 +3425,6 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
     }
     
     dom.libraryGrid.appendChild(item);
-    // Wire vote controls for library item (show counts even for owner's items)
-    try {
-      const vc = item.querySelector('.vote-controls');
-      if (vc) {
-        const reviewId = vc.getAttribute('data-review-id');
-        const ownerEmail = (vc.getAttribute('data-owner-email') || '').toLowerCase();
-        const authEmail = (localStorage.getItem('authEmail') || sessionStorage.getItem('authEmail') || '').toLowerCase();
-        const likeBtn = vc.querySelector('.vote-btn.like');
-        const dislikeBtn = vc.querySelector('.vote-btn.dislike');
-        const likeCountEl = likeBtn && likeBtn.querySelector('.vote-count');
-        const dislikeCountEl = dislikeBtn && dislikeBtn.querySelector('.vote-count');
-        const refreshVotes = async () => {
-          if (!remoteEnabled || !reviewId) return;
-          try {
-            const resp = await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/votes`);
-            if (!resp.ok) return;
-            const js = await resp.json();
-            if (likeCountEl) likeCountEl.textContent = js.likes || 0;
-            if (dislikeCountEl) dislikeCountEl.textContent = js.dislikes || 0;
-            if (js.myVote === 1) { likeBtn.classList.add('active'); dislikeBtn.classList.remove('active'); }
-            else if (js.myVote === -1) { dislikeBtn.classList.add('active'); likeBtn.classList.remove('active'); }
-            else { likeBtn.classList.remove('active'); dislikeBtn.classList.remove('active'); }
-          } catch (e) { }
-        };
-        refreshVotes();
-        // Disable voting buttons when viewing own review
-        if (ownerEmail && authEmail && ownerEmail === authEmail) {
-          try { likeBtn.setAttribute('disabled','disabled'); dislikeBtn.setAttribute('disabled','disabled'); likeBtn.title = 'Vous ne pouvez pas noter votre propre review'; dislikeBtn.title = likeBtn.title; } catch(e){}
-        }
-        likeBtn && likeBtn.addEventListener('click', async (ev) => {
-          ev.preventDefault(); ev.stopPropagation();
-          if (ownerEmail && authEmail && ownerEmail === authEmail) return;
-          if (!remoteEnabled) { showToast('Feature requires remote API', 'info'); return; }
-          const token = localStorage.getItem('authToken');
-          if (!token) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
-          if (likeBtn.classList.contains('active')) {
-            await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/vote`, { method: 'DELETE', headers: { 'X-Auth-Token': token } });
-          } else {
-            await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/vote`, { method: 'POST', headers: { 'Content-Type':'application/json', 'X-Auth-Token': token }, body: JSON.stringify({ vote: 1 }) });
-          }
-          refreshVotes();
-        });
-        dislikeBtn && dislikeBtn.addEventListener('click', async (ev) => {
-          ev.preventDefault(); ev.stopPropagation();
-          if (ownerEmail && authEmail && ownerEmail === authEmail) return;
-          if (!remoteEnabled) { showToast('Feature requires remote API', 'info'); return; }
-          const token = localStorage.getItem('authToken');
-          if (!token) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
-          if (dislikeBtn.classList.contains('active')) {
-            await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/vote`, { method: 'DELETE', headers: { 'X-Auth-Token': token } });
-          } else {
-            await fetch(`${remoteBase}/api/reviews/${encodeURIComponent(reviewId)}/vote`, { method: 'POST', headers: { 'Content-Type':'application/json', 'X-Auth-Token': token }, body: JSON.stringify({ vote: -1 }) });
-          }
-          refreshVotes();
-        });
-      }
-    } catch(e) { console.warn('library vote attach failed', e); }
   });
 }
 
@@ -4070,45 +3445,8 @@ async function openPreviewOnly(review) {
   const title = formData.cultivars || formData.strain || formData.productType;
   const date = new Date(review.date || Date.now()).toLocaleDateString("fr-FR", { day:'2-digit', month:'long', year:'numeric' });
   let html = `<div class="review-header"><h2>${title}</h2><div class="review-meta">${formData.productType} • ${date}</div></div>`;
-  // Build media viewer: support multiple files (images/videos) if present, otherwise fallback to single image
-  const filesList = [];
-  try {
-    // review.files may be an object with arrays per field, merge them
-    if (review.files && typeof review.files === 'object') {
-      Object.values(review.files).forEach(arr => {
-        if (Array.isArray(arr)) arr.forEach(u => { if (u) filesList.push(u); });
-      });
-    }
-  } catch (e) { /* ignore malformed files */ }
-  // Fallback to single imageUrl
-  if (!filesList.length && imageUrl) filesList.push(imageUrl);
-
-  if (filesList.length) {
-    // Main viewer (first media) and thumbnail strip
-    const main = filesList[0];
-    html += `<div class="review-image viewer">
-      <div class="viewer-main" id="preview-main-media">`;
-    if (/\.(mp4|webm|ogg|mov)(\?|$)/i.test(main) || main.includes('video')) {
-      html += `<video controls src="${main}" class="preview-main-video" id="preview-main-video"></video>`;
-    } else {
-      html += `<img src="${main}" alt="Photo du produit ${title}" class="preview-main-img" id="preview-main-img">`;
-    }
-    html += `</div>
-      <div class="viewer-controls">
-        <button class="viewer-prev" id="preview-prev">◀</button>
-        <div class="thumb-list" id="preview-thumb-list">`;
-    filesList.forEach((u, idx) => {
-      const isVideo = (/\.(mp4|webm|ogg|mov)(\?|$)/i.test(u) || u.includes('video'));
-      if (isVideo) {
-        html += `<div class="thumb" data-idx="${idx}"><video muted preload="metadata" src="${u}" class="thumb-media"></video></div>`;
-      } else {
-        html += `<div class="thumb" data-idx="${idx}"><img src="${u}" class="thumb-media" loading="lazy"></div>`;
-      }
-    });
-    html += `</div>
-        <button class="viewer-next" id="preview-next">▶</button>
-      </div>
-    </div>`;
+  if (imageUrl) {
+    html += `<div class="review-image"><img src="${imageUrl}" alt="Photo du produit ${title}"></div>`;
   }
   html += '<div class="review-grid">';
   structure.sections.forEach((section, index) => {
@@ -4144,43 +3482,6 @@ async function openPreviewOnly(review) {
   });
   html += '</div>';
   dom.previewModalContent.innerHTML = html;
-  // Attach thumbnail / viewer controls if present
-  try {
-    const thumbList = document.getElementById('preview-thumb-list');
-    const mainImg = document.getElementById('preview-main-img');
-    const mainVideo = document.getElementById('preview-main-video');
-    const prevBtn = document.getElementById('preview-prev');
-    const nextBtn = document.getElementById('preview-next');
-    if (thumbList) {
-      const thumbs = Array.from(thumbList.querySelectorAll('.thumb'));
-      let current = 0;
-      const setActive = (idx) => {
-        if (idx < 0) idx = thumbs.length - 1;
-        if (idx >= thumbs.length) idx = 0;
-        current = idx;
-        thumbs.forEach(t => t.classList.remove('active'));
-        const active = thumbs[current]; if (active) active.classList.add('active');
-        const src = active?.querySelector('.thumb-media')?.getAttribute('src');
-        if (!src) return;
-        // swap main media
-        if (mainVideo) { mainVideo.pause(); }
-        if (/\.(mp4|webm|ogg|mov)(\?|$)/i.test(src) || src.includes('video')) {
-          // replace main with video
-          const container = document.getElementById('preview-main-media');
-          container.innerHTML = `<video controls src="${src}" class="preview-main-video" id="preview-main-video"></video>`;
-        } else {
-          const container = document.getElementById('preview-main-media');
-          container.innerHTML = `<img src="${src}" alt="Preview" class="preview-main-img" id="preview-main-img">`;
-        }
-      };
-      thumbs.forEach((t, i) => t.addEventListener('click', () => setActive(i)));
-      prevBtn && prevBtn.addEventListener('click', () => setActive(current - 1));
-      nextBtn && nextBtn.addEventListener('click', () => setActive(current + 1));
-      // set first active
-      if (thumbs.length) setActive(0);
-    }
-  } catch (e) { console.warn('preview viewer setup failed', e); }
-
   // Show modal
   dom.previewOverlay?.removeAttribute('hidden');
   dom.previewModal?.removeAttribute('hidden');
@@ -5595,134 +4896,28 @@ function createFieldGroup(field, sectionIndex, section) {
       });
       break;
     case "file":
-      // Multi-file input: allow up to 4 files (images/videos). Show small thumbnails.
+      // Custom themed file input (button + filename)
       const fileWrap = document.createElement("div");
-      fileWrap.className = "file-input file-input-multi";
+      fileWrap.className = "file-input";
       const fileInput = document.createElement("input");
       fileInput.type = "file";
       fileInput.id = field.key;
-      fileInput.accept = "image/*,video/*";
-      fileInput.multiple = true;
+      fileInput.accept = "image/*";
       fileInput.className = "file-input-hidden";
-
       const fileBtn = document.createElement("button");
       fileBtn.type = "button";
       fileBtn.className = "btn btn-outline file-select-btn";
-      fileBtn.innerHTML = '<span aria-hidden="true">📷</span> Ajouter photo/vidéo';
-
-      const fileInfo = document.createElement("div");
-      fileInfo.className = "file-info";
-
-      const thumbList = document.createElement('div');
-      thumbList.className = 'thumb-list';
-
-      const fileCount = document.createElement('div');
-      fileCount.className = 'file-count';
-      fileCount.textContent = 'Aucun fichier';
-
+      fileBtn.innerHTML = '<span aria-hidden="true">📷</span> Choisir un fichier';
+      const fileName = document.createElement("span");
+      fileName.className = "file-name";
+      fileName.textContent = "Aucun fichier";
       fileBtn.addEventListener("click", () => fileInput.click());
-
-      async function renderFiles(files) {
-        thumbList.innerHTML = '';
-        const arr = Array.from(files || []);
-        if (!arr.length) {
-          fileCount.textContent = 'Aucun fichier';
-        } else {
-          fileCount.textContent = `${arr.length} fichier(s)`;
-        }
-        // Limit to first 4 for preview
-        arr.slice(0,4).forEach((f, idx) => {
-          const thumb = document.createElement('div');
-          thumb.className = 'thumb';
-
-          // remove button
-          const removeBtn = document.createElement('button');
-          removeBtn.type = 'button';
-          removeBtn.className = 'thumb-remove';
-          removeBtn.title = 'Supprimer';
-          removeBtn.textContent = '✕';
-          removeBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const stored = (formData.files && formData.files[field.key]) ? formData.files[field.key] : [];
-            // remove by index (current view index)
-            stored.splice(idx, 1);
-            formData.files = formData.files || {};
-            formData.files[field.key] = stored;
-            lastSelectedFiles = stored;
-            renderFiles(stored);
-            fileCount.textContent = stored.length ? `${stored.length} fichier(s)` : 'Aucun fichier';
-            updateProgress();
-          });
-
-          if (f.type.startsWith('image/')) {
-            const img = document.createElement('img');
-            readFileAsDataURL(f).then(d => img.src = d).catch(()=>{});
-            thumb.appendChild(img);
-          } else if (f.type.startsWith('video/')) {
-            const vid = document.createElement('video');
-            vid.width = 120; vid.height = 80; vid.muted = true; vid.playsInline = true; vid.loop = true;
-            readFileAsDataURL(f).then(d => { vid.src = d; vid.play().catch(()=>{}); }).catch(()=>{});
-            thumb.appendChild(vid);
-          } else {
-            const span = document.createElement('span'); span.textContent = f.name; thumb.appendChild(span);
-          }
-
-          thumb.appendChild(removeBtn);
-          thumbList.appendChild(thumb);
-        });
-      }
-
-      fileInput.addEventListener('change', async () => {
-        const selected = fileInput.files ? Array.from(fileInput.files) : [];
-        if (!selected.length) return;
-
-        formData.files = formData.files || {};
-        const existing = formData.files[field.key] || [];
-
-        // Merge existing + newly selected files
-        let merged = existing.concat(selected);
-
-        // Deduplicate by name/size/lastModified
-        const seen = new Set();
-        merged = merged.filter(f => {
-          const id = `${f.name}_${f.size}_${f.lastModified}`;
-          if (seen.has(id)) return false;
-          seen.add(id);
-          return true;
-        });
-
-        // Enforce max 4 files
-        if (merged.length > 4) {
-          showToast('Maximum 4 fichiers par produit. Seuls les 4 premiers ont été gardés.', 'warning');
-          merged.splice(4);
-        }
-
-        // Validate video durations (<=10s) for all merged files
-        for (let i = merged.length - 1; i >= 0; i--) {
-          const f = merged[i];
-          if (f.type && f.type.startsWith('video/')) {
-            const ok = await validateVideoDuration(f, 10);
-            if (!ok) {
-              showToast(`La vidéo ${f.name} dépasse 10 secondes et a été refusée.`, 'error');
-              merged.splice(i, 1);
-            }
-          }
-        }
-
-        // store merged selection
-        formData.files[field.key] = merged;
-        lastSelectedFiles = merged;
-        await renderFiles(merged);
-        fileCount.textContent = merged.length ? `${merged.length} fichier(s)` : 'Aucun fichier';
+      fileInput.addEventListener("change", () => {
+        const name = fileInput.files && fileInput.files[0] ? fileInput.files[0].name : "Aucun fichier";
+        fileName.textContent = name;
         updateProgress();
-
-        // reset input value so selecting the same files again triggers change
-        try { fileInput.value = ''; } catch(e) {}
       });
-
-      fileInfo.appendChild(fileBtn);
-      fileInfo.appendChild(fileCount);
-      fileWrap.append(fileInfo, thumbList, fileInput);
+      fileWrap.append(fileBtn, fileName, fileInput);
       wrapper.appendChild(fileWrap);
       return wrapper;
     default:
@@ -6370,35 +5565,8 @@ function collectFormData() {
       }
 
       if (input.type === "file") {
-        // collect all files for this input into formData.files[fieldKey] = [File...]
-        formData.files = formData.files || {};
-        const existing = formData.files[input.id] || [];
-        const selected = input.files ? Array.from(input.files) : [];
-
-        // If the user just selected files in the input, merge them with existing stored files
-        let merged;
-        if (selected.length) {
-          merged = existing.concat(selected);
-          // dedupe by name/size/lastModified
-          const seen = new Set();
-          merged = merged.filter(f => {
-            const id = `${f.name}_${f.size}_${f.lastModified}`;
-            if (seen.has(id)) return false;
-            seen.add(id);
-            return true;
-          });
-        } else {
-          // no new selection in the input; keep what we have stored
-          merged = existing.slice();
-        }
-
-        // enforce max 4 files per field
-        if (merged.length > 4) merged = merged.slice(0,4);
-
-        formData.files[input.id] = merged;
-        if (merged.length && merged[0]) {
-          // prepare first file preview (image/video) for generateReview
-          fileReaders.push(readFileAsDataURL(merged[0]));
+        if (input.files && input.files[0]) {
+          fileReaders.push(readFileAsDataURL(input.files[0]));
         }
         return;
       }
@@ -6551,26 +5719,6 @@ function readFileAsDataURL(file) {
   });
 }
 
-// Validate video duration (seconds) by loading it into a temporary video element
-function validateVideoDuration(file, maxSeconds = 10) {
-  return new Promise((resolve) => {
-    if (!file || !file.type.startsWith('video/')) return resolve(false);
-    const url = URL.createObjectURL(file);
-    const v = document.createElement('video');
-    v.preload = 'metadata';
-    v.src = url;
-    const clean = () => { try { URL.revokeObjectURL(url); } catch {} };
-    const onLoaded = () => {
-      const d = v.duration || 0;
-      clean();
-      resolve(d <= maxSeconds);
-    };
-    const onError = () => { clean(); resolve(false); };
-    v.addEventListener('loadedmetadata', onLoaded, { once: true });
-    v.addEventListener('error', onError, { once: true });
-  });
-}
-
 // Small helper: fetch with timeout using AbortController
 async function fetchWithTimeout(url, opts = {}, timeoutMs = 5000) {
   const controller = new AbortController();
@@ -6590,16 +5738,6 @@ async function fetchWithTimeout(url, opts = {}, timeoutMs = 5000) {
 // ---- Save modal helpers ----
 function openSaveModal() {
   if (!dom.saveModal) return;
-  // Safety: never open save modal for unauthenticated users or when remote is disabled
-  if (!isUserConnected) {
-    showToast('Connectez-vous pour enregistrer une review.', 'warning');
-    if (dom.authModal) dom.authModal.style.display = 'flex';
-    return;
-  }
-  if (!remoteEnabled) {
-    showToast('La sauvegarde locale est désactivée. Connectez-vous au serveur pour enregistrer.', 'warning');
-    return;
-  }
   try {
     // Hide preview-only overlay/modal if visible to avoid stacking issues
     dom.previewOverlay?.setAttribute('hidden','');
@@ -6715,30 +5853,10 @@ async function remoteSave(reviewObj) {
     const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
     const headers = token ? { 'X-Auth-Token': token } : {};
     let resp;
-    // If multi-file attachments exist on the reviewObj (formData.files), send them as FormData
-    const attachments = reviewObj.files || {};
-    const fileKeys = Object.keys(attachments || {}).filter(k => Array.isArray(attachments[k]) && attachments[k].length);
-    if (fileKeys.length) {
+    if (lastSelectedImageFile instanceof File) {
       const fd = new FormData();
-      // Prepare a lightweight payload: remove files and any large base64 strings
-      const payload = { ...reviewObj };
-      delete payload.files; // files will be sent as binary parts
-      // remove any large base64/image data to avoid exceeding server limits
-      Object.keys(payload).forEach(k => {
-        const v = payload[k];
-        if (typeof v === 'string') {
-          if (v.startsWith('data:')) delete payload[k];
-          else if (v.length > 50000) delete payload[k];
-        }
-      });
-      fd.append('data', JSON.stringify(payload));
-      // append up to 4 files per field (and globally limit to reasonable count)
-      for (const key of fileKeys) {
-        const arr = attachments[key].slice(0,4);
-        arr.forEach((f, i) => {
-          if (f instanceof File) fd.append(`${key}[]`, f, f.name);
-        });
-      }
+      fd.append('data', JSON.stringify(reviewObj));
+      fd.append('image', lastSelectedImageFile, lastSelectedImageFile.name);
       resp = await fetch(url, { method, body: fd, headers });
     } else {
       const copy = { ...reviewObj };
@@ -7652,34 +6770,74 @@ async function saveReview() {
   // Attach correlation key for dedupe
   reviewToSave.correlationKey = computeCorrelationKey(reviewToSave);
   try {
-    // Enforce server-side save: do not allow local-only persistence anymore.
-    if (!isUserConnected) {
-      showToast('Vous devez être connecté pour enregistrer une review.', 'error');
-      throw new Error('not_authenticated');
-    }
-    if (!remoteEnabled) {
-      showToast('Sauvegarde impossible: serveur indisponible. Connectez-vous au serveur.', 'error');
-      throw new Error('remote_unavailable');
+    if (db && !dbFailedOnce) {
+      // Simple save: update if id known, otherwise add new record
+      if (currentReviewId) {
+        await dbUpdateReview(reviewToSave);
+      } else {
+        const id = await dbAddReview(reviewToSave);
+        currentReviewId = id;
+      }
+    } else {
+      // Fallback to localStorage if DB not available
+      let reviews = [];
+      try { reviews = JSON.parse(localStorage.getItem("cannaReviews") || "[]"); } catch {}
+      if (Array.isArray(reviews)) {
+        const strictKey = reviewToSave.correlationKey;
+        const looseKey = computeLooseKey(reviewToSave);
+        // Offline fallback simple save: replace if id known, otherwise push
+        if (currentReviewId != null) {
+          const idx = reviews.findIndex(r => r && r.id === currentReviewId);
+          if (idx >= 0) reviews.splice(idx, 1, { ...reviewToSave, id: currentReviewId });
+          else reviews.push({ ...reviewToSave, id: currentReviewId });
+        } else {
+          // synthetic id for local storage
+          const syntheticId = Date.now();
+          reviews.push({ ...reviewToSave, id: syntheticId });
+          currentReviewId = syntheticId;
+        }
+      }
+      localStorage.setItem("cannaReviews", JSON.stringify(reviews));
     }
     
-    // Feedback pour sauvegarde explicite (remote save happens below)
-    // will be shown after remote sync success
+    // Feedback pour sauvegarde explicite
+    showToast("Review enregistrée avec succès!", "success");
+    // Mémoriser l'état non-brouillon
     isNonDraftRecord = true;
+    
+    // Rafraîchir la bibliothèque compacte
     renderCompactLibrary();
   } catch (e) {
     console.error("Erreur sauvegarde:", e);
     // Mark DB as failed and fallback to localStorage silently next times
-    // Do not persist locally. Show clear error to user.
-    try { showToast('Échec de la sauvegarde: ' + (e && e.message ? e.message : ''), 'error'); } catch(_){}
+    dbFailedOnce = true;
+    try {
+      let reviews = [];
+      try { reviews = JSON.parse(localStorage.getItem("cannaReviews") || "[]"); } catch {}
+      // Offline fallback: just append/update the review
+      if (currentReviewId != null) {
+        const idx = reviews.findIndex(r => r && r.id === currentReviewId);
+        if (idx >= 0) reviews.splice(idx, 1, reviewToSave);
+        else reviews.push(reviewToSave);
+      } else {
+        reviews.push(reviewToSave);
+      }
+      localStorage.setItem("cannaReviews", JSON.stringify(reviews));
+      if (!document.body.dataset.lsInfoShown) {
+        showToast("Sauvegarde locale activée (offline)", "info");
+        document.body.dataset.lsInfoShown = "1";
+      }
+    } catch (e2) {
+      showToast("Erreur lors de la sauvegarde", "error");
+    }
   }
 
   // Sync distante (non bloquante pour l'utilisateur en dehors du await interne)
   if (remoteEnabled) {
     try {
       const remoteCopy = { ...reviewToSave };
-      // If explicit file attachments exist, avoid sending large base64 in `image` field
-      if (remoteCopy.files && Object.keys(remoteCopy.files).length) {
-        if (remoteCopy.image && remoteCopy.image.length > 50000) delete remoteCopy.image;
+      if (!(lastSelectedImageFile instanceof File) && remoteCopy.image && remoteCopy.image.length > 50000) {
+        delete remoteCopy.image; // éviter envoi base64 lourd
       }
       const remoteRes = await remoteSave(remoteCopy);
       if (remoteRes?.ok && remoteRes.review?.id) {

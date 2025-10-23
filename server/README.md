@@ -339,8 +339,6 @@ sudo chown www-data:www-data server/tokens/TOKEN_USER
 ```
 Côté client, utiliser `https://exemple.com/index.html?token=MON_TOKEN` ou `localStorage.authToken = 'MON_TOKEN'`.
 
-Important: pour des raisons de sécurité, la création de reviews sur le serveur exige maintenant une authentification (token). Les clients non authentifiés recevront HTTP 401 lors de POST /api/reviews. De plus, les sauvegardes locales côté navigateur (IndexedDB/localStorage) sont désactivées par défaut dans la version front-end fournie — l'application attend une sauvegarde côté serveur.
-
 Exemple intégration bot Discord/LaFoncedalle:
 1) Le bot génère un token (UUID) lors de l'onboarding utilisateur.
 2) Écrit `server/tokens/<TOKEN>` avec `{ ownerId: <discordId>, roles: [] }` (ou `["staff"]` pour un staff).

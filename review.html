@@ -12,91 +12,6 @@
   <link rel="stylesheet" href="ui/ui-base.css" />
     <link rel="stylesheet" href="export-studio.css" />
   <link rel="icon" type="image/png" href="ink/logo.png" />
-    <style>
-      /* Inline overrides to remove decorative frames/backdrops and force-hide overlays
-         on the editor page. This lives inline so it loads after all other stylesheets
-         and uses high-specificity selectors with !important to counter existing rules. */
-      .editor-page .workspace::before,
-      .editor-page .workspace::after,
-      .editor-page .panel::before {
-        display: none !important;
-        background: transparent !important;
-        content: none !important;
-      }
-
-      /* Do NOT hide the actual workspace or panel containers; they hold
-         the interactive completion zones and inputs. Only neutralize
-         pseudo-elements and overlays. */
-      .editor-page .workspace,
-      .editor-page .workspace .panel,
-      .app-shell .panel {
-        /* Keep original visuals — do not force transparent background here. */
-        background: unset !important;
-        box-shadow: unset !important;
-        backdrop-filter: unset !important;
-        -webkit-backdrop-filter: unset !important;
-        border: unset !important;
-      }
-
-      /* Force-hide any modal/backdrop elements that could be injected or toggled at runtime. */
-      body.editor-page .modal-overlay,
-      body.editor-page .account-overlay,
-      body.editor-page .preview-overlay,
-      body.editor-page .tips-overlay,
-      body.editor-page .save-overlay,
-      #saveModalOverlay,
-      #authModalOverlay,
-      #tipsModalOverlay,
-      #confirmDeleteOverlay,
-      #publicProfileOverlay,
-      .modal[data-backdrop],
-      .modal.small .modal-overlay,
-      .account-overlay {
-        display: none !important;
-        opacity: 0 !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-        z-index: -1 !important;
-        background: transparent !important;
-        backdrop-filter: none !important;
-      }
-
-      /* Keep modal containers visible — only overlays are hidden. Let modal
-         content use its normal background so modals remain readable on the
-         editor page. */
-  body.editor-page .modal .modal-content,
-      body.editor-page .account-dialog {
-        /* Allow components' CSS to control background and shadows so modals are visible */
-        box-shadow: unset !important;
-        background: unset !important;
-        border: unset !important;
-      }
-        /* Hide any pseudo-elements that may render decorative frames around the editor
-           or modal dialogs. Some legacy styles insert ::before/::after decoration which
-           can't be removed via the overlay selectors above. */
-        body.editor-page .workspace::before,
-        body.editor-page .workspace::after,
-        body.editor-page .panel::before,
-        body.editor-page .modal::before,
-        body.editor-page .modal::after {
-          display: none !important;
-          content: none !important;
-          background: transparent !important;
-        }
-
-        /* Restore readable backgrounds for the primary modal dialogs while keeping
-           their overlays hidden. These rules are intentionally narrow and high-specificity
-           so we don't re-enable global decorative overlays. */
-        body.editor-page #saveModal .modal-content,
-        body.editor-page #authModal .modal-content,
-        body.editor-page #confirmDeleteModal .modal-content,
-        body.editor-page #accountModal .account-dialog {
-          background: linear-gradient(180deg, rgba(17,23,30,0.92), rgba(7,12,18,0.96)) !important;
-          box-shadow: 0 30px 90px rgba(2,6,23,0.6) !important;
-          border-radius: 14px !important;
-          padding: 18px !important;
-        }
-    </style>
   </head>
   <body class="editor-page">
     <div class="app-shell">
@@ -163,6 +78,10 @@
             <button type="button" class="btn btn-secondary" id="saveBtn">
               <span aria-hidden="true">💾</span>
               Enregistrer
+            </button>
+            <button type="button" class="btn btn-outline" id="resetBtn">
+              <span aria-hidden="true">🔄</span>
+              Réinitialiser
             </button>
           </div>
         </form>
@@ -340,47 +259,132 @@
         </div>
       </div>
 
-    <!-- Redesigned Account Modal (same structure as in index.html) -->
-  <div id="accountModal" data-backdrop="none" aria-hidden="true">
-      <div class="account-overlay" id="accountModalOverlay"></div>
-      <div class="account-dialog" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
-        <div class="account-header">
-          <h3 id="accountTitle">Mon compte</h3>
+    <!-- Redesigned Account Modal (uses account-* classes for styling) -->
+    <div class="modal" id="accountModal" style="display:none;">
+      <div class="modal-overlay" id="accountModalOverlay"></div>
+      <div class="modal-content account-modal-content" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
+        <header class="modal-header">
+          <h2 id="accountTitle">Mon compte</h2>
           <div style="display:flex;gap:8px;align-items:center;">
             <button type="button" class="btn btn-ghost" id="openAccountSettings" title="Paramètres">⚙️ Paramètres</button>
             <button type="button" class="modal-close" id="closeAccountModal" aria-label="Fermer">✕</button>
           </div>
-        </div>
-        <div class="account-body">
+        </header>
+
+        <div class="modal-body account-modal-inner">
+          <!-- Left column: profile & stats -->
           <div class="account-left">
             <div class="account-profile">
-              <div class="account-avatar">👤</div>
+              <div class="account-avatar" aria-hidden="true">👤</div>
               <div class="account-meta">
                 <div id="accountEmail">—</div>
                 <div class="sub">Membre Reviews Maker</div>
               </div>
             </div>
-            <div class="stats-grid" aria-hidden="false">
-              <div class="stat-card"><div class="num" id="accountTotal">0</div><div class="label">Total</div></div>
-              <div class="stat-card"><div class="num" id="statPublic">0</div><div class="label">Public</div></div>
-              <div class="stat-card"><div class="num" id="statPrivate">0</div><div class="label">Privé</div></div>
-                <div class="stat-card"><div class="num" id="accountLikesReceived">0</div><div class="label">Likes reçus</div></div>
-                <div class="stat-card"><div class="num" id="accountDislikesReceived">0</div><div class="label">Dislikes reçus</div></div>
+
+            <div class="account-stats">
+              <div class="stat-card">
+                <div class="num" id="accountTotal">0</div>
+                <div class="label">Total</div>
+              </div>
+              <div class="stat-card">
+                <div class="num" id="statPublic">0</div>
+                <div class="label">Public</div>
+              </div>
+              <div class="stat-card">
+              <!-- Public profile modal (read-only) - moved here so editor page can show public profiles -->
+              <div class="modal" id="publicProfileModal" style="display:none;">
+                <div class="modal-overlay" id="publicProfileOverlay"></div>
+                <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="publicProfileTitle">
+                  <div class="modal-header">
+                    <h2 id="publicProfileTitle">Profil public</h2>
+                    <button type="button" class="modal-close" id="closePublicProfile" aria-label="Fermer">✕</button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="account-profile" style="margin-bottom:10px;">
+                      <div class="account-avatar">👤</div>
+                      <div class="account-meta">
+                        <div id="publicProfileEmail">—</div>
+                        <div class="sub">Membre Reviews Maker</div>
+                      </div>
+                    </div>
+                    <div class="stats-grid" style="margin-bottom:10px;">
+                      <div class="stat-card"><div class="num" id="publicTotal">0</div><div class="label">Total</div></div>
+                      <div class="stat-card"><div class="num" id="publicPublic">0</div><div class="label">Public</div></div>
+                      <div class="stat-card"><div class="num" id="publicPrivate">0</div><div class="label">Privé</div></div>
+                    </div>
+                    <div id="publicByType" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+                  </div>
+                </div>
+              </div>
+                <div class="label">Privé</div>
+              </div>
             </div>
-            <div style="margin-top:10px;"><h4 class="section-title">Répartition par type</h4>
+
+            <div>
+              <h4 class="section-title">Répartition par type</h4>
               <div id="accountStatsByType" class="account-stats-by-type"></div>
             </div>
-              <div style="margin-top:10px; font-size:0.95rem; color:var(--text-muted);" id="accountRankDisplay">Classement: —</div>
+
+            <!-- Public profile removed from review.html — profile accessible via floating auth button only -->
           </div>
-          <div class="account-right">
-            <div class="panel">
-              <div style="display:flex;align-items:center;justify-content:space-between;">
-                <h4 class="section-title">Actions</h4>
+
+          <!-- Right column: actions & preferences -->
+          <aside class="account-right">
+            <div class="account-actions panel-section">
+              <h4 class="section-title">Actions</h4>
+              <div class="action-list">
+                <button class="btn btn-outline" id="openLibraryFromAccount">Ma bibliothèque</button>
+                <button class="btn btn-outline" id="accountDisconnect">Se déconnecter</button>
               </div>
-              <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;"><button class="btn btn-outline" id="openLibraryFromAccount">Ma bibliothèque</button><button class="btn btn-outline" id="accountDisconnect">Se déconnecter</button></div>
             </div>
+
+            <div class="account-preferences panel-section">
+              <h4 class="section-title">Préférences</h4>
+              <div class="form-group">
+                <div style="color:var(--text-soft);">Consulter et modifier vos paramètres (confidentialité, thèmes) depuis <strong>Paramètres</strong>.</div>
+                <div style="margin-top:10px;"><button class="btn btn-ghost" id="openAccountSettingsInline">Ouvrir Paramètres</button></div>
+              </div>
             </div>
-          </div>
+
+            <div id="accountSettingsPanel" class="account-settings-panel" style="display:none;">
+              <div class="settings-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <button type="button" class="btn btn-ghost" id="accountSettingsBack">← Retour</button>
+                  <h4 class="section-title">Paramètres</h4>
+                </div>
+              </div>
+              <div class="settings-body">
+                <div class="settings-block" style="margin-bottom:12px;">
+                  <h5>Confidentialité</h5>
+                  <div style="color:var(--text-soft);margin-top:6px;">Options de partage et visibilité par défaut.</div>
+                  <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+                    <label class="boolean-group" style="gap:8px;">
+                      <input type="checkbox" id="defaultPublic" />
+                      <span>Publier mes nouvelles reviews par défaut</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="settings-block">
+                  <h5>Préférences</h5>
+                  <div style="color:var(--text-soft);margin-top:6px;">Choisissez un thème :</div>
+                  <div style="margin-top:10px;">
+                    <div id="themeOptions" class="theme-options" role="radiogroup" aria-label="Choix du thème">
+                      <button type="button" class="theme-option" data-theme="violet" title="Violet sombre" aria-checked="false" role="radio">
+                        <span class="theme-swatch swatch-violet" aria-hidden="true"></span>
+                      </button>
+                      <button type="button" class="theme-option" data-theme="rose" title="Rose pâle" aria-checked="false" role="radio">
+                        <span class="theme-swatch swatch-rose" aria-hidden="true"></span>
+                      </button>
+                      <button type="button" class="theme-option" data-theme="bluish" title="Bleu foncé" aria-checked="false" role="radio">
+                        <span class="theme-swatch swatch-bluish" aria-hidden="true"></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
     </div>
@@ -437,36 +441,6 @@
         </div>
       </div>
     </div>
-
-  <!-- Public profile modal (read-only) - moved to top-level for correct stacking -->
-  <div class="modal" id="publicProfileModal" style="display:none;">
-    <div class="modal-overlay" id="publicProfileOverlay"></div>
-    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="publicProfileTitle">
-      <div class="modal-header">
-        <h2 id="publicProfileTitle">Profil public</h2>
-        <button type="button" class="modal-close" id="closePublicProfile" aria-label="Fermer">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="account-profile" style="margin-bottom:10px;">
-          <div class="account-avatar">👤</div>
-          <div class="account-meta">
-            <div id="publicProfileEmail">—</div>
-            <div class="sub">Membre Reviews Maker</div>
-          </div>
-        </div>
-        <div class="stats-grid" style="margin-bottom:10px;">
-          <div class="stat-card"><div class="num" id="publicTotal">0</div><div class="label">Total</div></div>
-          <div class="stat-card"><div class="num" id="publicPublic">0</div><div class="label">Public</div></div>
-          <div class="stat-card"><div class="num" id="publicPrivate">0</div><div class="label">Privé</div></div>
-          <div class="stat-card"><div class="num" id="publicLikesReceived">0</div><div class="label">Likes reçus</div></div>
-          <div class="stat-card"><div class="num" id="publicDislikesReceived">0</div><div class="label">Dislikes reçus</div></div>
-          <div class="stat-card"><div class="num" id="publicVotesGiven">0</div><div class="label">Votes donnés</div></div>
-          <div class="stat-card"><div class="num" id="publicRank">—</div><div class="label">Classement</div></div>
-        </div>
-        <div id="publicByType" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
-      </div>
-    </div>
-  </div>
 
     <!-- Export Studio Modal -->
     <div class="export-config-modal" id="exportStudioModal">
