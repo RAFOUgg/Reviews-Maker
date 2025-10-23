@@ -886,7 +886,7 @@ let remoteEnabled = false; // API détectée
 let remoteBase = ''; // Détecté automatiquement
 const AUTH_API_BASE = ''; // Chemin relatif (géré par le même serveur/proxy)
 // API_KEY must never be exposed in client-side code. Server handles calls requiring the secret.
-let lastSelectedImageFile = null; // Original File pour upload
+let lastSelectedFiles = []; // Array<File> pour upload (max 4)
 let isUserConnected = false; // Auth state shared across modules
 // Only keep "mine" (user personal library) as the default/current library mode.
 // The public gallery has been removed from the UI and should not be used.
@@ -1538,20 +1538,13 @@ function setupFormEvents() {
   // Événements de formulaire
   if (dom.reviewForm) {
     dom.reviewForm.addEventListener('submit', handleSubmit);
-    // Live image preview: intercept file inputs to update preview immediately
+    // Note: file inputs are handled per-field to support multiple files, thumbnails
     dom.reviewForm.addEventListener('change', async (ev) => {
       const t = ev.target;
       if (!(t instanceof HTMLInputElement)) return;
-      if (t.type !== 'file' || !t.files || !t.files[0]) return;
-      try {
-          lastSelectedImageFile = t.files[0];
-          imageUrl = await readFileAsDataURL(t.files[0]);
-        collectFormData();
-        generateReview();
-      } catch (e) {
-        console.error('Image preview error', e);
-        showToast("Impossible d'afficher la photo sélectionnée.", 'error');
-      }
+      // Skip generic file handling — individual file inputs handle their previews
+      if (t.type === 'file') return;
+      try { collectFormData(); generateReview(); } catch {}
     }, true);
 
     // Auto-generate preview whenever inputs change
@@ -5491,28 +5484,93 @@ function createFieldGroup(field, sectionIndex, section) {
       });
       break;
     case "file":
-      // Custom themed file input (button + filename)
+      // Multi-file input: allow up to 4 files (images/videos). Show small thumbnails.
       const fileWrap = document.createElement("div");
-      fileWrap.className = "file-input";
+      fileWrap.className = "file-input file-input-multi";
       const fileInput = document.createElement("input");
       fileInput.type = "file";
       fileInput.id = field.key;
-      fileInput.accept = "image/*";
+      fileInput.accept = "image/*,video/*";
+      fileInput.multiple = true;
       fileInput.className = "file-input-hidden";
+
       const fileBtn = document.createElement("button");
       fileBtn.type = "button";
       fileBtn.className = "btn btn-outline file-select-btn";
-      fileBtn.innerHTML = '<span aria-hidden="true">📷</span> Choisir un fichier';
-      const fileName = document.createElement("span");
-      fileName.className = "file-name";
-      fileName.textContent = "Aucun fichier";
+      fileBtn.innerHTML = '<span aria-hidden="true">📷</span> Ajouter photo/vidéo';
+
+      const fileInfo = document.createElement("div");
+      fileInfo.className = "file-info";
+
+      const thumbList = document.createElement('div');
+      thumbList.className = 'thumb-list';
+
+      const fileCount = document.createElement('div');
+      fileCount.className = 'file-count';
+      fileCount.textContent = 'Aucun fichier';
+
       fileBtn.addEventListener("click", () => fileInput.click());
-      fileInput.addEventListener("change", () => {
-        const name = fileInput.files && fileInput.files[0] ? fileInput.files[0].name : "Aucun fichier";
-        fileName.textContent = name;
+
+      async function renderFiles(files) {
+        thumbList.innerHTML = '';
+        const arr = Array.from(files || []);
+        if (!arr.length) {
+          fileCount.textContent = 'Aucun fichier';
+        } else {
+          fileCount.textContent = `${arr.length} fichier(s)`;
+        }
+        // Limit to first 4 for preview
+        arr.slice(0,4).forEach((f, idx) => {
+          const thumb = document.createElement('div');
+          thumb.className = 'thumb';
+          if (f.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            readFileAsDataURL(f).then(d => img.src = d).catch(()=>{});
+            thumb.appendChild(img);
+          } else if (f.type.startsWith('video/')) {
+            const vid = document.createElement('video');
+            vid.width = 120; vid.height = 80; vid.muted = true; vid.playsInline = true; vid.loop = true;
+            readFileAsDataURL(f).then(d => { vid.src = d; vid.play().catch(()=>{}); }).catch(()=>{});
+            thumb.appendChild(vid);
+          } else {
+            const span = document.createElement('span'); span.textContent = f.name; thumb.appendChild(span);
+          }
+          thumbList.appendChild(thumb);
+        });
+      }
+
+      fileInput.addEventListener('change', async () => {
+        const files = fileInput.files ? Array.from(fileInput.files) : [];
+        // Validation: max 4 files
+        if (files.length > 4) {
+          showToast('Maximum 4 fichiers par produit.', 'warning');
+          // keep only first 4
+          files.splice(4);
+        }
+        // Validate video durations (<=10s)
+        for (const f of files) {
+          if (f.type.startsWith('video/')) {
+            const ok = await validateVideoDuration(f, 10);
+            if (!ok) {
+              showToast(`La vidéo ${f.name} dépasse 10 secondes et a été refusée.`, 'error');
+              // remove that file from list
+              const idx = files.indexOf(f); if (idx >= 0) files.splice(idx,1);
+            }
+          }
+        }
+        // store selected files for upload (override previous for this field)
+        // Here we map by field.key in formData.files (object of arrays)
+        formData.files = formData.files || {};
+        formData.files[field.key] = files;
+        lastSelectedFiles = files;
+        await renderFiles(files);
+        fileCount.textContent = files.length ? `${files.length} fichier(s)` : 'Aucun fichier';
         updateProgress();
       });
-      fileWrap.append(fileBtn, fileName, fileInput);
+
+      fileInfo.appendChild(fileBtn);
+      fileInfo.appendChild(fileCount);
+      fileWrap.append(fileInfo, thumbList, fileInput);
       wrapper.appendChild(fileWrap);
       return wrapper;
     default:
@@ -6314,6 +6372,26 @@ function readFileAsDataURL(file) {
   });
 }
 
+// Validate video duration (seconds) by loading it into a temporary video element
+function validateVideoDuration(file, maxSeconds = 10) {
+  return new Promise((resolve) => {
+    if (!file || !file.type.startsWith('video/')) return resolve(false);
+    const url = URL.createObjectURL(file);
+    const v = document.createElement('video');
+    v.preload = 'metadata';
+    v.src = url;
+    const clean = () => { try { URL.revokeObjectURL(url); } catch {} };
+    const onLoaded = () => {
+      const d = v.duration || 0;
+      clean();
+      resolve(d <= maxSeconds);
+    };
+    const onError = () => { clean(); resolve(false); };
+    v.addEventListener('loadedmetadata', onLoaded, { once: true });
+    v.addEventListener('error', onError, { once: true });
+  });
+}
+
 // Small helper: fetch with timeout using AbortController
 async function fetchWithTimeout(url, opts = {}, timeoutMs = 5000) {
   const controller = new AbortController();
@@ -6458,10 +6536,19 @@ async function remoteSave(reviewObj) {
     const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
     const headers = token ? { 'X-Auth-Token': token } : {};
     let resp;
-    if (lastSelectedImageFile instanceof File) {
+    // If multi-file attachments exist on the reviewObj (formData.files), send them as FormData
+    const attachments = reviewObj.files || {};
+    const fileKeys = Object.keys(attachments || {}).filter(k => Array.isArray(attachments[k]) && attachments[k].length);
+    if (fileKeys.length) {
       const fd = new FormData();
       fd.append('data', JSON.stringify(reviewObj));
-      fd.append('image', lastSelectedImageFile, lastSelectedImageFile.name);
+      // append up to 4 files per field (and globally limit to reasonable count)
+      for (const key of fileKeys) {
+        const arr = attachments[key].slice(0,4);
+        arr.forEach((f, i) => {
+          if (f instanceof File) fd.append(`${key}[]`, f, f.name);
+        });
+      }
       resp = await fetch(url, { method, body: fd, headers });
     } else {
       const copy = { ...reviewObj };
