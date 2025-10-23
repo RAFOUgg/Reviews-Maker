@@ -3844,6 +3844,41 @@ svg defs {
   margin-top:12px;
 }
 
+/* Strong overrides to ensure the Library modal is clearly visible above page content */
+#libraryModal.modal,
+#libraryModal {
+  z-index: 99999 !important;
+  position: fixed;
+  inset: 0;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+#libraryModal .modal-overlay {
+  position: absolute !important;
+  inset: 0 !important;
+  background: rgba(0,0,0,0.78) !important; /* darker backdrop */
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+}
+#libraryModal .modal-content {
+  background: linear-gradient(180deg, rgba(6,10,18,0.98), rgba(10,14,22,0.98)) !important;
+  border: 1px solid rgba(255,255,255,0.04) !important;
+  box-shadow: 0 40px 120px rgba(2,6,23,0.9) !important;
+  padding: 20px !important;
+  max-width: min(96vw, 1100px) !important;
+  width: min(96vw, 1100px) !important;
+  max-height: 92vh !important;
+  overflow: auto !important;
+  border-radius: 18px !important;
+}
+#libraryModal .library-list { padding: 1.25rem 0 2.25rem 0 !important; }
+#libraryModal .library-item {
+  background: rgba(12,18,28,0.98) !important;
+  border-color: rgba(255,255,255,0.04) !important;
+  box-shadow: 0 30px 80px rgba(2,6,23,0.9) !important;
+}
+
 .compact-library-item:hover {
   border-color: var(--primary);
   background: rgba(52, 211, 153, 0.15);
