@@ -3393,10 +3393,14 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
     const libThumbs = collectMedia();
     const libSizeClass = ['one','two','three','four'][Math.max(0, Math.min(3, libThumbs.length - 1))] || 'one';
     const imageHtml = libThumbs.length > 0 ?
-      `<div class="library-image-grid ${libSizeClass}">${libThumbs.map((u,i)=> i === 0 ? `<div style="position:relative"><img src="${u}" alt="${title}-thumb-${i}"><div class="library-item-votes" data-review-id="${r.id || ''}"><button type="button" class="vote-btn vote-like" title="J'aime">👍 <span class="vote-count">0</span></button><button type="button" class="vote-btn vote-dislike" title="Je n'aime pas">👎 <span class="vote-count">0</span></button></div></div>` : `<div><img src="${u}" alt="${title}-thumb-${i}"></div>`).join('')}
+      `<div class="library-image-grid ${libSizeClass}">${libThumbs.map((u,i)=>`<div><img src="${u}" alt="${title}-thumb-${i}"></div>`).join('')}
+         <div class="library-item-votes" data-review-id="${r.id || ''}">
+           <button type="button" class="vote-btn vote-like" title="J'aime">👍 <span class="vote-count">0</span></button>
+           <button type="button" class="vote-btn vote-dislike" title="Je n'aime pas">👎 <span class="vote-count">0</span></button>
+         </div>
        </div>` :
-      `<div class="library-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; position: relative;">📷
-         <div class="library-item-votes" data-review-id="${r.id || ''}" style="position:absolute; right:8px; bottom:8px;">
+    `<div class="library-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; position: relative;">📷
+      <div class="library-item-votes" data-review-id="${r.id || ''}">
            <button type="button" class="vote-btn vote-like" title="J'aime">👍 <span class="vote-count">0</span></button>
            <button type="button" class="vote-btn vote-dislike" title="Je n'aime pas">👎 <span class="vote-count">0</span></button>
          </div>

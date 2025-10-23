@@ -469,8 +469,8 @@ body::before {
 .compact-item-votes,
 .library-item-votes {
   position: absolute;
-  right: 10px;
-  bottom: 10px;
+  right: 12px;
+  bottom: 12px;
   display: inline-flex;
   gap: 8px;
   align-items: center;
@@ -481,10 +481,11 @@ body::before {
   position: relative;
   padding: 6px 8px;
   border-radius: 8px;
-  background: rgba(0,0,0,0.45);
-  border: 1px solid rgba(255,255,255,0.04);
+  background: linear-gradient(180deg, rgba(6,10,18,0.8), rgba(20,26,36,0.7));
+  border: 1px solid rgba(255,255,255,0.06);
   color: var(--text-muted, #e6eef8);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  box-shadow: 0 6px 14px rgba(7,12,20,0.5);
 }
 .compact-item-votes .vote-count,
 .library-item-votes .vote-count { margin-left: 6px; font-weight: 600; }
@@ -2038,6 +2039,7 @@ file-input-multi .file-info { display:flex; gap:12px; align-items:center; }
 .library-image-grid { display:flex; gap:8px; align-items:center; }
 .library-image-grid { position: relative; }
 .library-image-grid > div { width:120px; height:76px; border-radius:8px; overflow:hidden; border:1px solid var(--glass-border); }
+.library-image-grid > div { position: relative; }
 .library-image-grid img { width:100%; height:100%; object-fit:cover; display:block; }
 /* Library card image grid variants (larger than compact) */
 .library-image-grid.one { display:grid; grid-template-columns: 1fr; grid-auto-rows: 1fr; height:200px; gap:8px; }
