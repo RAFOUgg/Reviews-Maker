@@ -1578,12 +1578,22 @@ function setupFormEvents() {
   updateSectionControls();
 
   // Fallback: delegated listener to ensure the Save modal opens even if direct binding failed
+  // Block save modal for unauthenticated users or when remote backend is disabled.
   document.addEventListener('click', async (e) => {
     const el = e.target;
     if (!(el instanceof Element)) return;
     const btn = el.closest('#saveBtn');
     if (!btn) return;
     try {
+      if (!isUserConnected) {
+        showToast('Connectez-vous pour enregistrer une review.', 'warning');
+        if (dom.authModal) dom.authModal.style.display = 'flex';
+        return;
+      }
+      if (!remoteEnabled) {
+        showToast('La sauvegarde locale est désactivée. Connectez-vous au serveur pour enregistrer.', 'warning');
+        return;
+      }
       openSaveModal();
       // Prefill best-effort
       try {
@@ -6331,6 +6341,16 @@ async function fetchWithTimeout(url, opts = {}, timeoutMs = 5000) {
 // ---- Save modal helpers ----
 function openSaveModal() {
   if (!dom.saveModal) return;
+  // Safety: never open save modal for unauthenticated users or when remote is disabled
+  if (!isUserConnected) {
+    showToast('Connectez-vous pour enregistrer une review.', 'warning');
+    if (dom.authModal) dom.authModal.style.display = 'flex';
+    return;
+  }
+  if (!remoteEnabled) {
+    showToast('La sauvegarde locale est désactivée. Connectez-vous au serveur pour enregistrer.', 'warning');
+    return;
+  }
   try {
     // Hide preview-only overlay/modal if visible to avoid stacking issues
     dom.previewOverlay?.setAttribute('hidden','');
