@@ -3853,12 +3853,61 @@ svg defs {
   box-sizing: border-box;
   border-radius: 0;
   overflow: hidden;
+  display: block; /* individual size controlled by variant classes below */
 }
 
-/* Single large cover area for card - grid variants still supported by .library-image-grid */
+/* Modal-specific variants: ensure 1..4 thumbnails behave like the public gallery */
+#libraryModal .library-item > .library-image-grid.one {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-rows: 1fr;
+  gap: 8px;
+  height: 180px; /* single large cover */
+}
+#libraryModal .library-item > .library-image-grid.two {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 8px;
+  height: 120px;
+}
+#libraryModal .library-item > .library-image-grid.three {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas: "a b" "c b";
+  gap: 8px;
+  height: 120px;
+}
+#libraryModal .library-item > .library-image-grid.three > div:nth-child(1) { grid-area: a; }
+#libraryModal .library-item > .library-image-grid.three > div:nth-child(2) { grid-area: b; }
+#libraryModal .library-item > .library-image-grid.three > div:nth-child(3) { grid-area: c; }
+#libraryModal .library-item > .library-image-grid.four {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 8px;
+  height: 120px;
+}
+
+/* Make sure each tile fills its grid slot and crops properly */
+#libraryModal .library-item > .library-image-grid > div {
+  overflow: hidden;
+  border-radius: 8px;
+  display: block;
+}
+#libraryModal .library-item > .library-image-grid > div img,
+#libraryModal .library-item > .library-image-grid > div video,
+#libraryModal .library-item > .library-image-grid > div .thumb-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Single-image fallback area (when no thumbnails array present) */
 #libraryModal .library-item .library-item-image {
   width: 100%;
-  aspect-ratio: 16 / 9; /* keeps all cards visually consistent */
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   display: block;
 }
@@ -3869,12 +3918,6 @@ svg defs {
   height: 100%;
   object-fit: cover;
   display: block;
-}
-
-/* Ensure child tiles (for multi-thumb grids inside cards) fill their slots */
-#libraryModal .library-item > .library-image-grid > div {
-  border-radius: 0;
-  overflow: hidden;
 }
 
 /* Actions area (buttons) aligned at the bottom of the card content */
