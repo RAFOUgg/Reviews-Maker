@@ -71,6 +71,31 @@
         background: unset !important;
         border: unset !important;
       }
+        /* Hide any pseudo-elements that may render decorative frames around the editor
+           or modal dialogs. Some legacy styles insert ::before/::after decoration which
+           can't be removed via the overlay selectors above. */
+        body.editor-page .workspace::before,
+        body.editor-page .workspace::after,
+        body.editor-page .panel::before,
+        body.editor-page .modal::before,
+        body.editor-page .modal::after {
+          display: none !important;
+          content: none !important;
+          background: transparent !important;
+        }
+
+        /* Restore readable backgrounds for the primary modal dialogs while keeping
+           their overlays hidden. These rules are intentionally narrow and high-specificity
+           so we don't re-enable global decorative overlays. */
+        body.editor-page #saveModal .modal-content,
+        body.editor-page #authModal .modal-content,
+        body.editor-page #confirmDeleteModal .modal-content,
+        body.editor-page #accountModal .account-dialog {
+          background: linear-gradient(180deg, rgba(17,23,30,0.92), rgba(7,12,18,0.96)) !important;
+          box-shadow: 0 30px 90px rgba(2,6,23,0.6) !important;
+          border-radius: 14px !important;
+          padding: 18px !important;
+        }
     </style>
   </head>
   <body class="editor-page">
