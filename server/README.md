@@ -11,7 +11,6 @@ npm start   # lance sur http://localhost:3000
 ```
 
 Le backend sert aussi les fichiers statiques du dossier racine (index.html, review.html, app.js...).
-Tu peux donc ouvrir: http://localhost:3000/index.html
 
 ## 2. Structure
 
@@ -23,30 +22,18 @@ Tu peux donc ouvrir: http://localhost:3000/index.html
 
 ### 3.1 Reviews
 
-| Méthode | URL                  | Description |
 |---------|---------------------|-------------|
 | GET     | /api/ping           | Test vie serveur |
 | GET     | /api/reviews        | Liste (max 500) |
 | GET     | /api/reviews/:id    | Détail |
 | POST    | /api/reviews        | Création (multipart ou JSON) |
-| PUT     | /api/reviews/:id    | Mise à jour |
-| DELETE  | /api/reviews/:id    | Suppression |
 
 ### 3.2 Authentification (LaFoncedalleBot Integration)
 
 | Méthode | URL                      | Description |
 |---------|--------------------------|-------------|
-| POST    | /api/auth/send-code      | Envoyer un code de vérification par email |
-| POST    | /api/auth/verify-code    | Vérifier le code et créer une session |
-| POST    | /api/auth/logout         | Déconnexion (supprimer le token) |
 | GET     | /api/auth/me             | Récupérer les infos de l'utilisateur connecté |
 
-**Note** : L'authentification s'intègre avec LaFoncedalleBot via son API :
-
-#### Architecture
-```
-Reviews-Maker (frontend) 
-    ↓
 Reviews-Maker (backend/server.js)
     ↓ API calls
 LaFoncedalleBot (API + Service de mailing + Base de données Discord)
@@ -66,14 +53,8 @@ LaFoncedalleBot (API + Service de mailing + Base de données Discord)
 - `LAFONCEDALLE_API_KEY` : Clé API partagée pour sécuriser les requêtes
 - `LAFONCEDALLE_DB_FILE` : **NOUVEAU** - Chemin absolu vers la base de données LaFoncedalleBot (optionnel)
 
-#### Nouvelle architecture de base de données (v2.0)
-Depuis la mise à jour de LaFoncedalleBot, Reviews-Maker peut accéder directement à la base de données du bot pour une vérification plus rapide et fiable.
 
 **Configuration sur VPS :**
-```bash
-# Dans le fichier .env de Reviews-Maker
-LAFONCEDALLE_DB_FILE=/chemin/vers/lafoncedallebot/db/data.db
-```
 
 **Avantages :**
 - ✅ Vérification instantanée (pas d'appel API)
@@ -90,8 +71,6 @@ Si une image est uploadée via champ `image`, on renvoie `image: /images/<fichie
 
 ## 4. Déploiement sur un serveur Ubuntu (production)
 
-### 4.1 Pré-requis
-- Nom de domaine pointant vers le serveur (A / AAAA).
 - Ubuntu 22.04+ recommandé.
 - Ports 80 et 443 ouverts.
 
