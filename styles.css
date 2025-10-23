@@ -3894,6 +3894,8 @@ svg defs {
   overflow: hidden;
   border-radius: 8px;
   display: block;
+  width: 100%;
+  height: 100%;
 }
 #libraryModal .library-item > .library-image-grid > div img,
 #libraryModal .library-item > .library-image-grid > div video,
