@@ -3412,8 +3412,8 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
     // Votes UI (shows for remote reviews)
     const votesHtml = (r && remoteEnabled && r.id != null) ? `
       <div class="library-item-votes vote-controls" data-review-id="${r.id}">
-        <button type="button" class="vote-btn vote-like" title="Like">👍 <span class="vote-count like-count">0</span></button>
-        <button type="button" class="vote-btn vote-dislike" title="Dislike">👎 <span class="vote-count dislike-count">0</span></button>
+        <button type="button" class="vote-pill vote-like" title="Like"><span class="icon">👍</span><span class="count like-count">0</span></button>
+        <button type="button" class="vote-pill vote-dislike" title="Dislike"><span class="icon">👎</span><span class="count dislike-count">0</span></button>
       </div>
     ` : `<div class="library-item-votes vote-controls" aria-hidden="true"></div>`;
 
