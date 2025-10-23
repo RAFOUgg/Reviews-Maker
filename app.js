@@ -3323,9 +3323,21 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
   const draftBadge = '';
     const holder = r.holderName ? `<div class="library-item-farm">${r.holderName}</div>` : '';
     
-    // Image d'aperçu si disponible
-    const imageHtml = r.image ? 
-      `<img src="${r.image}" alt="${title}" class="library-item-image" />` : 
+    // Build up to 4 preview images for the library card
+    const collectMedia = () => {
+      const out = [];
+      try {
+        if (r.files && typeof r.files === 'object') {
+          Object.values(r.files).forEach(arr => { if (Array.isArray(arr)) arr.forEach(u => u && out.push(u)); });
+        }
+      } catch(e) {}
+      if (!out.length && r.image) out.push(r.image);
+      return out.slice(0,4);
+    };
+    const libThumbs = collectMedia();
+    const libSizeClass = ['one','two','three','four'][Math.max(0, Math.min(3, libThumbs.length - 1))] || 'one';
+    const imageHtml = libThumbs.length > 0 ?
+      `<div class="library-image-grid ${libSizeClass}">${libThumbs.map((u,i)=>`<div><img src="${u}" alt="${title}-thumb-${i}"></div>`).join('')}</div>` :
       `<div class="library-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">📷</div>`;
     
     // Show actions only in 'mine' mode
