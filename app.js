@@ -3496,10 +3496,15 @@ async function renderLibraryList(mode = 'mine') {
     const previewAction = async () => { await openPreviewOnly(r); toggleLibrary(false, mode); };
     
     if (mode === 'mine') {
-        <button type="button" class="author-link">${authorLabel}</button>
-      li.querySelector('[data-act="edit"]').addEventListener('click', () => { loadReviewIntoForm(r, 'edit'); toggleLibrary(false, mode); });
-      li.querySelector('[data-act="dup"]').addEventListener('click', async () => { await duplicateReview(r); });
-      li.querySelector('[data-act="delete"]').addEventListener('click', async () => {
+      // wire actions
+      const loadBtn = li.querySelector('[data-act="load"]');
+      if (loadBtn) loadBtn.addEventListener('click', previewAction);
+      const editBtn = li.querySelector('[data-act="edit"]');
+      if (editBtn) editBtn.addEventListener('click', () => { loadReviewIntoForm(r, 'edit'); toggleLibrary(false, mode); });
+      const dupBtn = li.querySelector('[data-act="dup"]');
+      if (dupBtn) dupBtn.addEventListener('click', async () => { await duplicateReview(r); });
+      const delBtn = li.querySelector('[data-act="delete"]');
+      if (delBtn) delBtn.addEventListener('click', async () => {
         if (!r.id) { showToast('Suppression non disponible (entrée ancienne)', 'warning'); return; }
         // Open unified confirmation modal
         openConfirmDelete(`Supprimer « ${title} » ?`);
