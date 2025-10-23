@@ -3184,12 +3184,7 @@ async function renderCompactLibrary() {
     const thumbs = gatherMedia();
     const sizeClass = ['one','two','three','four'][Math.max(0, Math.min(3, thumbs.length - 1))] || 'one';
     const imageHtml = (thumbs.length > 0) ?
-      `<div class="compact-image-grid ${sizeClass}">${thumbs.map((u,i)=>`<div class="compact-thumb-slot"><img src="${u}" alt="thumb-${i}" loading="lazy"></div>`).join('')}
-        <div class="compact-item-votes" data-review-id="${r.id || ''}">
-          <button type="button" class="vote-btn vote-like" title="J'aime">👍 <span class="vote-count">0</span></button>
-          <button type="button" class="vote-btn vote-dislike" title="Je n'aime pas">👎 <span class="vote-count">0</span></button>
-        </div>
-      </div>` :
+      `<div class="compact-image-grid ${sizeClass}">${thumbs.map((u,i)=>`<div class="compact-thumb-slot"><img src="${u}" alt="thumb-${i}" loading="lazy">${i===0?`<div class="compact-item-votes" data-review-id="${r.id || ''}"><button type="button" class="vote-btn vote-like" title="J'aime">👍 <span class="vote-count">0</span></button><button type="button" class="vote-btn vote-dislike" title="Je n'aime pas">👎 <span class="vote-count">0</span></button></div>`:''}</div>`).join('')}</div>` :
       `<div class="compact-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.6rem; position: relative;">📷
         <div class="compact-item-votes" data-review-id="${r.id || ''}" style="position:absolute; right:8px; bottom:8px;">
           <button type="button" class="vote-btn vote-like" title="J'aime">👍 <span class="vote-count">0</span></button>
@@ -3393,14 +3388,9 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
     const libThumbs = collectMedia();
     const libSizeClass = ['one','two','three','four'][Math.max(0, Math.min(3, libThumbs.length - 1))] || 'one';
     const imageHtml = libThumbs.length > 0 ?
-      `<div class="library-image-grid ${libSizeClass}">${libThumbs.map((u,i)=>`<div><img src="${u}" alt="${title}-thumb-${i}"></div>`).join('')}
-         <div class="library-item-votes" data-review-id="${r.id || ''}">
-           <button type="button" class="vote-btn vote-like" title="J'aime">👍 <span class="vote-count">0</span></button>
-           <button type="button" class="vote-btn vote-dislike" title="Je n'aime pas">👎 <span class="vote-count">0</span></button>
-         </div>
-       </div>` :
-    `<div class="library-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; position: relative;">📷
-      <div class="library-item-votes" data-review-id="${r.id || ''}">
+      `<div class="library-image-grid ${libSizeClass}">${libThumbs.map((u,i)=>`<div><img src="${u}" alt="${title}-thumb-${i}">${i===0?`<div class="library-item-votes" data-review-id="${r.id || ''}"><button type="button" class="vote-btn vote-like" title="J'aime">👍 <span class="vote-count">0</span></button><button type="button" class="vote-btn vote-dislike" title="Je n'aime pas">👎 <span class="vote-count">0</span></button></div>`:''}</div>`).join('')}</div>` :
+      `<div class="library-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; position: relative;">📷
+         <div class="library-item-votes" data-review-id="${r.id || ''}" style="position:absolute; right:8px; bottom:8px;">
            <button type="button" class="vote-btn vote-like" title="J'aime">👍 <span class="vote-count">0</span></button>
            <button type="button" class="vote-btn vote-dislike" title="Je n'aime pas">👎 <span class="vote-count">0</span></button>
          </div>
