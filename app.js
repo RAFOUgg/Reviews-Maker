@@ -5523,6 +5523,26 @@ function createFieldGroup(field, sectionIndex, section) {
         arr.slice(0,4).forEach((f, idx) => {
           const thumb = document.createElement('div');
           thumb.className = 'thumb';
+
+          // remove button
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'thumb-remove';
+          removeBtn.title = 'Supprimer';
+          removeBtn.textContent = '✕';
+          removeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const stored = (formData.files && formData.files[field.key]) ? formData.files[field.key] : [];
+            // remove by index (current view index)
+            stored.splice(idx, 1);
+            formData.files = formData.files || {};
+            formData.files[field.key] = stored;
+            lastSelectedFiles = stored;
+            renderFiles(stored);
+            fileCount.textContent = stored.length ? `${stored.length} fichier(s)` : 'Aucun fichier';
+            updateProgress();
+          });
+
           if (f.type.startsWith('image/')) {
             const img = document.createElement('img');
             readFileAsDataURL(f).then(d => img.src = d).catch(()=>{});
@@ -5535,37 +5555,58 @@ function createFieldGroup(field, sectionIndex, section) {
           } else {
             const span = document.createElement('span'); span.textContent = f.name; thumb.appendChild(span);
           }
+
+          thumb.appendChild(removeBtn);
           thumbList.appendChild(thumb);
         });
       }
 
       fileInput.addEventListener('change', async () => {
-        const files = fileInput.files ? Array.from(fileInput.files) : [];
-        // Validation: max 4 files
-        if (files.length > 4) {
-          showToast('Maximum 4 fichiers par produit.', 'warning');
-          // keep only first 4
-          files.splice(4);
+        const selected = fileInput.files ? Array.from(fileInput.files) : [];
+        if (!selected.length) return;
+
+        formData.files = formData.files || {};
+        const existing = formData.files[field.key] || [];
+
+        // Merge existing + newly selected files
+        let merged = existing.concat(selected);
+
+        // Deduplicate by name/size/lastModified
+        const seen = new Set();
+        merged = merged.filter(f => {
+          const id = `${f.name}_${f.size}_${f.lastModified}`;
+          if (seen.has(id)) return false;
+          seen.add(id);
+          return true;
+        });
+
+        // Enforce max 4 files
+        if (merged.length > 4) {
+          showToast('Maximum 4 fichiers par produit. Seuls les 4 premiers ont été gardés.', 'warning');
+          merged.splice(4);
         }
-        // Validate video durations (<=10s)
-        for (const f of files) {
-          if (f.type.startsWith('video/')) {
+
+        // Validate video durations (<=10s) for all merged files
+        for (let i = merged.length - 1; i >= 0; i--) {
+          const f = merged[i];
+          if (f.type && f.type.startsWith('video/')) {
             const ok = await validateVideoDuration(f, 10);
             if (!ok) {
               showToast(`La vidéo ${f.name} dépasse 10 secondes et a été refusée.`, 'error');
-              // remove that file from list
-              const idx = files.indexOf(f); if (idx >= 0) files.splice(idx,1);
+              merged.splice(i, 1);
             }
           }
         }
-        // store selected files for upload (override previous for this field)
-        // Here we map by field.key in formData.files (object of arrays)
-        formData.files = formData.files || {};
-        formData.files[field.key] = files;
-        lastSelectedFiles = files;
-        await renderFiles(files);
-        fileCount.textContent = files.length ? `${files.length} fichier(s)` : 'Aucun fichier';
+
+        // store merged selection
+        formData.files[field.key] = merged;
+        lastSelectedFiles = merged;
+        await renderFiles(merged);
+        fileCount.textContent = merged.length ? `${merged.length} fichier(s)` : 'Aucun fichier';
         updateProgress();
+
+        // reset input value so selecting the same files again triggers change
+        try { fileInput.value = ''; } catch(e) {}
       });
 
       fileInfo.appendChild(fileBtn);
