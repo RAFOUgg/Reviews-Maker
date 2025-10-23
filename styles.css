@@ -3802,11 +3802,19 @@ svg defs {
 #libraryModal .library-list,
 #libraryModal .library-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(2, 1fr); /* force 2 columns only */
   gap: clamp(10px, 2vw, 24px);
   padding: 1rem 0 2rem 0;
   width: 100%;
   box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  /* On small screens, use single column for readability */
+  #libraryModal .library-list,
+  #libraryModal .library-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 #libraryModal .library-item {
@@ -5778,7 +5786,7 @@ kbd {
     font-size: 0.85rem;
   }
   
-  .library-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 1rem !important; }
+  .library-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
   .home-page .compact-library-list { grid-template-columns: repeat(2, 1fr); }
   
   .section-header {
