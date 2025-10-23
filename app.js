@@ -6218,8 +6218,14 @@ function collectFormData() {
       }
 
       if (input.type === "file") {
-        if (input.files && input.files[0]) {
-          fileReaders.push(readFileAsDataURL(input.files[0]));
+        // collect all files for this input into formData.files[fieldKey] = [File...]
+        formData.files = formData.files || {};
+        const filesArr = input.files ? Array.from(input.files).slice(0,4) : [];
+        // Keep only up to 4 files per field
+        formData.files[input.id] = filesArr;
+        if (filesArr.length && filesArr[0]) {
+          // prepare first file preview (image/video) for generateReview
+          fileReaders.push(readFileAsDataURL(filesArr[0]));
         }
         return;
       }

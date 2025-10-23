@@ -1886,6 +1886,12 @@ button {
 .file-name { color: var(--text-soft); font-size: .9rem; }
 .file-name { color: var(--text-soft); font-size: .9rem; flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .file-input-hidden { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+.file-input-multi { display:flex; flex-direction:column; gap:8px; }
+.file-input-multi .file-info { display:flex; gap:12px; align-items:center; }
+.thumb-list { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.thumb { width: 120px; height: 80px; background: rgba(255,255,255,0.02); border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.03); }
+.thumb img, .thumb video { width:100%; height:100%; object-fit:cover; display:block; }
+.file-count { color: var(--text-soft); font-size: 0.95rem; }
 .file-name { color: var(--text-soft); font-size: .9rem; }
 .file-select-btn { white-space: nowrap; }
 
