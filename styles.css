@@ -3853,63 +3853,12 @@ svg defs {
   box-sizing: border-box;
   border-radius: 0;
   overflow: hidden;
-  display: block; /* individual size controlled by variant classes below */
 }
 
-/* Modal-specific variants: ensure 1..4 thumbnails behave like the public gallery */
-#libraryModal .library-item > .library-image-grid.one {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-auto-rows: 1fr;
-  gap: 8px;
-  height: 180px; /* single large cover */
-}
-#libraryModal .library-item > .library-image-grid.two {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-auto-rows: 1fr;
-  gap: 8px;
-  height: 120px;
-}
-#libraryModal .library-item > .library-image-grid.three {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-areas: "a b" "c b";
-  gap: 8px;
-  height: 120px;
-}
-#libraryModal .library-item > .library-image-grid.three > div:nth-child(1) { grid-area: a; }
-#libraryModal .library-item > .library-image-grid.three > div:nth-child(2) { grid-area: b; }
-#libraryModal .library-item > .library-image-grid.three > div:nth-child(3) { grid-area: c; }
-#libraryModal .library-item > .library-image-grid.four {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-auto-rows: 1fr;
-  gap: 8px;
-  height: 120px;
-}
-
-/* Make sure each tile fills its grid slot and crops properly */
-#libraryModal .library-item > .library-image-grid > div {
-  overflow: hidden;
-  border-radius: 8px;
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-#libraryModal .library-item > .library-image-grid > div img,
-#libraryModal .library-item > .library-image-grid > div video,
-#libraryModal .library-item > .library-image-grid > div .thumb-media {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* Single-image fallback area (when no thumbnails array present) */
+/* Single large cover area for card - grid variants still supported by .library-image-grid */
 #libraryModal .library-item .library-item-image {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 16 / 9; /* keeps all cards visually consistent */
   overflow: hidden;
   display: block;
 }
@@ -3920,6 +3869,12 @@ svg defs {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+/* Ensure child tiles (for multi-thumb grids inside cards) fill their slots */
+#libraryModal .library-item > .library-image-grid > div {
+  border-radius: 0;
+  overflow: hidden;
 }
 
 /* Actions area (buttons) aligned at the bottom of the card content */
@@ -7585,52 +7540,6 @@ kbd {
     border-bottom: 1px solid rgba(52, 211, 153, 0.08) !important;
   }
 }
-
-/* Vote controls for reviews (like / dislike) */
-.vote-controls {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  justify-content: flex-end;
-}
-.compact-item-votes.vote-controls {
-  position: absolute;
-  right: 12px;
-  top: 12px;
-  z-index: 3;
-}
-.library-item-votes.vote-controls {
-  position: absolute;
-  right: 20px;
-  top: 16px;
-  z-index: 3;
-}
-.vote-btn {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.04);
-  color: var(--text);
-  padding: 6px 8px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  font-size: 0.9rem;
-}
-.vote-btn .vote-count {
-  margin-left: 6px;
-  font-weight: 700;
-  color: var(--text-soft);
-  font-size: 0.85rem;
-}
-.vote-btn.active-vote {
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  color: #022;
-  border-color: rgba(0,0,0,0.08);
-  box-shadow: 0 8px 20px rgba(2,6,23,0.6);
-}
-.vote-btn:hover { transform: translateY(-2px); }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    REDUCED MOTION
