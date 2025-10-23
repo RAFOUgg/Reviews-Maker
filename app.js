@@ -3473,7 +3473,20 @@ async function renderLibraryList(mode = 'mine') {
     li.className = "library-item";
     const title = r.productName || r.cultivars || r.productType || "review";
     const date = new Date(r.date || Date.now()).toLocaleString("fr-FR");
-    const thumb = r.image ? `<div style="width:44px;height:44px;border-radius:8px;overflow:hidden;border:1px solid var(--glass-border)"><img src="${r.image}" alt="" style="width:100%;height:100%;object-fit:cover"/></div>` : '';
+    // build small thumbnails for library list (prefer r.files map, fallback to r.image)
+    let thumbsList = [];
+    try {
+      if (r.files && typeof r.files === 'object') {
+        Object.keys(r.files).forEach(k => {
+          const arr = Array.isArray(r.files[k]) ? r.files[k] : [];
+          arr.forEach(p => { if (p) thumbsList.push(p); });
+        });
+      } else if (Array.isArray(r.files)) {
+        thumbsList = thumbsList.concat(r.files);
+      }
+    } catch(e) { thumbsList = []; }
+    if (thumbsList.length === 0 && r.image) thumbsList.push(r.image);
+    const thumb = thumbsList.length ? `<div style="display:flex;gap:6px;align-items:center">${thumbsList.slice(0,3).map(s=>`<div style=\"width:44px;height:44px;border-radius:8px;overflow:hidden;border:1px solid var(--glass-border)\"><img src=\"${s}\" alt=\"\" style=\"width:100%;height:100%;object-fit:cover\"/></div>`).join('')}</div>` : '';
   // Drafts removed: no draft badge
   const draftBadge = '';
     
@@ -3621,9 +3634,23 @@ async function renderCompactLibrary() {
     });
   const holder = r.holderName ? ` • ${r.holderName}` : '';
     
-    // Image d'aperçu si disponible
-    const imageHtml = r.image ? 
-      `<img src="${r.image}" alt="" class="compact-item-image" />` : 
+    // Build thumbnails: prefer r.files (object of arrays), else fallback to r.image
+    let thumbs = [];
+    try {
+      if (r.files && typeof r.files === 'object') {
+        Object.keys(r.files).forEach(k => {
+          const arr = Array.isArray(r.files[k]) ? r.files[k] : [];
+          arr.forEach(p => { if (p) thumbs.push(p); });
+        });
+      } else if (Array.isArray(r.files)) {
+        thumbs = thumbs.concat(r.files);
+      }
+    } catch(e) { thumbs = []; }
+    if (thumbs.length === 0 && r.image) thumbs.push(r.image);
+
+    const limited = thumbs.slice(0,4);
+    const imageHtml = limited.length ?
+      `<div class="compact-thumb-grid" style="display:flex;gap:6px;align-items:center">${limited.map(s=>`<div style=\"width:64px;height:40px;border-radius:8px;overflow:hidden;border:1px solid var(--glass-border)\"><img src=\"${s}\" alt=\"\" style=\"width:100%;height:100%;object-fit:cover\"/></div>`).join('')}</div>` :
       `<div class="compact-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.6rem;">📷</div>`;
     
   // Personal library: allow preview and, if owned, open editor when clicking edit
@@ -3850,10 +3877,20 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
   const draftBadge = '';
     const holder = r.holderName ? `<div class="library-item-farm">${r.holderName}</div>` : '';
     
-    // Image d'aperçu si disponible
-    const imageHtml = r.image ? 
-      `<img src="${r.image}" alt="${title}" class="library-item-image" />` : 
-      `<div class="library-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">📷</div>`;
+    // Build preview thumbnails (prefer r.files map, fallback to r.image)
+    let libThumbs = [];
+    try {
+      if (r.files && typeof r.files === 'object') {
+        Object.keys(r.files).forEach(k => {
+          const arr = Array.isArray(r.files[k]) ? r.files[k] : [];
+          arr.forEach(p => { if (p) libThumbs.push(p); });
+        });
+      } else if (Array.isArray(r.files)) {
+        libThumbs = libThumbs.concat(r.files);
+      }
+    } catch(e) { libThumbs = []; }
+    if (libThumbs.length === 0 && r.image) libThumbs.push(r.image);
+    const imageHtml = libThumbs.length ? `<div class="library-image-grid" style="display:flex;gap:8px;align-items:center">${libThumbs.slice(0,3).map(s=>`<div style=\"width:120px;height:76px;border-radius:8px;overflow:hidden;border:1px solid var(--glass-border)\"><img src=\"${s}\" alt=\"${title}\" style=\"width:100%;height:100%;object-fit:cover\"/></div>`).join('')}</div>` : `<div class="library-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">📷</div>`;
     
     // Show actions only in 'mine' mode
     const actionsHtml = mode === 'mine' ? `
@@ -4033,8 +4070,45 @@ async function openPreviewOnly(review) {
   const title = formData.cultivars || formData.strain || formData.productType;
   const date = new Date(review.date || Date.now()).toLocaleDateString("fr-FR", { day:'2-digit', month:'long', year:'numeric' });
   let html = `<div class="review-header"><h2>${title}</h2><div class="review-meta">${formData.productType} • ${date}</div></div>`;
-  if (imageUrl) {
-    html += `<div class="review-image"><img src="${imageUrl}" alt="Photo du produit ${title}"></div>`;
+  // Build media viewer: support multiple files (images/videos) if present, otherwise fallback to single image
+  const filesList = [];
+  try {
+    // review.files may be an object with arrays per field, merge them
+    if (review.files && typeof review.files === 'object') {
+      Object.values(review.files).forEach(arr => {
+        if (Array.isArray(arr)) arr.forEach(u => { if (u) filesList.push(u); });
+      });
+    }
+  } catch (e) { /* ignore malformed files */ }
+  // Fallback to single imageUrl
+  if (!filesList.length && imageUrl) filesList.push(imageUrl);
+
+  if (filesList.length) {
+    // Main viewer (first media) and thumbnail strip
+    const main = filesList[0];
+    html += `<div class="review-image viewer">
+      <div class="viewer-main" id="preview-main-media">`;
+    if (/\.(mp4|webm|ogg|mov)(\?|$)/i.test(main) || main.includes('video')) {
+      html += `<video controls src="${main}" class="preview-main-video" id="preview-main-video"></video>`;
+    } else {
+      html += `<img src="${main}" alt="Photo du produit ${title}" class="preview-main-img" id="preview-main-img">`;
+    }
+    html += `</div>
+      <div class="viewer-controls">
+        <button class="viewer-prev" id="preview-prev">◀</button>
+        <div class="thumb-list" id="preview-thumb-list">`;
+    filesList.forEach((u, idx) => {
+      const isVideo = (/\.(mp4|webm|ogg|mov)(\?|$)/i.test(u) || u.includes('video'));
+      if (isVideo) {
+        html += `<div class="thumb" data-idx="${idx}"><video muted preload="metadata" src="${u}" class="thumb-media"></video></div>`;
+      } else {
+        html += `<div class="thumb" data-idx="${idx}"><img src="${u}" class="thumb-media" loading="lazy"></div>`;
+      }
+    });
+    html += `</div>
+        <button class="viewer-next" id="preview-next">▶</button>
+      </div>
+    </div>`;
   }
   html += '<div class="review-grid">';
   structure.sections.forEach((section, index) => {
@@ -4070,6 +4144,43 @@ async function openPreviewOnly(review) {
   });
   html += '</div>';
   dom.previewModalContent.innerHTML = html;
+  // Attach thumbnail / viewer controls if present
+  try {
+    const thumbList = document.getElementById('preview-thumb-list');
+    const mainImg = document.getElementById('preview-main-img');
+    const mainVideo = document.getElementById('preview-main-video');
+    const prevBtn = document.getElementById('preview-prev');
+    const nextBtn = document.getElementById('preview-next');
+    if (thumbList) {
+      const thumbs = Array.from(thumbList.querySelectorAll('.thumb'));
+      let current = 0;
+      const setActive = (idx) => {
+        if (idx < 0) idx = thumbs.length - 1;
+        if (idx >= thumbs.length) idx = 0;
+        current = idx;
+        thumbs.forEach(t => t.classList.remove('active'));
+        const active = thumbs[current]; if (active) active.classList.add('active');
+        const src = active?.querySelector('.thumb-media')?.getAttribute('src');
+        if (!src) return;
+        // swap main media
+        if (mainVideo) { mainVideo.pause(); }
+        if (/\.(mp4|webm|ogg|mov)(\?|$)/i.test(src) || src.includes('video')) {
+          // replace main with video
+          const container = document.getElementById('preview-main-media');
+          container.innerHTML = `<video controls src="${src}" class="preview-main-video" id="preview-main-video"></video>`;
+        } else {
+          const container = document.getElementById('preview-main-media');
+          container.innerHTML = `<img src="${src}" alt="Preview" class="preview-main-img" id="preview-main-img">`;
+        }
+      };
+      thumbs.forEach((t, i) => t.addEventListener('click', () => setActive(i)));
+      prevBtn && prevBtn.addEventListener('click', () => setActive(current - 1));
+      nextBtn && nextBtn.addEventListener('click', () => setActive(current + 1));
+      // set first active
+      if (thumbs.length) setActive(0);
+    }
+  } catch (e) { console.warn('preview viewer setup failed', e); }
+
   // Show modal
   dom.previewOverlay?.removeAttribute('hidden');
   dom.previewModal?.removeAttribute('hidden');

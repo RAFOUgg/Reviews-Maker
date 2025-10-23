@@ -1893,6 +1893,26 @@ button {
 .thumb img, .thumb video { width:100%; height:100%; object-fit:cover; display:block; }
 .thumb-remove { position:absolute; top:6px; right:6px; background: rgba(0,0,0,0.45); color: #fff; border: none; width:22px; height:22px; border-radius:999px; display:inline-grid; place-items:center; cursor:pointer; font-size:12px; }
 .thumb-remove:hover { background: rgba(0,0,0,0.6); }
+
+/* Preview viewer */
+.viewer { display:flex; flex-direction:column; gap:12px; }
+.viewer-main { width:100%; max-height:520px; display:flex; align-items:center; justify-content:center; background: var(--panel-bg, rgba(15,22,40,0.6)); border-radius:8px; overflow:hidden; }
+.viewer-main img, .viewer-main video.preview-main-video { width:100%; height:100%; object-fit:contain; }
+.viewer-controls { display:flex; align-items:center; gap:12px; }
+.viewer-prev, .viewer-next { background: transparent; border:1px solid rgba(255,255,255,0.06); color:var(--text); padding:8px 12px; border-radius:6px; cursor:pointer; }
+.viewer-prev:hover, .viewer-next:hover { background: rgba(255,255,255,0.02); }
+.thumb.active { outline: 2px solid var(--primary); transform: scale(1.03); }
+.thumb .thumb-media { width:100%; height:100%; object-fit:cover; display:block; }
+
+/* compact grid for multiple thumbs in gallery cards */
+.compact-thumb-grid { display:flex; gap:6px; align-items:center; }
+.compact-thumb-grid > div { width:64px; height:40px; border-radius:8px; overflow:hidden; border:1px solid var(--glass-border); }
+.compact-thumb-grid img { width:100%; height:100%; object-fit:cover; display:block; }
+
+/* library image grid for list view */
+.library-image-grid { display:flex; gap:8px; align-items:center; }
+.library-image-grid > div { width:120px; height:76px; border-radius:8px; overflow:hidden; border:1px solid var(--glass-border); }
+.library-image-grid img { width:100%; height:100%; object-fit:cover; display:block; }
 .file-count { color: var(--text-soft); font-size: 0.95rem; }
 .file-name { color: var(--text-soft); font-size: .9rem; }
 .file-select-btn { white-space: nowrap; }
