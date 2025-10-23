@@ -404,6 +404,45 @@ body::before {
   backdrop-filter: blur(8px);
 }
 
+/* Vote buttons (like/dislike) animation and styles */
+.vote-controls { z-index: 50; }
+.vote-btn {
+  cursor: pointer;
+  transition: transform 180ms cubic-bezier(.2,.9,.2,1), box-shadow 180ms ease, background-color 180ms ease;
+  will-change: transform, box-shadow;
+  user-select: none;
+}
+.vote-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45), 0 6px 24px rgba(56,189,248,0.08);
+}
+.vote-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+.vote-btn.disabled, .vote-btn[disabled] {
+  opacity: 0.6;
+  cursor: default;
+  transform: none !important;
+}
+.vote-btn.active {
+  background: linear-gradient(135deg, rgba(255,215,110,0.18), rgba(52,211,153,0.14));
+  border: 1px solid rgba(52,211,153,0.16);
+  color: #ffd166 !important;
+}
+
+/* Small pop-like pulse on hover for better affordance */
+.vote-btn::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 8px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms ease, transform 260ms ease;
+  transform: scale(0.98);
+}
+.vote-btn:hover::after { opacity: 1; transform: scale(1.03); }
+
 .modal-content,
 .export-config-container,
 .account-dialog,
