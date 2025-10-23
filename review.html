@@ -61,13 +61,15 @@
         backdrop-filter: none !important;
       }
 
-      /* Also neutralize modal container shadows on the editor page just in case */
-      body.editor-page .modal,
-      body.editor-page .modal .modal-content,
+      /* Keep modal containers visible — only overlays are hidden. Let modal
+         content use its normal background so modals remain readable on the
+         editor page. */
+  body.editor-page .modal .modal-content,
       body.editor-page .account-dialog {
-        box-shadow: none !important;
-        background: transparent !important;
-        border: none !important;
+        /* Allow components' CSS to control background and shadows so modals are visible */
+        box-shadow: unset !important;
+        background: unset !important;
+        border: unset !important;
       }
     </style>
   </head>
