@@ -262,7 +262,8 @@ app.get('/api/reviews/:id', (req, res) => {
 });
 
 // Create
-app.post('/api/reviews', upload.single('image'), (req, res) => {
+// Accept multiple files for fields like photo[]; use multer.any() to receive all files
+app.post('/api/reviews', upload.any(), (req, res) => {
   let incoming = {};
   if (req.body.data) {
     try { incoming = JSON.parse(req.body.data); } catch {}
@@ -281,8 +282,23 @@ app.post('/api/reviews', upload.single('image'), (req, res) => {
   // Draft flag is deprecated on the server; force saved records to non-draft
   const isDraft = 0;
   const isPrivate = incoming.isPrivate ? 1 : 0;
-  if (req.file) {
-    incoming.image = '/images/' + req.file.filename;
+  // Map uploaded files into the payload. The client sends files under keys like `fieldKey[]`.
+  if (req.files && req.files.length) {
+    // Build a map field -> [filePaths]
+    const fileMap = {};
+    for (const f of req.files) {
+      // multer stores originalname and fieldname; compute served path
+      const served = '/images/' + f.filename;
+      if (!fileMap[f.fieldname]) fileMap[f.fieldname] = [];
+      fileMap[f.fieldname].push(served);
+    }
+    // Attach the map to incoming.files for later retrieval by client
+    incoming.files = fileMap;
+    // For backwards compatibility, set incoming.image to first uploaded file path if not present
+    if (!incoming.image) {
+      const firstField = Object.keys(fileMap)[0];
+      if (firstField && fileMap[firstField] && fileMap[firstField].length) incoming.image = fileMap[firstField][0];
+    }
   }
   const productType = incoming.productType || null;
   const name = incoming.name || incoming.cultivars || incoming.productName || null;
@@ -368,7 +384,7 @@ app.post('/api/reviews', upload.single('image'), (req, res) => {
 });
 
 // Update
-app.put('/api/reviews/:id', upload.single('image'), (req, res) => {
+app.put('/api/reviews/:id', upload.any(), (req, res) => {
   const id = req.params.id;
   db.get('SELECT * FROM reviews WHERE id=?', [id], (err, row) => {
     if (err) return res.status(500).json({ error: 'db_error' });
@@ -392,7 +408,19 @@ app.put('/api/reviews/:id', upload.single('image'), (req, res) => {
     if (!holderName || String(holderName).trim().length === 0) {
       return res.status(400).json({ error: 'validation_error', field: 'holderName', message: 'Titulaire requis' });
     }
-    if (req.file) incoming.image = '/images/' + req.file.filename;
+    if (req.files && req.files.length) {
+      const fileMap = {};
+      for (const f of req.files) {
+        const served = '/images/' + f.filename;
+        if (!fileMap[f.fieldname]) fileMap[f.fieldname] = [];
+        fileMap[f.fieldname].push(served);
+      }
+      incoming.files = fileMap;
+      if (!incoming.image) {
+        const firstField = Object.keys(fileMap)[0];
+        if (firstField && fileMap[firstField] && fileMap[firstField].length) incoming.image = fileMap[firstField][0];
+      }
+    }
 
     // Preserve/override draft status
   // Draft flag is deprecated: always store as non-draft on update as well

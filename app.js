@@ -6609,7 +6609,18 @@ async function remoteSave(reviewObj) {
     const fileKeys = Object.keys(attachments || {}).filter(k => Array.isArray(attachments[k]) && attachments[k].length);
     if (fileKeys.length) {
       const fd = new FormData();
-      fd.append('data', JSON.stringify(reviewObj));
+      // Prepare a lightweight payload: remove files and any large base64 strings
+      const payload = { ...reviewObj };
+      delete payload.files; // files will be sent as binary parts
+      // remove any large base64/image data to avoid exceeding server limits
+      Object.keys(payload).forEach(k => {
+        const v = payload[k];
+        if (typeof v === 'string') {
+          if (v.startsWith('data:')) delete payload[k];
+          else if (v.length > 50000) delete payload[k];
+        }
+      });
+      fd.append('data', JSON.stringify(payload));
       // append up to 4 files per field (and globally limit to reasonable count)
       for (const key of fileKeys) {
         const arr = attachments[key].slice(0,4);
