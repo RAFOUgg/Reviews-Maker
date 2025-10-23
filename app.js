@@ -2514,40 +2514,27 @@ async function populatePublicProfile(email, memberMetaArg) {
       // Prefer to call server stats when we have an email to query.
       // Use memberMeta.email if passed by caller (more reliable), otherwise use identifier when it looks like an email.
       const statsEmail = (memberMeta && memberMeta.email) ? String(memberMeta.email).trim() : (identifier && identifier.includes('@') ? identifier : null);
-      // If we have a remote backend, first try the new convenience endpoint /api/users/:ownerId
-      if (remoteBase && (statsEmail || identifier)) {
+      if (remoteBase && statsEmail) {
         const headers = {};
         if (token) headers['X-Auth-Token'] = token;
-        try {
-          const key = encodeURIComponent(statsEmail || identifier);
-          const respUser = await fetch(`${remoteBase.replace(/\/$/, '')}/api/users/${key}`, { headers });
-          if (respUser && respUser.ok) {
-            const d = await respUser.json();
-            total = d.total || 0; pub = d.public || d.pub || 0; priv = d.private || d.priv || 0; byType = d.by_type || d.byType || d.types || {};
-            try { memberMeta.displayName = d.displayName || d.username || d.discordUsername || memberMeta.displayName; } catch(e){}
-            try { memberMeta.email = d.email || memberMeta.email || statsEmail || identifier; } catch(e){}
+        const resp = await fetch(`${remoteBase}/api/users/stats?email=${encodeURIComponent(statsEmail)}`, { headers });
+        if (resp && resp.ok) {
+          const d = await resp.json();
+          total = d.total || 0; pub = d.public || 0; priv = d.private || 0; byType = d.by_type || d.types || {};
+          // remote API might return user metadata
+          try {
+            memberMeta.displayName = d.displayName || d.username || d.discordUsername || memberMeta.displayName;
+            memberMeta.email = d.email || memberMeta.email || statsEmail;
+            // likes/dislikes and votes given
             try { if (dom.publicLikesReceived) dom.publicLikesReceived.textContent = (d.likesReceived || 0); } catch(e){}
             try { if (dom.publicDislikesReceived) dom.publicDislikesReceived.textContent = (d.dislikesReceived || 0); } catch(e){}
             try { if (dom.publicVotesGiven) dom.publicVotesGiven.textContent = ((d.votesGivenLikes||0) + (d.votesGivenDislikes||0)); } catch(e){}
-            try { if (dom.publicRank) dom.publicRank.textContent = (d.rank || '—'); } catch(e){}
-          } else {
-            // fallback to legacy stats endpoint by email if available
-            if (statsEmail) {
-              const resp = await fetch(`${remoteBase}/api/users/stats?email=${encodeURIComponent(statsEmail)}`, { headers });
-              if (resp && resp.ok) {
-                const d = await resp.json();
-                total = d.total || 0; pub = d.public || 0; priv = d.private || 0; byType = d.by_type || d.types || {};
-                try { memberMeta.displayName = d.displayName || d.username || d.discordUsername || memberMeta.displayName; } catch(e){}
-                try { memberMeta.email = d.email || memberMeta.email || statsEmail; } catch(e){}
-                try { if (dom.publicLikesReceived) dom.publicLikesReceived.textContent = (d.likesReceived || 0); } catch(e){}
-                try { if (dom.publicDislikesReceived) dom.publicDislikesReceived.textContent = (d.dislikesReceived || 0); } catch(e){}
-                try { if (dom.publicVotesGiven) dom.publicVotesGiven.textContent = ((d.votesGivenLikes||0) + (d.votesGivenDislikes||0)); } catch(e){}
-                try { const rank = await getUserRankByEmail(memberMeta.email || statsEmail); if (dom.publicRank) dom.publicRank.textContent = rank || '—'; } catch(e){}
-              }
-            }
-          }
-        } catch (e) {
-          try { console.warn('populatePublicProfile: user endpoint fetch error', e); } catch(ignore){}
+            // fetch exact rank from server (preferred)
+            try {
+              const rank = await getUserRankByEmail(memberMeta.email || statsEmail);
+              try { if (dom.publicRank) dom.publicRank.textContent = rank || '—'; } catch(e){}
+            } catch(e) {}
+          } catch(e){}
         }
       }
     } catch(e) { /* ignore */ }
@@ -3038,26 +3025,17 @@ async function renderAccountView() {
     if (remoteBase && meEmail) {
       const headers = {};
       const token = localStorage.getItem('authToken'); if (token) headers['X-Auth-Token'] = token;
-      try {
-        // prefer convenience endpoint
-        const meKey = encodeURIComponent(meEmail);
-        const respUser = await fetch(`${remoteBase.replace(/\/$/, '')}/api/users/${meKey}`, { headers });
-        if (respUser && respUser.ok) {
-          const s = await respUser.json();
-          try { if (dom.accountLikesReceived) dom.accountLikesReceived.textContent = (s.likesReceived || 0); } catch(e){}
-          try { if (dom.accountDislikesReceived) dom.accountDislikesReceived.textContent = (s.dislikesReceived || 0); } catch(e){}
-          try { const rankEl = document.getElementById('accountRankDisplay'); if (rankEl) rankEl.textContent = `Classement: ${s.rank || '—'}`; } catch(e) {}
-        } else {
-          // fallback to legacy stats endpoint
-          const resp = await fetch(`${remoteBase}/api/users/stats?email=${encodeURIComponent(meEmail)}`, { headers });
-          if (resp && resp.ok) {
-            const s = await resp.json();
-            try { if (dom.accountLikesReceived) dom.accountLikesReceived.textContent = (s.likesReceived || 0); } catch(e){}
-            try { if (dom.accountDislikesReceived) dom.accountDislikesReceived.textContent = (s.dislikesReceived || 0); } catch(e){}
-            try { const rank = await getUserRankByEmail(meEmail); const rankEl = document.getElementById('accountRankDisplay'); if (rankEl) rankEl.textContent = `Classement: ${rank || '—'}`; } catch(e) {}
-          }
-        }
-      } catch(e) { console.warn('renderAccountView: user fetch error', e); }
+      const resp = await fetch(`${remoteBase}/api/users/stats?email=${encodeURIComponent(meEmail)}`, { headers });
+      if (resp && resp.ok) {
+        const s = await resp.json();
+        try { if (dom.accountLikesReceived) dom.accountLikesReceived.textContent = (s.likesReceived || 0); } catch(e){}
+        try { if (dom.accountDislikesReceived) dom.accountDislikesReceived.textContent = (s.dislikesReceived || 0); } catch(e){}
+        // compute rank via leaderboard (best-effort)
+        try {
+          const rank = await getUserRankByEmail(meEmail);
+          const rankEl = document.getElementById('accountRankDisplay'); if (rankEl) rankEl.textContent = `Classement: ${rank || '—'}`;
+        } catch(e) {}
+      }
     }
   } catch(e) { /* ignore */ }
 
@@ -3482,10 +3460,7 @@ async function renderLibraryList(mode = 'mine') {
       </div>
     ` : '';
     
-    // Prepare a safe author label (prefer holderName, then owner.displayName/username, then owner/raw holder)
-    const authorLabel = (r.holderName || (r.owner && (r.owner.displayName || r.owner.username || r.owner.user_name)) || r.holder || '').toString();
-
-    item.innerHTML = `
+    li.innerHTML = `
       <div class="meta">
         <div class="title" style="display:flex;align-items:center;gap:10px;">${thumb}${title}${draftBadge}</div>
         <div class="sub">${r.productType || ""} • ${r.farm || ""} • ${date}</div>
@@ -3496,7 +3471,7 @@ async function renderLibraryList(mode = 'mine') {
     const previewAction = async () => { await openPreviewOnly(r); toggleLibrary(false, mode); };
     
     if (mode === 'mine') {
-        <button type="button" class="author-link">${authorLabel}</button>
+      li.querySelector('[data-act="load"]').addEventListener('click', previewAction);
       li.querySelector('[data-act="edit"]').addEventListener('click', () => { loadReviewIntoForm(r, 'edit'); toggleLibrary(false, mode); });
       li.querySelector('[data-act="dup"]').addEventListener('click', async () => { await duplicateReview(r); });
       li.querySelector('[data-act="delete"]').addEventListener('click', async () => {
