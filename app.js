@@ -1486,6 +1486,16 @@ function setupFormEvents() {
   }
   if (dom.saveBtn) {
     dom.saveBtn.addEventListener("click", async () => {
+      // Block save modal and any local save when user is not authenticated or remote backend is unavailable
+      if (!isUserConnected) {
+        showToast('Connectez-vous pour enregistrer une review.', 'warning');
+        if (dom.authModal) dom.authModal.style.display = 'flex';
+        return;
+      }
+      if (!remoteEnabled) {
+        showToast('La sauvegarde locale est désactivée. Veuillez vous connecter au serveur pour enregistrer votre review.', 'warning');
+        return;
+      }
       // Ouvrir la modale immédiatement pour ne pas bloquer l'UX
       openSaveModal();
       // Pré-remplir ensuite (si une erreur survient, on ignore, la modale reste ouverte)
@@ -7353,58 +7363,25 @@ async function saveReview() {
   // Attach correlation key for dedupe
   reviewToSave.correlationKey = computeCorrelationKey(reviewToSave);
   try {
+    // Enforce server-side save: do not allow local-only persistence anymore.
+    if (!isUserConnected) {
+      showToast('Vous devez être connecté pour enregistrer une review.', 'error');
+      throw new Error('not_authenticated');
+    }
     if (!remoteEnabled) {
-      if (db && !dbFailedOnce) {
-        // Simple save: update if id known, otherwise add new record
-        if (currentReviewId) {
-          await dbUpdateReview(reviewToSave);
-        } else {
-          const id = await dbAddReview(reviewToSave);
-          currentReviewId = id;
-        }
-      } else {
-        // Fallback: keep reviewToSave in an in-memory queue (non-persistent)
-        window.__localFallbackQueue = window.__localFallbackQueue || [];
-        // assign a synthetic id if needed
-        if (currentReviewId == null) currentReviewId = Date.now();
-        window.__localFallbackQueue.push({ ...reviewToSave, id: currentReviewId });
-        console.warn('saveReview: IndexedDB unavailable, queued in-memory (non-persistent).');
-      }
-    } else {
-      // Remote is enabled: do not persist locally to avoid conflicts with remote DB.
-      // We'll still proceed to remote sync below.
+      showToast('Sauvegarde impossible: serveur indisponible. Connectez-vous au serveur.', 'error');
+      throw new Error('remote_unavailable');
     }
     
-    // Feedback pour sauvegarde explicite
-    showToast("Review enregistrée avec succès!", "success");
-    // Mémoriser l'état non-brouillon
+    // Feedback pour sauvegarde explicite (remote save happens below)
+    // will be shown after remote sync success
     isNonDraftRecord = true;
-    
-    // Rafraîchir la bibliothèque compacte
     renderCompactLibrary();
   } catch (e) {
     console.error("Erreur sauvegarde:", e);
     // Mark DB as failed and fallback to localStorage silently next times
-    dbFailedOnce = true;
-    try {
-      // Queue in-memory for this session instead of persisting to localStorage
-      if (!remoteEnabled) {
-        window.__localFallbackQueue = window.__localFallbackQueue || [];
-        if (currentReviewId != null) {
-          const idx = window.__localFallbackQueue.findIndex(r => r && r.id === currentReviewId);
-          if (idx >= 0) window.__localFallbackQueue.splice(idx, 1, reviewToSave);
-          else window.__localFallbackQueue.push(reviewToSave);
-        } else {
-          window.__localFallbackQueue.push(reviewToSave);
-        }
-      }
-      if (!document.body.dataset.lsInfoShown) {
-        showToast("Sauvegarde locale temporaire en mémoire (offline)", "info");
-        document.body.dataset.lsInfoShown = "1";
-      }
-    } catch (e2) {
-      showToast("Erreur lors de la sauvegarde", "error");
-    }
+    // Do not persist locally. Show clear error to user.
+    try { showToast('Échec de la sauvegarde: ' + (e && e.message ? e.message : ''), 'error'); } catch(_){}
   }
 
   // Sync distante (non bloquante pour l'utilisateur en dehors du await interne)
