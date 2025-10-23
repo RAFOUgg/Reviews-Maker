@@ -3482,7 +3482,10 @@ async function renderLibraryList(mode = 'mine') {
       </div>
     ` : '';
     
-    li.innerHTML = `
+    // Prepare a safe author label (prefer holderName, then owner.displayName/username, then owner/raw holder)
+    const authorLabel = (r.holderName || (r.owner && (r.owner.displayName || r.owner.username || r.owner.user_name)) || r.holder || '').toString();
+
+    item.innerHTML = `
       <div class="meta">
         <div class="title" style="display:flex;align-items:center;gap:10px;">${thumb}${title}${draftBadge}</div>
         <div class="sub">${r.productType || ""} • ${r.farm || ""} • ${date}</div>
@@ -3493,7 +3496,7 @@ async function renderLibraryList(mode = 'mine') {
     const previewAction = async () => { await openPreviewOnly(r); toggleLibrary(false, mode); };
     
     if (mode === 'mine') {
-      li.querySelector('[data-act="load"]').addEventListener('click', previewAction);
+        <button type="button" class="author-link">${authorLabel}</button>
       li.querySelector('[data-act="edit"]').addEventListener('click', () => { loadReviewIntoForm(r, 'edit'); toggleLibrary(false, mode); });
       li.querySelector('[data-act="dup"]').addEventListener('click', async () => { await duplicateReview(r); });
       li.querySelector('[data-act="delete"]').addEventListener('click', async () => {
