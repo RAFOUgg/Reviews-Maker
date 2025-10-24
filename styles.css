@@ -1013,7 +1013,9 @@ form {
   background: rgba(6,10,20,0.55);
   backdrop-filter: blur(6px) saturate(110%);
   display: none;
-  z-index: 2400;
+  /* Raise overlay slightly above page but below account dialog. Must remain
+     lower than the account modal's z-index so the dialog is interactive. */
+  z-index: 10100;
   pointer-events: auto !important;
 }
 
@@ -1027,7 +1029,9 @@ form {
   width: min(980px, 94vw);
   max-height: 88vh;
   display: none;
-  z-index: 2500;
+  /* Ensure account modal stacks above other generic modal overlays
+     (which may be appended to body with z-index ~10060). */
+  z-index: 10120;
   pointer-events: auto !important;
 }
 
