@@ -182,7 +182,9 @@ panel, .card, .library-item, .compact-library-item {
   background: var(--rm-modal-bg);
   box-shadow: 0 30px 80px rgba(2,6,23,0.6);
   position: relative; /* keep content positioned inside the fixed .modal */
-  z-index: 10060; /* above overlay */
+  /* Ensure modal content stacks above the overlay. Raise z-index so the
+     overlay (z-index:10060) cannot cover interactive modal content. */
+  z-index: 10090; /* above overlay */
   overflow: hidden;
   margin: 0 auto; /* center when possible */
   max-width: calc(var(--rm-modal-maxwidth));
