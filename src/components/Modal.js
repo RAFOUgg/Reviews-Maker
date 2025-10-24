@@ -31,12 +31,9 @@ export default class Modal {
         document.body.appendChild(this.overlay);
         this._overlayMoved = true;
       }
-      // Make overlay fixed full-viewport to avoid layout-dependent clipping
-      this.overlay.style.position = 'fixed';
-      this.overlay.style.inset = '0';
-      this.overlay.style.width = '100%';
-      this.overlay.style.height = '100%';
-      this.overlay.style.zIndex = '10060';
+      // Rely on CSS for positioning/z-index. Add a marker class in case
+      // we need to target overlays that were moved into <body>.
+      this.overlay.classList.add('moved-overlay');
     } catch (err) { /* non-fatal */ }
     try { if (typeof window !== 'undefined' && window.markOpening) window.markOpening(this.overlay); } catch(e){}
     this.overlay.classList.add('show');
@@ -64,12 +61,8 @@ export default class Modal {
         }
         this._overlayMoved = false;
       }
-      // remove any inline styles we set
-      this.overlay.style.position = '';
-      this.overlay.style.inset = '';
-      this.overlay.style.width = '';
-      this.overlay.style.height = '';
-      this.overlay.style.zIndex = '';
+      // remove helper class added on open
+      this.overlay.classList.remove('moved-overlay');
     } catch (err) { /* non-fatal */ }
   }
   this.root.classList.remove('show');
