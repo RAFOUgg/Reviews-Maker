@@ -5025,6 +5025,9 @@ body.modal-open .auth-status { pointer-events: none; opacity: 0.95; }
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
+  /* Ensure the hero sits under the top navigation: add top padding equal to nav height
+     so the hero title will scroll underneath the sticky header instead of overlapping it. */
+  padding-top: calc(2rem + var(--top-nav-height, 64px));
   flex: 1;
   display: flex;
   flex-direction: column;
