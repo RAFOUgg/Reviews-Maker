@@ -24,13 +24,14 @@
   --chip-bg: rgba(52, 211, 153, 0.12);
   --shadow-lg: 0 40px 80px -48px rgba(15, 23, 42, 0.95), 0 30px 60px -34px rgba(56, 189, 248, 0.24);
   --shadow-hover: 0 35px 70px -40px rgba(52, 211, 153, 0.35), 0 24px 48px -28px rgba(15, 23, 42, 0.85);
-  --radius-xl: 26px;
-  --radius-lg: 18px;
-  --radius-md: 12px;
-  --radius-sm: 8px;
+  /* Use relative units so radii scale with font-size / zoom */
+  --radius-xl: 1.625rem; /* ~=26px */
+  --radius-lg: 1.125rem; /* ~=18px */
+  --radius-md: 0.75rem;  /* ~=12px */
+  --radius-sm: 0.5rem;   /* ~=8px */
   --transition: all 0.24s ease;
   /* Scrollbar theme */
-  --scrollbar-size: 10px;
+  --scrollbar-size: 0.625rem; /* ~=10px */
   --scrollbar-thumb: rgba(148, 163, 184, 0.38);
   --scrollbar-thumb-hover: rgba(52, 211, 153, 0.7);
   --scrollbar-track: rgba(12, 21, 38, 0.4);
@@ -51,7 +52,8 @@ body {
   overflow-y: auto;
   /* Use a CSS variable set from JS so the header height is measured precisely
      (handles browser zoom / font changes). Falls back to 72px if not set. */
-  scroll-padding-top: calc(var(--top-nav-height, 72px) + 8px);
+  /* prefer rem fallback so it scales with zoom; JS can still set --top-nav-height in px or rem */
+  scroll-padding-top: calc(var(--top-nav-height, 4.5rem) + 0.5rem);
 }
 
 /* Global scrollbar styling (WebKit) */
@@ -76,20 +78,21 @@ body {
 /* Global scrollbar styling (Firefox) */
 .thumb-list {
   display:flex;
-  gap:10px;
+  gap:clamp(8px,1.8vw,12px);
   align-items:center;
   overflow-x:auto;
-  padding:6px 4px;
+  padding:clamp(6px,1.2vw,8px) clamp(4px,1vw,6px);
   -webkit-overflow-scrolling: touch;
 }
 .thumb-list::-webkit-scrollbar { height:8px; }
 .thumb-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.04); border-radius:8px; }
 .thumb {
   position:relative;
-  width:120px;
+  /* fluid width for various screens, with sensible min/max */
+  width: clamp(80px, 18vw, 160px);
   aspect-ratio: 16 / 10;
   background: rgba(255,255,255,0.02);
-  border-radius:10px;
+  border-radius: var(--radius-md);
   overflow:hidden;
   display:flex;
   align-items:center;
@@ -98,16 +101,16 @@ body {
   transition: transform .12s ease, box-shadow .12s ease;
   flex: 0 0 auto;
 }
-.thumb:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(6,10,30,0.55); }
+.thumb:hover { transform: translateY(-0.25rem); box-shadow: 0 0.5rem 1.5rem rgba(6,10,30,0.55); }
 .thumb img, .thumb video, .thumb .thumb-media { width:100%; height:100%; object-fit:cover; display:block; }
-.thumb.active { outline: none; box-shadow: 0 0 0 3px rgba(34,197,94,0.12); transform: scale(1.04); }
-.thumb .play-overlay { position:absolute; inset:auto 8px 8px auto; width:28px; height:28px; border-radius:999px; background: rgba(0,0,0,0.5); display:inline-grid; place-items:center; color:#fff; font-size:12px; }
+.thumb.active { outline: none; box-shadow: 0 0 0 0.1875rem rgba(34,197,94,0.12); transform: scale(1.04); }
+.thumb .play-overlay { position:absolute; inset:auto 0.5rem 0.5rem auto; width:clamp(20px,2.2vw,28px); height:clamp(20px,2.2vw,28px); border-radius:999px; background: rgba(0,0,0,0.5); display:inline-grid; place-items:center; color:#fff; font-size:clamp(10px,1.1vw,12px); }
 .thumb video { filter: brightness(0.95) contrast(0.98); }
 
 /* Responsive tweaks */
 @media (max-width:900px) {
-  .viewer-main { max-height:360px; border-radius:10px; }
-  .thumb { width:100px; aspect-ratio: 16/10; }
+  .viewer-main { max-height: clamp(220px, 36vh, 360px); border-radius: var(--radius-md); }
+  .thumb { width: clamp(80px,22vw,120px); aspect-ratio: 16/10; }
 }
  
 .sequence .step-extra .mesh-pair {
@@ -163,14 +166,14 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: clamp(18px, 3vw, 24px) clamp(20px, 3.5vw, 32px);
+  padding: clamp(12px, 3vw, 24px) clamp(12px, 4vw, 32px);
   background: rgba(8, 14, 27, 0.72);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
   backdrop-filter: blur(18px);
   position: sticky;
-  top: 12px;
+  top: 0.75rem;
   z-index: 10;
 }
 
@@ -193,12 +196,12 @@ body::before {
 .brand {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: clamp(8px,2.2vw,14px);
   cursor: pointer;
   transition: all 0.2s ease;
-  border-radius: 12px;
-  padding: 4px;
-  margin: -4px;
+  border-radius: var(--radius-md);
+  padding: 0.25rem;
+  margin: -0.25rem;
 }
 
 .brand:hover {
@@ -220,13 +223,13 @@ body::before {
 .brand-mark {
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
+  width: clamp(36px,6vw,56px);
+  height: clamp(36px,6vw,56px);
   background: linear-gradient(135deg, rgba(56, 240, 184, 0.25), rgba(139, 92, 246, 0.3));
   border: 1px solid rgba(56, 240, 184, 0.35);
-  border-radius: 16px;
-  font-size: 24px;
-  box-shadow: 0 15px 35px -18px rgba(56, 240, 184, 0.45);
+  border-radius: clamp(10px,1.8vw,16px);
+  font-size: clamp(18px,2.6vw,24px);
+  box-shadow: 0 0.9375rem 2.1875rem -1.125rem rgba(56, 240, 184, 0.45);
 }
 
 .brand-text {
@@ -251,8 +254,8 @@ body::before {
 .pill-btn {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 18px;
+  gap: clamp(8px,1.6vw,10px);
+  padding: clamp(8px,1.6vw,10px) clamp(12px,2.8vw,18px);
   background: rgba(148, 163, 184, 0.12);
   color: var(--text);
   border: 1px solid rgba(148, 163, 184, 0.2);
@@ -271,14 +274,14 @@ body::before {
 .pill-btn.has-indicator::after {
   content: '';
   position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 10px;
-  height: 10px;
+  top: -0.25rem;
+  right: -0.25rem;
+  width: 0.6rem;
+  height: 0.6rem;
   background: #f59e0b; /* orange-500 */
-  border: 2px solid rgba(8, 14, 27, 0.72);
+  border: 0.125rem solid rgba(8, 14, 27, 0.72);
   border-radius: 50%;
-  box-shadow: 0 0 0 2px rgba(0,0,0,0.15);
+  box-shadow: 0 0 0 0.125rem rgba(0,0,0,0.15);
 }
 
 /* Draft badge pill style */
@@ -5055,7 +5058,9 @@ body.modal-open .auth-status { pointer-events: none; opacity: 0.95; }
 
 .hero-section {
   text-align: center;
-  padding: 2rem 0 1rem 0;
+  /* Ensure hero content sits below the sticky header. Use measured --top-nav-height
+     (set from JS) to remain correct at different zoom levels; fall back to 72px. */
+  padding: max(2rem, calc(var(--top-nav-height, 72px) + 12px)) 0 1rem 0;
   margin: 0 auto 2rem auto;
   width: 100%;
 }
@@ -5075,7 +5080,8 @@ body.modal-open .auth-status { pointer-events: none; opacity: 0.95; }
   background-clip: text;
   line-height: 1.1;
   letter-spacing: -0.02em;
-  text-shadow: 0 6px 18px rgba(2,6,23,0.6); /* improve readability against backgrounds */
+  /* stronger shadow for better contrast over busy backgrounds */
+  text-shadow: 0 10px 26px rgba(2,6,23,0.72);
 }
 
 .hero-subtitle {
