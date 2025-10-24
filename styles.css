@@ -173,6 +173,16 @@ body::before {
   z-index: 10;
 }
 
+/* When the header sits above the hero area, make it a bit translucent and slightly smaller
+   so the large hero title remains visible while scrolling. This is toggled with JS. */
+.top-nav.over-hero {
+  background: rgba(15, 23, 42, 0.66);
+  backdrop-filter: blur(8px);
+  padding-top: 10px;
+  padding-bottom: 10px;
+  transition: background 200ms ease, padding 200ms ease;
+}
+
 .top-nav-status {
   display: flex;
   align-items: center;

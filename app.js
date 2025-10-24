@@ -61,6 +61,45 @@ function setupAccountModalEvents() {
     });
   }
 }
+
+// Toggle header style while hero is visible so the hero title remains readable during scroll
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const hero = document.querySelector('.hero-section');
+    const nav = document.querySelector('.top-nav');
+    if (!hero || !nav) return;
+
+    const navHeight = Math.ceil(nav.getBoundingClientRect().height || 64);
+    // Observe the hero; when it intersects the viewport (under the header area), add class
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.intersectionRatio > 0) {
+          nav.classList.add('over-hero');
+        } else {
+          nav.classList.remove('over-hero');
+        }
+      });
+    }, {
+      root: null,
+      rootMargin: `-${navHeight}px 0px 0px 0px`,
+      threshold: [0, 0.01]
+    });
+
+    obs.observe(hero);
+
+    // Update on resize to keep rootMargin accurate
+    window.addEventListener('resize', () => {
+      const h = Math.ceil(nav.getBoundingClientRect().height || 64);
+      obs.disconnect();
+      const newObs = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.intersectionRatio > 0) nav.classList.add('over-hero'); else nav.classList.remove('over-hero');
+        });
+      }, { root: null, rootMargin: `-${h}px 0px 0px 0px`, threshold: [0,0.01] });
+      newObs.observe(hero);
+    });
+  } catch (e) { console.warn('hero observer init failed', e); }
+});
   // Correction JS : pointer-events et focus
   try {
     dom.accountModal.classList.add('show');
