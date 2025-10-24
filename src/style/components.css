@@ -141,7 +141,7 @@ panel, .card, .library-item, .compact-library-item {
   justify-content: center;
   pointer-events: none; /* disabled when hidden */
   /* ensure modal is topmost stacking context for consistent centering */
-  z-index: 10050;
+  z-index: 10080; /* Raise z-index to ensure modal is above overlay */
   padding: 20px; /* keep some breathing room on small viewports */
   box-sizing: border-box;
 }
@@ -154,7 +154,7 @@ panel, .card, .library-item, .compact-library-item {
   backdrop-filter: blur(8px);
   position: absolute;
   inset: 0;
-  z-index: 10040; /* under modal content */
+  z-index: 10060; /* Ensure overlay is below modal content */
 }
 .modal-content {
   /* Use fluid max width and padding so modal scales gracefully */
