@@ -5074,14 +5074,23 @@ body.modal-open .auth-status { pointer-events: none; opacity: 0.95; }
   font-size: 3.2rem; /* slightly reduced so it doesn't overwhelm the header */
   font-weight: 800;
   margin-bottom: 1.5rem;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 50%, #f59e0b 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  /* Fallback visible color for browsers that don't support text-fill/clip */
+  color: var(--text);
   line-height: 1.1;
   letter-spacing: -0.02em;
-  /* stronger shadow for better contrast over busy backgrounds */
-  text-shadow: 0 10px 26px rgba(2,6,23,0.72);
+  text-shadow: 0 0.625rem 1.625rem rgba(2,6,23,0.72);
+}
+
+/* Only apply gradient clip when the browser supports -webkit-text-fill-color */
+@supports (-webkit-text-fill-color: transparent) {
+  .hero-title {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 50%, #f59e0b 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    /* slightly stronger shadow when using gradient text */
+    text-shadow: 0 0.625rem 1.625rem rgba(2,6,23,0.72);
+  }
 }
 
 .hero-subtitle {
