@@ -5852,6 +5852,7 @@ kbd {
     cursor: pointer;
     z-index: 50;
     position: relative;
+    color: #ffffff; /* username in white */
   }
 
 /* ========================================

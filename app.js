@@ -3216,7 +3216,23 @@ async function renderCompactLibrary() {
     // Wire vote controls (if present)
     try {
       const voteBox = item.querySelector('.vote-controls');
-      if (voteBox && remoteEnabled && r.id != null) {
+      // Client-side ownership check: hide/disable vote controls for my own reviews
+      let ownedByMe = false;
+      try {
+        const myEmail = (localStorage.getItem('authEmail') || '').toLowerCase();
+        const myDiscord = (localStorage.getItem('discordUsername') || '').toLowerCase();
+        const myDiscordId = localStorage.getItem('discordId');
+        if (myEmail && ( (r.ownerEmail && String(r.ownerEmail).toLowerCase() === myEmail) || (r.holderEmail && String(r.holderEmail).toLowerCase() === myEmail) )) ownedByMe = true;
+        if (!ownedByMe && myDiscord && ( (r.holderName && String(r.holderName).toLowerCase() === myDiscord) || (r.owner && ((r.owner.username && String(r.owner.username).toLowerCase() === myDiscord) || (r.owner.discordUsername && String(r.owner.discordUsername).toLowerCase() === myDiscord))) )) ownedByMe = true;
+        if (!ownedByMe && myDiscordId && r.owner && r.owner.discordId && String(r.owner.discordId) === String(myDiscordId)) ownedByMe = true;
+      } catch(e) { /* ignore localStorage/field issues */ }
+
+      if (ownedByMe && voteBox) {
+        voteBox.setAttribute('aria-hidden','true');
+        voteBox.innerHTML = '';
+      }
+
+      if (voteBox && remoteEnabled && r.id != null && !ownedByMe) {
   const likeBtn = voteBox.querySelector('.vote-like');
   const dislikeBtn = voteBox.querySelector('.vote-dislike');
   const likeCountEl = voteBox.querySelector('.like-count');
@@ -3502,7 +3518,23 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
     // Wire votes if present
     try {
       const voteBox = item.querySelector('.vote-controls');
-      if (voteBox && remoteEnabled && r.id != null) {
+      // Client-side ownership check: don't show vote controls on my own reviews
+      let ownedByMe = false;
+      try {
+        const myEmail = (localStorage.getItem('authEmail') || '').toLowerCase();
+        const myDiscord = (localStorage.getItem('discordUsername') || '').toLowerCase();
+        const myDiscordId = localStorage.getItem('discordId');
+        if (myEmail && ( (r.ownerEmail && String(r.ownerEmail).toLowerCase() === myEmail) || (r.holderEmail && String(r.holderEmail).toLowerCase() === myEmail) )) ownedByMe = true;
+        if (!ownedByMe && myDiscord && ( (r.holderName && String(r.holderName).toLowerCase() === myDiscord) || (r.owner && ((r.owner.username && String(r.owner.username).toLowerCase() === myDiscord) || (r.owner.discordUsername && String(r.owner.discordUsername).toLowerCase() === myDiscord))) )) ownedByMe = true;
+        if (!ownedByMe && myDiscordId && r.owner && r.owner.discordId && String(r.owner.discordId) === String(myDiscordId)) ownedByMe = true;
+      } catch(e) { /* ignore */ }
+
+      if (ownedByMe && voteBox) {
+        voteBox.setAttribute('aria-hidden','true');
+        voteBox.innerHTML = '';
+      }
+
+      if (voteBox && remoteEnabled && r.id != null && !ownedByMe) {
         const likeBtn = voteBox.querySelector('.vote-like');
         const dislikeBtn = voteBox.querySelector('.vote-dislike');
         const likeCountEl = voteBox.querySelector('.like-count');
