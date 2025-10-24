@@ -5974,13 +5974,14 @@ kbd {
     top: auto !important;
     margin: 0 !important;
     padding: 1rem 1.25rem !important;
-    background: rgba(15, 23, 42, 0.95) !important;
+    /* Slightly more opaque so underlying large hero text doesn't show through */
+    background: rgba(15, 23, 42, 1) !important;
     border: none !important;
     border-bottom: 1px solid rgba(52, 211, 153, 0.1) !important;
     border-radius: 0 !important;
     backdrop-filter: blur(20px) !important;
     box-shadow: none !important;
-    z-index: 1 !important; /* Réduire le z-index */
+    z-index: 5000 !important; /* Ensure header stays above hero/title */
   }
   
   .top-nav .brand .brand-text strong {
