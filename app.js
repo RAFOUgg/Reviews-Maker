@@ -2330,16 +2330,18 @@ function openAccountModal() {
   if (overlay) {
     overlay.classList.add('show');
     overlay.style.display = 'block';
-    overlay.style.zIndex = '10040';
+    // ensure overlay sits below the account modal (match CSS z-index stack)
+    overlay.style.zIndex = '10110';
     overlay.setAttribute('aria-hidden','false');
   }
   // Ensure account modal is above any .modal (which uses z-index:3000)
   dom.accountModal.style.display = 'block';
-  dom.accountModal.style.zIndex = '10050';
+  // match CSS priority for account modal
+  dom.accountModal.style.zIndex = '10120';
   dom.accountModal.classList.add('show');
   dom.accountModal.setAttribute('aria-hidden','false');
   // Ensure the inner dialog sits above the overlay
-  try { const dlg = dom.accountModal.querySelector('.account-dialog'); if (dlg) { dlg.style.zIndex = '10051'; dlg.style.display = 'block'; dlg.setAttribute('aria-hidden','false'); } } catch(e){}
+  try { const dlg = dom.accountModal.querySelector('.account-dialog'); if (dlg) { dlg.style.zIndex = '10121'; dlg.style.display = 'block'; dlg.setAttribute('aria-hidden','false'); } } catch(e){}
   // Fallback: force modal visible if still hidden
   setTimeout(() => {
     if (dom.accountModal && dom.accountModal.style.display !== 'block') dom.accountModal.style.display = 'block';
@@ -2478,12 +2480,14 @@ function openPublicProfile(email) {
     if (overlay) {
       overlay.classList.add('show');
       overlay.style.display = 'block';
-      overlay.style.zIndex = '10040';
+      // Keep public profile overlay below the modal content
+      overlay.style.zIndex = '10110';
       overlay.setAttribute('aria-hidden','false');
     }
     const modal = document.getElementById('publicProfileModal');
     if (modal) {
-      modal.style.zIndex = '10050';
+      // Ensure the modal itself is above overlays (match CSS values)
+      modal.style.zIndex = '10120';
       modal.classList.add('show');
       modal.setAttribute('aria-hidden','false');
       modal.style.display = 'block';
