@@ -49,8 +49,9 @@ body {
   scrollbar-gutter: stable both-edges;
   overflow-x: hidden;
   overflow-y: auto;
-  /* Ensure scroll positions account for sticky header height */
-  scroll-padding-top: clamp(72px, 12vh, 120px);
+  /* Use a CSS variable set from JS so the header height is measured precisely
+     (handles browser zoom / font changes). Falls back to 72px if not set. */
+  scroll-padding-top: calc(var(--top-nav-height, 72px) + 8px);
 }
 
 /* Global scrollbar styling (WebKit) */

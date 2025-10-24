@@ -100,6 +100,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   } catch (e) { console.warn('hero observer init failed', e); }
 });
+
+// Keep a CSS variable with the header height so layout (scroll-padding, offsets)
+// remains correct even when browser zoom or fonts change. This prevents visual
+// shifts that only appear at certain zoom levels.
+function updateTopNavHeight() {
+  try {
+    const nav = document.querySelector('.top-nav');
+    if (!nav) return;
+    const h = Math.ceil(nav.getBoundingClientRect().height || 72);
+    document.documentElement.style.setProperty('--top-nav-height', h + 'px');
+  } catch (e) { /* ignore measurement errors */ }
+}
+
+// Update on load and resize (debounced to avoid thrash)
+(() => {
+  try {
+    let t = null;
+    const run = () => { updateTopNavHeight(); };
+    window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(run, 120); });
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', run, { once: true });
+    } else {
+      run();
+    }
+  } catch(e){}
+})();
   // NOTE: removed forced modal-show debug code that opened account/profile modals
   // on load. Modals should be opened via their dedicated openXxx() functions which
   // set the correct display (flex) and ARIA attributes. Leaving pointer-events
