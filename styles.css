@@ -5013,11 +5013,12 @@ body.modal-open .auth-status { pointer-events: none; opacity: 0.95; }
 
 .home-page .top-nav {
   backdrop-filter: blur(16px);
-  background: rgba(15, 23, 42, 0.95);
+  /* Make header fully opaque and above other content so hero text doesn't show through */
+  background: rgba(15, 23, 42, 1);
   border-bottom: 1px solid var(--glass-border);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 5000; /* ensure header stays on top */
 }
 
 .home-page .workspace {
@@ -5054,7 +5055,7 @@ body.modal-open .auth-status { pointer-events: none; opacity: 0.95; }
 }
 
 .hero-title {
-  font-size: 3.5rem;
+  font-size: 3.2rem; /* slightly reduced so it doesn't overwhelm the header */
   font-weight: 800;
   margin-bottom: 1.5rem;
   background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 50%, #f59e0b 100%);
@@ -5063,6 +5064,7 @@ body.modal-open .auth-status { pointer-events: none; opacity: 0.95; }
   background-clip: text;
   line-height: 1.1;
   letter-spacing: -0.02em;
+  text-shadow: 0 6px 18px rgba(2,6,23,0.6); /* improve readability against backgrounds */
 }
 
 .hero-subtitle {
