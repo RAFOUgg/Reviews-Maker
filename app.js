@@ -3228,8 +3228,24 @@ async function renderCompactLibrary() {
       } catch(e) { /* ignore localStorage/field issues */ }
 
       if (ownedByMe && voteBox) {
-        voteBox.setAttribute('aria-hidden','true');
-        voteBox.innerHTML = '';
+        // Keep the controls visible but disable interaction — show counts only
+        try {
+          const likeBtn = voteBox.querySelector('.vote-like');
+          const dislikeBtn = voteBox.querySelector('.vote-dislike');
+          const likeCountEl = voteBox.querySelector('.like-count');
+          const dislikeCountEl = voteBox.querySelector('.dislike-count');
+          if (likeBtn) { likeBtn.disabled = true; likeBtn.classList.add('disabled-vote'); likeBtn.title = 'Vous ne pouvez pas noter votre propre review'; }
+          if (dislikeBtn) { dislikeBtn.disabled = true; dislikeBtn.classList.add('disabled-vote'); dislikeBtn.title = 'Vous ne pouvez pas noter votre propre review'; }
+          // Fetch counts so owner can still see likes/dislikes
+          (async () => {
+            try {
+              const js = await remoteGetReviewVotes(r.id);
+              if (!js) return;
+              if (likeCountEl) likeCountEl.textContent = String(js.likes || 0);
+              if (dislikeCountEl) dislikeCountEl.textContent = String(js.dislikes || 0);
+            } catch(e) { /* ignore */ }
+          })();
+        } catch(e) { /* ignore */ }
       }
 
       if (voteBox && remoteEnabled && r.id != null && !ownedByMe) {
@@ -3530,8 +3546,24 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
       } catch(e) { /* ignore */ }
 
       if (ownedByMe && voteBox) {
-        voteBox.setAttribute('aria-hidden','true');
-        voteBox.innerHTML = '';
+        // Keep the controls visible but disable interaction — show counts only
+        try {
+          const likeBtn = voteBox.querySelector('.vote-like');
+          const dislikeBtn = voteBox.querySelector('.vote-dislike');
+          const likeCountEl = voteBox.querySelector('.like-count');
+          const dislikeCountEl = voteBox.querySelector('.dislike-count');
+          if (likeBtn) { likeBtn.disabled = true; likeBtn.classList.add('disabled-vote'); likeBtn.title = 'Vous ne pouvez pas noter votre propre review'; }
+          if (dislikeBtn) { dislikeBtn.disabled = true; dislikeBtn.classList.add('disabled-vote'); dislikeBtn.title = 'Vous ne pouvez pas noter votre propre review'; }
+          // Fetch counts so owner can still see likes/dislikes
+          (async () => {
+            try {
+              const js = await remoteGetReviewVotes(r.id);
+              if (!js) return;
+              if (likeCountEl) likeCountEl.textContent = String(js.likes || 0);
+              if (dislikeCountEl) dislikeCountEl.textContent = String(js.dislikes || 0);
+            } catch(e) { /* ignore */ }
+          })();
+        } catch(e) { /* ignore */ }
       }
 
       if (voteBox && remoteEnabled && r.id != null && !ownedByMe) {

@@ -473,6 +473,15 @@ body::before {
 /* Active state */
 .vote-pill.active-vote { background: linear-gradient(135deg, var(--primary), var(--accent)); color: #012; }
 
+/* Disabled state for owner's own review vote buttons */
+.vote-pill.disabled-vote,
+.vote-pill[disabled] {
+  opacity: 0.75;
+  filter: grayscale(60%);
+  cursor: default;
+  pointer-events: none;
+}
+
 /* Accessibility: make sure hidden controls don't capture focus */
 .vote-controls[aria-hidden="true"] { pointer-events: none; opacity: 0.0001; }
 
