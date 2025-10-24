@@ -709,3 +709,18 @@ body .modal.show > .modal-overlay { display: block !important; visibility: visib
   .centered-modal.sheet { align-items: flex-end !important; }
 }
 
+/* Final safety overrides for the public profile modal only.
+   Scoped to #publicProfileModal so we don't disrupt other modal stacks.
+   Very high !important z-index values ensure it wins over legacy rules. */
+#publicProfileModal {
+  position: fixed !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 120000 !important; /* above any overlay set elsewhere */
+  pointer-events: auto !important;
+}
+#publicProfileModal > .modal-overlay { position: fixed !important; inset: 0 !important; z-index: 120000 !important; }
+#publicProfileModal .modal-content { position: relative !important; z-index: 120010 !important; }
+
