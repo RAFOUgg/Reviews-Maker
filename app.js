@@ -100,27 +100,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   } catch (e) { console.warn('hero observer init failed', e); }
 });
-  // Correction JS : pointer-events et focus
-  try {
-    dom.accountModal.classList.add('show');
-    dom.accountModal.setAttribute('aria-hidden', 'false');
-    dom.accountModal.style.display = 'block';
-    dom.accountModal.style.pointerEvents = 'auto';
-    const dlg = dom.accountModal.querySelector('.account-dialog');
-    if (dlg) {
-      dlg.classList.add('show');
-      dlg.style.pointerEvents = 'auto';
-      dlg.style.display = 'block';
-    }
-    document.body.classList.add('modal-open');
-  } catch(e){}
-  // Correction JS : pointer-events et focus
-  try {
-    const modal = document.getElementById('publicProfileModal');
-    if (modal) modal.style.pointerEvents = 'auto';
-    const dlg = modal ? modal.querySelector('.account-dialog') : null;
-    if (dlg) dlg.style.pointerEvents = 'auto';
-  } catch(e){}
+  // NOTE: removed forced modal-show debug code that opened account/profile modals
+  // on load. Modals should be opened via their dedicated openXxx() functions which
+  // set the correct display (flex) and ARIA attributes. Leaving pointer-events
+  // untouched here prevents accidental overlays covering the page on startup.
 // --- Hosting base-path support -------------------------------------------
 // If the app is served under /reviews, transparently prefix any absolute
 // API calls starting with /api/ so they hit /reviews/api/... behind Nginx.
