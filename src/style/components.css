@@ -17,6 +17,21 @@
   --rm-modal-maxwidth: clamp(640px, 48vw, 960px);
 }
 
+/* User request: disable/demote all overlays that can appear in front of modals.
+   These overlays were causing the public profile modal (and others) to be visually
+   hidden. The rules below forcibly hide them and make them non-interactive.
+   This is intentionally broad and uses !important to win over legacy rules.
+   If you want to restore overlay dimming later, remove or adjust this block. */
+body .modal-overlay, .modal-overlay, .account-overlay, #publicProfileOverlay, #confirmDeleteOverlay, #saveModalOverlay {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  pointer-events: none !important;
+}
+
+
 /* Global harmonization tweaks */
 button, .btn, .pill-btn { font-family: inherit; font-weight:600; }
 
