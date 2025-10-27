@@ -398,6 +398,37 @@ body::before {
 }
 .tips-block h4 { margin: 0 0 8px 0; font-size: 0.98rem; }
 .tips-block ul { margin: 0; padding-left: 18px; color: var(--text-muted); }
+
+/* Small, safe responsive improvements to make the UI stretchable across screens */
+@media (max-width: 900px) {
+  .app-shell { padding: 16px; grid-template-rows: auto 1fr; gap: 12px; }
+  .workspace { padding: 0; }
+  .panel { border-radius: 12px; }
+  .top-nav { padding: 10px 12px; }
+  .preview-body { padding: 12px; }
+}
+
+/* Modal responsiveness: full-width on small screens, centered on larger ones */
+.modal .modal-content,
+.account-dialog,
+.modal-content.account-modal-content {
+  width: min(96vw, 980px);
+  max-width: 980px;
+  max-height: 90vh;
+  overflow: auto;
+  margin: 0 auto;
+}
+
+/* Make preview and editor panels stack on small screens */
+@media (max-width: 1100px) {
+  .editor-workspace { display: flex; flex-direction: column-reverse; gap: 12px; }
+  .panel-preview { order: -1; }
+  .panel-form { width: 100%; }
+}
+
+/* Ensure images and iframes scale */
+img, video { max-width: 100%; height: auto; }
+
 .tips-kbd-line { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--text-muted); }
 .tips-kbd-line kbd {
   display: inline-flex;
@@ -7610,3 +7641,52 @@ kbd {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Add final responsive safety rules to ensure stretchability and readable layout */
+/* Keep these low-risk and additive */
+html, body {
+  height: 100%;
+  min-width: 280px;
+}
+
+.app-root {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  align-items: stretch;
+}
+
+/* On small screens stack editor and preview vertically */
+@media (max-width: 980px) {
+  .app-root {
+    flex-direction: column;
+  }
+  .editor-panel, .preview-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Ensure images and canvases never overflow their containers */
+img, canvas, .preview-canvas, .export-preview img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Modal content should be responsive and centered */
+.modal .modal-content {
+  width: min(920px, 95vw);
+  max-height: 90vh;
+  overflow: auto;
+}
+
+/* Make export studio panels flexible */
+.export-studio { display: flex; gap: 12px; flex-wrap: wrap; }
+.export-studio .left, .export-studio .right { flex: 1 1 320px; min-width: 260px; }
+
+/* Small touch targets on very small screens */
+@media (max-width: 420px) {
+  .btn, button { padding: 10px 12px; font-size: 0.9rem; }
+}
+

@@ -13,6 +13,25 @@ Studio web ergonomique pour composer, visualiser et exporter des fiches de revie
 - **Export Studio** : Personnalisez et exportez vos reviews en images PNG haute définition, prêtes à être partagées.
 - **Gestion des Reviews** : Une galerie publique pour découvrir les créations de la communauté et une bibliothèque personnelle pour gérer vos propres reviews (publiques ou privées).
 - **Comptes Utilisateurs** : Liez votre compte via un système d'authentification par e-mail (intégré avec Discord) pour synchroniser vos reviews et accéder à vos statistiques.
+
+## 🧰 Nettoyage et maintenance (actions récentes)
+
+- Plusieurs scripts de diagnostic et d'exemples ont été archivés pour alléger la branche principale et réduire le bruit lors du développement. Ils se trouvent désormais sous `archive/debug/` (copies conservées). Exemples :
+    - `scripts/modal-diagnostics.js`
+    - `scripts/clean_review_images.js`
+    - `scripts/check_braces.js`
+    - `scripts/vps-diagnostics.sh`
+    - `scripts/vps-redeploy-and-fix.sh`
+    - `export-studio-test.html`
+    - `export-studio-examples.js`
+    - `server/fix_reviews.js` and `server/fix_reviews.cjs`
+    - `server/scripts/backfill_users.js`
+
+- Les copies originales ont été neutralisées (remplacées par des placeholders) dans leur emplacement d'origine pour éviter toute exécution accidentelle. Pour restaurer un script : copier le fichier depuis `archive/debug/` vers son emplacement d'origine.
+
+- Comportement des logs frontend : un petit logger `scripts/logger.js` a été ajouté. Par défaut les `console.log`, `console.debug` et `console.info` sont silencieux. Pour activer le debug dans le navigateur, ajoutez `?debug=1` à l'URL ou exécutez `localStorage.setItem('RM_DEBUG','1')` puis rechargez la page.
+
+Si tu veux que j'archive d'autres fichiers ou que je restaure quelque chose, dis-le clairement.
 - **Profils Publics** : Consultez les statistiques et les reviews publiques d'autres utilisateurs.
 - **Raccourcis Clavier** : Optimisez votre vitesse de saisie avec des raccourcis pour la navigation entre les sections et la génération de l'aperçu.
 - **Interface Responsive** : Une expérience utilisateur optimale sur ordinateur de bureau.

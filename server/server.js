@@ -24,19 +24,22 @@ fs.mkdirSync(TOKENS_DIR, { recursive: true });
 const LAFONCEDALLE_API_URL = process.env.LAFONCEDALLE_API_URL || 'http://localhost:5000'; // URL de l'API LaFoncedalle
 const LAFONCEDALLE_API_KEY = process.env.LAFONCEDALLE_API_KEY || 'your-api-key'; // Clé API pour authentifier les requêtes
 // Log explicit de la configuration pour faciliter le debug (PM2 / docker / .env)
-console.log(`[CONFIG] LAFONCEDALLE_API_URL=${LAFONCEDALLE_API_URL}`);
+if (process.env.DEBUG) console.log(`[CONFIG] LAFONCEDALLE_API_URL=${LAFONCEDALLE_API_URL}`);
 
 // LaFoncedalleBot Database Configuration (nouvelle architecture)
 // IMPORTANT: Sur le VPS, définir LAFONCEDALLE_DB_FILE avec le chemin absolu vers la DB du bot
 // Exemple: /home/user/lafoncedallebot/db/data.db
 const LAFONCEDALLE_DB_FILE = process.env.LAFONCEDALLE_DB_FILE;
+// Determine environment-sensitive logging
+const IS_PROD = process.env.NODE_ENV === 'production';
+const infoLog = (...a) => { if (!IS_PROD) console.log(...a); };
+const debugLog = (...a) => { if (process.env.DEBUG) console.log(...a); };
 
 if (!LAFONCEDALLE_DB_FILE) {
   console.warn('[CONFIG] LAFONCEDALLE_DB_FILE non défini - utilisation de la DB directe désactivée');
-}
-else {
-  // explicit startup log to help debugging env issues under PM2
-  console.log(`[CONFIG] LAFONCEDALLE_DB_FILE configuré: ${LAFONCEDALLE_DB_FILE}`);
+} else {
+  // explicit startup log to help debugging env issues under PM2; suppressed in production
+  infoLog(`[CONFIG] LAFONCEDALLE_DB_FILE configuré: ${LAFONCEDALLE_DB_FILE}`);
 }
 
 // Email auth: store verification codes temporarily (in production, use Redis)
@@ -79,14 +82,14 @@ db.serialize(() => {
   db.run(INIT_SQL);
   // Idempotent migration for existing databases missing new columns
   db.all("PRAGMA table_info('reviews')", [], (err, rows) => {
-    if (err) { console.warn('[db] PRAGMA table_info error', err); return; }
+  if (err) { console.warn('[db] PRAGMA table_info error', err); return; }
     const cols = new Set((rows || []).map(r => r.name));
     const addCol = (name, defSql, after = null) => new Promise(res => {
       if (cols.has(name)) return res(true);
       const sql = `ALTER TABLE reviews ADD COLUMN ${defSql}`;
       db.run(sql, [], (e) => {
         if (e) { console.warn(`[db] ALTER TABLE add ${name} failed`, e.message); }
-        else { console.log(`[db] Added column ${name}`); cols.add(name); }
+        else { infoLog(`[db] Added column ${name}`); cols.add(name); }
         res(!e);
       });
     });
@@ -108,7 +111,7 @@ db.serialize(() => {
           updatedAt TEXT DEFAULT (datetime('now'))
         );`, [], (e) => {
           if (e) console.warn('[db] create review_likes failed', e.message);
-          else console.log('[db] ensured review_likes table');
+          else infoLog('[db] ensured review_likes table');
         });
         db.run('CREATE UNIQUE INDEX IF NOT EXISTS idx_review_owner ON review_likes(reviewId, ownerId)', [], () => {});
       } catch (e) { console.warn('[db] review_likes migration error', e && e.message ? e.message : e); }

@@ -910,7 +910,11 @@ let isCompactPreview = true; // Track preview mode (compact vs full)
 // App version helper (bump when deploying to verify remote update)
 const APP_VERSION = '2025-10-16-accmodal-1';
 
-console.log('App JS version:', APP_VERSION);
+if (window.RMLogger && window.RMLogger.log) {
+  window.RMLogger.log('App JS version:', APP_VERSION);
+} else {
+  console.log('App JS version:', APP_VERSION);
+}
 let homeGalleryLimit = 8; // 4x2 grid on the home page, increases avec "Voir plus"
 let isNonDraftRecord = false; // Track if current review has been explicitly saved as non-draft
 // Remote backend flags
@@ -1175,7 +1179,11 @@ if (!document.getElementById('enhanced-ux-styles')) {
 }
 
 function initHomePage() {
-  console.log('Initializing home page...');
+  if (window.RMLogger && window.RMLogger.log) {
+    window.RMLogger.log('Initializing home page...');
+  } else {
+    console.log('Initializing home page...');
+  }
   
   // Éléments spécifiques à la page d'accueil
   dom.typeCards = Array.from(document.querySelectorAll(".type-card"));
@@ -1255,12 +1263,17 @@ function initHomePage() {
   dom.publicViewLibrary = document.getElementById('publicViewLibrary');
   if (dom.publicViewLibrary) dom.publicViewLibrary.style.display = 'none';
 
-  console.log('DOM elements found:', {
+  const __domInfo = {
     typeCards: dom.typeCards.length,
-  restoreDraft: !!dom.restoreDraft,
+    restoreDraft: !!dom.restoreDraft,
     openTips: !!dom.openTips,
     showMore: !!dom.showMoreLibrary
-  });
+  };
+  if (window.RMLogger && window.RMLogger.log) {
+    window.RMLogger.log('DOM elements found:', __domInfo);
+  } else {
+    console.log('DOM elements found:', __domInfo);
+  }
 
   // Theme helpers: apply and persist
   function applyTheme(name) {
@@ -1269,7 +1282,7 @@ function initHomePage() {
       document.documentElement.classList.remove('theme-violet','theme-rose','theme-bluish');
       if (!name || name === 'auto') {
         localStorage.removeItem('siteTheme');
-        console.info('Theme set to auto');
+  if (window.RMLogger && window.RMLogger.info) window.RMLogger.info('Theme set to auto'); else console.info('Theme set to auto');
         return;
       }
       let cls = null;
@@ -1278,7 +1291,7 @@ function initHomePage() {
       if (name === 'bluish') cls = 'theme-bluish';
       if (cls) document.documentElement.classList.add(cls);
       localStorage.setItem('siteTheme', name);
-      console.info('Theme applied', name);
+  if (window.RMLogger && window.RMLogger.info) window.RMLogger.info('Theme applied', name); else console.info('Theme applied', name);
     } catch (e) { console.warn('applyTheme error', e); }
   }
 
@@ -1700,15 +1713,15 @@ function setupModalEvents() {
   // Modal Auth - Email based
   if (dom.floatingAuthBtn) {
     dom.floatingAuthBtn.addEventListener("click", () => {
-      console.log('DEBUG: floatingAuthBtn clicked; isUserConnected=', isUserConnected, 'dom.accountModal=', !!dom.accountModal, 'dom.authModal=', !!dom.authModal);
+      if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: floatingAuthBtn clicked; isUserConnected=', isUserConnected, 'dom.accountModal=', !!dom.accountModal, 'dom.authModal=', !!dom.authModal);
       // If connected, open account modal instead of auth modal
       if (isUserConnected && dom.accountModal) {
-        console.log('DEBUG: Opening account modal');
+  if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: Opening account modal');
         openAccountModal();
         return;
       }
       if (dom.authModal) {
-        console.log('DEBUG: Opening auth modal');
+  if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: Opening auth modal');
         dom.authModal.style.display = "flex";
         updateAuthUI();
       }
@@ -1743,7 +1756,7 @@ function setupModalEvents() {
       const accDisc = e.target.closest('#accountDisconnect');
       const openSettings = e.target.closest('#openAccountSettingsInline');
       if (libBtn) {
-        try { console.log('DEBUG: delegated openLibraryFromAccount'); } catch(e){}
+  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: delegated openLibraryFromAccount'); } catch(e){}
         e.preventDefault();
         closeAccountModal();
         if (!isUserConnected) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
@@ -1751,7 +1764,7 @@ function setupModalEvents() {
         return;
       }
       if (accDisc) {
-        try { console.log('DEBUG: delegated accountDisconnect'); } catch(e){}
+  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: delegated accountDisconnect'); } catch(e){}
         e.preventDefault();
         // reuse same disconnect flow
         localStorage.removeItem('authToken');
@@ -1767,7 +1780,7 @@ function setupModalEvents() {
         return;
       }
       if (openSettings) {
-        try { console.log('DEBUG: delegated openAccountSettingsInline'); } catch(e){}
+  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: delegated openAccountSettingsInline'); } catch(e){}
         e.preventDefault();
         const panel = document.getElementById('accountSettingsPanel'); if (panel) panel.style.display = 'block';
         if (dom.accountPreferences) dom.accountPreferences.style.display = 'none';
@@ -1778,7 +1791,7 @@ function setupModalEvents() {
   // 'Ma bibliothèque' inside auth modal
   if (dom.authOpenLibrary) {
     dom.authOpenLibrary.addEventListener('click', () => {
-      try { console.log('DEBUG: authOpenLibrary clicked, isUserConnected=', isUserConnected); } catch(e){}
+  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: authOpenLibrary clicked, isUserConnected=', isUserConnected); } catch(e){}
       if (dom.authModal) dom.authModal.style.display = 'none';
       if (!isUserConnected) {
         if (dom.authModal) dom.authModal.style.display = 'flex';
@@ -2373,7 +2386,7 @@ function closeAccountModal() {
 // Public profile (read-only) helpers
 async function populatePublicProfile(email) {
   try {
-    try { console.log('DEBUG: populatePublicProfile called with', email); } catch(e){}
+  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: populatePublicProfile called with', email); } catch(e){}
     // Accept either email or a display name (pseudo)
     const identifier = String(email || '').trim();
     if (dom.publicProfileEmail) dom.publicProfileEmail.textContent = identifier || '—';
@@ -2463,7 +2476,7 @@ async function populatePublicProfile(email) {
 
 function openPublicProfile(email) {
   try {
-    try { console.log('DEBUG: openPublicProfile called with', email); } catch(e){}
+  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: openPublicProfile called with', email); } catch(e){}
     // Close any account modal or other modals to ensure the public profile appears on top
     try {
       // If account modal is open, close it first
@@ -2497,7 +2510,7 @@ function openPublicProfile(email) {
         if (overlay && overlay.style.display !== 'block') overlay.style.display = 'block';
       }, 100);
     }
-    try { console.log('DEBUG: publicProfileOverlay, modal classes ->', { overlayClass: overlay ? overlay.className : null, modalClass: modal ? modal.className : null, modalStyleDisplay: modal ? modal.style.display : null }); } catch(e){}
+  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: publicProfileOverlay, modal classes ->', { overlayClass: overlay ? overlay.className : null, modalClass: modal ? modal.className : null, modalStyleDisplay: modal ? modal.style.display : null }); } catch(e){}
     try { document.body.classList.add('modal-open'); } catch(e){}
     populatePublicProfile(email).catch(()=>{});
   } catch(e){}
@@ -2620,7 +2633,7 @@ async function renderAccountView() {
   if (dom.statFavType) dom.statFavType.textContent = favType;
   if (dom.accountTotal) dom.accountTotal.textContent = totalCount;
 
-  try { console.log('DEBUG: renderAccountView computed', { totalCount, publicCount, privateCount, byTypeKeys: Object.keys(byType||{}) }); } catch(e){}
+  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: renderAccountView computed', { totalCount, publicCount, privateCount, byTypeKeys: Object.keys(byType||{}) }); } catch(e){}
 
   // Render by-type breakdown
   const container = document.getElementById('accountStatsByType');
@@ -3256,10 +3269,10 @@ async function renderCompactLibrary() {
     if (authorBtn) {
       authorBtn.addEventListener('click', (ev) => {
         // Debug: trace author clicks to see why public profile may not open
-        try { console.log('DEBUG: author-link clicked', { text: authorBtn.textContent, data: authorBtn.getAttribute('data-author-email') }); } catch(e){}
+  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: author-link clicked', { text: authorBtn.textContent, data: authorBtn.getAttribute('data-author-email') }); } catch(e){}
         ev.stopPropagation();
         const email = authorBtn.getAttribute('data-author-email') || authorBtn.textContent || '';
-        try { console.log('DEBUG: resolved author identifier ->', email); } catch(e){}
+  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: resolved author identifier ->', email); } catch(e){}
         if (email) openPublicProfile(email);
       });
     }
@@ -6004,7 +6017,7 @@ function openSaveModal() {
   dom.saveModal.style.display = 'flex';
   // In case some global style toggled visibility via hidden attr
   dom.saveModal.removeAttribute('hidden');
-  console.debug('[ui] Save modal opened');
+  if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('[ui] Save modal opened'); else console.debug('[ui] Save modal opened');
 }
 function closeSaveModal() {
   if (!dom.saveModal) return;
@@ -6025,7 +6038,7 @@ async function tryEnableRemote() {
     if (js && js.ok) {
       remoteEnabled = true;
       remoteBase = basePath; // ensure subsequent calls hit /reviews/api when relevant
-      console.info('[remote] API détectée');
+  if (window.RMLogger && window.RMLogger.info) window.RMLogger.info('[remote] API détectée'); else console.info('[remote] API détectée');
       // Toast supprimé pour ne pas surcharger l'UI
       renderCompactLibrary();
     }
@@ -6726,6 +6739,19 @@ function generateCardPreview() {
 // MODE 4: MINIMAL - Vue ultra-simple
 function generateMinimalPreview() {
   const data = getPreviewData();
+  // Compute simple completion summary (fields filled / total)
+  let __totalFields = 0, __filledFields = 0;
+  try {
+    const __sections = getSections();
+    __sections.forEach(s => {
+      const st = getSectionFillState(s);
+      __totalFields += (st.total || 0);
+      __filledFields += (st.filled || 0);
+    });
+  } catch (e) {
+    // defensive: if helpers missing, keep zeros
+  }
+  const __completionPercent = __totalFields === 0 ? 0 : Math.round((__filledFields / __totalFields) * 100);
   
   let html = `
     <div class="preview-minimal">
@@ -6767,6 +6793,7 @@ function generateMinimalPreview() {
   html += `
     <div class="minimal-info">
       <span>${data.sectionsWithData} section${data.sectionsWithData > 1 ? 's' : ''} complétée${data.sectionsWithData > 1 ? 's' : ''}</span>
+      <div class="minimal-completion">Complétion : ${__completionPercent}% (${__filledFields}/${__totalFields})</div>
     </div>
   </div>
 </div>`;
@@ -7183,9 +7210,15 @@ async function exportImage(event) {
       throw new Error('html2canvas n\'est pas chargé');
     }
 
-    console.log('Début de l\'export image');
-    console.log('Element à exporter:', dom.reviewContent);
-    console.log('Contenu de l\'élément:', dom.reviewContent.innerHTML.length, 'caractères');
+    if (window.RMLogger && window.RMLogger.log) {
+      window.RMLogger.log('Début de l\'export image');
+      window.RMLogger.log('Element à exporter:', dom.reviewContent);
+      window.RMLogger.log('Contenu de l\'élément:', dom.reviewContent.innerHTML.length, 'caractères');
+    } else {
+      console.log('Début de l\'export image');
+      console.log('Element à exporter:', dom.reviewContent);
+      console.log('Contenu de l\'élément:', dom.reviewContent.innerHTML.length, 'caractères');
+    }
 
     if (document.fonts?.ready) {
       await document.fonts.ready;
@@ -7201,7 +7234,7 @@ async function exportImage(event) {
       foreignObjectRendering: false
     });
 
-    console.log('Canvas généré:', canvas.width, 'x', canvas.height);
+  if (window.RMLogger && window.RMLogger.log) window.RMLogger.log('Canvas généré:', canvas.width, 'x', canvas.height); else console.log('Canvas généré:', canvas.width, 'x', canvas.height);
 
     const link = document.createElement("a");
     const safeName = (formData.cultivars || formData.productType || "review").replace(/\s+/g, "-").toLowerCase();
@@ -7209,7 +7242,7 @@ async function exportImage(event) {
     link.href = canvas.toDataURL("image/png");
     link.click();
     
-    console.log('Téléchargement déclenché');
+  if (window.RMLogger && window.RMLogger.log) window.RMLogger.log('Téléchargement déclenché'); else console.log('Téléchargement déclenché');
   showToast("Image exportée avec succès.");
   // clear draft remnants
   clearSavedDraft();

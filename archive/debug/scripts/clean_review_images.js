@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Detect and optionally delete orphaned images in db/review_images
-// Usage:
-//   node scripts/clean_review_images.js --db db/reviews.sqlite --images db/review_images --dry-run
+// Archived copy of scripts/clean_review_images.js
+// Original moved from scripts/clean_review_images.js on 2025-10-27
+// To restore, copy this file back to scripts/ and remove the header.
 
 const fs = require('fs');
 const path = require('path');
@@ -71,7 +71,54 @@ async function main() {
         if (d) {
           const candidates = [];
           if (d.image) candidates.push(d.image);
-          // Archived/neutralized: original clean_review_images.js moved to archive/debug/scripts/clean_review_images.js
-          // To restore: copy the archived file back to scripts/ and remove this header.
-          console.log('[ARCHIVE] scripts/clean_review_images.js neutralized. Original at archive/debug/scripts/clean_review_images.js');
+          if (d.imagePath) candidates.push(d.imagePath);
+          for (const val of candidates) {
             if (!val) continue;
+            try { const bn = path.basename(String(val)); if (bn) referenced.add(bn); } catch {}
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
+  db.serialize(() => {
+    db.each('SELECT imagePath, data FROM reviews', [], (err, row) => {
+      if (err) return; collectFromRow(row);
+    }, async (err, count) => {
+      try {
+        const files = await fs.promises.readdir(imagesDir);
+        const orphans = [];
+        for (const f of files) {
+          const full = path.join(imagesDir, f);
+          const stat = await fs.promises.stat(full);
+          if (!stat.isFile()) continue;
+          if (!referenced.has(f)) orphans.push(f);
+        }
+
+        console.log('\nFound', orphans.length, 'orphaned images:');
+        for (const o of orphans) console.log('  ', o);
+
+        if (orphans.length === 0) {
+          console.log('Nothing to do.');
+          db.close();
+          return;
+        }
+
+        if (!opts.dryRun) {
+          for (const o of orphans) {
+            const p = path.join(imagesDir, o);
+            try { await fs.promises.unlink(p); console.log('Deleted', o); } catch (e) { console.error('Failed to delete', o, e && e.message); }
+          }
+        } else {
+          console.log('\nDry-run mode: no files were deleted. To remove them, run with --delete');
+        }
+      } catch (e) {
+        console.error('Error scanning images dir:', e && e.message);
+      } finally {
+        db.close();
+      }
+    });
+  });
+}
+
+main().catch((e) => { console.error(e && e.stack || e); process.exit(1); });

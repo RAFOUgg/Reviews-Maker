@@ -303,7 +303,7 @@ Pour la déployer sur un VPS via Docker pull, ajouter un second workflow avec SS
 
 ---
 
-## 12. Auth par token (brouillons privés, staff) et mini admin
+## 12. Auth par token (privés, staff) et mini admin
 
 Le serveur supporte un header `X-Auth-Token` (ou `?token=`). Il cherche un fichier `server/tokens/<TOKEN>`.
 
@@ -315,8 +315,7 @@ Format du fichier token:
 ```
 
 Règles d'accès:
-- Sans token: on voit uniquement les reviews publiées (isDraft=0) et non privées (isPrivate=0).
-- Avec token (non-staff): on voit les publiées non privées + toutes ses reviews (brouillons, privées incluses).
+- Avec token (non-staff): on voit les publiées non privées + toutes ses reviews (privées incluses).
 - Staff: accès à tout.
 
 Endpoints utiles:
@@ -354,3 +353,26 @@ Rappel HTTPS & sécurité:
 - Service Node écoutant sur 127.0.0.1:3000
 - Sauvegarder `db/` régulièrement (base + images)
 
+
+### Cahier des charges : 
+1
+- Les membres ne peuvent pas créer de review sans s'être authentifiés.
+2
+- Permettre aux utilisateurs de créer des reviews avec des images et informations précises et modulable.
+ - Fonctionnalité de completion des reviews : 
+2.5   - Description personnel rapide via mots prédéfinis et recherches intelligentes des termes explicatifs.
+3- Stocker les reviews dans une base de données SQLite.
+- Fournir une API RESTful pour gérer les reviews.
+4- Intégrer un système d'authentification via une API externe (LaFoncedalleBot).
+ - Ajouter un système de connexion sans passer par l'API externe en utilisant la base de données locale.
+- Déployer l'application sur un serveur Ubuntu avec Nginx en reverse proxy.
+5- UI/UX ergonomique et responsive pour la création et la visualisation des reviews.
+ - Aperçus rapide des reviews avec gestion de la forme et des informations affichées dans le rendu final.
+- Système de compte utilisateur avec bibliothèque personnel, gestion des reviews privées et publiques.
+ - Gestion des préférences, thème d'application et thème d'aperçu/rendu des reviews.
+
+6- Visualisation des comptes d'autres utilisateurs et de leurs reviews.
+6.5 - Système de like / dislike sur les reviews.
+- Système de statistique dans les profils utilisateurs (nombre de reviews, likes reçus, par types de produits, etc.).
+7- Système de galerie publique pour visualiser les reviews non privées dans la page principale.
+  - Système de filtre par mots clés (2.5)
