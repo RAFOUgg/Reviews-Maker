@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         entries.forEach(e => {
           if (e.intersectionRatio > 0) nav.classList.add('over-hero'); else nav.classList.remove('over-hero');
         });
-      }, { root: null, rootMargin: `-${h}px 0px 0px 0px`, threshold: [0,0.01] });
+      }, { root: null, rootMargin: `-${h}px 0px 0px 0px`, threshold: [0, 0.01] });
       newObs.observe(hero);
     });
   } catch (e) { console.warn('hero observer init failed', e); }
@@ -119,20 +119,20 @@ function updateTopNavHeight() {
     let t = null;
     const run = () => { updateTopNavHeight(); };
     window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(run, 120); });
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', run, { once: true });
-      } else {
-        run();
-      }
-      // Also update after the full window load (images/fonts may change header size)
-      // This reduces layout shifts that happen when async content finishes loading.
-      try { window.addEventListener('load', run, { once: true }); } catch (e) {}
-  } catch(e){}
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', run, { once: true });
+    } else {
+      run();
+    }
+    // Also update after the full window load (images/fonts may change header size)
+    // This reduces layout shifts that happen when async content finishes loading.
+    try { window.addEventListener('load', run, { once: true }); } catch (e) { }
+  } catch (e) { }
 })();
-  // NOTE: removed forced modal-show debug code that opened account/profile modals
-  // on load. Modals should be opened via their dedicated openXxx() functions which
-  // set the correct display (flex) and ARIA attributes. Leaving pointer-events
-  // untouched here prevents accidental overlays covering the page on startup.
+// NOTE: removed forced modal-show debug code that opened account/profile modals
+// on load. Modals should be opened via their dedicated openXxx() functions which
+// set the correct display (flex) and ARIA attributes. Leaving pointer-events
+// untouched here prevents accidental overlays covering the page on startup.
 // --- Hosting base-path support -------------------------------------------
 // If the app is served under /reviews, transparently prefix any absolute
 // API calls starting with /api/ so they hit /reviews/api/... behind Nginx.
@@ -146,21 +146,21 @@ function updateTopNavHeight() {
       window.fetch = (input, init) => {
         try {
           if (typeof input === 'string' && input.startsWith('/api/')) input = base + input;
-        } catch {}
+        } catch { }
         return origFetch(input, init);
       };
     }
     // Patch XMLHttpRequest (au cas où)
     if (typeof window !== 'undefined' && window.XMLHttpRequest && window.XMLHttpRequest.prototype && window.XMLHttpRequest.prototype.open) {
       const origOpen = window.XMLHttpRequest.prototype.open;
-      window.XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+      window.XMLHttpRequest.prototype.open = function (method, url, ...rest) {
         try {
           if (typeof url === 'string' && url.startsWith('/api/')) url = base + url;
-        } catch {}
+        } catch { }
         return origOpen.call(this, method, url, ...rest);
       };
     }
-  } catch {}
+  } catch { }
 })();
 // --------------------------------------------------------------------------
 
@@ -192,7 +192,7 @@ function updateTopNavHeight() {
     } else {
       attempt();
     }
-  } catch {}
+  } catch { }
 })();
 // --------------------------------------------------------------------------
 // DÉTECTION DE PAGE ET NAVIGATION
@@ -267,7 +267,7 @@ function closeConfirmDelete() {
 }
 
 // Wire confirm delete buttons (if present)
-document.addEventListener('click', function(e){
+document.addEventListener('click', function (e) {
   const target = e.target;
   if (!target) return;
   if (target.id === 'closeConfirmDelete' || target.id === 'cancelDelete') {
@@ -276,7 +276,7 @@ document.addEventListener('click', function(e){
   // confirmDelete button can dispatch an app-level event to actually delete
   if (target.id === 'confirmDelete') {
     // dispatch a CustomEvent so caller code can listen and perform the deletion
-    document.dispatchEvent(new CustomEvent('reviews:confirm-delete')); 
+    document.dispatchEvent(new CustomEvent('reviews:confirm-delete'));
     closeConfirmDelete();
   }
 });
@@ -449,9 +449,9 @@ const productStructures = {
       {
         title: "Informations générales",
         fields: [
-          { 
-            key: "cultivarsList", 
-            label: "Cultivars utilisés", 
+          {
+            key: "cultivarsList",
+            label: "Cultivars utilisés",
             type: "cultivar-list",
             matiereChoices: ["Fleurs fraîches", "Fleurs sèches", "Trim", "Autre"]
           },
@@ -503,7 +503,7 @@ const productStructures = {
           { key: "densite", label: "Densité", type: "number", max: 10 },
         ],
         total: true,
-        totalKeys: ["couleurTransparence","pureteVisuelle", "densite"]
+        totalKeys: ["couleurTransparence", "pureteVisuelle", "densite"]
       },
       {
         title: "Odeur",
@@ -547,9 +547,9 @@ const productStructures = {
           { key: "montee", label: "Montée (rapidité)", type: "number", max: 10 },
           { key: "intensiteEffet", label: "Intensité", type: "number", max: 10 },
           { key: "typeEffet", label: "Type d'effet", type: "textarea" },
-          { 
-            key: "duree", 
-            label: "Durée", 
+          {
+            key: "duree",
+            label: "Durée",
             type: "multiple-choice",
             choices: ["<15min", "<30min", "<1h", "<2h", "2h+"]
           }
@@ -663,9 +663,9 @@ const productStructures = {
           { key: "montee", label: "Montée", type: "number", max: 10 },
           { key: "intensiteEffet", label: "Intensité", type: "number", max: 10 },
           { key: "typeEffet", label: "Type d'effet", type: "textarea" },
-          { 
-            key: "duree", 
-            label: "Durée", 
+          {
+            key: "duree",
+            label: "Durée",
             type: "multiple-choice",
             choices: ["<15min", "<30min", "<1h", "<2h", "2h+"]
           }
@@ -680,9 +680,9 @@ const productStructures = {
       {
         title: "Informations générales",
         fields: [
-          { 
-            key: "cultivarsList", 
-            label: "Cultivars utilisés", 
+          {
+            key: "cultivarsList",
+            label: "Cultivars utilisés",
             type: "cultivar-list",
             matiereChoices: ["Fleurs fraîches", "Fleurs sèches", "Trim", "Trichomes", "Autre"]
           },
@@ -819,9 +819,9 @@ const productStructures = {
           { key: "montee", label: "Montée", type: "number", max: 10 },
           { key: "intensiteEffets", label: "Intensité des effets", type: "number", max: 10 },
           { key: "typeEffet", label: "Type d'effet", type: "textarea" },
-          { 
-            key: "duree", 
-            label: "Durée", 
+          {
+            key: "duree",
+            label: "Durée",
             type: "multiple-choice",
             choices: ["<15min", "<30min", "<1h", "<2h", "2h+"]
           }
@@ -839,13 +839,17 @@ const productStructures = {
         fields: [
           { key: "productName", label: "Nom du produit", type: "text" },
           { key: "marque", label: "Marque / Producteur / Cuisinier", type: "text" },
-          { key: "typeComestible", label: "Type de produit", type: "text", choices: [
-            "Pâtisserie", "Confiserie", "Boisson", "Capsule", "Huile", "Chocolat", "Bonbon", "Gélule", "Autre"
-          ] },
+          {
+            key: "typeComestible", label: "Type de produit", type: "text", choices: [
+              "Pâtisserie", "Confiserie", "Boisson", "Capsule", "Huile", "Chocolat", "Bonbon", "Gélule", "Autre"
+            ]
+          },
           { key: "ingredients", label: "Ingrédients principaux (hors cannabis)", type: "textarea" },
-          { key: "infoDiet", label: "Informations diététiques", type: "multiple-choice", choices: [
-            "Vegan", "Sans gluten", "Sans sucre", "Sans lactose", "Bio", "Halal", "Kasher"
-          ] },
+          {
+            key: "infoDiet", label: "Informations diététiques", type: "multiple-choice", choices: [
+              "Vegan", "Sans gluten", "Sans sucre", "Sans lactose", "Bio", "Halal", "Kasher"
+            ]
+          },
           { key: "photo", label: "Photo du produit", type: "file" }
         ]
       },
@@ -854,9 +858,11 @@ const productStructures = {
         fields: [
           { key: "matiere", label: "Matière première cannabis utilisée", type: "text" },
           { key: "cultivars", label: "Cultivars (variété)", type: "text" },
-          { key: "typeExtrait", label: "Type d'extrait pour l'infusion", type: "multiple-choice", choices: [
-            "Distillat", "Rosin", "RSO/FECO", "Beurre de Marrakech", "Huile infusée", "Isolat", "Autre"
-          ] },
+          {
+            key: "typeExtrait", label: "Type d'extrait pour l'infusion", type: "multiple-choice", choices: [
+              "Distillat", "Rosin", "RSO/FECO", "Beurre de Marrakech", "Huile infusée", "Isolat", "Autre"
+            ]
+          },
           { key: "thcMg", label: "THC (mg)", type: "number", max: 1000 },
           { key: "cbdMg", label: "CBD (mg)", type: "number", max: 1000 },
           { key: "autresCanna", label: "Autres cannabinoïdes (mg)", type: "number", max: 1000 },
@@ -877,15 +883,15 @@ const productStructures = {
           { key: "qualiteAlimentaire", label: "Qualité globale du produit alimentaire", type: "number", max: 10 }
         ],
         total: true,
-        totalKeys: ["apparence","intensiteOdeur","gout","texture","qualiteAlimentaire"]
+        totalKeys: ["apparence", "intensiteOdeur", "gout", "texture", "qualiteAlimentaire"]
       },
       {
         title: "Effets & expérience psychotrope",
         fields: [
           { key: "dosagePris", label: "Dosage pris", type: "text" },
-          { key: "tempsMontee", label: "Temps de montée", type: "text", choices: ["<30min","30-60min","60-90min","90min+"] },
+          { key: "tempsMontee", label: "Temps de montée", type: "text", choices: ["<30min", "30-60min", "60-90min", "90min+"] },
           { key: "intensiteMax", label: "Intensité maximale", type: "number", max: 10 },
-          { key: "plateau", label: "Plateau (durée de l'effet principal)", type: "text", choices: ["<1h","1-2h","2-4h","4h+"] },
+          { key: "plateau", label: "Plateau (durée de l'effet principal)", type: "text", choices: ["<1h", "1-2h", "2-4h", "4h+"] },
           { key: "typeEffet", label: "Type d'effet", type: "textarea" }
         ],
         total: true,
@@ -957,17 +963,17 @@ function init() {
     // Fallback pour l'ancienne page review.html
     initEditorPage();
   }
-  
+
   // Créer la navigation mobile pour tous les types de pages
   createMobileBottomNav();
-  
+
   // Améliorer l'UX des champs de saisie
   setTimeout(() => {
     enhanceFormFields();
   }, 500); // Délai pour s'assurer que les éléments sont chargés
 
   // Ensure auth UI reflects stored session on load (floating button, library visibility)
-  try { if (typeof updateAuthUI === 'function') updateAuthUI(); } catch(e) { console.warn('updateAuthUI init error', e); }
+  try { if (typeof updateAuthUI === 'function') updateAuthUI(); } catch (e) { console.warn('updateAuthUI init error', e); }
 }
 
 // Apply theme from localStorage (or system) on load
@@ -991,12 +997,12 @@ function createMobileBottomNav() {
   // Vérifier si on est sur mobile
   const isMobile = window.innerWidth <= 768;
   if (!isMobile) return;
-  
+
   // Chercher les boutons de navigation existants
   const openLibrary = document.getElementById('openLibrary');
   const openTips = document.getElementById('openTips');
   if (!openLibrary || !openTips) return;
-  
+
   // Créer le conteneur de navigation mobile s'il n'existe pas
   let mobileNav = document.querySelector('.mobile-bottom-nav');
   if (!mobileNav) {
@@ -1004,7 +1010,7 @@ function createMobileBottomNav() {
     mobileNav.className = 'mobile-bottom-nav';
     document.body.appendChild(mobileNav);
   }
-  
+
   // Cloner les boutons et les ajouter à la navigation mobile
   const libraryBtn = openLibrary.cloneNode(true);
   const tipsBtn = openTips.cloneNode(true);
@@ -1012,15 +1018,15 @@ function createMobileBottomNav() {
   // Also add account button on mobile by cloning floatingAuthBtn
   let accountBtn = null;
   if (document.getElementById('floatingAuthBtn')) accountBtn = document.getElementById('floatingAuthBtn').cloneNode(true);
-  
+
   // Ajuster les IDs pour éviter les conflits
   libraryBtn.id = 'mobileOpenLibrary';
   tipsBtn.id = 'mobileOpenTips';
-  
+
   // Forcer l'affichage des boutons clonés
   libraryBtn.style.display = 'inline-flex';
   tipsBtn.style.display = 'inline-flex';
-  
+
   // Ajouter les boutons à la navigation mobile
   mobileNav.innerHTML = '';
   mobileNav.appendChild(libraryBtn);
@@ -1034,7 +1040,7 @@ function createMobileBottomNav() {
     });
     mobileNav.appendChild(accountBtn);
   }
-  
+
   // Copier les event listeners des boutons originaux
   libraryBtn.addEventListener('click', () => openLibrary.click());
   tipsBtn.addEventListener('click', () => openTips.click());
@@ -1053,7 +1059,7 @@ function enhanceFormFields() {
     const minHeight = 100; // Hauteur minimum confortable
     const newHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
     textarea.style.height = newHeight + 'px';
-    
+
     // Gestion du scroll si le contenu dépasse
     if (scrollHeight > maxHeight) {
       textarea.style.overflowY = 'auto';
@@ -1061,40 +1067,40 @@ function enhanceFormFields() {
       textarea.style.overflowY = 'hidden';
     }
   }
-  
+
   // Appliquer l'auto-resize à toutes les textarea
   document.querySelectorAll('textarea').forEach(textarea => {
     // Auto-resize initial
     autoResizeTextarea(textarea);
-    
+
     // Auto-resize lors de la saisie
     textarea.addEventListener('input', () => autoResizeTextarea(textarea));
-    
+
     // Effet de focus amélioré
-    textarea.addEventListener('focus', function() {
+    textarea.addEventListener('focus', function () {
       this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
     });
   });
-  
+
   // Améliorations pour tous les champs de saisie
   document.querySelectorAll('input[type="text"], input[type="number"], select').forEach(field => {
     // Effet de focus avec animation du label
-    field.addEventListener('focus', function() {
+    field.addEventListener('focus', function () {
       const fieldGroup = this.closest('.field-group');
       if (fieldGroup) {
         fieldGroup.classList.add('focused');
       }
     });
-    
-    field.addEventListener('blur', function() {
+
+    field.addEventListener('blur', function () {
       const fieldGroup = this.closest('.field-group');
       if (fieldGroup) {
         fieldGroup.classList.remove('focused');
       }
     });
-    
+
     // Validation visuelle en temps réel
-    field.addEventListener('input', function() {
+    field.addEventListener('input', function () {
       if (this.value.trim() !== '') {
         this.classList.add('has-content');
       } else {
@@ -1102,10 +1108,10 @@ function enhanceFormFields() {
       }
     });
   });
-  
+
   // Amélioration des boutons radio et checkbox
   document.querySelectorAll('.radio, .checkbox-item').forEach(element => {
-    element.addEventListener('click', function(e) {
+    element.addEventListener('click', function (e) {
       // Effet ripple
       const ripple = document.createElement('div');
       ripple.className = 'ripple-effect';
@@ -1117,18 +1123,18 @@ function enhanceFormFields() {
         animation: ripple 0.6s linear;
         pointer-events: none;
       `;
-      
+
       const rect = this.getBoundingClientRect();
       const size = Math.max(rect.width, rect.height);
       const x = e.clientX - rect.left - size / 2;
       const y = e.clientY - rect.top - size / 2;
-      
+
       ripple.style.width = ripple.style.height = size + 'px';
       ripple.style.left = x + 'px';
       ripple.style.top = y + 'px';
-      
+
       this.appendChild(ripple);
-      
+
       // Supprimer l'effet après l'animation
       setTimeout(() => {
         if (ripple.parentNode) {
@@ -1137,18 +1143,18 @@ function enhanceFormFields() {
       }, 600);
     });
   });
-  
+
   // Placeholder dynamique pour les textarea
   document.querySelectorAll('textarea[placeholder]').forEach(textarea => {
     const originalPlaceholder = textarea.placeholder;
-    
-    textarea.addEventListener('focus', function() {
+
+    textarea.addEventListener('focus', function () {
       if (this.value === '') {
         this.placeholder = 'Commencez à écrire...';
       }
     });
-    
-    textarea.addEventListener('blur', function() {
+
+    textarea.addEventListener('blur', function () {
       this.placeholder = originalPlaceholder;
     });
   });
@@ -1187,7 +1193,7 @@ function initHomePage() {
   } else {
     console.log('Initializing home page...');
   }
-  
+
   // Éléments spécifiques à la page d'accueil
   dom.typeCards = Array.from(document.querySelectorAll(".type-card"));
   dom.compactLibraryList = document.getElementById("compactLibraryList");
@@ -1202,7 +1208,7 @@ function initHomePage() {
   dom.previewModalContent = document.getElementById("previewModalContent");
   dom.downloadPreviewPng = document.getElementById("downloadPreviewPng");
   dom.closePreviewModal = document.getElementById("closePreviewModal");
-  
+
   // Modals
   dom.libraryModal = document.getElementById("libraryModal");
   dom.libraryModalOverlay = document.getElementById("libraryModalOverlay");
@@ -1215,7 +1221,7 @@ function initHomePage() {
   dom.libraryEmpty = document.getElementById("libraryEmpty");
   dom.librarySearch = document.getElementById("librarySearch");
   dom.libraryTitle = document.getElementById("libraryTitle");
-  
+
   // Auth modal - needed for floating auth button
   dom.authModal = document.getElementById("authModal");
   dom.authModalOverlay = document.getElementById("authModalOverlay");
@@ -1282,10 +1288,10 @@ function initHomePage() {
   function applyTheme(name) {
     try {
       // remove any previous theme classes from root
-      document.documentElement.classList.remove('theme-violet','theme-rose','theme-bluish');
+      document.documentElement.classList.remove('theme-violet', 'theme-rose', 'theme-bluish');
       if (!name || name === 'auto') {
         localStorage.removeItem('siteTheme');
-  if (window.RMLogger && window.RMLogger.info) window.RMLogger.info('Theme set to auto'); else console.info('Theme set to auto');
+        if (window.RMLogger && window.RMLogger.info) window.RMLogger.info('Theme set to auto'); else console.info('Theme set to auto');
         return;
       }
       let cls = null;
@@ -1294,12 +1300,12 @@ function initHomePage() {
       if (name === 'bluish') cls = 'theme-bluish';
       if (cls) document.documentElement.classList.add(cls);
       localStorage.setItem('siteTheme', name);
-  if (window.RMLogger && window.RMLogger.info) window.RMLogger.info('Theme applied', name); else console.info('Theme applied', name);
+      if (window.RMLogger && window.RMLogger.info) window.RMLogger.info('Theme applied', name); else console.info('Theme applied', name);
     } catch (e) { console.warn('applyTheme error', e); }
   }
 
   // Load saved theme on init
-  try { if (typeof applySavedTheme === 'function') applySavedTheme(); } catch(e){}
+  try { if (typeof applySavedTheme === 'function') applySavedTheme(); } catch (e) { }
 
   // Setup events with error handling
   setTimeout(() => {
@@ -1311,7 +1317,7 @@ function initHomePage() {
 async function initEditorPage() {
   // Éléments spécifiques à la page éditeur
   dom.typeCards = Array.from(document.querySelectorAll(".type-card"));
-    dom.productTypeInput = document.getElementById("productType") || null;
+  dom.productTypeInput = document.getElementById("productType") || null;
   dom.dynamicSections = document.getElementById("dynamicSections");
   dom.reviewForm = document.getElementById("reviewForm");
   dom.previewPlaceholder = document.getElementById("previewPlaceholder");
@@ -1351,7 +1357,7 @@ async function initEditorPage() {
   dom.savePrivacySegment = document.getElementById('savePrivacySegment');
   dom.cancelSave = document.getElementById('cancelSave');
   dom.confirmSave = document.getElementById('confirmSave');
-  
+
   // Modals
   dom.libraryModal = document.getElementById("libraryModal");
   dom.libraryModalOverlay = document.getElementById("libraryModalOverlay");
@@ -1395,19 +1401,19 @@ async function initEditorPage() {
     const previewPanel = document.querySelector('.panel.panel-preview');
     if (workspace && previewPanel) {
       workspace.classList.add('no-preview');
-      previewPanel.setAttribute('hidden','');
+      previewPanel.setAttribute('hidden', '');
     }
-  } catch {}
+  } catch { }
 
   // Récupérer les paramètres de l'URL
   const { type, reviewData, reviewId } = getEditorParams();
 
   setupEditorPageEvents();
   await initDatabase();
-  
+
   // Initialize auth UI on editor page
   updateAuthUI();
-  
+
   // Si un type est spécifié dans l'URL, l'appliquer automatiquement
   if (type) {
     // Sélection immédiate pour éviter tout clignotement de l'étape 1
@@ -1418,10 +1424,10 @@ async function initEditorPage() {
       // Charger depuis API distante si dispo, sinon DB locale
       let r = null;
       if (remoteEnabled) {
-        try { r = await remoteGetReview(reviewId); } catch {}
+        try { r = await remoteGetReview(reviewId); } catch { }
       }
       if (!r) {
-        try { r = await dbGetReviewById(reviewId); } catch {}
+        try { r = await dbGetReviewById(reviewId); } catch { }
       }
       if (r) loadReviewIntoForm(r, 'edit');
     }
@@ -1430,7 +1436,7 @@ async function initEditorPage() {
 
 function setupHomePageEvents() {
   console.log('Setting up home page events...', dom.typeCards?.length, 'type cards found');
-  
+
   // Navigation vers l'éditeur lors de la sélection du type
   if (dom.typeCards && dom.typeCards.length > 0) {
     dom.typeCards.forEach(card => {
@@ -1466,10 +1472,10 @@ function setupHomePageEvents() {
 
   // Modals et autres événements
   setupModalEvents();
-  
+
   // Initialize auth UI
   updateAuthUI();
-  
+
   // Always show public gallery on home page
   if (dom.compactLibraryList) {
     dom.compactLibraryList.style.display = 'grid';
@@ -1509,7 +1515,7 @@ function setupEditorPageEvents() {
       if (!dom.previewModal || !dom.previewOverlay || !dom.reviewContent) return;
       // Toujours ouvrir (fermeture via croix ou clic extérieur)
       // Ensure content is up-to-date
-      try { collectFormData(); generateReview(); } catch {}
+      try { collectFormData(); generateReview(); } catch { }
       const html = dom.reviewContent.innerHTML || '';
       if (dom.previewModalContent) dom.previewModalContent.innerHTML = html;
       dom.previewOverlay.removeAttribute('hidden');
@@ -1590,8 +1596,8 @@ function setupFormEvents() {
       if (!(t instanceof HTMLInputElement)) return;
       if (t.type !== 'file' || !t.files || !t.files[0]) return;
       try {
-          lastSelectedImageFile = t.files[0];
-          imageUrl = await readFileAsDataURL(t.files[0]);
+        lastSelectedImageFile = t.files[0];
+        imageUrl = await readFileAsDataURL(t.files[0]);
         collectFormData();
         generateReview();
       } catch (e) {
@@ -1601,11 +1607,11 @@ function setupFormEvents() {
     }, true);
 
     // Auto-generate preview whenever inputs change
-    dom.reviewForm.addEventListener("input", () => { 
-      try { collectFormData(); generateReview(); updateSectionCompletionState(); } catch {} 
+    dom.reviewForm.addEventListener("input", () => {
+      try { collectFormData(); generateReview(); updateSectionCompletionState(); } catch { }
     });
-    dom.reviewForm.addEventListener("change", () => { 
-      try { collectFormData(); generateReview(); updateSectionCompletionState(); } catch {} 
+    dom.reviewForm.addEventListener("change", () => {
+      try { collectFormData(); generateReview(); updateSectionCompletionState(); } catch { }
     });
   }
 
@@ -1630,32 +1636,32 @@ function setupFormEvents() {
         if (dom.saveName) dom.saveName.value = formData.productName || defName || '';
         // Afficher le titulaire automatique avec récupération async
         await updateHolderDisplay();
-      } catch {}
-    } catch {}
+      } catch { }
+    } catch { }
   }, { capture: true });
 }
 
 function setupModalEvents() {
   // Astuces - Utilise maintenant le modal sur toutes les pages
   if (dom.openTips) {
-    const openTipsModal = () => { 
+    const openTipsModal = () => {
       // Réessayer de trouver le modal s'il n'est pas déjà chargé
       if (!dom.tipsModal) {
         dom.tipsModal = document.getElementById("tipsModal");
       }
       if (dom.tipsModal) {
-        dom.tipsModal.style.display = 'flex'; 
+        dom.tipsModal.style.display = 'flex';
       } else {
         console.error('Modal tipsModal introuvable dans le DOM');
         showToast('Modal astuces non disponible', 'warning');
       }
     };
-    
+
     dom.openTips.addEventListener('click', openTipsModal);
     dom.openTips.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { 
-        e.preventDefault(); 
-        openTipsModal(); 
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openTipsModal();
       }
     });
   }
@@ -1719,24 +1725,24 @@ function setupModalEvents() {
       if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: floatingAuthBtn clicked; isUserConnected=', isUserConnected, 'dom.accountModal=', !!dom.accountModal, 'dom.authModal=', !!dom.authModal);
       // If connected, open account modal instead of auth modal
       if (isUserConnected && dom.accountModal) {
-  if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: Opening account modal');
+        if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: Opening account modal');
         openAccountModal();
         return;
       }
       if (dom.authModal) {
-  if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: Opening auth modal');
+        if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: Opening auth modal');
         dom.authModal.style.display = "flex";
         updateAuthUI();
       }
     });
   }
-  
+
   if (dom.closeAuth) {
     dom.closeAuth.addEventListener("click", () => {
       if (dom.authModal) dom.authModal.style.display = "none";
     });
   }
-  
+
   if (dom.authModalOverlay) {
     dom.authModalOverlay.addEventListener("click", () => {
       if (dom.authModal) dom.authModal.style.display = "none";
@@ -1759,7 +1765,7 @@ function setupModalEvents() {
       const accDisc = e.target.closest('#accountDisconnect');
       const openSettings = e.target.closest('#openAccountSettingsInline');
       if (libBtn) {
-  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: delegated openLibraryFromAccount'); } catch(e){}
+        try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: delegated openLibraryFromAccount'); } catch (e) { }
         e.preventDefault();
         closeAccountModal();
         if (!isUserConnected) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
@@ -1767,7 +1773,7 @@ function setupModalEvents() {
         return;
       }
       if (accDisc) {
-  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: delegated accountDisconnect'); } catch(e){}
+        try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: delegated accountDisconnect'); } catch (e) { }
         e.preventDefault();
         // reuse same disconnect flow
         localStorage.removeItem('authToken');
@@ -1778,12 +1784,12 @@ function setupModalEvents() {
         sessionStorage.removeItem('pendingCode');
         showAuthStatus('Déconnecté', 'info');
         updateAuthUI();
-        try { dom.accountModal.style.display = 'none'; } catch(e){}
+        try { dom.accountModal.style.display = 'none'; } catch (e) { }
         if (isHomePage) { renderCompactLibrary(); setupHomeTabs(); }
         return;
       }
       if (openSettings) {
-  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: delegated openAccountSettingsInline'); } catch(e){}
+        try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: delegated openAccountSettingsInline'); } catch (e) { }
         e.preventDefault();
         const panel = document.getElementById('accountSettingsPanel'); if (panel) panel.style.display = 'block';
         if (dom.accountPreferences) dom.accountPreferences.style.display = 'none';
@@ -1794,7 +1800,7 @@ function setupModalEvents() {
   // 'Ma bibliothèque' inside auth modal
   if (dom.authOpenLibrary) {
     dom.authOpenLibrary.addEventListener('click', () => {
-  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: authOpenLibrary clicked, isUserConnected=', isUserConnected); } catch(e){}
+      try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: authOpenLibrary clicked, isUserConnected=', isUserConnected); } catch (e) { }
       if (dom.authModal) dom.authModal.style.display = 'none';
       if (!isUserConnected) {
         if (dom.authModal) dom.authModal.style.display = 'flex';
@@ -1813,88 +1819,88 @@ function setupModalEvents() {
     });
   }
 
-    // (Supprimé: gestion du bouton accountSettingsBtn, non présent dans le HTML)
-    // applySavedTheme reads localStorage and delegates to applyTheme
-    function applySavedTheme() {
-      try {
-        const v = localStorage.getItem('siteTheme') || 'auto';
-        if (v && v !== 'auto') applyTheme(v);
-        else {
-          // remove classes for auto
-          document.documentElement.classList.remove('theme-violet','theme-rose','theme-bluish');
-        }
-        if (dom.themeSelect) dom.themeSelect.value = v;
-        // mark theme-option buttons if present
-        try {
-          const opts = Array.from(document.querySelectorAll('.theme-option'));
-          opts.forEach(b => {
-            const t = b.getAttribute('data-theme');
-            b.setAttribute('aria-checked', (t === v) ? 'true' : 'false');
-          });
-        } catch(e){}
-      } catch(e){}
-    }
-
-    if (dom.themeSelect) {
-      dom.themeSelect.addEventListener('change', (e) => {
-        const v = e.target.value;
-        localStorage.setItem('siteTheme', v);
-        if (v === 'auto') applyTheme('auto'); else applyTheme(v);
-      });
-    }
-
-    // wire theme-option buttons (icon buttons)
+  // (Supprimé: gestion du bouton accountSettingsBtn, non présent dans le HTML)
+  // applySavedTheme reads localStorage and delegates to applyTheme
+  function applySavedTheme() {
     try {
-      const themeButtons = Array.from(document.querySelectorAll('.theme-option'));
-      themeButtons.forEach(btn => {
-        btn.addEventListener('click', (ev) => {
-          const t = btn.getAttribute('data-theme');
-          // update aria-checked on group
-          themeButtons.forEach(b => b.setAttribute('aria-checked','false'));
-          btn.setAttribute('aria-checked','true');
-          // apply and persist
-          localStorage.setItem('siteTheme', t);
-          applyTheme(t);
+      const v = localStorage.getItem('siteTheme') || 'auto';
+      if (v && v !== 'auto') applyTheme(v);
+      else {
+        // remove classes for auto
+        document.documentElement.classList.remove('theme-violet', 'theme-rose', 'theme-bluish');
+      }
+      if (dom.themeSelect) dom.themeSelect.value = v;
+      // mark theme-option buttons if present
+      try {
+        const opts = Array.from(document.querySelectorAll('.theme-option'));
+        opts.forEach(b => {
+          const t = b.getAttribute('data-theme');
+          b.setAttribute('aria-checked', (t === v) ? 'true' : 'false');
         });
-      });
-    } catch(e){}
+      } catch (e) { }
+    } catch (e) { }
+  }
 
-    // openAccountSettings button (header) focuses preferences section
-    if (dom.openAccountSettings) {
-      dom.openAccountSettings.addEventListener('click', () => {
-        // show dedicated settings panel when Paramètres clicked
-        const panel = document.getElementById('accountSettingsPanel');
-        if (panel) {
-          panel.style.display = 'block';
-          // hide the main preferences area for clarity
-          if (dom.accountPreferences) dom.accountPreferences.style.display = 'none';
-          // focus first interactive element
-          const firstOpt = panel.querySelector('.theme-option');
-          if (firstOpt) firstOpt.focus();
-        }
-      });
-    }
+  if (dom.themeSelect) {
+    dom.themeSelect.addEventListener('change', (e) => {
+      const v = e.target.value;
+      localStorage.setItem('siteTheme', v);
+      if (v === 'auto') applyTheme('auto'); else applyTheme(v);
+    });
+  }
 
-    // inline button that opens settings from the preferences tile
-    const inlineBtn = document.getElementById('openAccountSettingsInline');
-    if (inlineBtn) {
-      inlineBtn.addEventListener('click', () => {
-        const panel = document.getElementById('accountSettingsPanel');
-        if (panel) panel.style.display = 'block';
+  // wire theme-option buttons (icon buttons)
+  try {
+    const themeButtons = Array.from(document.querySelectorAll('.theme-option'));
+    themeButtons.forEach(btn => {
+      btn.addEventListener('click', (ev) => {
+        const t = btn.getAttribute('data-theme');
+        // update aria-checked on group
+        themeButtons.forEach(b => b.setAttribute('aria-checked', 'false'));
+        btn.setAttribute('aria-checked', 'true');
+        // apply and persist
+        localStorage.setItem('siteTheme', t);
+        applyTheme(t);
+      });
+    });
+  } catch (e) { }
+
+  // openAccountSettings button (header) focuses preferences section
+  if (dom.openAccountSettings) {
+    dom.openAccountSettings.addEventListener('click', () => {
+      // show dedicated settings panel when Paramètres clicked
+      const panel = document.getElementById('accountSettingsPanel');
+      if (panel) {
+        panel.style.display = 'block';
+        // hide the main preferences area for clarity
         if (dom.accountPreferences) dom.accountPreferences.style.display = 'none';
-      });
-    }
+        // focus first interactive element
+        const firstOpt = panel.querySelector('.theme-option');
+        if (firstOpt) firstOpt.focus();
+      }
+    });
+  }
 
-    // back button in settings panel
-    const settingsBack = document.getElementById('accountSettingsBack');
-    if (settingsBack) {
-      settingsBack.addEventListener('click', () => {
-        const panel = document.getElementById('accountSettingsPanel');
-        if (panel) panel.style.display = 'none';
-        if (dom.accountPreferences) dom.accountPreferences.style.display = 'block';
-      });
-    }
-  
+  // inline button that opens settings from the preferences tile
+  const inlineBtn = document.getElementById('openAccountSettingsInline');
+  if (inlineBtn) {
+    inlineBtn.addEventListener('click', () => {
+      const panel = document.getElementById('accountSettingsPanel');
+      if (panel) panel.style.display = 'block';
+      if (dom.accountPreferences) dom.accountPreferences.style.display = 'none';
+    });
+  }
+
+  // back button in settings panel
+  const settingsBack = document.getElementById('accountSettingsBack');
+  if (settingsBack) {
+    settingsBack.addEventListener('click', () => {
+      const panel = document.getElementById('accountSettingsPanel');
+      if (panel) panel.style.display = 'none';
+      if (dom.accountPreferences) dom.accountPreferences.style.display = 'block';
+    });
+  }
+
   // Send verification code
   if (dom.authSendCode) {
     dom.authSendCode.addEventListener("click", async () => {
@@ -1903,10 +1909,10 @@ function setupModalEvents() {
         showAuthStatus("Adresse email invalide", "error");
         return;
       }
-      
+
       dom.authSendCode.disabled = true;
       dom.authSendCode.textContent = "Vérification...";
-      
+
       try {
         // Use server-side endpoint to request verification code.
         // This avoids exposing the LaFoncedalle API key in the browser and
@@ -1960,26 +1966,26 @@ function setupModalEvents() {
       }
     });
   }
-  
+
   // Verify code
   if (dom.authVerifyCode) {
     dom.authVerifyCode.addEventListener("click", async () => {
       const email = sessionStorage.getItem('authEmail');
       const code = dom.authCodeInput?.value?.trim();
       const expectedCode = sessionStorage.getItem('pendingCode');
-      
+
       if (!code || code.length !== 6) {
         showAuthStatus("Code invalide (6 chiffres)", "error");
         return;
       }
-      
+
       dom.authVerifyCode.disabled = true;
       dom.authVerifyCode.textContent = "Vérification...";
-      
+
       try {
         // Verify the code via server so it can create a proper session token.
         const base = AUTH_API_BASE || remoteBase || '';
-  const verifyResp = await fetch(base + '/api/auth/verify-code', {
+        const verifyResp = await fetch(base + '/api/auth/verify-code', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, code })
@@ -2021,28 +2027,28 @@ function setupModalEvents() {
       }
     });
   }
-  
+
   // Resend code
   if (dom.authResendCode) {
     dom.authResendCode.addEventListener("click", async () => {
       const email = sessionStorage.getItem('authEmail');
       if (!email) return;
-      
+
       dom.authResendCode.disabled = true;
       dom.authResendCode.textContent = "Envoi...";
-      
+
       try {
         // Générer un nouveau code
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         sessionStorage.setItem('pendingCode', code);
-        
+
         // Request server to resend the verification code. Server will call LaFoncedalle/mail endpoint.
-  const sendResponse = await fetch((AUTH_API_BASE || remoteBase) + '/api/auth/resend-code', {
+        const sendResponse = await fetch((AUTH_API_BASE || remoteBase) + '/api/auth/resend-code', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email })
         });
-        
+
         if (sendResponse.ok) {
           showAuthStatus("Nouveau code envoyé", "success");
         } else {
@@ -2056,7 +2062,7 @@ function setupModalEvents() {
       }
     });
   }
-  
+
   // Back button
   if (dom.authBack) {
     dom.authBack.addEventListener("click", () => {
@@ -2066,7 +2072,7 @@ function setupModalEvents() {
       sessionStorage.removeItem('authEmail');
     });
   }
-  
+
   // Disconnect
   if (dom.authDisconnect) {
     dom.authDisconnect.addEventListener("click", async () => {
@@ -2077,10 +2083,10 @@ function setupModalEvents() {
       localStorage.removeItem('discordId');
       sessionStorage.removeItem('authEmail');
       sessionStorage.removeItem('pendingCode');
-      
+
       showAuthStatus("Déconnecté", "info");
       updateAuthUI();
-      
+
       setTimeout(() => {
         if (dom.authModal) dom.authModal.style.display = "none";
         if (isHomePage) {
@@ -2118,31 +2124,31 @@ function setupModalEvents() {
 // Helper function to get and display holder name
 async function updateHolderDisplay() {
   if (!dom.saveHolderDisplay) return;
-  
+
   const cachedUsername = localStorage.getItem('discordUsername');
   const cachedEmail = localStorage.getItem('authEmail');
-  
+
   // Si on a un vrai pseudo Discord en cache (pas un User#xxxx), l'utiliser
   if (cachedUsername && !cachedUsername.startsWith('User#') && !cachedUsername.startsWith('Discord #')) {
     dom.saveHolderDisplay.textContent = cachedUsername;
     return cachedUsername;
   }
-  
+
   // Si on a l'email, essayer de récupérer les infos Discord
-    if (cachedEmail && AUTH_API_BASE) {
+  if (cachedEmail && AUTH_API_BASE) {
     try {
       dom.saveHolderDisplay.textContent = 'Récupération...';
       // Ask our server for the Discord user linked to this email. Server will use the secret key.
-  const response = await fetch(`${AUTH_API_BASE}/api/discord/user-by-email`, {
+      const response = await fetch(`${AUTH_API_BASE}/api/discord/user-by-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: cachedEmail })
       });
-      
+
       if (response.ok) {
         const userData = await response.json();
         const username = userData.username || userData.user_name;
-        
+
         // Vérifier qu'on a un vrai pseudo Discord (pas un User#xxxx ou Discord #xxxx)
         if (username && !username.startsWith('User#') && !username.startsWith('Discord #')) {
           localStorage.setItem('discordUsername', username);
@@ -2155,7 +2161,7 @@ async function updateHolderDisplay() {
       console.warn('Failed to fetch Discord username:', err);
     }
   }
-  
+
   // Fallback sur l'email
   const holder = cachedEmail || 'Utilisateur non connecté';
   dom.saveHolderDisplay.textContent = holder;
@@ -2167,33 +2173,33 @@ async function updateAuthUI() {
   const token = localStorage.getItem('authToken');
   const email = localStorage.getItem('authEmail');
   const isConnected = !!(token && email);
-  
+
   // Show/hide auth steps based on connection state
   if (isConnected) {
     if (dom.authStepEmail) dom.authStepEmail.style.display = 'none';
     if (dom.authStepCode) dom.authStepCode.style.display = 'none';
     if (dom.authStepConnected) {
       dom.authStepConnected.style.display = 'flex';
-      
+
       // Fetch user info from server to get Discord username
       try {
         const response = await fetch(`${remoteBase}/api/auth/me`, {
           headers: { 'X-Auth-Token': token }
         });
-        
+
         if (response.ok) {
           const userData = await response.json();
           // Essayer différents champs: discordUsername ou user_name (depuis la DB LaFoncedalle)
           const username = userData.discordUsername || userData.user_name;
-          
+
           // Display Discord username if available, otherwise Discord ID, otherwise email
           let displayName = username || email;
-          
+
           // If no username but we have a Discord ID, format it nicely
           if (!username && userData.discordId) {
             displayName = `Discord #${userData.discordId.slice(-4)}`;
           }
-          
+
           if (dom.authConnectedEmail) {
             dom.authConnectedEmail.textContent = displayName;
             // Store Discord info in localStorage for offline access
@@ -2225,7 +2231,7 @@ async function updateAuthUI() {
       }
     }
     // Populate small summary inside auth modal
-    try { await renderAuthConnectedStats(); } catch(e) {}
+    try { await renderAuthConnectedStats(); } catch (e) { }
   } else {
     if (dom.authStepEmail) dom.authStepEmail.style.display = 'flex';
     if (dom.authStepCode) dom.authStepCode.style.display = 'none';
@@ -2234,7 +2240,7 @@ async function updateAuthUI() {
     if (dom.authEmailInput) dom.authEmailInput.value = '';
     if (dom.authCodeInput) dom.authCodeInput.value = '';
   }
-  
+
   // Update floating button
   if (dom.floatingAuthBtn) {
     if (isConnected) {
@@ -2247,7 +2253,7 @@ async function updateAuthUI() {
       dom.floatingAuthBtn.classList.remove('connected');
     }
   }
-  
+
   // Persist auth state for other modules
   isUserConnected = isConnected;
 
@@ -2293,7 +2299,7 @@ async function renderAuthConnectedStats() {
 
 function showAuthStatus(message, type = "info") {
   if (!dom.authStatus) return;
-  
+
   // Créer ou réutiliser l'élément de notification
   let notification = document.getElementById('globalAuthNotification');
   if (!notification) {
@@ -2301,20 +2307,20 @@ function showAuthStatus(message, type = "info") {
     notification.id = 'globalAuthNotification';
     document.body.appendChild(notification);
   }
-  
+
   notification.textContent = message;
   notification.className = `auth-status auth-status-${type}`;
   notification.style.display = 'block';
-  
+
   // Supprimer l'ancien event listener pour éviter les doublons
   const newNotification = notification.cloneNode(true);
   notification.parentNode.replaceChild(newNotification, notification);
-  
+
   // Clic pour fermer immédiatement
   newNotification.addEventListener('click', () => {
     newNotification.style.display = 'none';
   });
-  
+
   // Auto-fermeture après 5 secondes
   setTimeout(() => {
     if (newNotification && newNotification.style.display === 'block') {
@@ -2331,15 +2337,15 @@ function openAccountModal() {
     const others = document.querySelectorAll('.modal, .tips-dialog, .export-config-modal');
     others.forEach(m => {
       if (m !== dom.accountModal) {
-        try { m.style.display = 'none'; } catch(e){}
-        try { m.classList.remove('show'); } catch(e){}
-        try { m.setAttribute('aria-hidden','true'); } catch(e){}
+        try { m.style.display = 'none'; } catch (e) { }
+        try { m.classList.remove('show'); } catch (e) { }
+        try { m.setAttribute('aria-hidden', 'true'); } catch (e) { }
       }
     });
     // Also ensure any generic modal overlays are hidden so they don't sit above the account dialog
     const overlays = document.querySelectorAll('.modal-overlay');
-    overlays.forEach(o => { try { o.style.display = 'none'; o.classList.remove('show'); o.setAttribute('aria-hidden','true'); } catch(e){} });
-  } catch(e){}
+    overlays.forEach(o => { try { o.style.display = 'none'; o.classList.remove('show'); o.setAttribute('aria-hidden', 'true'); } catch (e) { } });
+  } catch (e) { }
   // show overlay and dialog
   const overlay = document.getElementById('accountModalOverlay');
   console.log('openAccountModal: preparing to show account modal, hiding other overlays');
@@ -2348,16 +2354,16 @@ function openAccountModal() {
     overlay.style.display = 'block';
     // ensure overlay sits below the account modal (match CSS z-index stack)
     overlay.style.zIndex = '10110';
-    overlay.setAttribute('aria-hidden','false');
+    overlay.setAttribute('aria-hidden', 'false');
   }
   // Ensure account modal is above any .modal (which uses z-index:3000)
   dom.accountModal.style.display = 'block';
   // match CSS priority for account modal
   dom.accountModal.style.zIndex = '10120';
   dom.accountModal.classList.add('show');
-  dom.accountModal.setAttribute('aria-hidden','false');
+  dom.accountModal.setAttribute('aria-hidden', 'false');
   // Ensure the inner dialog sits above the overlay
-  try { const dlg = dom.accountModal.querySelector('.account-dialog'); if (dlg) { dlg.style.zIndex = '10121'; dlg.style.display = 'block'; dlg.setAttribute('aria-hidden','false'); } } catch(e){}
+  try { const dlg = dom.accountModal.querySelector('.account-dialog'); if (dlg) { dlg.style.zIndex = '10121'; dlg.style.display = 'block'; dlg.setAttribute('aria-hidden', 'false'); } } catch (e) { }
   // Fallback: force modal visible if still hidden
   setTimeout(() => {
     if (dom.accountModal && dom.accountModal.style.display !== 'block') dom.accountModal.style.display = 'block';
@@ -2366,7 +2372,7 @@ function openAccountModal() {
   // trap focus on dialog element
   const dialog = dom.accountModal.querySelector('.account-dialog') || dom.accountModal;
   trapFocus(dialog);
-  try { document.body.classList.add('modal-open'); } catch(e){}
+  try { document.body.classList.add('modal-open'); } catch (e) { }
   renderAccountView().catch(err => console.warn('Failed to render account view', err));
 }
 
@@ -2376,25 +2382,25 @@ function closeAccountModal() {
     const overlay = document.getElementById('accountModalOverlay');
     if (overlay) {
       overlay.classList.remove('show');
-      try { overlay.style.display = 'none'; } catch(e){}
+      try { overlay.style.display = 'none'; } catch (e) { }
     }
-  } catch(e){}
-  try { dom.accountModal.classList.remove('show'); } catch(e){}
-  try { dom.accountModal.setAttribute('aria-hidden','true'); } catch(e){}
-  try { dom.accountModal.style.display = 'none'; } catch(e){}
+  } catch (e) { }
+  try { dom.accountModal.classList.remove('show'); } catch (e) { }
+  try { dom.accountModal.setAttribute('aria-hidden', 'true'); } catch (e) { }
+  try { dom.accountModal.style.display = 'none'; } catch (e) { }
   releaseFocusTrap();
-  try { document.body.classList.remove('modal-open'); } catch(e){}
+  try { document.body.classList.remove('modal-open'); } catch (e) { }
 }
 
 // Public profile (read-only) helpers
 async function populatePublicProfile(email) {
   try {
-  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: populatePublicProfile called with', email); } catch(e){}
+    try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: populatePublicProfile called with', email); } catch (e) { }
     // Accept either email or a display name (pseudo)
     const identifier = String(email || '').trim();
     if (dom.publicProfileEmail) dom.publicProfileEmail.textContent = identifier || '—';
     // Ensure modal is displayed (fallback if CSS wasn't applied)
-    try { const modal = document.getElementById('publicProfileModal'); if (modal) modal.style.display = 'block'; } catch(e){}
+    try { const modal = document.getElementById('publicProfileModal'); if (modal) modal.style.display = 'block'; } catch (e) { }
     // Determine ownership: if the profile email matches the signed-in email,
     // show settings/actions that are only available to the owner.
     try {
@@ -2411,23 +2417,23 @@ async function populatePublicProfile(email) {
             // Close public profile and open account modal to settings
             try {
               const overlay = document.getElementById('publicProfileOverlay'); if (overlay) overlay.classList.remove('show');
-              const modal = document.getElementById('publicProfileModal'); if (modal) { modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); }
-              try { document.body.classList.remove('modal-open'); } catch(e){}
-            } catch(e){}
+              const modal = document.getElementById('publicProfileModal'); if (modal) { modal.classList.remove('show'); modal.setAttribute('aria-hidden', 'true'); }
+              try { document.body.classList.remove('modal-open'); } catch (e) { }
+            } catch (e) { }
             // Open account modal and reveal settings panel
-            try { openAccountModal(); } catch(e){}
+            try { openAccountModal(); } catch (e) { }
             try {
               const settingsPanel = document.getElementById('accountSettingsPanel');
               const prefs = document.getElementById('accountPreferences');
               if (settingsPanel) settingsPanel.style.display = 'block';
               if (prefs) prefs.style.display = 'none';
-            } catch(e){}
+            } catch (e) { }
           });
         }
       }
       // Ensure the 'Voir la bibliothèque publique' action remains visible
-  // Suppression de la logique pour 'Voir la bibliothèque publique'
-    } catch(e) { /* ignore UI toggle failures */ }
+      // Suppression de la logique pour 'Voir la bibliothèque publique'
+    } catch (e) { /* ignore UI toggle failures */ }
     // Try to fetch from API first if available
     let byType = {};
     let total = 0, pub = 0, priv = 0;
@@ -2441,7 +2447,7 @@ async function populatePublicProfile(email) {
           total = d.total || 0; pub = d.public || 0; priv = d.private || 0; byType = d.by_type || d.types || {};
         }
       }
-    } catch(e) { /* ignore */ }
+    } catch (e) { /* ignore */ }
     // fallback to local DB if needed
     if (!total) {
       try {
@@ -2461,9 +2467,9 @@ async function populatePublicProfile(email) {
         pub = unique.filter(r => !r.isPrivate).length;
         priv = unique.filter(r => !!r.isPrivate).length;
         const map = {};
-        unique.forEach(r => { const t = r.productType || r.type || 'Autre'; map[t] = (map[t]||0)+1; });
+        unique.forEach(r => { const t = r.productType || r.type || 'Autre'; map[t] = (map[t] || 0) + 1; });
         byType = map;
-      } catch(e) { /* ignore */ }
+      } catch (e) { /* ignore */ }
     }
     if (dom.publicTotal) dom.publicTotal.textContent = total;
     if (dom.publicPublic) dom.publicPublic.textContent = pub;
@@ -2474,38 +2480,38 @@ async function populatePublicProfile(email) {
         const el = document.createElement('div'); el.className = 'type-pill'; el.textContent = `${k}: ${byType[k]}`; dom.publicByType.appendChild(el);
       });
     }
-  } catch(e) { console.warn('populatePublicProfile', e); }
+  } catch (e) { console.warn('populatePublicProfile', e); }
 }
 
 function openPublicProfile(email) {
   try {
-  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: openPublicProfile called with', email); } catch(e){}
+    try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: openPublicProfile called with', email); } catch (e) { }
     // Close any account modal or other modals to ensure the public profile appears on top
     try {
       // If account modal is open, close it first
       if (dom && dom.accountModal) {
-        try { closeAccountModal(); } catch(e) { /* ignore */ }
+        try { closeAccountModal(); } catch (e) { /* ignore */ }
       }
       const others = document.querySelectorAll('.modal, .tips-dialog, .export-config-modal');
-      others.forEach(m => { if (m && m.id !== 'publicProfileModal') { try { m.style.display = 'none'; } catch(e){} try { m.classList.remove('show'); } catch(e){} } });
+      others.forEach(m => { if (m && m.id !== 'publicProfileModal') { try { m.style.display = 'none'; } catch (e) { } try { m.classList.remove('show'); } catch (e) { } } });
       // Hide any modal-overlay elements that could sit above the public profile
       const overlays = document.querySelectorAll('.modal-overlay, .account-overlay');
-      overlays.forEach(o => { try { o.style.display = 'none'; o.classList.remove('show'); } catch(e){} });
-    } catch(e) { /* ignore */ }
+      overlays.forEach(o => { try { o.style.display = 'none'; o.classList.remove('show'); } catch (e) { } });
+    } catch (e) { /* ignore */ }
     const overlay = document.getElementById('publicProfileOverlay');
     if (overlay) {
       overlay.classList.add('show');
       overlay.style.display = 'block';
       // Keep public profile overlay below the modal content
       overlay.style.zIndex = '10110';
-      overlay.setAttribute('aria-hidden','false');
+      overlay.setAttribute('aria-hidden', 'false');
     }
     const modal = document.getElementById('publicProfileModal');
     if (modal) {
       // Ensure the modal itself is above overlays (match CSS values)
       modal.style.zIndex = '10120';
       modal.classList.add('show');
-      modal.setAttribute('aria-hidden','false');
+      modal.setAttribute('aria-hidden', 'false');
       modal.style.display = 'block';
       // Fallback: force modal visible if still hidden
       setTimeout(() => {
@@ -2513,20 +2519,22 @@ function openPublicProfile(email) {
         if (overlay && overlay.style.display !== 'block') overlay.style.display = 'block';
       }, 100);
     }
-  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: publicProfileOverlay, modal classes ->', { overlayClass: overlay ? overlay.className : null, modalClass: modal ? modal.className : null, modalStyleDisplay: modal ? modal.style.display : null }); } catch(e){}
-    try { document.body.classList.add('modal-open'); } catch(e){}
-    populatePublicProfile(email).catch(()=>{});
-  } catch(e){}
+    try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: publicProfileOverlay, modal classes ->', { overlayClass: overlay ? overlay.className : null, modalClass: modal ? modal.className : null, modalStyleDisplay: modal ? modal.style.display : null }); } catch (e) { }
+    try { document.body.classList.add('modal-open'); } catch (e) { }
+    populatePublicProfile(email).catch(() => { });
+  } catch (e) { }
 }
 
 if (typeof window !== 'undefined') {
-  try { document.addEventListener('click', (e) => {
-    if (e.target && e.target.id === 'closePublicProfile') {
-      const overlay = document.getElementById('publicProfileOverlay'); if (overlay) overlay.classList.remove('show');
-      const modal = document.getElementById('publicProfileModal'); if (modal) { modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); }
-      try { document.body.classList.remove('modal-open'); } catch(e){}
-    }
-  }); } catch(e){}
+  try {
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.id === 'closePublicProfile') {
+        const overlay = document.getElementById('publicProfileOverlay'); if (overlay) overlay.classList.remove('show');
+        const modal = document.getElementById('publicProfileModal'); if (modal) { modal.classList.remove('show'); modal.setAttribute('aria-hidden', 'true'); }
+        try { document.body.classList.remove('modal-open'); } catch (e) { }
+      }
+    });
+  } catch (e) { }
 }
 
 // Focus trap utilities
@@ -2538,7 +2546,7 @@ function trapFocus(root) {
     if (!focusable.length) return;
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
-    _accountFocusHandler = function(e) {
+    _accountFocusHandler = function (e) {
       if (e.key === 'Tab') {
         if (e.shiftKey && document.activeElement === first) {
           e.preventDefault();
@@ -2588,7 +2596,7 @@ async function renderAccountView() {
       favType = cached.favorite_type || favType;
       totalCount = (typeof cached.total !== 'undefined' && cached.total !== null) ? cached.total : totalCount;
       byType = cached.by_type || cached.types || byType;
-    } catch {}
+    } catch { }
   }
 
   // If cached provided public/private counts but no total, compute it
@@ -2636,7 +2644,7 @@ async function renderAccountView() {
   if (dom.statFavType) dom.statFavType.textContent = favType;
   if (dom.accountTotal) dom.accountTotal.textContent = totalCount;
 
-  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: renderAccountView computed', { totalCount, publicCount, privateCount, byTypeKeys: Object.keys(byType||{}) }); } catch(e){}
+  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: renderAccountView computed', { totalCount, publicCount, privateCount, byTypeKeys: Object.keys(byType || {}) }); } catch (e) { }
 
   // Render by-type breakdown
   const container = document.getElementById('accountStatsByType');
@@ -2651,7 +2659,7 @@ async function renderAccountView() {
         container.appendChild(el);
       });
       // debug: print deduped counts to console for quick verification
-      try { console.info('ACCOUNT_STATS_DEDUPE', { totalCount, publicCount, privateCount, byType }); } catch(e){}
+      try { console.info('ACCOUNT_STATS_DEDUPE', { totalCount, publicCount, privateCount, byType }); } catch (e) { }
     } else if (localStorage.getItem('accountReviews')) {
       try {
         const reviews = JSON.parse(localStorage.getItem('accountReviews'));
@@ -2666,7 +2674,7 @@ async function renderAccountView() {
           el.textContent = `${t}: ${map[t]}`;
           container.appendChild(el);
         });
-      } catch(e) { /* ignore */ }
+      } catch (e) { /* ignore */ }
     }
   }
 
@@ -2708,13 +2716,13 @@ async function initDatabase() {
     if (shouldDedupeOnStart()) {
       await dedupeDatabase();
     }
-    
+
     // Charger la bibliothèque après l'initialisation de la DB
     if (isHomePage || isEditorPage) {
       renderCompactLibrary();
     }
     // Tentative d'activation du backend distant
-    try { await tryEnableRemote(); } catch {}
+    try { await tryEnableRemote(); } catch { }
   } catch (err) {
     console.error("Erreur d'initialisation de la base de données", err);
     showToast("Problème d'initialisation. Mode hors ligne activé.", "warning");
@@ -2729,13 +2737,13 @@ async function initDatabase() {
       // Validation
       const name = (dom.saveName?.value || '').trim();
       let ok = true;
-      if (!name) { dom.saveNameError?.removeAttribute('hidden'); ok = false; } else { dom.saveNameError?.setAttribute('hidden',''); }
+      if (!name) { dom.saveNameError?.removeAttribute('hidden'); ok = false; } else { dom.saveNameError?.setAttribute('hidden', ''); }
       if (!ok) return;
-      
+
       // Récupérer automatiquement le pseudo Discord/email de l'utilisateur connecté
       // Utiliser la fonction qui récupère depuis le serveur si nécessaire
       const holder = await updateHolderDisplay() || 'Utilisateur';
-      
+
       // Inject into formData and persist
       formData.productName = name;
       formData.holderName = holder; // automatiquement rempli avec le pseudo Discord
@@ -2743,10 +2751,10 @@ async function initDatabase() {
       const privVal = (dom.savePrivacy?.value || 'public');
       formData.isPrivate = privVal === 'private';
       try {
-  const res = await saveReview();
+        const res = await saveReview();
         closeSaveModal();
       }
-      catch(e){ console.error(e); showToast("Impossible d'enregistrer.", 'error'); }
+      catch (e) { console.error(e); showToast("Impossible d'enregistrer.", 'error'); }
     });
   }
   // Wire segmented privacy control
@@ -2781,7 +2789,7 @@ function shouldDedupeOnStart() {
   try {
     const params = new URLSearchParams(location.search);
     if (params.get('dedupe') === '1') return true;
-  } catch {}
+  } catch { }
   try {
     return localStorage.getItem('rm_dedupeOnStart') === '1';
   } catch { return false; }
@@ -2824,17 +2832,17 @@ function setupDatabase() {
 async function migrateLocalStorageToDB() {
   if (!db) return; // Nothing to do if no DB
   let reviews = [];
-  try { reviews = JSON.parse(localStorage.getItem("cannaReviews") || "[]"); } catch {}
+  try { reviews = JSON.parse(localStorage.getItem("cannaReviews") || "[]"); } catch { }
   if (!Array.isArray(reviews) || reviews.length === 0) return;
   // 1) Normalize and deduplicate local entries by correlation/loose key
   const pickBetter = (a, b) => {
-  // Prefer most recent date (draft flag removed)
-  const da = new Date(a.date || 0).getTime();
-  const dbt = new Date(b.date || 0).getTime();
-  return da >= dbt ? a : b;
-  const ta = new Date(a.date || 0).getTime();
-  const tb = new Date(b.date || 0).getTime();
-  return ta >= tb ? a : b;
+    // Prefer most recent date (draft flag removed)
+    const da = new Date(a.date || 0).getTime();
+    const dbt = new Date(b.date || 0).getTime();
+    return da >= dbt ? a : b;
+    const ta = new Date(a.date || 0).getTime();
+    const tb = new Date(b.date || 0).getTime();
+    return ta >= tb ? a : b;
   };
   const chosenByStrict = new Map();
   const chosenByLoose = new Map();
@@ -2871,7 +2879,7 @@ async function migrateLocalStorageToDB() {
 
   // 2) Avoid importing duplicates already present in DB and within this batch
   let existing = [];
-  try { existing = await dbGetAllReviews(); } catch {}
+  try { existing = await dbGetAllReviews(); } catch { }
   const seenKeys = new Set((existing || []).map(x => x.correlationKey || computeCorrelationKey(x)));
   let migrated = 0;
   for (const r of locals) {
@@ -3072,13 +3080,13 @@ async function renderLibraryList(mode = 'mine') {
   if (dom.libraryEmpty && dom.libraryEmpty.dataset.defaultHtml) {
     dom.libraryEmpty.innerHTML = dom.libraryEmpty.dataset.defaultHtml;
   }
-  
+
   // Load reviews based on mode
-  const items = mode === 'public' 
+  const items = mode === 'public'
     ? (remoteEnabled ? await remoteListPublicReviews() : [])
     : (remoteEnabled ? await remoteListMyReviews() : await dbGetAllReviews());
   const list = items
-    .sort((a,b) => (a.date || "").localeCompare(b.date || ""))
+    .sort((a, b) => (a.date || "").localeCompare(b.date || ""))
     .reverse()
     .filter(r => {
       if (!q) return true;
@@ -3101,9 +3109,9 @@ async function renderLibraryList(mode = 'mine') {
     const title = r.productName || r.cultivars || r.productType || "review";
     const date = new Date(r.date || Date.now()).toLocaleString("fr-FR");
     const thumb = r.image ? `<div style="width:44px;height:44px;border-radius:8px;overflow:hidden;border:1px solid var(--glass-border)"><img src="${r.image}" alt="" style="width:100%;height:100%;object-fit:cover"/></div>` : '';
-  // Drafts removed: no draft badge
-  const draftBadge = '';
-    
+    // Drafts removed: no draft badge
+    const draftBadge = '';
+
     // Show actions only in 'mine' mode
     const actionsHtml = mode === 'mine' ? `
       <div class="actions">
@@ -3113,17 +3121,17 @@ async function renderLibraryList(mode = 'mine') {
         <button type="button" class="btn btn-outline btn-sm" data-act="delete">🗑️</button>
       </div>
     ` : '';
-    
+
     li.innerHTML = `
       <div class="meta">
         <div class="title" style="display:flex;align-items:center;gap:10px;">${thumb}${title}${draftBadge}</div>
         <div class="sub">${r.productType || ""} • ${r.farm || ""} • ${date}</div>
       </div>
       ${actionsHtml}`;
-  
+
     // Always allow preview
     const previewAction = async () => { await openPreviewOnly(r); toggleLibrary(false, mode); };
-    
+
     if (mode === 'mine') {
       li.querySelector('[data-act="load"]').addEventListener('click', previewAction);
       li.querySelector('[data-act="edit"]').addEventListener('click', () => { loadReviewIntoForm(r, 'edit'); toggleLibrary(false, mode); });
@@ -3138,11 +3146,11 @@ async function renderLibraryList(mode = 'mine') {
             if (remoteEnabled) {
               remoteOk = await remoteDeleteReview(r.id);
             }
-            try { await dbDeleteReview(r.id); } catch {}
+            try { await dbDeleteReview(r.id); } catch { }
             showToast(remoteOk ? 'Review supprimée.' : 'Supprimée localement, échec serveur', remoteOk ? 'success' : 'warning');
             renderLibraryList(mode);
             renderCompactLibrary();
-          } catch(e) {
+          } catch (e) {
             showToast('Échec de la suppression', 'error');
           }
           document.removeEventListener('reviews:confirm-delete', onConfirm);
@@ -3154,7 +3162,7 @@ async function renderLibraryList(mode = 'mine') {
       // In public mode, just click to preview
       li.addEventListener('click', previewAction);
     }
-    
+
     dom.libraryList.appendChild(li);
   });
 }
@@ -3162,28 +3170,28 @@ async function renderLibraryList(mode = 'mine') {
 // Fonction pour dupliquer une review
 async function duplicateReview(review) {
   if (!review) return;
-  
+
   try {
     const duplicatedReview = {
       ...review,
       id: undefined, // Nouvel ID sera généré
       date: new Date().toISOString(),
-    // Draft flag removed: duplicates are full records by default
-    isDraft: false,
+      // Draft flag removed: duplicates are full records by default
+      isDraft: false,
       productName: (review.productName || review.cultivars || review.productType) + " (Copie)"
     };
     // Recompute correlation key for the duplicated draft
     duplicatedReview.correlationKey = computeCorrelationKey(duplicatedReview);
-    
+
     if (db && !dbFailedOnce) {
       await dbAddReview(duplicatedReview);
     } else {
       let reviews = [];
-      try { reviews = JSON.parse(localStorage.getItem("cannaReviews") || "[]"); } catch {}
+      try { reviews = JSON.parse(localStorage.getItem("cannaReviews") || "[]"); } catch { }
       reviews.push(duplicatedReview);
       localStorage.setItem("cannaReviews", JSON.stringify(reviews));
     }
-    
+
     showToast("Review dupliquée avec succès!", "success");
     renderLibraryList();
     renderCompactLibrary();
@@ -3196,7 +3204,7 @@ async function duplicateReview(review) {
 // Fonction pour rendre la bibliothèque compacte
 async function renderCompactLibrary() {
   if (!dom.compactLibraryList) return;
-  
+
 
   // Sur la home, on affiche la galerie publique (reviews publiques uniquement)
   let items = [];
@@ -3204,43 +3212,43 @@ async function renderCompactLibrary() {
     if (remoteEnabled) {
       items = await remoteListPublicReviews();
     } else {
-    items = (await dbGetAllReviews()).filter(r => !r.isPrivate);
+      items = (await dbGetAllReviews()).filter(r => !r.isPrivate);
     }
   } catch (e) { console.warn('renderCompactLibrary load error', e); items = []; }
 
   const list = (items || [])
-    .sort((a,b) => (a.date || "").localeCompare(b.date || ""))
+    .sort((a, b) => (a.date || "").localeCompare(b.date || ""))
     .reverse()
     .slice(0, isHomePage ? homeGalleryLimit : 8);
 
   dom.compactLibraryList.innerHTML = "";
-  
+
   if (list.length === 0) {
     if (dom.compactLibraryEmpty) dom.compactLibraryEmpty.style.display = "block";
     if (dom.showMoreLibrary) dom.showMoreLibrary.style.display = 'none';
     return;
   }
-  
+
   if (dom.compactLibraryEmpty) dom.compactLibraryEmpty.style.display = "none";
   // Afficher ou masquer le bouton "Voir plus" (si plus d'éléments que la limite)
   if (isHomePage && dom.showMoreLibrary) {
     dom.showMoreLibrary.style.display = (items || []).length > list.length ? 'inline-flex' : 'none';
   }
-  
+
   list.forEach(r => {
     const item = document.createElement("div");
     item.className = "compact-library-item";
-    
+
     const title = r.productName || r.cultivars || r.productType || "Review";
     const date = new Date(r.date || Date.now()).toLocaleDateString("fr-FR", {
       day: 'numeric',
       month: 'short'
     });
-  const holder = r.holderName ? ` • ${r.holderName}` : '';
-    
+    const holder = r.holderName ? ` • ${r.holderName}` : '';
+
     // Image d'aperçu si disponible
-    const imageHtml = r.image ? 
-      `<img src="${r.image}" alt="" class="compact-item-image" />` : 
+    const imageHtml = r.image ?
+      `<img src="${r.image}" alt="" class="compact-item-image" />` :
       `<div class="compact-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.6rem;">📷</div>`;
 
     // Votes UI (positionnée entre l'image et le titre, affichée si remote API disponible)
@@ -3251,17 +3259,17 @@ async function renderCompactLibrary() {
       </div>
     ` : `<div class="compact-item-votes vote-controls" aria-hidden="true"></div>`;
 
-  // Personal library: allow preview and, if owned, open editor when clicking edit
+    // Personal library: allow preview and, if owned, open editor when clicking edit
     item.innerHTML = `
       ${imageHtml}
       ${votesHtml}
       <div class="compact-item-content">
         <div class="compact-item-title">${title}</div>
         <div class="compact-item-meta">${r.productType || "Review"} • ${date}${holder}</div>
-  ${r.holderName ? `<button type="button" class="author-link" data-author-email="${String((r.holderEmail || (r.owner && r.owner.email) || r.owner || r.holderName) || '').replace(/\"/g,'')}">${r.holderName}</button>` : ''}
+  ${r.holderName ? `<button type="button" class="author-link" data-author-email="${String((r.holderEmail || (r.owner && r.owner.email) || r.owner || r.holderName) || '').replace(/\"/g, '')}">${r.holderName}</button>` : ''}
       </div>
     `;
-    
+
     // Click: always preview when shown in the public/compact gallery
     const openItem = async () => {
       await openPreviewOnly(r);
@@ -3272,14 +3280,14 @@ async function renderCompactLibrary() {
     if (authorBtn) {
       authorBtn.addEventListener('click', (ev) => {
         // Debug: trace author clicks to see why public profile may not open
-  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: author-link clicked', { text: authorBtn.textContent, data: authorBtn.getAttribute('data-author-email') }); } catch(e){}
+        try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: author-link clicked', { text: authorBtn.textContent, data: authorBtn.getAttribute('data-author-email') }); } catch (e) { }
         ev.stopPropagation();
         const email = authorBtn.getAttribute('data-author-email') || authorBtn.textContent || '';
-  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: resolved author identifier ->', email); } catch(e){}
+        try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: resolved author identifier ->', email); } catch (e) { }
         if (email) openPublicProfile(email);
       });
     }
-    
+
     dom.compactLibraryList.appendChild(item);
     // Wire vote controls (if present)
     try {
@@ -3290,10 +3298,10 @@ async function renderCompactLibrary() {
         const myEmail = (localStorage.getItem('authEmail') || '').toLowerCase();
         const myDiscord = (localStorage.getItem('discordUsername') || '').toLowerCase();
         const myDiscordId = localStorage.getItem('discordId');
-        if (myEmail && ( (r.ownerEmail && String(r.ownerEmail).toLowerCase() === myEmail) || (r.holderEmail && String(r.holderEmail).toLowerCase() === myEmail) )) ownedByMe = true;
-        if (!ownedByMe && myDiscord && ( (r.holderName && String(r.holderName).toLowerCase() === myDiscord) || (r.owner && ((r.owner.username && String(r.owner.username).toLowerCase() === myDiscord) || (r.owner.discordUsername && String(r.owner.discordUsername).toLowerCase() === myDiscord))) )) ownedByMe = true;
+        if (myEmail && ((r.ownerEmail && String(r.ownerEmail).toLowerCase() === myEmail) || (r.holderEmail && String(r.holderEmail).toLowerCase() === myEmail))) ownedByMe = true;
+        if (!ownedByMe && myDiscord && ((r.holderName && String(r.holderName).toLowerCase() === myDiscord) || (r.owner && ((r.owner.username && String(r.owner.username).toLowerCase() === myDiscord) || (r.owner.discordUsername && String(r.owner.discordUsername).toLowerCase() === myDiscord))))) ownedByMe = true;
         if (!ownedByMe && myDiscordId && r.owner && r.owner.discordId && String(r.owner.discordId) === String(myDiscordId)) ownedByMe = true;
-      } catch(e) { /* ignore localStorage/field issues */ }
+      } catch (e) { /* ignore localStorage/field issues */ }
 
       if (ownedByMe && voteBox) {
         // Keep the controls visible but disable interaction — show counts only
@@ -3311,19 +3319,19 @@ async function renderCompactLibrary() {
               if (!js) return;
               if (likeCountEl) likeCountEl.textContent = String(js.likes || 0);
               if (dislikeCountEl) dislikeCountEl.textContent = String(js.dislikes || 0);
-            } catch(e) { /* ignore */ }
+            } catch (e) { /* ignore */ }
           })();
-        } catch(e) { /* ignore */ }
+        } catch (e) { /* ignore */ }
       }
 
       if (voteBox && remoteEnabled && r.id != null && !ownedByMe) {
-  const likeBtn = voteBox.querySelector('.vote-like');
-  const dislikeBtn = voteBox.querySelector('.vote-dislike');
-  const likeCountEl = voteBox.querySelector('.like-count');
-  const dislikeCountEl = voteBox.querySelector('.dislike-count');
+        const likeBtn = voteBox.querySelector('.vote-like');
+        const dislikeBtn = voteBox.querySelector('.vote-dislike');
+        const likeCountEl = voteBox.querySelector('.like-count');
+        const dislikeCountEl = voteBox.querySelector('.dislike-count');
         let currentMyVote = 0;
         // Prevent parent click when interacting with buttons
-  [likeBtn, dislikeBtn].forEach(b => { if (b) b.addEventListener('click', (ev)=>ev.stopPropagation()); });
+        [likeBtn, dislikeBtn].forEach(b => { if (b) b.addEventListener('click', (ev) => ev.stopPropagation()); });
 
         // Load current votes
         (async () => {
@@ -3335,11 +3343,11 @@ async function renderCompactLibrary() {
             currentMyVote = js.myVote || 0;
             if (currentMyVote === 1) likeBtn.classList.add('active-vote');
             if (currentMyVote === -1) dislikeBtn.classList.add('active-vote');
-          } catch(e){ console.warn('vote load err', e); }
+          } catch (e) { console.warn('vote load err', e); }
         })();
 
         // Click handlers
-  if (likeBtn) likeBtn.addEventListener('click', async (ev) => {
+        if (likeBtn) likeBtn.addEventListener('click', async (ev) => {
           ev.stopPropagation();
           if (!isUserConnected) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
           try {
@@ -3357,10 +3365,10 @@ async function renderCompactLibrary() {
               likeCountEl.textContent = String(js.likes || 0);
               dislikeCountEl.textContent = String(js.dislikes || 0);
             }
-          } catch(e) { console.warn(e); showToast('Erreur vote', 'error'); }
+          } catch (e) { console.warn(e); showToast('Erreur vote', 'error'); }
         });
 
-  if (dislikeBtn) dislikeBtn.addEventListener('click', async (ev) => {
+        if (dislikeBtn) dislikeBtn.addEventListener('click', async (ev) => {
           ev.stopPropagation();
           if (!isUserConnected) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
           try {
@@ -3378,10 +3386,10 @@ async function renderCompactLibrary() {
               likeCountEl.textContent = String(js.likes || 0);
               dislikeCountEl.textContent = String(js.dislikes || 0);
             }
-          } catch(e) { console.warn(e); showToast('Erreur vote', 'error'); }
+          } catch (e) { console.warn(e); showToast('Erreur vote', 'error'); }
         });
       }
-    } catch(e){ console.warn('vote wiring failed', e); }
+    } catch (e) { console.warn('vote wiring failed', e); }
   });
 }
 
@@ -3423,13 +3431,13 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
   const items = mode === 'public'
     ? (remoteEnabled ? await remoteListPublicReviews() : [])
     : (remoteEnabled ? await remoteListMyReviews() : await dbGetAllReviews());
-  
+
   const searchTerm = dom.librarySearch?.value?.toLowerCase() || "";
-  
+
   // Get current user token to identify ownership
   const token = localStorage.getItem('authToken');
   const isAuthenticated = !!token;
-  
+
   const filteredItems = items.filter(r => {
     // Filter by search term
     if (searchTerm) {
@@ -3438,7 +3446,7 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
       ].filter(Boolean).join(' ').toLowerCase();
       if (!searchFields.includes(searchTerm)) return false;
     }
-    
+
     // Filter private reviews: only show if user is authenticated
     // (server already filters by ownership, so if we receive a private review, it's ours)
     // But for extra safety, we can add client-side check
@@ -3447,16 +3455,16 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
     // 1. Public reviews (isPrivate=false)
     // 2. User's own private reviews (when authenticated)
     // No additional filtering needed here as server handles it
-    
+
     return true;
   });
-  
+
   const list = filteredItems
-    .sort((a,b) => (a.date || "").localeCompare(b.date || ""))
+    .sort((a, b) => (a.date || "").localeCompare(b.date || ""))
     .reverse();
 
   dom.libraryGrid.innerHTML = "";
-  
+
   if (list.length === 0) {
     if (dom.libraryEmpty) {
       const defaultHtml = dom.libraryEmpty.dataset.defaultHtml || dom.libraryEmpty.innerHTML;
@@ -3469,31 +3477,31 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
     }
     return;
   }
-  
+
   if (dom.libraryEmpty) {
     const defaultHtml = dom.libraryEmpty.dataset.defaultHtml;
     if (defaultHtml) dom.libraryEmpty.innerHTML = defaultHtml;
     dom.libraryEmpty.style.display = "none";
   }
-  
+
   list.forEach(r => {
     const item = document.createElement("div");
-  item.className = "library-item";
-    
+    item.className = "library-item";
+
     const title = r.productName || r.cultivars || r.productType || "Review";
     const date = new Date(r.date || Date.now()).toLocaleDateString("fr-FR", {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
     });
-  const draftBadge = '';
+    const draftBadge = '';
     const holder = r.holderName ? `<div class="library-item-farm">${r.holderName}</div>` : '';
-    
+
     // Image d'aperçu si disponible
-    const imageHtml = r.image ? 
-      `<img src="${r.image}" alt="${title}" class="library-item-image" />` : 
+    const imageHtml = r.image ?
+      `<img src="${r.image}" alt="${title}" class="library-item-image" />` :
       `<div class="library-item-image" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">📷</div>`;
-    
+
     // Show actions only in 'mine' mode
     const actionsHtml = mode === 'mine' ? `
       <div class="library-item-actions">
@@ -3530,7 +3538,7 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
       </div>
       ${actionsHtml}
     `;
-    
+
     // Event listeners only in 'mine' mode
     if (mode === 'mine') {
       const editBtn = item.querySelector('[data-act="edit"]');
@@ -3538,33 +3546,33 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
         editBtn.addEventListener('click', () => {
           // Fermer la modal
           if (dom.libraryModal) dom.libraryModal.style.display = "none";
-          
+
           if (isHomePage) {
             navigateToEditor(r.productType, r);
           } else {
-            loadReviewIntoForm(r, 'edit'); 
+            loadReviewIntoForm(r, 'edit');
           }
         });
       }
-      
+
       const delBtn = item.querySelector('[data-act="delete"]');
       if (delBtn) {
         delBtn.addEventListener('click', async () => {
-      if (confirm(`Êtes-vous sûr de vouloir supprimer "${title}" ?`)) {
-        try {
-          let remoteOk = true;
-          if (remoteEnabled) {
-            remoteOk = await remoteDeleteReview(r.id);
+          if (confirm(`Êtes-vous sûr de vouloir supprimer "${title}" ?`)) {
+            try {
+              let remoteOk = true;
+              if (remoteEnabled) {
+                remoteOk = await remoteDeleteReview(r.id);
+              }
+              try { await dbDeleteReview(r.id); } catch { }
+              renderFullLibrary(mode); // Recharger la liste avec le même mode
+              renderCompactLibrary(); // Mettre à jour la vue compacte aussi
+              showToast(remoteOk ? "Review supprimée" : "Supprimée localement, échec serveur", remoteOk ? 'success' : 'warning');
+            } catch (e) {
+              console.error("Erreur suppression:", e);
+              showToast("Erreur lors de la suppression", "error");
+            }
           }
-          try { await dbDeleteReview(r.id); } catch {}
-          renderFullLibrary(mode); // Recharger la liste avec le même mode
-          renderCompactLibrary(); // Mettre à jour la vue compacte aussi
-          showToast(remoteOk ? "Review supprimée" : "Supprimée localement, échec serveur", remoteOk ? 'success' : 'warning');
-        } catch (e) {
-          console.error("Erreur suppression:", e);
-          showToast("Erreur lors de la suppression", "error");
-        }
-      }
         });
       }
 
@@ -3598,7 +3606,7 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
         await openPreviewOnly(r);
       });
     }
-    
+
     // Wire votes if present
     try {
       const voteBox = item.querySelector('.vote-controls');
@@ -3608,10 +3616,10 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
         const myEmail = (localStorage.getItem('authEmail') || '').toLowerCase();
         const myDiscord = (localStorage.getItem('discordUsername') || '').toLowerCase();
         const myDiscordId = localStorage.getItem('discordId');
-        if (myEmail && ( (r.ownerEmail && String(r.ownerEmail).toLowerCase() === myEmail) || (r.holderEmail && String(r.holderEmail).toLowerCase() === myEmail) )) ownedByMe = true;
-        if (!ownedByMe && myDiscord && ( (r.holderName && String(r.holderName).toLowerCase() === myDiscord) || (r.owner && ((r.owner.username && String(r.owner.username).toLowerCase() === myDiscord) || (r.owner.discordUsername && String(r.owner.discordUsername).toLowerCase() === myDiscord))) )) ownedByMe = true;
+        if (myEmail && ((r.ownerEmail && String(r.ownerEmail).toLowerCase() === myEmail) || (r.holderEmail && String(r.holderEmail).toLowerCase() === myEmail))) ownedByMe = true;
+        if (!ownedByMe && myDiscord && ((r.holderName && String(r.holderName).toLowerCase() === myDiscord) || (r.owner && ((r.owner.username && String(r.owner.username).toLowerCase() === myDiscord) || (r.owner.discordUsername && String(r.owner.discordUsername).toLowerCase() === myDiscord))))) ownedByMe = true;
         if (!ownedByMe && myDiscordId && r.owner && r.owner.discordId && String(r.owner.discordId) === String(myDiscordId)) ownedByMe = true;
-      } catch(e) { /* ignore */ }
+      } catch (e) { /* ignore */ }
 
       if (ownedByMe && voteBox) {
         // Keep the controls visible but disable interaction — show counts only
@@ -3629,9 +3637,9 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
               if (!js) return;
               if (likeCountEl) likeCountEl.textContent = String(js.likes || 0);
               if (dislikeCountEl) dislikeCountEl.textContent = String(js.dislikes || 0);
-            } catch(e) { /* ignore */ }
+            } catch (e) { /* ignore */ }
           })();
-        } catch(e) { /* ignore */ }
+        } catch (e) { /* ignore */ }
       }
 
       if (voteBox && remoteEnabled && r.id != null && !ownedByMe) {
@@ -3640,7 +3648,7 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
         const likeCountEl = voteBox.querySelector('.like-count');
         const dislikeCountEl = voteBox.querySelector('.dislike-count');
         let currentMyVote = 0;
-        [likeBtn, dislikeBtn].forEach(b => { if (b) b.addEventListener('click', (ev)=>ev.stopPropagation()); });
+        [likeBtn, dislikeBtn].forEach(b => { if (b) b.addEventListener('click', (ev) => ev.stopPropagation()); });
 
         (async () => {
           try {
@@ -3651,7 +3659,7 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
             currentMyVote = js.myVote || 0;
             if (currentMyVote === 1) likeBtn.classList.add('active-vote');
             if (currentMyVote === -1) dislikeBtn.classList.add('active-vote');
-          } catch(e){ console.warn('vote load err', e); }
+          } catch (e) { console.warn('vote load err', e); }
         })();
 
         if (likeBtn) likeBtn.addEventListener('click', async (ev) => {
@@ -3672,7 +3680,7 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
               likeCountEl.textContent = String(js.likes || 0);
               dislikeCountEl.textContent = String(js.dislikes || 0);
             }
-          } catch(e) { console.warn(e); showToast('Erreur vote', 'error'); }
+          } catch (e) { console.warn(e); showToast('Erreur vote', 'error'); }
         });
 
         if (dislikeBtn) dislikeBtn.addEventListener('click', async (ev) => {
@@ -3693,10 +3701,10 @@ async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
               likeCountEl.textContent = String(js.likes || 0);
               dislikeCountEl.textContent = String(js.dislikes || 0);
             }
-          } catch(e) { console.warn(e); showToast('Erreur vote', 'error'); }
+          } catch (e) { console.warn(e); showToast('Erreur vote', 'error'); }
         });
       }
-    } catch(e){ console.warn('vote wiring failed', e); }
+    } catch (e) { console.warn('vote wiring failed', e); }
 
     dom.libraryGrid.appendChild(item);
   });
@@ -3717,7 +3725,7 @@ async function openPreviewOnly(review) {
   if (!dom.previewModalContent) return;
   const structure = productStructures[currentType];
   const title = formData.cultivars || formData.strain || formData.productType;
-  const date = new Date(review.date || Date.now()).toLocaleDateString("fr-FR", { day:'2-digit', month:'long', year:'numeric' });
+  const date = new Date(review.date || Date.now()).toLocaleDateString("fr-FR", { day: '2-digit', month: 'long', year: 'numeric' });
   let html = `<div class="review-header"><h2>${title}</h2><div class="review-meta">${formData.productType} • ${date}</div></div>`;
   if (imageUrl) {
     html += `<div class="review-image"><img src="${imageUrl}" alt="Photo du produit ${title}"></div>`;
@@ -3733,9 +3741,9 @@ async function openPreviewOnly(review) {
       hasContent = true;
       let displayValue = '';
       if (field.type === 'number') {
-        displayValue = Number.parseFloat(value).toFixed(1).replace('.0','');
+        displayValue = Number.parseFloat(value).toFixed(1).replace('.0', '');
       } else if (field.type === 'sequence') {
-        try { const steps = JSON.parse(value); displayValue = Array.isArray(steps) && steps.length ? steps.map((s,i)=>`${i+1}) ${s}`).join(' \u203A ') : ''; } catch { displayValue = value; }
+        try { const steps = JSON.parse(value); displayValue = Array.isArray(steps) && steps.length ? steps.map((s, i) => `${i + 1}) ${s}`).join(' \u203A ') : ''; } catch { displayValue = value; }
       } else if (field.type === 'multiple-choice' || (Array.isArray(field.choices) && field.choices.length)) {
         try { const sel = JSON.parse(value); displayValue = Array.isArray(sel) && sel.length ? sel.join(' • ') : ''; } catch { displayValue = value; }
       } else {
@@ -3762,8 +3770,8 @@ async function openPreviewOnly(review) {
 }
 
 function closePreviewOnly() {
-  dom.previewOverlay?.setAttribute('hidden','');
-  dom.previewModal?.setAttribute('hidden','');
+  dom.previewOverlay?.setAttribute('hidden', '');
+  dom.previewModal?.setAttribute('hidden', '');
   // Le bouton garde toujours le même texte (pas besoin de le changer)
 }
 
@@ -3779,7 +3787,7 @@ async function downloadPreviewAsPng() {
       allowTaint: true
     });
     const link = document.createElement('a');
-    const safeName = (formData.cultivars || formData.productType || 'review').replace(/\s+/g,'-').toLowerCase();
+    const safeName = (formData.cultivars || formData.productType || 'review').replace(/\s+/g, '-').toLowerCase();
     link.download = `review_${safeName}_${Date.now()}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
@@ -3856,7 +3864,7 @@ function loadReviewIntoForm(review, mode = 'view') {
       input.value = String(val);
     });
   });
-  
+
   // Recalculer après avoir rempli tous les champs
   setTimeout(() => {
     recalculateTotals();
@@ -3866,7 +3874,7 @@ function loadReviewIntoForm(review, mode = 'view') {
     // S'assurer que les contrôles de section sont correctement mis à jour
     updateSectionControls();
   }, 50);
-  
+
   // Ensure panels are visible like after type selection
   const workspace = document.querySelector('.workspace');
   if (workspace) {
@@ -3881,7 +3889,7 @@ function loadReviewIntoForm(review, mode = 'view') {
   const previewPanel = document.querySelector('.panel.panel-preview');
   if (formPanel) { formPanel.hidden = false; formPanel.removeAttribute('hidden'); }
   // Ne pas forcer l'aperçu: reste caché tant que l'utilisateur ne le révèle pas
-  if (previewPanel) { previewPanel.setAttribute('hidden',''); }
+  if (previewPanel) { previewPanel.setAttribute('hidden', ''); }
   // Hide assistant immediately to avoid any flicker
   document.body.classList.add('assistant-hidden');
   formPanel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -3892,7 +3900,7 @@ function loadReviewIntoForm(review, mode = 'view') {
   } else {
     setReadOnly(true);
   }
-  
+
   // S'assurer que les boutons sont bien réactivés après le chargement
   setTimeout(() => {
     updateSectionControls();
@@ -4023,7 +4031,7 @@ function handleTypeSelection(card) {
   const formPanel = document.querySelector('.panel.panel-form');
   const previewPanel = document.querySelector('.panel.panel-preview');
   if (formPanel) { formPanel.hidden = false; formPanel.removeAttribute('hidden'); }
-  if (previewPanel) { previewPanel.setAttribute('hidden',''); }
+  if (previewPanel) { previewPanel.setAttribute('hidden', ''); }
 
   // Masquer l'assistant immédiatement pour éviter tout clignotement
   document.body.classList.add('assistant-hidden');
@@ -4066,7 +4074,7 @@ function selectProductType(type) {
     const formPanel = document.querySelector('.panel.panel-form');
     const previewPanel = document.querySelector('.panel.panel-preview');
     if (formPanel) { formPanel.hidden = false; formPanel.removeAttribute('hidden'); }
-    if (previewPanel) { previewPanel.setAttribute('hidden',''); }
+    if (previewPanel) { previewPanel.setAttribute('hidden', ''); }
 
     document.body.classList.add('assistant-hidden');
     formPanel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -4103,13 +4111,13 @@ function renderForm() {
     const sectionHeader = document.createElement("div");
     sectionHeader.className = "section-header";
 
-  const title = document.createElement("h2");
-  title.textContent = section.title;
+    const title = document.createElement("h2");
+    title.textContent = section.title;
     sectionHeader.appendChild(title);
 
-  const container = document.createElement("div");
-  // Always use a stacked layout: one field per row to keep a perfect global indentation
-  container.className = "fields-stack";
+    const container = document.createElement("div");
+    // Always use a stacked layout: one field per row to keep a perfect global indentation
+    container.className = "fields-stack";
 
     section.fields.forEach(field => {
       container.appendChild(createFieldGroup(field, index, section));
@@ -4140,7 +4148,7 @@ function renderForm() {
     formTitle.textContent = `Informations du produit — ${currentType}`;
   }
   // After initial render, generate a fresh preview if data exists
-  try { updateConditionalVisibility(); collectFormData(); generateReview(); } catch {}
+  try { updateConditionalVisibility(); collectFormData(); generateReview(); } catch { }
 }
 
 function renderSectionNav(sections = []) {
@@ -4205,7 +4213,7 @@ function activateSection(index, focusFirst = false) {
     dom.currentSectionIndicator.textContent = activeTitle ? `Section: ${activeTitle}` : 'Aucune section';
   }
   updateSectionControls();
-  try { updateSectionCompletionState(); } catch {}
+  try { updateSectionCompletionState(); } catch { }
 
   if (focusFirst) {
     requestAnimationFrame(() => {
@@ -4262,22 +4270,22 @@ function createFieldGroup(field, sectionIndex, section) {
   if (field.type === "cultivar-list") {
     const container = document.createElement("div");
     container.className = "cultivar-list";
-    
+
     const list = document.createElement("div");
     list.className = "cultivar-items";
-    
+
     const addBtn = document.createElement("button");
     addBtn.type = "button";
     addBtn.className = "btn btn-outline add-cultivar-btn";
     addBtn.innerHTML = '<span aria-hidden="true">⊕</span> Ajouter un cultivar';
-    
+
     const hidden = document.createElement("input");
     hidden.type = "hidden";
     hidden.id = field.key;
     hidden.dataset.cultivarList = "true";
-    
+
     let cultivarCounter = 0;
-    
+
     function serializeCultivars() {
       const items = Array.from(list.querySelectorAll('.cultivar-item')).map(item => ({
         name: item.querySelector('[data-cultivar-name]')?.value?.trim() || '',
@@ -4287,16 +4295,16 @@ function createFieldGroup(field, sectionIndex, section) {
       })).filter(c => c.name); // Only keep cultivars with a name
       hidden.value = JSON.stringify(items);
       updateProgress();
-      try { collectFormData(); generateReview(); } catch {}
+      try { collectFormData(); generateReview(); } catch { }
       // Notify pipeline fields to update their cultivar checkboxes
       updatePipelineCultivars();
     }
-    
+
     function createCultivarItem(data = {}) {
       const item = document.createElement("div");
       item.className = "cultivar-item";
       item.dataset.cultivarId = ++cultivarCounter;
-      
+
       const header = document.createElement("div");
       header.className = "cultivar-item-header";
       const title = document.createElement("span");
@@ -4312,10 +4320,10 @@ function createFieldGroup(field, sectionIndex, section) {
         serializeCultivars();
       });
       header.append(title, delBtn);
-      
+
       const fields = document.createElement("div");
       fields.className = "cultivar-fields";
-      
+
       // Cultivar name
       const nameGroup = document.createElement("div");
       nameGroup.className = "field-inline";
@@ -4328,7 +4336,7 @@ function createFieldGroup(field, sectionIndex, section) {
       nameInput.value = data.name || '';
       nameInput.addEventListener('input', serializeCultivars);
       nameGroup.append(nameLabel, nameInput);
-      
+
       // Farm
       const farmGroup = document.createElement("div");
       farmGroup.className = "field-inline";
@@ -4341,7 +4349,7 @@ function createFieldGroup(field, sectionIndex, section) {
       farmInput.value = data.farm || '';
       farmInput.addEventListener('input', serializeCultivars);
       farmGroup.append(farmLabel, farmInput);
-      
+
       // Breeder
       const breederGroup = document.createElement("div");
       breederGroup.className = "field-inline";
@@ -4354,7 +4362,7 @@ function createFieldGroup(field, sectionIndex, section) {
       breederInput.value = data.breeder || '';
       breederInput.addEventListener('input', serializeCultivars);
       breederGroup.append(breederLabel, breederInput);
-      
+
       // Matiere vegetale (checkboxes)
       const matiereGroup = document.createElement("div");
       matiereGroup.className = "field-inline matiere-group";
@@ -4375,17 +4383,17 @@ function createFieldGroup(field, sectionIndex, section) {
         matiereChoices.appendChild(lbl);
       });
       matiereGroup.append(matiereLabel, matiereChoices);
-      
+
       fields.append(nameGroup, farmGroup, breederGroup, matiereGroup);
       item.append(header, fields);
       return item;
     }
-    
+
     addBtn.addEventListener('click', () => {
       list.appendChild(createCultivarItem());
       serializeCultivars();
     });
-    
+
     container.append(addBtn, list, hidden);
     wrapper.appendChild(container);
     wrapper.style.gridColumn = "1 / -1"; // Full width
@@ -4449,13 +4457,13 @@ function createFieldGroup(field, sectionIndex, section) {
       return Array.from(list.querySelectorAll('li.pipeline-item')).map(li => {
         const name = li.querySelector('.step-label')?.textContent || '';
         if (!name) return null;
-        
+
         const entry = { name };
-        
+
         // Get selected cultivars
         const selectedCultivars = Array.from(li.querySelectorAll('[data-step-cultivar]:checked')).map(cb => cb.value);
         if (selectedCultivars.length) entry.cultivars = selectedCultivars;
-        
+
         // Mesh-capable steps
         if (li.dataset.sieve === 'true' || li.dataset.rosin === 'true') {
           const minV = li.querySelector('input[data-mesh-min]')?.value?.trim() || '';
@@ -4463,20 +4471,20 @@ function createFieldGroup(field, sectionIndex, section) {
           const any = minV || maxV;
           const mesh = (minV && maxV) ? `${minV}–${maxV}` : (any ? `0–${minV || maxV}` : '');
           if (mesh) entry.mesh = mesh;
-          
+
           if (li.dataset.rosin === 'true') {
             const tempC = li.querySelector('input[data-rosin-temp]')?.value?.trim() || '';
             if (tempC) entry.tempC = tempC;
           }
         }
-        
+
         if (li.dataset.co2 === 'true') {
           const pressureBar = li.querySelector('input[data-co2-pressure]')?.value?.trim() || '';
           const tempC = li.querySelector('input[data-co2-temp]')?.value?.trim() || '';
           if (pressureBar) entry.pressureBar = pressureBar;
           if (tempC) entry.tempC = tempC;
         }
-        
+
         return entry;
       }).filter(Boolean);
     }
@@ -4509,27 +4517,27 @@ function createFieldGroup(field, sectionIndex, section) {
       hidden.value = JSON.stringify(entries);
       renderDisplay(entries);
       updateProgress();
-      
+
       // Update all subsequent steps' cultivar options (to include new extractions)
       list.querySelectorAll('.pipeline-item').forEach(item => {
         const currentSelected = Array.from(item.querySelectorAll('[data-step-cultivar]:checked')).map(cb => cb.value);
         updateItemCultivars(item, currentSelected);
       });
-      
-      try { collectFormData(); generateReview(); } catch {}
+
+      try { collectFormData(); generateReview(); } catch { }
     }
 
     function createItem(text, meta = {}) {
       const li = document.createElement("li");
       li.className = "pipeline-item";
-      
+
       const header = document.createElement("div");
       header.className = "pipeline-item-header";
-      
+
       const label = document.createElement("span");
       label.className = "step-label";
       label.textContent = text;
-      
+
       const actions = document.createElement("span");
       actions.className = "step-actions";
       const up = document.createElement("button");
@@ -4562,7 +4570,7 @@ function createFieldGroup(field, sectionIndex, section) {
       cultivarsCheckboxes.dataset.cultivarsTarget = "";
       cultivarsDiv.append(cultivarsLabel, cultivarsCheckboxes);
       li.appendChild(cultivarsDiv);
-      
+
       // Populate cultivars checkboxes
       updateItemCultivars(li, meta.cultivars || []);
 
@@ -4594,7 +4602,7 @@ function createFieldGroup(field, sectionIndex, section) {
               const single = str.match(/(\d+)/);
               if (single) { maxInput.value = single[1]; }
             }
-          } catch {}
+          } catch { }
         }
         minInput.addEventListener('input', serialize);
         maxInput.addEventListener('input', serialize);
@@ -4653,26 +4661,26 @@ function createFieldGroup(field, sectionIndex, section) {
 
       return li;
     }
-    
+
     function updateItemCultivars(item, selectedCultivars = []) {
       const checkboxesDiv = item.querySelector('[data-cultivars-target]');
       if (!checkboxesDiv) return;
       checkboxesDiv.innerHTML = '';
-      
+
       const cultivars = getCultivarsList();
-      
+
       // Get previous steps (extractions) as potential inputs
       const previousSteps = [];
       let current = item.previousElementSibling;
       while (current && current.classList.contains('pipeline-item')) {
         const stepName = current.querySelector('.step-label')?.textContent || '';
         const stepCultivars = Array.from(current.querySelectorAll('[data-step-cultivar]:checked')).map(cb => cb.value);
-        
+
         // Build extraction name (e.g., "Dry Critical Kush 220µm")
         let extractionName = '';
         if (stepCultivars.length > 0) {
           const cultivarsPart = stepCultivars.join(' + ');
-          
+
           // Get mesh info if available
           let meshInfo = '';
           if (current.dataset.sieve === 'true' || current.dataset.rosin === 'true') {
@@ -4682,29 +4690,29 @@ function createFieldGroup(field, sectionIndex, section) {
               meshInfo = (minV && maxV) ? ` ${minV}–${maxV}µm` : ` ${minV || maxV}µm`;
             }
           }
-          
+
           extractionName = `${stepName.split('(')[0].trim()}: ${cultivarsPart}${meshInfo}`;
         }
-        
+
         if (extractionName) {
           previousSteps.push(extractionName);
         }
         current = current.previousElementSibling;
       }
-      
+
       // Show message if no options available
       if (!cultivars.length && !previousSteps.length) {
         checkboxesDiv.innerHTML = '<em style="opacity:0.6;font-size:0.9em;">Aucun cultivar ou extraction défini</em>';
         return;
       }
-      
+
       // Add base cultivars section
       if (cultivars.length > 0) {
         const cultivarsTitle = document.createElement('div');
         cultivarsTitle.className = 'step-cultivars-section-title';
         cultivarsTitle.textContent = '🌿 Cultivars de base :';
         checkboxesDiv.appendChild(cultivarsTitle);
-        
+
         cultivars.forEach(c => {
           if (!c.name) return;
           const lbl = document.createElement('label');
@@ -4719,7 +4727,7 @@ function createFieldGroup(field, sectionIndex, section) {
           checkboxesDiv.appendChild(lbl);
         });
       }
-      
+
       // Add previous extractions section
       if (previousSteps.length > 0) {
         const extractionsTitle = document.createElement('div');
@@ -4727,7 +4735,7 @@ function createFieldGroup(field, sectionIndex, section) {
         extractionsTitle.textContent = '🔬 Extractions précédentes :';
         extractionsTitle.style.marginTop = '12px';
         checkboxesDiv.appendChild(extractionsTitle);
-        
+
         previousSteps.forEach(extraction => {
           const lbl = document.createElement('label');
           lbl.className = 'checkbox-label';
@@ -4769,7 +4777,7 @@ function createFieldGroup(field, sectionIndex, section) {
       const isOpen = !menu.hidden;
       document.querySelectorAll(".multi-select-menu").forEach(el => {
         el.hidden = true;
-        el.previousElementSibling?.setAttribute("aria-expanded","false");
+        el.previousElementSibling?.setAttribute("aria-expanded", "false");
       });
       menu.hidden = isOpen;
       display.setAttribute("aria-expanded", String(!isOpen));
@@ -4784,7 +4792,7 @@ function createFieldGroup(field, sectionIndex, section) {
     });
 
     // Store update function globally for cross-field updates
-    window.updatePipelineCultivars = function() {
+    window.updatePipelineCultivars = function () {
       // Update all pipeline items with fresh cultivar list
       container.querySelectorAll('.pipeline-item').forEach(item => {
         const currentSelected = Array.from(item.querySelectorAll('[data-step-cultivar]:checked')).map(cb => cb.value);
@@ -4899,8 +4907,8 @@ function createFieldGroup(field, sectionIndex, section) {
       renderDisplay(payload);
       updateProgress();
       // Update conditional fields visibility based on sequence content
-      try { updateConditionalVisibility(); } catch {}
-      try { collectFormData(); generateReview(); } catch {}
+      try { updateConditionalVisibility(); } catch { }
+      try { collectFormData(); generateReview(); } catch { }
     }
 
     function createItem(text, meta = {}) {
@@ -4945,7 +4953,7 @@ function createFieldGroup(field, sectionIndex, section) {
               const single = str.match(/(\d+)/);
               if (single) { maxInput.value = single[1]; }
             }
-          } catch {}
+          } catch { }
         }
         const onPairChange = () => { serialize(); };
         minInput.addEventListener('input', onPairChange);
@@ -5013,7 +5021,7 @@ function createFieldGroup(field, sectionIndex, section) {
     display.addEventListener("click", (e) => {
       e.stopPropagation();
       const isOpen = !menu.hidden;
-      document.querySelectorAll(".multi-select-menu").forEach(el => { el.hidden = true; el.previousElementSibling?.setAttribute("aria-expanded","false"); });
+      document.querySelectorAll(".multi-select-menu").forEach(el => { el.hidden = true; el.previousElementSibling?.setAttribute("aria-expanded", "false"); });
       menu.hidden = isOpen; // if open -> close, else open after closing others
       display.setAttribute("aria-expanded", String(!isOpen));
     });
@@ -5067,7 +5075,7 @@ function createFieldGroup(field, sectionIndex, section) {
       hidden.value = JSON.stringify(selected);
       renderDisplay(selected);
       updateProgress();
-      try { collectFormData(); generateReview(); } catch {}
+      try { collectFormData(); generateReview(); } catch { }
     }
 
     // Build options
@@ -5088,7 +5096,7 @@ function createFieldGroup(field, sectionIndex, section) {
     display.addEventListener("click", (e) => {
       e.stopPropagation();
       const isOpen = !menu.hidden;
-      document.querySelectorAll(".multi-select-menu").forEach(el => { el.hidden = true; el.previousElementSibling?.setAttribute("aria-expanded","false"); });
+      document.querySelectorAll(".multi-select-menu").forEach(el => { el.hidden = true; el.previousElementSibling?.setAttribute("aria-expanded", "false"); });
       menu.hidden = isOpen; // if open -> close, else open after closing others
       display.setAttribute("aria-expanded", String(!isOpen));
     });
@@ -5129,7 +5137,7 @@ function createFieldGroup(field, sectionIndex, section) {
       r.addEventListener('change', () => {
         hidden.value = value;
         updateProgress();
-        try { collectFormData(); generateReview(); } catch {}
+        try { collectFormData(); generateReview(); } catch { }
       });
       const span = document.createElement('span');
       span.textContent = labelText;
@@ -5218,7 +5226,7 @@ function updateConditionalVisibility() {
       const joined = names.join(' ').toLowerCase();
       hasSieve = /tamis|bubble|ice\s*hash|whole\s*plant\s*fresh\s*frozen|wpff|dry\s*tamis|tamisage/.test(joined);
     }
-  } catch {}
+  } catch { }
 
   // Show/hide the tamis field if present
   const tamisField = document.getElementById('tamisMaillages')?.closest('.field-group');
@@ -5268,9 +5276,9 @@ function rehydrateSequenceField(fieldId, steps) {
     label.textContent = text;
     const actions = document.createElement('span');
     actions.className = 'step-actions';
-    const up = document.createElement('button'); up.type='button'; up.className='step-move'; up.title='Monter'; up.textContent='↑';
-    const down = document.createElement('button'); down.type='button'; down.className='step-move'; down.title='Descendre'; down.textContent='↓';
-    const del = document.createElement('button'); del.type='button'; del.className='step-del'; del.title='Supprimer'; del.textContent='✕';
+    const up = document.createElement('button'); up.type = 'button'; up.className = 'step-move'; up.title = 'Monter'; up.textContent = '↑';
+    const down = document.createElement('button'); down.type = 'button'; down.className = 'step-move'; down.title = 'Descendre'; down.textContent = '↓';
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'step-del'; del.title = 'Supprimer'; del.textContent = '✕';
     actions.append(up, down, del);
     li.append(label, actions);
     // Extra metadata editors per step type
@@ -5301,7 +5309,7 @@ function rehydrateSequenceField(fieldId, steps) {
             const single = str.match(/(\d+)/);
             if (single) { maxInput.value = single[1]; }
           }
-        } catch {}
+        } catch { }
       }
       const onPairChange = () => {
         try {
@@ -5346,7 +5354,7 @@ function rehydrateSequenceField(fieldId, steps) {
               return `<span class="chip">${nm}${metaStr}</span>`;
             }).join('') : 'Ajouter une étape';
           }
-        } catch {}
+        } catch { }
       };
       minInput.addEventListener('input', onPairChange);
       maxInput.addEventListener('input', onPairChange);
@@ -5424,7 +5432,7 @@ function rehydrateSequenceField(fieldId, steps) {
               return `<span class="chip">${nm}${metaStr}</span>`;
             }).join('') : 'Ajouter une étape';
           }
-        } catch {}
+        } catch { }
       };
       pressure.addEventListener('input', onChange);
       temp.addEventListener('input', onChange);
@@ -5455,7 +5463,7 @@ function rehydrateSequenceField(fieldId, steps) {
           }).join('') : 'Ajouter une étape';
         }
         updateProgress();
-      } catch {}
+      } catch { }
     };
     up.addEventListener('click', () => { if (li.previousElementSibling) { list.insertBefore(li, li.previousElementSibling); serialize(); } });
     down.addEventListener('click', () => { if (li.nextElementSibling) { list.insertBefore(li.nextElementSibling, li); serialize(); } });
@@ -5486,7 +5494,7 @@ function rehydrateSequenceField(fieldId, steps) {
       return `<span class="chip">${nm}${metaStr}</span>`;
     }).join('') : 'Ajouter une étape';
   }
-  try { updateConditionalVisibility(); } catch {}
+  try { updateConditionalVisibility(); } catch { }
 }
 
 function rehydrateMultipleChoice(fieldId, selections) {
@@ -5542,13 +5550,13 @@ function rehydrateCultivarList(fieldId, cultivars) {
   const container = hidden.closest('.cultivar-list');
   const list = container?.querySelector('.cultivar-items');
   if (!list) return;
-  
+
   hidden.value = JSON.stringify(cultivars);
-  
+
   // Clear and rebuild
   list.innerHTML = '';
   const addBtn = container.querySelector('.add-cultivar-btn');
-  
+
   cultivars.forEach(c => {
     // Trigger the add button to create items (simulate click but pass data)
     if (addBtn) {
@@ -5578,22 +5586,22 @@ function rehydratePipelineWithCultivars(fieldId, steps) {
   const list = container?.querySelector('.pipeline-list');
   const menu = container?.querySelector('.multi-select-menu');
   if (!list || !menu) return;
-  
+
   hidden.value = JSON.stringify(steps);
-  
+
   // Clear and rebuild
   list.innerHTML = '';
-  
+
   steps.forEach(step => {
     const stepName = (step && typeof step === 'object') ? step.name : String(step);
     if (!stepName) return;
-    
+
     // Find and click the menu option to add the step
     const options = Array.from(menu.querySelectorAll('.multi-select-option'));
     const opt = options.find(o => o.textContent.trim() === stepName);
     if (opt) {
       opt.click();
-      
+
       // Get the last added item and populate metadata
       const items = list.querySelectorAll('.pipeline-item');
       const lastItem = items[items.length - 1];
@@ -5605,7 +5613,7 @@ function rehydratePipelineWithCultivars(fieldId, steps) {
             if (cb) cb.checked = true;
           });
         }
-        
+
         // Set mesh/temp/pressure
         if (step.mesh) {
           try {
@@ -5623,14 +5631,14 @@ function rehydratePipelineWithCultivars(fieldId, steps) {
                 if (maxInput) maxInput.value = single[1];
               }
             }
-          } catch {}
+          } catch { }
         }
-        
+
         if (step.tempC || step.temperature) {
           const tempInput = lastItem.querySelector('[data-rosin-temp], [data-co2-temp]');
           if (tempInput) tempInput.value = String(step.tempC || step.temperature);
         }
-        
+
         if (step.pressureBar) {
           const pressureInput = lastItem.querySelector('[data-co2-pressure]');
           if (pressureInput) pressureInput.value = String(step.pressureBar);
@@ -5861,13 +5869,13 @@ function collectFormData() {
 
   // Auto-generate and auto-save to Library (no manual generate)
   const finalize = () => {
-    try { generateReview(); } catch {}
+    try { generateReview(); } catch { }
     if (dbSaveTimer) clearTimeout(dbSaveTimer);
-    dbSaveTimer = setTimeout(async () => { 
+    dbSaveTimer = setTimeout(async () => {
       // Sauvegarder automatiquement seulement si le contenu est significatif
       if (hasSignificantContent()) {
         // Si la review a déjà été enregistrée explicitement, ne pas la repasser en brouillon
-  await saveReview();
+        await saveReview();
         // Rafraîchir la bibliothèque compacte immédiatement après sauvegarde
         renderCompactLibrary();
       }
@@ -5898,9 +5906,9 @@ function buildSuggestedName() {
   const type = currentType || formData.productType || '';
   const val = (k) => (formData[k] || '').toString().trim();
   // Try to parse arrays from JSON strings where relevant
-  const parseArr = (v) => { try { const a = JSON.parse(v||''); return Array.isArray(a) ? a : []; } catch { return []; } };
+  const parseArr = (v) => { try { const a = JSON.parse(v || ''); return Array.isArray(a) ? a : []; } catch { return []; } };
   const namesOnly = (arr) => (Array.isArray(arr) ? arr.map(x => (x && typeof x === 'object') ? (x.name || '') : String(x)).filter(Boolean) : []);
-  
+
   // Helper to get cultivar names from cultivarsList
   const getCultivarNames = () => {
     try {
@@ -5910,7 +5918,7 @@ function buildSuggestedName() {
       return val('cultivars'); // Fallback to old field
     }
   };
-  
+
   let parts = [];
   if (type === 'Hash') {
     const cultivars = getCultivarNames() || val('cultivars');
@@ -5952,7 +5960,7 @@ function buildSuggestedName() {
   } else {
     parts = [val('cultivars') || val('productName'), type];
   }
-  const cleaned = parts.filter(Boolean).join(' - ').replace(/\s{2,}/g,' ').trim();
+  const cleaned = parts.filter(Boolean).join(' - ').replace(/\s{2,}/g, ' ').trim();
   return cleaned || (val('cultivars') || type || 'Review');
 }
 
@@ -6014,9 +6022,9 @@ function openSaveModal() {
   if (!dom.saveModal) return;
   try {
     // Hide preview-only overlay/modal if visible to avoid stacking issues
-    dom.previewOverlay?.setAttribute('hidden','');
-    dom.previewModal?.setAttribute('hidden','');
-  } catch {}
+    dom.previewOverlay?.setAttribute('hidden', '');
+    dom.previewModal?.setAttribute('hidden', '');
+  } catch { }
   dom.saveModal.style.display = 'flex';
   // In case some global style toggled visibility via hidden attr
   dom.saveModal.removeAttribute('hidden');
@@ -6032,20 +6040,20 @@ async function tryEnableRemote() {
   try {
     // If hosted under /reviews, use that as base-path; otherwise root
     const basePath = (typeof location !== 'undefined' && location.pathname && location.pathname.startsWith('/reviews')) ? '/reviews' : '';
-  const headers = {};
-  const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
-  if (token) headers['X-Auth-Token'] = token;
-  const r = await fetchWithTimeout(basePath + '/api/ping', { cache: 'no-store', headers }, 3000);
+    const headers = {};
+    const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
+    if (token) headers['X-Auth-Token'] = token;
+    const r = await fetchWithTimeout(basePath + '/api/ping', { cache: 'no-store', headers }, 3000);
     if (!r.ok) { console.warn('[remote] ping returned', r.status); return; }
     const js = await r.json().catch(() => null);
     if (js && js.ok) {
       remoteEnabled = true;
       remoteBase = basePath; // ensure subsequent calls hit /reviews/api when relevant
-  if (window.RMLogger && window.RMLogger.info) window.RMLogger.info('[remote] API détectée'); else console.info('[remote] API détectée');
+      if (window.RMLogger && window.RMLogger.info) window.RMLogger.info('[remote] API détectée'); else console.info('[remote] API détectée');
       // Toast supprimé pour ne pas surcharger l'UI
       renderCompactLibrary();
     }
-  } catch {}
+  } catch { }
 }
 
 async function remoteListReviews() {
@@ -6054,9 +6062,9 @@ async function remoteListReviews() {
     const headers = {};
     const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
     if (token) headers['X-Auth-Token'] = token;
-  const r = await fetchWithTimeout(remoteBase + '/api/reviews', { headers }, 5000);
-  if (!r.ok) throw new Error('HTTP '+r.status);
-  return await r.json();
+    const r = await fetchWithTimeout(remoteBase + '/api/reviews', { headers }, 5000);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
   } catch (e) { console.warn('Remote list erreur', e); return dbGetAllReviews(); }
 }
 
@@ -6064,9 +6072,9 @@ async function remoteListReviews() {
 async function remoteListPublicReviews() {
   if (!remoteEnabled) return [];
   try {
-  const r = await fetchWithTimeout(remoteBase + '/api/public/reviews', {}, 5000);
-  if (!r.ok) throw new Error('HTTP '+r.status);
-  return await r.json();
+    const r = await fetchWithTimeout(remoteBase + '/api/public/reviews', {}, 5000);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
   } catch (e) {
     console.warn('Remote public reviews error', e);
     return [];
@@ -6079,14 +6087,14 @@ async function remoteListMyReviews() {
   try {
     const token = localStorage.getItem('authToken');
     if (!token) return [];
-    
+
     const headers = { 'X-Auth-Token': token };
-  const r = await fetchWithTimeout(remoteBase + '/api/my/reviews', { headers }, 5000);
-  if (!r.ok) throw new Error('HTTP '+r.status);
-  return await r.json();
-  } catch (e) { 
-    console.warn('Remote my reviews error', e); 
-    return dbGetAllReviews(); 
+    const r = await fetchWithTimeout(remoteBase + '/api/my/reviews', { headers }, 5000);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } catch (e) {
+    console.warn('Remote my reviews error', e);
+    return dbGetAllReviews();
   }
 }
 
@@ -6098,7 +6106,7 @@ async function listUnifiedReviews() {
   // On ne retourne que les reviews publiques du serveur
   if (!remoteEnabled) return [];
   let remote = [];
-  try { remote = await remoteListReviews(); } catch {}
+  try { remote = await remoteListReviews(); } catch { }
   // Ne garder que les reviews publiques (ni privées ni brouillons)
   return (remote || []).filter(r => !r.isPrivate);
 }
@@ -6110,9 +6118,9 @@ async function remoteGetReview(id) {
     const headers = {};
     const token = (localStorage.getItem('authToken') || new URLSearchParams(location.search).get('token'));
     if (token) headers['X-Auth-Token'] = token;
-  const r = await fetchWithTimeout(`${remoteBase}/api/reviews/${id}`, { headers }, 5000);
-  if (!r.ok) throw new Error('HTTP '+r.status);
-  return await r.json();
+    const r = await fetchWithTimeout(`${remoteBase}/api/reviews/${id}`, { headers }, 5000);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
   } catch (e) {
     console.warn('Remote get erreur', e);
     return null;
@@ -6139,9 +6147,9 @@ async function remoteSave(reviewObj) {
     }
     const status = resp.status;
     let js = null;
-    try { js = await resp.json(); } catch {}
+    try { js = await resp.json(); } catch { }
     if (!resp.ok) {
-      return { ok: false, status, ...(js || {}), message: js?.message || ('HTTP '+status) };
+      return { ok: false, status, ...(js || {}), message: js?.message || ('HTTP ' + status) };
     }
     return { ok: true, review: js?.review || js };
   } catch (e) {
@@ -6240,15 +6248,15 @@ let currentPreviewMode = localStorage.getItem('previewMode') || 'detailed';
 function setPreviewMode(mode) {
   currentPreviewMode = mode;
   localStorage.setItem('previewMode', mode);
-  
+
   // Update UI buttons
   document.querySelectorAll('.preview-mode-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === mode);
   });
-  
+
   // Regenerate preview
   generateReview();
-  
+
   // Update modal content if it's open
   if (dom.previewModal && !dom.previewModal.hasAttribute('hidden')) {
     const html = dom.reviewContent?.innerHTML || '';
@@ -6281,7 +6289,7 @@ function generateReview() {
     default:
       generateDetailedPreview();
   }
-  
+
   // Always generate full review for export
   generateFullReview();
 }
@@ -6289,7 +6297,7 @@ function generateReview() {
 // Helper functions for preview generation
 function getPreviewData() {
   const structure = productStructures[currentType];
-  
+
   // Get cultivar info
   const getCultivarInfo = () => {
     try {
@@ -6300,19 +6308,19 @@ function getPreviewData() {
           details: list
         };
       }
-    } catch {}
+    } catch { }
     return {
       title: formData.cultivars || formData.productType || "Review en cours",
       details: null
     };
   };
-  
+
   const cultivarInfo = getCultivarInfo();
-  
+
   // Product icons
   const productIcons = {
     'Hash': '🧊',
-    'Fleur': '🌸', 
+    'Fleur': '🌸',
     'Concentré': '💎',
     'Comestible': '🍬'
   };
@@ -6321,7 +6329,7 @@ function getPreviewData() {
   let globalScore = 0;
   let maxGlobalScore = 0;
   let sectionsWithData = 0;
-  
+
   Object.values(totals).forEach(section => {
     if (section.sum && section.max) {
       globalScore += section.sum;
@@ -6329,10 +6337,10 @@ function getPreviewData() {
       sectionsWithData++;
     }
   });
-  
+
   const scoreOutOf10 = maxGlobalScore > 0 ? (globalScore / maxGlobalScore * 10) : 0;
   const percentage = maxGlobalScore > 0 ? (globalScore / maxGlobalScore * 100) : 0;
-  
+
   return {
     structure,
     cultivarInfo,
@@ -6348,7 +6356,7 @@ function getPreviewData() {
 // MODE 1: COMPACT - Vue condensée avec scores principaux
 function generateCompactPreview() {
   const data = getPreviewData();
-  
+
   let html = `
     <div class="preview-compact">
       <div class="preview-mode-selector">
@@ -6405,12 +6413,12 @@ function generateCompactPreview() {
   data.structure.sections.forEach((section, index) => {
     const sectionScore = totals[`section-${index}`];
     const hasData = section.fields.some(f => f.type !== "file" && formData[f.key]);
-    
+
     if (!hasData) return;
-    
+
     const scoreText = sectionScore ? `${sectionScore.sum.toFixed(1)}/${sectionScore.max}` : '';
     const scorePercent = sectionScore ? (sectionScore.sum / sectionScore.max * 100) : 0;
-    
+
     html += `
       <div class="compact-section">
         <div class="compact-section-header">
@@ -6422,7 +6430,7 @@ function generateCompactPreview() {
         </div>` : ''}
       </div>`;
   });
-  
+
   html += '</div></div>';
 
   if (dom.reviewContent) {
@@ -6437,7 +6445,7 @@ function generateCompactPreview() {
 // MODE 2: DETAILED - Vue complète avec tous les détails
 function generateDetailedPreview() {
   const data = getPreviewData();
-  
+
   let html = `
     <div class="preview-detailed">
       <div class="preview-mode-selector">
@@ -6471,7 +6479,7 @@ function generateDetailedPreview() {
       if (c.farm) meta.push(`📍 ${c.farm}`);
       if (c.breeder) meta.push(`🧬 ${c.breeder}`);
       if (c.matiere && c.matiere.length) meta.push(`🌱 ${c.matiere.join(', ')}`);
-      
+
       html += `
         <div class="detailed-cultivar">
           <span class="cultivar-badge">${idx + 1}</span>
@@ -6515,16 +6523,16 @@ function generateDetailedPreview() {
     const sectionScore = totals[`section-${index}`];
     let hasContent = false;
     const fields = [];
-    
+
     section.fields.forEach(field => {
       if (field.type === "file") return;
       const value = formData[field.key];
       if (!value) return;
-      
+
       hasContent = true;
       let displayValue = value;
       let fieldClass = "detailed-field";
-      
+
       // Format value based on type
       if (field.type === "number") {
         const numValue = Number.parseFloat(value);
@@ -6541,42 +6549,42 @@ function generateDetailedPreview() {
           if (Array.isArray(steps) && steps.length) {
             displayValue = `<ol class="field-sequence">
               ${steps.map(s => {
-                const name = (s && typeof s === 'object') ? s.name : String(s);
-                const parts = [];
-                if (s.mesh) parts.push(`${s.mesh}µm`);
-                if (s.tempC) parts.push(`${s.tempC}°C`);
-                if (s.pressureBar) parts.push(`${s.pressureBar}bar`);
-                if (s.cultivars && s.cultivars.length) parts.push(`🌿 ${s.cultivars.join(', ')}`);
-                const meta = parts.length ? ` <small>(${parts.join(', ')})</small>` : '';
-                return `<li>${name}${meta}</li>`;
-              }).join("")}
+              const name = (s && typeof s === 'object') ? s.name : String(s);
+              const parts = [];
+              if (s.mesh) parts.push(`${s.mesh}µm`);
+              if (s.tempC) parts.push(`${s.tempC}°C`);
+              if (s.pressureBar) parts.push(`${s.pressureBar}bar`);
+              if (s.cultivars && s.cultivars.length) parts.push(`🌿 ${s.cultivars.join(', ')}`);
+              const meta = parts.length ? ` <small>(${parts.join(', ')})</small>` : '';
+              return `<li>${name}${meta}</li>`;
+            }).join("")}
             </ol>`;
           }
-        } catch {}
+        } catch { }
       } else if (field.type === "multiple-choice" || field.type === "cultivar-list") {
         try {
           const items = JSON.parse(value);
           if (Array.isArray(items) && items.length) {
             displayValue = `<div class="field-tags">
               ${items.map(item => {
-                if (typeof item === 'object' && item.name) {
-                  // cultivar-list format
-                  return `<span class="field-tag cultivar-tag">${item.name}</span>`;
-                }
-                return `<span class="field-tag">${item}</span>`;
-              }).join("")}
+              if (typeof item === 'object' && item.name) {
+                // cultivar-list format
+                return `<span class="field-tag cultivar-tag">${item.name}</span>`;
+              }
+              return `<span class="field-tag">${item}</span>`;
+            }).join("")}
             </div>`;
           }
-        } catch {}
+        } catch { }
       }
-      
+
       fields.push({ label: field.label, value: displayValue, class: fieldClass });
     });
-    
+
     if (!hasContent) return;
-    
+
     const scorePercent = sectionScore ? (sectionScore.sum / sectionScore.max * 100) : 0;
-    
+
     html += `
       <div class="detailed-section">
         <div class="detailed-section-header">
@@ -6599,7 +6607,7 @@ function generateDetailedPreview() {
         </div>
       </div>`;
   });
-  
+
   html += '</div></div>';
 
   if (dom.reviewContent) {
@@ -6614,7 +6622,7 @@ function generateDetailedPreview() {
 // MODE 3: CARD - Style carte sociale
 function generateCardPreview() {
   const data = getPreviewData();
-  
+
   let html = `
     <div class="preview-card">
       <div class="preview-mode-selector">
@@ -6633,7 +6641,7 @@ function generateCardPreview() {
       </div>
       
       <div class="card-container">`;
-  
+
   // Image section
   if (imageUrl) {
     html += `
@@ -6652,11 +6660,11 @@ function generateCardPreview() {
         </div>
       </div>`;
   }
-  
+
   html += `
     <div class="card-content">
       <h2 class="card-title">${data.cultivarInfo.title}</h2>`;
-  
+
   // Score badge
   if (data.maxGlobalScore > 0) {
     const scoreClass = data.scoreOutOf10 >= 8 ? 'excellent' : data.scoreOutOf10 >= 6 ? 'good' : 'average';
@@ -6666,7 +6674,7 @@ function generateCardPreview() {
         <span class="card-score-unit">/10</span>
       </div>`;
   }
-  
+
   // Quick stats
   html += `
     <div class="card-stats">
@@ -6684,7 +6692,7 @@ function generateCardPreview() {
           <span class="stat-value">${data.sectionsWithData}/${data.structure.sections.length}</span>
         </div>
       </div>`;
-  
+
   // Farm info if available
   const farmInfo = data.cultivarInfo.details?.[0]?.farm || formData.farm;
   if (farmInfo) {
@@ -6697,19 +6705,19 @@ function generateCardPreview() {
         </div>
       </div>`;
   }
-  
+
   html += `
     </div>
     
     <div class="card-sections">`;
-  
+
   // Top sections with scores
   const sectionsWithScores = data.structure.sections
     .map((section, index) => ({ section, index, score: totals[`section-${index}`] }))
     .filter(s => s.score && s.score.sum > 0)
     .sort((a, b) => (b.score.sum / b.score.max) - (a.score.sum / a.score.max))
     .slice(0, 4);
-  
+
   sectionsWithScores.forEach(({ section, score }) => {
     const percent = (score.sum / score.max) * 100;
     html += `
@@ -6723,7 +6731,7 @@ function generateCardPreview() {
         </div>
       </div>`;
   });
-  
+
   html += `
     </div>
   </div>
@@ -6755,7 +6763,7 @@ function generateMinimalPreview() {
     // defensive: if helpers missing, keep zeros
   }
   const __completionPercent = __totalFields === 0 ? 0 : Math.round((__filledFields / __totalFields) * 100);
-  
+
   let html = `
     <div class="preview-minimal">
       <div class="preview-mode-selector">
@@ -6777,7 +6785,7 @@ function generateMinimalPreview() {
         <div class="minimal-icon">${data.productIcon}</div>
         <h2 class="minimal-title">${data.cultivarInfo.title}</h2>
         <p class="minimal-type">${currentType}</p>`;
-  
+
   if (data.maxGlobalScore > 0) {
     const scoreClass = data.scoreOutOf10 >= 8 ? 'excellent' : data.scoreOutOf10 >= 6 ? 'good' : 'average';
     html += `
@@ -6792,7 +6800,7 @@ function generateMinimalPreview() {
         <span class="minimal-progress-text">${data.globalScore.toFixed(1)} / ${data.maxGlobalScore} points</span>
       </div>`;
   }
-  
+
   html += `
     <div class="minimal-info">
       <span>${data.sectionsWithData} section${data.sectionsWithData > 1 ? 's' : ''} complétée${data.sectionsWithData > 1 ? 's' : ''}</span>
@@ -6813,7 +6821,7 @@ function generateMinimalPreview() {
 function generateFullReview() {
   // Version complète pour l'export optimisée pour lisibilité et compacité
   const structure = productStructures[currentType];
-  
+
   // Helper to get cultivar info
   const getCultivarInfo = () => {
     try {
@@ -6824,16 +6832,16 @@ function generateFullReview() {
           details: list
         };
       }
-    } catch {}
+    } catch { }
     return {
       title: formData.cultivars || formData.productType,
       details: null
     };
   };
-  
+
   const cultivarInfo = getCultivarInfo();
   const title = cultivarInfo.title;
-  
+
   const date = new Date().toLocaleDateString("fr-FR", {
     day: "2-digit",
     month: "long",
@@ -6843,7 +6851,7 @@ function generateFullReview() {
   // Icônes pour chaque type de produit
   const productIcons = {
     'Hash': '🧊',
-    'Fleur': '🌸', 
+    'Fleur': '🌸',
     'Concentré': '💎'
   };
 
@@ -6900,7 +6908,7 @@ function generateFullReview() {
 
   if (maxGlobalScore > 0) {
     const percentage = (globalScore / maxGlobalScore) * 100;
-    const scoreOut10 = (globalScore/maxGlobalScore*10);
+    const scoreOut10 = (globalScore / maxGlobalScore * 10);
     html += `<div class="global-score-compact">
       <div class="score-header">
         <h3>Score global</h3>
@@ -6973,17 +6981,17 @@ function generateFullReview() {
             fieldClass += " field-sequence";
             displayValue = `<ol class="sequence-list">
               ${steps.map(s => {
-                if (s && typeof s === 'object') {
-                  const name = s.name || '';
-                  const parts = [];
-                  if (s.mesh) parts.push(`${s.mesh}`);
-                  if (s.pressureBar) parts.push(`${s.pressureBar} bar`);
-                  if (s.tempC) parts.push(`${s.tempC}°C`);
-                  const meta = parts.length ? ` <small style="opacity:.8;">(${parts.join(', ')})</small>` : '';
-                  return `<li class="sequence-item">${name}${meta}</li>`;
-                }
-                return `<li class="sequence-item">${s}</li>`;
-              }).join("")}
+              if (s && typeof s === 'object') {
+                const name = s.name || '';
+                const parts = [];
+                if (s.mesh) parts.push(`${s.mesh}`);
+                if (s.pressureBar) parts.push(`${s.pressureBar} bar`);
+                if (s.tempC) parts.push(`${s.tempC}°C`);
+                const meta = parts.length ? ` <small style="opacity:.8;">(${parts.join(', ')})</small>` : '';
+                return `<li class="sequence-item">${name}${meta}</li>`;
+              }
+              return `<li class="sequence-item">${s}</li>`;
+            }).join("")}
             </ol>`;
           } else {
             return;
@@ -7074,9 +7082,9 @@ function generateFullReview() {
 
 function togglePreviewMode() {
   if (!window.fullReviewHtml) return;
-  
+
   isCompactPreview = !isCompactPreview;
-  
+
   if (isCompactPreview) {
     // Basculer vers l'aperçu compact
     generateLivePreview();
@@ -7101,7 +7109,7 @@ async function saveReview() {
     productName: formData.productName || formData.cultivars || formData.productType,
     totals,
     id: currentReviewId || undefined,
-  isDraft: false
+    isDraft: false
   };
   // Attach correlation key for dedupe
   reviewToSave.correlationKey = computeCorrelationKey(reviewToSave);
@@ -7117,7 +7125,7 @@ async function saveReview() {
     } else {
       // Fallback to localStorage if DB not available
       let reviews = [];
-      try { reviews = JSON.parse(localStorage.getItem("cannaReviews") || "[]"); } catch {}
+      try { reviews = JSON.parse(localStorage.getItem("cannaReviews") || "[]"); } catch { }
       if (Array.isArray(reviews)) {
         const strictKey = reviewToSave.correlationKey;
         const looseKey = computeLooseKey(reviewToSave);
@@ -7135,12 +7143,12 @@ async function saveReview() {
       }
       localStorage.setItem("cannaReviews", JSON.stringify(reviews));
     }
-    
+
     // Feedback pour sauvegarde explicite
     showToast("Review enregistrée avec succès!", "success");
     // Mémoriser l'état non-brouillon
     isNonDraftRecord = true;
-    
+
     // Rafraîchir la bibliothèque compacte
     renderCompactLibrary();
   } catch (e) {
@@ -7149,7 +7157,7 @@ async function saveReview() {
     dbFailedOnce = true;
     try {
       let reviews = [];
-      try { reviews = JSON.parse(localStorage.getItem("cannaReviews") || "[]"); } catch {}
+      try { reviews = JSON.parse(localStorage.getItem("cannaReviews") || "[]"); } catch { }
       // Offline fallback: just append/update the review
       if (currentReviewId != null) {
         const idx = reviews.findIndex(r => r && r.id === currentReviewId);
@@ -7237,18 +7245,18 @@ async function exportImage(event) {
       foreignObjectRendering: false
     });
 
-  if (window.RMLogger && window.RMLogger.log) window.RMLogger.log('Canvas généré:', canvas.width, 'x', canvas.height); else console.log('Canvas généré:', canvas.width, 'x', canvas.height);
+    if (window.RMLogger && window.RMLogger.log) window.RMLogger.log('Canvas généré:', canvas.width, 'x', canvas.height); else console.log('Canvas généré:', canvas.width, 'x', canvas.height);
 
     const link = document.createElement("a");
     const safeName = (formData.cultivars || formData.productType || "review").replace(/\s+/g, "-").toLowerCase();
     link.download = `review_${safeName}_${Date.now()}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
-    
-  if (window.RMLogger && window.RMLogger.log) window.RMLogger.log('Téléchargement déclenché'); else console.log('Téléchargement déclenché');
-  showToast("Image exportée avec succès.");
-  // clear draft remnants
-  clearSavedDraft();
+
+    if (window.RMLogger && window.RMLogger.log) window.RMLogger.log('Téléchargement déclenché'); else console.log('Téléchargement déclenché');
+    showToast("Image exportée avec succès.");
+    // clear draft remnants
+    clearSavedDraft();
   } catch (error) {
     console.error("Erreur export image détaillée:", error);
     console.error("Type d'erreur:", error.name);
@@ -7274,7 +7282,7 @@ function handleReset(mode = 'full', preserveDraft = false) {
     activeSectionIndex = -1;
     currentReviewId = null;
     isReadOnlyView = false;
-  isNonDraftRecord = false;
+    isNonDraftRecord = false;
 
     // Clear form fields
     if (dom.reviewForm) {
@@ -7345,19 +7353,19 @@ function showToast(message, type = "success") {
 // Vérifie si le formulaire contient du contenu significatif
 function hasSignificantContent() {
   if (!currentType) return false;
-  
+
   const data = serializeCurrentForm();
-  
+
   // Vérifier s'il y a des champs texte remplis
   const textFields = ['cultivars', 'productName', 'farm', 'description', 'notes', 'conclusion'];
   const hasText = textFields.some(field => {
     const value = data[field];
     return value && typeof value === 'string' && value.trim().length > 0;
   });
-  
+
   // Vérifier s'il y a une image
   const hasImage = imageUrl && imageUrl.trim().length > 0;
-  
+
   // Vérifier s'il y a des scores/ratings non-zéro
   const hasRatings = Object.values(data).some(value => {
     if (typeof value === 'number' && value > 0) return true;
@@ -7367,7 +7375,7 @@ function hasSignificantContent() {
     }
     return false;
   });
-  
+
   // Le contenu est significatif s'il y a du texte, une image, ou des ratings
   return hasText || hasImage || hasRatings;
 }
@@ -7402,4 +7410,4 @@ function restoreDraftIfAny() {
 // Check if a draft exists in localStorage (top-level, used during init)
 function hasSavedDraft() { return false; }
 
-function clearSavedDraft() { try { localStorage.removeItem('reviewsMakerDraft'); } catch {} }
+function clearSavedDraft() { try { localStorage.removeItem('reviewsMakerDraft'); } catch { } }
