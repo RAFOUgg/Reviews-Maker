@@ -5128,6 +5128,16 @@ body.modal-open .auth-status { pointer-events: none; opacity: 0.95; }
   }
 }
 
+/* Ensure hero title stays visually above assistant/sidebar panels in production
+   environments where some sidebars may be fixed with high z-index. Keep this
+   lower than the main top navigation and modals (which use very large z-indexes). */
+.home-page .hero-section,
+.home-page .hero-title {
+  position: relative;
+  z-index: 3000; /* above side panels (<= 1500) but below top-nav (5000) and modals */
+}
+
+
 .hero-subtitle {
   font-size: 1.25rem;
   color: var(--text-muted);
