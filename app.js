@@ -270,6 +270,19 @@ function closeConfirmDelete() {
 document.addEventListener('click', function (e) {
   const target = e.target;
   if (!target) return;
+  // Fallback delegation: if a .type-card was clicked but per-card listeners
+  // weren't attached (e.g. JS init error or late DOM), handle navigation here.
+  try {
+    const typeCard = (target.closest && target.closest('.type-card')) || null;
+    if (typeCard) {
+      const t = (typeCard.getAttribute && typeCard.getAttribute('data-type')) || typeCard.dataset.type || null;
+      if (t) {
+        // navigate and short-circuit so other handlers don't run twice
+        navigateToEditor(t);
+        return;
+      }
+    }
+  } catch (ex) { /* ignore fallback errors */ }
   if (target.id === 'closeConfirmDelete' || target.id === 'cancelDelete') {
     closeConfirmDelete();
   }

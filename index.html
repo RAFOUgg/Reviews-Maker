@@ -1,29 +1,35 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Composition, prévisualisation et exportation de reviews produits cannabis. Communauté et partage d'expertise." />
+  <meta name="description"
+    content="Composition, prévisualisation et exportation de reviews produits cannabis. Communauté et partage d'expertise." />
   <title>📑 Reviews Maker </title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="ui/ui-base.css" />
   <link rel="icon" type="image/png" href="ink/logo.png" />
 </head>
+
 <body class="home-page">
   <div class="app-shell">
     <header class="top-nav" role="banner">
       <div class="brand" role="button" tabindex="0" aria-label="Accueil">
-  <span class="brand-mark" aria-hidden="true"><img src="ink/logo.png" alt="" style="width:22px;height:22px;object-fit:contain;border-radius:4px" /></span>
+        <span class="brand-mark" aria-hidden="true"><img src="ink/logo.png" alt=""
+            style="width:22px;height:22px;object-fit:contain;border-radius:4px" /></span>
         <div class="brand-text">
           <strong>Reviews Maker</strong>
           <span>Analyse de qualité</span>
         </div>
       </div>
       <div class="top-nav-status">
-          <div class="nav-actions">
+        <div class="nav-actions">
           <span class="pill-btn" id="openTips" title="Afficher les raccourcis et astuces" tabindex="0" role="button">
             <span aria-hidden="true">💡</span>
             Astuce
@@ -38,7 +44,7 @@
         <div class="hero-content">
           <h1 class="hero-title">Composez une review premium</h1>
           <p class="hero-subtitle">Sélectionnez le type de produit pour activer les blocs adaptés.</p>
-          
+
           <!-- Sélection du type de produit -->
           <div class="type-selector" role="list">
             <button type="button" class="type-card" data-type="Hash" role="listitem">
@@ -104,7 +110,8 @@
       <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="libraryTitle">
         <div class="modal-header">
           <div style="display:flex;align-items:center;gap:12px;">
-            <button type="button" class="btn btn-ghost" id="libraryBackToAccount" style="display:none;">← Retour</button>
+            <button type="button" class="btn btn-ghost" id="libraryBackToAccount" style="display:none;">←
+              Retour</button>
             <h2 id="libraryTitle">🖼️ Galerie publique</h2>
           </div>
           <button type="button" class="modal-close" id="closeLibrary" aria-label="Fermer">
@@ -113,7 +120,8 @@
         </div>
         <div class="modal-body">
           <div class="search-bar">
-            <input type="text" id="librarySearch" placeholder="Rechercher par nom, variété, farm..." class="search-input">
+            <input type="text" id="librarySearch" placeholder="Rechercher par nom, variété, farm..."
+              class="search-input">
           </div>
           <div class="library-grid" id="libraryGrid">
             <!-- Reviews complètes seront générées ici -->
@@ -169,47 +177,59 @@
   </div>
 
   <!-- Modal Connexion / Authentification -->
-    <!-- Redesigned Account Modal (same structure as in review.html) -->
-  <div id="accountModal" data-backdrop="none" aria-hidden="true">
-      <div class="account-overlay" id="accountModalOverlay"></div>
-      <div class="account-dialog" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
-        <div class="account-header">
-          <h3 id="accountTitle">Mon compte</h3>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <button type="button" class="btn btn-ghost" id="openAccountSettings" title="Paramètres">⚙️ Paramètres</button>
-            <button type="button" class="modal-close" id="closeAccountModal" aria-label="Fermer">✕</button>
+  <!-- Redesigned Account Modal (same structure as in review.html) -->
+  <div id="accountModal" data-backdrop="none" aria-hidden="true" hidden>
+    <div class="account-overlay" id="accountModalOverlay"></div>
+    <div class="account-dialog" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
+      <div class="account-header">
+        <h3 id="accountTitle">Mon compte</h3>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button type="button" class="btn btn-ghost" id="openAccountSettings" title="Paramètres">⚙️ Paramètres</button>
+          <button type="button" class="modal-close" id="closeAccountModal" aria-label="Fermer">✕</button>
+        </div>
+      </div>
+      <div class="account-body">
+        <div class="account-left">
+          <div class="account-profile">
+            <div class="account-avatar">👤</div>
+            <div class="account-meta">
+              <div id="accountEmail">—</div>
+              <div class="sub">Membre Reviews Maker</div>
+            </div>
+          </div>
+          <div class="stats-grid" aria-hidden="false">
+            <div class="stat-card">
+              <div class="num" id="accountTotal">0</div>
+              <div class="label">Total</div>
+            </div>
+            <div class="stat-card">
+              <div class="num" id="statPublic">0</div>
+              <div class="label">Public</div>
+            </div>
+            <div class="stat-card">
+              <div class="num" id="statPrivate">0</div>
+              <div class="label">Privé</div>
+            </div>
+          </div>
+          <div style="margin-top:10px;">
+            <h4 class="section-title">Répartition par type</h4>
+            <div id="accountStatsByType" class="account-stats-by-type"></div>
           </div>
         </div>
-        <div class="account-body">
-          <div class="account-left">
-            <div class="account-profile">
-              <div class="account-avatar">👤</div>
-              <div class="account-meta">
-                <div id="accountEmail">—</div>
-                <div class="sub">Membre Reviews Maker</div>
-              </div>
+        <div class="account-right">
+          <div class="panel">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <h4 class="section-title">Actions</h4>
             </div>
-            <div class="stats-grid" aria-hidden="false">
-              <div class="stat-card"><div class="num" id="accountTotal">0</div><div class="label">Total</div></div>
-              <div class="stat-card"><div class="num" id="statPublic">0</div><div class="label">Public</div></div>
-              <div class="stat-card"><div class="num" id="statPrivate">0</div><div class="label">Privé</div></div>
-            </div>
-            <div style="margin-top:10px;"><h4 class="section-title">Répartition par type</h4>
-              <div id="accountStatsByType" class="account-stats-by-type"></div>
-            </div>
-          </div>
-          <div class="account-right">
-            <div class="panel">
-              <div style="display:flex;align-items:center;justify-content:space-between;">
-                <h4 class="section-title">Actions</h4>
-              </div>
-              <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;"><button class="btn btn-outline" id="openLibraryFromAccount">Ma bibliothèque</button><button class="btn btn-outline" id="accountDisconnect">Se déconnecter</button></div>
-            </div>
-            </div>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;"><button class="btn btn-outline"
+                id="openLibraryFromAccount">Ma bibliothèque</button><button class="btn btn-outline"
+                id="accountDisconnect">Se déconnecter</button></div>
           </div>
         </div>
       </div>
     </div>
+  </div>
+  </div>
 
   <div class="modal" id="authModal" style="display: none;">
     <div class="modal-overlay" id="authModalOverlay"></div>
@@ -222,8 +242,9 @@
       </div>
       <div class="modal-body">
         <div class="auth-content">
-          <p class="auth-description">Liez votre compte pour synchroniser vos reviews sur le serveur et y accéder depuis n'importe quel appareil.</p>
-          
+          <p class="auth-description">Liez votre compte pour synchroniser vos reviews sur le serveur et y accéder depuis
+            n'importe quel appareil.</p>
+
           <!-- Étape 1: Demande d'email -->
           <div id="authStepEmail" class="auth-step">
             <div class="form-group">
@@ -234,7 +255,7 @@
               <button type="button" class="btn btn-primary" id="authSendCode">Envoyer le code</button>
             </div>
           </div>
-          
+
           <!-- Étape 2: Vérification du code -->
           <div id="authStepCode" class="auth-step" style="display:none;">
             <p class="auth-info">Un code de vérification a été envoyé à <strong id="authEmailDisplay"></strong></p>
@@ -246,9 +267,10 @@
               <button type="button" class="btn btn-outline" id="authBack">Retour</button>
               <button type="button" class="btn btn-primary" id="authVerifyCode">Vérifier</button>
             </div>
-            <p class="auth-help">Code non reçu ? <button type="button" class="link-btn" id="authResendCode">Renvoyer</button></p>
+            <p class="auth-help">Code non reçu ? <button type="button" class="link-btn"
+                id="authResendCode">Renvoyer</button></p>
           </div>
-          
+
           <!-- Étape 3: Connecté -->
           <div id="authStepConnected" class="auth-step" style="display:none;">
             <div class="account-profile" style="margin-bottom:10px;">
@@ -259,17 +281,29 @@
               </div>
             </div>
             <div class="stats-grid" style="margin-bottom:10px;">
-              <div class="stat-card"><div class="num" id="authConnTotal">0</div><div class="label">Total</div></div>
-              <div class="stat-card"><div class="num" id="authConnPublic">0</div><div class="label">Public</div></div>
-              <div class="stat-card"><div class="num" id="authConnPrivate">0</div><div class="label">Privé</div></div>
+              <div class="stat-card">
+                <div class="num" id="authConnTotal">0</div>
+                <div class="label">Total</div>
+              </div>
+              <div class="stat-card">
+                <div class="num" id="authConnPublic">0</div>
+                <div class="label">Public</div>
+              </div>
+              <div class="stat-card">
+                <div class="num" id="authConnPrivate">0</div>
+                <div class="label">Privé</div>
+              </div>
             </div>
-            <div style="margin-top:10px;"><h4 class="section-title">Répartition par type</h4><div id="authConnByType" class="account-stats-by-type"></div></div>
+            <div style="margin-top:10px;">
+              <h4 class="section-title">Répartition par type</h4>
+              <div id="authConnByType" class="account-stats-by-type"></div>
+            </div>
             <div class="auth-actions" style="margin-top:12px;">
               <button type="button" class="btn btn-outline" id="authOpenLibrary">Ma bibliothèque</button>
               <button type="button" class="btn btn-outline" id="authDisconnect">Se déconnecter</button>
             </div>
           </div>
-          
+
           <div class="auth-status" id="authStatus" style="display:none;"></div>
         </div>
       </div>
@@ -295,11 +329,23 @@
           </div>
         </div>
         <div class="stats-grid" style="margin-bottom:10px;">
-          <div class="stat-card"><div class="num" id="publicTotal">0</div><div class="label">Total</div></div>
-          <div class="stat-card"><div class="num" id="publicPublic">0</div><div class="label">Public</div></div>
-          <div class="stat-card"><div class="num" id="publicPrivate">0</div><div class="label">Privé</div></div>
+          <div class="stat-card">
+            <div class="num" id="publicTotal">0</div>
+            <div class="label">Total</div>
+          </div>
+          <div class="stat-card">
+            <div class="num" id="publicPublic">0</div>
+            <div class="label">Public</div>
+          </div>
+          <div class="stat-card">
+            <div class="num" id="publicPrivate">0</div>
+            <div class="label">Privé</div>
+          </div>
         </div>
-        <div style="margin-top:10px;"><h4 class="section-title">Répartition par type</h4><div id="publicByType" class="account-stats-by-type"></div></div>
+        <div style="margin-top:10px;">
+          <h4 class="section-title">Répartition par type</h4>
+          <div id="publicByType" class="account-stats-by-type"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -347,4 +393,5 @@
   <script src="app.js?v=2025-10-24-prodfix-1"></script>
   <!-- Feedback widget removed -->
 </body>
+
 </html>
