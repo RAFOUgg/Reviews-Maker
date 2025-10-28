@@ -1,3 +1,28 @@
+// Lightweight runtime logger and console gate.
+// Use window.DEBUG = true or add ?debug=1 to the URL to enable debug logs in production.
+(function(){
+  try {
+    const origConsole = Object.assign({}, console);
+    let enabled = (window.DEBUG === true) || /[?&]debug=1(&|$)/.test(location.search);
+    window.RMLogger = {
+      enabled: () => enabled,
+      debug: (...args) => { if (enabled) origConsole.debug('[RM DEBUG]', ...args); },
+      info: (...args) => { origConsole.info('[RM INFO]', ...args); },
+      warn: (...args) => { origConsole.warn('[RM WARN]', ...args); },
+      error: (...args) => { origConsole.error('[RM ERR]', ...args); },
+      setEnabled: (v) => { enabled = !!v; }
+    };
+    // Override console methods to funnel through RMLogger (so legacy console.x calls are controllable)
+    console.debug = (...a) => RMLogger.debug(...a);
+    console.info = (...a) => RMLogger.info(...a);
+    console.warn = (...a) => RMLogger.warn(...a);
+    console.error = (...a) => RMLogger.error(...a);
+    console.log = (...a) => RMLogger.info(...a);
+  } catch (e) {
+    /* fail silently to avoid blocking app init */
+  }
+})();
+
 function setupAccountModalEvents() {
   if (dom.closeAccountModal) {
     dom.closeAccountModal.addEventListener('click', () => closeAccountModal());
