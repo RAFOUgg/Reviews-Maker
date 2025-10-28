@@ -6055,6 +6055,22 @@ body.modal-open .auth-status {
   flex: 1;
 }
 
+/* Standardize section header spacing to ensure consistent left/right inset
+   across pages and viewports. Use clamp() so spacing scales with viewport
+   while providing sensible min/max values. Placed at file-end to override
+   earlier loose definitions and keep changes low-risk. */
+.app-shell .workspace .section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* horizontal inset that scales: min 12px, ideal 2vw, max 24px */
+  padding-inline: clamp(12px, 2vw, 24px);
+  /* vertical padding kept small and consistent */
+  padding-block: 0.6rem;
+  gap: clamp(8px, 1.2vw, 14px);
+  width: 100%;
+}
+
 .compact-library {
   /* Supprime l'apparence de boîte et tout scroll interne */
   position: relative;
