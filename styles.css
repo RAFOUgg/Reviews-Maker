@@ -255,9 +255,10 @@ body::before {
 .top-nav.over-hero {
   background: rgba(15, 23, 42, 0.66);
   backdrop-filter: blur(8px);
-  padding-top: 10px;
-  padding-bottom: 10px;
-  transition: background 200ms ease, padding 200ms ease;
+  /* Keep visual treatment but avoid changing layout (padding) to prevent
+     content reflow when the hero area toggles. Height changes here cause
+     the hero/title to shift as async content loads. */
+  transition: background 200ms ease;
 }
 
 .top-nav-status {

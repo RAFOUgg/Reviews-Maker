@@ -119,11 +119,14 @@ function updateTopNavHeight() {
     let t = null;
     const run = () => { updateTopNavHeight(); };
     window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(run, 120); });
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', run, { once: true });
-    } else {
-      run();
-    }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', run, { once: true });
+      } else {
+        run();
+      }
+      // Also update after the full window load (images/fonts may change header size)
+      // This reduces layout shifts that happen when async content finishes loading.
+      try { window.addEventListener('load', run, { once: true }); } catch (e) {}
   } catch(e){}
 })();
   // NOTE: removed forced modal-show debug code that opened account/profile modals
