@@ -4533,7 +4533,7 @@ body {
   background: rgba(10, 18, 34, 0.98);
   border-left: 1px solid var(--glass-border);
   box-shadow: -24px 0 60px -24px rgba(0,0,0,0.55);
-  z-index: 1250;
+  z-index: var(--z-panel);
   display: grid;
   grid-template-rows: auto 1fr;
 }
@@ -4544,12 +4544,12 @@ body {
   inset: 0;
   background: rgba(2, 6, 14, 0.65);
   backdrop-filter: blur(2px);
-  z-index: 1400;
+  z-index: var(--z-preview);
 }
 .preview-modal {
   position: fixed;
   inset: 0;
-  z-index: 1450;
+  z-index: calc(var(--z-preview) + 50);
   display: grid;
   grid-template-rows: auto 1fr;
   width: min(1000px, 94vw);
@@ -5078,13 +5078,15 @@ body.modal-open .auth-status { pointer-events: none; opacity: 0.95; }
 }
 
 .home-page .workspace {
-  /* Wider canvas so the gallery can breathe */
-  max-width: 1400px;
+  /* Wider canvas so the gallery can breathe. Use fluid bounds so layout adapts
+    to different viewport sizes while keeping a sane max width. */
+  max-width: min(1400px, 94vw);
+  width: 100%;
   margin: 0 auto;
-  padding: 2rem;
+  padding: clamp(1rem, 2.5vw, 2rem);
   /* Ensure the hero sits under the top navigation: add top padding equal to nav height
-     so the hero title will scroll underneath the sticky header instead of overlapping it. */
-  padding-top: calc(2rem + var(--top-nav-height, 64px));
+    so the hero title will scroll underneath the sticky header instead of overlapping it. */
+  padding-top: calc(clamp(1rem, 2.5vw, 2rem) + var(--top-nav-height, 64px));
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -5108,8 +5110,9 @@ body.modal-open .auth-status { pointer-events: none; opacity: 0.95; }
 }
 
 .hero-content {
-  max-width: 1100px;
+  max-width: min(1100px, 92vw);
   margin: 0 auto;
+  padding: 0 1rem;
 }
 
 .hero-title {
@@ -6061,7 +6064,7 @@ kbd {
     border-radius: 0 !important;
     backdrop-filter: blur(20px) !important;
     box-shadow: none !important;
-    z-index: 5000 !important; /* Ensure header stays above hero/title */
+    z-index: var(--z-top-nav) !important; /* Ensure header stays above hero/title */
   }
   
   .top-nav .brand .brand-text strong {
