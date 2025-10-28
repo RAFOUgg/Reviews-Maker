@@ -35,6 +35,13 @@
   --scrollbar-thumb: rgba(148, 163, 184, 0.38);
   --scrollbar-thumb-hover: rgba(52, 211, 153, 0.7);
   --scrollbar-track: rgba(12, 21, 38, 0.4);
+  /* Centralized stacking/z-index variables to avoid scattered magic numbers */
+  --z-panel: 1400;       /* side panels, drawers */
+  --z-preview: 1500;     /* preview overlays/modals that sit above panels */
+  --z-floating-btn: 1300;/* floating auth button */
+  --z-hero: 3000;       /* hero title */
+  --z-top-nav: 5000;    /* top navigation */
+  --z-modal: 10120;     /* main account/modal z-index (keeps parity with existing account modal) */
 }
 
 html, body {
@@ -4303,7 +4310,7 @@ body {
   top: auto;
   height: auto;
   overflow: visible;
-  z-index: 20;
+  z-index: var(--z-panel);
   max-width: 1040px;
   width: 100%;
   justify-self: center;
@@ -5067,7 +5074,7 @@ body.modal-open .auth-status { pointer-events: none; opacity: 0.95; }
   border-bottom: 1px solid var(--glass-border);
   position: sticky;
   top: 0;
-  z-index: 5000; /* ensure header stays on top */
+  z-index: var(--z-top-nav); /* ensure header stays on top */
 }
 
 .home-page .workspace {
@@ -5134,7 +5141,7 @@ body.modal-open .auth-status { pointer-events: none; opacity: 0.95; }
 .home-page .hero-section,
 .home-page .hero-title {
   position: relative;
-  z-index: 3000; /* above side panels (<= 1500) but below top-nav (5000) and modals */
+  z-index: var(--z-hero); /* above side panels but below top-nav and modals */
 }
 
 
