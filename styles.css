@@ -78,6 +78,10 @@
 }
 
 :root {
+  /* Ensure a single canonical header height used across rules. JS may override
+     this at runtime, but having a CSS default avoids mismatches between
+     different fallbacks that prevented correct scrolling on some viewports. */
+  --top-nav-height: 4.5rem;
   --bg-gradient: radial-gradient(circle at 5% -10%, #1d3b74 0%, #0a162b 45%, #030712 100%);
   --surface-primary: rgba(15, 23, 42, 0.88);
   --surface-elevated: rgba(17, 30, 58, 0.94);
@@ -142,10 +146,10 @@ body {
   scrollbar-gutter: stable both-edges;
   overflow-x: hidden;
   overflow-y: auto;
-  /* Use a CSS variable set from JS so the header height is measured precisely
-     (handles browser zoom / font changes). Falls back to 72px if not set. */
-  /* prefer rem fallback so it scales with zoom; JS can still set --top-nav-height in px or rem */
-  scroll-padding-top: calc(var(--top-nav-height, 4.5rem) + 0.5rem);
+  /* Use canonical --top-nav-height for scroll offset so browsers can reach
+    the top of the document even when the header is sticky. JS may override
+    --top-nav-height at runtime; the CSS default above keeps behavior stable. */
+  scroll-padding-top: calc(var(--top-nav-height) + 0.5rem);
 }
 
 /* Global scrollbar styling (WebKit) */
@@ -319,7 +323,10 @@ body::before {
   box-shadow: var(--shadow-lg);
   backdrop-filter: blur(18px);
   position: sticky;
-  top: 0.75rem;
+  /* Pin header to the very top to avoid fractional offsets that could
+     make content appear unreachable on some small viewports. JS can still
+     animate or add the .over-hero class to change visual treatment. */
+  top: 0;
   /* Use centralized z-index so modals and other layers can reference the same scale */
   z-index: var(--z-top-nav);
 }
