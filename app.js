@@ -43,12 +43,17 @@ function setupAccountModalEvents() {
   const accountDisconnectBtn = document.getElementById('accountDisconnect');
   if (accountDisconnectBtn) {
     accountDisconnectBtn.addEventListener('click', async () => {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('authEmail');
-      localStorage.removeItem('discordUsername');
-      localStorage.removeItem('discordId');
-      sessionStorage.removeItem('authEmail');
-      sessionStorage.removeItem('pendingCode');
+      try {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('authEmail');
+        localStorage.removeItem('discordUsername');
+        localStorage.removeItem('discordId');
+        sessionStorage.removeItem('authEmail');
+        sessionStorage.removeItem('pendingCode');
+      } catch (e) {
+        console.error('Storage clear error:', e);
+        alert('Erreur lors de la suppression des données locales. Veuillez vérifier les permissions du navigateur.');
+      }
       showAuthStatus('Déconnecté', 'info');
       updateAuthUI();
       if (dom.accountModal) dom.accountModal.style.display = 'none';
@@ -238,7 +243,12 @@ function navigateToEditor(productType = null, reviewData = null, reviewId = null
   }
   if (reviewData) {
     // Stocker temporairement les données de review pour la page éditeur
-    sessionStorage.setItem('pendingReviewData', JSON.stringify(reviewData));
+    try {
+      sessionStorage.setItem('pendingReviewData', JSON.stringify(reviewData));
+    } catch (e) {
+      console.error('Erreur stockage sessionStorage:', e);
+      alert('Erreur lors de l\'enregistrement local de la review. Vérifiez les permissions du navigateur.');
+    }
   }
   window.location.href = url.toString();
 }
@@ -253,9 +263,20 @@ function getEditorParams() {
   const type = params.get('type');
   const reviewIdStr = params.get('id') || params.get('editId');
   const reviewId = reviewIdStr != null ? (isNaN(Number(reviewIdStr)) ? reviewIdStr : Number(reviewIdStr)) : null;
-  const pendingData = sessionStorage.getItem('pendingReviewData');
+  let pendingData = null;
+  try {
+    pendingData = sessionStorage.getItem('pendingReviewData');
+  } catch (e) {
+    console.error('Erreur lecture sessionStorage:', e);
+    alert('Erreur lors de la lecture des données locales. Vérifiez les permissions du navigateur.');
+  }
   if (pendingData) {
-    sessionStorage.removeItem('pendingReviewData');
+    try {
+      sessionStorage.removeItem('pendingReviewData');
+    } catch (e) {
+      console.error('Erreur suppression sessionStorage:', e);
+      alert('Erreur lors de la suppression des données locales. Vérifiez les permissions du navigateur.');
+    }
     return { type, reviewData: JSON.parse(pendingData), reviewId };
   }
   return { type, reviewData: null, reviewId };
@@ -298,6 +319,19 @@ function closeConfirmDelete() {
 document.addEventListener('click', function (e) {
   const target = e.target;
   if (!target) return;
+  // Fallback delegation: if a .type-card was clicked but per-card listeners
+  // weren't attached (e.g. JS init error or late DOM), handle navigation here.
+  try {
+    const typeCard = (target.closest && target.closest('.type-card')) || null;
+    if (typeCard) {
+      const t = (typeCard.getAttribute && typeCard.getAttribute('data-type')) || typeCard.dataset.type || null;
+      if (t) {
+        // navigate and short-circuit so other handlers don't run twice
+        navigateToEditor(t);
+        return;
+      }
+    }
+  } catch (ex) { /* ignore fallback errors */ }
   if (target.id === 'closeConfirmDelete' || target.id === 'cancelDelete') {
     closeConfirmDelete();
   }
