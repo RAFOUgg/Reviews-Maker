@@ -5,6 +5,23 @@
     gap: 14px;
   }
 
+  /* Accessibility and stacking fixes: ensure top-nav remains above side panels
+   and assistant overlays on all viewports without covering modal dialogs. This
+   rule intentionally uses !important and is placed at the end of the file so
+   it overrides mobile/legacy blocks that set the header to `position: static`. */
+  .top-nav {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: var(--z-top-nav) !important;
+  }
+
+  /* Keep the scroll-padding aligned to the canonical header height so anchors
+   and in-page jumps land below the sticky header. Use !important to prevent
+   accidental overrides from mobile-specific blocks. */
+  body {
+    scroll-padding-top: calc(var(--top-nav-height) + 0.5rem) !important;
+  }
+
   .type-card {
     min-width: 0;
 
@@ -126,7 +143,7 @@
   /* floating auth button */
   --z-hero: 3000;
   /* hero title */
-  --z-top-nav: 5000;
+  --z-top-nav: 7000;
   /* top navigation */
   --z-modal: 10120;
   /* main account/modal z-index (keeps parity with existing account modal) */
