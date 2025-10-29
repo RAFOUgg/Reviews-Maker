@@ -5948,13 +5948,12 @@ body.modal-open .auth-status {
 }
 
 .hero-title {
-  font-size: 3.2rem;
-  /* slightly reduced so it doesn't overwhelm the header */
+  /* Responsive scaling so the title fits nicely on small and large viewports */
+  font-size: clamp(1.6rem, 5.8vw, 3.2rem);
   font-weight: 800;
-  margin-bottom: 1.5rem;
-  /* Fallback visible color for browsers that don't support text-fill/clip */
+  margin-bottom: clamp(0.8rem, 3.2vw, 1.5rem);
   color: var(--text);
-  line-height: 1.1;
+  line-height: 1.05;
   letter-spacing: -0.02em;
   text-shadow: 0 0.625rem 1.625rem rgba(2, 6, 23, 0.72);
 }
@@ -5994,7 +5993,8 @@ body.modal-open .auth-status {
 
 .home-page .type-selector {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  /* allow narrower cards on small windows so layout adapts proportionally */
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.25rem;
   margin: 0 auto 1.5rem auto;
   max-width: 920px;
