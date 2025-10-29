@@ -298,7 +298,8 @@ body::before {
   backdrop-filter: blur(18px);
   position: sticky;
   top: 0.75rem;
-  z-index: 10;
+  /* Use centralized z-index so modals and other layers can reference the same scale */
+  z-index: var(--z-top-nav);
 }
 
 /* When the header sits above the hero area, make it a bit translucent and slightly smaller
@@ -645,7 +646,8 @@ video {
   /* toggled via inline style or .active */
   align-items: center;
   justify-content: center;
-  z-index: 1200;
+  /* Ensure modals sit above all other UI elements using the centralized var */
+  z-index: var(--z-modal);
 }
 
 .modal.active,
@@ -661,6 +663,8 @@ video {
   inset: 0;
   background: rgba(3, 6, 12, 0.6);
   backdrop-filter: blur(8px);
+  /* overlay sits just below the modal content */
+  z-index: calc(var(--z-modal) - 10);
 }
 
 /* Vote buttons (like/dislike) — compact pill overlays on images */
@@ -759,6 +763,8 @@ video {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  /* ensure the content is above the overlay and other elements */
+  z-index: calc(var(--z-modal) + 1);
 }
 
 .modal-header,
