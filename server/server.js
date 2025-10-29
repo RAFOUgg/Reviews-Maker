@@ -82,7 +82,7 @@ db.serialize(() => {
   db.run(INIT_SQL);
   // Idempotent migration for existing databases missing new columns
   db.all("PRAGMA table_info('reviews')", [], (err, rows) => {
-  if (err) { console.warn('[db] PRAGMA table_info error', err); return; }
+    if (err) { console.warn('[db] PRAGMA table_info error', err); return; }
     const cols = new Set((rows || []).map(r => r.name));
     const addCol = (name, defSql, after = null) => new Promise(res => {
       if (cols.has(name)) return res(true);
@@ -113,13 +113,13 @@ db.serialize(() => {
           if (e) console.warn('[db] create review_likes failed', e.message);
           else infoLog('[db] ensured review_likes table');
         });
-        db.run('CREATE UNIQUE INDEX IF NOT EXISTS idx_review_owner ON review_likes(reviewId, ownerId)', [], () => {});
+        db.run('CREATE UNIQUE INDEX IF NOT EXISTS idx_review_owner ON review_likes(reviewId, ownerId)', [], () => { });
       } catch (e) { console.warn('[db] review_likes migration error', e && e.message ? e.message : e); }
       // Backfill sensible defaults for existing rows (NULLs only)
-      db.run("UPDATE reviews SET isDraft=0 WHERE isDraft IS NULL", () => {});
-      db.run("UPDATE reviews SET isPrivate=0 WHERE isPrivate IS NULL", () => {});
-      db.run("UPDATE reviews SET createdAt=datetime('now') WHERE createdAt IS NULL", () => {});
-      db.run("UPDATE reviews SET updatedAt=datetime('now') WHERE updatedAt IS NULL", () => {});
+      db.run("UPDATE reviews SET isDraft=0 WHERE isDraft IS NULL", () => { });
+      db.run("UPDATE reviews SET isPrivate=0 WHERE isPrivate IS NULL", () => { });
+      db.run("UPDATE reviews SET createdAt=datetime('now') WHERE createdAt IS NULL", () => { });
+      db.run("UPDATE reviews SET updatedAt=datetime('now') WHERE updatedAt IS NULL", () => { });
     })();
   });
 });
@@ -155,7 +155,7 @@ app.use((req, _res, next) => {
       // optionally log for debugging (kept minimal)
       console.debug('[path-rewrite] Rewrote request to', req.url);
     }
-  } catch (e) {}
+  } catch (e) { }
   next();
 });
 // Auth middleware (optional): accepts X-Auth-Token header; matches file in tokens dir
@@ -176,31 +176,31 @@ function resolveOwnerIdFromToken(token) {
             discordUsername: js.discordUsername || null
           };
         }
-      } catch {}
+      } catch { }
       return { ownerId: content || token, roles: [], discordId: null, discordUsername: null };
     }
-  } catch {}
+  } catch { }
   return null;
 }
 
 app.use((req, _res, next) => {
   const token = req.header('X-Auth-Token') || req.query.token;
   const info = resolveOwnerIdFromToken(token);
-  let ownerId = null; 
+  let ownerId = null;
   let roles = [];
   let discordId = null;
   let discordUsername = null;
-  
-  if (info && typeof info === 'object') { 
-    ownerId = info.ownerId || null; 
+
+  if (info && typeof info === 'object') {
+    ownerId = info.ownerId || null;
     roles = Array.isArray(info.roles) ? info.roles : [];
     discordId = info.discordId || null;
     discordUsername = info.discordUsername || null;
   }
-  else if (typeof info === 'string') { 
-    ownerId = info; 
+  else if (typeof info === 'string') {
+    ownerId = info;
   }
-  
+
   req.auth = { token: token || null, ownerId, roles, discordId, discordUsername };
   next();
 });
@@ -209,7 +209,7 @@ app.use((req, _res, next) => {
 function rowToReview(row) {
   if (!row) return null;
   let payload = {};
-  try { payload = JSON.parse(row.data); } catch {}
+  try { payload = JSON.parse(row.data); } catch { }
   if (row.imagePath && !payload.image) {
     payload.image = '/images/' + path.basename(row.imagePath);
   }
@@ -268,7 +268,7 @@ app.get('/api/reviews/:id', (req, res) => {
 app.post('/api/reviews', upload.single('image'), (req, res) => {
   let incoming = {};
   if (req.body.data) {
-    try { incoming = JSON.parse(req.body.data); } catch {}
+    try { incoming = JSON.parse(req.body.data); } catch { }
   } else {
     incoming = req.body;
   }
@@ -292,17 +292,17 @@ app.post('/api/reviews', upload.single('image'), (req, res) => {
   const json = JSON.stringify(incoming);
   db.run('INSERT INTO reviews (productType, name, data, imagePath, ownerId, isDraft, isPrivate) VALUES (?,?,?,?,?,?,?)',
     [productType, name, json, req.file ? req.file.path : null, ownerId, isDraft, isPrivate],
-    function(err) {
+    function (err) {
       if (err) return res.status(500).json({ error: 'db_error' });
       db.get('SELECT * FROM reviews WHERE id=?', [this.lastID], (e2, row) => {
         if (e2) return res.status(500).json({ error: 'db_error' });
         res.json({ review: rowToReview(row) });
       });
     });
-      db.get('SELECT * FROM reviews WHERE id=?', [this.lastID], (e2, row) => {
-        if (e2) return res.status(500).json({ error: 'db_error' });
-        res.json({ review: rowToReview(row) });
-      });
+  db.get('SELECT * FROM reviews WHERE id=?', [this.lastID], (e2, row) => {
+    if (e2) return res.status(500).json({ error: 'db_error' });
+    res.json({ review: rowToReview(row) });
+  });
 });
 
 // Update
@@ -322,7 +322,7 @@ app.put('/api/reviews/:id', upload.single('image'), (req, res) => {
 
     let incoming = {};
     if (req.body.data) {
-      try { incoming = JSON.parse(req.body.data); } catch {}
+      try { incoming = JSON.parse(req.body.data); } catch { }
     } else { incoming = req.body; }
     // Validation serveur: si holderName fourni ou déjà existant, s'assurer qu'il est non vide
     const existing = JSON.parse(row.data || '{}');
@@ -333,9 +333,9 @@ app.put('/api/reviews/:id', upload.single('image'), (req, res) => {
     if (req.file) incoming.image = '/images/' + req.file.filename;
 
     // Preserve/override draft status
-  // Draft flag is deprecated: always store as non-draft on update as well
-  const nextIsDraft = 0;
-  const nextIsPrivate = incoming.isPrivate != null ? (incoming.isPrivate ? 1 : 0) : row.isPrivate;
+    // Draft flag is deprecated: always store as non-draft on update as well
+    const nextIsDraft = 0;
+    const nextIsPrivate = incoming.isPrivate != null ? (incoming.isPrivate ? 1 : 0) : row.isPrivate;
     const nextOwnerId = row.ownerId || ownerId || null;
 
     const merged = { ...JSON.parse(row.data), ...incoming };
@@ -344,7 +344,7 @@ app.put('/api/reviews/:id', upload.single('image'), (req, res) => {
 
     db.run('UPDATE reviews SET productType=?, name=?, data=?, imagePath=?, ownerId=?, isDraft=?, isPrivate=?, updatedAt=datetime(\'now\') WHERE id=?',
       [merged.productType || null, merged.name || merged.cultivars || merged.productName || null, json, newImagePath, nextOwnerId, nextIsDraft, nextIsPrivate, id],
-      function(e2) {
+      function (e2) {
         if (e2) return res.status(500).json({ error: 'db_error' });
         db.get('SELECT * FROM reviews WHERE id=?', [id], (e3, row2) => {
           if (e3) return res.status(500).json({ error: 'db_error' });
@@ -493,7 +493,7 @@ app.post('/api/reviews/:id/vote', (req, res) => {
     if (!row) return res.status(404).json({ error: 'not_found' });
     if (row.ownerId && row.ownerId === me) return res.status(403).json({ error: 'forbidden', message: 'Cannot vote own review' });
     // Upsert logic: try update, else insert
-    db.run('INSERT INTO review_likes (reviewId, ownerId, vote, createdAt, updatedAt) VALUES (?,?,?,?,datetime(\'now\')) ON CONFLICT(reviewId, ownerId) DO UPDATE SET vote=excluded.vote, updatedAt=datetime(\'now\')', [id, me, vote, new Date().toISOString()], function(e) {
+    db.run('INSERT INTO review_likes (reviewId, ownerId, vote, createdAt, updatedAt) VALUES (?,?,?,?,datetime(\'now\')) ON CONFLICT(reviewId, ownerId) DO UPDATE SET vote=excluded.vote, updatedAt=datetime(\'now\')', [id, me, vote, new Date().toISOString()], function (e) {
       // Fallback for SQLite versions without INSERT ... ON CONFLICT DO UPDATE use manual upsert
       if (e) {
         // manual upsert
@@ -535,7 +535,7 @@ app.delete('/api/reviews/:id/vote', (req, res) => {
   const me = req.auth?.ownerId || null;
   if (!me) return res.status(401).json({ error: 'unauthorized' });
   if (!id) return res.status(400).json({ error: 'invalid_id' });
-  db.run('DELETE FROM review_likes WHERE reviewId=? AND ownerId=?', [id, me], function(err) {
+  db.run('DELETE FROM review_likes WHERE reviewId=? AND ownerId=?', [id, me], function (err) {
     if (err) return res.status(500).json({ error: 'db_error' });
     db.get('SELECT SUM(CASE WHEN vote=1 THEN 1 ELSE 0 END) as likes, SUM(CASE WHEN vote=-1 THEN 1 ELSE 0 END) as dislikes FROM review_likes WHERE reviewId=?', [id], (er, agg) => {
       if (er) return res.status(500).json({ error: 'db_error' });
@@ -632,7 +632,7 @@ app.get('/api/users/stats', async (req, res) => {
               try {
                 const discord = await getDiscordUserByEmail(owner).catch(() => null);
                 if (discord) displayName = discord.username || null;
-              } catch (e) {}
+              } catch (e) { }
               return res.json({ total, public: pub, private: priv, by_type, displayName, email: owner, likesReceived, dislikesReceived, votesGivenLikes, votesGivenDislikes });
             })();
           });
@@ -668,27 +668,27 @@ async function getDiscordUserFromDB(email) {
         console.warn('[LaFoncedalle][DB] Could not open LaFoncedalleBot database:', err.message);
         return resolve(null);
       }
-      
+
       db.get(
         "SELECT discord_id, user_email, user_name FROM user_links WHERE LOWER(user_email) = ? AND active = 1",
         [email.toLowerCase()],
         (err, row) => {
           db.close();
-          
+
           if (err) {
             console.warn('[LaFoncedalle][DB] Query error:', err.message);
             return resolve(null);
           }
-          
+
           if (!row) {
             console.log(`[LaFoncedalle][DB] Email ${email} not found in database`);
             return resolve(null);
           }
-          
+
           const username = row.user_name || `User#${row.discord_id.slice(-4)}`;
-          
+
           console.log(`[LaFoncedalle][DB] Found user: ${username} (${row.discord_id})`);
-          
+
           resolve({
             discordId: row.discord_id,
             username: username,
@@ -714,7 +714,7 @@ async function getDiscordUserByEmail(email) {
   } catch (err) {
     console.warn('[LaFoncedalle] Database query failed, trying API:', err.message);
   }
-  
+
   // 2. Fallback to API calls (legacy)
   const candidates = [
     { method: 'POST', path: '/api/discord/user-by-email', body: { email } },
@@ -748,7 +748,7 @@ async function getDiscordUserByEmail(email) {
       const ct = response.headers.get('content-type') || '';
       if (!response.ok) {
         const text = await response.text().catch(() => '');
-        console.warn(`[LaFoncedalle] ${cand.method} ${cand.path} returned ${response.status}: ${String(text).slice(0,200)}`);
+        console.warn(`[LaFoncedalle] ${cand.method} ${cand.path} returned ${response.status}: ${String(text).slice(0, 200)}`);
         lastError = new Error(`status_${response.status}`);
         continue;
       }
@@ -842,7 +842,7 @@ async function sendVerificationEmail(email, code) {
       const response = await fetch(url, opts);
       if (!response.ok) {
         const txt = await response.text().catch(() => '');
-        console.warn(`[LaFoncedalle][mail] ${cand.path} returned ${response.status}: ${String(txt).slice(0,200)}`);
+        console.warn(`[LaFoncedalle][mail] ${cand.path} returned ${response.status}: ${String(txt).slice(0, 200)}`);
         lastErr = new Error(`status_${response.status}`);
         continue;
       }
@@ -918,11 +918,11 @@ app.post('/api/notify/send-verification', async (req, res) => {
 // POST /api/auth/send-code - Request verification code
 app.post('/api/auth/send-code', async (req, res) => {
   const email = req.body?.email?.trim()?.toLowerCase();
-  
+
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: 'invalid_email', message: 'Adresse email invalide' });
   }
-  
+
   try {
     // Step 1: Verify email exists in Discord bot database
     let discordUser = null;
@@ -935,9 +935,9 @@ app.post('/api/auth/send-code', async (req, res) => {
     }
 
     if (!discordUser) {
-      return res.status(404).json({ 
-        error: 'email_not_found', 
-        message: 'Cette adresse email n\'est pas liée à un compte Discord. Veuillez d\'abord lier votre email sur le serveur Discord LaFoncedalle.' 
+      return res.status(404).json({
+        error: 'email_not_found',
+        message: 'Cette adresse email n\'est pas liée à un compte Discord. Veuillez d\'abord lier votre email sur le serveur Discord LaFoncedalle.'
       });
     }
 
@@ -948,9 +948,9 @@ app.post('/api/auth/send-code', async (req, res) => {
     const expires = Date.now() + CODE_EXPIRY;
 
     // Step 3: Store code with Discord user info
-    verificationCodes.set(email, { 
-      code, 
-      expires, 
+    verificationCodes.set(email, {
+      code,
+      expires,
       attempts: 0,
       discordUser: {
         discordId: discordUser.discordId,
@@ -970,12 +970,12 @@ app.post('/api/auth/send-code', async (req, res) => {
     }
   } catch (err) {
     console.error('[AUTH] Unexpected error in send-code:', err && (err.message || err));
-    res.status(500).json({ 
-      error: 'server_error', 
-      message: 'Erreur serveur inattendue' 
+    res.status(500).json({
+      error: 'server_error',
+      message: 'Erreur serveur inattendue'
     });
   }
-  
+
   // Clean up expired codes periodically
   setTimeout(() => {
     for (const [email, data] of verificationCodes.entries()) {
@@ -1037,42 +1037,42 @@ app.post('/api/auth/user-by-email', async (req, res) => {
 app.post('/api/auth/verify-code', (req, res) => {
   const email = req.body?.email?.trim()?.toLowerCase();
   const code = req.body?.code?.trim();
-  
+
   if (!email || !code) {
     return res.status(400).json({ error: 'missing_fields', message: 'Email et code requis' });
   }
-  
+
   const stored = verificationCodes.get(email);
-  
+
   if (!stored) {
     return res.status(404).json({ error: 'code_not_found', message: 'Code expiré ou introuvable' });
   }
-  
+
   // Check expiry
   if (Date.now() > stored.expires) {
     verificationCodes.delete(email);
     return res.status(410).json({ error: 'code_expired', message: 'Code expiré' });
   }
-  
+
   // Check attempts
   if (stored.attempts >= MAX_ATTEMPTS) {
     verificationCodes.delete(email);
     return res.status(429).json({ error: 'too_many_attempts', message: 'Trop de tentatives' });
   }
-  
+
   // Verify code
   if (stored.code !== code) {
     stored.attempts++;
-    return res.status(401).json({ 
-      error: 'invalid_code', 
-      message: 'Code invalide', 
-      attemptsLeft: MAX_ATTEMPTS - stored.attempts 
+    return res.status(401).json({
+      error: 'invalid_code',
+      message: 'Code invalide',
+      attemptsLeft: MAX_ATTEMPTS - stored.attempts
     });
   }
-  
+
   // Success! Generate filesystem-safe session token
   const token = crypto.randomBytes(24).toString('hex');
-  
+
   // Store token with Discord user information
   const tokenFile = path.join(TOKENS_DIR, token);
   const tokenData = {
@@ -1082,7 +1082,7 @@ app.post('/api/auth/verify-code', (req, res) => {
     roles: [],
     createdAt: new Date().toISOString()
   };
-  
+
   try {
     fs.writeFileSync(tokenFile, JSON.stringify(tokenData, null, 2));
     console.log(`[AUTH] Token created for Discord user: ${tokenData.discordUsername}`);
@@ -1090,21 +1090,21 @@ app.post('/api/auth/verify-code', (req, res) => {
     console.error('[AUTH] Error storing token:', err);
     return res.status(500).json({ error: 'token_error', message: 'Erreur lors de la création de la session' });
   }
-  
+
   // Clean up code
   verificationCodes.delete(email);
-  
+
   res.json({ ok: true, token, email });
 });
 
 // POST /api/auth/logout - Logout (delete token)
 app.post('/api/auth/logout', (req, res) => {
   const token = req.header('X-Auth-Token') || req.body?.token;
-  
+
   if (!token) {
     return res.status(400).json({ error: 'no_token' });
   }
-  
+
   // Delete token file
   const tokenFile = path.join(TOKENS_DIR, token);
   try {
@@ -1114,7 +1114,7 @@ app.post('/api/auth/logout', (req, res) => {
   } catch (err) {
     console.error('[AUTH] Error deleting token:', err);
   }
-  
+
   res.json({ ok: true });
 });
 
@@ -1124,11 +1124,11 @@ app.get('/api/auth/me', async (req, res) => {
   const isStaff = req.auth?.roles?.includes('staff');
   const discordId = req.auth?.discordId;
   let discordUsername = req.auth?.discordUsername;
-  
+
   if (!email) {
     return res.status(401).json({ error: 'unauthorized' });
   }
-  
+
   // Fetch real username from LaFoncedalle database
   try {
     const discordUser = await getDiscordUserByEmail(email).catch(e => null);
@@ -1140,9 +1140,9 @@ app.get('/api/auth/me', async (req, res) => {
     console.error('[AUTH] Failed to fetch Discord username:', error);
     // Continue with JWT username as fallback
   }
-  
-  res.json({ 
-    email, 
+
+  res.json({
+    email,
     isStaff,
     discordId,
     discordUsername,
