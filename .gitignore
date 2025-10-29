@@ -6,6 +6,8 @@ server/package-lock.json
 /db/*.sqlite
 /db/review_images/*
 !db/review_images/.gitkeep
+# Local DB backups (move or ignore locally)
+db/*.bak
 
 # Logs
 *.log
