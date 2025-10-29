@@ -149,6 +149,12 @@ function updateTopNavHeight() {
     } else {
       run();
     }
+<<<<<<< HEAD
+=======
+    // Also update after the full window load (images/fonts may change header size)
+    // This reduces layout shifts that happen when async content finishes loading.
+    try { window.addEventListener('load', run, { once: true }); } catch (e) { }
+>>>>>>> 0f454ed819a377ca5470f28b41dc4abf959e2e24
   } catch (e) { }
 })();
 // NOTE: removed forced modal-show debug code that opened account/profile modals
