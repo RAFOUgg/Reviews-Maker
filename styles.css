@@ -141,7 +141,7 @@
   /* preview overlays/modals that sit above panels */
   --z-floating-btn: 1300;
   /* floating auth button */
-  --z-hero: 3000;
+  --z-hero: 6900;
   /* hero title */
   --z-top-nav: 7000;
   /* top navigation */
@@ -8736,4 +8736,59 @@ canvas,
     padding: 10px 12px;
     font-size: 0.9rem;
   }
+}
+
+/* ===== Production stacking & modal harmonization =====
+   Some production builds include duplicated modal/overlay rules which led
+   to overlay layers appearing above the modal content or side panels
+   covering the hero title. These explicit high-specificity overrides ensure
+   a consistent stacking order across environments. */
+
+/* Ensure modals always sit above other UI, and overlays sit just below them */
+.modal,
+.export-config-modal,
+#accountModal {
+  position: fixed !important;
+  inset: 0 !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: var(--z-modal) !important;
+}
+
+.modal.active,
+.export-config-modal.active,
+#accountModal.active {
+  display: flex !important;
+}
+
+.modal-overlay,
+.export-config-modal .modal-overlay,
+.account-overlay {
+  position: absolute !important;
+  inset: 0 !important;
+  background: rgba(3, 6, 12, 0.6) !important;
+  backdrop-filter: blur(8px) !important;
+  z-index: calc(var(--z-modal) - 10) !important;
+}
+
+/* Modal content must be above the overlay */
+.modal .modal-content,
+.export-config-modal .modal-content,
+#accountModal .account-dialog {
+  position: relative !important;
+  z-index: calc(var(--z-modal) + 1) !important;
+}
+
+/* Keep top-nav sticky on most viewports but allow mobile to use static layout */
+@media (max-width: 700px) {
+  .top-nav {
+    position: static !important;
+    top: auto !important;
+  }
+}
+
+/* Safety: ensure body scroll-padding aligns with header height in all builds */
+body {
+  scroll-padding-top: calc(var(--top-nav-height) + 0.5rem) !important;
 }
