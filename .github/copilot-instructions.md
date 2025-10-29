@@ -1,61 +1,59 @@
 ```md
-## Reviews-Maker — Copilot instructions (merged & improved)
+## Reviews-Maker — Copilot Instructions (2025)
 
-Short, actionable guidance to help an AI coding agent make safe edits, fixes and small features.
+Concise, actionable guidance for AI coding agents working in this codebase. Focus on safe, project-specific edits and workflows.
 
-Core architecture (read these first)
-- Frontend: plain HTML + vanilla JS in repo root. Key files: `index.html`, `review.html`, `app.js`, `export-studio.js`, `export-studio-ui.js`, `styles.css`.
-- Backend (optional): Express + SQLite in `server/`. Main file: `server/server.js`. DB: `db/reviews.sqlite`. Images: `db/review_images/` served from `/images` and `/reviews/images`.
-- Auth: file-based tokens in `server/tokens/`. Files named by token string; contents are either an ownerId or JSON `{ ownerId, roles, discordId, discordUsername }`.
+### Architecture Overview
+- **Frontend:** Plain HTML + vanilla JS in repo root. Main files: `index.html`, `review.html`, `app.js`, `export-studio.js`, `export-studio-ui.js`, `styles.css`.
+- **Backend (optional):** Express + SQLite in `server/`. Main: `server/server.js`. DB: `db/reviews.sqlite`. Images: `db/review_images/` (served at `/images` and `/reviews/images`).
+- **Auth:** File-based tokens in `server/tokens/` (filename = token, content = ownerId or JSON with roles/discord info).
 
-Why this shape
-- Simple static frontend so small DOM edits are safest. Backend is designed for light usage and simple file-based auth to ease VPS deployments.
+### Key Patterns & Conventions
+- **Frontend:**
+  - Avoid large refactors; prefer minimal DOM edits in `index.html`, `review.html`, or `app.js`.
+  - UI logic is direct JS, no framework. See `export-studio.js` for modular UI logic.
+- **Backend:**
+  - API endpoints in `server/server.js` use synchronous sqlite3 callbacks.
+  - Use `rowToReview` for DB-to-JSON transforms. Copy this pattern for new endpoints.
+  - Auth: check `req.auth` (populated from token file). Simulate auth by creating a file in `server/tokens/` and using `X-Auth-Token` or `?token=`.
+  - DB migrations: Additive/idempotent, run at startup via `PRAGMA table_info` + `ALTER TABLE` (see `server/server.js`).
+  - API errors: Always `{ error: 'code', message: 'human' }`.
 
-Safe/typical edits
-- Small UI changes: prefer DOM tweaks in `index.html`/`review.html` or `app.js` over large refactors.
-- API changes: follow `server/server.js` patterns (synchronous sqlite3 callbacks, use `rowToReview` to convert rows). Additive query params and read endpoints are low-risk.
-- Auth/tests: to simulate owner-scoped requests, create a token file in `server/tokens/` and call endpoints with header `X-Auth-Token: <filename>` or `?token=<filename>`.
+### Developer Workflows
+- **Frontend-only:** Open `index.html` or `review.html` in browser. VS Code tasks exist to open in Edge.
+- **Backend:**
+  - `cd server && npm install && npm start` (serves frontend at http://localhost:3000)
+  - Quick API check: `Invoke-RestMethod -Uri http://localhost:3000/api/ping` (PowerShell)
+  - Docker: `docker build -t reviews-maker:latest .` then `docker run -v ${PWD}\db:/app/db -p 3000:3000 reviews-maker:latest`
+- **Debugging:**
+  - Startup logs print config (LAFONCEDALLE_API_URL, LAFONCEDALLE_DB_FILE)
+  - For SQLite `SQLITE_BUSY`, retry or serialize writes
+  - For auth issues, inspect `server/tokens/` and in-memory `verificationCodes` (runtime-only)
 
-Important conventions and examples
-- DB migrations: applied at startup in `server/server.js` via `PRAGMA table_info` + `ALTER TABLE`. If you change schema, make migrations additive and idempotent.
-- Error shape: API errors use `{ error: 'code', message: 'human' }` — reuse this in new endpoints.
-- Example row transformer: search `rowToReview` in `server/server.js` and copy-style for new DB-to-JSON transforms.
+### Integration & External Dependencies
+- **LaFoncedalleBot:**
+  - Integration via DB file (`LAFONCEDALLE_DB_FILE`) or API (`LAFONCEDALLE_API_URL` + `LAFONCEDALLE_API_KEY`).
+  - Use resilient candidate-try pattern for lookups (see `getDiscordUserByEmail` in `server/server.js`).
+- **Images:** Stored in `db/review_images/`, served statically.
 
-Run / debug (PowerShell-friendly examples)
-- Frontend-only: open `index.html` or `review.html` in a browser (VS Code task exists to open in Edge).
-- Backend local (serves frontend):
-  - cd server
-  - npm install
-  - npm start   # serves on http://localhost:3000
-- Quick checks (PowerShell):
-  - Invoke-RestMethod -Uri http://localhost:3000/api/ping
-  - Invoke-RestMethod -Uri http://localhost:3000/api/reviews | ConvertTo-Json -Depth 5
-- Docker: `docker build -t reviews-maker:latest .` then run mounting the db and images (PowerShell):
-  - docker run -v ${PWD}\db:/app/db -p 3000:3000 reviews-maker:latest
+### Project-Specific Gotchas
+- Token auth is file-based; add/remove files in `server/tokens/` for testing.
+- DB migrations must be additive/idempotent; update startup logic if schema changes.
+- File permissions: `db/review_images/` and `server/tokens/` must be writable on VPS.
+- Avoid breaking legacy LaFoncedalle integrations; follow fallback patterns in `server/server.js`.
 
-Debugging tips
-- Startup logs: `server/server.js` prints config (LAFONCEDALLE_API_URL, LAFONCEDALLE_DB_FILE). Useful under PM2/docker.
-- SQLite lock (`SQLITE_BUSY`): expect under concurrency. Solutions: retry/serialize writes or reduce concurrency.
-- Auth issues: inspect `server/tokens/` files and the in-memory `verificationCodes` map (runtime-only). For verification flows, review `sendVerificationEmail` & `getDiscordUserByEmail` resilient-candidate pattern in `server/server.js`.
+### Examples
+- **Additive DB migration:** See startup logic in `server/server.js` (uses `PRAGMA table_info` + `ALTER TABLE`).
+- **API error:** `{ error: 'not_found', message: 'No review found' }`
+- **Token file:** Filename = token, content = `{ "ownerId": "...", "roles": ["admin"] }`
 
-Files to open first when triaging
-- `server/server.js` — most API logic and patterns.
-- `server/README.md` — env vars and deploy/run notes.
-- `index.html`, `review.html`, `app.js` — reproduce frontend issues quickly.
+### Key Files to Review
+- `server/server.js` — API, DB, and auth logic
+- `server/README.md` — env vars, deploy/run notes
+- `index.html`, `review.html`, `app.js` — UI logic
 
-When adding endpoints or changing behavior
-- Follow style in `server/server.js`: synchronous sqlite3 callbacks, `rowToReview`, `req.auth` for owner scoping, and consistent error objects.
-- Include a short curl/Invoke-RestMethod example in the PR description demonstrating the new endpoint.
-
-Project-specific gotchas
-- Token auth is file-based: adding/removing token files is an acceptable test approach on dev/VPS.
-- Images are stored on disk; ensure `db/review_images/` permissions on VPS.
-
-Questions to ask maintainers (use before risky changes)
-- Does this change require an on-disk DB migration? If yes, ensure it's additive/idempotent and update startup migrations in `server/server.js`.
-- Will the VPS environment allow extra services (Redis, background workers)? See `docs/DEPLOIEMENT_VPS.md`.
-
-If anything here is unclear, tell me which section to expand and I will iterate.
+---
+If any section is unclear or incomplete, ask for clarification or request examples to expand.
 ```## Reviews-Maker — Copilot instructions
 
 This repository contains a lightweight frontend (vanilla JS) and an optional Node/Express backend (SQLite). The goal of these instructions is to help an AI coding agent become productive quickly when making edits, bug fixes, or small features.
