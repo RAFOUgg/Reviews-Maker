@@ -1160,7 +1160,9 @@ video {
 
 .type-selector {
   display: grid;
-  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  /* Force a 2-column layout by default so the four type buttons appear 2x2
+     on desktop/tablet. Mobile override (<=700px) already sets 1 column. */
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
   gap: 18px;
   justify-items: stretch;
 }
@@ -6002,11 +6004,16 @@ body.modal-open .auth-status {
 
 .home-page .type-selector {
   display: grid;
-  /* allow narrower cards on small windows so layout adapts proportionally */
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  /* Keep the selector strictly 2 columns so the four type buttons form a 2x2 block
+     on all desktop/tablet viewports. The mobile media query (<=700px) will still
+     collapse to a single column. */
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
   gap: 1.25rem;
   margin: 0 auto 1.5rem auto;
   max-width: 920px;
+  position: relative;
+  /* sit just below the hero z-layer so header/sticky nav remains above it */
+  z-index: calc(var(--z-hero) - 10);
 }
 
 .home-page .type-card {
@@ -6734,9 +6741,12 @@ kbd {
 
 /* RESPONSIVE POUR NOUVELLES PAGES */
 @media (max-width: 1200px) {
+
+  /* Keep two columns at this breakpoint to preserve the 2x2 layout on
+     narrower desktops / large tablets. Mobile override (<=700px) still applies. */
   .home-page .type-selector {
-    grid-template-columns: 1fr;
-    max-width: 600px;
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+    max-width: 760px;
   }
 
   .home-page .compact-library-list {
