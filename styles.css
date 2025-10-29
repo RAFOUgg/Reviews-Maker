@@ -5924,7 +5924,10 @@ body.modal-open .auth-status {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 120px);
+  /* Make hero height dynamic relative to the header height so it doesn't
+    reserve excessive vertical space on small viewports. Subtract a small
+    fixed offset for visual breathing room. */
+  min-height: calc(100vh - var(--top-nav-height, 64px) - 48px);
 }
 
 .home-workspace {
