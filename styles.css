@@ -7,6 +7,28 @@
 
   .type-card {
     min-width: 0;
+
+    /* Strong mobile override for very small viewports: force a single column
+   for the type selector so buttons stack vertically (1x4). Using the
+   more specific selector and !important prevents other rules from
+   accidentally overriding this in production builds or when CSS is
+   concatenated/modified by dep tooling. */
+    @media (max-width: 700px) {
+      .home-page .type-selector {
+        grid-template-columns: 1fr !important;
+        gap: 14px;
+        max-width: 100%;
+        margin: 0 auto 1rem auto;
+      }
+
+      .home-page .type-card,
+      .type-card {
+        width: 100% !important;
+        min-width: 0;
+        margin: 0 auto !important;
+      }
+    }
+
     width: 100%;
     margin: 0 auto;
   }
