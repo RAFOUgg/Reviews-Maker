@@ -18,12 +18,17 @@ function setupAccountModalEvents() {
   const accountDisconnectBtn = document.getElementById('accountDisconnect');
   if (accountDisconnectBtn) {
     accountDisconnectBtn.addEventListener('click', async () => {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('authEmail');
-      localStorage.removeItem('discordUsername');
-      localStorage.removeItem('discordId');
-      sessionStorage.removeItem('authEmail');
-      sessionStorage.removeItem('pendingCode');
+      try {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('authEmail');
+        localStorage.removeItem('discordUsername');
+        localStorage.removeItem('discordId');
+        sessionStorage.removeItem('authEmail');
+        sessionStorage.removeItem('pendingCode');
+      } catch (e) {
+        console.error('Storage clear error:', e);
+        alert('Erreur lors de la suppression des données locales. Veuillez vérifier les permissions du navigateur.');
+      }
       showAuthStatus('Déconnecté', 'info');
       updateAuthUI();
       if (dom.accountModal) dom.accountModal.style.display = 'none';
@@ -210,7 +215,12 @@ function navigateToEditor(productType = null, reviewData = null, reviewId = null
   }
   if (reviewData) {
     // Stocker temporairement les données de review pour la page éditeur
-    sessionStorage.setItem('pendingReviewData', JSON.stringify(reviewData));
+    try {
+      sessionStorage.setItem('pendingReviewData', JSON.stringify(reviewData));
+    } catch (e) {
+      console.error('Erreur stockage sessionStorage:', e);
+      alert('Erreur lors de l\'enregistrement local de la review. Vérifiez les permissions du navigateur.');
+    }
   }
   window.location.href = url.toString();
 }
@@ -225,9 +235,20 @@ function getEditorParams() {
   const type = params.get('type');
   const reviewIdStr = params.get('id') || params.get('editId');
   const reviewId = reviewIdStr != null ? (isNaN(Number(reviewIdStr)) ? reviewIdStr : Number(reviewIdStr)) : null;
-  const pendingData = sessionStorage.getItem('pendingReviewData');
+  let pendingData = null;
+  try {
+    pendingData = sessionStorage.getItem('pendingReviewData');
+  } catch (e) {
+    console.error('Erreur lecture sessionStorage:', e);
+    alert('Erreur lors de la lecture des données locales. Vérifiez les permissions du navigateur.');
+  }
   if (pendingData) {
-    sessionStorage.removeItem('pendingReviewData');
+    try {
+      sessionStorage.removeItem('pendingReviewData');
+    } catch (e) {
+      console.error('Erreur suppression sessionStorage:', e);
+      alert('Erreur lors de la suppression des données locales. Vérifiez les permissions du navigateur.');
+    }
     return { type, reviewData: JSON.parse(pendingData), reviewId };
   }
   return { type, reviewData: null, reviewId };
