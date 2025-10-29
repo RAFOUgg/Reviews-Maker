@@ -14,7 +14,8 @@ function Test-Get($path) {
         Write-Host "  OK: status returned; sample: " -NoNewline
         if ($r -is [System.Collections.IEnumerable]) { Write-Host "(array) count=$($r.Count)" } else { Write-Host "(object) keys=$($r | Get-Member -MemberType NoteProperty | Select -ExpandProperty Name -First 5 -ErrorAction SilentlyContinue)" }
         return $true
-    } catch {
+    }
+    catch {
         Write-Host "  FAIL:" $_ -ForegroundColor Red
         return $false
     }
