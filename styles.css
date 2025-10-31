@@ -327,6 +327,8 @@ body::before {
   gap: clamp(18px, 2.8vw, 32px);
   position: relative;
   isolation: isolate;
+  padding-top: var(--top-nav-height);
+  /* Décale le contenu sous le header sticky */
 }
 
 .top-nav {
@@ -1498,6 +1500,11 @@ form {
 @media (max-width:880px) {
   .account-body {
     grid-template-columns: 1fr;
+  }
+
+
+  .app-shell {
+    padding-top: var(--top-nav-height) !important;
   }
 
   .account-left {
