@@ -6004,8 +6004,9 @@ body.modal-open .auth-status {
 .hero-section {
   text-align: center;
   /* Ensure hero content sits below the sticky header. Use measured --top-nav-height
-     (set from JS) to remain correct at different zoom levels; fall back to 72px. */
-  padding: max(2rem, calc(var(--top-nav-height, 72px) + 12px)) 0 1rem 0;
+     (set from JS) to remain correct at different zoom levels; fall back to 72px. 
+     Increased spacing to prevent title from being hidden behind sticky header. */
+  padding: calc(var(--top-nav-height, 72px) + 1.5rem) 0 1rem 0;
   margin: 0 auto 2rem auto;
   width: 100%;
 }
@@ -6834,7 +6835,8 @@ kbd {
   }
 
   .hero-section {
-    padding: 1.5rem 0;
+    /* Mobile: ensure title is visible below sticky header */
+    padding: calc(var(--top-nav-height, 72px) + 1.5rem) 0 1.5rem 0;
     margin-bottom: 2rem;
   }
 
