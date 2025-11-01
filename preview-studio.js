@@ -5,8 +5,11 @@
 
 // Configuration de preview par défaut
 const previewConfig = {
-    // Template/mode sélectionné
-    template: 'detailed', // 'minimal', 'compact', 'detailed', 'card', 'social', 'magazine'
+    // Style prédéfini sélectionné
+    presetStyle: 'compact', // 'compact', 'airy', 'minimal'
+
+    // Variante de couleur
+    colorVariant: 'emerald', // 'emerald', 'ocean', 'sunset', 'midnight', 'forest', 'candy'
 
     // Sections à afficher
     sections: {
@@ -22,19 +25,6 @@ const previewConfig = {
         branding: true
     },
 
-    // Style visuel
-    style: {
-        colorScheme: 'dark', // 'dark', 'light', 'custom'
-        accentColor: '#34d399', // Couleur principale
-        backgroundColor: null, // null = auto selon colorScheme
-        fontFamily: 'Inter',
-        fontSize: 'medium', // 'small', 'medium', 'large'
-        borderRadius: 18,
-        spacing: 'comfortable', // 'compact', 'comfortable', 'spacious'
-        showWatermark: true,
-        showIcons: true
-    },
-
     // Contenu personnalisé
     branding: {
         signature: null,
@@ -43,86 +33,119 @@ const previewConfig = {
     }
 };
 
-// Templates d'aperçu disponibles
-const previewTemplates = {
-    minimal: {
-        name: '⚡ Minimal',
-        description: 'Scores essentiels uniquement',
-        icon: '━',
-        defaultSections: ['header', 'scores'],
-        defaultStyle: {
-            fontSize: 'large',
-            spacing: 'compact'
-        }
-    },
-
+// Styles prédéfinis Apple-like
+const previewPresets = {
     compact: {
-        name: '▤ Compact',
-        description: 'Vue condensée avec scores',
-        icon: '▤',
-        defaultSections: ['header', 'cultivars', 'scores', 'details'],
-        defaultStyle: {
-            fontSize: 'medium',
-            spacing: 'compact'
+        name: 'Compact',
+        description: 'Dense et efficace',
+        icon: '▪',
+        style: {
+            spacing: '12px',
+            borderRadius: '12px',
+            fontSize: '14px',
+            lineHeight: '1.4',
+            padding: '16px',
+            gap: '12px',
+            shadow: '0 2px 8px rgba(0,0,0,0.1)',
+            bubbleStyle: 'solid'
         }
     },
 
-    detailed: {
-        name: '☰ Détaillé',
-        description: 'Tous les détails (par défaut)',
-        icon: '☰',
-        defaultSections: ['header', 'cultivars', 'generalInfo', 'scores', 'details', 'textures', 'flavors', 'effects', 'notes'],
-        defaultStyle: {
-            fontSize: 'medium',
-            spacing: 'comfortable'
+    airy: {
+        name: 'Aéré',
+        description: 'Spacieux et respire',
+        icon: '○',
+        style: {
+            spacing: '24px',
+            borderRadius: '20px',
+            fontSize: '15px',
+            lineHeight: '1.6',
+            padding: '28px',
+            gap: '20px',
+            shadow: '0 8px 32px rgba(0,0,0,0.12)',
+            bubbleStyle: 'outlined'
         }
     },
 
-    card: {
-        name: '▣ Carte',
-        description: 'Format carte style social',
-        icon: '▣',
-        defaultSections: ['header', 'scores', 'details'],
-        defaultStyle: {
-            fontSize: 'medium',
-            spacing: 'comfortable',
-            borderRadius: 24
-        }
-    },
-
-    social: {
-        name: '📱 Story',
-        description: 'Optimisé réseaux sociaux',
-        icon: '📱',
-        defaultSections: ['header', 'scores', 'effects'],
-        defaultStyle: {
-            fontSize: 'large',
-            spacing: 'spacious'
-        }
-    },
-
-    magazine: {
-        name: '📰 Magazine',
-        description: 'Mise en page éditoriale',
-        icon: '📰',
-        defaultSections: ['header', 'cultivars', 'generalInfo', 'scores', 'details', 'notes', 'branding'],
-        defaultStyle: {
-            fontSize: 'medium',
-            spacing: 'spacious'
+    minimal: {
+        name: 'Épuré',
+        description: 'Minimaliste et élégant',
+        icon: '—',
+        style: {
+            spacing: '16px',
+            borderRadius: '16px',
+            fontSize: '14px',
+            lineHeight: '1.5',
+            padding: '20px',
+            gap: '16px',
+            shadow: '0 4px 16px rgba(0,0,0,0.08)',
+            bubbleStyle: 'glass'
         }
     }
 };
 
-// Palettes de couleurs prédéfinies
-const colorPresets = {
-    emerald: { name: 'Emeraude', color: '#34d399', bg: '#0f1628' },
-    blue: { name: 'Bleu', color: '#38bdf8', bg: '#0a1929' },
-    purple: { name: 'Violet', color: '#a78bfa', bg: '#1a1625' },
-    pink: { name: 'Rose', color: '#f472b6', bg: '#2a1625' },
-    orange: { name: 'Orange', color: '#fb923c', bg: '#261a10' },
-    cyan: { name: 'Cyan', color: '#22d3ee', bg: '#0a1f29' },
-    lime: { name: 'Lime', color: '#84cc16', bg: '#1a2010' },
-    amber: { name: 'Ambre', color: '#fbbf24', bg: '#2a2010' }
+// Variantes de couleurs Apple-like
+const colorVariants = {
+    emerald: {
+        name: 'Émeraude',
+        icon: '●',
+        primary: '#34d399',
+        secondary: '#10b981',
+        background: '#0f1628',
+        surface: '#1a2640',
+        text: '#f8fafc',
+        gradient: 'linear-gradient(135deg, #34d399 0%, #10b981 100%)'
+    },
+    ocean: {
+        name: 'Océan',
+        icon: '●',
+        primary: '#38bdf8',
+        secondary: '#0ea5e9',
+        background: '#0a1929',
+        surface: '#1e3a5f',
+        text: '#f0f9ff',
+        gradient: 'linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%)'
+    },
+    sunset: {
+        name: 'Couchant',
+        icon: '●',
+        primary: '#fb923c',
+        secondary: '#f97316',
+        background: '#1a1210',
+        surface: '#2d1f1a',
+        text: '#fff7ed',
+        gradient: 'linear-gradient(135deg, #fb923c 0%, #f97316 100%)'
+    },
+    midnight: {
+        name: 'Minuit',
+        icon: '●',
+        primary: '#a78bfa',
+        secondary: '#8b5cf6',
+        background: '#1a1625',
+        surface: '#2d2440',
+        text: '#faf5ff',
+        gradient: 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)'
+    },
+    forest: {
+        name: 'Forêt',
+        icon: '●',
+        primary: '#84cc16',
+        secondary: '#65a30d',
+        background: '#1a2010',
+        surface: '#2d3a1f',
+        text: '#f7fee7',
+        gradient: 'linear-gradient(135deg, #84cc16 0%, #65a30d 100%)'
+    },
+    candy: {
+        name: 'Bonbon',
+        icon: '●',
+        primary: '#f472b6',
+        secondary: '#ec4899',
+        background: '#2a1625',
+        surface: '#3d2438',
+        text: '#fdf2f8',
+        gradient: 'linear-gradient(135deg, #f472b6 0%, #ec4899 100%)'
+    }
 };
 
 /**
