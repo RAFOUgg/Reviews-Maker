@@ -1020,12 +1020,12 @@ video {
 }
 
 .panel {
-  background: transparent;
-  border: none;
+  background: var(--panel);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
-  padding: 0;
-  box-shadow: none;
-  backdrop-filter: none;
+  padding: clamp(24px, 3.2vw, 36px);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(24px);
   display: flex;
   flex-direction: column;
   gap: clamp(20px, 2.8vw, 30px);
@@ -6725,11 +6725,10 @@ kbd {
 }
 
 .editor-page .panel {
-  background: transparent;
-  border: none;
+  background: var(--surface-primary);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  padding: 0;
 }
 
 .panel-form {
