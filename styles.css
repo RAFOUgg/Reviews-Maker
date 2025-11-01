@@ -78,7 +78,8 @@
   .workspace {
     width: 100vw;
     min-width: 0;
-    padding: 0;
+    /* FIXED: Keep padding-top for sticky header, only reset horizontal padding */
+    padding: calc(var(--top-nav-height, 72px) + 1rem) 0.5rem 1rem 0.5rem;
     gap: 10px;
   }
 
@@ -5989,11 +5990,11 @@ body.modal-open .auth-status {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  /* Make hero height dynamic relative to the header height so it doesn't
-    reserve excessive vertical space on small viewports. Subtract a small
-    fixed offset for visual breathing room. */
-  min-height: calc(100vh - var(--top-nav-height, 64px) - 48px);
+  /* FIXED: Changed from 'center' to 'flex-start' so content starts at top 
+     and title is visible. Center was pushing everything to middle of viewport. */
+  justify-content: flex-start;
+  /* Allow content to grow naturally instead of forcing viewport height */
+  min-height: auto;
 }
 
 .home-workspace {
@@ -6003,9 +6004,8 @@ body.modal-open .auth-status {
 
 .hero-section {
   text-align: center;
-  /* No top padding needed here since .home-page .workspace already handles 
-     the offset for the sticky header. This prevents double padding. */
-  padding: 0 0 1rem 0;
+  /* Small top padding for breathing room. Main offset is handled by .workspace */
+  padding: 1.5rem 0 2rem 0;
   margin: 0 auto 2rem auto;
   width: 100%;
 }
@@ -6823,19 +6823,21 @@ kbd {
   }
 
   .home-page .workspace {
-    padding: 1.5rem;
+    /* Keep top padding for sticky header */
+    padding: calc(var(--top-nav-height, 72px) + 1.5rem) 1.5rem 1.5rem 1.5rem;
   }
 }
 
 @media (max-width: 768px) {
   .home-page .workspace {
-    padding: 1rem;
+    /* FIXED: Preserve top padding for sticky header on mobile */
+    padding: calc(var(--top-nav-height, 72px) + 1rem) 1rem 1rem 1rem;
     gap: 2rem;
   }
 
   .hero-section {
-    /* Mobile: no top padding needed, .workspace already handles offset */
-    padding: 0 0 1.5rem 0;
+    /* Small top padding for breathing room */
+    padding: 1rem 0 1.5rem 0;
     margin-bottom: 2rem;
   }
 
