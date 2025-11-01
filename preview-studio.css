@@ -218,52 +218,62 @@
     margin: 0 0 14px 0;
 }
 
-/* === Templates de preview === */
-.preview-templates {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+/* === Styles prédéfinis (Apple-like) === */
+.preview-preset-styles {
+    display: flex;
+    flex-direction: column;
     gap: 10px;
 }
 
-.preview-template-btn {
+.preview-preset-btn {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 6px;
-    padding: 14px 10px;
+    gap: 14px;
+    padding: 16px;
     background: var(--surface-elevated);
     border: 2px solid var(--border);
-    border-radius: 10px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.2s ease;
-    text-align: center;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: left;
+    width: 100%;
 }
 
-.preview-template-btn:hover {
+.preview-preset-btn:hover {
     border-color: var(--accent);
     background: var(--surface-hover);
-    transform: translateY(-2px);
+    transform: translateX(2px);
 }
 
-.preview-template-btn.active {
+.preview-preset-btn.active {
     border-color: var(--accent);
     background: var(--accent-bg);
     box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
-.preview-template-btn .template-icon {
-    font-size: 28px;
+.preview-preset-btn .preset-icon {
+    font-size: 32px;
     line-height: 1;
+    width: 40px;
+    text-align: center;
+    flex-shrink: 0;
 }
 
-.preview-template-btn .template-name {
-    font-size: 12px;
+.preset-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+}
+
+.preset-info .preset-name {
+    font-size: 14px;
     font-weight: 600;
     color: var(--text);
 }
 
-.preview-template-btn .template-desc {
-    font-size: 10px;
+.preset-info .preset-desc {
+    font-size: 11px;
     color: var(--text-muted);
     line-height: 1.3;
 }
@@ -305,57 +315,55 @@
     user-select: none;
 }
 
-/* === Couleurs === */
-.preview-color-picker {
+/* === Variantes de couleur (Apple-like) === */
+.preview-color-variants {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
 }
 
-.preview-color-input-wrapper {
+.preview-variant-btn {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px;
+    gap: 14px;
+    padding: 14px 16px;
     background: var(--surface-elevated);
-    border-radius: 8px;
-}
-
-.preview-color-input {
-    width: 60px;
-    height: 40px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    background: transparent;
-}
-
-.preview-color-input::-webkit-color-swatch-wrapper {
-    padding: 0;
-}
-
-.preview-color-input::-webkit-color-swatch {
     border: 2px solid var(--border);
-    border-radius: 6px;
-}
-
-.preview-color-value {
-    flex: 1;
-    font-size: 14px;
-    font-weight: 600;
-    font-family: 'Monaco', 'Courier New', monospace;
-    color: var(--text);
-    text-transform: uppercase;
-}
-
-.preview-color-presets {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-}
-
-.preview-color-preset {
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: left;
     width: 100%;
+}
+
+.preview-variant-btn:hover {
+    background: var(--surface-hover);
+    transform: translateX(2px);
+}
+
+.preview-variant-btn.active {
+    border-color: transparent;
+    box-shadow: 0 0 0 2px var(--accent), 0 4px 12px var(--accent-glow);
+}
+
+.preview-variant-btn .variant-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2),
+                inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+.preview-variant-btn .variant-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+}
+
+/* Suppression anciens presets */
+.preview-color-presets {
+    display: none;
     aspect-ratio: 1;
     border-radius: 10px;
     cursor: pointer;

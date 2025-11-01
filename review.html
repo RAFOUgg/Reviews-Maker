@@ -644,39 +644,30 @@
             <p>Choisissez le style et les sections à afficher</p>
           </div>
 
-          <!-- Templates -->
+          <!-- Style prédéfini -->
           <div class="preview-config-group">
-            <h4 class="preview-config-group-title">Style de rendu</h4>
-            <div class="preview-templates">
-              <button class="preview-template-btn" data-template="minimal" type="button">
-                <span class="template-icon">━</span>
-                <span class="template-name">Minimal</span>
-                <span class="template-desc">Scores essentiels</span>
+            <h4 class="preview-config-group-title">Style</h4>
+            <div class="preview-preset-styles">
+              <button class="preview-preset-btn" data-preset="compact" type="button">
+                <span class="preset-icon">▪</span>
+                <div class="preset-info">
+                  <span class="preset-name">Compact</span>
+                  <span class="preset-desc">Dense et efficace</span>
+                </div>
               </button>
-              <button class="preview-template-btn" data-template="compact" type="button">
-                <span class="template-icon">▤</span>
-                <span class="template-name">Compact</span>
-                <span class="template-desc">Vue condensée</span>
+              <button class="preview-preset-btn active" data-preset="airy" type="button">
+                <span class="preset-icon">○</span>
+                <div class="preset-info">
+                  <span class="preset-name">Aéré</span>
+                  <span class="preset-desc">Spacieux et respire</span>
+                </div>
               </button>
-              <button class="preview-template-btn active" data-template="detailed" type="button">
-                <span class="template-icon">☰</span>
-                <span class="template-name">Détaillé</span>
-                <span class="template-desc">Tous les détails</span>
-              </button>
-              <button class="preview-template-btn" data-template="card" type="button">
-                <span class="template-icon">▣</span>
-                <span class="template-name">Carte</span>
-                <span class="template-desc">Style social</span>
-              </button>
-              <button class="preview-template-btn" data-template="social" type="button">
-                <span class="template-icon">📱</span>
-                <span class="template-name">Story</span>
-                <span class="template-desc">Réseaux sociaux</span>
-              </button>
-              <button class="preview-template-btn" data-template="magazine" type="button">
-                <span class="template-icon">📰</span>
-                <span class="template-name">Magazine</span>
-                <span class="template-desc">Éditoriale</span>
+              <button class="preview-preset-btn" data-preset="minimal" type="button">
+                <span class="preset-icon">—</span>
+                <div class="preset-info">
+                  <span class="preset-name">Épuré</span>
+                  <span class="preset-desc">Minimaliste et élégant</span>
+                </div>
               </button>
             </div>
           </div>
@@ -728,53 +719,34 @@
             </div>
           </div>
 
-          <!-- Couleurs -->
+          <!-- Variantes de couleur -->
           <div class="preview-config-group">
-            <h4 class="preview-config-group-title">Couleurs</h4>
-            <div class="preview-option">
-              <label class="preview-option-label">Couleur principale</label>
-              <div class="preview-color-input-wrapper">
-                <input type="color" id="preview-accent-color" value="#34d399" class="preview-color-input">
-                <span class="preview-color-value">#34d399</span>
-              </div>
-              <div class="preview-color-presets" style="margin-top: 12px;">
-                <div class="preview-color-preset color-emerald active" data-color="#34d399"></div>
-                <div class="preview-color-preset color-blue" data-color="#38bdf8"></div>
-                <div class="preview-color-preset color-purple" data-color="#a78bfa"></div>
-                <div class="preview-color-preset color-pink" data-color="#f472b6"></div>
-                <div class="preview-color-preset color-orange" data-color="#fb923c"></div>
-                <div class="preview-color-preset color-cyan" data-color="#22d3ee"></div>
-                <div class="preview-color-preset color-lime" data-color="#84cc16"></div>
-                <div class="preview-color-preset color-amber" data-color="#fbbf24"></div>
-              </div>
-            </div>
-            <div class="preview-option">
-              <label class="preview-option-label">Thème</label>
-              <select id="preview-color-scheme">
-                <option value="dark" selected>Sombre</option>
-                <option value="light">Clair</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Style -->
-          <div class="preview-config-group">
-            <h4 class="preview-config-group-title">Style</h4>
-            <div class="preview-option">
-              <label class="preview-option-label">Taille de police</label>
-              <select id="preview-font-size">
-                <option value="small">Petite</option>
-                <option value="medium" selected>Moyenne</option>
-                <option value="large">Grande</option>
-              </select>
-            </div>
-            <div class="preview-option">
-              <label class="preview-option-label">Espacement</label>
-              <select id="preview-spacing">
-                <option value="compact">Compact</option>
-                <option value="comfortable" selected>Confortable</option>
-                <option value="spacious">Spacieux</option>
-              </select>
+            <h4 class="preview-config-group-title">Couleur</h4>
+            <div class="preview-color-variants">
+              <button class="preview-variant-btn active" data-variant="emerald" type="button">
+                <span class="variant-dot" style="background: linear-gradient(135deg, #34d399 0%, #10b981 100%);"></span>
+                <span class="variant-name">Émeraude</span>
+              </button>
+              <button class="preview-variant-btn" data-variant="ocean" type="button">
+                <span class="variant-dot" style="background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);"></span>
+                <span class="variant-name">Océan</span>
+              </button>
+              <button class="preview-variant-btn" data-variant="sunset" type="button">
+                <span class="variant-dot" style="background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);"></span>
+                <span class="variant-name">Couchant</span>
+              </button>
+              <button class="preview-variant-btn" data-variant="midnight" type="button">
+                <span class="variant-dot" style="background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);"></span>
+                <span class="variant-name">Minuit</span>
+              </button>
+              <button class="preview-variant-btn" data-variant="forest" type="button">
+                <span class="variant-dot" style="background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);"></span>
+                <span class="variant-name">Forêt</span>
+              </button>
+              <button class="preview-variant-btn" data-variant="candy" type="button">
+                <span class="variant-dot" style="background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);"></span>
+                <span class="variant-name">Bonbon</span>
+              </button>
             </div>
           </div>
         </div>
@@ -783,12 +755,6 @@
         <div class="preview-area">
           <div class="preview-area-header">
             <h3 class="preview-area-title">Aperçu en temps réel</h3>
-            <div class="preview-zoom-controls">
-              <button class="preview-zoom-btn" data-zoom="0.5">50%</button>
-              <button class="preview-zoom-btn" data-zoom="0.75">75%</button>
-              <button class="preview-zoom-btn active" data-zoom="1">100%</button>
-              <button class="preview-zoom-btn" data-zoom="1.25">125%</button>
-            </div>
             <button type="button" class="preview-close-btn" id="previewStudioCloseBtn" title="Fermer (Échap)">
               <span aria-hidden="true">×</span>
             </button>
