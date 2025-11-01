@@ -6725,8 +6725,8 @@ kbd {
 }
 
 .editor-page .panel {
-  background: var(--surface-primary);
-  border: 1px solid var(--glass-border);
+  background: transparent;
+  border: none;
   border-radius: var(--radius-lg);
   overflow: hidden;
 }
