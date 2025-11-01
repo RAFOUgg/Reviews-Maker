@@ -166,14 +166,18 @@ class PreviewStudio {
      * Ouvre le panneau de configuration d'aperçu
      */
     open(reviewData) {
+        console.log('[Preview Studio] Opening with data:', reviewData);
+
         this.currentReviewData = reviewData;
         this.isOpen = true;
 
         const panel = document.getElementById('previewStudioPanel');
         if (!panel) {
-            console.error('Preview Studio panel not found');
+            console.error('[Preview Studio] Panel element not found!');
             return;
         }
+
+        console.log('[Preview Studio] Panel found, displaying...');
 
         // Afficher le panneau
         panel.style.display = 'flex';
@@ -197,6 +201,8 @@ class PreviewStudio {
 
         // Générer l'aperçu initial
         this.generatePreview();
+
+        console.log('[Preview Studio] Preview generated');
 
         // Focus sur le premier template
         const firstTemplate = panel.querySelector('.preview-template-btn');
@@ -442,17 +448,35 @@ class PreviewStudio {
      * Génère l'aperçu selon la configuration actuelle
      */
     generatePreview() {
-        const previewArea = document.getElementById('previewStudioCanvas');
-        if (!previewArea || !this.currentReviewData) return;
+        console.log('[Preview Studio] Generating preview...');
 
+        const previewArea = document.getElementById('previewStudioCanvas');
+        if (!previewArea) {
+            console.error('[Preview Studio] Canvas element not found!');
+            return;
+        }
+
+        if (!this.currentReviewData) {
+            console.warn('[Preview Studio] No review data available');
+            previewArea.innerHTML = this.renderEmptyState();
+            return;
+        }
+
+        console.log('[Preview Studio] Rendering preview with data:', this.currentReviewData);
         const html = this.renderPreview(this.currentReviewData);
         previewArea.innerHTML = html;
+        console.log('[Preview Studio] Preview rendered successfully');
     }
 
     /**
      * Génère le HTML de l'aperçu
      */
     renderPreview(data) {
+        // Vérifier que les données sont valides
+        if (!data || !data.currentType || !data.cultivarInfo) {
+            return this.renderEmptyState();
+        }
+
         const template = previewTemplates[this.config.template];
         const isDark = this.config.style.colorScheme === 'dark';
         const bgColor = this.config.style.backgroundColor || (isDark ? '#0f1628' : '#f8fafc');
@@ -764,6 +788,39 @@ class PreviewStudio {
             }
         }
         return String(value);
+    }
+
+    /**
+     * Rendu de l'état vide (quand pas de données)
+     */
+    renderEmptyState() {
+        const isDark = this.config.style.colorScheme === 'dark';
+        const bgColor = isDark ? '#0f1628' : '#f8fafc';
+        const textColor = isDark ? '#f8fafc' : '#0a162b';
+        const mutedColor = isDark ? '#94a3b8' : '#64748b';
+
+        return `
+      <div style="
+        background: ${bgColor};
+        color: ${textColor};
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+        padding: 60px;
+        text-align: center;
+        border-radius: ${this.config.style.borderRadius}px;
+      ">
+        <div style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;">👁️</div>
+        <h3 style="font-size: 24px; font-weight: 700; margin: 0 0 12px 0; color: ${textColor};">
+          Aucune review à prévisualiser
+        </h3>
+        <p style="font-size: 16px; color: ${mutedColor}; margin: 0; max-width: 400px; line-height: 1.5;">
+          Remplissez le formulaire de review et relancez l'aperçu pour voir le rendu personnalisé.
+        </p>
+      </div>
+    `;
     }
 }
 

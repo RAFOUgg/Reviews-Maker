@@ -4,6 +4,21 @@
  * MODAL par-dessus la fenêtre principale
  */
 
+/* Variables locales si non définies globalement */
+.preview-studio-panel {
+    --surface: #0f1628;
+    --surface-elevated: #1a2640;
+    --surface-hover: #243050;
+    --border: rgba(255, 255, 255, 0.1);
+    --text: #f8fafc;
+    --text-soft: #cbd5e1;
+    --text-muted: #94a3b8;
+    --accent: #34d399;
+    --accent-hover: #10b981;
+    --accent-bg: rgba(52, 211, 153, 0.1);
+    --accent-glow: rgba(52, 211, 153, 0.2);
+}
+
 /* === Overlay de la modale === */
 .preview-studio-panel {
     position: fixed;
@@ -11,7 +26,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(10, 22, 40, 0.85);
+    background: rgba(10, 22, 40, 0.92);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     z-index: 10000;
