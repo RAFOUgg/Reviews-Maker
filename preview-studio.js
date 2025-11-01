@@ -403,7 +403,7 @@ class PreviewStudio {
 
         const preset = previewPresets[this.config.presetStyle];
         const variant = colorVariants[this.config.colorVariant];
-        
+
         if (!preset || !variant) {
             console.error('[Preview Studio] Preset ou variant introuvable');
             return this.renderEmptyState();
