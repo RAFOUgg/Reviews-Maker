@@ -2427,7 +2427,13 @@ function openAccountModal() {
   // If the modal had the HTML 'hidden' attribute, remove it so CSS [hidden] rule
   // (which uses !important) no longer forces it invisible. We'll restore the
   // attribute when closing the modal.
-  try { dom.accountModal.removeAttribute && dom.accountModal.removeAttribute('hidden'); } catch (e) { }
+  try {
+    if (dom.accountModal.hasAttribute && dom.accountModal.hasAttribute('hidden')) {
+      dom.accountModal.removeAttribute('hidden');
+    }
+  } catch (e) {
+    console.warn('Failed to remove hidden attribute from accountModal', e);
+  }
   // Ensure account modal is above any .modal (which uses z-index:3000)
   dom.accountModal.style.display = 'block';
   // match CSS priority for account modal
@@ -2462,7 +2468,13 @@ function closeAccountModal() {
   try { dom.accountModal.style.display = 'none'; } catch (e) { }
   // Reinstate the hidden attribute so CSS keeps it out of the accessibility tree
   // and prevents accidental focus when hidden.
-  try { dom.accountModal.setAttribute && dom.accountModal.setAttribute('hidden', ''); } catch (e) { }
+  try {
+    if (dom.accountModal.setAttribute) {
+      dom.accountModal.setAttribute('hidden', '');
+    }
+  } catch (e) {
+    console.warn('Failed to set hidden attribute on accountModal', e);
+  }
   releaseFocusTrap();
   try { document.body.classList.remove('modal-open'); } catch (e) { }
 }
