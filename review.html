@@ -1,23 +1,29 @@
 <!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Studio professionnel pour composer, prévisualiser et exporter des reviews produits cannabis." />
-    <title>Reviews Maker · Studio professionnel</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Studio professionnel pour composer, prévisualiser et exporter des reviews produits cannabis." />
+  <title>Reviews Maker · Studio professionnel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="ui/ui-base.css" />
-    <link rel="stylesheet" href="export-studio.css" />
+  <link rel="stylesheet" href="export-studio.css" />
   <link rel="icon" type="image/png" href="ink/logo.png" />
-  </head>
-  <body class="editor-page">
-    <div class="app-shell">
+</head>
+
+<body class="editor-page">
+  <div class="app-shell">
     <header class="top-nav" role="banner">
       <div class="brand" id="brandLogo" role="button" tabindex="0" title="Retour à l'accueil">
-  <span class="brand-mark" aria-hidden="true"><img src="ink/logo.png" alt="" style="width:22px;height:22px;object-fit:contain;border-radius:4px" /></span>
+        <span class="brand-mark" aria-hidden="true"><img src="ink/logo.png" alt=""
+            style="width:22px;height:22px;object-fit:contain;border-radius:4px" /></span>
         <div class="brand-text">
           <strong>Reviews Maker</strong>
           <span>Studio professionnel</span>
@@ -39,7 +45,7 @@
             <span aria-hidden="true">👁️</span>
             Afficher l'aperçu
           </button>
-          
+
           <span class="pill-btn" id="openTips" title="Afficher les raccourcis et astuces" tabindex="0" role="button">
             <span aria-hidden="true">💡</span>
             Astuces
@@ -49,7 +55,7 @@
     </header>
     <!-- Workspace wrapper was missing; required for proper layout -->
     <main class="workspace editor-workspace" role="main">
-    <section class="panel panel-form" aria-labelledby="form-title" hidden>
+      <section class="panel panel-form" aria-labelledby="form-title" hidden>
         <header class="panel-header">
           <p class="panel-eyebrow">Contenu détaillé</p>
           <h2 id="form-title">Informations du produit</h2>
@@ -79,15 +85,11 @@
               <span aria-hidden="true">💾</span>
               Enregistrer
             </button>
-            <button type="button" class="btn btn-outline" id="resetBtn">
-              <span aria-hidden="true">🔄</span>
-              Réinitialiser
-            </button>
           </div>
         </form>
-    </section>
+      </section>
 
-  <aside class="panel panel-preview" aria-live="polite" aria-labelledby="preview-title" hidden>
+      <aside class="panel panel-preview" aria-live="polite" aria-labelledby="preview-title" hidden>
         <header class="panel-header preview-header">
           <p class="panel-eyebrow">Aperçu en direct</p>
           <h2 id="preview-title">Qualité studio prête à exporter</h2>
@@ -101,7 +103,8 @@
             <span class="placeholder-icon" aria-hidden="true">🪄</span>
             <h3>Commencez votre review</h3>
             <p>
-              Sélectionnez un type de produit puis complétez les blocs d'information. L'aperçu se mettra à jour automatiquement à la génération.
+              Sélectionnez un type de produit puis complétez les blocs d'information. L'aperçu se mettra à jour
+              automatiquement à la génération.
             </p>
             <ul class="placeholder-list">
               <li>Aperçu compact en temps réel</li>
@@ -151,7 +154,8 @@
             </div>
             <div class="form-row">
               <label class="field-label">Titulaire</label>
-              <div style="padding: 12px; background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 8px; color: var(--text);">
+              <div
+                style="padding: 12px; background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 8px; color: var(--text);">
                 <span id="saveHolderDisplay">Chargement...</span>
               </div>
               <p class="field-hint">Le titulaire est automatiquement défini avec votre pseudo Discord.</p>
@@ -159,11 +163,14 @@
             <div class="form-row">
               <label class="field-label">Confidentialité</label>
               <div class="segmented" id="savePrivacySegment" role="group" aria-label="Choisir la confidentialité">
-                <button type="button" class="btn btn-outline btn-sm" data-privacy="public" aria-pressed="true">🌐 Public</button>
-                <button type="button" class="btn btn-outline btn-sm" data-privacy="private" aria-pressed="false">🔒 Privé</button>
+                <button type="button" class="btn btn-outline btn-sm" data-privacy="public" aria-pressed="true">🌐
+                  Public</button>
+                <button type="button" class="btn btn-outline btn-sm" data-privacy="private" aria-pressed="false">🔒
+                  Privé</button>
               </div>
               <input type="hidden" id="savePrivacy" value="public" />
-              <p class="field-hint">Public: visible dans la galerie. Privé: visible uniquement pour vous (et le staff).</p>
+              <p class="field-hint">Public: visible dans la galerie. Privé: visible uniquement pour vous (et le staff).
+              </p>
             </div>
             <div class="modal-actions">
               <button type="button" class="btn btn-outline" id="cancelSave">Annuler</button>
@@ -186,8 +193,9 @@
         </div>
         <div class="modal-body">
           <div class="auth-content">
-            <p class="auth-description">Liez votre compte pour synchroniser vos reviews sur le serveur et y accéder depuis n'importe quel appareil.</p>
-            
+            <p class="auth-description">Liez votre compte pour synchroniser vos reviews sur le serveur et y accéder
+              depuis n'importe quel appareil.</p>
+
             <!-- Étape 1: Demande d'email -->
             <div id="authStepEmail" class="auth-step">
               <div class="form-group">
@@ -198,7 +206,7 @@
                 <button type="button" class="btn btn-primary" id="authSendCode">Envoyer le code</button>
               </div>
             </div>
-            
+
             <!-- Étape 2: Vérification du code -->
             <div id="authStepCode" class="auth-step" style="display:none;">
               <p class="auth-info">Un code de vérification a été envoyé à <strong id="authEmailDisplay"></strong></p>
@@ -210,17 +218,24 @@
                 <button type="button" class="btn btn-outline" id="authBack">Retour</button>
                 <button type="button" class="btn btn-primary" id="authVerifyCode">Vérifier</button>
               </div>
-              <p class="auth-help">Code non reçu ? <button type="button" class="link-btn" id="authResendCode">Renvoyer</button></p>
+              <p class="auth-help">Code non reçu ? <button type="button" class="link-btn"
+                  id="authResendCode">Renvoyer</button></p>
             </div>
-            
+
             <!-- Étape 3: Connecté -->
             <div id="authStepConnected" class="auth-step" style="display:none;">
               <p class="auth-info">Connecté en tant que <strong id="authConnectedEmail"></strong></p>
               <div class="auth-account-summary" style="margin-top:10px;">
                 <div style="display:flex; gap:12px; align-items:center;">
-                  <div><strong id="authConnTotal">0</strong><div style="font-size:0.85rem;color:var(--text-muted);">Total</div></div>
-                  <div><strong id="authConnPublic">0</strong><div style="font-size:0.85rem;color:var(--text-muted);">Public</div></div>
-                  <div><strong id="authConnPrivate">0</strong><div style="font-size:0.85rem;color:var(--text-muted);">Privé</div></div>
+                  <div><strong id="authConnTotal">0</strong>
+                    <div style="font-size:0.85rem;color:var(--text-muted);">Total</div>
+                  </div>
+                  <div><strong id="authConnPublic">0</strong>
+                    <div style="font-size:0.85rem;color:var(--text-muted);">Public</div>
+                  </div>
+                  <div><strong id="authConnPrivate">0</strong>
+                    <div style="font-size:0.85rem;color:var(--text-muted);">Privé</div>
+                  </div>
                 </div>
                 <div id="authConnByType" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;"></div>
               </div>
@@ -229,7 +244,7 @@
                 <button type="button" class="btn btn-outline" id="authDisconnect">Se déconnecter</button>
               </div>
             </div>
-            
+
             <div class="auth-status" id="authStatus" style="display:none;"></div>
           </div>
         </div>
@@ -241,49 +256,58 @@
       <span aria-hidden="true">🔗</span>
     </button>
 
-      <!-- Confirmation de suppression (global) -->
-      <div class="modal small" id="confirmDeleteModal" style="display:none;" aria-hidden="true">
-        <div class="modal-overlay" id="confirmDeleteOverlay"></div>
-        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="confirmDeleteTitle">
-          <div class="modal-header">
-            <h2 id="confirmDeleteTitle">Confirmer la suppression</h2>
-            <button type="button" class="modal-close" id="closeConfirmDelete" aria-label="Fermer">✕</button>
-          </div>
-          <div class="modal-body">
-            <p>Êtes-vous sûr(e) de vouloir supprimer cette review ? Cette action est irréversible.</p>
-          </div>
-          <div class="modal-actions">
-            <button type="button" class="btn btn-outline" id="cancelDelete">Annuler</button>
-            <button type="button" class="btn btn-danger" id="confirmDelete">Supprimer</button>
-          </div>
+    <!-- Confirmation de suppression (global) -->
+    <div class="modal small" id="confirmDeleteModal" style="display:none;" aria-hidden="true">
+      <div class="modal-overlay" id="confirmDeleteOverlay"></div>
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="confirmDeleteTitle">
+        <div class="modal-header">
+          <h2 id="confirmDeleteTitle">Confirmer la suppression</h2>
+          <button type="button" class="modal-close" id="closeConfirmDelete" aria-label="Fermer">✕</button>
+        </div>
+        <div class="modal-body">
+          <p>Êtes-vous sûr(e) de vouloir supprimer cette review ? Cette action est irréversible.</p>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" id="cancelDelete">Annuler</button>
+          <button type="button" class="btn btn-danger" id="confirmDelete">Supprimer</button>
         </div>
       </div>
+    </div>
 
-      <!-- Public profile modal (moved to root so it won't be clipped by other modal containers) -->
-      <div class="modal" id="publicProfileModal" style="display:none;">
-        <div class="modal-overlay" id="publicProfileOverlay"></div>
-        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="publicProfileTitle">
-          <div class="modal-header">
-            <h2 id="publicProfileTitle">Profil public</h2>
-            <button type="button" class="modal-close" id="closePublicProfile" aria-label="Fermer">✕</button>
-          </div>
-          <div class="modal-body">
-            <div class="account-profile" style="margin-bottom:10px;">
-              <div class="account-avatar">👤</div>
-              <div class="account-meta">
-                <div id="publicProfileEmail">—</div>
-                <div class="sub">Membre Reviews Maker</div>
-              </div>
+    <!-- Public profile modal (moved to root so it won't be clipped by other modal containers) -->
+    <div class="modal" id="publicProfileModal" style="display:none;">
+      <div class="modal-overlay" id="publicProfileOverlay"></div>
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="publicProfileTitle">
+        <div class="modal-header">
+          <h2 id="publicProfileTitle">Profil public</h2>
+          <button type="button" class="modal-close" id="closePublicProfile" aria-label="Fermer">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="account-profile" style="margin-bottom:10px;">
+            <div class="account-avatar">👤</div>
+            <div class="account-meta">
+              <div id="publicProfileEmail">—</div>
+              <div class="sub">Membre Reviews Maker</div>
             </div>
-            <div class="stats-grid" style="margin-bottom:10px;">
-              <div class="stat-card"><div class="num" id="publicTotal">0</div><div class="label">Total</div></div>
-              <div class="stat-card"><div class="num" id="publicPublic">0</div><div class="label">Public</div></div>
-              <div class="stat-card"><div class="num" id="publicPrivate">0</div><div class="label">Privé</div></div>
-            </div>
-            <div id="publicByType" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
           </div>
+          <div class="stats-grid" style="margin-bottom:10px;">
+            <div class="stat-card">
+              <div class="num" id="publicTotal">0</div>
+              <div class="label">Total</div>
+            </div>
+            <div class="stat-card">
+              <div class="num" id="publicPublic">0</div>
+              <div class="label">Public</div>
+            </div>
+            <div class="stat-card">
+              <div class="num" id="publicPrivate">0</div>
+              <div class="label">Privé</div>
+            </div>
+          </div>
+          <div id="publicByType" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
         </div>
       </div>
+    </div>
 
     <!-- Redesigned Account Modal (uses account-* classes for styling) -->
     <div class="modal" id="accountModal" style="display:none;">
@@ -292,7 +316,8 @@
         <header class="modal-header">
           <h2 id="accountTitle">Mon compte</h2>
           <div style="display:flex;gap:8px;align-items:center;">
-            <button type="button" class="btn btn-ghost" id="openAccountSettings" title="Paramètres">⚙️ Paramètres</button>
+            <button type="button" class="btn btn-ghost" id="openAccountSettings" title="Paramètres">⚙️
+              Paramètres</button>
             <button type="button" class="modal-close" id="closeAccountModal" aria-label="Fermer">✕</button>
           </div>
         </header>
@@ -343,13 +368,16 @@
             <div class="account-preferences panel-section">
               <h4 class="section-title">Préférences</h4>
               <div class="form-group">
-                <div style="color:var(--text-soft);">Consulter et modifier vos paramètres (confidentialité, thèmes) depuis <strong>Paramètres</strong>.</div>
-                <div style="margin-top:10px;"><button class="btn btn-ghost" id="openAccountSettingsInline">Ouvrir Paramètres</button></div>
+                <div style="color:var(--text-soft);">Consulter et modifier vos paramètres (confidentialité, thèmes)
+                  depuis <strong>Paramètres</strong>.</div>
+                <div style="margin-top:10px;"><button class="btn btn-ghost" id="openAccountSettingsInline">Ouvrir
+                    Paramètres</button></div>
               </div>
             </div>
 
             <div id="accountSettingsPanel" class="account-settings-panel" style="display:none;">
-              <div class="settings-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
+              <div class="settings-header"
+                style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
                 <div style="display:flex;align-items:center;gap:10px;">
                   <button type="button" class="btn btn-ghost" id="accountSettingsBack">← Retour</button>
                   <h4 class="section-title">Paramètres</h4>
@@ -371,13 +399,16 @@
                   <div style="color:var(--text-soft);margin-top:6px;">Choisissez un thème :</div>
                   <div style="margin-top:10px;">
                     <div id="themeOptions" class="theme-options" role="radiogroup" aria-label="Choix du thème">
-                      <button type="button" class="theme-option" data-theme="violet" title="Violet sombre" aria-checked="false" role="radio">
+                      <button type="button" class="theme-option" data-theme="violet" title="Violet sombre"
+                        aria-checked="false" role="radio">
                         <span class="theme-swatch swatch-violet" aria-hidden="true"></span>
                       </button>
-                      <button type="button" class="theme-option" data-theme="rose" title="Rose pâle" aria-checked="false" role="radio">
+                      <button type="button" class="theme-option" data-theme="rose" title="Rose pâle"
+                        aria-checked="false" role="radio">
                         <span class="theme-swatch swatch-rose" aria-hidden="true"></span>
                       </button>
-                      <button type="button" class="theme-option" data-theme="bluish" title="Bleu foncé" aria-checked="false" role="radio">
+                      <button type="button" class="theme-option" data-theme="bluish" title="Bleu foncé"
+                        aria-checked="false" role="radio">
                         <span class="theme-swatch swatch-bluish" aria-hidden="true"></span>
                       </button>
                     </div>
@@ -391,13 +422,13 @@
     </div>
 
     <template id="tipsTemplate">
-    <div class="toast" role="status" aria-live="polite">
-      <strong>Raccourcis utiles</strong>
-      <div style="margin-top:6px; color: var(--text-muted); font-size: 0.95rem;">
-        <div><kbd>Ctrl/⌘</kbd> + <kbd>↑</kbd>/<kbd>↓</kbd> — changer de section</div>
-        <div><kbd>Ctrl/⌘</kbd> + <kbd>Entrée</kbd> — générer la review</div>
+      <div class="toast" role="status" aria-live="polite">
+        <strong>Raccourcis utiles</strong>
+        <div style="margin-top:6px; color: var(--text-muted); font-size: 0.95rem;">
+          <div><kbd>Ctrl/⌘</kbd> + <kbd>↑</kbd>/<kbd>↓</kbd> — changer de section</div>
+          <div><kbd>Ctrl/⌘</kbd> + <kbd>Entrée</kbd> — générer la review</div>
+        </div>
       </div>
-    </div>
     </template>
     <!-- Modal Astuces -->
     <div class="modal" id="tipsModal" style="display: none;">
@@ -432,7 +463,8 @@
             <div class="tip-group">
               <h3>✨ Astuces</h3>
               <ul>
-                <li>Les champs séquence permettent d'ajouter plusieurs étapes dans l'ordre (ex: Bubble Hash → Séparation électrostatique)</li>
+                <li>Les champs séquence permettent d'ajouter plusieurs étapes dans l'ordre (ex: Bubble Hash → Séparation
+                  électrostatique)</li>
                 <li>Ajoutez une photo pour un rendu optimal</li>
                 <li>La sauvegarde est automatique pendant la saisie</li>
                 <li>Vos brouillons sont accessibles depuis "Ma Bibliothèque"</li>
@@ -605,6 +637,7 @@
     <script src="export-studio.js"></script>
     <script src="export-studio-ui.js"></script>
     <script src="scripts/logger.js"></script>
-  <script src="app.js?v=2025-10-24-prodfix-1"></script>
-  </body>
+    <script src="app.js?v=2025-10-24-prodfix-1"></script>
+</body>
+
 </html>

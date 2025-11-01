@@ -1386,7 +1386,6 @@ async function initEditorPage() {
   dom.generateBtn = document.getElementById("generateBtn");
   dom.newReviewBtn = document.getElementById("newReviewBtn");
   dom.brandLogo = document.getElementById("brandLogo");
-  dom.resetBtn = document.getElementById("resetBtn");
   dom.saveBtn = document.getElementById("saveBtn");
   dom.prevSection = document.getElementById("prevSection");
   dom.nextSection = document.getElementById("nextSection");
@@ -1587,16 +1586,6 @@ function setupFormEvents() {
   if (!isEditorPage) return;
 
   // Boutons de formulaire
-  if (dom.resetBtn) {
-    dom.resetBtn.addEventListener("click", () => {
-      const hasContent = hasSignificantContent();
-      if (hasContent && !confirm("Réinitialiser le formulaire ? Les données saisies seront effacées.")) {
-        return;
-      }
-      // Soft reset: efface tous les champs (y compris pipelines) et reste dans la page
-      handleReset('soft');
-    });
-  }
   if (dom.saveBtn) {
     dom.saveBtn.addEventListener("click", async () => {
       // Ouvrir la modale immédiatement pour ne pas bloquer l'UX
