@@ -995,7 +995,6 @@ let isUserConnected = false; // Auth state shared across modules
 // Only keep "mine" (user personal library) as the default/current library mode.
 // The public gallery has been removed from the UI and should not be used.
 let currentLibraryMode = 'mine';
-// Preview Studio instance (défini dans preview-studio.js)
 
 const LAYOUT_THRESHOLDS = {
   enterWidth: 1200,
@@ -1453,9 +1452,6 @@ async function initEditorPage() {
   dom.libraryDrawer = document.getElementById("libraryDrawer");
   dom.libraryList = document.getElementById("libraryList");
   dom.openLibrary = document.getElementById("openLibrary");
-
-  // Preview Studio est déjà initialisé globalement dans preview-studio.js
-  // (disponible via window.previewStudio)
 
   // Masquer l'aperçu par défaut pour gagner de la place
   try {
