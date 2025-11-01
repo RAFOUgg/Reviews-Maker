@@ -33,20 +33,26 @@
     display: none;
     opacity: 0;
     transition: opacity 0.3s ease;
-    padding: 20px;
-    overflow: hidden;
+    padding: 0;
+    overflow: auto;
+    align-items: center;
+    justify-content: center;
 }
 
 .preview-studio-panel.active {
     opacity: 1;
+    display: flex;
 }
 
 /* === Container principal (modale) === */
 .preview-studio-container {
     display: grid;
     grid-template-columns: 380px 1fr 320px;
-    height: 100%;
-    max-height: calc(100vh - 40px);
+    width: 95%;
+    max-width: 1800px;
+    height: 90vh;
+    max-height: 900px;
+    margin: auto;
     overflow: hidden;
     gap: 0;
     background: var(--surface, #0f1628);
@@ -68,9 +74,19 @@
     }
 }
 
+/* === Responsive === */
+@media (max-width: 1400px) {
+    .preview-studio-container {
+        width: 98%;
+        height: 95vh;
+        grid-template-columns: 300px 1fr 280px;
+    }
+}
+
 @media (max-width: 1200px) {
     .preview-studio-container {
-        grid-template-columns: 320px 1fr;
+        grid-template-columns: 280px 1fr;
+        width: 98%;
     }
 
     .preview-studio-container .preview-actions-panel {
@@ -78,15 +94,72 @@
         right: 0;
         top: 0;
         bottom: 0;
-        width: 320px;
+        width: 280px;
         background: var(--surface);
         box-shadow: -4px 0 24px rgba(0, 0, 0, 0.5);
         transform: translateX(100%);
         transition: transform 0.3s ease;
+        z-index: 10;
     }
 
     .preview-studio-container .preview-actions-panel.visible {
         transform: translateX(0);
+    }
+
+    .preview-config-sidebar {
+        width: 280px;
+    }
+}
+
+@media (max-width: 900px) {
+    .preview-studio-panel {
+        padding: 0;
+    }
+
+    .preview-studio-container {
+        width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr auto;
+    }
+
+    .preview-config-sidebar {
+        display: none;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        z-index: 20;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .preview-config-sidebar.visible {
+        display: block;
+    }
+
+    .preview-actions-panel {
+        display: none;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: auto;
+        max-height: 50vh;
+        width: 100%;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+        overflow-y: auto;
+    }
+
+    .preview-actions-panel.visible {
+        display: block;
+    }
+
+    .preview-area {
+        grid-row: 1 / -1;
     }
 }
 
