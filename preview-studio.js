@@ -177,10 +177,23 @@ class PreviewStudio {
 
         // Afficher le panneau
         panel.style.display = 'flex';
+        // Force reflow
+        panel.offsetHeight;
         panel.classList.add('active');
 
         // Initialiser les contrôles
         this.initControls();
+
+        // Gérer la fermeture par clic sur l'overlay
+        panel.addEventListener('click', (e) => {
+            if (e.target === panel) {
+                this.close();
+            }
+        });
+
+        // Gérer la fermeture par touche Échap
+        this.handleEscapeKey = this.handleEscapeKey.bind(this);
+        document.addEventListener('keydown', this.handleEscapeKey);
 
         // Générer l'aperçu initial
         this.generatePreview();
@@ -202,11 +215,11 @@ class PreviewStudio {
                 panel.style.display = 'none';
             }, 300);
         }
-        
+
         // Retirer le listener d'échap
         document.removeEventListener('keydown', this.handleEscapeKey);
     }
-    
+
     /**
      * Gère la touche Échap pour fermer la modale
      */
