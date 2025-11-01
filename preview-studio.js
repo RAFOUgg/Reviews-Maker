@@ -282,275 +282,196 @@ class PreviewStudio {
                 checkbox.onchange = () => this.toggleSection(sectionKey, checkbox.checked);
             }
         });
-        if (valueDisplay) valueDisplay.textContent = color.toUpperCase();
-    };
-});
 
-// Thème clair/sombre
-const schemeSelect = document.getElementById('preview-color-scheme');
-if (schemeSelect) {
-    schemeSelect.value = this.config.style.colorScheme;
-    schemeSelect.onchange = (e) => this.setColorScheme(e.target.value);
-}
-
-// Taille de police
-const fontSizeSelect = document.getElementById('preview-font-size');
-if (fontSizeSelect) {
-    fontSizeSelect.value = this.config.style.fontSize;
-    fontSizeSelect.onchange = (e) => this.setFontSize(e.target.value);
-}
-
-// Espacement
-const spacingSelect = document.getElementById('preview-spacing');
-if (spacingSelect) {
-    spacingSelect.value = this.config.style.spacing;
-    spacingSelect.onchange = (e) => this.setSpacing(e.target.value);
-}
-
-// Contrôles de zoom
-document.querySelectorAll('.preview-zoom-btn').forEach(btn => {
-    btn.onclick = () => {
-        const zoom = parseFloat(btn.dataset.zoom);
-        this.setZoom(zoom);
-        document.querySelectorAll('.preview-zoom-btn').forEach(b => {
-            b.classList.toggle('active', b.dataset.zoom === btn.dataset.zoom);
-        });
-    };
-});
-
-// Bouton Appliquer et Fermer
-const applyBtn = document.getElementById('previewApplyBtn');
-if (applyBtn) {
-    applyBtn.onclick = () => {
-        this.saveConfig();
-        // Appliquer au panneau principal si nécessaire
-        if (typeof generateReview === 'function') {
-            generateReview();
+        // Bouton Appliquer et Fermer
+        const applyBtn = document.getElementById('previewApplyBtn');
+        if (applyBtn) {
+            applyBtn.onclick = () => {
+                this.saveConfig();
+                // Appliquer au panneau principal si nécessaire
+                if (typeof generateReview === 'function') {
+                    generateReview();
+                }
+                this.close();
+            };
         }
-        this.close();
-    };
-}
 
-const cancelBtn = document.getElementById('previewCancelBtn');
-if (cancelBtn) {
-    cancelBtn.onclick = () => {
-        // Recharger la config sauvegardée
-        this.config = this.loadConfig();
-        this.close();
-    };
-}
+        const cancelBtn = document.getElementById('previewCancelBtn');
+        if (cancelBtn) {
+            cancelBtn.onclick = () => {
+                // Recharger la config sauvegardée
+                this.config = this.loadConfig();
+                this.close();
+            };
+        }
 
-// Bouton de fermeture (X)
-const closeBtn = document.getElementById('previewStudioCloseBtn');
-if (closeBtn) {
-    closeBtn.onclick = () => {
-        this.close();
-    };
-}
+        // Bouton de fermeture (X)
+        const closeBtn = document.getElementById('previewStudioCloseBtn');
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                this.close();
+            };
+        }
     }
 
-/**
- * Change le zoom de l'aperçu
- */
-setZoom(zoom) {
-    const canvas = document.getElementById('previewStudioCanvas');
-    if (!canvas) return;
+    /**
+     * Change le style prédéfini
+     */
+    setPresetStyle(presetName) {
+        if (!previewPresets[presetName]) return;
 
-    // Retirer toutes les classes de zoom
-    canvas.classList.remove('zoom-50', 'zoom-75', 'zoom-100', 'zoom-125', 'zoom-150');
+        this.config.presetStyle = presetName;
 
-    // Ajouter la nouvelle classe de zoom
-    const zoomClass = `zoom-${Math.round(zoom * 100)}`;
-    canvas.classList.add(zoomClass);
-}
+        // Mettre à jour l'interface
+        document.querySelectorAll('.preview-preset-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.preset === presetName);
+        });
 
-/**
- * Change le template actif
- */
-setTemplate(templateName) {
-    const template = previewTemplates[templateName];
-    if (!template) return;
-
-    this.config.template = templateName;
-
-    // Appliquer les sections par défaut du template
-    Object.keys(this.config.sections).forEach(key => {
-        this.config.sections[key] = template.defaultSections.includes(key);
-    });
-
-    // Appliquer le style par défaut du template
-    if (template.defaultStyle) {
-        this.config.style = { ...this.config.style, ...template.defaultStyle };
+        this.generatePreview();
     }
 
-    // Mettre à jour l'interface
-    document.querySelectorAll('.preview-template-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.template === templateName);
-    });
+    /**
+     * Change la variante de couleur
+     */
+    setColorVariant(variantName) {
+        if (!colorVariants[variantName]) return;
 
-    // Mettre à jour les checkboxes de sections
-    Object.keys(this.config.sections).forEach(key => {
-        const checkbox = document.getElementById(`preview-section-${key}`);
-        if (checkbox) checkbox.checked = this.config.sections[key];
-    });
+        this.config.colorVariant = variantName;
 
-    this.generatePreview();
-}
+        // Mettre à jour l'interface
+        document.querySelectorAll('.preview-variant-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.variant === variantName);
+        });
 
-/**
- * Active/désactive une section
- */
-toggleSection(sectionKey, enabled) {
-    this.config.sections[sectionKey] = enabled;
-    this.generatePreview();
-}
-
-/**
- * Change la couleur d'accent
- */
-setAccentColor(color) {
-    this.config.style.accentColor = color;
-
-    // Mettre à jour les presets actifs
-    document.querySelectorAll('.preview-color-preset').forEach(preset => {
-        preset.classList.toggle('active', preset.dataset.color === color);
-    });
-
-    this.generatePreview();
-}
-
-/**
- * Change le thème clair/sombre
- */
-setColorScheme(scheme) {
-    this.config.style.colorScheme = scheme;
-
-    // Mettre à jour la couleur de fond automatiquement
-    if (scheme === 'dark') {
-        this.config.style.backgroundColor = '#0f1628';
-    } else if (scheme === 'light') {
-        this.config.style.backgroundColor = '#f8fafc';
+        this.generatePreview();
     }
 
-    this.generatePreview();
-}
-
-/**
- * Change la taille de police
- */
-setFontSize(size) {
-    this.config.style.fontSize = size;
-    this.generatePreview();
-}
-
-/**
- * Change l'espacement
- */
-setSpacing(spacing) {
-    this.config.style.spacing = spacing;
-    this.generatePreview();
-}
-
-/**
- * Génère l'aperçu selon la configuration actuelle
- */
-generatePreview() {
-    console.log('[Preview Studio] Generating preview...');
-
-    const previewArea = document.getElementById('previewStudioCanvas');
-    if (!previewArea) {
-        console.error('[Preview Studio] Canvas element not found!');
-        return;
+    /**
+     * Active/désactive une section
+     */
+    toggleSection(sectionKey, enabled) {
+        this.config.sections[sectionKey] = enabled;
+        this.generatePreview();
     }
 
-    if (!this.currentReviewData) {
-        console.warn('[Preview Studio] No review data available');
-        previewArea.innerHTML = this.renderEmptyState();
-        return;
+    /**
+     * Change la couleur d'accent (obsolète - gardé pour compatibilité)
+     */
+    setAccentColor(color) {
+        // Mettre à jour les presets actifs
+        document.querySelectorAll('.preview-color-preset').forEach(preset => {
+            preset.classList.toggle('active', preset.dataset.color === color);
+        });
+
+        this.generatePreview();
     }
 
-    console.log('[Preview Studio] Rendering preview with data:', this.currentReviewData);
-    const html = this.renderPreview(this.currentReviewData);
-    previewArea.innerHTML = html;
-    console.log('[Preview Studio] Preview rendered successfully');
-}
 
-/**
- * Génère le HTML de l'aperçu
- */
-renderPreview(data) {
-    // Vérifier que les données sont valides
-    if (!data || !data.currentType || !data.cultivarInfo) {
-        return this.renderEmptyState();
+
+    /**
+     * Génère l'aperçu selon la configuration actuelle
+     */
+    generatePreview() {
+        console.log('[Preview Studio] Generating preview...');
+
+        const previewArea = document.getElementById('previewStudioCanvas');
+        if (!previewArea) {
+            console.error('[Preview Studio] Canvas element not found!');
+            return;
+        }
+
+        if (!this.currentReviewData) {
+            console.warn('[Preview Studio] No review data available');
+            previewArea.innerHTML = this.renderEmptyState();
+            return;
+        }
+
+        console.log('[Preview Studio] Rendering preview with data:', this.currentReviewData);
+        const html = this.renderPreview(this.currentReviewData);
+        previewArea.innerHTML = html;
+        console.log('[Preview Studio] Preview rendered successfully');
     }
 
-    const template = previewTemplates[this.config.template];
-    const isDark = this.config.style.colorScheme === 'dark';
-    const bgColor = this.config.style.backgroundColor || (isDark ? '#0f1628' : '#f8fafc');
-    const textColor = isDark ? '#f8fafc' : '#0a162b';
-    const mutedColor = isDark ? '#94a3b8' : '#64748b';
+    /**
+     * Génère le HTML de l'aperçu
+     */
+    renderPreview(data) {
+        // Vérifier que les données sont valides
+        if (!data || !data.currentType || !data.cultivarInfo) {
+            return this.renderEmptyState();
+        }
 
-    let html = `
-      <div class="preview-render preview-${this.config.template}" 
+        const preset = previewPresets[this.config.presetStyle];
+        const variant = colorVariants[this.config.colorVariant];
+        
+        if (!preset || !variant) {
+            console.error('[Preview Studio] Preset ou variant introuvable');
+            return this.renderEmptyState();
+        }
+
+        let html = `
+      <div class="preview-render preview-${this.config.presetStyle}" 
            style="
-             background: ${bgColor};
-             color: ${textColor};
-             font-family: ${this.config.style.fontFamily}, sans-serif;
-             font-size: ${this.getFontSizeValue()}px;
-             padding: ${this.getSpacingValue()}px;
-             border-radius: ${this.config.style.borderRadius}px;
+             background: ${variant.background};
+             color: ${variant.text};
+             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'SF Pro Display', sans-serif;
+             font-size: ${preset.style.fontSize};
+             line-height: ${preset.style.lineHeight};
+             padding: ${preset.style.padding};
+             border-radius: ${preset.style.borderRadius};
+             box-shadow: ${preset.style.shadow};
              position: relative;
              overflow: hidden;
              min-height: 400px;
            ">
     `;
 
-    // Header
-    if (this.config.sections.header) {
-        html += this.renderHeader(data, textColor);
+        // Header
+        if (this.config.sections.header) {
+            html += this.renderHeader(data, textColor);
+        }
+
+        // Cultivars details
+        if (this.config.sections.cultivars && data.cultivarInfo?.details) {
+            html += this.renderCultivars(data, mutedColor);
+        }
+
+        // Informations générales
+        if (this.config.sections.generalInfo) {
+            html += this.renderGeneralInfo(data, mutedColor);
+        }
+
+        // Scores globaux
+        if (this.config.sections.scores && data.maxGlobalScore > 0) {
+            html += this.renderScores(data, textColor, mutedColor);
+        }
+
+        // Détails par section
+        if (this.config.sections.details) {
+            html += this.renderDetails(data, textColor, mutedColor);
+        }
+
+        // Notes et commentaires
+        if (this.config.sections.notes) {
+            html += this.renderNotes(data, mutedColor);
+        }
+
+        // Branding
+        if (this.config.sections.branding) {
+            html += this.renderBranding(mutedColor);
+        }
+
+        html += '</div>';
+        return html;
     }
 
-    // Cultivars details
-    if (this.config.sections.cultivars && data.cultivarInfo?.details) {
-        html += this.renderCultivars(data, mutedColor);
-    }
+    /**
+     * Rendu de l'en-tête
+     */
+    renderHeader(data, textColor) {
+        const accentColor = this.config.style.accentColor;
 
-    // Informations générales
-    if (this.config.sections.generalInfo) {
-        html += this.renderGeneralInfo(data, mutedColor);
-    }
-
-    // Scores globaux
-    if (this.config.sections.scores && data.maxGlobalScore > 0) {
-        html += this.renderScores(data, textColor, mutedColor);
-    }
-
-    // Détails par section
-    if (this.config.sections.details) {
-        html += this.renderDetails(data, textColor, mutedColor);
-    }
-
-    // Notes et commentaires
-    if (this.config.sections.notes) {
-        html += this.renderNotes(data, mutedColor);
-    }
-
-    // Branding
-    if (this.config.sections.branding) {
-        html += this.renderBranding(mutedColor);
-    }
-
-    html += '</div>';
-    return html;
-}
-
-/**
- * Rendu de l'en-tête
- */
-renderHeader(data, textColor) {
-    const accentColor = this.config.style.accentColor;
-
-    return `
+        return `
       <div class="preview-header" style="margin-bottom: 32px;">
         <div class="preview-badge" style="
           display: inline-flex;
@@ -582,19 +503,19 @@ renderHeader(data, textColor) {
         ">${data.cultivarInfo.title}</h1>
       </div>
     `;
-}
+    }
 
-/**
- * Rendu des cultivars
- */
-renderCultivars(data, mutedColor) {
-    if (!data.cultivarInfo?.details?.length) return '';
+    /**
+     * Rendu des cultivars
+     */
+    renderCultivars(data, mutedColor) {
+        if (!data.cultivarInfo?.details?.length) return '';
 
-    let html = '<div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;">';
+        let html = '<div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;">';
 
-    data.cultivarInfo.details.forEach(cultivar => {
-        if (cultivar.name) {
-            html += `
+        data.cultivarInfo.details.forEach(cultivar => {
+            if (cultivar.name) {
+                html += `
           <div style="
             padding: 8px 16px;
             background: rgba(255, 255, 255, 0.05);
@@ -606,28 +527,28 @@ renderCultivars(data, mutedColor) {
             <span>${cultivar.name}</span>
           </div>
         `;
-        }
-    });
+            }
+        });
 
-    html += '</div>';
-    return html;
-}
+        html += '</div>';
+        return html;
+    }
 
-/**
- * Rendu des informations générales
- */
-renderGeneralInfo(data, mutedColor) {
-    // TODO: Ajouter les infos générales selon le type de produit
-    return '';
-}
+    /**
+     * Rendu des informations générales
+     */
+    renderGeneralInfo(data, mutedColor) {
+        // TODO: Ajouter les infos générales selon le type de produit
+        return '';
+    }
 
-/**
- * Rendu des scores
- */
-renderScores(data, textColor, mutedColor) {
-    const accentColor = this.config.style.accentColor;
+    /**
+     * Rendu des scores
+     */
+    renderScores(data, textColor, mutedColor) {
+        const accentColor = this.config.style.accentColor;
 
-    return `
+        return `
       <div class="preview-scores" style="
         display: grid;
         grid-template-columns: ${this.config.template === 'minimal' ? '1fr' : '1fr 1fr'};
@@ -680,23 +601,23 @@ renderScores(data, textColor, mutedColor) {
         ` : ''}
       </div>
     `;
-}
+    }
 
-/**
- * Rendu des détails par section
- */
-renderDetails(data, textColor, mutedColor) {
-    if (!data.structure?.sections) return '';
+    /**
+     * Rendu des détails par section
+     */
+    renderDetails(data, textColor, mutedColor) {
+        if (!data.structure?.sections) return '';
 
-    let html = '<div style="margin: 32px 0;">';
+        let html = '<div style="margin: 32px 0;">';
 
-    data.structure.sections.forEach((section, index) => {
-        const sectionScore = data.totals[`section-${index}`];
-        const hasData = section.fields.some(f => data.formData[f.key]);
+        data.structure.sections.forEach((section, index) => {
+            const sectionScore = data.totals[`section-${index}`];
+            const hasData = section.fields.some(f => data.formData[f.key]);
 
-        if (!hasData && !sectionScore) return;
+            if (!hasData && !sectionScore) return;
 
-        html += `
+            html += `
         <div style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.08);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
             <h3 style="
@@ -713,41 +634,41 @@ renderDetails(data, textColor, mutedColor) {
           </div>
       `;
 
-        // Afficher les champs avec données
-        section.fields.forEach(field => {
-            const value = data.formData[field.key];
-            if (!value || field.type === 'file') return;
+            // Afficher les champs avec données
+            section.fields.forEach(field => {
+                const value = data.formData[field.key];
+                if (!value || field.type === 'file') return;
 
-            html += `
+                html += `
           <div style="margin: 8px 0; font-size: 14px;">
             <span style="color: ${mutedColor}; font-weight: 500;">${field.label}:</span>
             <span style="color: ${textColor}; margin-left: 8px;">${this.formatFieldValue(value, field)}</span>
           </div>
         `;
+            });
+
+            html += '</div>';
         });
 
         html += '</div>';
-    });
+        return html;
+    }
 
-    html += '</div>';
-    return html;
-}
+    /**
+     * Rendu des notes
+     */
+    renderNotes(data, mutedColor) {
+        // TODO: Ajouter les notes si présentes dans formData
+        return '';
+    }
 
-/**
- * Rendu des notes
- */
-renderNotes(data, mutedColor) {
-    // TODO: Ajouter les notes si présentes dans formData
-    return '';
-}
+    /**
+     * Rendu du branding
+     */
+    renderBranding(mutedColor) {
+        if (!this.config.style.showWatermark && !this.config.branding.signature) return '';
 
-/**
- * Rendu du branding
- */
-renderBranding(mutedColor) {
-    if (!this.config.style.showWatermark && !this.config.branding.signature) return '';
-
-    return `
+        return `
       <div style="
         margin-top: 40px;
         padding-top: 24px;
@@ -760,53 +681,53 @@ renderBranding(mutedColor) {
         ${this.config.style.showWatermark ? `<div>${this.config.branding.watermarkText}</div>` : ''}
       </div>
     `;
-}
-
-/**
- * Helpers
- */
-getFontSizeValue() {
-    const sizes = { small: 14, medium: 16, large: 18 };
-    return sizes[this.config.style.fontSize] || 16;
-}
-
-getHeaderFontSize() {
-    const multipliers = { small: 2.5, medium: 3, large: 3.5 };
-    return this.getFontSizeValue() * (multipliers[this.config.style.fontSize] || 3);
-}
-
-getSpacingValue() {
-    const values = { compact: 24, comfortable: 40, spacious: 60 };
-    return values[this.config.style.spacing] || 40;
-}
-
-formatFieldValue(value, field) {
-    if (typeof value === 'number') {
-        return field.max ? `${value}/${field.max}` : value;
     }
-    if (Array.isArray(value)) {
-        return value.join(', ');
+
+    /**
+     * Helpers
+     */
+    getFontSizeValue() {
+        const sizes = { small: 14, medium: 16, large: 18 };
+        return sizes[this.config.style.fontSize] || 16;
     }
-    if (typeof value === 'object') {
-        try {
-            return JSON.stringify(value);
-        } catch {
-            return String(value);
+
+    getHeaderFontSize() {
+        const multipliers = { small: 2.5, medium: 3, large: 3.5 };
+        return this.getFontSizeValue() * (multipliers[this.config.style.fontSize] || 3);
+    }
+
+    getSpacingValue() {
+        const values = { compact: 24, comfortable: 40, spacious: 60 };
+        return values[this.config.style.spacing] || 40;
+    }
+
+    formatFieldValue(value, field) {
+        if (typeof value === 'number') {
+            return field.max ? `${value}/${field.max}` : value;
         }
+        if (Array.isArray(value)) {
+            return value.join(', ');
+        }
+        if (typeof value === 'object') {
+            try {
+                return JSON.stringify(value);
+            } catch {
+                return String(value);
+            }
+        }
+        return String(value);
     }
-    return String(value);
-}
 
-/**
- * Rendu de l'état vide (quand pas de données)
- */
-renderEmptyState() {
-    const isDark = this.config.style.colorScheme === 'dark';
-    const bgColor = isDark ? '#0f1628' : '#f8fafc';
-    const textColor = isDark ? '#f8fafc' : '#0a162b';
-    const mutedColor = isDark ? '#94a3b8' : '#64748b';
+    /**
+     * Rendu de l'état vide (quand pas de données)
+     */
+    renderEmptyState() {
+        const isDark = this.config.style.colorScheme === 'dark';
+        const bgColor = isDark ? '#0f1628' : '#f8fafc';
+        const textColor = isDark ? '#f8fafc' : '#0a162b';
+        const mutedColor = isDark ? '#94a3b8' : '#64748b';
 
-    return `
+        return `
       <div style="
         background: ${bgColor};
         color: ${textColor};
@@ -828,7 +749,7 @@ renderEmptyState() {
         </p>
       </div>
     `;
-}
+    }
 }
 
 // Instance globale
