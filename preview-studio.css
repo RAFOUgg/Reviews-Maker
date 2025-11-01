@@ -47,11 +47,12 @@
 /* === Container principal (modale) === */
 .preview-studio-container {
     display: grid;
-    grid-template-columns: 380px 1fr 320px;
-    width: 95%;
-    max-width: 1800px;
-    height: 90vh;
-    max-height: 900px;
+    grid-template-columns: 360px 1fr 340px;
+    grid-template-rows: auto 1fr;
+    width: 96%;
+    max-width: 1600px;
+    height: 88vh;
+    max-height: 880px;
     margin: auto;
     overflow: hidden;
     gap: 0;
@@ -165,67 +166,74 @@
 
 /* === Sidebar Configuration === */
 .preview-config-sidebar {
+    grid-row: 1 / 3;
     background: var(--surface, #0f1628);
     border-right: 1px solid var(--border, rgba(255, 255, 255, 0.1));
     border-radius: 16px 0 0 16px;
     overflow-y: auto;
-    padding: 32px 24px;
+    overflow-x: hidden;
+    padding: 24px 20px;
+    max-height: 100%;
 }
 
 .preview-config-header {
-    margin-bottom: 32px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
 }
 
 .preview-config-header h2 {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 700;
-    margin: 0 0 8px 0;
+    margin: 0 0 6px 0;
     color: var(--text);
 }
 
 .preview-config-header p {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--text-muted);
     margin: 0;
+    line-height: 1.4;
 }
 
 /* === Groupes de configuration === */
 .preview-config-group {
-    margin-bottom: 32px;
-    padding-bottom: 32px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
     border-bottom: 1px solid var(--border);
 }
 
 .preview-config-group:last-child {
     border-bottom: none;
     padding-bottom: 0;
+    margin-bottom: 0;
 }
 
 .preview-config-group-title {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-soft);
-    margin: 0 0 16px 0;
+    margin: 0 0 14px 0;
 }
 
 /* === Templates de preview === */
 .preview-templates {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: 10px;
 }
 
 .preview-template-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    padding: 16px 12px;
+    gap: 6px;
+    padding: 14px 10px;
     background: var(--surface-elevated);
     border: 2px solid var(--border);
-    border-radius: 12px;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s ease;
     text-align: center;
@@ -240,22 +248,22 @@
 .preview-template-btn.active {
     border-color: var(--accent);
     background: var(--accent-bg);
-    box-shadow: 0 0 0 4px var(--accent-glow);
+    box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 .preview-template-btn .template-icon {
-    font-size: 32px;
+    font-size: 28px;
     line-height: 1;
 }
 
 .preview-template-btn .template-name {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--text);
 }
 
 .preview-template-btn .template-desc {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--text-muted);
     line-height: 1.3;
 }
@@ -488,6 +496,8 @@
 
 /* === Zone d'aperçu centrale === */
 .preview-area {
+    grid-column: 2;
+    grid-row: 1 / 3;
     background: linear-gradient(135deg, #0a1628 0%, #1a2640 100%);
     display: flex;
     flex-direction: column;
@@ -496,7 +506,7 @@
 }
 
 .preview-area-header {
-    padding: 20px 32px;
+    padding: 16px 28px;
     border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.1));
     background: rgba(10, 22, 40, 0.8);
     backdrop-filter: blur(10px);
@@ -504,19 +514,17 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
     z-index: 10;
 }
 
 .preview-close-btn {
-    position: absolute;
-    top: 20px;
-    right: 32px;
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
+    font-size: 24px;
     line-height: 1;
     color: var(--text-muted, #94a3b8);
     background: transparent;
@@ -524,7 +532,7 @@
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
-    z-index: 100;
+    flex-shrink: 0;
 }
 
 .preview-close-btn:hover {
@@ -538,28 +546,31 @@
 }
 
 .preview-area-title {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--text);
     margin: 0;
+    flex: 1;
 }
 
 .preview-zoom-controls {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .preview-zoom-btn {
-    padding: 8px 16px;
+    padding: 6px 14px;
     background: var(--surface-elevated);
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
 .preview-zoom-btn:hover {
@@ -576,10 +587,11 @@
 .preview-canvas-wrapper {
     flex: 1;
     overflow: auto;
-    padding: 40px;
+    padding: 32px 24px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+    min-height: 0;
 }
 
 .preview-canvas {
@@ -624,20 +636,26 @@
 
 /* === Panneau d'actions === */
 .preview-actions-panel {
+    grid-row: 1 / 3;
     background: var(--surface);
     border-left: 1px solid var(--border);
+    border-radius: 0 16px 16px 0;
     overflow-y: auto;
-    padding: 32px 24px;
+    overflow-x: hidden;
+    padding: 24px 20px;
     display: flex;
     flex-direction: column;
+    max-height: 100%;
 }
 
 .preview-actions-header {
-    margin-bottom: 24px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
 }
 
 .preview-actions-header h3 {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--text);
     margin: 0;
@@ -647,11 +665,11 @@
 .preview-stats {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 32px;
-    padding: 20px;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 16px;
     background: var(--surface-elevated);
-    border-radius: 12px;
+    border-radius: 10px;
 }
 
 .preview-stat {
@@ -659,14 +677,14 @@
 }
 
 .preview-stat-value {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 700;
     color: var(--accent);
     margin-bottom: 4px;
 }
 
 .preview-stat-label {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -677,20 +695,22 @@
     margin-top: auto;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
 }
 
 .preview-primary-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    padding: 16px 24px;
+    gap: 10px;
+    padding: 14px 20px;
     background: var(--accent);
     color: white;
     border: none;
-    border-radius: 12px;
-    font-size: 15px;
+    border-radius: 10px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -699,7 +719,7 @@
 .preview-primary-btn:hover {
     background: var(--accent-hover);
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px var(--accent-glow);
+    box-shadow: 0 6px 20px var(--accent-glow);
 }
 
 .preview-primary-btn:active {
@@ -707,12 +727,12 @@
 }
 
 .preview-secondary-btn {
-    padding: 14px 24px;
+    padding: 12px 20px;
     background: transparent;
     color: var(--text);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    font-size: 15px;
+    border-radius: 10px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
