@@ -1566,18 +1566,38 @@ function setupEditorPageEvents() {
   dom.previewOverlay?.addEventListener('click', closePreviewOnly);
   dom.downloadPreviewPng?.addEventListener('click', downloadPreviewAsPng);
 
-  // Toggle panneau d'aperçu (ouvre la modale d'aperçu)
+  // Toggle panneau d'aperçu (ouvre le nouveau Preview Studio)
   if (dom.togglePreviewPanel) {
     dom.togglePreviewPanel.addEventListener('click', () => {
-      // Open preview modal with the latest generated HTML
-      if (!dom.previewModal || !dom.previewOverlay || !dom.reviewContent) return;
-      // Toujours ouvrir (fermeture via croix ou clic extérieur)
-      // Ensure content is up-to-date
-      try { collectFormData(); generateReview(); } catch { }
-      const html = dom.reviewContent.innerHTML || '';
-      if (dom.previewModalContent) dom.previewModalContent.innerHTML = html;
-      dom.previewOverlay.removeAttribute('hidden');
-      dom.previewModal.removeAttribute('hidden');
+      // Utiliser le nouveau système Preview Studio
+      try {
+        collectFormData();
+
+        // Préparer les données pour le preview
+        const reviewData = {
+          formData: formData,
+          currentType: currentType,
+          totals: totals,
+          structure: productStructures[currentType],
+          cultivarInfo: getCultivarInfo(),
+          productIcon: getProductIcon(),
+          globalScore: calculateGlobalScore().globalScore,
+          maxGlobalScore: calculateGlobalScore().maxGlobalScore,
+          scoreOutOf10: calculateGlobalScore().scoreOutOf10,
+          percentage: calculateGlobalScore().percentage
+        };
+
+        // Ouvrir le Preview Studio
+        if (typeof previewStudio !== 'undefined') {
+          previewStudio.open(reviewData);
+        } else {
+          console.error('Preview Studio non chargé');
+          showToast('Erreur: Preview Studio non disponible', 'error');
+        }
+      } catch (e) {
+        console.error('Erreur ouverture preview:', e);
+        showToast('Erreur lors de l\'ouverture de l\'aperçu', 'error');
+      }
     });
   }
 }
@@ -6349,38 +6369,34 @@ function generateReview() {
   generateFullReview();
 }
 
-// Helper functions for preview generation
-function getPreviewData() {
-  const structure = productStructures[currentType];
-
-  // Get cultivar info
-  const getCultivarInfo = () => {
-    try {
-      const list = JSON.parse(formData['cultivarsList'] || '[]');
-      if (Array.isArray(list) && list.length > 0) {
-        return {
-          title: list.map(c => c.name).filter(Boolean).join(' + ') || formData.cultivars || formData.productType || "Review en cours",
-          details: list
-        };
-      }
-    } catch { }
-    return {
-      title: formData.cultivars || formData.productType || "Review en cours",
-      details: null
-    };
+// Helper functions for preview generation (globales pour Preview Studio)
+function getCultivarInfo() {
+  try {
+    const list = JSON.parse(formData['cultivarsList'] || '[]');
+    if (Array.isArray(list) && list.length > 0) {
+      return {
+        title: list.map(c => c.name).filter(Boolean).join(' + ') || formData.cultivars || formData.productType || "Review en cours",
+        details: list
+      };
+    }
+  } catch { }
+  return {
+    title: formData.cultivars || formData.productType || "Review en cours",
+    details: null
   };
+}
 
-  const cultivarInfo = getCultivarInfo();
-
-  // Product icons
+function getProductIcon() {
   const productIcons = {
     'Hash': '🧊',
     'Fleur': '🌸',
     'Concentré': '💎',
     'Comestible': '🍬'
   };
+  return productIcons[currentType] || '🌿';
+}
 
-  // Calculate global score
+function calculateGlobalScore() {
   let globalScore = 0;
   let maxGlobalScore = 0;
   let sectionsWithData = 0;
@@ -6397,14 +6413,29 @@ function getPreviewData() {
   const percentage = maxGlobalScore > 0 ? (globalScore / maxGlobalScore * 100) : 0;
 
   return {
-    structure,
-    cultivarInfo,
-    productIcon: productIcons[currentType] || '🌿',
     globalScore,
     maxGlobalScore,
     sectionsWithData,
     scoreOutOf10,
     percentage
+  };
+}
+
+function getPreviewData() {
+  const structure = productStructures[currentType];
+  const cultivarInfo = getCultivarInfo();
+  const productIcon = getProductIcon();
+  const scores = calculateGlobalScore();
+
+  return {
+    structure,
+    cultivarInfo,
+    productIcon,
+    globalScore: scores.globalScore,
+    maxGlobalScore: scores.maxGlobalScore,
+    sectionsWithData: scores.sectionsWithData,
+    scoreOutOf10: scores.scoreOutOf10,
+    percentage: scores.percentage
   };
 }
 

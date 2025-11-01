@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="ui/ui-base.css" />
   <link rel="stylesheet" href="export-studio.css" />
+  <link rel="stylesheet" href="preview-studio.css" />
   <link rel="icon" type="image/png" href="ink/logo.png" />
 </head>
 
@@ -633,9 +634,207 @@
       </div>
     </div>
 
+    <!-- Preview Studio Panel -->
+    <div class="preview-studio-panel" id="previewStudioPanel" style="display:none;">
+      <div class="preview-studio-container">
+        <!-- Sidebar Configuration -->
+        <div class="preview-config-sidebar">
+          <div class="preview-config-header">
+            <h2>🎨 Aperçu Personnalisable</h2>
+            <p>Choisissez le style et les sections à afficher</p>
+          </div>
+
+          <!-- Templates -->
+          <div class="preview-config-group">
+            <h4 class="preview-config-group-title">Style de rendu</h4>
+            <div class="preview-templates">
+              <button class="preview-template-btn" data-template="minimal" type="button">
+                <span class="template-icon">━</span>
+                <span class="template-name">Minimal</span>
+                <span class="template-desc">Scores essentiels</span>
+              </button>
+              <button class="preview-template-btn" data-template="compact" type="button">
+                <span class="template-icon">▤</span>
+                <span class="template-name">Compact</span>
+                <span class="template-desc">Vue condensée</span>
+              </button>
+              <button class="preview-template-btn active" data-template="detailed" type="button">
+                <span class="template-icon">☰</span>
+                <span class="template-name">Détaillé</span>
+                <span class="template-desc">Tous les détails</span>
+              </button>
+              <button class="preview-template-btn" data-template="card" type="button">
+                <span class="template-icon">▣</span>
+                <span class="template-name">Carte</span>
+                <span class="template-desc">Style social</span>
+              </button>
+              <button class="preview-template-btn" data-template="social" type="button">
+                <span class="template-icon">📱</span>
+                <span class="template-name">Story</span>
+                <span class="template-desc">Réseaux sociaux</span>
+              </button>
+              <button class="preview-template-btn" data-template="magazine" type="button">
+                <span class="template-icon">📰</span>
+                <span class="template-name">Magazine</span>
+                <span class="template-desc">Éditoriale</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sections à inclure -->
+          <div class="preview-config-group">
+            <h4 class="preview-config-group-title">Sections affichées</h4>
+            <div class="preview-sections-list">
+              <div class="preview-section-toggle">
+                <input type="checkbox" id="preview-section-header" checked>
+                <label for="preview-section-header">En-tête & Titre</label>
+              </div>
+              <div class="preview-section-toggle">
+                <input type="checkbox" id="preview-section-cultivars" checked>
+                <label for="preview-section-cultivars">Cultivars</label>
+              </div>
+              <div class="preview-section-toggle">
+                <input type="checkbox" id="preview-section-generalInfo" checked>
+                <label for="preview-section-generalInfo">Infos générales</label>
+              </div>
+              <div class="preview-section-toggle">
+                <input type="checkbox" id="preview-section-scores" checked>
+                <label for="preview-section-scores">Scores</label>
+              </div>
+              <div class="preview-section-toggle">
+                <input type="checkbox" id="preview-section-details" checked>
+                <label for="preview-section-details">Détails par section</label>
+              </div>
+              <div class="preview-section-toggle">
+                <input type="checkbox" id="preview-section-textures" checked>
+                <label for="preview-section-textures">Textures</label>
+              </div>
+              <div class="preview-section-toggle">
+                <input type="checkbox" id="preview-section-flavors" checked>
+                <label for="preview-section-flavors">Saveurs</label>
+              </div>
+              <div class="preview-section-toggle">
+                <input type="checkbox" id="preview-section-effects" checked>
+                <label for="preview-section-effects">Effets</label>
+              </div>
+              <div class="preview-section-toggle">
+                <input type="checkbox" id="preview-section-notes" checked>
+                <label for="preview-section-notes">Notes</label>
+              </div>
+              <div class="preview-section-toggle">
+                <input type="checkbox" id="preview-section-branding" checked>
+                <label for="preview-section-branding">Signature</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Couleurs -->
+          <div class="preview-config-group">
+            <h4 class="preview-config-group-title">Couleurs</h4>
+            <div class="preview-option">
+              <label class="preview-option-label">Couleur principale</label>
+              <div class="preview-color-input-wrapper">
+                <input type="color" id="preview-accent-color" value="#34d399" class="preview-color-input">
+                <span class="preview-color-value">#34d399</span>
+              </div>
+              <div class="preview-color-presets" style="margin-top: 12px;">
+                <div class="preview-color-preset color-emerald active" data-color="#34d399"></div>
+                <div class="preview-color-preset color-blue" data-color="#38bdf8"></div>
+                <div class="preview-color-preset color-purple" data-color="#a78bfa"></div>
+                <div class="preview-color-preset color-pink" data-color="#f472b6"></div>
+                <div class="preview-color-preset color-orange" data-color="#fb923c"></div>
+                <div class="preview-color-preset color-cyan" data-color="#22d3ee"></div>
+                <div class="preview-color-preset color-lime" data-color="#84cc16"></div>
+                <div class="preview-color-preset color-amber" data-color="#fbbf24"></div>
+              </div>
+            </div>
+            <div class="preview-option">
+              <label class="preview-option-label">Thème</label>
+              <select id="preview-color-scheme">
+                <option value="dark" selected>Sombre</option>
+                <option value="light">Clair</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Style -->
+          <div class="preview-config-group">
+            <h4 class="preview-config-group-title">Style</h4>
+            <div class="preview-option">
+              <label class="preview-option-label">Taille de police</label>
+              <select id="preview-font-size">
+                <option value="small">Petite</option>
+                <option value="medium" selected>Moyenne</option>
+                <option value="large">Grande</option>
+              </select>
+            </div>
+            <div class="preview-option">
+              <label class="preview-option-label">Espacement</label>
+              <select id="preview-spacing">
+                <option value="compact">Compact</option>
+                <option value="comfortable" selected>Confortable</option>
+                <option value="spacious">Spacieux</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Zone d'aperçu centrale -->
+        <div class="preview-area">
+          <div class="preview-area-header">
+            <h3 class="preview-area-title">Aperçu en temps réel</h3>
+            <div class="preview-zoom-controls">
+              <button class="preview-zoom-btn" data-zoom="0.5">50%</button>
+              <button class="preview-zoom-btn" data-zoom="0.75">75%</button>
+              <button class="preview-zoom-btn active" data-zoom="1">100%</button>
+              <button class="preview-zoom-btn" data-zoom="1.25">125%</button>
+            </div>
+          </div>
+          <div class="preview-canvas-wrapper">
+            <div class="preview-canvas zoom-100" id="previewStudioCanvas">
+              <!-- Le rendu sera injecté ici -->
+              <div class="preview-empty">
+                <span class="preview-empty-icon">👁️</span>
+                <h3 class="preview-empty-title">Aucune review à prévisualiser</h3>
+                <p class="preview-empty-text">Remplissez le formulaire et cliquez sur "Afficher l'aperçu" pour voir le
+                  rendu.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panneau d'actions -->
+        <div class="preview-actions-panel">
+          <div class="preview-actions-header">
+            <h3>Actions</h3>
+          </div>
+
+          <!-- Actions principales -->
+          <div class="preview-actions-buttons">
+            <button class="preview-primary-btn" id="previewApplyBtn">
+              <span>✓</span>
+              <span>Appliquer et fermer</span>
+            </button>
+            <button class="preview-secondary-btn" id="previewCancelBtn">
+              Annuler
+            </button>
+          </div>
+
+          <div class="preview-config-group" style="margin-top: 24px;">
+            <h4 class="preview-config-group-title">💡 Astuce</h4>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+              Le style d'aperçu choisi sera utilisé pour afficher cette review dans la galerie publique.
+              Dans votre bibliothèque personnelle, la review complète sera toujours visible.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="export-studio.js"></script>
     <script src="export-studio-ui.js"></script>
+    <script src="preview-studio.js"></script>
     <script src="scripts/logger.js"></script>
     <script src="app.js?v=2025-10-24-prodfix-1"></script>
 </body>
