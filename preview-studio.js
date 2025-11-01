@@ -202,6 +202,18 @@ class PreviewStudio {
                 panel.style.display = 'none';
             }, 300);
         }
+        
+        // Retirer le listener d'échap
+        document.removeEventListener('keydown', this.handleEscapeKey);
+    }
+    
+    /**
+     * Gère la touche Échap pour fermer la modale
+     */
+    handleEscapeKey(e) {
+        if (e.key === 'Escape' && this.isOpen) {
+            this.close();
+        }
     }
 
     /**

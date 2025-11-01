@@ -1,35 +1,56 @@
 /**
  * PREVIEW STUDIO - Styles pour le système d'aperçu avancé
  * Interface de configuration et d'aperçu en temps réel
+ * MODAL par-dessus la fenêtre principale
  */
 
-/* === Panneau principal du Preview Studio === */
+/* === Overlay de la modale === */
 .preview-studio-panel {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(10, 22, 40, 0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    z-index: 9999;
+    background: rgba(10, 22, 40, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 10000;
     display: none;
     opacity: 0;
     transition: opacity 0.3s ease;
+    padding: 20px;
+    overflow: hidden;
 }
 
 .preview-studio-panel.active {
     opacity: 1;
 }
 
-/* === Container principal === */
+/* === Container principal (modale) === */
 .preview-studio-container {
     display: grid;
     grid-template-columns: 380px 1fr 320px;
-    height: 100vh;
+    height: 100%;
+    max-height: calc(100vh - 40px);
     overflow: hidden;
     gap: 0;
+    background: var(--surface, #0f1628);
+    border-radius: 16px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6),
+        0 12px 40px rgba(0, 0, 0, 0.4);
+    animation: modal-slide-up 0.3s ease;
+}
+
+@keyframes modal-slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @media (max-width: 1200px) {
@@ -56,8 +77,9 @@
 
 /* === Sidebar Configuration === */
 .preview-config-sidebar {
-    background: var(--surface);
-    border-right: 1px solid var(--border);
+    background: var(--surface, #0f1628);
+    border-right: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+    border-radius: 16px 0 0 16px;
     overflow-y: auto;
     padding: 32px 24px;
 }
@@ -386,8 +408,8 @@
 }
 
 .preview-area-header {
-    padding: 24px 32px;
-    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.1));
     background: rgba(10, 22, 40, 0.8);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -395,6 +417,36 @@
     justify-content: space-between;
     align-items: center;
     z-index: 10;
+}
+
+.preview-close-btn {
+    position: absolute;
+    top: 20px;
+    right: 32px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    line-height: 1;
+    color: var(--text-muted, #94a3b8);
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 100;
+}
+
+.preview-close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text, #f8fafc);
+    transform: scale(1.1);
+}
+
+.preview-close-btn:active {
+    transform: scale(0.95);
 }
 
 .preview-area-title {
