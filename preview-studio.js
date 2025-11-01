@@ -326,6 +326,14 @@ class PreviewStudio {
                 this.close();
             };
         }
+        
+        // Bouton de fermeture (X)
+        const closeBtn = document.getElementById('previewStudioCloseBtn');
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                this.close();
+            };
+        }
     }
 
     /**
