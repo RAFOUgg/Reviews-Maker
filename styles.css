@@ -1023,7 +1023,7 @@ video {
   background: transparent;
   border: none;
   border-radius: var(--radius-xl);
-  padding: clamp(24px, 3.2vw, 36px);
+  padding: 0;
   box-shadow: none;
   backdrop-filter: none;
   display: flex;
@@ -1874,7 +1874,7 @@ body.modal-open {
 }
 
 .section {
-  background: transparent;
+  background: rgba(14, 23, 40, 0.92);
   border: 1px solid var(--glass-border);
   border-left: 3px solid transparent;
   border-radius: var(--radius-lg);
@@ -1882,7 +1882,7 @@ body.modal-open {
   display: none;
   flex-direction: column;
   gap: 16px;
-  box-shadow: none;
+  box-shadow: 0 24px 38px -34px rgba(15, 23, 42, 0.74);
   position: relative;
 }
 
@@ -6729,6 +6729,7 @@ kbd {
   border: none;
   border-radius: var(--radius-lg);
   overflow: hidden;
+  padding: 0;
 }
 
 .panel-form {
