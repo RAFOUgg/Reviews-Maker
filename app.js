@@ -1823,45 +1823,6 @@ function setupModalEvents() {
   }
   document.addEventListener('DOMContentLoaded', setupAccountModalEvents);
 
-  // Delegated click handler inside account modal to handle clicks even if DOM nodes are re-rendered
-  if (dom.accountModal) {
-    dom.accountModal.addEventListener('click', (e) => {
-      const libBtn = e.target.closest('#openLibraryFromAccount');
-      const accDisc = e.target.closest('#accountDisconnect');
-      const openSettings = e.target.closest('#openAccountSettingsInline');
-      if (libBtn) {
-        try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: delegated openLibraryFromAccount'); } catch (e) { }
-        e.preventDefault();
-        closeAccountModal();
-        if (!isUserConnected) { if (dom.authModal) dom.authModal.style.display = 'flex'; return; }
-        openLibraryModal('mine', { fromAccount: true });
-        return;
-      }
-      if (accDisc) {
-        try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: delegated accountDisconnect'); } catch (e) { }
-        e.preventDefault();
-        // reuse same disconnect flow
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('authEmail');
-        localStorage.removeItem('discordUsername');
-        localStorage.removeItem('discordId');
-        sessionStorage.removeItem('authEmail');
-        sessionStorage.removeItem('pendingCode');
-        showAuthStatus('Déconnecté', 'info');
-        updateAuthUI();
-        try { dom.accountModal.style.display = 'none'; } catch (e) { }
-        if (isHomePage) { renderCompactLibrary(); setupHomeTabs(); }
-        return;
-      }
-      if (openSettings) {
-        try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: delegated openAccountSettingsInline'); } catch (e) { }
-        e.preventDefault();
-        const panel = document.getElementById('accountSettingsPanel'); if (panel) panel.style.display = 'block';
-        if (dom.accountPreferences) dom.accountPreferences.style.display = 'none';
-        return;
-      }
-    });
-  }
   // 'Ma bibliothèque' inside auth modal
   if (dom.authOpenLibrary) {
     dom.authOpenLibrary.addEventListener('click', () => {
@@ -2668,57 +2629,102 @@ async function renderAccountView() {
 
   // Try to fetch stats from API when token present
   const token = localStorage.getItem('authToken');
-  // Désactivé : ne pas fetch /api/auth/stats, utilise uniquement les stats locales
+  if (token && remoteEnabled) {
+    try {
+      const resp = await fetch('/api/auth/stats', {
+        headers: { 'X-Auth-Token': token }
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        totalCount = data.total || 0;
+        publicCount = data.public || 0;
+        privateCount = data.private || 0;
+        byType = data.by_type || data.types || {};
+        // Find favorite type
+        if (byType && Object.keys(byType).length > 0) {
+          let max = 0;
+          Object.keys(byType).forEach(k => {
+            if (byType[k] > max) {
+              max = byType[k];
+              favType = k;
+            }
+          });
+        }
+        // Cache for offline use
+        localStorage.setItem('accountStats', JSON.stringify({
+          total: totalCount,
+          public: publicCount,
+          private: privateCount,
+          by_type: byType,
+          favorite_type: favType
+        }));
+      }
+    } catch (err) {
+      console.warn('Failed to fetch account stats from API:', err);
+    }
+  }
 
   // Fallback: try to read a cached stats object in localStorage
-  if ((!publicCount && !privateCount) && localStorage.getItem('accountStats')) {
+  if ((!publicCount && !privateCount && !totalCount) && localStorage.getItem('accountStats')) {
     try {
       const cached = JSON.parse(localStorage.getItem('accountStats'));
-      publicCount = cached.public || publicCount;
-      privateCount = cached.private || privateCount;
-      favType = cached.favorite_type || favType;
-      totalCount = (typeof cached.total !== 'undefined' && cached.total !== null) ? cached.total : totalCount;
-      byType = cached.by_type || cached.types || byType;
-    } catch { }
+      publicCount = cached.public || 0;
+      privateCount = cached.private || 0;
+      favType = cached.favorite_type || '—';
+      totalCount = cached.total || 0;
+      byType = cached.by_type || cached.types || {};
+    } catch (err) {
+      console.warn('Failed to parse cached account stats:', err);
+    }
   }
 
-  // If cached provided public/private counts but no total, compute it
-  if (!totalCount && (publicCount || privateCount)) {
-    totalCount = (publicCount || 0) + (privateCount || 0);
-  }
-
-  // If still empty, try to compute from local DB / localStorage reviews
+  // Last fallback: compute from local DB reviews
   if ((!publicCount && !privateCount && !totalCount) || (!byType || Object.keys(byType).length === 0)) {
     try {
       const all = await dbGetAllReviews();
       if (all && all.length) {
-        // Dedupe by id to avoid counting duplicates
+        // Filter by current user's email if available
+        const currentEmail = email && email !== '—' ? email.toLowerCase() : null;
+
+        // Dedupe by id and filter by owner
         const seen = new Set();
         const unique = [];
         all.forEach(r => {
           if (!r || !r.id) return;
-          if (!seen.has(r.id)) {
-            seen.add(r.id);
-            unique.push(r);
+          if (seen.has(r.id)) return;
+
+          // Skip if this review doesn't belong to current user
+          if (currentEmail && r.ownerId && typeof r.ownerId === 'string') {
+            const ownerEmail = r.ownerId.toLowerCase();
+            if (ownerEmail !== currentEmail) return;
           }
+
+          seen.add(r.id);
+          unique.push(r);
         });
+
         totalCount = unique.length;
         publicCount = unique.filter(r => !r.isPrivate).length;
         privateCount = unique.filter(r => !!r.isPrivate).length;
+
         const map = {};
         unique.forEach(r => {
           const t = r.productType || r.type || 'Autre';
           map[t] = (map[t] || 0) + 1;
         });
         byType = map;
-        // Pick favorite
+
+        // Pick favorite type
         let max = 0;
-        Object.keys(map).forEach(k => { if (map[k] > max) { max = map[k]; favType = k; } });
-        // Ensure total matches public+private if any mismatch
-        if (!totalCount) totalCount = publicCount + privateCount;
+        Object.keys(map).forEach(k => {
+          if (map[k] > max) {
+            max = map[k];
+            favType = k;
+          }
+        });
       }
     } catch (err) {
-      // ignore
+      console.warn('Failed to compute stats from local DB:', err);
     }
   }
 
