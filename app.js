@@ -1926,7 +1926,13 @@ function setupModalEvents() {
   }
   if (dom.closeLibrary) {
     dom.closeLibrary.addEventListener("click", () => {
-      if (dom.libraryModal) dom.libraryModal.style.display = "none";
+      if (dom.libraryModal) {
+        dom.libraryModal.classList.remove('active');
+        dom.libraryModal.setAttribute('aria-hidden', 'true');
+      }
+      if (dom.libraryModalOverlay) {
+        dom.libraryModalOverlay.classList.remove('active');
+      }
       if (dom.libraryDrawer) toggleLibrary(false);
     });
   }
@@ -1935,7 +1941,13 @@ function setupModalEvents() {
   }
   if (dom.libraryModalOverlay) {
     dom.libraryModalOverlay.addEventListener("click", () => {
-      if (dom.libraryModal) dom.libraryModal.style.display = "none";
+      if (dom.libraryModal) {
+        dom.libraryModal.classList.remove('active');
+        dom.libraryModal.setAttribute('aria-hidden', 'true');
+      }
+      if (dom.libraryModalOverlay) {
+        dom.libraryModalOverlay.classList.remove('active');
+      }
     });
   }
 
@@ -3389,7 +3401,7 @@ function openLibraryModal(mode = 'mine', options = {}) {
     return;
   }
 
-  console.log('✅ Opening library modal - Setting display to flex');
+  console.log('✅ Opening library modal');
 
   // Show/hide back button based on context
   if (dom.libraryBackToAccount) {
@@ -3397,10 +3409,20 @@ function openLibraryModal(mode = 'mine', options = {}) {
     console.log('🔍 [DEBUG] Back button display:', fromAccount ? 'visible' : 'hidden');
   }
 
-  // Open the modal
-  dom.libraryModal.style.display = "flex";
-  console.log('🔍 [DEBUG] Modal display set to:', dom.libraryModal.style.display);
-  console.log('🔍 [DEBUG] Modal computed style:', window.getComputedStyle(dom.libraryModal).display);
+  // ✅ FIX: Open the modal using the same pattern as accountModal
+  // Remove display:none style and add .active class
+  dom.libraryModal.style.display = "";  // Remove inline style
+  dom.libraryModal.classList.add('active');  // Add active class
+  dom.libraryModal.removeAttribute('aria-hidden');
+
+  // Show overlay
+  if (dom.libraryModalOverlay) {
+    dom.libraryModalOverlay.style.display = "";
+    dom.libraryModalOverlay.classList.add('active');
+  }
+
+  console.log('🔍 [DEBUG] Modal classes:', dom.libraryModal.className);
+  console.log('🔍 [DEBUG] Modal computed display:', window.getComputedStyle(dom.libraryModal).display);
 
   console.log('✅ Calling renderFullLibrary with mode:', mode);
   renderFullLibrary(mode);
