@@ -32,15 +32,22 @@ function setupAccountModalEvents() {
   }
   if (dom.openLibraryFromAccount) {
     dom.openLibraryFromAccount.addEventListener('click', (e) => {
+      console.log('🔍 [DEBUG] Ma bibliothèque clicked');
+      console.log('🔍 [DEBUG] isUserConnected:', isUserConnected);
+      console.log('🔍 [DEBUG] dom.libraryModal exists:', !!dom.libraryModal);
       e.preventDefault();
       e.stopPropagation();
       closeAccountModal();
       if (!isUserConnected) {
+        console.warn('⚠️ User not connected, showing auth modal');
         if (dom.authModal) dom.authModal.style.display = 'flex';
         return;
       }
+      console.log('✅ Calling openLibraryModal');
       openLibraryModal('mine', { fromAccount: true });
     });
+  } else {
+    console.error('❌ openLibraryFromAccount button not found in DOM!');
   }
   const accountDisconnectBtn = document.getElementById('accountDisconnect');
   if (accountDisconnectBtn) {
@@ -2724,11 +2731,27 @@ async function renderAccountView() {
             favType = k;
           }
         });
+
+        console.log('📊 [DEBUG] Stats computed from local DB:', {
+          total: totalCount,
+          public: publicCount,
+          private: privateCount,
+          byType: byType,
+          uniqueReviews: unique.length,
+          filteredByEmail: currentEmail
+        });
       }
     } catch (err) {
       console.warn('Failed to compute stats from local DB:', err);
     }
   }
+
+  console.log('📊 [DEBUG] Final stats:', {
+    total: totalCount,
+    public: publicCount,
+    private: privateCount,
+    byType: byType
+  });
 
   if (dom.statPublic) dom.statPublic.textContent = publicCount;
   if (dom.statPrivate) dom.statPrivate.textContent = privateCount;
@@ -3137,22 +3160,34 @@ function toggleLibrary(open, mode = 'mine') {
 }
 
 function openLibraryModal(mode = 'mine', options = {}) {
+  console.log('🔍 [DEBUG] openLibraryModal called with mode:', mode, 'options:', options);
   currentLibraryMode = mode;
   const fromAccount = options && options.fromAccount;
+
   if (dom.libraryDrawer) {
+    console.log('🔍 [DEBUG] Using drawer mode');
     toggleLibrary(true, mode);
     return;
   }
+
   if (!dom.libraryModal) {
-    console.error('Library modal element not found');
+    console.error('❌ Library modal element not found');
+    console.log('🔍 [DEBUG] Available modals:', {
+      authModal: !!dom.authModal,
+      accountModal: !!dom.accountModal,
+      libraryModal: !!dom.libraryModal
+    });
     showToast('Interface de bibliothèque indisponible', 'error');
     return;
   }
+
+  console.log('✅ Opening library modal');
   // show back button if requested
   if (dom.libraryBackToAccount) {
     dom.libraryBackToAccount.style.display = fromAccount ? 'inline-flex' : 'none';
   }
   dom.libraryModal.style.display = "flex";
+  console.log('✅ Calling renderFullLibrary');
   renderFullLibrary(mode);
 }
 
