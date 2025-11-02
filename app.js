@@ -2422,14 +2422,7 @@ function openAccountModal() {
     console.error('openAccountModal: error hiding other modals', e);
   }
 
-  // CRITICAL: Remove the 'hidden' attribute FIRST before setting display
-  // because CSS [hidden] { display: none !important; } will override inline styles
-  if (dom.accountModal.hasAttribute('hidden')) {
-    console.log('openAccountModal: removing hidden attribute from accountModal');
-    dom.accountModal.removeAttribute('hidden');
-  }
-
-  // show overlay and dialog
+  // show overlay first (now it's outside the modal container)
   const overlay = document.getElementById('accountModalOverlay');
   console.log('openAccountModal: preparing to show account modal overlay');
   if (overlay) {
@@ -2442,41 +2435,28 @@ function openAccountModal() {
     console.warn('openAccountModal: accountModalOverlay not found');
   }
 
-  // Ensure account modal is above any .modal (which uses z-index:3000)
+  // Show the account modal
   dom.accountModal.style.display = 'block';
-  // match CSS priority for account modal
-  dom.accountModal.style.zIndex = '10120';
   dom.accountModal.classList.add('show');
+  // Set z-index to ensure it's above everything else
+  dom.accountModal.style.zIndex = '10120';
   dom.accountModal.setAttribute('aria-hidden', 'false');
 
-  console.log('openAccountModal: accountModal display set to', dom.accountModal.style.display);
+  console.log('openAccountModal: accountModal display set, computed style:', window.getComputedStyle(dom.accountModal).display);
 
-  // Ensure the inner dialog sits above the overlay
+  // Ensure the inner dialog is properly configured
   try {
     const dlg = dom.accountModal.querySelector('.account-dialog');
     if (dlg) {
       dlg.style.zIndex = '10121';
-      dlg.style.display = 'block';
       dlg.setAttribute('aria-hidden', 'false');
-      console.log('openAccountModal: account-dialog found and configured');
+      console.log('openAccountModal: account-dialog found and configured, computed display:', window.getComputedStyle(dlg).display);
     } else {
       console.warn('openAccountModal: .account-dialog not found inside accountModal');
     }
   } catch (e) {
     console.error('openAccountModal: error configuring account-dialog', e);
   }
-
-  // Fallback: force modal visible if still hidden
-  setTimeout(() => {
-    if (dom.accountModal && dom.accountModal.style.display !== 'block') {
-      console.warn('openAccountModal: fallback - forcing display block');
-      dom.accountModal.style.display = 'block';
-    }
-    if (overlay && overlay.style.display !== 'block') {
-      console.warn('openAccountModal: fallback - forcing overlay display block');
-      overlay.style.display = 'block';
-    }
-  }, 100);
 
   // trap focus on dialog element
   const dialog = dom.accountModal.querySelector('.account-dialog') || dom.accountModal;
@@ -2494,6 +2474,7 @@ function closeAccountModal() {
     if (overlay) {
       overlay.classList.remove('show');
       overlay.style.display = 'none';
+      overlay.setAttribute('aria-hidden', 'true');
       console.log('closeAccountModal: overlay hidden');
     }
   } catch (e) {
@@ -2503,13 +2484,6 @@ function closeAccountModal() {
   try { dom.accountModal.classList.remove('show'); } catch (e) { }
   try { dom.accountModal.setAttribute('aria-hidden', 'true'); } catch (e) { }
   try { dom.accountModal.style.display = 'none'; } catch (e) { }
-
-  // Reinstate the hidden attribute so CSS keeps it out of the accessibility tree
-  // and prevents accidental focus when hidden.
-  if (!dom.accountModal.hasAttribute('hidden')) {
-    dom.accountModal.setAttribute('hidden', '');
-    console.log('closeAccountModal: hidden attribute restored');
-  }
 
   releaseFocusTrap();
   try { document.body.classList.remove('modal-open'); } catch (e) { }
