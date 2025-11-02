@@ -148,30 +148,58 @@
 })();
 
 function setupAccountModalEvents() {
+  console.log('🔧 [SETUP] setupAccountModalEvents called');
+  console.log('🔧 [SETUP] dom.openLibraryFromAccount:', dom.openLibraryFromAccount);
+
   if (dom.closeAccountModal) {
     dom.closeAccountModal.addEventListener('click', () => closeAccountModal());
   }
   if (dom.accountModalOverlay) {
     dom.accountModalOverlay.addEventListener('click', () => closeAccountModal());
   }
+
+  // ✅ FIX: Force re-query l'élément si non trouvé
+  if (!dom.openLibraryFromAccount) {
+    console.warn('⚠️ dom.openLibraryFromAccount was null, re-querying...');
+    dom.openLibraryFromAccount = document.getElementById('openLibraryFromAccount');
+  }
+
   if (dom.openLibraryFromAccount) {
+    console.log('✅ Attaching event listener to openLibraryFromAccount button');
+
+    // Remove any existing listener first
+    const oldBtn = dom.openLibraryFromAccount.cloneNode(true);
+    dom.openLibraryFromAccount.parentNode.replaceChild(oldBtn, dom.openLibraryFromAccount);
+    dom.openLibraryFromAccount = oldBtn;
+
     dom.openLibraryFromAccount.addEventListener('click', (e) => {
       console.log('🔍 [DEBUG] Ma bibliothèque clicked');
       console.log('🔍 [DEBUG] isUserConnected:', isUserConnected);
       console.log('🔍 [DEBUG] dom.libraryModal exists:', !!dom.libraryModal);
       e.preventDefault();
       e.stopPropagation();
-      closeAccountModal();
+
       if (!isUserConnected) {
         console.warn('⚠️ User not connected, showing auth modal');
+        closeAccountModal();
         if (dom.authModal) dom.authModal.style.display = 'flex';
         return;
       }
-      console.log('✅ Calling openLibraryModal');
-      openLibraryModal('mine', { fromAccount: true });
+
+      console.log('✅ User connected, closing account modal and opening library');
+      closeAccountModal();
+
+      // Wait a bit for modal close animation
+      setTimeout(() => {
+        console.log('✅ Calling openLibraryModal');
+        openLibraryModal('mine', { fromAccount: true });
+      }, 100);
     });
+
+    console.log('✅ Event listener attached successfully');
   } else {
-    console.error('❌ openLibraryFromAccount button not found in DOM!');
+    console.error('❌ openLibraryFromAccount button STILL not found in DOM!');
+    console.log('🔍 Available buttons:', Array.from(document.querySelectorAll('button')).map(b => ({ id: b.id, text: b.textContent.trim() })));
   }
   const accountDisconnectBtn = document.getElementById('accountDisconnect');
   if (accountDisconnectBtn) {
