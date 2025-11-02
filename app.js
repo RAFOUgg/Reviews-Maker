@@ -2768,7 +2768,7 @@ async function initDatabase() {
     try {
       // Remove old non-email-specific caches (migration)
       UserDataManager.clearLegacyCache();
-      
+
       // Clean up expired cache entries
       const keys = Object.keys(localStorage);
       keys.forEach(key => {
