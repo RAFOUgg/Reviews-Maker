@@ -687,8 +687,7 @@ video {
 
 /* ---------- Unified modal system (responsive & scalable) ---------- */
 .modal,
-.export-config-modal,
-#accountModal {
+.export-config-modal {
   position: fixed;
   inset: 0;
   display: none;
@@ -700,8 +699,7 @@ video {
 }
 
 .modal.active,
-.export-config-modal.active,
-#accountModal.active {
+.export-config-modal.active {
   display: flex;
 }
 
@@ -1349,25 +1347,7 @@ form {
 }
 
 .account-overlay.show {
-  display: block;
-}
-
-#accountModal {
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: min(980px, 94vw);
-  max-height: 88vh;
-  display: none;
-  /* Ensure account modal stacks above other generic modal overlays
-     (which may be appended to body with z-index ~10060). */
-  z-index: 10120;
-  pointer-events: auto !important;
-}
-
-#accountModal.show {
-  display: block;
+  display: block !important;
 }
 
 .account-dialog {
@@ -8764,8 +8744,7 @@ canvas,
 
 /* Ensure modals always sit above other UI, and overlays sit just below them */
 .modal,
-.export-config-modal,
-#accountModal {
+.export-config-modal {
   position: fixed !important;
   inset: 0 !important;
   display: none !important;
@@ -8775,9 +8754,24 @@ canvas,
 }
 
 .modal.active,
-.export-config-modal.active,
-#accountModal.active {
+.export-config-modal.active {
   display: flex !important;
+}
+
+/* Account modal uses a different structure with separate overlay */
+#accountModal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(980px, 94vw);
+  max-height: 88vh;
+  z-index: 10120;
+  pointer-events: auto;
+}
+
+#accountModal.show {
+  display: block !important;
 }
 
 .modal-overlay,
