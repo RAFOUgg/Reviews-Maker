@@ -6527,6 +6527,27 @@ body.modal-open .auth-status {
     0 0 60px -20px rgba(52, 211, 153, 0.2);
 }
 
+/* Public profile overlay */
+#publicProfileOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: calc(var(--z-modal) - 10);
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#publicProfileOverlay.show {
+  display: block;
+  opacity: 1;
+}
+
 /* Public profile modal: hidden by default and shown when .show is added */
 #publicProfileModal {
   position: fixed;
@@ -6536,7 +6557,7 @@ body.modal-open .auth-status {
   width: min(900px, 94vw);
   max-height: 88vh;
   display: none;
-  z-index: 2450;
+  z-index: var(--z-modal);
 }
 
 #publicProfileModal .account-dialog {

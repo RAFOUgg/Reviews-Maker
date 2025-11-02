@@ -2697,10 +2697,26 @@ function openAccountModal() {
     } catch (e) { /* ignore */ }
   });
 
+  // Close public profile modal specifically if open
+  try {
+    const publicProfileModal = document.getElementById('publicProfileModal');
+    const publicProfileOverlay = document.getElementById('publicProfileOverlay');
+    if (publicProfileModal) {
+      publicProfileModal.style.display = 'none';
+      publicProfileModal.classList.remove('show', 'active');
+      publicProfileModal.setAttribute('aria-hidden', 'true');
+    }
+    if (publicProfileOverlay) {
+      publicProfileOverlay.style.display = 'none';
+      publicProfileOverlay.classList.remove('show', 'active');
+      publicProfileOverlay.setAttribute('aria-hidden', 'true');
+    }
+  } catch (e) { /* ignore */ }
+
   // Hide other modals to prevent stacking
   const otherModals = document.querySelectorAll('.modal, .tips-dialog, .export-config-modal');
   otherModals.forEach(modal => {
-    if (modal !== dom.accountModal) {
+    if (modal !== dom.accountModal && modal.id !== 'publicProfileModal') {
       modal.style.display = 'none';
       modal.classList.remove('show', 'active');
       modal.setAttribute('aria-hidden', 'true');
