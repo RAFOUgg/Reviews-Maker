@@ -58,7 +58,6 @@ function setupAccountModalEvents() {
         localStorage.removeItem('discordUsername');
         localStorage.removeItem('discordId');
         sessionStorage.removeItem('authEmail');
-        sessionStorage.removeItem('pendingCode');
       } catch (e) {
         console.error('Storage clear error:', e);
         alert('Erreur lors de la suppression des données locales. Veuillez vérifier les permissions du navigateur.');
@@ -2007,7 +2006,6 @@ function setupModalEvents() {
     dom.authVerifyCode.addEventListener("click", async () => {
       const email = sessionStorage.getItem('authEmail');
       const code = dom.authCodeInput?.value?.trim();
-      const expectedCode = sessionStorage.getItem('pendingCode');
 
       if (!code || code.length !== 6) {
         showAuthStatus("Code invalide (6 chiffres)", "error");
@@ -2039,12 +2037,17 @@ function setupModalEvents() {
           localStorage.setItem('authToken', verifyData.token);
           localStorage.setItem('authEmail', verifyData.email || email);
           sessionStorage.removeItem('authEmail');
-          sessionStorage.removeItem('pendingCode');
 
           showAuthStatus('Connexion réussie !', 'success');
+
+          // Close auth modal and open account modal after a brief delay
           setTimeout(() => {
             updateAuthUI();
             if (dom.authModal) dom.authModal.style.display = 'none';
+
+            // Open account modal to show user profile
+            setTimeout(() => openAccountModal(), 300);
+
             if (isHomePage) {
               renderCompactLibrary();
               setupHomeTabs();
@@ -2073,11 +2076,7 @@ function setupModalEvents() {
       dom.authResendCode.textContent = "Envoi...";
 
       try {
-        // Générer un nouveau code
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-        sessionStorage.setItem('pendingCode', code);
-
-        // Request server to resend the verification code. Server will call LaFoncedalle/mail endpoint.
+        // Request server to resend the verification code. Server will generate and send a new code.
         const sendResponse = await fetch((AUTH_API_BASE || remoteBase) + '/api/auth/resend-code', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2117,7 +2116,6 @@ function setupModalEvents() {
       localStorage.removeItem('discordUsername');
       localStorage.removeItem('discordId');
       sessionStorage.removeItem('authEmail');
-      sessionStorage.removeItem('pendingCode');
 
       showAuthStatus("Déconnecté", "info");
       updateAuthUI();
@@ -2156,51 +2154,213 @@ function setupModalEvents() {
   });
 }
 
-// Helper function to get and display holder name
-async function updateHolderDisplay() {
-  if (!dom.saveHolderDisplay) return;
+// ========== USER DATA MANAGER - Centralized user data handling ==========
+const UserDataManager = {
+  // Cache TTL configuration
+  CACHE_TTL: {
+    discordInfo: 24 * 60 * 60 * 1000, // 24 hours
+    userStats: 5 * 60 * 1000           // 5 minutes
+  },
 
-  const cachedUsername = localStorage.getItem('discordUsername');
-  const cachedEmail = localStorage.getItem('authEmail');
-
-  // Si on a un vrai pseudo Discord en cache (pas un User#xxxx), l'utiliser
-  if (cachedUsername && !cachedUsername.startsWith('User#') && !cachedUsername.startsWith('Discord #')) {
-    dom.saveHolderDisplay.textContent = cachedUsername;
-    return cachedUsername;
-  }
-
-  // Si on a l'email, essayer de récupérer les infos Discord
-  if (cachedEmail && AUTH_API_BASE) {
+  // Get cached data with TTL check
+  getCachedData(key) {
     try {
-      dom.saveHolderDisplay.textContent = 'Récupération...';
-      // Ask our server for the Discord user linked to this email. Server will use the secret key.
-      const response = await fetch(`${AUTH_API_BASE}/api/discord/user-by-email`, {
+      const cached = localStorage.getItem(key);
+      const timestamp = localStorage.getItem(`${key}_timestamp`);
+
+      if (!cached || !timestamp) return null;
+
+      const age = Date.now() - parseInt(timestamp, 10);
+      const ttl = this.CACHE_TTL[key] || this.CACHE_TTL.discordInfo;
+
+      if (age > ttl) {
+        this.invalidateCache(key);
+        return null;
+      }
+
+      return JSON.parse(cached);
+    } catch (e) {
+      return null;
+    }
+  },
+
+  // Set cached data with timestamp
+  setCachedData(key, data) {
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+      localStorage.setItem(`${key}_timestamp`, Date.now().toString());
+    } catch (e) {
+      console.warn('Failed to cache data:', e);
+    }
+  },
+
+  // Invalidate specific cache
+  invalidateCache(key) {
+    try {
+      localStorage.removeItem(key);
+      localStorage.removeItem(`${key}_timestamp`);
+    } catch (e) { }
+  },
+
+  // Get user profile with caching
+  async getUserProfile(email, forceRefresh = false) {
+    if (!email) return null;
+
+    // Check cache first
+    if (!forceRefresh) {
+      const cached = this.getCachedData('discordInfo');
+      if (cached && cached.email === email) {
+        return cached;
+      }
+    }
+
+    // Fetch from server
+    try {
+      const response = await fetch(`${remoteBase}/api/auth/user-by-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cachedEmail })
+        body: JSON.stringify({ email })
       });
 
       if (response.ok) {
         const userData = await response.json();
-        const username = userData.username || userData.user_name;
+        const profile = {
+          email,
+          username: userData.username || userData.user_name,
+          discordId: userData.discordId,
+          timestamp: Date.now()
+        };
 
-        // Vérifier qu'on a un vrai pseudo Discord (pas un User#xxxx ou Discord #xxxx)
-        if (username && !username.startsWith('User#') && !username.startsWith('Discord #')) {
-          localStorage.setItem('discordUsername', username);
-          localStorage.setItem('discordId', userData.discordId);
-          dom.saveHolderDisplay.textContent = username;
-          return username;
-        }
+        this.setCachedData('discordInfo', profile);
+
+        // Also update legacy localStorage for backward compatibility
+        if (profile.username) localStorage.setItem('discordUsername', profile.username);
+        if (profile.discordId) localStorage.setItem('discordId', profile.discordId);
+
+        return profile;
       }
     } catch (err) {
-      console.warn('Failed to fetch Discord username:', err);
+      console.warn('Failed to fetch user profile:', err);
     }
-  }
 
-  // Fallback sur l'email
-  const holder = cachedEmail || 'Utilisateur non connecté';
-  dom.saveHolderDisplay.textContent = holder;
-  return holder;
+    return null;
+  },
+
+  // Get user display name (username or email)
+  async getDisplayName(email = null) {
+    const userEmail = email || localStorage.getItem('authEmail');
+    if (!userEmail) return 'Utilisateur non connecté';
+
+    const profile = await this.getUserProfile(userEmail);
+
+    if (profile && profile.username &&
+      !profile.username.startsWith('User#') &&
+      !profile.username.startsWith('Discord #')) {
+      return profile.username;
+    }
+
+    return userEmail;
+  },
+
+  // Get user statistics with caching
+  async getUserStats(email = null, forceRefresh = false) {
+    const userEmail = email || localStorage.getItem('authEmail');
+    if (!userEmail) return { total: 0, public: 0, private: 0, by_type: {} };
+
+    // Check cache first
+    if (!forceRefresh) {
+      const cached = this.getCachedData('userStats');
+      if (cached && cached.email === userEmail) {
+        return cached;
+      }
+    }
+
+    let stats = { total: 0, public: 0, private: 0, by_type: {} };
+
+    // Try API first if token available
+    const token = localStorage.getItem('authToken');
+    if (token && remoteEnabled) {
+      try {
+        const resp = await fetch('/api/auth/stats', {
+          headers: { 'X-Auth-Token': token }
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          stats = {
+            email: userEmail,
+            total: data.total || 0,
+            public: data.public || 0,
+            private: data.private || 0,
+            by_type: data.by_type || data.types || {},
+            timestamp: Date.now()
+          };
+          this.setCachedData('userStats', stats);
+          return stats;
+        }
+      } catch (err) {
+        console.warn('Failed to fetch stats from API:', err);
+      }
+    }
+
+    // Fallback to local DB
+    try {
+      const all = await dbGetAllReviews();
+      if (all && all.length) {
+        const currentEmail = userEmail.toLowerCase();
+        const seen = new Set();
+        const unique = [];
+
+        all.forEach(r => {
+          if (!r || !r.id || seen.has(r.id)) return;
+
+          // Filter by owner
+          if (r.ownerId && typeof r.ownerId === 'string') {
+            const ownerEmail = r.ownerId.toLowerCase();
+            if (ownerEmail !== currentEmail) return;
+          }
+
+          seen.add(r.id);
+          unique.push(r);
+        });
+
+        stats.total = unique.length;
+        stats.public = unique.filter(r => !r.isPrivate).length;
+        stats.private = unique.filter(r => !!r.isPrivate).length;
+
+        const map = {};
+        unique.forEach(r => {
+          const t = r.productType || r.type || 'Autre';
+          map[t] = (map[t] || 0) + 1;
+        });
+        stats.by_type = map;
+        stats.email = userEmail;
+        stats.timestamp = Date.now();
+
+        this.setCachedData('userStats', stats);
+      }
+    } catch (err) {
+      console.warn('Failed to compute stats from local DB:', err);
+    }
+
+    return stats;
+  }
+};
+
+// Helper function to get and display holder name
+async function updateHolderDisplay() {
+  if (!dom.saveHolderDisplay) return;
+
+  try {
+    dom.saveHolderDisplay.textContent = 'Récupération...';
+    const displayName = await UserDataManager.getDisplayName();
+    dom.saveHolderDisplay.textContent = displayName;
+    return displayName;
+  } catch (err) {
+    console.warn('Failed to update holder display:', err);
+    const fallback = localStorage.getItem('authEmail') || 'Utilisateur non connecté';
+    dom.saveHolderDisplay.textContent = fallback;
+    return fallback;
+  }
 }
 
 // Helper functions for auth UI
@@ -2213,60 +2373,12 @@ async function updateAuthUI() {
   if (isConnected) {
     if (dom.authStepEmail) dom.authStepEmail.style.display = 'none';
     if (dom.authStepCode) dom.authStepCode.style.display = 'none';
+
+    // Redirect to account modal instead of showing authStepConnected
+    // This avoids UI duplication and provides a better UX
     if (dom.authStepConnected) {
-      dom.authStepConnected.style.display = 'flex';
-
-      // Fetch user info from server to get Discord username
-      try {
-        const response = await fetch(`${remoteBase}/api/auth/me`, {
-          headers: { 'X-Auth-Token': token }
-        });
-
-        if (response.ok) {
-          const userData = await response.json();
-          // Essayer différents champs: discordUsername ou user_name (depuis la DB LaFoncedalle)
-          const username = userData.discordUsername || userData.user_name;
-
-          // Display Discord username if available, otherwise Discord ID, otherwise email
-          let displayName = username || email;
-
-          // If no username but we have a Discord ID, format it nicely
-          if (!username && userData.discordId) {
-            displayName = `Discord #${userData.discordId.slice(-4)}`;
-          }
-
-          if (dom.authConnectedEmail) {
-            dom.authConnectedEmail.textContent = displayName;
-            // Store Discord info in localStorage for offline access
-            if (username) {
-              localStorage.setItem('discordUsername', username);
-            }
-            if (userData.discordId) {
-              localStorage.setItem('discordId', userData.discordId);
-            }
-          }
-        } else {
-          // Fallback to email if API call fails
-          if (dom.authConnectedEmail) dom.authConnectedEmail.textContent = email;
-        }
-      } catch (err) {
-        console.error('[AUTH] Error fetching user info:', err);
-        // Use cached Discord info if available
-        const cachedUsername = localStorage.getItem('discordUsername');
-        const cachedDiscordId = localStorage.getItem('discordId');
-        if (dom.authConnectedEmail) {
-          if (cachedUsername) {
-            dom.authConnectedEmail.textContent = cachedUsername;
-          } else if (cachedDiscordId) {
-            dom.authConnectedEmail.textContent = `Discord #${cachedDiscordId.slice(-4)}`;
-          } else {
-            dom.authConnectedEmail.textContent = email;
-          }
-        }
-      }
+      dom.authStepConnected.style.display = 'none';
     }
-    // Populate small summary inside auth modal
-    try { await renderAuthConnectedStats(); } catch (e) { }
   } else {
     if (dom.authStepEmail) dom.authStepEmail.style.display = 'flex';
     if (dom.authStepCode) dom.authStepCode.style.display = 'none';
@@ -2312,25 +2424,7 @@ async function updateAuthUI() {
   }
 }
 
-// Populate the small connected summary inside the auth modal
-async function renderAuthConnectedStats() {
-  // Reuse renderAccountView to fetch/populate main account modal fields
-  await renderAccountView();
-  // Copy values into auth modal small summary
-  if (dom.accountTotal && dom.authConnTotal) dom.authConnTotal.textContent = dom.accountTotal.textContent || '0';
-  if (dom.statPublic && dom.authConnPublic) dom.authConnPublic.textContent = dom.statPublic.textContent || '0';
-  if (dom.statPrivate && dom.authConnPrivate) dom.authConnPrivate.textContent = dom.statPrivate.textContent || '0';
-  // Copy by-type pills
-  const src = document.getElementById('accountStatsByType');
-  const dst = dom.authConnByType;
-  if (dst) {
-    dst.innerHTML = '';
-    if (src) {
-      // clone pills
-      src.childNodes.forEach(n => dst.appendChild(n.cloneNode(true)));
-    }
-  }
-}
+// REMOVED: renderAuthConnectedStats() - No longer needed as we redirect to accountModal after login
 
 function showAuthStatus(message, type = "info") {
   if (!dom.authStatus) return;
@@ -2445,95 +2539,47 @@ function closeAccountModal() {
   document.body.classList.remove('modal-open');
 }
 
-// Public profile (read-only) helpers
+// Public profile (read-only) helpers - Simplified with UserDataManager
 async function populatePublicProfile(email) {
   try {
-    try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: populatePublicProfile called with', email); } catch (e) { }
-    // Accept either email or a display name (pseudo)
     const identifier = String(email || '').trim();
-    if (dom.publicProfileEmail) dom.publicProfileEmail.textContent = identifier || '—';
-    // Ensure modal is displayed (fallback if CSS wasn't applied)
-    try { const modal = document.getElementById('publicProfileModal'); if (modal) modal.style.display = 'block'; } catch (e) { }
-    // Determine ownership: if the profile email matches the signed-in email,
-    // show settings/actions that are only available to the owner.
-    try {
-      const me = (localStorage.getItem('authEmail') || '').toLowerCase();
-      const isOwner = me && email && me === String(email).toLowerCase();
-      // Show/hide the dedicated settings button in the public profile header
-      const hdrSettingsBtn = document.getElementById('publicProfileSettingsBtn');
-      if (hdrSettingsBtn) {
-        hdrSettingsBtn.style.display = isOwner ? 'inline-flex' : 'none';
-        // ensure no duplicate listeners
-        hdrSettingsBtn.onclick = null;
-        if (isOwner) {
-          hdrSettingsBtn.addEventListener('click', () => {
-            // Close public profile and open account modal to settings
-            try {
-              const overlay = document.getElementById('publicProfileOverlay'); if (overlay) overlay.classList.remove('show');
-              const modal = document.getElementById('publicProfileModal'); if (modal) { modal.classList.remove('show'); modal.setAttribute('aria-hidden', 'true'); }
-              try { document.body.classList.remove('modal-open'); } catch (e) { }
-            } catch (e) { }
-            // Open account modal and reveal settings panel
-            try { openAccountModal(); } catch (e) { }
-            try {
-              const settingsPanel = document.getElementById('accountSettingsPanel');
-              const prefs = document.getElementById('accountPreferences');
-              if (settingsPanel) settingsPanel.style.display = 'block';
-              if (prefs) prefs.style.display = 'none';
-            } catch (e) { }
-          });
-        }
-      }
-      // Ensure the 'Voir la bibliothèque publique' action remains visible
-      // Suppression de la logique pour 'Voir la bibliothèque publique'
-    } catch (e) { /* ignore UI toggle failures */ }
-    // Try to fetch from API first if available
-    let byType = {};
-    let total = 0, pub = 0, priv = 0;
-    try {
-      const token = localStorage.getItem('authToken');
-      // If identifier looks like an email, prefer server lookup
-      if (token && remoteBase && identifier.includes('@')) {
-        const resp = await fetch(`${remoteBase}/api/users/stats?email=${encodeURIComponent(identifier)}`, { headers: { 'X-Auth-Token': token } });
-        if (resp.ok) {
-          const d = await resp.json();
-          total = d.total || 0; pub = d.public || 0; priv = d.private || 0; byType = d.by_type || d.types || {};
-        }
-      }
-    } catch (e) { /* ignore */ }
-    // fallback to local DB if needed
-    if (!total) {
-      try {
-        const all = await dbGetAllReviews();
-        // If identifier is an email, match by ownerEmail/holderEmail; otherwise match by holderName or stored discordUsername
-        let userReviews = [];
-        if (identifier.includes('@')) {
-          userReviews = (all || []).filter(r => (r.ownerEmail && String(r.ownerEmail).toLowerCase() === identifier.toLowerCase()) || (r.holderEmail && String(r.holderEmail).toLowerCase() === identifier.toLowerCase()));
-        } else {
-          const idLower = identifier.toLowerCase();
-          userReviews = (all || []).filter(r => (r.holderName && String(r.holderName).toLowerCase() === idLower) || (r.owner && r.owner.username && String(r.owner.username).toLowerCase() === idLower) || (r.owner && r.owner.discordUsername && String(r.owner.discordUsername).toLowerCase() === idLower));
-        }
-        const seen = new Set();
-        const unique = [];
-        userReviews.forEach(r => { if (r && r.id && !seen.has(r.id)) { seen.add(r.id); unique.push(r); } });
-        total = unique.length;
-        pub = unique.filter(r => !r.isPrivate).length;
-        priv = unique.filter(r => !!r.isPrivate).length;
-        const map = {};
-        unique.forEach(r => { const t = r.productType || r.type || 'Autre'; map[t] = (map[t] || 0) + 1; });
-        byType = map;
-      } catch (e) { /* ignore */ }
+
+    // Show display name
+    const displayName = await UserDataManager.getDisplayName(identifier);
+    if (dom.publicProfileEmail) dom.publicProfileEmail.textContent = displayName;
+
+    // Check if viewing own profile
+    const me = (localStorage.getItem('authEmail') || '').toLowerCase();
+    const isOwner = me && identifier && me === identifier.toLowerCase();
+
+    // If owner, redirect to account modal instead
+    if (isOwner) {
+      const modal = document.getElementById('publicProfileModal');
+      if (modal) modal.style.display = 'none';
+      setTimeout(() => openAccountModal(), 200);
+      return;
     }
-    if (dom.publicTotal) dom.publicTotal.textContent = total;
-    if (dom.publicPublic) dom.publicPublic.textContent = pub;
-    if (dom.publicPrivate) dom.publicPrivate.textContent = priv;
-    if (dom.publicByType) {
+
+    // Fetch stats using centralized manager
+    const stats = await UserDataManager.getUserStats(identifier);
+
+    // Update DOM
+    if (dom.publicTotal) dom.publicTotal.textContent = stats.total;
+    if (dom.publicPublic) dom.publicPublic.textContent = stats.public;
+    if (dom.publicPrivate) dom.publicPrivate.textContent = stats.private;
+
+    if (dom.publicByType && stats.by_type) {
       dom.publicByType.innerHTML = '';
-      Object.keys(byType || {}).forEach(k => {
-        const el = document.createElement('div'); el.className = 'type-pill'; el.textContent = `${k}: ${byType[k]}`; dom.publicByType.appendChild(el);
+      Object.keys(stats.by_type).forEach(k => {
+        const el = document.createElement('div');
+        el.className = 'type-pill';
+        el.textContent = `${k}: ${stats.by_type[k]}`;
+        dom.publicByType.appendChild(el);
       });
     }
-  } catch (e) { console.warn('populatePublicProfile', e); }
+  } catch (e) {
+    console.warn('populatePublicProfile error:', e);
+  }
 }
 
 function openPublicProfile(email) {
@@ -2625,171 +2671,42 @@ function releaseFocusTrap() {
 }
 
 async function renderAccountView() {
-  // Show email
+  // Show email or display name
   const email = localStorage.getItem('authEmail') || '—';
-  if (dom.accountEmail) dom.accountEmail.textContent = email;
+  const displayName = await UserDataManager.getDisplayName(email);
+  if (dom.accountEmail) dom.accountEmail.textContent = displayName;
 
-  // Default placeholder stats
-  let publicCount = 0;
-  let privateCount = 0;
+  // Fetch stats using centralized manager
+  const stats = await UserDataManager.getUserStats(email);
+
+  // Find favorite type
   let favType = '—';
-  let totalCount = 0;
-  let byType = {};
-
-  // Try to fetch stats from API when token present
-  const token = localStorage.getItem('authToken');
-  if (token && remoteEnabled) {
-    try {
-      const resp = await fetch('/api/auth/stats', {
-        headers: { 'X-Auth-Token': token }
-      });
-      if (resp.ok) {
-        const data = await resp.json();
-        totalCount = data.total || 0;
-        publicCount = data.public || 0;
-        privateCount = data.private || 0;
-        byType = data.by_type || data.types || {};
-        // Find favorite type
-        if (byType && Object.keys(byType).length > 0) {
-          let max = 0;
-          Object.keys(byType).forEach(k => {
-            if (byType[k] > max) {
-              max = byType[k];
-              favType = k;
-            }
-          });
-        }
-        // Cache for offline use
-        localStorage.setItem('accountStats', JSON.stringify({
-          total: totalCount,
-          public: publicCount,
-          private: privateCount,
-          by_type: byType,
-          favorite_type: favType
-        }));
+  if (stats.by_type && Object.keys(stats.by_type).length > 0) {
+    let max = 0;
+    Object.keys(stats.by_type).forEach(k => {
+      if (stats.by_type[k] > max) {
+        max = stats.by_type[k];
+        favType = k;
       }
-    } catch (err) {
-      console.warn('Failed to fetch account stats from API:', err);
-    }
+    });
   }
 
-  // Fallback: try to read a cached stats object in localStorage
-  if ((!publicCount && !privateCount && !totalCount) && localStorage.getItem('accountStats')) {
-    try {
-      const cached = JSON.parse(localStorage.getItem('accountStats'));
-      publicCount = cached.public || 0;
-      privateCount = cached.private || 0;
-      favType = cached.favorite_type || '—';
-      totalCount = cached.total || 0;
-      byType = cached.by_type || cached.types || {};
-    } catch (err) {
-      console.warn('Failed to parse cached account stats:', err);
-    }
-  }
-
-  // Last fallback: compute from local DB reviews
-  if ((!publicCount && !privateCount && !totalCount) || (!byType || Object.keys(byType).length === 0)) {
-    try {
-      const all = await dbGetAllReviews();
-      if (all && all.length) {
-        // Filter by current user's email if available
-        const currentEmail = email && email !== '—' ? email.toLowerCase() : null;
-
-        // Dedupe by id and filter by owner
-        const seen = new Set();
-        const unique = [];
-        all.forEach(r => {
-          if (!r || !r.id) return;
-          if (seen.has(r.id)) return;
-
-          // Skip if this review doesn't belong to current user
-          if (currentEmail && r.ownerId && typeof r.ownerId === 'string') {
-            const ownerEmail = r.ownerId.toLowerCase();
-            if (ownerEmail !== currentEmail) return;
-          }
-
-          seen.add(r.id);
-          unique.push(r);
-        });
-
-        totalCount = unique.length;
-        publicCount = unique.filter(r => !r.isPrivate).length;
-        privateCount = unique.filter(r => !!r.isPrivate).length;
-
-        const map = {};
-        unique.forEach(r => {
-          const t = r.productType || r.type || 'Autre';
-          map[t] = (map[t] || 0) + 1;
-        });
-        byType = map;
-
-        // Pick favorite type
-        let max = 0;
-        Object.keys(map).forEach(k => {
-          if (map[k] > max) {
-            max = map[k];
-            favType = k;
-          }
-        });
-
-        console.log('📊 [DEBUG] Stats computed from local DB:', {
-          total: totalCount,
-          public: publicCount,
-          private: privateCount,
-          byType: byType,
-          uniqueReviews: unique.length,
-          filteredByEmail: currentEmail
-        });
-      }
-    } catch (err) {
-      console.warn('Failed to compute stats from local DB:', err);
-    }
-  }
-
-  console.log('📊 [DEBUG] Final stats:', {
-    total: totalCount,
-    public: publicCount,
-    private: privateCount,
-    byType: byType
-  });
-
-  if (dom.statPublic) dom.statPublic.textContent = publicCount;
-  if (dom.statPrivate) dom.statPrivate.textContent = privateCount;
+  // Update DOM
+  if (dom.statPublic) dom.statPublic.textContent = stats.public;
+  if (dom.statPrivate) dom.statPrivate.textContent = stats.private;
   if (dom.statFavType) dom.statFavType.textContent = favType;
-  if (dom.accountTotal) dom.accountTotal.textContent = totalCount;
-
-  try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: renderAccountView computed', { totalCount, publicCount, privateCount, byTypeKeys: Object.keys(byType || {}) }); } catch (e) { }
+  if (dom.accountTotal) dom.accountTotal.textContent = stats.total;
 
   // Render by-type breakdown
   const container = document.getElementById('accountStatsByType');
-  if (container) {
+  if (container && stats.by_type) {
     container.innerHTML = '';
-    // If we have a byType map, render it; else try to compute from cached reviews
-    if (byType && Object.keys(byType).length > 0) {
-      Object.keys(byType).forEach(t => {
-        const el = document.createElement('div');
-        el.className = 'type-pill';
-        el.textContent = `${t}: ${byType[t]}`;
-        container.appendChild(el);
-      });
-      // debug: print deduped counts to console for quick verification
-      try { console.info('ACCOUNT_STATS_DEDUPE', { totalCount, publicCount, privateCount, byType }); } catch (e) { }
-    } else if (localStorage.getItem('accountReviews')) {
-      try {
-        const reviews = JSON.parse(localStorage.getItem('accountReviews'));
-        const map = {};
-        reviews.forEach(r => {
-          const t = r.type || r.productType || 'Autre';
-          map[t] = (map[t] || 0) + 1;
-        });
-        Object.keys(map).forEach(t => {
-          const el = document.createElement('div');
-          el.className = 'type-pill';
-          el.textContent = `${t}: ${map[t]}`;
-          container.appendChild(el);
-        });
-      } catch (e) { /* ignore */ }
-    }
+    Object.keys(stats.by_type).forEach(t => {
+      const el = document.createElement('div');
+      el.className = 'type-pill';
+      el.textContent = `${t}: ${stats.by_type[t]}`;
+      container.appendChild(el);
+    });
   }
 
   // Setup theme select
@@ -2825,6 +2742,20 @@ function debounce(func, wait) {
 // Initialisation de la base de données
 async function initDatabase() {
   try {
+    // Clean up expired cache on startup
+    try {
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.endsWith('_timestamp')) {
+          const dataKey = key.replace('_timestamp', '');
+          const cached = UserDataManager.getCachedData(dataKey);
+          // getCachedData already handles TTL validation and cleanup
+        }
+      });
+    } catch (e) {
+      console.warn('Cache cleanup failed:', e);
+    }
+
     await setupDatabase();
     await migrateLocalStorageToDB();
     if (shouldDedupeOnStart()) {

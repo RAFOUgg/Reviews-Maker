@@ -47,6 +47,11 @@ const verificationCodes = new Map(); // email -> {code, expires, attempts, disco
 const CODE_EXPIRY = 10 * 60 * 1000; // 10 minutes
 const MAX_ATTEMPTS = 5;
 
+// Rate limiting for code sending (prevent spam)
+const rateLimitMap = new Map(); // email -> {count, resetTime}
+const RATE_LIMIT_WINDOW = 10 * 60 * 1000; // 10 minutes
+const RATE_LIMIT_MAX_REQUESTS = 3; // max 3 requests per window
+
 // Storage config for images
 // ...existing code...
 
@@ -651,7 +656,8 @@ app.get('/api/users/stats', async (req, res) => {
 
 // Helper: Generate 6-digit code
 function generateCode() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  // Secure code generation using crypto.randomInt (available in Node.js 14.10.0+)
+  return crypto.randomInt(100000, 1000000).toString();
 }
 
 // Helper: Query LaFoncedalleBot database directly (nouvelle architecture)
@@ -921,6 +927,28 @@ app.post('/api/auth/send-code', async (req, res) => {
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: 'invalid_email', message: 'Adresse email invalide' });
+  }
+
+  // Rate limiting check
+  const now = Date.now();
+  const rateLimit = rateLimitMap.get(email);
+
+  if (rateLimit) {
+    if (now < rateLimit.resetTime) {
+      if (rateLimit.count >= RATE_LIMIT_MAX_REQUESTS) {
+        const waitMinutes = Math.ceil((rateLimit.resetTime - now) / 60000);
+        return res.status(429).json({
+          error: 'rate_limit_exceeded',
+          message: `Trop de tentatives. Réessayez dans ${waitMinutes} minute(s).`
+        });
+      }
+      rateLimit.count++;
+    } else {
+      // Reset window
+      rateLimitMap.set(email, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    }
+  } else {
+    rateLimitMap.set(email, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
   }
 
   try {
