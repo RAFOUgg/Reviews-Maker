@@ -6518,6 +6518,8 @@ body.modal-open .auth-status {
   bottom: 0;
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
+  z-index: 1;
+  /* Derrière le contenu */
 }
 
 .modal-content {
@@ -6532,6 +6534,8 @@ body.modal-open .auth-status {
   box-shadow:
     0 40px 80px -20px rgba(0, 0, 0, 0.8),
     0 0 60px -20px rgba(52, 211, 153, 0.2);
+  z-index: 2;
+  /* Devant l'overlay */
 }
 
 /* Public profile overlay */

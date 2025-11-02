@@ -2950,8 +2950,10 @@ async function renderAccountView() {
   const displayName = await UserDataManager.getDisplayName(email);
   if (dom.accountEmail) dom.accountEmail.textContent = displayName;
 
-  // Fetch stats using centralized manager
-  const stats = await UserDataManager.getUserStats(email);
+  // Fetch stats using centralized manager - FORCE REFRESH to avoid cache issues
+  console.log('📊 [DEBUG] Fetching stats for:', email);
+  const stats = await UserDataManager.getUserStats(email, true);
+  console.log('📊 [DEBUG] Stats received:', stats);
 
   // Find favorite type
   let favType = '—';
@@ -2966,10 +2968,16 @@ async function renderAccountView() {
   }
 
   // Update DOM
-  if (dom.statPublic) dom.statPublic.textContent = stats.public;
-  if (dom.statPrivate) dom.statPrivate.textContent = stats.private;
+  console.log('📊 [DEBUG] Updating DOM with:', {
+    total: stats.total,
+    public: stats.public,
+    private: stats.private,
+    favType
+  });
+  if (dom.statPublic) dom.statPublic.textContent = stats.public || 0;
+  if (dom.statPrivate) dom.statPrivate.textContent = stats.private || 0;
   if (dom.statFavType) dom.statFavType.textContent = favType;
-  if (dom.accountTotal) dom.accountTotal.textContent = stats.total;
+  if (dom.accountTotal) dom.accountTotal.textContent = stats.total || 0;
 
   // Render by-type breakdown
   const container = document.getElementById('accountStatsByType');
