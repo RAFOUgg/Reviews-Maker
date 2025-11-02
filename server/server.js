@@ -257,8 +257,12 @@ app.get('/api/reviews', (req, res) => {
 });
 
 // GET /api/reviews/stats - Get current user's statistics
-app.get('/api/reviews/stats', requireAuth, (req, res) => {
-  const ownerId = req.auth.ownerId;
+app.get('/api/reviews/stats', (req, res) => {
+  // Require authentication
+  const ownerId = req.auth?.ownerId;
+  if (!ownerId) {
+    return res.status(401).json({ error: 'unauthorized', message: 'Authentication required' });
+  }
 
   // Query to get counts by type and privacy
   const sql = `
