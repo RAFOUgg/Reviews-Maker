@@ -2496,7 +2496,7 @@ const UserDataManager = {
     const token = localStorage.getItem('authToken');
     if (token && remoteEnabled) {
       try {
-        const resp = await fetch('/api/auth/stats', {
+        const resp = await fetch('/api/reviews/stats', {
           headers: { 'X-Auth-Token': token }
         });
         if (resp.ok) {
@@ -2689,6 +2689,14 @@ function openAccountModal() {
     return;
   }
 
+  // Close all dropdowns first to prevent UI glitches
+  document.querySelectorAll('.dropdown-menu, [class*="dropdown"]').forEach(el => {
+    try {
+      el.style.display = 'none';
+      el.classList.remove('show', 'active');
+    } catch (e) { /* ignore */ }
+  });
+
   // Hide other modals to prevent stacking
   const otherModals = document.querySelectorAll('.modal, .tips-dialog, .export-config-modal');
   otherModals.forEach(modal => {
@@ -2809,6 +2817,14 @@ function openPublicProfile(email) {
     try { if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: openPublicProfile called with', email); } catch (e) { }
     // Close any account modal or other modals to ensure the public profile appears on top
     try {
+      // Close all dropdowns first to prevent UI glitches
+      document.querySelectorAll('.dropdown-menu, [class*="dropdown"]').forEach(el => {
+        try {
+          el.style.display = 'none';
+          el.classList.remove('show', 'active');
+        } catch (e) { /* ignore */ }
+      });
+
       // If account modal is open, close it first
       if (dom && dom.accountModal) {
         try { closeAccountModal(); } catch (e) { /* ignore */ }
