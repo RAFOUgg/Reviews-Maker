@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Test Library Modal</title>
+    <style>
+        body {
+            font-family: system-ui;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+
+        button {
+            background: #4ecca3;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: 600;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #16213e;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔍 Test Library Modal</h1>
+
+    <button onclick="testElements()">1. Vérifier Éléments DOM</button>
+    <button onclick="testOpenModal()">2. Tester openLibraryModal()</button>
+    <button onclick="testDirectOpen()">3. Ouvrir Modal Directement</button>
+
+    <div id="result" class="result">Cliquez sur un bouton pour tester...</div>
+
+    <script src="scripts/logger.js"></script>
+    <script src="src/storage-manager.js"></script>
+    <script src="app.js"></script>
+
+    <script>
+        function log(msg) {
+            document.getElementById('result').textContent = msg;
+            console.log(msg);
+        }
+
+        function testElements() {
+            let msg = '🔍 Vérification des éléments DOM:\n\n';
+
+            const elements = {
+                'libraryModal': document.getElementById('libraryModal'),
+                'libraryModalOverlay': document.getElementById('libraryModalOverlay'),
+                'libraryDrawer': document.getElementById('libraryDrawer'),
+                'openLibrary': document.getElementById('openLibrary'),
+                'openLibraryFromAccount': document.getElementById('openLibraryFromAccount'),
+                'libraryGrid': document.getElementById('libraryGrid'),
+                'libraryList': document.getElementById('libraryList')
+            };
+
+            Object.keys(elements).forEach(key => {
+                const el = elements[key];
+                msg += `${key}: ${el ? '✅ Existe' : '❌ Manquant'}`;
+                if (el) {
+                    msg += ` (display: ${el.style.display || 'default'})`;
+                }
+                msg += '\n';
+            });
+
+            msg += '\n🔍 Variables globales:\n';
+            msg += `dom object: ${typeof dom !== 'undefined' ? '✅' : '❌'}\n`;
+            if (typeof dom !== 'undefined') {
+                msg += `dom.libraryModal: ${!!dom.libraryModal}\n`;
+                msg += `dom.libraryDrawer: ${!!dom.libraryDrawer}\n`;
+            }
+            msg += `openLibraryModal function: ${typeof openLibraryModal !== 'undefined' ? '✅' : '❌'}\n`;
+
+            log(msg);
+        }
+
+        function testOpenModal() {
+            log('🔍 Tentative d\'ouverture via openLibraryModal()...\n');
+
+            if (typeof openLibraryModal === 'undefined') {
+                log('❌ ERREUR: openLibraryModal() non définie!');
+                return;
+            }
+
+            try {
+                console.clear();
+                openLibraryModal('mine', { fromAccount: true });
+
+                setTimeout(() => {
+                    const modal = document.getElementById('libraryModal');
+                    let msg = '✅ openLibraryModal() appelée\n\n';
+                    msg += 'État du modal après appel:\n';
+                    msg += `display: ${modal ? modal.style.display : 'modal introuvable'}\n`;
+                    msg += `visible: ${modal && modal.style.display === 'flex' ? '✅ OUI' : '❌ NON'}\n\n`;
+                    msg += 'Vérifiez la console pour les logs de debug.';
+                    log(msg);
+                }, 500);
+            } catch (err) {
+                log(`❌ ERREUR: ${err.message}\n${err.stack}`);
+            }
+        }
+
+        function testDirectOpen() {
+            log('🔍 Ouverture directe du modal (force display)...\n');
+
+            const modal = document.getElementById('libraryModal');
+            if (!modal) {
+                log('❌ libraryModal introuvable!');
+                return;
+            }
+
+            modal.style.display = 'flex';
+
+            let msg = '✅ Modal ouvert en force\n\n';
+            msg += `display: ${modal.style.display}\n`;
+            msg += '\nSi vous ne voyez rien, vérifiez:\n';
+            msg += '- Les styles CSS du modal\n';
+            msg += '- Le z-index\n';
+            msg += '- La présence de contenu dans le modal';
+
+            log(msg);
+        }
+
+        // Auto-test au chargement
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(testElements, 1000);
+        });
+    </script>
+</body>
+
+</html>

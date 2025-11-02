@@ -211,33 +211,7 @@ function setupAccountModalEvents() {
       }
     });
   }
-  if (dom.openAccountSettings) {
-    dom.openAccountSettings.addEventListener('click', () => {
-      const panel = document.getElementById('accountSettingsPanel');
-      if (panel) {
-        panel.style.display = 'block';
-        if (dom.accountPreferences) dom.accountPreferences.style.display = 'none';
-        const firstOpt = panel.querySelector('.theme-option');
-        if (firstOpt) firstOpt.focus();
-      }
-    });
-  }
-  const inlineBtn = document.getElementById('openAccountSettingsInline');
-  if (inlineBtn) {
-    inlineBtn.addEventListener('click', () => {
-      const panel = document.getElementById('accountSettingsPanel');
-      if (panel) panel.style.display = 'block';
-      if (dom.accountPreferences) dom.accountPreferences.style.display = 'none';
-    });
-  }
-  const settingsBack = document.getElementById('accountSettingsBack');
-  if (settingsBack) {
-    settingsBack.addEventListener('click', () => {
-      const panel = document.getElementById('accountSettingsPanel');
-      if (panel) panel.style.display = 'none';
-      if (dom.accountPreferences) dom.accountPreferences.style.display = 'block';
-    });
-  }
+  // ✅ REMOVED: Duplicate code - settings handlers are at lines 2050-2085
 }
 
 // Toggle header style while hero is visible so the hero title remains readable during scroll
@@ -3350,34 +3324,54 @@ function toggleLibrary(open, mode = 'mine') {
 
 function openLibraryModal(mode = 'mine', options = {}) {
   console.log('🔍 [DEBUG] openLibraryModal called with mode:', mode, 'options:', options);
+  console.log('🔍 [DEBUG] dom object:', typeof dom, 'keys:', dom ? Object.keys(dom).length : 'N/A');
+  console.log('🔍 [DEBUG] dom.libraryDrawer:', dom.libraryDrawer);
+  console.log('🔍 [DEBUG] dom.libraryModal:', dom.libraryModal);
+
   currentLibraryMode = mode;
   const fromAccount = options && options.fromAccount;
 
+  // ✅ FIX: Ne pas utiliser le drawer qui n'existe pas dans index.html
+  // Le drawer est uniquement pour review.html (page d'édition)
   if (dom.libraryDrawer) {
-    console.log('🔍 [DEBUG] Using drawer mode');
+    console.log('🔍 [DEBUG] Using drawer mode (review.html)');
     toggleLibrary(true, mode);
     return;
   }
 
   if (!dom.libraryModal) {
-    console.error('❌ Library modal element not found');
+    console.error('❌ Library modal element not found in DOM!');
     console.log('🔍 [DEBUG] Available modals:', {
       authModal: !!dom.authModal,
       accountModal: !!dom.accountModal,
-      libraryModal: !!dom.libraryModal
+      libraryModal: !!dom.libraryModal,
+      previewModal: !!dom.previewModal
+    });
+    console.log('🔍 [DEBUG] Checking raw DOM:', {
+      byId: !!document.getElementById('libraryModal'),
+      allModals: Array.from(document.querySelectorAll('.modal')).map(m => m.id)
     });
     showToast('Interface de bibliothèque indisponible', 'error');
     return;
   }
 
-  console.log('✅ Opening library modal');
-  // show back button if requested
+  console.log('✅ Opening library modal - Setting display to flex');
+
+  // Show/hide back button based on context
   if (dom.libraryBackToAccount) {
     dom.libraryBackToAccount.style.display = fromAccount ? 'inline-flex' : 'none';
+    console.log('🔍 [DEBUG] Back button display:', fromAccount ? 'visible' : 'hidden');
   }
+
+  // Open the modal
   dom.libraryModal.style.display = "flex";
-  console.log('✅ Calling renderFullLibrary');
+  console.log('🔍 [DEBUG] Modal display set to:', dom.libraryModal.style.display);
+  console.log('🔍 [DEBUG] Modal computed style:', window.getComputedStyle(dom.libraryModal).display);
+
+  console.log('✅ Calling renderFullLibrary with mode:', mode);
   renderFullLibrary(mode);
+
+  console.log('✅ openLibraryModal completed');
 }
 
 async function renderLibraryList(mode = 'mine') {
@@ -3716,9 +3710,16 @@ async function renderCompactLibrary() {
 
 // Rendu de la bibliothèque complète dans la modal
 async function renderFullLibrary(mode = (currentLibraryMode || 'mine')) {
-  if (!dom.libraryGrid) return;
+  console.log('🔍 [DEBUG] renderFullLibrary called with mode:', mode);
+  console.log('🔍 [DEBUG] dom.libraryGrid exists:', !!dom.libraryGrid);
+
+  if (!dom.libraryGrid) {
+    console.error('❌ libraryGrid element not found!');
+    return;
+  }
 
   currentLibraryMode = mode;
+  console.log('🔍 [DEBUG] currentLibraryMode set to:', currentLibraryMode);
   if (dom.libraryModal) {
     dom.libraryModal.setAttribute('data-mode', mode);
     if (mode === 'public') dom.libraryModal.classList.add('read-only'); else dom.libraryModal.classList.remove('read-only');
@@ -4035,58 +4036,103 @@ async function openPreviewOnly(review) {
   if (!review) return;
   // Ensure correlationKey exists for legacy entries
   if (!review.correlationKey) { review.correlationKey = computeCorrelationKey(review); }
-  // Render review HTML into modal without enabling the form panels
+
   // Build a minimal context to reuse generateReview-like output
   currentType = review.productType;
+  // ✅ FIX: Les données sont déjà au niveau racine (rowToReview flatten les données)
   formData = { ...review };
   imageUrl = review.image || "";
   totals = review.totals || {};
-  // Create the same HTML as generateReview but into modal content
-  if (!dom.previewModalContent) return;
+
+  if (!dom.previewModalContent) {
+    console.error('[openPreviewOnly] previewModalContent DOM element not found');
+    return;
+  }
+
   const structure = productStructures[currentType];
-  const title = formData.cultivars || formData.strain || formData.productType;
-  const date = new Date(review.date || Date.now()).toLocaleDateString("fr-FR", { day: '2-digit', month: 'long', year: 'numeric' });
+  if (!structure) {
+    console.error(`[openPreviewOnly] No structure found for type: ${currentType}`);
+    dom.previewModalContent.innerHTML = `<div class="review-header"><h2>Erreur</h2><p>Type de produit non reconnu: ${currentType}</p></div>`;
+    return;
+  }
+
+  const title = formData.cultivars || formData.strain || formData.name || formData.productType;
+  const date = new Date(review.date || review.updatedAt || Date.now()).toLocaleDateString("fr-FR", { day: '2-digit', month: 'long', year: 'numeric' });
+
   let html = `<div class="review-header"><h2>${title}</h2><div class="review-meta">${formData.productType} • ${date}</div></div>`;
+
   if (imageUrl) {
     html += `<div class="review-image"><img src="${imageUrl}" alt="Photo du produit ${title}"></div>`;
   }
+
   html += '<div class="review-grid">';
+
   structure.sections.forEach((section, index) => {
     let card = `<div class="review-card"><h3>${section.title}</h3>`;
     let hasContent = false;
+
     section.fields.forEach(field => {
       if (field.type === 'file') return;
+
+      // ✅ FIX: Les données sont au niveau racine, pas dans .data
       const value = formData[field.key];
-      if (!value) return;
+
+      // ✅ FIX: Afficher même les valeurs vides pour debug
+      if (value === undefined || value === null || value === '') {
+        // Ne pas afficher les champs réellement vides
+        return;
+      }
+
       hasContent = true;
       let displayValue = '';
+
       if (field.type === 'number') {
         displayValue = Number.parseFloat(value).toFixed(1).replace('.0', '');
       } else if (field.type === 'sequence') {
-        try { const steps = JSON.parse(value); displayValue = Array.isArray(steps) && steps.length ? steps.map((s, i) => `${i + 1}) ${s}`).join(' \u203A ') : ''; } catch { displayValue = value; }
+        try {
+          const steps = JSON.parse(value);
+          displayValue = Array.isArray(steps) && steps.length ? steps.map((s, i) => `${i + 1}) ${s}`).join(' › ') : '';
+        } catch {
+          displayValue = value;
+        }
       } else if (field.type === 'multiple-choice' || (Array.isArray(field.choices) && field.choices.length)) {
-        try { const sel = JSON.parse(value); displayValue = Array.isArray(sel) && sel.length ? sel.join(' • ') : ''; } catch { displayValue = value; }
+        try {
+          const sel = JSON.parse(value);
+          displayValue = Array.isArray(sel) && sel.length ? sel.join(' • ') : '';
+        } catch {
+          displayValue = value;
+        }
       } else {
         displayValue = value;
       }
-      card += `<div class="review-item"><strong>${field.label}</strong><span>${displayValue}</span></div>`;
+
+      if (displayValue) {
+        card += `<div class="review-item"><strong>${field.label}</strong><span>${displayValue}</span></div>`;
+      }
     });
+
     if (section.total && totals[`section-${index}`]) {
       const { sum, max } = totals[`section-${index}`];
       card += `<div class="review-item"><strong>Score global</strong><span>${Number(sum).toFixed(1)} / ${max}</span></div>`;
       hasContent = true;
     }
+
     if (!hasContent) {
       card += '<div class="review-item"><span>Aucune information renseignée.</span></div>';
     }
+
     card += '</div>';
     html += card;
   });
+
   html += '</div>';
   dom.previewModalContent.innerHTML = html;
+
   // Show modal
   dom.previewOverlay?.removeAttribute('hidden');
   dom.previewModal?.removeAttribute('hidden');
+
+  console.log('[openPreviewOnly] Modal displayed for:', title);
 }
 
 function closePreviewOnly() {
