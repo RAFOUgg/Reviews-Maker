@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test des fonctionnalités Reviews Maker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+
+        .test-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .status.success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status.error {
+            background: #f44336;
+            color: white;
+        }
+
+        .status.warning {
+            background: #ff9800;
+            color: white;
+        }
+
+        .status.pending {
+            background: #9e9e9e;
+            color: white;
+        }
+
+        .test-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #ddd;
+        }
+
+        .test-item.pass {
+            border-left-color: #4caf50;
+        }
+
+        .test-item.fail {
+            border-left-color: #f44336;
+        }
+
+        .test-item.warn {
+            border-left-color: #ff9800;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result-box {
+            margin-top: 10px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .log {
+            color: #666;
+            margin: 3px 0;
+        }
+
+        .log.error {
+            color: #f44336;
+            font-weight: bold;
+        }
+
+        .log.success {
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .summary-card {
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+        }
+
+        .summary-card.total {
+            background: #2196F3;
+        }
+
+        .summary-card.pass {
+            background: #4caf50;
+        }
+
+        .summary-card.fail {
+            background: #f44336;
+        }
+
+        .summary-card.warn {
+            background: #ff9800;
+        }
+
+        .summary-card .number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .summary-card .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧪 Test des fonctionnalités Reviews Maker</h1>
+        <p class="subtitle">Diagnostic complet des modales et interactions utilisateur</p>
+
+        <div class="summary" id="summary">
+            <!-- Stats dynamiques -->
+        </div>
+
+        <div class="test-section">
+            <h2>🏠 Tests sur index.html</h2>
+            <button onclick="runIndexTests()">▶️ Lancer les tests index.html</button>
+            <div class="result-box" id="indexResults" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📝 Tests sur review.html</h2>
+            <button onclick="runReviewTests()">▶️ Lancer les tests review.html</button>
+            <div class="result-box" id="reviewResults" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Analyse détaillée</h2>
+            <div id="detailedAnalysis"></div>
+        </div>
+    </div>
+
+    <script>
+        const results = {
+            total: 0,
+            pass: 0,
+            fail: 0,
+            warn: 0
+        };
+
+        function updateSummary() {
+            const summaryEl = document.getElementById('summary');
+            summaryEl.innerHTML = `
+        <div class="summary-card total">
+          <div class="number">${results.total}</div>
+          <div class="label">Total Tests</div>
+        </div>
+        <div class="summary-card pass">
+          <div class="number">${results.pass}</div>
+          <div class="label">Réussis</div>
+        </div>
+        <div class="summary-card fail">
+          <div class="number">${results.fail}</div>
+          <div class="label">Échoués</div>
+        </div>
+        <div class="summary-card warn">
+          <div class="number">${results.warn}</div>
+          <div class="label">Avertissements</div>
+        </div>
+      `;
+        }
+
+        function log(containerId, message, type = 'log') {
+            const container = document.getElementById(containerId);
+            container.style.display = 'block';
+            const logLine = document.createElement('div');
+            logLine.className = `log ${type}`;
+            logLine.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            container.appendChild(logLine);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function testElement(containerId, selector, description) {
+            results.total++;
+            const el = document.querySelector(selector);
+            if (el) {
+                results.pass++;
+                log(containerId, `✅ ${description}: trouvé`, 'success');
+                return true;
+            } else {
+                results.fail++;
+                log(containerId, `❌ ${description}: MANQUANT`, 'error');
+                return false;
+            }
+        }
+
+        async function runIndexTests() {
+            const containerId = 'indexResults';
+            document.getElementById(containerId).innerHTML = '';
+            log(containerId, '🚀 Début des tests sur index.html...', 'success');
+
+            // Ouvrir index.html dans un iframe
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = '../index.html';
+            document.body.appendChild(iframe);
+
+            iframe.onload = () => {
+                const doc = iframe.contentDocument || iframe.contentWindow.document;
+                const win = iframe.contentWindow;
+
+                log(containerId, '📄 index.html chargé', 'success');
+
+                // Test 1: Modale Astuces
+                log(containerId, '\n--- Test 1: Pop-up Astuces ---');
+                testElementInDoc(doc, containerId, '#openTips', 'Bouton Astuces (💡)');
+                testElementInDoc(doc, containerId, '#tipsModal', 'Modale tipsModal');
+                testElementInDoc(doc, containerId, '#closeTips', 'Bouton fermer astuces');
+                testElementInDoc(doc, containerId, '#tipsModalOverlay', 'Overlay astuces');
+
+                // Test 2: Ma Bibliothèque
+                log(containerId, '\n--- Test 2: Ma Bibliothèque ---');
+                testElementInDoc(doc, containerId, '#libraryModal', 'Modale libraryModal');
+                testElementInDoc(doc, containerId, '#closeLibrary', 'Bouton fermer bibliothèque');
+                testElementInDoc(doc, containerId, '#libraryModalOverlay', 'Overlay bibliothèque');
+                testElementInDoc(doc, containerId, '#libraryGrid', 'Grille de reviews');
+                testElementInDoc(doc, containerId, '#openLibraryFromAccount', 'Bouton "Ma bibliothèque" dans compte');
+
+                // Test 3: Modal Compte (Account Modal)
+                log(containerId, '\n--- Test 3: Informations Utilisateur ---');
+                testElementInDoc(doc, containerId, '#accountModal', 'Modale accountModal');
+                testElementInDoc(doc, containerId, '#closeAccountModal', 'Bouton fermer compte');
+                testElementInDoc(doc, containerId, '#accountModalOverlay', 'Overlay compte');
+                testElementInDoc(doc, containerId, '#accountEmail', 'Email utilisateur');
+                testElementInDoc(doc, containerId, '#accountTotal', 'Total reviews');
+                testElementInDoc(doc, containerId, '#statPublic', 'Stats publiques');
+                testElementInDoc(doc, containerId, '#statPrivate', 'Stats privées');
+                testElementInDoc(doc, containerId, '#accountStatsByType', 'Répartition par type');
+
+                // Test 4: Paramètres Utilisateur
+                log(containerId, '\n--- Test 4: Paramètres Utilisateur ---');
+                testElementInDoc(doc, containerId, '#openAccountSettings', 'Bouton Paramètres (⚙️)');
+                testElementInDoc(doc, containerId, '#accountSettingsPanel', 'Panneau de paramètres');
+                testElementInDoc(doc, containerId, '#accountSettingsBack', 'Bouton retour paramètres');
+                testElementInDoc(doc, containerId, '#themeSelect', 'Sélecteur de thème');
+                testElementInDoc(doc, containerId, '#accountPreferences', 'Panneau préférences');
+
+                // Test 5: Fonctions JavaScript
+                log(containerId, '\n--- Test 5: Fonctions JavaScript ---');
+                testFunctionInWindow(win, containerId, 'openAccountModal', 'Fonction openAccountModal');
+                testFunctionInWindow(win, containerId, 'closeAccountModal', 'Fonction closeAccountModal');
+                testFunctionInWindow(win, containerId, 'openLibraryModal', 'Fonction openLibraryModal');
+                testFunctionInWindow(win, containerId, 'setupAccountModalEvents', 'Fonction setupAccountModalEvents');
+                testFunctionInWindow(win, containerId, 'setupModalEvents', 'Fonction setupModalEvents');
+
+                // Test 6: Event Listeners
+                log(containerId, '\n--- Test 6: Vérification des Event Listeners ---');
+                const openTipsBtn = doc.getElementById('openTips');
+                if (openTipsBtn) {
+                    const hasListener = win.getEventListeners && win.getEventListeners(openTipsBtn).click;
+                    if (hasListener && hasListener.length > 0) {
+                        results.pass++;
+                        results.total++;
+                        log(containerId, '✅ Event listener sur bouton Astuces: OK', 'success');
+                    } else {
+                        results.warn++;
+                        results.total++;
+                        log(containerId, '⚠️ Event listener sur bouton Astuces: non détectable (normal)', 'warn');
+                    }
+                }
+
+                log(containerId, '\n✨ Tests terminés!', 'success');
+                updateSummary();
+
+                // Nettoyage
+                setTimeout(() => document.body.removeChild(iframe), 100);
+            };
+        }
+
+        function testElementInDoc(doc, containerId, selector, description) {
+            results.total++;
+            const el = doc.querySelector(selector);
+            if (el) {
+                results.pass++;
+                log(containerId, `✅ ${description}: trouvé`, 'success');
+                return true;
+            } else {
+                results.fail++;
+                log(containerId, `❌ ${description}: MANQUANT`, 'error');
+                return false;
+            }
+        }
+
+        function testFunctionInWindow(win, containerId, funcName, description) {
+            results.total++;
+            if (typeof win[funcName] === 'function') {
+                results.pass++;
+                log(containerId, `✅ ${description}: définie`, 'success');
+                return true;
+            } else {
+                results.fail++;
+                log(containerId, `❌ ${description}: NON DÉFINIE`, 'error');
+                return false;
+            }
+        }
+
+        function runReviewTests() {
+            const containerId = 'reviewResults';
+            document.getElementById(containerId).innerHTML = '';
+            log(containerId, '🚀 Début des tests sur review.html...', 'success');
+
+            // Ouvrir review.html dans un iframe
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = '../review.html';
+            document.body.appendChild(iframe);
+
+            iframe.onload = () => {
+                const doc = iframe.contentDocument || iframe.contentWindow.document;
+                const win = iframe.contentWindow;
+
+                log(containerId, '📄 review.html chargé', 'success');
+
+                // Tests similaires pour review.html
+                log(containerId, '\n--- Test: Éléments de base ---');
+                testElementInDoc(doc, containerId, '#openTips', 'Bouton Astuces');
+                testElementInDoc(doc, containerId, '#tipsModal', 'Modale astuces');
+
+                log(containerId, '\n✨ Tests terminés!', 'success');
+                updateSummary();
+
+                setTimeout(() => document.body.removeChild(iframe), 100);
+            };
+        }
+
+        // Analyse détaillée au chargement
+        window.addEventListener('load', () => {
+            const analysis = document.getElementById('detailedAnalysis');
+            analysis.innerHTML = `
+        <h3>📋 Rapport d'analyse</h3>
+        <div class="test-item">
+          <span><strong>Fonctionnalités à tester:</strong></span>
+          <span>4 principales</span>
+        </div>
+        <div class="test-item">
+          <span>1. Pop-up astuces (💡 Astuce)</span>
+          <span class="status pending">En attente</span>
+        </div>
+        <div class="test-item">
+          <span>2. Ma Bibliothèque</span>
+          <span class="status pending">En attente</span>
+        </div>
+        <div class="test-item">
+          <span>3. Paramètres utilisateur (⚙️)</span>
+          <span class="status pending">En attente</span>
+        </div>
+        <div class="test-item">
+          <span>4. Informations utilisateur (compte)</span>
+          <span class="status pending">En attente</span>
+        </div>
+        <p style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 6px;">
+          💡 <strong>Instructions:</strong> Cliquez sur les boutons ci-dessus pour lancer les tests automatiques.
+          Les tests vérifieront la présence des éléments DOM, des fonctions JavaScript et des event listeners.
+        </p>
+      `;
+        });
+
+        updateSummary();
+    </script>
+</body>
+
+</html>
