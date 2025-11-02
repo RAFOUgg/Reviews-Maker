@@ -32,20 +32,15 @@ function setupAccountModalEvents() {
   }
   if (dom.openLibraryFromAccount) {
     dom.openLibraryFromAccount.addEventListener('click', (e) => {
-      console.log('Ma bibliothèque clicked, isUserConnected:', isUserConnected);
       e.preventDefault();
       e.stopPropagation();
       closeAccountModal();
       if (!isUserConnected) {
-        console.warn('User not connected, showing auth modal');
         if (dom.authModal) dom.authModal.style.display = 'flex';
         return;
       }
-      console.log('Opening library modal in "mine" mode');
       openLibraryModal('mine', { fromAccount: true });
     });
-  } else {
-    console.error('openLibraryFromAccount button not found in DOM');
   }
   const accountDisconnectBtn = document.getElementById('accountDisconnect');
   if (accountDisconnectBtn) {
@@ -3142,22 +3137,21 @@ function toggleLibrary(open, mode = 'mine') {
 }
 
 function openLibraryModal(mode = 'mine', options = {}) {
-  console.log('openLibraryModal called with mode:', mode, 'options:', options);
   currentLibraryMode = mode;
   const fromAccount = options && options.fromAccount;
   if (dom.libraryDrawer) {
-    console.log('Using library drawer');
     toggleLibrary(true, mode);
-    // show back button only in modal mode, so nothing to do for drawer
     return;
   }
   if (!dom.libraryModal) {
-    console.error('libraryModal not found in DOM');
+    console.error('Library modal element not found');
+    showToast('Interface de bibliothèque indisponible', 'error');
     return;
   }
-  console.log('Opening library modal, fromAccount:', fromAccount);
   // show back button if requested
-  if (dom.libraryBackToAccount) dom.libraryBackToAccount.style.display = fromAccount ? 'inline-flex' : 'none';
+  if (dom.libraryBackToAccount) {
+    dom.libraryBackToAccount.style.display = fromAccount ? 'inline-flex' : 'none';
+  }
   dom.libraryModal.style.display = "flex";
   renderFullLibrary(mode);
 }
