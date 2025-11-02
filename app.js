@@ -3142,14 +3142,20 @@ function toggleLibrary(open, mode = 'mine') {
 }
 
 function openLibraryModal(mode = 'mine', options = {}) {
+  console.log('openLibraryModal called with mode:', mode, 'options:', options);
   currentLibraryMode = mode;
   const fromAccount = options && options.fromAccount;
   if (dom.libraryDrawer) {
+    console.log('Using library drawer');
     toggleLibrary(true, mode);
     // show back button only in modal mode, so nothing to do for drawer
     return;
   }
-  if (!dom.libraryModal) return;
+  if (!dom.libraryModal) {
+    console.error('libraryModal not found in DOM');
+    return;
+  }
+  console.log('Opening library modal, fromAccount:', fromAccount);
   // show back button if requested
   if (dom.libraryBackToAccount) dom.libraryBackToAccount.style.display = fromAccount ? 'inline-flex' : 'none';
   dom.libraryModal.style.display = "flex";
