@@ -409,7 +409,16 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="scripts/logger.js"></script>
-  <script src="app.js?v=2025-10-24-prodfix-1"></script>
+
+  <!-- 🆕 Core modules v2.0 - AVANT app.js pour rétrocompatibilité -->
+  <script type="module" src="src/core/StorageManager.js"></script>
+  <script type="module" src="src/core/ReviewsAPI.js"></script>
+  <script type="module" src="src/core/ModalManager.js"></script>
+  <script type="module" src="src/core/UserDataManager.js"></script>
+  <script type="module" src="src/compat/compat-layer.js"></script>
+
+  <!-- Code legacy (fonctionne via compat layer) -->
+  <script src="app.js?v=2025-11-02-refactor-1"></script>
   <!-- Feedback widget removed -->
 </body>
 
