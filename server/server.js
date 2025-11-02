@@ -256,6 +256,60 @@ app.get('/api/reviews', (req, res) => {
   });
 });
 
+// GET /api/reviews/stats - Get current user's statistics
+app.get('/api/reviews/stats', requireAuth, (req, res) => {
+  const ownerId = req.auth.ownerId;
+
+  // Query to get counts by type and privacy
+  const sql = `
+    SELECT 
+      productType,
+      isPrivate,
+      COUNT(*) as count
+    FROM reviews 
+    WHERE ownerId = ?
+    GROUP BY productType, isPrivate
+  `;
+
+  db.all(sql, [ownerId], (err, rows) => {
+    if (err) {
+      console.error('[Reviews] Stats error:', err);
+      return res.status(500).json({ error: 'db_error', message: 'Database error' });
+    }
+
+    // Aggregate results
+    let total = 0;
+    let publicCount = 0;
+    let privateCount = 0;
+    const by_type = {};
+
+    rows.forEach(row => {
+      const type = row.productType || 'Autre';
+      const count = parseInt(row.count) || 0;
+      const isPrivate = row.isPrivate === 1;
+
+      // Count by type
+      by_type[type] = (by_type[type] || 0) + count;
+
+      // Count by privacy
+      total += count;
+      if (isPrivate) {
+        privateCount += count;
+      } else {
+        publicCount += count;
+      }
+    });
+
+    res.json({
+      total,
+      public: publicCount,
+      private: privateCount,
+      by_type,
+      types: by_type // Compatibility alias
+    });
+  });
+});
+
 app.get('/api/reviews/:id', (req, res) => {
   db.get('SELECT * FROM reviews WHERE id=?', [req.params.id], (err, row) => {
     if (err) return res.status(500).json({ error: 'db_error' });
