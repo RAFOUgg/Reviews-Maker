@@ -23,6 +23,130 @@
   }
 })();
 
+// ========== STORAGE MANAGER INITIALIZATION & COMPATIBILITY LAYER ==========
+// Initialize StorageManager and create compatibility wrappers
+(async function initStorage() {
+  // Wait for StorageManager to be available
+  if (!window.storageManager) {
+    console.warn('[Storage] StorageManager not loaded, using localStorage fallback');
+    return;
+  }
+
+  try {
+    // Initialize StorageManager
+    await window.storageManager.init();
+    console.info('[Storage] StorageManager initialized successfully');
+
+    // Create enhanced storage helpers that maintain backward compatibility
+    window.storage = {
+      // Get current user email for scoping
+      getCurrentUserEmail() {
+        return localStorage.getItem('authEmail') || null;
+      },
+
+      // Auth-related storage (always persist)
+      async getAuth() {
+        const auth = await storageManager.get('auth');
+        // Fallback to localStorage for migration
+        if (!auth) {
+          const token = localStorage.getItem('authToken');
+          const email = localStorage.getItem('authEmail');
+          if (token && email) {
+            return { token, email };
+          }
+        }
+        return auth;
+      },
+
+      async setAuth(authData) {
+        await storageManager.set('auth', authData, { persist: true });
+        // Also set in localStorage for immediate backward compat
+        if (authData.token) localStorage.setItem('authToken', authData.token);
+        if (authData.email) localStorage.setItem('authEmail', authData.email);
+        if (authData.discordUsername) localStorage.setItem('discordUsername', authData.discordUsername);
+        if (authData.discordId) localStorage.setItem('discordId', authData.discordId);
+      },
+
+      async clearAuth() {
+        await storageManager.remove('auth');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('authEmail');
+        localStorage.removeItem('discordUsername');
+        localStorage.removeItem('discordId');
+        sessionStorage.removeItem('authEmail');
+      },
+
+      // User-scoped data (CRITICAL: fixes cache collision bug!)
+      async getUserData(key, email = null) {
+        const userEmail = email || this.getCurrentUserEmail();
+        if (!userEmail) return null;
+        return await storageManager.get(key, { scope: userEmail });
+      },
+
+      async setUserData(key, value, options = {}) {
+        const userEmail = this.getCurrentUserEmail();
+        if (!userEmail) {
+          console.warn('[Storage] Cannot set user data without email');
+          return false;
+        }
+        const { ttl = 5 * 60 * 1000 } = options; // Default 5 min TTL
+        return await storageManager.set(key, value, {
+          scope: userEmail,
+          ttl,
+          persist: true
+        });
+      },
+
+      async clearUserData(email = null) {
+        const userEmail = email || this.getCurrentUserEmail();
+        if (!userEmail) return;
+        await storageManager.clearUserData(userEmail);
+      },
+
+      // Temporary data (sessionStorage replacement)
+      async getTemp(key) {
+        return await storageManager.get(key) || sessionStorage.getItem(key);
+      },
+
+      async setTemp(key, value) {
+        await storageManager.set(key, value, { temporary: true });
+        // Also set in sessionStorage for backward compat
+        try {
+          sessionStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+        } catch (e) { }
+      },
+
+      async removeTemp(key) {
+        await storageManager.remove(key);
+        sessionStorage.removeItem(key);
+      },
+
+      // Preferences (global, persist)
+      async getPreference(key) {
+        return await storageManager.get(key) || localStorage.getItem(key);
+      },
+
+      async setPreference(key, value) {
+        await storageManager.set(key, value, { persist: true });
+        localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+      },
+
+      // Stats & cache
+      getStats() {
+        return storageManager.getStats();
+      },
+
+      async cleanup() {
+        return await storageManager.cleanup();
+      }
+    };
+
+    console.info('[Storage] Compatibility layer ready');
+  } catch (error) {
+    console.error('[Storage] Initialization error:', error);
+  }
+})();
+
 function setupAccountModalEvents() {
   if (dom.closeAccountModal) {
     dom.closeAccountModal.addEventListener('click', () => closeAccountModal());
@@ -55,12 +179,20 @@ function setupAccountModalEvents() {
       try {
         const email = localStorage.getItem('authEmail');
 
-        // Clear auth tokens and user data
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('authEmail');
-        localStorage.removeItem('discordUsername');
-        localStorage.removeItem('discordId');
-        sessionStorage.removeItem('authEmail');
+        // Clear auth tokens and user data using new storage system
+        if (window.storage) {
+          await window.storage.clearAuth();
+          if (email) {
+            await window.storage.clearUserData(email);
+          }
+        } else {
+          // Fallback to direct localStorage
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authEmail');
+          localStorage.removeItem('discordUsername');
+          localStorage.removeItem('discordId');
+          sessionStorage.removeItem('authEmail');
+        }
 
         // Invalidate user-specific cache
         if (email) {
@@ -246,7 +378,7 @@ const isHomePage = document.body.classList.contains('home-page');
 const isEditorPage = document.body.classList.contains('editor-page');
 
 // Navigation entre les pages
-function navigateToEditor(productType = null, reviewData = null, reviewId = null) {
+async function navigateToEditor(productType = null, reviewData = null, reviewId = null) {
   const url = new URL('review.html', window.location.href);
   if (productType) {
     url.searchParams.set('type', productType);
@@ -257,7 +389,11 @@ function navigateToEditor(productType = null, reviewData = null, reviewId = null
   if (reviewData) {
     // Stocker temporairement les données de review pour la page éditeur
     try {
-      sessionStorage.setItem('pendingReviewData', JSON.stringify(reviewData));
+      if (window.storage) {
+        await window.storage.setTemp('pendingReviewData', reviewData);
+      } else {
+        sessionStorage.setItem('pendingReviewData', JSON.stringify(reviewData));
+      }
     } catch (e) {
       console.error('Erreur stockage sessionStorage:', e);
       alert('Erreur lors de l\'enregistrement local de la review. Vérifiez les permissions du navigateur.');
@@ -271,28 +407,31 @@ function navigateToHome() {
 }
 
 // Récupérer les paramètres URL sur la page éditeur
-function getEditorParams() {
+async function getEditorParams() {
   const params = new URLSearchParams(window.location.search);
   const type = params.get('type');
   const reviewIdStr = params.get('id') || params.get('editId');
   const reviewId = reviewIdStr != null ? (isNaN(Number(reviewIdStr)) ? reviewIdStr : Number(reviewIdStr)) : null;
-  let pendingData = null;
+  let reviewData = null;
+
   try {
-    pendingData = sessionStorage.getItem('pendingReviewData');
-  } catch (e) {
-    console.error('Erreur lecture sessionStorage:', e);
-    alert('Erreur lors de la lecture des données locales. Vérifiez les permissions du navigateur.');
-  }
-  if (pendingData) {
-    try {
-      sessionStorage.removeItem('pendingReviewData');
-    } catch (e) {
-      console.error('Erreur suppression sessionStorage:', e);
-      alert('Erreur lors de la suppression des données locales. Vérifiez les permissions du navigateur.');
+    if (window.storage) {
+      reviewData = await window.storage.getTemp('pendingReviewData');
+      if (reviewData) {
+        await window.storage.removeTemp('pendingReviewData');
+      }
+    } else {
+      const pendingData = sessionStorage.getItem('pendingReviewData');
+      if (pendingData) {
+        reviewData = JSON.parse(pendingData);
+        sessionStorage.removeItem('pendingReviewData');
+      }
     }
-    return { type, reviewData: JSON.parse(pendingData), reviewId };
+  } catch (e) {
+    console.error('Erreur lecture/suppression sessionStorage:', e);
   }
-  return { type, reviewData: null, reviewId };
+
+  return { type, reviewData, reviewId };
 }
 
 // ---------- Modal utilities (global) ----------
@@ -1995,7 +2134,11 @@ function setupModalEvents() {
         }
 
         // Server has sent the verification email. Move to code entry step.
-        sessionStorage.setItem('authEmail', email);
+        if (window.storage) {
+          await window.storage.setTemp('authEmail', email);
+        } else {
+          sessionStorage.setItem('authEmail', email);
+        }
         showAuthStatus("Code envoyé ! Vérifiez vos emails", "success");
         if (dom.authStepEmail) dom.authStepEmail.style.display = 'none';
         if (dom.authStepCode) dom.authStepCode.style.display = 'flex';
@@ -2013,7 +2156,13 @@ function setupModalEvents() {
   // Verify code
   if (dom.authVerifyCode) {
     dom.authVerifyCode.addEventListener("click", async () => {
-      const email = sessionStorage.getItem('authEmail');
+      let email;
+      if (window.storage) {
+        email = await window.storage.getTemp('authEmail');
+      } else {
+        email = sessionStorage.getItem('authEmail');
+      }
+
       const code = dom.authCodeInput?.value?.trim();
 
       if (!code || code.length !== 6) {
@@ -2043,9 +2192,20 @@ function setupModalEvents() {
 
         // Server returns token and email
         if (verifyData && verifyData.token) {
-          localStorage.setItem('authToken', verifyData.token);
-          localStorage.setItem('authEmail', verifyData.email || email);
-          sessionStorage.removeItem('authEmail');
+          // Use new storage system
+          if (window.storage) {
+            await window.storage.setAuth({
+              token: verifyData.token,
+              email: verifyData.email || email,
+              discordUsername: verifyData.user?.discordUsername,
+              discordId: verifyData.user?.discordId
+            });
+            await window.storage.removeTemp('authEmail');
+          } else {
+            localStorage.setItem('authToken', verifyData.token);
+            localStorage.setItem('authEmail', verifyData.email || email);
+            sessionStorage.removeItem('authEmail');
+          }
 
           showAuthStatus('Connexion réussie !', 'success');
 
@@ -2078,7 +2238,12 @@ function setupModalEvents() {
   // Resend code
   if (dom.authResendCode) {
     dom.authResendCode.addEventListener("click", async () => {
-      const email = sessionStorage.getItem('authEmail');
+      let email;
+      if (window.storage) {
+        email = await window.storage.getTemp('authEmail');
+      } else {
+        email = sessionStorage.getItem('authEmail');
+      }
       if (!email) return;
 
       dom.authResendCode.disabled = true;
@@ -2178,31 +2343,37 @@ const UserDataManager = {
     userStats: 5 * 60 * 1000           // 5 minutes
   },
 
-  // Get cached data with TTL check
-  getCachedData(key) {
+  // Get cached data with TTL check (now uses StorageManager)
+  async getCachedData(key, email = null) {
     try {
+      if (window.storage) {
+        return await window.storage.getUserData(key, email);
+      }
+      // Fallback to old method
       const cached = localStorage.getItem(key);
       const timestamp = localStorage.getItem(`${key}_timestamp`);
-
       if (!cached || !timestamp) return null;
-
       const age = Date.now() - parseInt(timestamp, 10);
       const ttl = this.CACHE_TTL[key] || this.CACHE_TTL.discordInfo;
-
       if (age > ttl) {
         this.invalidateCache(key);
         return null;
       }
-
       return JSON.parse(cached);
     } catch (e) {
       return null;
     }
   },
 
-  // Set cached data with timestamp
-  setCachedData(key, data) {
+  // Set cached data with timestamp (now uses StorageManager)
+  async setCachedData(key, data, email = null) {
     try {
+      if (window.storage) {
+        const ttl = this.CACHE_TTL[key] || this.CACHE_TTL.discordInfo;
+        await window.storage.setUserData(key, data, { ttl });
+        return;
+      }
+      // Fallback to old method
       localStorage.setItem(key, JSON.stringify(data));
       localStorage.setItem(`${key}_timestamp`, Date.now().toString());
     } catch (e) {
@@ -2219,11 +2390,15 @@ const UserDataManager = {
   },
 
   // Invalidate all caches for a specific user
-  invalidateUserCache(email) {
+  async invalidateUserCache(email) {
     if (!email) return;
-    const emailLower = email.toLowerCase();
-    this.invalidateCache(`userStats_${emailLower}`);
-    this.invalidateCache(`discordInfo_${emailLower}`);
+    if (window.storage) {
+      await window.storage.clearUserData(email);
+    } else {
+      const emailLower = email.toLowerCase();
+      this.invalidateCache(`userStats_${emailLower}`);
+      this.invalidateCache(`discordInfo_${emailLower}`);
+    }
   },
 
   // Clear all old non-email-specific caches (migration helper)
@@ -2242,10 +2417,11 @@ const UserDataManager = {
   async getUserProfile(email, forceRefresh = false) {
     if (!email) return null;
 
+    const emailLower = email.toLowerCase();
+
     // Check cache first - USE UNIQUE KEY PER USER
-    const cacheKey = `discordInfo_${email.toLowerCase()}`;
     if (!forceRefresh) {
-      const cached = this.getCachedData(cacheKey);
+      const cached = await this.getCachedData('discordInfo', emailLower);
       if (cached && cached.email === email) {
         return cached;
       }
@@ -2268,7 +2444,7 @@ const UserDataManager = {
           timestamp: Date.now()
         };
 
-        this.setCachedData(cacheKey, profile);
+        await this.setCachedData('discordInfo', profile, emailLower);
 
         // Also update legacy localStorage for backward compatibility
         if (profile.username) localStorage.setItem('discordUsername', profile.username);
@@ -2304,10 +2480,11 @@ const UserDataManager = {
     const userEmail = email || localStorage.getItem('authEmail');
     if (!userEmail) return { total: 0, public: 0, private: 0, by_type: {} };
 
+    const emailLower = userEmail.toLowerCase();
+
     // Check cache first - USE UNIQUE KEY PER USER
-    const cacheKey = `userStats_${userEmail.toLowerCase()}`;
     if (!forceRefresh) {
-      const cached = this.getCachedData(cacheKey);
+      const cached = await this.getCachedData('userStats', emailLower);
       if (cached && cached.email === userEmail) {
         return cached;
       }
@@ -2332,7 +2509,7 @@ const UserDataManager = {
             by_type: data.by_type || data.types || {},
             timestamp: Date.now()
           };
-          this.setCachedData(cacheKey, stats);
+          await this.setCachedData('userStats', stats, emailLower);
           return stats;
         }
       } catch (err) {
@@ -2374,7 +2551,7 @@ const UserDataManager = {
         stats.email = userEmail;
         stats.timestamp = Date.now();
 
-        this.setCachedData(cacheKey, stats);
+        await this.setCachedData('userStats', stats, emailLower);
       }
     } catch (err) {
       console.warn('Failed to compute stats from local DB:', err);
