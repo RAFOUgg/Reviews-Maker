@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnostic Bugs Reviews Maker</title>
+    <style>
+        body {
+            font-family: system-ui;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+
+        .test-section {
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .test-section h2 {
+            color: #4ecca3;
+            margin-top: 0;
+        }
+
+        button {
+            background: #4ecca3;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: #3dbb8a;
+        }
+
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #0f3460;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+        }
+
+        .success {
+            border-left: 4px solid #4ecca3;
+        }
+
+        .error {
+            border-left: 4px solid #e94560;
+        }
+
+        .warning {
+            border-left: 4px solid #f39c12;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔍 Diagnostic Reviews Maker</h1>
+    <p>Ce fichier teste chaque fonctionnalité individuellement pour identifier les bugs.</p>
+
+    <div class="test-section">
+        <h2>1. Test: Connexion & Auth</h2>
+        <button onclick="testAuth()">Tester Auth</button>
+        <div id="auth-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Test: Interface Compte</h2>
+        <button onclick="testAccountModal()">Ouvrir Mon Compte</button>
+        <button onclick="testAccountData()">Vérifier Données Compte</button>
+        <div id="account-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Test: Stats Utilisateur</h2>
+        <button onclick="testStats()">Charger Stats</button>
+        <div id="stats-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Test: Contenu Reviews</h2>
+        <button onclick="testReviewsContent()">Vérifier Contenu Reviews</button>
+        <div id="reviews-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Test: Paramètres</h2>
+        <button onclick="testSettings()">Accéder Paramètres</button>
+        <div id="settings-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>6. Test: DOM Elements</h2>
+        <button onclick="testDOMElements()">Vérifier Tous les Éléments DOM</button>
+        <div id="dom-result" class="result"></div>
+    </div>
+
+    <script src="scripts/logger.js"></script>
+    <script src="src/storage-manager.js"></script>
+    <script src="app.js"></script>
+    <script>
+        function log(elementId, message, type = 'success') {
+            const result = document.getElementById(elementId);
+            result.className = `result ${type}`;
+            result.textContent = message;
+        }
+
+        async function testAuth() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const email = localStorage.getItem('authEmail');
+
+                let message = `Token: ${token ? '✅ Présent' : '❌ Absent'}\n`;
+                message += `Email: ${email || '❌ Non défini'}\n\n`;
+
+                if (token && email) {
+                    message += `Tentative de fetch /api/reviews/stats...\n`;
+                    const resp = await fetch('/api/reviews/stats', {
+                        headers: { 'X-Auth-Token': token }
+                    });
+                    message += `Status: ${resp.status}\n`;
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        message += `Données reçues: ${JSON.stringify(data, null, 2)}\n`;
+                        log('auth-result', message, 'success');
+                    } else {
+                        const error = await resp.text();
+                        message += `Erreur: ${error}\n`;
+                        log('auth-result', message, 'error');
+                    }
+                } else {
+                    message += '⚠️ Non connecté - Connectez-vous d\'abord sur index.html';
+                    log('auth-result', message, 'warning');
+                }
+            } catch (err) {
+                log('auth-result', `❌ ERREUR: ${err.message}\n${err.stack}`, 'error');
+            }
+        }
+
+        async function testAccountModal() {
+            try {
+                const accountModal = document.getElementById('accountModal');
+                if (!accountModal) {
+                    log('account-result', '❌ Modal #accountModal introuvable dans le DOM!', 'error');
+                    return;
+                }
+
+                if (typeof openAccountModal === 'function') {
+                    openAccountModal();
+                    log('account-result', '✅ Modal ouvert avec succès', 'success');
+                } else {
+                    log('account-result', '❌ Fonction openAccountModal() introuvable!', 'error');
+                }
+            } catch (err) {
+                log('account-result', `❌ ERREUR: ${err.message}\n${err.stack}`, 'error');
+            }
+        }
+
+        async function testAccountData() {
+            try {
+                const elements = {
+                    accountEmail: document.getElementById('accountEmail'),
+                    statPublic: document.getElementById('statPublic'),
+                    statPrivate: document.getElementById('statPrivate'),
+                    statFavType: document.getElementById('statFavType'),
+                    accountTotal: document.getElementById('accountTotal'),
+                    accountStatsByType: document.getElementById('accountStatsByType')
+                };
+
+                let message = 'Éléments DOM du compte:\n\n';
+                Object.keys(elements).forEach(key => {
+                    const el = elements[key];
+                    message += `${key}: ${el ? '✅ Trouvé' : '❌ Manquant'}`;
+                    if (el && el.textContent) {
+                        message += ` = "${el.textContent}"`;
+                    }
+                    message += '\n';
+                });
+
+                const allFound = Object.values(elements).every(el => el !== null);
+                log('account-result', message, allFound ? 'success' : 'error');
+            } catch (err) {
+                log('account-result', `❌ ERREUR: ${err.message}\n${err.stack}`, 'error');
+            }
+        }
+
+        async function testStats() {
+            try {
+                const email = localStorage.getItem('authEmail');
+                if (!email) {
+                    log('stats-result', '⚠️ Non connecté - Connectez-vous d\'abord', 'warning');
+                    return;
+                }
+
+                if (typeof UserDataManager === 'undefined') {
+                    log('stats-result', '❌ UserDataManager non défini!', 'error');
+                    return;
+                }
+
+                let message = `Chargement stats pour: ${email}\n\n`;
+                const stats = await UserDataManager.getUserStats(email);
+
+                message += `Total: ${stats.total}\n`;
+                message += `Public: ${stats.public}\n`;
+                message += `Privé: ${stats.private}\n`;
+                message += `Par type:\n${JSON.stringify(stats.by_type, null, 2)}`;
+
+                log('stats-result', message, 'success');
+            } catch (err) {
+                log('stats-result', `❌ ERREUR: ${err.message}\n${err.stack}`, 'error');
+            }
+        }
+
+        async function testReviewsContent() {
+            try {
+                let message = 'Vérification du contenu des reviews...\n\n';
+
+                // Test fetch reviews
+                const resp = await fetch('/api/reviews');
+                message += `Fetch /api/reviews: ${resp.status}\n`;
+
+                if (!resp.ok) {
+                    message += `❌ Erreur: ${await resp.text()}\n`;
+                    log('reviews-result', message, 'error');
+                    return;
+                }
+
+                const reviews = await resp.json();
+                message += `Nombre de reviews: ${reviews.length}\n\n`;
+
+                if (reviews.length > 0) {
+                    const firstReview = reviews[0];
+                    message += `Exemple première review:\n`;
+                    message += `ID: ${firstReview.id}\n`;
+                    message += `Name: ${firstReview.name}\n`;
+                    message += `Type: ${firstReview.productType}\n`;
+                    message += `Owner: ${firstReview.ownerId}\n`;
+                    message += `Champs data: ${Object.keys(firstReview.data || {}).join(', ')}\n`;
+
+                    // Vérifier si le contenu détaillé est présent
+                    const hasDetails = firstReview.data && (
+                        firstReview.data.general_description ||
+                        firstReview.data.terpenes ||
+                        firstReview.data.effects
+                    );
+
+                    if (hasDetails) {
+                        message += `\n✅ Contenu détaillé présent`;
+                    } else {
+                        message += `\n❌ Contenu détaillé MANQUANT`;
+                    }
+                }
+
+                log('reviews-result', message, reviews.length > 0 ? 'success' : 'warning');
+            } catch (err) {
+                log('reviews-result', `❌ ERREUR: ${err.message}\n${err.stack}`, 'error');
+            }
+        }
+
+        async function testSettings() {
+            try {
+                const settingsBtn = document.querySelector('button[data-action="settings"]') ||
+                    document.querySelector('.settings-btn') ||
+                    document.getElementById('settingsBtn');
+
+                let message = `Bouton Paramètres: ${settingsBtn ? '✅ Trouvé' : '❌ Introuvable'}\n`;
+
+                const themeSelect = document.getElementById('themeSelect');
+                message += `Theme Select: ${themeSelect ? '✅ Trouvé' : '❌ Introuvable'}\n`;
+
+                if (themeSelect) {
+                    message += `Valeur actuelle: ${themeSelect.value}\n`;
+                    message += `Options: ${Array.from(themeSelect.options).map(o => o.value).join(', ')}`;
+                }
+
+                const settingsModal = document.getElementById('settingsModal') ||
+                    document.querySelector('.settings-modal');
+                message += `\n\nModal Paramètres: ${settingsModal ? '✅ Trouvé' : '❌ Introuvable'}`;
+
+                log('settings-result', message, (settingsBtn || themeSelect) ? 'success' : 'error');
+            } catch (err) {
+                log('settings-result', `❌ ERREUR: ${err.message}\n${err.stack}`, 'error');
+            }
+        }
+
+        async function testDOMElements() {
+            try {
+                const criticalElements = [
+                    'accountModal',
+                    'accountEmail',
+                    'statPublic',
+                    'statPrivate',
+                    'accountTotal',
+                    'accountStatsByType',
+                    'themeSelect',
+                    'publicProfileModal',
+                    'publicProfileOverlay',
+                    'accountModalOverlay'
+                ];
+
+                let message = 'Éléments DOM critiques:\n\n';
+                let missing = [];
+
+                criticalElements.forEach(id => {
+                    const el = document.getElementById(id);
+                    const status = el ? '✅' : '❌';
+                    message += `${status} ${id}\n`;
+                    if (!el) missing.push(id);
+                });
+
+                if (missing.length === 0) {
+                    message += `\n✅ Tous les éléments présents!`;
+                    log('dom-result', message, 'success');
+                } else {
+                    message += `\n❌ ${missing.length} éléments manquants: ${missing.join(', ')}`;
+                    log('dom-result', message, 'error');
+                }
+            } catch (err) {
+                log('dom-result', `❌ ERREUR: ${err.message}\n${err.stack}`, 'error');
+            }
+        }
+
+        // Auto-run DOM test on load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                testDOMElements();
+            }, 1000);
+        });
+    </script>
+</body>
+
+</html>

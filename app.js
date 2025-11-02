@@ -211,33 +211,7 @@ function setupAccountModalEvents() {
       }
     });
   }
-  if (dom.openAccountSettings) {
-    dom.openAccountSettings.addEventListener('click', () => {
-      const panel = document.getElementById('accountSettingsPanel');
-      if (panel) {
-        panel.style.display = 'block';
-        if (dom.accountPreferences) dom.accountPreferences.style.display = 'none';
-        const firstOpt = panel.querySelector('.theme-option');
-        if (firstOpt) firstOpt.focus();
-      }
-    });
-  }
-  const inlineBtn = document.getElementById('openAccountSettingsInline');
-  if (inlineBtn) {
-    inlineBtn.addEventListener('click', () => {
-      const panel = document.getElementById('accountSettingsPanel');
-      if (panel) panel.style.display = 'block';
-      if (dom.accountPreferences) dom.accountPreferences.style.display = 'none';
-    });
-  }
-  const settingsBack = document.getElementById('accountSettingsBack');
-  if (settingsBack) {
-    settingsBack.addEventListener('click', () => {
-      const panel = document.getElementById('accountSettingsPanel');
-      if (panel) panel.style.display = 'none';
-      if (dom.accountPreferences) dom.accountPreferences.style.display = 'block';
-    });
-  }
+  // ✅ REMOVED: Duplicate code - settings handlers are at lines 2050-2085
 }
 
 // Toggle header style while hero is visible so the hero title remains readable during scroll
@@ -4035,58 +4009,103 @@ async function openPreviewOnly(review) {
   if (!review) return;
   // Ensure correlationKey exists for legacy entries
   if (!review.correlationKey) { review.correlationKey = computeCorrelationKey(review); }
-  // Render review HTML into modal without enabling the form panels
+
   // Build a minimal context to reuse generateReview-like output
   currentType = review.productType;
+  // ✅ FIX: Les données sont déjà au niveau racine (rowToReview flatten les données)
   formData = { ...review };
   imageUrl = review.image || "";
   totals = review.totals || {};
-  // Create the same HTML as generateReview but into modal content
-  if (!dom.previewModalContent) return;
+
+  if (!dom.previewModalContent) {
+    console.error('[openPreviewOnly] previewModalContent DOM element not found');
+    return;
+  }
+
   const structure = productStructures[currentType];
-  const title = formData.cultivars || formData.strain || formData.productType;
-  const date = new Date(review.date || Date.now()).toLocaleDateString("fr-FR", { day: '2-digit', month: 'long', year: 'numeric' });
+  if (!structure) {
+    console.error(`[openPreviewOnly] No structure found for type: ${currentType}`);
+    dom.previewModalContent.innerHTML = `<div class="review-header"><h2>Erreur</h2><p>Type de produit non reconnu: ${currentType}</p></div>`;
+    return;
+  }
+
+  const title = formData.cultivars || formData.strain || formData.name || formData.productType;
+  const date = new Date(review.date || review.updatedAt || Date.now()).toLocaleDateString("fr-FR", { day: '2-digit', month: 'long', year: 'numeric' });
+
   let html = `<div class="review-header"><h2>${title}</h2><div class="review-meta">${formData.productType} • ${date}</div></div>`;
+
   if (imageUrl) {
     html += `<div class="review-image"><img src="${imageUrl}" alt="Photo du produit ${title}"></div>`;
   }
+
   html += '<div class="review-grid">';
+
   structure.sections.forEach((section, index) => {
     let card = `<div class="review-card"><h3>${section.title}</h3>`;
     let hasContent = false;
+
     section.fields.forEach(field => {
       if (field.type === 'file') return;
+
+      // ✅ FIX: Les données sont au niveau racine, pas dans .data
       const value = formData[field.key];
-      if (!value) return;
+
+      // ✅ FIX: Afficher même les valeurs vides pour debug
+      if (value === undefined || value === null || value === '') {
+        // Ne pas afficher les champs réellement vides
+        return;
+      }
+
       hasContent = true;
       let displayValue = '';
+
       if (field.type === 'number') {
         displayValue = Number.parseFloat(value).toFixed(1).replace('.0', '');
       } else if (field.type === 'sequence') {
-        try { const steps = JSON.parse(value); displayValue = Array.isArray(steps) && steps.length ? steps.map((s, i) => `${i + 1}) ${s}`).join(' \u203A ') : ''; } catch { displayValue = value; }
+        try {
+          const steps = JSON.parse(value);
+          displayValue = Array.isArray(steps) && steps.length ? steps.map((s, i) => `${i + 1}) ${s}`).join(' › ') : '';
+        } catch {
+          displayValue = value;
+        }
       } else if (field.type === 'multiple-choice' || (Array.isArray(field.choices) && field.choices.length)) {
-        try { const sel = JSON.parse(value); displayValue = Array.isArray(sel) && sel.length ? sel.join(' • ') : ''; } catch { displayValue = value; }
+        try {
+          const sel = JSON.parse(value);
+          displayValue = Array.isArray(sel) && sel.length ? sel.join(' • ') : '';
+        } catch {
+          displayValue = value;
+        }
       } else {
         displayValue = value;
       }
-      card += `<div class="review-item"><strong>${field.label}</strong><span>${displayValue}</span></div>`;
+
+      if (displayValue) {
+        card += `<div class="review-item"><strong>${field.label}</strong><span>${displayValue}</span></div>`;
+      }
     });
+
     if (section.total && totals[`section-${index}`]) {
       const { sum, max } = totals[`section-${index}`];
       card += `<div class="review-item"><strong>Score global</strong><span>${Number(sum).toFixed(1)} / ${max}</span></div>`;
       hasContent = true;
     }
+
     if (!hasContent) {
       card += '<div class="review-item"><span>Aucune information renseignée.</span></div>';
     }
+
     card += '</div>';
     html += card;
   });
+
   html += '</div>';
   dom.previewModalContent.innerHTML = html;
+
   // Show modal
   dom.previewOverlay?.removeAttribute('hidden');
   dom.previewModal?.removeAttribute('hidden');
+
+  console.log('[openPreviewOnly] Modal displayed for:', title);
 }
 
 function closePreviewOnly() {
