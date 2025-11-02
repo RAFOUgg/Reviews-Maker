@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Reviews Maker v2 - Architecture modulaire production-ready" />
+    <title>📑 Reviews Maker v2 - Test</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css?v=20251102" />
+    <link rel="stylesheet" href="ui/ui-base.css" />
+    <link rel="icon" type="image/png" href="ink/logo.png" />
+
+    <style>
+        /* Test UI specific styles */
+        .test-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(10, 18, 34, 0.95);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 16px;
+            z-index: 10000;
+            max-width: 300px;
+        }
+
+        .test-controls h3 {
+            margin: 0 0 12px 0;
+            font-size: 0.9rem;
+            color: var(--primary);
+        }
+
+        .test-btn {
+            width: 100%;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border: 1px solid var(--glass-border);
+            background: rgba(52, 211, 153, 0.1);
+            color: var(--text);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .test-btn:hover {
+            background: rgba(52, 211, 153, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .test-status {
+            margin-top: 12px;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            background: rgba(52, 211, 153, 0.1);
+            color: var(--primary);
+        }
+    </style>
+</head>
+
+<body class="home-page">
+    <div class="app-shell">
+        <header class="top-nav" role="banner">
+            <div class="brand" role="button" tabindex="0" aria-label="Accueil">
+                <span class="brand-mark" aria-hidden="true">
+                    <img src="ink/logo.png" alt=""
+                        style="width:22px;height:22px;object-fit:contain;border-radius:4px" />
+                </span>
+                <div class="brand-text">
+                    <strong>Reviews Maker v2</strong>
+                    <span>Architecture modulaire</span>
+                </div>
+            </div>
+            <div class="top-nav-status">
+                <div class="nav-actions">
+                    <span class="pill-btn" id="openTips" title="Astuces" tabindex="0" role="button">
+                        <span aria-hidden="true">💡</span> Astuces
+                    </span>
+                    <span class="pill-btn" id="openLibrary" title="Ma bibliothèque" tabindex="0" role="button"
+                        style="display:none;">
+                        <span aria-hidden="true">📚</span> Bibliothèque
+                    </span>
+                </div>
+            </div>
+        </header>
+
+        <main class="workspace home-workspace" role="main">
+            <section class="hero-section">
+                <div class="hero-content">
+                    <h1 class="hero-title">🚀 Reviews Maker v2</h1>
+                    <p class="hero-subtitle">Architecture modulaire production-ready avec gestion d'état, event bus, et
+                        error handling professionnel.</p>
+
+                    <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <div class="type-card" style="flex: 1; min-width: 200px;">
+                            <span class="type-icon">✨</span>
+                            <div class="type-content">
+                                <span class="type-title">État centralisé</span>
+                                <span class="type-caption">StateManager avec proxy réactif</span>
+                            </div>
+                        </div>
+                        <div class="type-card" style="flex: 1; min-width: 200px;">
+                            <span class="type-icon">🎯</span>
+                            <div class="type-content">
+                                <span class="type-title">Event Bus</span>
+                                <span class="type-caption">Communication inter-modules</span>
+                            </div>
+                        </div>
+                        <div class="type-card" style="flex: 1; min-width: 200px;">
+                            <span class="type-icon">🛡️</span>
+                            <div class="type-content">
+                                <span class="type-title">Error Handling</span>
+                                <span class="type-caption">Retry logic + user-friendly messages</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Floating Auth Button -->
+    <button type="button" class="floating-auth-btn" id="floatingAuthBtn" aria-label="Connexion">
+        <span aria-hidden="true">🔗</span>
+    </button>
+
+    <!-- Modals (same structure as index.html) -->
+    <div class="account-overlay" id="accountModalOverlay" style="display: none;" aria-hidden="true"></div>
+    <div id="accountModal" data-backdrop="none" aria-hidden="true" style="display: none;">
+        <div class="account-dialog" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
+            <div class="account-header">
+                <h3 id="accountTitle">Mon compte</h3>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <button type="button" class="btn btn-ghost" id="openAccountSettings" title="Paramètres">⚙️</button>
+                    <button type="button" class="modal-close" id="closeAccountModal" aria-label="Fermer">✕</button>
+                </div>
+            </div>
+            <div class="account-body">
+                <div class="account-left">
+                    <div class="account-profile">
+                        <div class="account-avatar">👤</div>
+                        <div class="account-meta">
+                            <div id="accountEmail">—</div>
+                            <div class="sub">Membre Reviews Maker</div>
+                        </div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="num" id="accountTotal">0</div>
+                            <div class="label">Total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="num" id="statPublic">0</div>
+                            <div class="label">Public</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="num" id="statPrivate">0</div>
+                            <div class="label">Privé</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:10px;">
+                        <h4 class="section-title">Par type</h4>
+                        <div id="accountStatsByType" class="account-stats-by-type"></div>
+                    </div>
+                </div>
+                <div class="account-right">
+                    <div class="panel" id="accountPreferences">
+                        <h4 class="section-title">Actions</h4>
+                        <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+                            <button class="btn btn-outline" id="openLibraryFromAccount">Ma bibliothèque</button>
+                            <button class="btn btn-outline" id="accountDisconnect">Se déconnecter</button>
+                        </div>
+                    </div>
+                    <div class="panel" id="accountSettingsPanel" style="display:none;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                            <h4 class="section-title">⚙️ Paramètres</h4>
+                            <button type="button" class="btn btn-ghost btn-sm" id="accountSettingsBack">←
+                                Retour</button>
+                        </div>
+                        <div class="form-group">
+                            <label for="themeSelect">Thème</label>
+                            <select id="themeSelect" class="input">
+                                <option value="auto">Automatique</option>
+                                <option value="violet">Violet</option>
+                                <option value="rose">Rose</option>
+                                <option value="bluish">Bleuté</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div class="modal" id="authModal" style="display: none;">
+        <div class="modal-overlay" id="authModalOverlay"></div>
+        <div class="modal-content" role="dialog" aria-modal="true">
+            <div class="modal-header">
+                <h2>Connexion</h2>
+                <button type="button" class="modal-close" id="closeAuth">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="text-align:center;color:var(--text-muted);">Fonctionnalité de connexion disponible avec le
+                    backend</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tips Modal -->
+    <div class="modal" id="tipsModal" style="display: none;">
+        <div class="modal-overlay" id="tipsModalOverlay"></div>
+        <div class="modal-content" role="dialog" aria-modal="true">
+            <div class="modal-header">
+                <h2>🎯 Architecture v2</h2>
+                <button type="button" class="modal-close" id="closeTips">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="tips-content">
+                    <div class="tip-group">
+                        <h3>✨ Modules Core</h3>
+                        <ul>
+                            <li><strong>StateManager</strong> - Gestion d'état réactive avec proxy</li>
+                            <li><strong>EventBus</strong> - Pub/Sub pour communication découpée</li>
+                            <li><strong>ErrorHandler</strong> - Capture, retry logic, user-friendly</li>
+                            <li><strong>Logger</strong> - Logs structurés, filtres, export</li>
+                        </ul>
+                    </div>
+                    <div class="tip-group">
+                        <h3>🎨 Modules UI</h3>
+                        <ul>
+                            <li><strong>ModalController</strong> - Stack management, animations Apple-like</li>
+                            <li><strong>AuthService</strong> - Auto-reconnect, session validation</li>
+                            <li><strong>UserService</strong> - Cache intelligent, retry logic</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Library Modal (stub) -->
+    <div class="modal" id="libraryModal" style="display: none;">
+        <div class="modal-overlay" id="libraryModalOverlay"></div>
+        <div class="modal-content" role="dialog" aria-modal="true">
+            <div class="modal-header">
+                <h2>📚 Bibliothèque</h2>
+                <button type="button" class="modal-close" id="closeLibrary">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="text-align:center;color:var(--text-muted);">Bibliothèque disponible après connexion</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Controls -->
+    <div class="test-controls">
+        <h3>🧪 Tests v2</h3>
+        <button class="test-btn" onclick="testAuth()">Test Auth</button>
+        <button class="test-btn" onclick="testModals()">Test Modals</button>
+        <button class="test-btn" onclick="testState()">Test State</button>
+        <button class="test-btn" onclick="testEvents()">Test Events</button>
+        <button class="test-btn" onclick="showDebug()">Show Debug Info</button>
+        <div class="test-status" id="testStatus">Prêt</div>
+    </div>
+
+    <!-- Load v2 Architecture -->
+    <script type="module">
+        // Enable debug mode
+        window.DEBUG = true;
+
+        // Import v2 modules
+        import './src/v2/App.js';
+        import './src/v2/compat.js';
+
+        // Test functions (global for onclick)
+        window.testAuth = function () {
+            const status = document.getElementById('testStatus');
+            const isAuth = window.__RM_V2__.auth.isAuthenticated();
+            status.textContent = `Auth: ${isAuth ? '✅ Connected' : '❌ Not connected'}`;
+        };
+
+        window.testModals = async function () {
+            const status = document.getElementById('testStatus');
+            status.textContent = 'Opening account modal...';
+            await window.__RM_V2__.modal.open('account');
+            setTimeout(() => {
+                status.textContent = '✅ Modal opened!';
+            }, 500);
+        };
+
+        window.testState = function () {
+            const status = document.getElementById('testStatus');
+            const state = window.__RM_V2__.state.getState();
+            console.log('Current state:', state);
+            status.textContent = `State: ${JSON.stringify(state.auth).substr(0, 50)}...`;
+        };
+
+        window.testEvents = function () {
+            const status = document.getElementById('testStatus');
+            window.__RM_V2__.events.emit('test:event', { message: 'Hello from test!' });
+            status.textContent = '✅ Event emitted! Check console.';
+        };
+
+        window.showDebug = function () {
+            console.group('🔍 Debug Info');
+            console.log('App:', window.__RM_V2__.app);
+            console.log('State:', window.__RM_V2__.state.getState());
+            console.log('Auth:', {
+                isAuth: window.__RM_V2__.auth.isAuthenticated(),
+                user: window.__RM_V2__.auth.getUser()
+            });
+            console.log('Modal Stack:', window.__RM_V2__.modal.getStack());
+            console.log('Event History:', window.__RM_V2__.events.getHistory().slice(-5));
+            console.log('Error Stats:', window.__RM_V2__.error.getStats());
+            console.groupEnd();
+        };
+
+        // Listen to app ready event
+        window.__RM_V2__.events.on('app:ready', () => {
+            console.log('✅ Reviews Maker v2 ready!');
+            document.getElementById('testStatus').textContent = '✅ v2 ready!';
+        });
+    </script>
+</body>
+
+</html>
