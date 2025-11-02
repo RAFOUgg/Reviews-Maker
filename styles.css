@@ -733,9 +733,16 @@ video {
 /* Full library item: place slightly inset from bottom-right of image area */
 .library-item-votes.vote-controls {
   position: absolute;
-  right: 18px;
-  bottom: 18px;
+  right: 12px;
+  /* Position à cheval entre l'image et le contenu */
+  /* L'image a aspect-ratio 16/9, donc occupe environ 140-160px dans une carte */
+  /* On positionne à la fin de l'image moins la moitié de la hauteur des boutons */
+  top: 130px;
+  transform: translateY(-50%);
   z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 /* Individual pill/button */
