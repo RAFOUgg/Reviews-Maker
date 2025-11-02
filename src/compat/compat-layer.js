@@ -19,19 +19,21 @@ import { userDataManager } from '../core/UserDataManager.js';
 // STORAGE COMPATIBILITY
 // ============================================================================
 
-// Migration automatique des anciennes clés au premier chargement
-(function migrateOldStorage() {
-    const oldKeys = [
-        'authToken',
-        'authEmail',
-        'discordUsername',
-        'discordId',
-        'siteTheme',
-        'previewMode'
-    ];
-
-    storage.migrateOldKeys(oldKeys);
-})();
+// MIGRATION DÉSACTIVÉE : NE PAS MIGRER AUTOMATIQUEMENT !
+// L'ancien code utilise directement localStorage sans préfixe
+// La migration doit être manuelle et progressive
+// 
+// (function migrateOldStorage() {
+//     const oldKeys = [
+//         'authToken',
+//         'authEmail',
+//         'discordUsername',
+//         'discordId',
+//         'siteTheme',
+//         'previewMode'
+//     ];
+//     storage.migrateOldKeys(oldKeys);
+// })();
 
 // ============================================================================
 // API COMPATIBILITY
