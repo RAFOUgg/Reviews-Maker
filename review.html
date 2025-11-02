@@ -800,12 +800,13 @@
       </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="export-studio.js"></script>
-    <script src="export-studio-ui.js"></script>
-    <script src="preview-studio.js"></script>
+    <!-- Load dependencies in correct order -->
     <script src="scripts/logger.js"></script>
     <script src="src/storage-manager.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="preview-studio.js"></script>
+    <script src="export-studio.js"></script>
+    <script src="export-studio-ui.js"></script>
     <script src="app.js"></script>
 </body>
 
