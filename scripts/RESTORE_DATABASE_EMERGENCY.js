@@ -24,14 +24,14 @@ let notFound = [];
 keysToRestore.forEach(key => {
     const newKey = 'rm_' + key;
     const migratedValue = localStorage.getItem(newKey);
-    
+
     if (migratedValue !== null) {
         // Restaurer l'ancienne clé
         localStorage.setItem(key, migratedValue);
-        
+
         // Supprimer la nouvelle clé préfixée
         localStorage.removeItem(newKey);
-        
+
         console.log(`✅ Restauré: ${key} = ${migratedValue.substring(0, 20)}...`);
         restored++;
     } else {
