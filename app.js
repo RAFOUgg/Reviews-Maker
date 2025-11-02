@@ -31,14 +31,21 @@ function setupAccountModalEvents() {
     dom.accountModalOverlay.addEventListener('click', () => closeAccountModal());
   }
   if (dom.openLibraryFromAccount) {
-    dom.openLibraryFromAccount.addEventListener('click', () => {
+    dom.openLibraryFromAccount.addEventListener('click', (e) => {
+      console.log('Ma bibliothèque clicked, isUserConnected:', isUserConnected);
+      e.preventDefault();
+      e.stopPropagation();
       closeAccountModal();
       if (!isUserConnected) {
+        console.warn('User not connected, showing auth modal');
         if (dom.authModal) dom.authModal.style.display = 'flex';
         return;
       }
+      console.log('Opening library modal in "mine" mode');
       openLibraryModal('mine', { fromAccount: true });
     });
+  } else {
+    console.error('openLibraryFromAccount button not found in DOM');
   }
   const accountDisconnectBtn = document.getElementById('accountDisconnect');
   if (accountDisconnectBtn) {
