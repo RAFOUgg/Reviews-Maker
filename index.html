@@ -218,13 +218,32 @@
           </div>
         </div>
         <div class="account-right">
-          <div class="panel">
+          <!-- Main account preferences panel -->
+          <div class="panel" id="accountPreferences">
             <div style="display:flex;align-items:center;justify-content:space-between;">
               <h4 class="section-title">Actions</h4>
             </div>
-            <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;"><button class="btn btn-outline"
-                id="openLibraryFromAccount">Ma bibliothèque</button><button class="btn btn-outline"
-                id="accountDisconnect">Se déconnecter</button></div>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+              <button class="btn btn-outline" id="openLibraryFromAccount">Ma bibliothèque</button>
+              <button class="btn btn-outline" id="accountDisconnect">Se déconnecter</button>
+            </div>
+          </div>
+
+          <!-- Settings panel (hidden by default) -->
+          <div class="panel" id="accountSettingsPanel" style="display:none;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <h4 class="section-title">⚙️ Paramètres</h4>
+              <button type="button" class="btn btn-ghost btn-sm" id="accountSettingsBack">← Retour</button>
+            </div>
+            <div class="form-group">
+              <label for="themeSelect">Thème</label>
+              <select id="themeSelect" class="input">
+                <option value="auto">Automatique</option>
+                <option value="violet">Violet</option>
+                <option value="rose">Rose</option>
+                <option value="bluish">Bleuté</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
