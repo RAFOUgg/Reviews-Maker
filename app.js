@@ -53,11 +53,19 @@ function setupAccountModalEvents() {
   if (accountDisconnectBtn) {
     accountDisconnectBtn.addEventListener('click', async () => {
       try {
+        const email = localStorage.getItem('authEmail');
+
+        // Clear auth tokens and user data
         localStorage.removeItem('authToken');
         localStorage.removeItem('authEmail');
         localStorage.removeItem('discordUsername');
         localStorage.removeItem('discordId');
         sessionStorage.removeItem('authEmail');
+
+        // Invalidate user-specific cache
+        if (email) {
+          UserDataManager.invalidateUserCache(email);
+        }
       } catch (e) {
         console.error('Storage clear error:', e);
         alert('Erreur lors de la suppression des données locales. Veuillez vérifier les permissions du navigateur.');
@@ -2110,12 +2118,19 @@ function setupModalEvents() {
   // Disconnect
   if (dom.authDisconnect) {
     dom.authDisconnect.addEventListener("click", async () => {
+      const email = localStorage.getItem('authEmail');
+
       // Clear all auth-related data including Discord info
       localStorage.removeItem('authToken');
       localStorage.removeItem('authEmail');
       localStorage.removeItem('discordUsername');
       localStorage.removeItem('discordId');
       sessionStorage.removeItem('authEmail');
+
+      // Invalidate user-specific cache
+      if (email) {
+        UserDataManager.invalidateUserCache(email);
+      }
 
       showAuthStatus("Déconnecté", "info");
       updateAuthUI();
