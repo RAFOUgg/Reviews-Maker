@@ -2202,13 +2202,34 @@ const UserDataManager = {
     } catch (e) { }
   },
 
+  // Invalidate all caches for a specific user
+  invalidateUserCache(email) {
+    if (!email) return;
+    const emailLower = email.toLowerCase();
+    this.invalidateCache(`userStats_${emailLower}`);
+    this.invalidateCache(`discordInfo_${emailLower}`);
+  },
+
+  // Clear all old non-email-specific caches (migration helper)
+  clearLegacyCache() {
+    try {
+      // Remove old cache keys that don't have email suffix
+      this.invalidateCache('userStats');
+      this.invalidateCache('discordInfo');
+      localStorage.removeItem('accountStats'); // Old cache format
+    } catch (e) {
+      console.warn('Failed to clear legacy cache:', e);
+    }
+  },
+
   // Get user profile with caching
   async getUserProfile(email, forceRefresh = false) {
     if (!email) return null;
 
-    // Check cache first
+    // Check cache first - USE UNIQUE KEY PER USER
+    const cacheKey = `discordInfo_${email.toLowerCase()}`;
     if (!forceRefresh) {
-      const cached = this.getCachedData('discordInfo');
+      const cached = this.getCachedData(cacheKey);
       if (cached && cached.email === email) {
         return cached;
       }
@@ -2231,7 +2252,7 @@ const UserDataManager = {
           timestamp: Date.now()
         };
 
-        this.setCachedData('discordInfo', profile);
+        this.setCachedData(cacheKey, profile);
 
         // Also update legacy localStorage for backward compatibility
         if (profile.username) localStorage.setItem('discordUsername', profile.username);
@@ -2267,9 +2288,10 @@ const UserDataManager = {
     const userEmail = email || localStorage.getItem('authEmail');
     if (!userEmail) return { total: 0, public: 0, private: 0, by_type: {} };
 
-    // Check cache first
+    // Check cache first - USE UNIQUE KEY PER USER
+    const cacheKey = `userStats_${userEmail.toLowerCase()}`;
     if (!forceRefresh) {
-      const cached = this.getCachedData('userStats');
+      const cached = this.getCachedData(cacheKey);
       if (cached && cached.email === userEmail) {
         return cached;
       }
@@ -2294,7 +2316,7 @@ const UserDataManager = {
             by_type: data.by_type || data.types || {},
             timestamp: Date.now()
           };
-          this.setCachedData('userStats', stats);
+          this.setCachedData(cacheKey, stats);
           return stats;
         }
       } catch (err) {
@@ -2336,7 +2358,7 @@ const UserDataManager = {
         stats.email = userEmail;
         stats.timestamp = Date.now();
 
-        this.setCachedData('userStats', stats);
+        this.setCachedData(cacheKey, stats);
       }
     } catch (err) {
       console.warn('Failed to compute stats from local DB:', err);
@@ -2742,8 +2764,12 @@ function debounce(func, wait) {
 // Initialisation de la base de données
 async function initDatabase() {
   try {
-    // Clean up expired cache on startup
+    // Clean up legacy cache and expired entries on startup
     try {
+      // Remove old non-email-specific caches (migration)
+      UserDataManager.clearLegacyCache();
+      
+      // Clean up expired cache entries
       const keys = Object.keys(localStorage);
       keys.forEach(key => {
         if (key.endsWith('_timestamp')) {
