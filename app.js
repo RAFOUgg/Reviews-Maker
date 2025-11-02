@@ -147,59 +147,61 @@
   }
 })();
 
-function setupAccountModalEvents() {
-  console.log('🔧 [SETUP] setupAccountModalEvents called');
-  console.log('🔧 [SETUP] dom.openLibraryFromAccount:', dom.openLibraryFromAccount);
+/**
+ * Setup account modal buttons (called when modal opens)
+ * Buttons inside the modal aren't accessible until it's visible in DOM
+ */
+function setupAccountModalButtons() {
+  console.log('🔧 [SETUP] setupAccountModalButtons called');
 
-  if (dom.closeAccountModal) {
-    dom.closeAccountModal.addEventListener('click', () => closeAccountModal());
-  }
-  if (dom.accountModalOverlay) {
-    dom.accountModalOverlay.addEventListener('click', () => closeAccountModal());
-  }
+  // Re-query button since modal is now visible
+  const libraryBtn = document.getElementById('openLibraryFromAccount');
+  console.log('🔧 Button found:', libraryBtn);
 
-  // ✅ FIX: Force re-query l'élément si non trouvé
-  if (!dom.openLibraryFromAccount) {
-    console.warn('⚠️ dom.openLibraryFromAccount was null, re-querying...');
-    dom.openLibraryFromAccount = document.getElementById('openLibraryFromAccount');
-  }
+  if (libraryBtn) {
+    // Remove old listener by cloning
+    const newBtn = libraryBtn.cloneNode(true);
+    libraryBtn.parentNode.replaceChild(newBtn, libraryBtn);
 
-  if (dom.openLibraryFromAccount) {
-    console.log('✅ Attaching event listener to openLibraryFromAccount button');
-
-    // Remove any existing listener first
-    const oldBtn = dom.openLibraryFromAccount.cloneNode(true);
-    dom.openLibraryFromAccount.parentNode.replaceChild(oldBtn, dom.openLibraryFromAccount);
-    dom.openLibraryFromAccount = oldBtn;
-
-    dom.openLibraryFromAccount.addEventListener('click', (e) => {
+    newBtn.addEventListener('click', (e) => {
       console.log('🔍 [DEBUG] Ma bibliothèque clicked');
       console.log('🔍 [DEBUG] isUserConnected:', isUserConnected);
-      console.log('🔍 [DEBUG] dom.libraryModal exists:', !!dom.libraryModal);
       e.preventDefault();
       e.stopPropagation();
 
       if (!isUserConnected) {
-        console.warn('⚠️ User not connected, showing auth modal');
+        console.warn('⚠️ User not connected');
         closeAccountModal();
         if (dom.authModal) dom.authModal.style.display = 'flex';
         return;
       }
 
-      console.log('✅ User connected, closing account modal and opening library');
+      console.log('✅ Closing account, opening library');
       closeAccountModal();
 
-      // Wait a bit for modal close animation
       setTimeout(() => {
         console.log('✅ Calling openLibraryModal');
         openLibraryModal('mine', { fromAccount: true });
       }, 100);
     });
 
-    console.log('✅ Event listener attached successfully');
+    console.log('✅ Event listener attached');
   } else {
-    console.error('❌ openLibraryFromAccount button STILL not found in DOM!');
-    console.log('🔍 Available buttons:', Array.from(document.querySelectorAll('button')).map(b => ({ id: b.id, text: b.textContent.trim() })));
+    console.error('❌ Button openLibraryFromAccount not found!');
+  }
+}
+
+/**
+ * Setup account modal events (called once at init)
+ */
+function setupAccountModalEvents() {
+  console.log('� [SETUP] setupAccountModalEvents called');
+
+  if (dom.closeAccountModal) {
+    dom.closeAccountModal.addEventListener('click', () => closeAccountModal());
+  }
+  if (dom.accountModalOverlay) {
+    dom.accountModalOverlay.addEventListener('click', () => closeAccountModal());
   }
   const accountDisconnectBtn = document.getElementById('accountDisconnect');
   if (accountDisconnectBtn) {
@@ -2761,6 +2763,10 @@ function openAccountModal() {
     console.error('Failed to render account view:', err);
     showToast('Erreur lors du chargement des données', 'error');
   });
+
+  // ✅ FIX: Attacher les event listeners APRÈS que le modal soit visible
+  // Les éléments internes ne sont accessibles qu'une fois le modal ouvert
+  setupAccountModalButtons();
 }
 
 /**
