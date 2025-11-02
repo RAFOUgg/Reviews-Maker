@@ -1790,19 +1790,26 @@ function setupModalEvents() {
   // Modal Auth - Email based
   if (dom.floatingAuthBtn) {
     dom.floatingAuthBtn.addEventListener("click", () => {
+      console.log('floatingAuthBtn clicked; isUserConnected=', isUserConnected, 'dom.accountModal=', !!dom.accountModal, 'dom.authModal=', !!dom.authModal);
       if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: floatingAuthBtn clicked; isUserConnected=', isUserConnected, 'dom.accountModal=', !!dom.accountModal, 'dom.authModal=', !!dom.authModal);
       // If connected, open account modal instead of auth modal
       if (isUserConnected && dom.accountModal) {
+        console.log('User is connected, opening account modal');
         if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: Opening account modal');
         openAccountModal();
         return;
       }
       if (dom.authModal) {
+        console.log('User not connected, opening auth modal');
         if (window.RMLogger && window.RMLogger.debug) window.RMLogger.debug('DEBUG: Opening auth modal');
         dom.authModal.style.display = "flex";
         updateAuthUI();
+      } else {
+        console.error('Neither accountModal nor authModal is available!');
       }
     });
+  } else {
+    console.error('floatingAuthBtn not found in DOM!');
   }
 
   if (dom.closeAuth) {
@@ -2399,15 +2406,18 @@ function showAuthStatus(message, type = "info") {
 
 // Account modal helpers
 function openAccountModal() {
+  console.log('=== openAccountModal CALLED ===');
   if (!dom.accountModal) {
     console.error('openAccountModal: dom.accountModal is null or undefined');
+    alert('Erreur: Le modal de compte est introuvable dans le DOM');
     return;
   }
-  console.log('openAccountModal: starting to open account modal');
+  console.log('openAccountModal: dom.accountModal exists:', dom.accountModal);
 
   try {
     // hide any other open modals to avoid visual stacking
     const others = document.querySelectorAll('.modal, .tips-dialog, .export-config-modal');
+    console.log('openAccountModal: hiding', others.length, 'other modals');
     others.forEach(m => {
       if (m !== dom.accountModal) {
         try { m.style.display = 'none'; } catch (e) { }
@@ -2417,6 +2427,7 @@ function openAccountModal() {
     });
     // Also ensure any generic modal overlays are hidden so they don't sit above the account dialog
     const overlays = document.querySelectorAll('.modal-overlay');
+    console.log('openAccountModal: hiding', overlays.length, 'generic overlays');
     overlays.forEach(o => { try { o.style.display = 'none'; o.classList.remove('show'); o.setAttribute('aria-hidden', 'true'); } catch (e) { } });
   } catch (e) {
     console.error('openAccountModal: error hiding other modals', e);
@@ -2424,33 +2435,44 @@ function openAccountModal() {
 
   // show overlay first (now it's outside the modal container)
   const overlay = document.getElementById('accountModalOverlay');
-  console.log('openAccountModal: preparing to show account modal overlay');
+  console.log('openAccountModal: overlay element:', overlay);
   if (overlay) {
     overlay.classList.add('show');
     overlay.style.display = 'block';
     // ensure overlay sits below the account modal (match CSS z-index stack)
     overlay.style.zIndex = '10110';
     overlay.setAttribute('aria-hidden', 'false');
+    console.log('openAccountModal: overlay shown, computed display:', window.getComputedStyle(overlay).display);
   } else {
-    console.warn('openAccountModal: accountModalOverlay not found');
+    console.warn('openAccountModal: accountModalOverlay not found in DOM');
   }
 
   // Show the account modal
+  console.log('openAccountModal: setting accountModal display to block');
   dom.accountModal.style.display = 'block';
   dom.accountModal.classList.add('show');
   // Set z-index to ensure it's above everything else
   dom.accountModal.style.zIndex = '10120';
   dom.accountModal.setAttribute('aria-hidden', 'false');
 
-  console.log('openAccountModal: accountModal display set, computed style:', window.getComputedStyle(dom.accountModal).display);
+  const computedDisplay = window.getComputedStyle(dom.accountModal).display;
+  console.log('openAccountModal: accountModal display set, computed style:', computedDisplay);
+
+  if (computedDisplay === 'none') {
+    console.error('openAccountModal: WARNING - modal display is still "none" after setting to block!');
+    console.log('openAccountModal: accountModal classList:', dom.accountModal.classList);
+    console.log('openAccountModal: accountModal inline style:', dom.accountModal.getAttribute('style'));
+  }
 
   // Ensure the inner dialog is properly configured
   try {
     const dlg = dom.accountModal.querySelector('.account-dialog');
+    console.log('openAccountModal: .account-dialog element:', dlg);
     if (dlg) {
       dlg.style.zIndex = '10121';
       dlg.setAttribute('aria-hidden', 'false');
-      console.log('openAccountModal: account-dialog found and configured, computed display:', window.getComputedStyle(dlg).display);
+      const dlgDisplay = window.getComputedStyle(dlg).display;
+      console.log('openAccountModal: account-dialog configured, computed display:', dlgDisplay);
     } else {
       console.warn('openAccountModal: .account-dialog not found inside accountModal');
     }
@@ -2460,9 +2482,12 @@ function openAccountModal() {
 
   // trap focus on dialog element
   const dialog = dom.accountModal.querySelector('.account-dialog') || dom.accountModal;
+  console.log('openAccountModal: trapping focus on:', dialog);
   trapFocus(dialog);
-  try { document.body.classList.add('modal-open'); } catch (e) { }
-  renderAccountView().catch(err => console.warn('Failed to render account view', err));
+  try { document.body.classList.add('modal-open'); } catch (e) { console.error('Error adding modal-open class:', e); }
+  console.log('openAccountModal: calling renderAccountView');
+  renderAccountView().catch(err => console.error('Failed to render account view', err));
+  console.log('=== openAccountModal COMPLETED ===');
 }
 
 function closeAccountModal() {
