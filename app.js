@@ -2407,6 +2407,8 @@ async function updateAuthUI() {
   const email = localStorage.getItem('authEmail');
   const isConnected = !!(token && email);
 
+  console.log('[Auth] updateAuthUI called - token:', !!token, 'email:', !!email, 'isConnected:', isConnected);
+
   // Show/hide auth steps based on connection state
   if (isConnected) {
     if (dom.authStepEmail) dom.authStepEmail.style.display = 'none';
@@ -2432,15 +2434,20 @@ async function updateAuthUI() {
       dom.floatingAuthBtn.innerHTML = '<span aria-hidden="true">👤</span>';
       dom.floatingAuthBtn.title = "Compte";
       dom.floatingAuthBtn.classList.add('connected');
+      console.log('[Auth] Floating button set to CONNECTED');
     } else {
       dom.floatingAuthBtn.innerHTML = '<span aria-hidden="true">🔗</span>';
       dom.floatingAuthBtn.title = "Lier mon compte";
       dom.floatingAuthBtn.classList.remove('connected');
+      console.log('[Auth] Floating button set to DISCONNECTED');
     }
+  } else {
+    console.warn('[Auth] floatingAuthBtn not found in DOM!');
   }
 
   // Persist auth state for other modules
   isUserConnected = isConnected;
+  console.log('[Auth] isUserConnected set to:', isUserConnected);
 
   // Show/hide "Ma bibliothèque" entry points
   if (dom.openLibrary) {
