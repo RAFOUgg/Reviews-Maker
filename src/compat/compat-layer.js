@@ -57,141 +57,174 @@ window.remoteListReviews = async function () {
 /**
  * @deprecated Utiliser reviewsAPI.listReviews({ mode: 'public' })
  */
-window.remoteListPublicReviews = async function () {
-    return await reviewsAPI.listReviews({ mode: 'public' });
-};
+if (!window.remoteListPublicReviews) {
+    window.remoteListPublicReviews = async function () {
+        return await reviewsAPI.listReviews({ mode: 'public' });
+    };
+}
 
 /**
  * @deprecated Utiliser reviewsAPI.listReviews({ mode: 'mine' })
  */
-window.remoteListMyReviews = async function () {
-    return await reviewsAPI.listReviews({ mode: 'mine' });
-};
+if (!window.remoteListMyReviews) {
+    window.remoteListMyReviews = async function () {
+        return await reviewsAPI.listReviews({ mode: 'mine' });
+    };
+}
 
 /**
  * @deprecated Utiliser reviewsAPI.getReview(id)
  */
-window.remoteGetReview = async function (id) {
-    return await reviewsAPI.getReview(id);
-};
+if (!window.remoteGetReview) {
+    window.remoteGetReview = async function (id) {
+        return await reviewsAPI.getReview(id);
+    };
+}
 
 /**
  * @deprecated Utiliser reviewsAPI.saveReview(data, imageFile)
  */
-window.remoteSave = async function (reviewObj) {
-    const imageFile = window.lastSelectedImageFile || null;
-    return await reviewsAPI.saveReview(reviewObj, imageFile);
-};
+if (!window.remoteSave) {
+    window.remoteSave = async function (reviewObj) {
+        const imageFile = window.lastSelectedImageFile || null;
+        return await reviewsAPI.saveReview(reviewObj, imageFile);
+    };
+}
 
 /**
  * @deprecated Utiliser reviewsAPI.deleteReview(id)
  */
-window.remoteDeleteReview = async function (id) {
-    return await reviewsAPI.deleteReview(id);
-};
+if (!window.remoteDeleteReview) {
+    window.remoteDeleteReview = async function (id) {
+        return await reviewsAPI.deleteReview(id);
+    };
+}
 
 /**
  * @deprecated Utiliser reviewsAPI.togglePrivacy(id, isPrivate)
  */
-window.remoteTogglePrivacy = async function (id, isPrivate) {
-    return await reviewsAPI.togglePrivacy(id, isPrivate);
-};
+if (!window.remoteTogglePrivacy) {
+    window.remoteTogglePrivacy = async function (id, isPrivate) {
+        return await reviewsAPI.togglePrivacy(id, isPrivate);
+    };
+}
 
 /**
  * @deprecated Utiliser reviewsAPI.getVotes(id)
  */
-window.remoteGetReviewVotes = async function (id) {
-    return await reviewsAPI.getVotes(id);
-};
+if (!window.remoteGetReviewVotes) {
+    window.remoteGetReviewVotes = async function (id) {
+        return await reviewsAPI.getVotes(id);
+    };
+}
 
 /**
  * @deprecated Utiliser reviewsAPI.castVote(id, vote)
  */
-window.remoteCastVote = async function (id, vote) {
-    return await reviewsAPI.castVote(id, vote);
-};
+if (!window.remoteCastVote) {
+    window.remoteCastVote = async function (id, vote) {
+        return await reviewsAPI.castVote(id, vote);
+    };
+}
 
 /**
  * @deprecated Utiliser reviewsAPI.removeVote(id)
  */
-window.remoteDeleteVote = async function (id) {
-    return await reviewsAPI.removeVote(id);
-};
+if (!window.remoteDeleteVote) {
+    window.remoteDeleteVote = async function (id) {
+        return await reviewsAPI.removeVote(id);
+    };
+}
 
 // ============================================================================
 // MODAL COMPATIBILITY
 // ============================================================================
+// Note: Ces fonctions ne sont définies QUE si app.js ne les définit pas déjà
 
 /**
  * @deprecated Utiliser modalManager.open(modalId)
  */
-window.openAccountModal = function () {
-    return modalManager.open('accountModal', {
-        onOpen: async () => {
-            if (typeof window.renderAccountView === 'function') {
-                await window.renderAccountView();
+if (!window.openAccountModal) {
+    window.openAccountModal = function () {
+        return modalManager.open('accountModal', {
+            onOpen: async () => {
+                if (typeof window.renderAccountView === 'function') {
+                    await window.renderAccountView();
+                }
             }
-        }
-    });
-};
+        });
+    };
+}
 
 /**
  * @deprecated Utiliser modalManager.close(modalId)
  */
-window.closeAccountModal = function () {
-    return modalManager.close('accountModal');
-};
+if (!window.closeAccountModal) {
+    window.closeAccountModal = function () {
+        return modalManager.close('accountModal');
+    };
+}
 
 /**
  * @deprecated Utiliser modalManager.open(modalId)
  */
-window.openLibraryModal = function (mode = 'mine', options = {}) {
-    const success = modalManager.open('libraryModal', {
-        onOpen: async () => {
-            window.currentLibraryMode = mode;
+if (!window.openLibraryModal) {
+    window.openLibraryModal = function (mode = 'mine', options = {}) {
+        const success = modalManager.open('libraryModal', {
+            onOpen: async () => {
+                window.currentLibraryMode = mode;
 
-            // Bouton retour si vient du compte
-            if (options.fromAccount) {
-                const backBtn = document.getElementById('libraryBackToAccount');
-                if (backBtn) backBtn.style.display = 'inline-flex';
+                // Bouton retour si vient du compte
+                if (options.fromAccount) {
+                    const backBtn = document.getElementById('libraryBackToAccount');
+                    if (backBtn) backBtn.style.display = 'inline-flex';
+                }
+
+                if (typeof window.renderFullLibrary === 'function') {
+                    await window.renderFullLibrary(mode);
+                }
             }
+        });
 
-            if (typeof window.renderFullLibrary === 'function') {
-                await window.renderFullLibrary(mode);
-            }
-        }
-    });
-
-    return success;
-};
+        return success;
+    };
+}
 
 /**
  * @deprecated Utiliser modalManager._lockBodyScroll()
  */
-window.lockBodyScroll = function () {
-    modalManager._lockBodyScroll();
-};
+if (!window.lockBodyScroll) {
+    window.lockBodyScroll = function () {
+        modalManager._lockBodyScroll();
+    };
+}
 
 /**
  * @deprecated Utiliser modalManager._unlockBodyScroll()
  */
-window.unlockBodyScroll = function () {
-    modalManager._unlockBodyScroll();
-};
+if (!window.unlockBodyScroll) {
+    window.unlockBodyScroll = function () {
+        modalManager._unlockBodyScroll();
+    };
+}
 
 /**
  * @deprecated Utiliser modalManager._trapFocus(element)
  */
-window.trapFocus = function (element) {
-    modalManager._trapFocus(element);
-};
+if (!window.trapFocus) {
+    window.trapFocus = function (element) {
+        modalManager._trapFocus(element);
+    };
+}
 
 /**
  * @deprecated Utiliser modalManager._releaseFocusTrap(element)
  */
-window.releaseFocusTrap = function () {
-    modalManager._releaseFocusTrap(null);
-};
+if (!window.releaseFocusTrap) {
+    window.releaseFocusTrap = function () {
+        modalManager._releaseFocusTrap(null);
+    };
+}
 
 // ============================================================================
 // USER DATA COMPATIBILITY
@@ -282,12 +315,20 @@ export async function initCompatLayer() {
         console.info('[Compat] Debug APIs exposed at window.__RM_INTERNAL__');
     }
 
+    // Signal que la compat layer est prête
+    window.__RM_COMPAT_READY__ = true;
+    document.dispatchEvent(new Event('rm:compat-ready'));
+
     console.info('[Compat] Compatibility layer ready');
 }
 
-// Auto-init si le DOM est prêt
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initCompatLayer, { once: true });
-} else {
-    initCompatLayer();
-}
+// Auto-init et bloquer app.js jusqu'à ce que ce soit prêt
+(async function autoInit() {
+    if (document.readyState === 'loading') {
+        await new Promise(resolve => {
+            document.addEventListener('DOMContentLoaded', resolve, { once: true });
+        });
+    }
+
+    await initCompatLayer();
+})();

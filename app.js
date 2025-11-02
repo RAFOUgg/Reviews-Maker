@@ -1020,13 +1020,31 @@ const LAYOUT_THRESHOLDS = {
   exitAspect: 1.08
 };
 
-// Initialize app once DOM is ready; if already ready, run immediately
-if (document.readyState === 'loading') {
-  document.addEventListener("DOMContentLoaded", init, { once: true });
-} else {
-  // DOM is already parsed
+// Wait for DOM AND compatibility layer to be ready before initializing the app
+async function waitForCompatLayer() {
+  // Attendre le DOM
+  if (document.readyState === 'loading') {
+    await new Promise(resolve => {
+      document.addEventListener("DOMContentLoaded", resolve, { once: true });
+    });
+  }
+
+  // Attendre que la compat layer soit prête
+  if (!window.__RM_COMPAT_READY__) {
+    console.info('[App] Waiting for compatibility layer...');
+    await new Promise(resolve => {
+      document.addEventListener('rm:compat-ready', resolve, { once: true });
+    });
+  }
+
+  console.info('[App] Compatibility layer ready, initializing app...');
   init();
 }
+
+// Lancer l'initialisation
+waitForCompatLayer().catch(err => {
+  console.error('[App] Failed to initialize:', err);
+});
 
 function init() {
   // Initialisation différente selon la page
@@ -1837,7 +1855,8 @@ function setupModalEvents() {
   if (dom.accountModalOverlay) {
     dom.accountModalOverlay.addEventListener('click', () => closeAccountModal());
   }
-  document.addEventListener('DOMContentLoaded', setupAccountModalEvents);
+  // Setup account modal events immediately (DOM is already ready when this runs)
+  setupAccountModalEvents();
 
   // 'Ma bibliothèque' inside auth modal
   if (dom.authOpenLibrary) {

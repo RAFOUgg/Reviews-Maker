@@ -1,0 +1,66 @@
+fix: Corriger le modal de compte et la synchronisation des modules ES6
+
+## Problèmes résolus
+
+1. **Race condition modules ES6**
+   - Les modules ES6 (type="module") se chargeaient de manière asynchrone
+   - app.js s'exécutait avant que la compat layer soit prête
+   - Les fonctions globales (openAccountModal, etc.) n'étaient pas disponibles
+
+2. **Conflits de définition de fonctions**
+   - app.js redéfinissait les fonctions après la compat layer
+   - Les versions de la compat layer étaient écrasées
+
+3. **setupAccountModalEvents non appelé**
+   - L'événement DOMContentLoaded ne se déclenchait jamais
+   - Les listeners du modal n'étaient pas attachés
+
+## Solutions appliquées
+
+### compat-layer.js
+- Ajout système de synchronisation avec `window.__RM_COMPAT_READY__`
+- Émission événement `rm:compat-ready` quand prêt
+- Protection de TOUTES les fonctions avec `if (!window.functionName)`
+- Auto-init async qui attend le DOM
+
+### app.js
+- Ajout fonction `waitForCompatLayer()` qui attend l'événement
+- Remplacement de l'init synchrone par init async
+- Appel direct de `setupAccountModalEvents()` au lieu de DOMContentLoaded
+
+## Stratégie de compatibilité
+
+**Cohabitation** : app.js garde ses fonctions, compat layer fournit des fallbacks
+
+Avantages :
+- Pas de breaking changes
+- Migration progressive possible
+- Code legacy continue de fonctionner
+
+## Tests
+
+Voir `GUIDE_TEST_UTILISATEUR.md` pour instructions de test complètes
+
+## Documentation
+
+- START_HERE.md : Point d'entrée rapide
+- GUIDE_TEST_UTILISATEUR.md : Instructions de test détaillées
+- RESUME_INTEGRATION_ES6.md : Vue d'ensemble technique
+- CORRECTIF_MODAL_2025-11-02.md : Détails techniques
+- scripts/diagnostic-integration.js : Script de diagnostic
+
+## Fichiers modifiés
+
+- src/compat/compat-layer.js : Système de sync + protection fonctions
+- app.js : Attente compat layer + fix setupAccountModalEvents
+
+## Prochaines étapes
+
+1. Tester localement (voir GUIDE_TEST_UTILISATEUR.md)
+2. Valider que le modal s'ouvre correctement
+3. Vérifier affichage des infos reviews
+4. Déployer sur VPS si OK
+
+---
+
+Refs: #integration-es6 #modal-account #race-condition
