@@ -100,10 +100,33 @@ Suite à la fermeture annoncée de LaFoncedalle, Reviews Maker doit devenir **to
 
 **Composants disponibles** :
 - 10+ composants UI prêts à l'emploi
-- 3 thèmes de couleurs complets
+- 4 thèmes de couleurs complets (Violet, Émeraude, Rose, Bleu marine)
 - Animations 60fps
 - Glass morphism effects
 - Dark mode par défaut
+
+---
+
+### 🎯 UX & Saisie Facilitée
+
+**[UX_SAISIE_FACILITEE.md](./UX_SAISIE_FACILITEE.md)**  
+→ Roue des terpènes interactive (8 terpènes + infos)  
+→ Système de notes rapides sur 10 (boutons cliquables)  
+→ Tags prédéfinis (effets, saveurs, textures)  
+→ Slider Indica/Sativa visuel  
+→ Composants React + CSS complets  
+→ Intégration complète avec exemples
+
+**Public** : Développeurs frontend, UX designers  
+**Durée lecture** : 15 minutes  
+**Lignes** : ~700
+
+**Fonctionnalités clés** :
+- Saisie 10x plus rapide avec sélection visuelle
+- Roue terpènes cliquable avec tooltips
+- Notes de 1 à 10 en un clic
+- Tags standardisés (cohérence des données)
+- Interface ludique et engageante
 
 ---
 
@@ -191,20 +214,29 @@ node scripts/backup-before-migration.js
 node scripts/export-users-list.js
 ```
 
-### 2️⃣ Discord Developer Portal
+### 2️⃣ Discord Developer Portal (Environnement DEV)
 1. Aller sur https://discord.com/developers/applications
-2. Créer "New Application" → Nom : `Reviews Maker`
+2. Créer "New Application" → Nom : `Reviews Maker DEV`
 3. OAuth2 → Ajouter redirects :
    - `http://localhost:3000/auth/discord/callback`
-   - `https://reviews-maker.fr/auth/discord/callback`
+   - `http://localhost:5173/auth/discord/callback` (Vite dev server)
 4. Scopes : `identify` + `email`
 5. **Copier** Client ID et Client Secret
 
-### 3️⃣ Resend (Service Email)
+### 3️⃣ Service Email (Environnement DEV)
+**Option 1 - Resend (Recommandé pour dev)** :
 1. Créer compte sur https://resend.com
-2. Vérifier domaine `reviews-maker.fr`
+2. Utiliser domaine de test fourni par Resend
 3. Générer API Key
 4. **Copier** la clé (format : `re_xxxxx`)
+
+**Option 2 - EmailingAutomate (Illimité gratuit)** :
+1. Utiliser : http://emailingautomate.free.fr/new/index2.php
+2. Configurer SMTP local pour dev
+
+**Option 3 - Mode DEV (Pas d'emails réels)** :
+- Les emails seront loggés en console uniquement
+- Parfait pour développement local
 
 ### 4️⃣ Init Frontend
 ```bash
@@ -232,8 +264,8 @@ npx prisma migrate dev --name init
 
 | Métrique | Valeur |
 |----------|--------|
-| **Documentation totale** | ~2200 lignes |
-| **Fichiers créés** | 6 (4 docs + 2 scripts) |
+| **Documentation totale** | ~2900 lignes |
+| **Fichiers créés** | 7 (5 docs + 2 scripts) |
 | **Temps lecture** | 30-40 minutes |
 | **Durée implémentation** | 2-3 semaines |
 | **Coût mensuel** | ~10€ (VPS uniquement) |
@@ -297,12 +329,12 @@ npx prisma migrate dev --name init
 - [ ] Tests unitaires >70% couverture
 - [ ] Performance validée (Lighthouse >90)
 
-### Phase 5 : Déploiement
-- [ ] CI/CD configuré
-- [ ] VPS préparé (Nginx + PM2)
-- [ ] SSL actif
-- [ ] Monitoring en place
-- [ ] Backups automatiques
+### Phase 5 : Déploiement (LOCAL DEV)
+- [ ] Build production testé localement
+- [ ] Variables d'environnement configurées
+- [ ] Base de données de production prête
+- [ ] Documentation déploiement (si besoin futur)
+- [ ] Backups automatiques configurés
 
 ---
 
@@ -318,11 +350,16 @@ npx prisma migrate dev --name init
 **R:** React = écosystème mature + TailwindCSS optimisé + Framer Motion top niveau. Mais le plan est adaptable à Vue/Svelte !
 
 ### Q: Combien coûte l'hébergement ?
-**R:** 
-- VPS 4GB RAM : ~10€/mois (Contabo, Hetzner)
-- Resend : Gratuit (3000 emails/mois)
+**R (Mode DEV - Local uniquement):** 
+- Développement local : **Gratuit** (0€)
+- Resend (dev) : Gratuit (3000 emails/mois)
 - Discord OAuth : Gratuit
-- **Total : ~10€/mois**
+- **Total : 0€/mois en développement**
+
+**R (Si déploiement futur):** 
+- VPS 4GB RAM : ~10€/mois (Contabo, Hetzner)
+- Ou gratuit : Vercel/Netlify (frontend) + Railway/Render (backend)
+- **Total : 0-10€/mois selon choix**
 
 ### Q: Peut-on garder l'ancien design ?
 **R:** Oui, mais l'objectif est un design moderne Apple-like. L'ancien CSS peut être réutilisé temporairement pendant la transition.

@@ -1,0 +1,215 @@
+{
+    "terpenes": [
+        {
+            "id": "myrcene",
+            "name": "Myrcène",
+            "nameEn": "Myrcene",
+            "aromas": [
+                "Terreux",
+                "Musqué",
+                "Clou de girofle"
+            ],
+            "tastes": [
+                "Fruits rouges",
+                "Herbal"
+            ],
+            "effects": [
+                "Relaxant",
+                "Sédatif",
+                "Anti-inflammatoire"
+            ],
+            "strains": [
+                "Blue Dream",
+                "Granddaddy Purple",
+                "OG Kush"
+            ],
+            "color": "#8B5CF6",
+            "icon": "🍇"
+        },
+        {
+            "id": "limonene",
+            "name": "Limonène",
+            "nameEn": "Limonene",
+            "aromas": [
+                "Citron",
+                "Orange",
+                "Agrumes"
+            ],
+            "tastes": [
+                "Citrus vif",
+                "Zeste"
+            ],
+            "effects": [
+                "Énergisant",
+                "Anti-stress",
+                "Euphorique"
+            ],
+            "strains": [
+                "Lemon Haze",
+                "Sour Diesel",
+                "Jack Herer"
+            ],
+            "color": "#F59E0B",
+            "icon": "🍋"
+        },
+        {
+            "id": "caryophyllene",
+            "name": "Caryophyllène",
+            "nameEn": "Caryophyllene",
+            "aromas": [
+                "Poivre",
+                "Épicé",
+                "Boisé"
+            ],
+            "tastes": [
+                "Poivré",
+                "Piquant"
+            ],
+            "effects": [
+                "Anti-douleur",
+                "Anti-anxiété",
+                "Anti-inflammatoire"
+            ],
+            "strains": [
+                "Girl Scout Cookies",
+                "Sour Diesel",
+                "Chemdog"
+            ],
+            "color": "#DC2626",
+            "icon": "🌶️"
+        },
+        {
+            "id": "pinene",
+            "name": "Pinène",
+            "nameEn": "Pinene",
+            "aromas": [
+                "Pin",
+                "Sapin",
+                "Forêt"
+            ],
+            "tastes": [
+                "Résine",
+                "Bois"
+            ],
+            "effects": [
+                "Alerte",
+                "Concentration",
+                "Mémoire"
+            ],
+            "strains": [
+                "Jack Herer",
+                "Blue Dream",
+                "Trainwreck"
+            ],
+            "color": "#10B981",
+            "icon": "🌲"
+        },
+        {
+            "id": "linalool",
+            "name": "Linalol",
+            "nameEn": "Linalool",
+            "aromas": [
+                "Lavande",
+                "Floral"
+            ],
+            "tastes": [
+                "Doux",
+                "Floral",
+                "Légèrement épicé"
+            ],
+            "effects": [
+                "Calmant",
+                "Anti-anxiété",
+                "Aide au sommeil"
+            ],
+            "strains": [
+                "Amnesia Haze",
+                "Lavender",
+                "LA Confidential"
+            ],
+            "color": "#A855F7",
+            "icon": "💜"
+        },
+        {
+            "id": "terpinolene",
+            "name": "Terpinolène",
+            "nameEn": "Terpinolene",
+            "aromas": [
+                "Pin",
+                "Floral",
+                "Herbal"
+            ],
+            "tastes": [
+                "Complexe",
+                "Agrumes",
+                "Pin",
+                "Floral"
+            ],
+            "effects": [
+                "Sédatif léger",
+                "Antioxydant"
+            ],
+            "strains": [
+                "Jack Herer",
+                "Dutch Treat",
+                "Golden Goat"
+            ],
+            "color": "#3B82F6",
+            "icon": "🌸"
+        },
+        {
+            "id": "humulene",
+            "name": "Humulène",
+            "nameEn": "Humulene",
+            "aromas": [
+                "Houblon",
+                "Bois",
+                "Terreux"
+            ],
+            "tastes": [
+                "Épicé",
+                "Boisé",
+                "Subtil"
+            ],
+            "effects": [
+                "Coupe-faim",
+                "Anti-inflammatoire",
+                "Énergisant"
+            ],
+            "strains": [
+                "White Widow",
+                "Headband",
+                "Sour Diesel"
+            ],
+            "color": "#D97706",
+            "icon": "🌾"
+        },
+        {
+            "id": "ocimene",
+            "name": "Ocimène",
+            "nameEn": "Ocimene",
+            "aromas": [
+                "Doux",
+                "Herbal",
+                "Boisé"
+            ],
+            "tastes": [
+                "Fruits",
+                "Menthe",
+                "Basilic"
+            ],
+            "effects": [
+                "Énergisant",
+                "Antifongique",
+                "Décongestionnant"
+            ],
+            "strains": [
+                "Golden Goat",
+                "Clementine",
+                "Space Queen"
+            ],
+            "color": "#EC4899",
+            "icon": "🌿"
+        }
+    ]
+}
