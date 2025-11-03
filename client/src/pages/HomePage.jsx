@@ -9,8 +9,48 @@ export default function HomePage() {
     const [searchQuery, setSearchQuery] = useState('')
 
     useEffect(() => {
-        fetchReviews()
-    }, [])    // Filter reviews based on search and type
+        // TODO: Fetch real data from API
+        // For now, use mock data
+        const mockReviews = [
+            {
+                id: 1,
+                holderName: 'Blue Dream',
+                type: 'Sativa',
+                note: 8.5,
+                description: 'Une variété incroyable avec des arômes fruités et terreux. Parfait pour la journée.',
+                mainImageUrl: null,
+                terpenes: ['Myrcène', 'Limonène', 'Pinène'],
+                author: 'RAFOUgg',
+                createdAt: new Date().toISOString(),
+            },
+            {
+                id: 2,
+                holderName: 'Granddaddy Purple',
+                type: 'Indica',
+                note: 9.0,
+                description: 'Relaxation profonde et saveurs sucrées de raisin. Idéal pour le soir.',
+                mainImageUrl: null,
+                terpenes: ['Myrcène', 'Caryophyllène'],
+                author: 'User123',
+                createdAt: new Date(Date.now() - 86400000).toISOString(),
+            },
+            {
+                id: 3,
+                holderName: 'Girl Scout Cookies',
+                type: 'Hybride',
+                note: 8.8,
+                description: 'Équilibre parfait entre euphorie et relaxation. Goût sucré et épicé.',
+                mainImageUrl: null,
+                terpenes: ['Caryophyllène', 'Limonène'],
+                author: 'CannaCritic',
+                createdAt: new Date(Date.now() - 172800000).toISOString(),
+            },
+        ]
+
+        useStore.setState({ reviews: mockReviews, loading: false })
+    }, [])
+
+    // Filter reviews based on search and type
     const filteredReviews = reviews.filter(review => {
         const matchesSearch = review.holderName.toLowerCase().includes(searchQuery.toLowerCase())
         const matchesType = filters.type === 'all' || review.type === filters.type
