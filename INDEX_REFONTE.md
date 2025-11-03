@@ -52,7 +52,7 @@ Suite à la fermeture annoncée de LaFoncedalle, Reviews Maker doit devenir **to
 - Architecture Frontend : React + Vite + TailwindCSS
 - Backend : Express + Prisma + SQLite/PostgreSQL
 - Auth : Discord OAuth2 (pas d'intermédiaire)
-- Email : Resend (gratuit 3000/mois)
+- Email : Resend (gratuit 3000/mois) ou illimité avec : http://emailingautomate.free.fr/new/index2.php
 - Migration : Script automatique préservant toutes les données
 
 ---
@@ -62,6 +62,7 @@ Suite à la fermeture annoncée de LaFoncedalle, Reviews Maker doit devenir **to
 **[PLAN_IMPLEMENTATION.md](./PLAN_IMPLEMENTATION.md)**  
 → Roadmap détaillée en 10 phases (20 jours)  
 → Phase 0 : Sauvegarde critique  
+→ Phase 0.1 : Suppression et clear des scripts obselètes
 → Phases 1-2 : Setup infrastructure + backend  
 → Phases 3-4 : Migration DB + design system  
 → Phases 5-6 : Frontend + tests  
@@ -86,7 +87,7 @@ Suite à la fermeture annoncée de LaFoncedalle, Reviews Maker doit devenir **to
 
 **[DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)**  
 → Guide complet du design Apple-like  
-→ Palettes de couleurs (Violet, Émeraude, Rose)  
+→ Palettes de couleurs (Violet, Émeraude, Rose, Bleu marine)  
 → Typographie et espacements (8px grid)  
 → Composants UI (Button, Card, Modal, Input...)  
 → Animations et micro-interactions  
