@@ -9,3 +9,76 @@ datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+
+// Modèle User (utilisateurs Discord)
+model User {
+  id            String   @id @default(uuid())
+  discordId     String   @unique
+  username      String
+  discriminator String?
+  avatar        String?
+  email         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  reviews  Review[]
+  sessions Session[]
+
+  @@map("users")
+}
+
+// Modèle Session (authentification)
+model Session {
+  id        String   @id @default(uuid())
+  sid       String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// Modèle Review (reviews cannabis)
+model Review {
+  id          String   @id @default(uuid())
+  holderName  String // Nom de la variété
+  type        String // Indica, Sativa, Hybride, CBD
+  description String?
+  
+  // Notation
+  note        Float?
+  ratings     String? // JSON: {apparence: 8, odeur: 9, gout: 7, effets: 8.5}
+  
+  // Profil terpénique et tags
+  terpenes    String? // JSON: ["Myrcène", "Limonène", "Pinène"]
+  tastes      String? // JSON: ["Citron", "Terreux", "Pin"]
+  aromas      String? // JSON: ["Citronné", "Boisé", "Fruité"]
+  effects     String? // JSON: ["Relaxant", "Euphorique", "Créatif"]
+  
+  // Type de variété
+  strainType  String? // "Indica Pur", "Hybride Indica", "Équilibré", "Hybride Sativa", "Sativa Pur"
+  indicaRatio Int?    // 0-100 (0 = Sativa pur, 100 = Indica pur)
+  
+  // Images
+  images      String? // JSON: ["image1.jpg", "image2.jpg", ...]
+  mainImage   String? // Image principale
+  
+  // Métadonnées
+  isPublic    Boolean  @default(true)
+  isPrivate   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Auteur
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("reviews")
+}
