@@ -2515,20 +2515,28 @@ const UserDataManager = {
     if (remoteEnabled) {
       try {
         let resp;
+        let endpoint;
 
         // Use different endpoints based on context
         if (isOwnProfile && token) {
           // For own profile, use authenticated endpoint that shows all reviews
-          resp = await fetch('/api/reviews/stats', {
+          endpoint = '/api/reviews/stats';
+          console.log('📊 [getUserStats] Fetching own profile stats:', endpoint);
+          resp = await fetch(endpoint, {
             headers: { 'X-Auth-Token': token }
           });
         } else {
           // For other users, use public endpoint that only shows public reviews
-          resp = await fetch(`/api/reviews/stats/public/${encodeURIComponent(userEmail)}`);
+          endpoint = `/api/reviews/stats/public/${encodeURIComponent(userEmail)}`;
+          console.log('📊 [getUserStats] Fetching public profile stats:', endpoint, 'for user:', userEmail);
+          resp = await fetch(endpoint);
         }
+
+        console.log('📊 [getUserStats] Response status:', resp.status, resp.statusText);
 
         if (resp.ok) {
           const data = await resp.json();
+          console.log('📊 [getUserStats] Data received:', data);
           stats = {
             email: userEmail,
             total: data.total || 0,
@@ -2539,9 +2547,11 @@ const UserDataManager = {
           };
           await this.setCachedData('userStats', stats, emailLower);
           return stats;
+        } else {
+          console.warn('📊 [getUserStats] API returned error:', resp.status, await resp.text());
         }
       } catch (err) {
-        console.warn('Failed to fetch stats from API:', err);
+        console.warn('📊 [getUserStats] Failed to fetch stats from API:', err);
       }
     }
 
