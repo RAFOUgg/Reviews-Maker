@@ -2497,6 +2497,8 @@ const UserDataManager = {
     if (!userEmail) return { total: 0, public: 0, private: 0, by_type: {} };
 
     const emailLower = userEmail.toLowerCase();
+    const myEmail = (localStorage.getItem('authEmail') || '').toLowerCase();
+    const isOwnProfile = emailLower === myEmail;
 
     // Check cache first - USE UNIQUE KEY PER USER
     if (!forceRefresh) {
@@ -2508,13 +2510,23 @@ const UserDataManager = {
 
     let stats = { total: 0, public: 0, private: 0, by_type: {} };
 
-    // Try API first if token available
+    // Try API first if remote enabled
     const token = localStorage.getItem('authToken');
-    if (token && remoteEnabled) {
+    if (remoteEnabled) {
       try {
-        const resp = await fetch('/api/reviews/stats', {
-          headers: { 'X-Auth-Token': token }
-        });
+        let resp;
+
+        // Use different endpoints based on context
+        if (isOwnProfile && token) {
+          // For own profile, use authenticated endpoint that shows all reviews
+          resp = await fetch('/api/reviews/stats', {
+            headers: { 'X-Auth-Token': token }
+          });
+        } else {
+          // For other users, use public endpoint that only shows public reviews
+          resp = await fetch(`/api/reviews/stats/public/${encodeURIComponent(userEmail)}`);
+        }
+
         if (resp.ok) {
           const data = await resp.json();
           stats = {

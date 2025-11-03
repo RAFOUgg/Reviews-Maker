@@ -314,6 +314,53 @@ app.get('/api/reviews/stats', (req, res) => {
   });
 });
 
+// GET /api/reviews/stats/public/:email - Get public stats for any user (no auth required)
+app.get('/api/reviews/stats/public/:email', (req, res) => {
+  const targetEmail = req.params.email;
+
+  if (!targetEmail) {
+    return res.status(400).json({ error: 'invalid_request', message: 'Email required' });
+  }
+
+  // Only count PUBLIC reviews for the target user
+  const sql = `
+    SELECT 
+      productType,
+      COUNT(*) as count
+    FROM reviews 
+    WHERE ownerId = ? AND isPrivate = 0
+    GROUP BY productType
+  `;
+
+  db.all(sql, [targetEmail], (err, rows) => {
+    if (err) {
+      console.error('[Reviews] Public stats error:', err);
+      return res.status(500).json({ error: 'db_error', message: 'Database error' });
+    }
+
+    // Aggregate only public reviews
+    let publicCount = 0;
+    const by_type = {};
+
+    rows.forEach(row => {
+      const type = row.productType || 'Autre';
+      const count = parseInt(row.count) || 0;
+
+      by_type[type] = (by_type[type] || 0) + count;
+      publicCount += count;
+    });
+
+    // For public profile, only show public stats
+    res.json({
+      total: publicCount,
+      public: publicCount,
+      private: 0, // Don't expose private count to others
+      by_type,
+      types: by_type // Compatibility alias
+    });
+  });
+});
+
 app.get('/api/reviews/:id', (req, res) => {
   db.get('SELECT * FROM reviews WHERE id=?', [req.params.id], (err, row) => {
     if (err) return res.status(500).json({ error: 'db_error' });
