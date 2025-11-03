@@ -2832,10 +2832,6 @@ async function populatePublicProfile(email) {
   try {
     const identifier = String(email || '').trim();
 
-    // Show display name
-    const displayName = await UserDataManager.getDisplayName(identifier);
-    if (dom.publicProfileEmail) dom.publicProfileEmail.textContent = displayName;
-
     // Check if viewing own profile
     const me = (localStorage.getItem('authEmail') || '').toLowerCase();
     const isOwner = me && identifier && me === identifier.toLowerCase();
@@ -2848,8 +2844,20 @@ async function populatePublicProfile(email) {
       return;
     }
 
+    // Try to get display name, but don't block if it fails
+    let displayName = identifier;
+    try {
+      displayName = await UserDataManager.getDisplayName(identifier);
+    } catch (err) {
+      console.warn('Could not fetch display name, using email:', err);
+    }
+
+    if (dom.publicProfileEmail) dom.publicProfileEmail.textContent = displayName;
+
     // Fetch stats using centralized manager
+    console.log('📊 [populatePublicProfile] Fetching stats for:', identifier);
     const stats = await UserDataManager.getUserStats(identifier);
+    console.log('📊 [populatePublicProfile] Stats received:', stats);
 
     // Update DOM
     if (dom.publicTotal) dom.publicTotal.textContent = stats.total;
@@ -2866,7 +2874,7 @@ async function populatePublicProfile(email) {
       });
     }
   } catch (e) {
-    console.warn('populatePublicProfile error:', e);
+    console.error('❌ populatePublicProfile error:', e);
   }
 }
 
