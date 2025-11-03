@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  discordId     String    @unique
+  username      String
+  discriminator String?
+  avatar        String?
+  email         String?
+  roles         String?   // JSON string: ["staff", "admin"]
+  
+  reviews       Review[]
+  sessions      Session[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  sid       String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  data      String   // JSON session data
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Review {
+  id              String   @id @default(uuid())
+  holderName      String   // Nom de la variété
+  type            String   // Indica, Sativa, Hybride, CBD
+  description     String?
+  note            Float?   // Note sur 10
+  
+  // Nouveau système avec terpènes et tags
+  terpenes        String?  // JSON array: ["Myrcène", "Limonène"]
+  tastes          String?  // JSON array: ["Citron", "Terreux"]
+  aromas          String?  // JSON array: ["Citronné", "Pin"]
+  effects         String?  // JSON array: ["Relaxant", "Créatif"]
+  
+  // Ratio Indica/Sativa
+  indicaPercent   Int?     // 0-100
+  sativaPercent   Int?     // 0-100
+  
+  // Images
+  mainImageUrl    String?
+  images          String?  // JSON array: ["img1.jpg", "img2.jpg"]
+  
+  // Métadonnées
+  authorId        String
+  author          User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  isPublic        Boolean  @default(true)
+  viewCount       Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([authorId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("reviews")
+}
