@@ -11,7 +11,12 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"
   },
-  "keywords": ["cannabis", "reviews", "express", "prisma"],
+  "keywords": [
+    "cannabis",
+    "reviews",
+    "express",
+    "prisma"
+  ],
   "author": "RAFOUgg",
   "license": "ISC",
   "dependencies": {
