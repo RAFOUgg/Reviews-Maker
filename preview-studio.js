@@ -757,5 +757,5 @@ const previewStudio = new PreviewStudio();
 
 // Rendre accessible globalement
 window.previewStudio = previewStudio;
-window.previewTemplates = previewTemplates;
-window.colorPresets = colorPresets;
+window.previewPresets = previewPresets;
+window.colorVariants = colorVariants;
