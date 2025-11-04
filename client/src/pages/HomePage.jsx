@@ -175,7 +175,7 @@ export default function HomePage() {
                                     </div>
 
                                     {/* Review Info */}
-                                    <div 
+                                    <div
                                         className="p-4 space-y-2"
                                         onClick={() => navigate(`/review/${review.id}`)}
                                     >
@@ -192,7 +192,7 @@ export default function HomePage() {
                                         </div>
 
                                         {/* Author (clickable to view stats) */}
-                                        <div 
+                                        <div
                                             className="flex items-center gap-2 text-sm text-gray-500 hover:text-green-400 transition-colors"
                                             onClick={(e) => {
                                                 e.stopPropagation()
@@ -232,11 +232,11 @@ export default function HomePage() {
 
                         {/* Author Stats Modal */}
                         {selectedAuthor && (
-                            <div 
+                            <div
                                 className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
                                 onClick={() => setSelectedAuthor(null)}
                             >
-                                <div 
+                                <div
                                     className="bg-gray-800 rounded-2xl p-8 max-w-2xl w-full border border-gray-700 shadow-2xl"
                                     onClick={(e) => e.stopPropagation()}
                                 >
@@ -244,7 +244,7 @@ export default function HomePage() {
                                         <h3 className="text-2xl font-bold text-white">
                                             Statistiques publiques
                                         </h3>
-                                        <button 
+                                        <button
                                             onClick={() => setSelectedAuthor(null)}
                                             className="text-gray-400 hover:text-white transition-colors"
                                         >
@@ -303,7 +303,7 @@ export default function HomePage() {
                                                 .filter(r => r.ownerId === selectedAuthor)
                                                 .slice(0, 3)
                                                 .map(review => (
-                                                    <div 
+                                                    <div
                                                         key={review.id}
                                                         className="bg-gray-900 rounded-lg p-3 flex justify-between items-center cursor-pointer hover:bg-gray-800 transition-colors"
                                                         onClick={() => {
