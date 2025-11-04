@@ -9,14 +9,6 @@ export default function LibraryPage() {
     const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState('all') // all, public, private
 
-    useEffect(() => {
-        if (!user) {
-            navigate('/')
-            return
-        }
-        fetchMyReviews()
-    }, [user, navigate])
-
     const fetchMyReviews = async () => {
         try {
             const response = await fetch('/api/reviews/my', {
@@ -32,6 +24,15 @@ export default function LibraryPage() {
             setLoading(false)
         }
     }
+
+    useEffect(() => {
+        if (!user) {
+            navigate('/')
+            return
+        }
+        fetchMyReviews()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user, navigate])
 
     const toggleVisibility = async (reviewId, currentVisibility) => {
         try {
@@ -169,8 +170,8 @@ export default function LibraryPage() {
                             key={f}
                             onClick={() => setFilter(f)}
                             className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === f
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                ? 'bg-indigo-600 text-white'
+                                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                 }`}
                         >
                             {f === 'all' ? 'Toutes' : f === 'public' ? 'Publiques' : 'Privées'}
@@ -200,8 +201,8 @@ export default function LibraryPage() {
                                                 {review.holderName}
                                             </h3>
                                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${review.isPublic
-                                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                                    : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                                : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
                                                 }`}>
                                                 {review.isPublic ? 'Publique' : 'Privée'}
                                             </span>

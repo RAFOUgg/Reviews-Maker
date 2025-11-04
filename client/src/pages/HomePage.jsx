@@ -10,10 +10,6 @@ export default function HomePage() {
     const [showAll, setShowAll] = useState(false)
     const [selectedAuthor, setSelectedAuthor] = useState(null)
 
-    useEffect(() => {
-        fetchReviews()
-    }, [])
-
     const fetchReviews = async () => {
         try {
             const response = await fetch('/api/reviews')
@@ -27,6 +23,11 @@ export default function HomePage() {
             setLoading(false)
         }
     }
+
+    useEffect(() => {
+        fetchReviews()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     const productTypes = [
         { name: 'Fleur', icon: '🌿', gradient: 'from-green-600 to-green-400' },

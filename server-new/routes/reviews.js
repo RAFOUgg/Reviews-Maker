@@ -343,4 +343,82 @@ router.delete('/:id', requireAuth, async (req, res) => {
     }
 })
 
+// GET /api/reviews/my - Récupérer les reviews de l'utilisateur connecté
+router.get('/my', requireAuth, async (req, res) => {
+    try {
+        const reviews = await prisma.review.findMany({
+            where: { authorId: req.user.id },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        username: true,
+                        avatar: true,
+                        discordId: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        })
+
+        const formattedReviews = reviews.map(review => ({
+            ...review,
+            terpenes: review.terpenes ? JSON.parse(review.terpenes) : [],
+            tastes: review.tastes ? JSON.parse(review.tastes) : [],
+            aromas: review.aromas ? JSON.parse(review.aromas) : [],
+            effects: review.effects ? JSON.parse(review.effects) : [],
+            images: review.images ? JSON.parse(review.images) : [],
+            ratings: review.ratings ? JSON.parse(review.ratings) : null,
+            mainImageUrl: review.mainImage ? `/images/${review.mainImage}` : null,
+            ownerName: review.author.username,
+            ownerId: review.author.id
+        }))
+
+        res.json(formattedReviews)
+    } catch (error) {
+        console.error('Error fetching user reviews:', error)
+        res.status(500).json({ error: 'Failed to fetch reviews' })
+    }
+})
+
+// PATCH /api/reviews/:id/visibility - Changer la visibilité d'une review
+router.patch('/:id/visibility', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params
+        const { isPublic } = req.body
+
+        // Vérifier que la review appartient à l'utilisateur
+        const review = await prisma.review.findUnique({
+            where: { id }
+        })
+
+        if (!review) {
+            return res.status(404).json({ error: 'Review not found' })
+        }
+
+        if (review.authorId !== req.user.id) {
+            return res.status(403).json({ error: 'You can only modify your own reviews' })
+        }
+
+        // Mettre à jour la visibilité
+        const updatedReview = await prisma.review.update({
+            where: { id },
+            data: { isPublic: Boolean(isPublic) }
+        })
+
+        res.json({
+            ...updatedReview,
+            terpenes: updatedReview.terpenes ? JSON.parse(updatedReview.terpenes) : [],
+            tastes: updatedReview.tastes ? JSON.parse(updatedReview.tastes) : [],
+            aromas: updatedReview.aromas ? JSON.parse(updatedReview.aromas) : [],
+            effects: updatedReview.effects ? JSON.parse(updatedReview.effects) : [],
+            images: updatedReview.images ? JSON.parse(updatedReview.images) : [],
+            ratings: updatedReview.ratings ? JSON.parse(updatedReview.ratings) : null
+        })
+    } catch (error) {
+        console.error('Error updating visibility:', error)
+        res.status(500).json({ error: 'Failed to update visibility' })
+    }
+})
+
 export default router
