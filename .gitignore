@@ -1,15 +1,65 @@
-# Node
-server/node_modules/
-server/package-lock.json
+# Dependencies
+node_modules/
+*/node_modules/
+client/node_modules/
+server-new/node_modules/
+package-lock.json
+*/package-lock.json
 
-# SQLite DB & uploaded images
-/db/*.sqlite
-/db/review_images/*
+# Environment variables
+.env
+.env.local
+.env.production
+.env.development
+*.local
+
+# Build outputs
+client/dist/
+client/build/
+dist/
+build/
+
+# Database & Uploads
+db/*.sqlite
+db/*.sqlite-shm
+db/*.sqlite-wal
+db/review_images/*
 !db/review_images/.gitkeep
-# Local DB backups (move or ignore locally)
-db/*.bak
+db/backups/*
+!db/backups/.gitkeep
+*.bak
 
 # Logs
+logs/
 *.log
 npm-debug.log*
-.env
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# PM2
+.pm2/
+ecosystem.config.js
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Prisma
+server-new/prisma/migrations/*/migration.sql.backup
+
+# Testing
+coverage/
+.nyc_output/
+
+# Archives (optionnel)
+archive/

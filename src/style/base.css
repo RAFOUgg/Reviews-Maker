@@ -1,8 +1,0 @@
-/* base.css - resets and base rules */
-@import './variables.css';
-html,body{height:100%;margin:0;font-family:var(--font-sans);background:linear-gradient(180deg,var(--color-bg),#0a2330);color:#e6f7f1}
-.modal{display:none}
-.modal.show{display:block}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(6,10,20,0.6);backdrop-filter:blur(6px)}
-.modal-overlay.show{display:block}
-.btn{padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.03);color:var(--color-primary)}
