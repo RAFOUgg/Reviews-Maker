@@ -138,82 +138,89 @@ export default function HomePage() {
                 ) : (
                     <>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {(showAll ? reviews : reviews.slice(0, 8)).map((review) => (
-                                <div
-                                    key={review.id}
-                                    className="group bg-gray-800/50 backdrop-blur-xl rounded-2xl overflow-hidden border border-gray-700 hover:border-green-600 transition-all duration-300 cursor-pointer hover:shadow-xl hover:shadow-green-600/20"
-                                >
-                                    {/* Image Grid 2x2 */}
-                                    <div className="grid grid-cols-2 gap-1 bg-gray-900 aspect-square">
-                                        {review.images && review.images.length > 0 ? (
-                                            <>
-                                                {review.images.slice(0, 4).map((img, idx) => (
-                                                    <div key={idx} className="bg-gray-700 aspect-square overflow-hidden">
-                                                        <img
-                                                            src={img}
-                                                            alt={`${review.holderName} ${idx + 1}`}
-                                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                                        />
-                                                    </div>
-                                                ))}
-                                                {/* Fill remaining spaces if less than 4 images */}
-                                                {Array.from({ length: Math.max(0, 4 - (review.images?.length || 0)) }).map((_, idx) => (
-                                                    <div key={`empty-${idx}`} className="bg-gray-700 aspect-square flex items-center justify-center">
-                                                        <span className="text-gray-600 text-4xl">🌿</span>
-                                                    </div>
-                                                ))}
-                                            </>
-                                        ) : (
-                                            // No images - show product emoji
-                                            <div className="col-span-2 flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
-                                                <span className="text-6xl">
-                                                    {review.type === 'Fleur' ? '🌿' :
-                                                        review.type === 'Hash' ? '🟫' :
-                                                            review.type === 'Concentré' ? '🔮' : '🍰'}
+                            {(showAll ? reviews : reviews.slice(0, 8)).map((review) => {
+                                // Parser images si c'est une chaîne JSON
+                                const images = typeof review.images === 'string'
+                                    ? JSON.parse(review.images)
+                                    : (Array.isArray(review.images) ? review.images : [])
+
+                                return (
+                                    <div
+                                        key={review.id}
+                                        className="group bg-gray-800/50 backdrop-blur-xl rounded-2xl overflow-hidden border border-gray-700 hover:border-green-600 transition-all duration-300 cursor-pointer hover:shadow-xl hover:shadow-green-600/20"
+                                    >
+                                        {/* Image Grid 2x2 */}
+                                        <div className="grid grid-cols-2 gap-1 bg-gray-900 aspect-square">
+                                            {images && images.length > 0 ? (
+                                                <>
+                                                    {images.slice(0, 4).map((img, idx) => (
+                                                        <div key={idx} className="bg-gray-700 aspect-square overflow-hidden">
+                                                            <img
+                                                                src={img}
+                                                                alt={`${review.holderName} ${idx + 1}`}
+                                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                    {/* Fill remaining spaces if less than 4 images */}
+                                                    {Array.from({ length: Math.max(0, 4 - images.length) }).map((_, idx) => (
+                                                        <div key={`empty-${idx}`} className="bg-gray-700 aspect-square flex items-center justify-center">
+                                                            <span className="text-gray-600 text-4xl">🌿</span>
+                                                        </div>
+                                                    ))}
+                                                </>
+                                            ) : (
+                                                // No images - show product emoji
+                                                <div className="col-span-2 flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+                                                    <span className="text-6xl">
+                                                        {review.type === 'Fleur' ? '🌿' :
+                                                            review.type === 'Hash' ? '🟫' :
+                                                                review.type === 'Concentré' ? '🔮' : '🍰'}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Review Info */}
+                                        <div
+                                            className="p-4 space-y-2"
+                                            onClick={() => navigate(`/review/${review.id}`)}
+                                        >
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex-1">
+                                                    <h3 className="font-bold text-white group-hover:text-green-400 transition-colors line-clamp-1">
+                                                        {review.holderName}
+                                                    </h3>
+                                                    <p className="text-xs text-gray-400">{review.type}</p>
+                                                </div>
+                                                <div className="text-lg font-bold text-green-400">
+                                                    {review.overallRating || review.note || '—'}/10
+                                                </div>
+                                            </div>
+
+                                            {/* Author (clickable to view stats) */}
+                                            <div
+                                                className="flex items-center gap-2 text-sm text-gray-500 hover:text-green-400 transition-colors"
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    setSelectedAuthor(review.authorId || review.ownerId || review.author?.id)
+                                                }}
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                </svg>
+                                                <span className="hover:underline">
+                                                    {review.ownerName || (review.author?.username) || 'Anonyme'}
                                                 </span>
                                             </div>
-                                        )}
-                                    </div>
 
-                                    {/* Review Info */}
-                                    <div
-                                        className="p-4 space-y-2"
-                                        onClick={() => navigate(`/review/${review.id}`)}
-                                    >
-                                        <div className="flex justify-between items-start">
-                                            <div className="flex-1">
-                                                <h3 className="font-bold text-white group-hover:text-green-400 transition-colors line-clamp-1">
-                                                    {review.holderName}
-                                                </h3>
-                                                <p className="text-xs text-gray-400">{review.type}</p>
-                                            </div>
-                                            <div className="text-lg font-bold text-green-400">
-                                                {review.overallRating || review.note || '—'}/10
+                                            <div className="text-xs text-gray-600">
+                                                {new Date(review.createdAt).toLocaleDateString('fr-FR')}
                                             </div>
                                         </div>
-
-                                        {/* Author (clickable to view stats) */}
-                                        <div
-                                            className="flex items-center gap-2 text-sm text-gray-500 hover:text-green-400 transition-colors"
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                setSelectedAuthor(review.ownerId)
-                                            }}
-                                        >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                            </svg>
-                                            <span className="hover:underline">
-                                                {review.ownerName || review.author || 'Anonyme'}
-                                            </span>
-                                        </div>
-
-                                        <div className="text-xs text-gray-600">
-                                            {new Date(review.createdAt).toLocaleDateString('fr-FR')}
-                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
 
                         {/* Show More Button */}
@@ -263,7 +270,9 @@ export default function HomePage() {
                                             </div>
                                             <div>
                                                 <h4 className="text-xl font-bold text-white">
-                                                    {reviews.find(r => r.ownerId === selectedAuthor)?.ownerName}
+                                                    {reviews.find(r => r.ownerId === selectedAuthor || r.authorId === selectedAuthor)?.ownerName ||
+                                                        reviews.find(r => r.ownerId === selectedAuthor || r.authorId === selectedAuthor)?.author?.username ||
+                                                        'Anonyme'}
                                                 </h4>
                                                 <p className="text-gray-400">Membre</p>
                                             </div>
