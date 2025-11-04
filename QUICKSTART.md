@@ -1,19 +1,20 @@
 # 🚀 Démarrage Rapide - Reviews-Maker v2.0
 
+**Mode développement local uniquement**
+
 ## 📋 Prérequis
 
-- Node.js 18+ et npm installés
-- Compte Discord Developer (pour OAuth2)
-- Git installé
+- Node.js 18+ et npm
+- Compte Discord Developer (gratuit)
 
 ## ⚡ Installation en 5 minutes
 
-### 1️⃣ Configuration Discord OAuth2
+### 1️⃣ Discord OAuth2
 
-1. Aller sur https://discord.com/developers/applications
-2. Créer une nouvelle application "Reviews-Maker"
-3. Onglet **OAuth2** → Copier **Client ID** et **Client Secret**
-4. Ajouter l'URL de redirection : `http://localhost:3000/api/auth/discord/callback`
+1. Va sur https://discord.com/developers/applications
+2. Créer "Reviews-Maker Dev"
+3. **OAuth2** → **General** : Copier Client ID + Client Secret
+4. **OAuth2** → **Redirects** : Ajouter `http://localhost:3000/api/auth/discord/callback`
 
 ### 2️⃣ Configuration Backend
 
@@ -39,71 +40,69 @@ FRONTEND_URL=http://localhost:5173
 
 DATABASE_URL="file:../db/reviews.sqlite"
 
-DISCORD_CLIENT_ID=votre_client_id_ici
-DISCORD_CLIENT_SECRET=votre_client_secret_ici
-DISCORD_CALLBACK_URL=http://localhost:3000/api/auth/discord/callback
+DISCORD_CLIENT_ID="ton_client_id_ici"
+DISCORD_CLIENT_SECRET="ton_secret_ici"
+DISCORD_CALLBACK_URL="http://localhost:3000/api/auth/discord/callback"
 
-SESSION_SECRET=changez_moi_par_une_chaine_aleatoire_longue
+SESSION_SECRET="genere_une_longue_chaine_aleatoire"
 ```
 
-**Initialiser la base de données :**
+**💡 Astuce** : Générer un SESSION_SECRET sécurisé :
 ```powershell
-# Toujours dans server-new/
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+**Initialiser la base de données** :
+```powershell
 npx prisma generate
 npx prisma migrate dev --name init
 ```
 
-### 3️⃣ Configuration Frontend
+### 3️⃣ Frontend
 
 ```powershell
-# Depuis la racine du projet
 cd client
-
-# Installer les dépendances
 npm install
 ```
 
-### 4️⃣ Lancement
+### 4️⃣ Lancer l'application
 
-**Terminal 1 - Backend :**
+**Terminal 1 - Backend** :
 ```powershell
 cd server-new
 npm run dev
 ```
 
-**Terminal 2 - Frontend :**
+**Terminal 2 - Frontend** :
 ```powershell
 cd client
 npm run dev
 ```
 
-### 5️⃣ Tester l'application
+### 5️⃣ Utiliser l'app
 
-1. Ouvrir http://localhost:5173 dans votre navigateur
-2. Cliquer sur **"Se connecter"** en haut à droite
-3. Autoriser l'application Discord
-4. Vous êtes connecté ! Créez votre première review 🎉
+1. Ouvre http://localhost:5173
+2. Clique "Se connecter"
+3. Autorise Discord
+4. Crée ta première review ! �
 
 ---
 
 ## 🔧 Commandes Utiles
 
-### Backend (server-new/)
+### Backend
 
 ```powershell
-npm run dev              # Démarrer avec hot-reload
-npm start                # Démarrer en production
-npm run prisma:generate  # Générer client Prisma
-npm run prisma:migrate   # Appliquer migrations
-npm run prisma:studio    # Interface admin DB
+npm run dev              # Dev avec hot-reload
+npx prisma studio        # Interface admin DB (http://localhost:5555)
+npx prisma migrate dev   # Créer nouvelle migration
 ```
 
-### Frontend (client/)
+### Frontend
 
 ```powershell
-npm run dev      # Serveur dev Vite
-npm run build    # Build production
-npm run preview  # Preview du build
+npm run dev      # Dev avec hot-reload
+npm run build    # Build pour production
 npm run lint     # Vérifier le code
 ```
 
@@ -111,52 +110,34 @@ npm run lint     # Vérifier le code
 
 ## 🐛 Problèmes Courants
 
-### Le backend ne démarre pas
+### Backend ne démarre pas
+- Vérifier que `.env` existe avec toutes les variables
+- Port 3000 déjà utilisé ? Tuer le processus
+- Lancer `npx prisma generate` si erreur Prisma
 
-- ✅ Vérifier que `.env` existe et contient toutes les variables
-- ✅ Vérifier que le port 3000 n'est pas déjà utilisé
-- ✅ Vérifier que Prisma est initialisé : `npx prisma generate`
+### Connexion Discord échoue
+- Les clés Discord doivent être **entre guillemets** dans `.env`
+- Vérifier l'URL de callback sur Discord Developer Portal
+- `FRONTEND_URL` doit être `http://localhost:5173`
 
-### La connexion Discord échoue
+### Images ne s'affichent pas
+- Créer le dossier `db/review_images/` si absent
+- Vérifier les logs serveur pour erreurs Multer
 
-- ✅ Vérifier `DISCORD_CLIENT_ID` et `DISCORD_CLIENT_SECRET` dans `.env`
-- ✅ Vérifier l'URL de callback dans Discord Developer Portal
-- ✅ Vérifier que `FRONTEND_URL` pointe vers `http://localhost:5173`
-
-### Les images ne s'affichent pas
-
-- ✅ Vérifier que le dossier `db/review_images/` existe
-- ✅ Vérifier les permissions du dossier
-- ✅ Vérifier les logs du serveur pour erreurs Multer
-
-### Erreur "Cannot find module"
-
-- ✅ Supprimer `node_modules/` et refaire `npm install`
-- ✅ Vérifier que vous êtes dans le bon dossier (client/ ou server-new/)
+### "Cannot find module"
+- Supprimer `node_modules/` et refaire `npm install`
+- Vérifier que tu es dans le bon dossier
 
 ---
 
-## 📚 Documentation Complète
+## 📚 Plus d'infos
 
-Pour aller plus loin, consulter le dossier **docs/** :
-
-- `INDEX_REFONTE.md` - Vue d'ensemble du projet
-- `REFONTE_AUTONOME_2025.md` - Architecture détaillée
-- `DESIGN_SYSTEM.md` - Guide du design
-- `DISCORD_OAUTH_SETUP.md` - Configuration OAuth2 détaillée
-- `DONNEES_CANNABIS.md` - Listes de données (terpènes, effets, etc.)
-- `UX_SAISIE_FACILITEE.md` - Composants interactifs
+Dossier `docs/` :
+- Architecture détaillée
+- Design system
+- Guide données cannabis
+- Composants UX interactifs
 
 ---
 
-## 🌐 Déploiement Production
-
-Voir les scripts de déploiement :
-- `deploy.sh` (Linux/Mac)
-- `deploy.ps1` (Windows)
-- `ecosystem.config.cjs` (Configuration PM2)
-- `nginx.conf` (Configuration Nginx)
-
----
-
-**Prêt à créer des reviews ! 🌿**
+**C'est parti ! 🌿**

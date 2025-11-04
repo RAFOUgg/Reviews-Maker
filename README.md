@@ -1,46 +1,76 @@
-# 🌿 Reviews-Maker - Version 2.0
+# 🌿 Reviews-Maker v2.0
 
 Application moderne de gestion et création de reviews de cannabis, avec authentification Discord et interface React.
 
-## 🚀 Installation Rapide
+**⚠️ Mode développement uniquement - Application locale**
+
+## 🚀 Installation & Lancement
 
 ### 1. Prérequis
-- Node.js 18+ et npm
-- Compte Discord Developer (pour OAuth2)
+- Node.js 18+ et npm installés
+- Compte Discord Developer (gratuit)
 
-### 2. Configuration Discord
-Créer une application Discord et obtenir `DISCORD_CLIENT_ID` et `DISCORD_CLIENT_SECRET`.  
-Ajouter l'URL de callback : `http://localhost:3000/api/auth/discord/callback`
+### 2. Configuration Discord OAuth2
 
-### 3. Backend
+1. Va sur https://discord.com/developers/applications
+2. Créer une nouvelle application "Reviews-Maker Dev"
+3. Dans **OAuth2** → **General**, copier :
+   - Client ID
+   - Client Secret (cliquer "Reset Secret" si besoin)
+4. Dans **OAuth2** → **Redirects**, ajouter :
+   ```
+   http://localhost:3000/api/auth/discord/callback
+   ```
+
+### 3. Configuration Backend
 
 ```powershell
 cd server-new
 npm install
 
-# Créer et configurer .env
+# Créer le fichier .env
 cp .env.example .env
-# Éditer .env avec vos credentials Discord
+```
 
-# Initialiser base de données
+**Éditer `.env` et remplacer avec tes vraies clés** :
+```env
+NODE_ENV=development
+PORT=3000
+FRONTEND_URL=http://localhost:5173
+
+DATABASE_URL="file:../db/reviews.sqlite"
+
+DISCORD_CLIENT_ID="ton_client_id_ici"
+DISCORD_CLIENT_SECRET="ton_secret_ici"
+DISCORD_CALLBACK_URL="http://localhost:3000/api/auth/discord/callback"
+
+SESSION_SECRET="genere_une_longue_chaine_aleatoire"
+```
+
+**Initialiser la base de données** :
+```powershell
 npx prisma generate
 npx prisma migrate dev --name init
+```
 
-# Démarrer serveur
+**Démarrer le serveur** :
+```powershell
 npm run dev
 ```
 
-### 4. Frontend
+### 4. Configuration Frontend
 
+**Dans un nouveau terminal** :
 ```powershell
 cd client
 npm install
 npm run dev
 ```
 
-### 5. Accéder à l'application
+### 5. Accès à l'application
 - **Frontend** : http://localhost:5173
 - **Backend API** : http://localhost:3000
+- **Prisma Studio** : `npx prisma studio` (interface DB)
 
 ## 📁 Structure du Projet
 
@@ -97,28 +127,52 @@ Reviews-Maker/
 - **Passport.js** - Authentification Discord
 - **Multer** - Upload d'images
 
-## 📡 API Endpoints
+## 📡 API Endpoints (localhost:3000)
 
-### Auth
-- `GET /api/auth/discord` - Connexion Discord
+### Authentification
+- `GET /api/auth/discord` - Initier connexion Discord
 - `GET /api/auth/discord/callback` - Callback OAuth2
-- `GET /api/auth/me` - User connecté
+- `GET /api/auth/me` - Obtenir utilisateur connecté
 - `POST /api/auth/logout` - Déconnexion
 
 ### Reviews
-- `GET /api/reviews` - Liste (filtres: type, search, pagination)
-- `GET /api/reviews/:id` - Détail review
-- `POST /api/reviews` - Créer (auth requis)
-- `PUT /api/reviews/:id` - Modifier (ownership requis)
-- `DELETE /api/reviews/:id` - Supprimer (ownership requis)
+- `GET /api/reviews` - Liste avec filtres (type, search, page, limit)
+- `GET /api/reviews/:id` - Détail d'une review
+- `POST /api/reviews` - Créer review (auth + multipart/form-data)
+- `PUT /api/reviews/:id` - Modifier review (ownership requis)
+- `DELETE /api/reviews/:id` - Supprimer review (ownership requis)
 
-### Users
+### Utilisateurs
 - `GET /api/users/me/reviews` - Mes reviews
-- `GET /api/users/me/stats` - Mes statistiques
-- `GET /api/users/:id/profile` - Profil public
-- `GET /api/users/:id/reviews` - Reviews publiques user
+- `GET /api/users/me/stats` - Mes statistiques (total, moyenne, breakdown)
+- `GET /api/users/:id/profile` - Profil public d'un utilisateur
+- `GET /api/users/:id/reviews` - Reviews publiques d'un utilisateur
+
+## 🐛 Troubleshooting
+
+### Le backend ne démarre pas
+- Vérifier que le fichier `.env` existe dans `server-new/`
+- Vérifier que toutes les variables sont renseignées
+- Vérifier que le port 3000 est libre
+
+### Erreur OAuth2Strategy
+- Les clés Discord doivent être entre guillemets dans `.env`
+- Vérifier que l'URL de callback est bien configurée sur Discord
+
+### Le frontend ne se connecte pas à l'API
+- Vérifier que le backend tourne sur port 3000
+- Vérifier la console navigateur pour erreurs CORS
+
+## 📚 Documentation
+
+Consulter le dossier `docs/` pour plus d'infos :
+- Architecture détaillée
+- Design system
+- Guide des données cannabis
+- Composants UX
 
 ---
 
-**Status** : Phase 1 en cours (Init React + Vite)  
-**Date** : Novembre 2025
+**Version** : 2.0.0 (Refonte complète)  
+**Date** : Novembre 2025  
+**Mode** : Développement local uniquement
