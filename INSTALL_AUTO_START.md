@@ -1,192 +1,156 @@
-# 🚀 Installation du Démarrage Automatique
+# 🚀 Guide d'Installation - Démarrage Automatique
 
-Ce guide t'explique comment faire en sorte que Reviews-Maker se lance **automatiquement au démarrage de Windows**.
+## 📦 Scripts Disponibles
 
-## 📋 Méthode Simple (Dossier Démarrage)
+### 1. **START_DEV_AUTO.bat** - Lancer les serveurs
+- Démarre le backend (Express)
+- Démarre le frontend (React)
+- Ouvre automatiquement le navigateur
+- Les serveurs tournent en arrière-plan
 
-### Étape 1 : Créer un raccourci
-
-1. **Clic droit** sur `START_DEV_AUTO.bat`
-2. Sélectionne **"Créer un raccourci"**
-3. Un fichier `START_DEV_AUTO.bat - Raccourci` apparaît
-
-### Étape 2 : Déplacer dans le dossier Démarrage
-
-1. Appuie sur **Win + R**
-2. Tape : `shell:startup`
-3. Appuie sur **Entrée**
-4. **Copie** le raccourci dans ce dossier
-
-✅ **C'est tout !** Au prochain démarrage de Windows, le site se lancera automatiquement.
+**Usage** : Double-clic sur le fichier
 
 ---
 
-## 🔧 Méthode Avancée (Planificateur de Tâches)
+### 2. **STOP_DEV.bat** - Arrêter les serveurs
+- Arrête tous les processus Node.js
+- Ferme le backend et le frontend
 
-Si tu veux plus de contrôle (par exemple retarder le lancement) :
-
-### Étape 1 : Ouvrir le Planificateur
-
-1. Appuie sur **Win + R**
-2. Tape : `taskschd.msc`
-3. Appuie sur **Entrée**
-
-### Étape 2 : Créer une tâche
-
-1. Dans le menu de droite, clique **"Créer une tâche..."**
-2. **Nom** : `Reviews-Maker AutoStart`
-3. Coche **"Exécuter avec les autorisations maximales"**
-
-### Étape 3 : Déclencheur
-
-1. Onglet **"Déclencheurs"** → **"Nouveau"**
-2. **Lancer la tâche** : `À l'ouverture de session`
-3. **Utilisateur spécifique** : Ton compte Windows
-4. **Retarder la tâche de** : `30 secondes` (pour laisser Windows démarrer)
-5. Clique **OK**
-
-### Étape 4 : Action
-
-1. Onglet **"Actions"** → **"Nouveau"**
-2. **Action** : `Démarrer un programme`
-3. **Programme** : `C:\Users\Rafi\Documents\.0AMes-Logiciel\Reviews-Maker\START_DEV_AUTO.bat`
-4. Clique **OK**
-
-### Étape 5 : Conditions
-
-1. Onglet **"Conditions"**
-2. **Décoche** "Démarrer uniquement si connecté au secteur" (si laptop)
-3. Clique **OK**
-
-### Étape 6 : Paramètres
-
-1. Onglet **"Paramètres"**
-2. Coche **"Autoriser l'exécution de la tâche à la demande"**
-3. Coche **"Si la tâche échoue, recommencer toutes les"** : `1 minute`
-4. Clique **OK**
-
-✅ **Terminé !** La tâche est créée.
+**Usage** : Double-clic quand tu veux tout arrêter
 
 ---
 
-## 🌐 Accès depuis le Réseau Local
+### 3. **INSTALL_AUTO_START.bat** - Installer le démarrage automatique
+- Crée un raccourci dans le dossier Démarrage de Windows
+- Le site se lancera automatiquement à chaque démarrage du PC
 
-### Trouver ton IP locale
+**Usage** : Double-clic pour installer le démarrage auto
 
-Ouvre PowerShell et tape :
+---
+
+### 4. **UNINSTALL_AUTO_START.bat** - Désinstaller le démarrage automatique
+- Supprime le raccourci du dossier Démarrage
+- Le site ne se lancera plus automatiquement
+
+**Usage** : Double-clic pour désinstaller
+
+---
+
+### 5. **CREATE_DESKTOP_SHORTCUT.bat** - Créer un raccourci Bureau
+- Crée un raccourci sur ton Bureau
+- Pour lancer facilement Reviews-Maker
+
+**Usage** : Double-clic pour créer le raccourci
+
+---
+
+### 6. **OPEN_SITE.bat** - Ouvrir le site
+- Ouvre directement http://localhost:5173 dans ton navigateur
+- (Le serveur doit être lancé avant)
+
+**Usage** : Double-clic pour ouvrir le site rapidement
+
+---
+
+### 7. **OPEN_NETWORK.bat** - Accéder depuis le réseau local
+- Affiche ton adresse IP locale
+- Ouvre le site accessible depuis ton téléphone/tablette
+
+**Usage** : Double-clic pour voir l'URL réseau
+
+---
+
+## 🎯 Installation Recommandée
+
+### Étape 1 : Installer les dépendances (première fois)
+
 ```powershell
-ipconfig | Select-String "IPv4"
+# Backend
+cd server-new
+npm install
+
+# Frontend
+cd ../client
+npm install
 ```
 
-Tu verras quelque chose comme : `192.168.1.X`
+### Étape 2 : Créer le fichier .env
 
-### Accéder depuis un autre appareil
+```powershell
+cd server-new
+# Copier .env.example vers .env
+copy .env.example .env
+# Éditer .env avec tes credentials Discord
+```
 
-Sur **n'importe quel appareil connecté au même WiFi** :
+### Étape 3 : Tester le lancement
 
-1. Ouvre un navigateur
-2. Va sur : `http://192.168.1.X:5173` (remplace X par ton IP)
-3. Le site Reviews-Maker s'affiche ! 🎉
+Double-clic sur **START_DEV_AUTO.bat**
 
-### ⚠️ Pare-feu Windows
+Le site devrait s'ouvrir sur http://localhost:5173
 
-Si ça ne fonctionne pas, autorise le port 5173 :
+### Étape 4 : Installer le démarrage automatique (optionnel)
 
-1. Ouvre **Pare-feu Windows Defender**
-2. **"Paramètres avancés"** → **"Règles de trafic entrant"**
-3. **"Nouvelle règle..."**
-4. Type : **Port**
-5. Protocole : **TCP**, Port : **5173**
-6. Autoriser la connexion
-7. Nom : `Vite Dev Server (Reviews-Maker)`
+Double-clic sur **INSTALL_AUTO_START.bat**
+
+Maintenant, à chaque démarrage de Windows, le site se lancera automatiquement ! 🎉
 
 ---
 
-## 🛑 Arrêter les Services
+## 📱 Accès depuis ton téléphone/tablette
 
-Si tu veux arrêter manuellement :
+1. Lance **OPEN_NETWORK.bat**
+2. Note ton adresse IP (ex: `192.168.1.50`)
+3. Sur ton téléphone, ouvre le navigateur et va sur :
+   ```
+   http://192.168.1.50:5173
+   ```
 
-1. Cherche les fenêtres **"Reviews-Backend"** et **"Reviews-Frontend"**
-2. Ferme-les (ou tape `Ctrl+C` dedans)
-
-Ou crée un fichier `STOP_DEV.bat` :
-
-```bat
-@echo off
-taskkill /FI "WINDOWTITLE eq Reviews-Backend*" /F
-taskkill /FI "WINDOWTITLE eq Reviews-Frontend*" /F
-echo ✅ Services arrêtés !
-pause
-```
+**⚠️ Important** : Ton téléphone et ton PC doivent être sur le même réseau WiFi !
 
 ---
 
-## 📊 Vérifier que ça tourne
+## 🛑 Désinstaller le démarrage automatique
 
-Ouvre un navigateur et va sur :
-- **Frontend** : http://localhost:5173
-- **Backend API** : http://localhost:3000/api/health
+Si tu ne veux plus que le site se lance au démarrage de Windows :
 
-Si tu vois les pages, c'est que ça fonctionne ! 🎉
+Double-clic sur **UNINSTALL_AUTO_START.bat**
+
+---
+
+## 🔧 Dépannage
+
+### Le site ne se lance pas
+1. Vérifie que Node.js est installé : `node --version`
+2. Vérifie que les dépendances sont installées (voir Étape 1)
+3. Vérifie le fichier `.env` dans `server-new/`
+
+### Le navigateur ne s'ouvre pas automatiquement
+- Ouvre manuellement http://localhost:5173
+- Ou lance **OPEN_SITE.bat**
+
+### Les serveurs ne s'arrêtent pas
+- Lance **STOP_DEV.bat**
+- Ou ouvre le Gestionnaire des tâches et tue les processus Node.js
+
+### Accès réseau local ne fonctionne pas
+1. Vérifie que le pare-feu Windows autorise les connexions entrantes sur le port 5173
+2. Dans Vite config, vérifie que `host: '0.0.0.0'` est configuré
 
 ---
 
 ## 💡 Astuces
 
-### 1. Réduire automatiquement les fenêtres
+### Épingler à la barre des tâches
+1. Clic droit sur **START_DEV_AUTO.bat**
+2. Créer un raccourci
+3. Glisse le raccourci dans la barre des tâches
 
-Modifie `START_DEV_AUTO.bat`, remplace `cmd /k` par `cmd /c` :
-
-```bat
-start "Reviews-Backend" /MIN cmd /c "cd server-new && npm run dev"
-start "Reviews-Frontend" /MIN cmd /c "cd client && npm run dev"
-```
-
-Les fenêtres se lanceront réduites dans la barre des tâches.
-
-### 2. Logs dans un fichier
-
-Pour garder une trace des logs :
-
-```bat
-start "Reviews-Backend" cmd /c "cd server-new && npm run dev >> logs-backend.txt 2>&1"
-start "Reviews-Frontend" cmd /c "cd client && npm run dev >> logs-frontend.txt 2>&1"
-```
-
-### 3. Notification au démarrage
-
-Ajoute avant `exit` :
-
-```bat
-powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('Reviews-Maker est en ligne !', 'Démarrage', 'OK', 'Information')"
-```
+### Personnaliser l'icône du raccourci Bureau
+1. Clic droit sur le raccourci → Propriétés
+2. Changer l'icône → Parcourir
+3. Choisis une icône dans `C:\Windows\System32\imageres.dll`
 
 ---
 
-## 🐛 Problèmes Courants
-
-### Le site ne démarre pas
-
-- Vérifie que Node.js est installé : `node --version`
-- Vérifie que les dépendances sont installées :
-  ```bat
-  cd server-new && npm install
-  cd client && npm install
-  ```
-
-### Port déjà utilisé
-
-Si le port 3000 ou 5173 est occupé :
-
-1. Trouve le processus : `netstat -ano | findstr :3000`
-2. Tue-le : `taskkill /PID [numero] /F`
-
-### Pas d'accès réseau
-
-- Vérifie que le pare-feu autorise Vite (port 5173)
-- Vérifie que ton PC et l'autre appareil sont sur le même réseau WiFi
-- Essaye de désactiver temporairement le pare-feu pour tester
-
----
-
-**🌿 Profite de Reviews-Maker en mode automatique !**
+**Prêt à coder ! 🚀**

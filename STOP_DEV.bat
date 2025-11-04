@@ -1,30 +1,26 @@
 @echo off
-REM Reviews-Maker - Arrêt des services
+title Reviews-Maker - Arret des services
+color 0C
 
 echo.
-echo ╔══════════════════════════════════════════════════════════════════╗
-echo ║  🛑 Reviews-Maker - Arrêt des services                           ║
-echo ╚══════════════════════════════════════════════════════════════════╝
+echo ========================================
+echo    REVIEWS-MAKER v2.0
+echo    Arret des services
+echo ========================================
 echo.
 
-echo 🔍 Recherche des processus...
-
-REM Arrêter les fenêtres par leur titre
+echo Arret du backend...
 taskkill /FI "WINDOWTITLE eq Reviews-Backend*" /F >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    echo ✅ Backend arrêté
-) else (
-    echo ⚠️  Aucun backend en cours
-)
 
+echo Arret du frontend...
 taskkill /FI "WINDOWTITLE eq Reviews-Frontend*" /F >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    echo ✅ Frontend arrêté
-) else (
-    echo ⚠️  Aucun frontend en cours
-)
+
+echo Arret des processus Node.js...
+taskkill /IM node.exe /F >nul 2>&1
 
 echo.
-echo 🎯 Services Reviews-Maker arrêtés !
+echo ========================================
+echo    Services arretes !
+echo ========================================
 echo.
-pause
+timeout /t 3 /nobreak >nul

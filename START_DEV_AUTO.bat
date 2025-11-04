@@ -1,37 +1,39 @@
 @echo off
-REM Reviews-Maker - Démarrage automatique développement
-REM Ce script lance le backend et le frontend en arrière-plan
+title Reviews-Maker - Demarrage automatique
+color 0A
 
 echo.
-echo ╔══════════════════════════════════════════════════════════════════╗
-echo ║  🌿 Reviews-Maker - Démarrage automatique                        ║
-echo ╚══════════════════════════════════════════════════════════════════╝
+echo ========================================
+echo    REVIEWS-MAKER v2.0
+echo    Demarrage automatique
+echo ========================================
 echo.
 
-REM Aller dans le dossier du projet
+:: Aller dans le dossier du projet
 cd /d "%~dp0"
 
-echo 📦 Démarrage du backend Express...
-start "Reviews-Backend" cmd /k "cd server-new && npm run dev"
-
-REM Attendre 3 secondes que le backend démarre
+:: Demarrer le backend en arriere-plan
+echo [1/3] Demarrage du backend Express...
+start "Reviews-Backend" /min cmd /c "cd server-new && npm run dev"
 timeout /t 3 /nobreak >nul
 
-echo 🎨 Démarrage du frontend React...
-start "Reviews-Frontend" cmd /k "cd client && npm run dev"
-
-echo.
-echo ✅ Services lancés :
-echo    Backend:  http://localhost:3000
-echo    Frontend: http://localhost:5173
-echo.
-echo 🌐 Accès réseau local :
-echo    Depuis un autre PC : http://[TON_IP]:5173
-echo    Trouve ton IP : ipconfig
-echo.
-echo 💡 Les fenêtres peuvent être réduites mais NE PAS les fermer !
-echo.
-
-REM Attendre 5 secondes avant de fermer cette fenêtre
+:: Demarrer le frontend en arriere-plan
+echo [2/3] Demarrage du frontend React...
+start "Reviews-Frontend" /min cmd /c "cd client && npm run dev"
 timeout /t 5 /nobreak >nul
-exit
+
+:: Ouvrir le navigateur automatiquement
+echo [3/3] Ouverture du navigateur...
+timeout /t 2 /nobreak >nul
+start http://localhost:5173
+
+echo.
+echo ========================================
+echo    PRET ! Le site est accessible :
+echo    http://localhost:5173
+echo ========================================
+echo.
+echo Les serveurs tournent en arriere-plan.
+echo Ferme cette fenetre quand tu veux.
+echo.
+pause
