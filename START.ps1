@@ -1,68 +1,72 @@
 #!/usr/bin/env pwsh
 # ============================================================================
-# 🚀 Reviews-Maker - Lanceur Principal
+# Reviews-Maker - Lanceur Principal
 # ============================================================================
 # Usage: .\START.ps1
-# Ce script démarre automatiquement le backend ET le frontend
+# Ce script demarre automatiquement le backend ET le frontend
 # ============================================================================
 
 $ErrorActionPreference = "Stop"
 $Host.UI.RawUI.WindowTitle = "Reviews-Maker - Lanceur"
 
 Write-Host "`n" -NoNewline
-Write-Host "╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║           🌿 REVIEWS-MAKER - DÉMARRAGE                        ║" -ForegroundColor Cyan
-Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+Write-Host "================================================================" -ForegroundColor Cyan
+Write-Host "           REVIEWS-MAKER - DEMARRAGE                            " -ForegroundColor Cyan
+Write-Host "================================================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Vérifier Node.js
-Write-Host "🔍 Vérification de l'environnement..." -ForegroundColor Yellow
+# Verifier Node.js
+Write-Host "Verification de l'environnement..." -ForegroundColor Yellow
 try {
     $nodeVersion = node --version
-    Write-Host "  ✓ Node.js: $nodeVersion" -ForegroundColor Green
-} catch {
-    Write-Host "  ✗ Node.js n'est pas installé !" -ForegroundColor Red
-    Write-Host "    Téléchargez-le sur https://nodejs.org" -ForegroundColor Red
+    Write-Host "  [OK] Node.js: $nodeVersion" -ForegroundColor Green
+}
+catch {
+    Write-Host "  [ERREUR] Node.js n'est pas installe !" -ForegroundColor Red
+    Write-Host "    Telechargez-le sur https://nodejs.org" -ForegroundColor Red
     pause
     exit 1
 }
 
-# Arrêter les anciens processus Node
-Write-Host "`n🛑 Nettoyage des anciens processus..." -ForegroundColor Yellow
+# Arreter les anciens processus Node
+Write-Host "`nNettoyage des anciens processus..." -ForegroundColor Yellow
 $nodeProcesses = Get-Process -Name node -ErrorAction SilentlyContinue
 if ($nodeProcesses) {
     $nodeProcesses | Stop-Process -Force
     Start-Sleep -Seconds 1
-    Write-Host "  ✓ Anciens processus arrêtés" -ForegroundColor Green
-} else {
-    Write-Host "  ✓ Aucun processus à arrêter" -ForegroundColor Green
+    Write-Host "  [OK] Anciens processus arretes" -ForegroundColor Green
+}
+else {
+    Write-Host "  [OK] Aucun processus a arreter" -ForegroundColor Green
 }
 
-# Vérifier les dépendances
-Write-Host "`n📦 Vérification des dépendances..." -ForegroundColor Yellow
+# Verifier les dependances
+Write-Host "`nVerification des dependances..." -ForegroundColor Yellow
 
 if (!(Test-Path "server-new/node_modules")) {
-    Write-Host "  → Installation des dépendances backend..." -ForegroundColor Gray
+    Write-Host "  Installation des dependances backend..." -ForegroundColor Gray
     Set-Location server-new
     npm install --silent
     Set-Location ..
-    Write-Host "  ✓ Backend prêt" -ForegroundColor Green
-} else {
-    Write-Host "  ✓ Backend déjà installé" -ForegroundColor Green
+    Write-Host "  [OK] Backend pret" -ForegroundColor Green
+}
+else {
+    Write-Host "  [OK] Backend deja installe" -ForegroundColor Green
 }
 
 if (!(Test-Path "client/node_modules")) {
-    Write-Host "  → Installation des dépendances frontend..." -ForegroundColor Gray
+    Write-Host "  Installation des dependances frontend..." -ForegroundColor Gray
     Set-Location client
     npm install --silent
     Set-Location ..
-    Write-Host "  ✓ Frontend prêt" -ForegroundColor Green
-} else {
-    Write-Host "  ✓ Frontend déjà installé" -ForegroundColor Green
+    Write-Host "  [OK] Frontend pret" -ForegroundColor Green
+}
+else {
+    Write-Host "  [OK] Frontend deja installe" -ForegroundColor Green
 }
 
-# Démarrer le backend
-Write-Host "`n🔧 Démarrage du backend..." -ForegroundColor Yellow
+# Demarrer le backend
+Write-Host "`nDemarrage du backend..." -ForegroundColor Yellow
 $backendJob = Start-Job -ScriptBlock {
     Set-Location $using:PWD
     Set-Location server-new
@@ -70,7 +74,7 @@ $backendJob = Start-Job -ScriptBlock {
 }
 Start-Sleep -Seconds 3
 
-# Vérifier que le backend répond
+# Verifier que le backend repond
 $backendReady = $false
 for ($i = 1; $i -le 10; $i++) {
     try {
@@ -79,24 +83,26 @@ for ($i = 1; $i -le 10; $i++) {
             $backendReady = $true
             break
         }
-    } catch {
-        Write-Host "  ⏳ Tentative $i/10..." -ForegroundColor Gray
+    }
+    catch {
+        Write-Host "  Tentative $i/10..." -ForegroundColor Gray
         Start-Sleep -Seconds 1
     }
 }
 
 if ($backendReady) {
-    Write-Host "  ✓ Backend actif sur http://localhost:3000" -ForegroundColor Green
-} else {
-    Write-Host "  ✗ Le backend n'a pas démarré correctement" -ForegroundColor Red
+    Write-Host "  [OK] Backend actif sur http://localhost:3000" -ForegroundColor Green
+}
+else {
+    Write-Host "  [ERREUR] Le backend n'a pas demarre correctement" -ForegroundColor Red
     Stop-Job $backendJob
     Remove-Job $backendJob
     pause
     exit 1
 }
 
-# Démarrer le frontend
-Write-Host "`n🎨 Démarrage du frontend..." -ForegroundColor Yellow
+# Demarrer le frontend
+Write-Host "`nDemarrage du frontend..." -ForegroundColor Yellow
 $frontendJob = Start-Job -ScriptBlock {
     Set-Location $using:PWD
     Set-Location client
@@ -104,7 +110,7 @@ $frontendJob = Start-Job -ScriptBlock {
 }
 Start-Sleep -Seconds 3
 
-# Vérifier que le frontend répond
+# Verifier que le frontend repond
 $frontendReady = $false
 for ($i = 1; $i -le 10; $i++) {
     try {
@@ -113,36 +119,38 @@ for ($i = 1; $i -le 10; $i++) {
             $frontendReady = $true
             break
         }
-    } catch {
-        Write-Host "  ⏳ Tentative $i/10..." -ForegroundColor Gray
+    }
+    catch {
+        Write-Host "  Tentative $i/10..." -ForegroundColor Gray
         Start-Sleep -Seconds 1
     }
 }
 
 if ($frontendReady) {
-    Write-Host "  ✓ Frontend actif sur http://localhost:5173" -ForegroundColor Green
-} else {
-    Write-Host "  ✗ Le frontend n'a pas démarré correctement" -ForegroundColor Red
+    Write-Host "  [OK] Frontend actif sur http://localhost:5173" -ForegroundColor Green
+}
+else {
+    Write-Host "  [ERREUR] Le frontend n'a pas demarre correctement" -ForegroundColor Red
     Stop-Job $backendJob, $frontendJob
     Remove-Job $backendJob, $frontendJob
     pause
     exit 1
 }
 
-# Succès !
+# Succes !
 Write-Host ""
-Write-Host "╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Green
-Write-Host "║               ✅ REVIEWS-MAKER EST PRÊT !                      ║" -ForegroundColor Green
-Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Green
+Write-Host "================================================================" -ForegroundColor Green
+Write-Host "               REVIEWS-MAKER EST PRET !                         " -ForegroundColor Green
+Write-Host "================================================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "🌐 Accédez au site : " -NoNewline -ForegroundColor White
+Write-Host "Site web : " -NoNewline -ForegroundColor White
 Write-Host "http://localhost:5173" -ForegroundColor Cyan
-Write-Host "🔧 API Backend     : " -NoNewline -ForegroundColor White
+Write-Host "API Backend : " -NoNewline -ForegroundColor White
 Write-Host "http://localhost:3000" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "💡 Pour arrêter : Appuyez sur " -NoNewline -ForegroundColor Yellow
+Write-Host "Pour arreter : Appuyez sur " -NoNewline -ForegroundColor Yellow
 Write-Host "CTRL+C" -NoNewline -ForegroundColor White
-Write-Host " dans cette fenêtre" -ForegroundColor Yellow
+Write-Host " dans cette fenetre" -ForegroundColor Yellow
 Write-Host ""
 
 # Ouvrir le navigateur automatiquement
@@ -150,26 +158,27 @@ Start-Sleep -Seconds 1
 Start-Process "http://localhost:5173"
 
 # Attendre et afficher les logs
-Write-Host "📋 Logs en direct (CTRL+C pour arrêter):`n" -ForegroundColor Cyan
+Write-Host "Logs en direct (CTRL+C pour arreter):`n" -ForegroundColor Cyan
 
 try {
     while ($true) {
         Start-Sleep -Seconds 1
         
-        # Vérifier que les jobs tournent toujours
+        # Verifier que les jobs tournent toujours
         if ($backendJob.State -ne "Running") {
-            Write-Host "⚠️  Le backend s'est arrêté !" -ForegroundColor Red
+            Write-Host "[ALERTE] Le backend s'est arrete !" -ForegroundColor Red
             break
         }
         if ($frontendJob.State -ne "Running") {
-            Write-Host "⚠️  Le frontend s'est arrêté !" -ForegroundColor Red
+            Write-Host "[ALERTE] Le frontend s'est arrete !" -ForegroundColor Red
             break
         }
     }
-} finally {
-    Write-Host "`n🛑 Arrêt des serveurs..." -ForegroundColor Yellow
+}
+finally {
+    Write-Host "`nArret des serveurs..." -ForegroundColor Yellow
     Stop-Job $backendJob, $frontendJob -ErrorAction SilentlyContinue
     Remove-Job $backendJob, $frontendJob -ErrorAction SilentlyContinue
     Get-Process -Name node -ErrorAction SilentlyContinue | Stop-Process -Force
-    Write-Host "✓ Tous les serveurs sont arrêtés" -ForegroundColor Green
+    Write-Host "[OK] Tous les serveurs sont arretes" -ForegroundColor Green
 }
