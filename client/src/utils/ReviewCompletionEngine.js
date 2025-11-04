@@ -841,7 +841,7 @@ export class ReviewCompletionEngine {
 // ============================================================================
 
 export const reviewEngine = new ReviewCompletionEngine({
-    apiBase: process.env.REACT_APP_API_BASE || '/api',
+    apiBase: import.meta.env.VITE_API_BASE || '/api',
     maxRetries: 3,
     uploadTimeout: 30000
 })
