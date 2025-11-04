@@ -9,22 +9,22 @@ color 0B
 :MENU
 cls
 echo.
-echo ╔════════════════════════════════════════════════════════════════╗
-echo ║           🎨 REVIEWS-MAKER - MENU PRINCIPAL 🎨                ║
-echo ╚════════════════════════════════════════════════════════════════╝
+echo ================================================================
+echo            REVIEWS-MAKER - MENU PRINCIPAL
+echo ================================================================
 echo.
-echo  [1] ⚙️  Activer/Désactiver démarrage automatique
-echo  [2] 🌐 Ouvrir le site (lance le serveur si nécessaire)
-echo  [3] 🔄 Redémarrer le serveur
-echo  [4] 📊 Afficher le statut du serveur
-echo  [5] 📝 Ouvrir les logs du serveur
-echo  [6] 📱 Accès réseau (mobile/tablette)
-echo  [7] 🛑 Arrêter le serveur
-echo  [8] 📂 Ouvrir le dossier du projet
-echo  [9] 🔧 Installer dépendances (npm install)
-echo  [0] ❌ Quitter
+echo  [1] Activer/Desactiver demarrage automatique
+echo  [2] Ouvrir le site (lance le serveur si necessaire)
+echo  [3] Redemarrer le serveur
+echo  [4] Afficher le statut du serveur
+echo  [5] Ouvrir les logs du serveur
+echo  [6] Acces reseau (mobile/tablette)
+echo  [7] Arreter le serveur
+echo  [8] Ouvrir le dossier du projet
+echo  [9] Installer dependances (npm install)
+echo  [0] Quitter
 echo.
-echo ════════════════════════════════════════════════════════════════
+echo ================================================================
 echo.
 
 set /p choice="Votre choix : "
@@ -40,28 +40,28 @@ if "%choice%"=="8" goto OPEN_FOLDER
 if "%choice%"=="9" goto INSTALL_DEPS
 if "%choice%"=="0" goto EXIT
 
-echo ❌ Choix invalide. Appuyez sur une touche...
+echo [X] Choix invalide. Appuyez sur une touche...
 pause >nul
 goto MENU
 
 :: ============================================================================
-:: OPTION 1 : Activer/Désactiver démarrage automatique
+:: OPTION 1 : Activer/Desactiver demarrage automatique
 :: ============================================================================
 :AUTO_START
 cls
 echo.
-echo ╔════════════════════════════════════════════════════════════════╗
-echo ║           ⚙️  DÉMARRAGE AUTOMATIQUE                            ║
-echo ╚════════════════════════════════════════════════════════════════╝
+echo ================================================================
+echo            DEMARRAGE AUTOMATIQUE
+echo ================================================================
 echo.
 
 set "STARTUP_DIR=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"
 set "SHORTCUT_PATH=%STARTUP_DIR%\Reviews-Maker.lnk"
 
 if exist "%SHORTCUT_PATH%" (
-    echo 📌 Le démarrage automatique est actuellement ACTIVÉ
+    echo [*] Le demarrage automatique est actuellement ACTIVE
     echo.
-    echo Voulez-vous le DÉSACTIVER ?
+    echo Voulez-vous le DESACTIVER ?
     echo.
     set /p confirm="[O]ui / [N]on : "
     
@@ -69,17 +69,17 @@ if exist "%SHORTCUT_PATH%" (
         del "%SHORTCUT_PATH%" 2>nul
         if !errorlevel! equ 0 (
             echo.
-            echo ✅ Démarrage automatique DÉSACTIVÉ avec succès
+            echo [OK] Demarrage automatique DESACTIVE avec succes
         ) else (
             echo.
-            echo ❌ Erreur lors de la désactivation
+            echo [ERREUR] Erreur lors de la desactivation
         )
     ) else (
         echo.
-        echo ℹ️  Aucune modification effectuée
+        echo [INFO] Aucune modification effectuee
     )
 ) else (
-    echo 📌 Le démarrage automatique est actuellement DÉSACTIVÉ
+    echo [*] Le demarrage automatique est actuellement DESACTIVE
     echo.
     echo Voulez-vous l'ACTIVER ?
     echo.
@@ -87,7 +87,7 @@ if exist "%SHORTCUT_PATH%" (
     
     if /i "!confirm!"=="O" (
         echo.
-        echo 🔄 Activation en cours...
+        echo [...] Activation en cours...
         
         powershell -NoProfile -ExecutionPolicy Bypass -Command ^
         "$WshShell = New-Object -ComObject WScript.Shell; ^
@@ -100,16 +100,16 @@ if exist "%SHORTCUT_PATH%" (
         
         if !errorlevel! equ 0 (
             echo.
-            echo ✅ Démarrage automatique ACTIVÉ avec succès
+            echo [OK] Demarrage automatique ACTIVE avec succes
             echo.
-            echo 💡 Le serveur démarrera automatiquement au prochain démarrage du PC
+            echo [INFO] Le serveur demarrera automatiquement au prochain demarrage du PC
         ) else (
             echo.
-            echo ❌ Erreur lors de l'activation
+            echo [ERREUR] Erreur lors de l'activation
         )
     ) else (
         echo.
-        echo ℹ️  Aucune modification effectuée
+        echo [INFO] Aucune modification effectuee
     )
 )
 
@@ -118,50 +118,50 @@ pause
 goto MENU
 
 :: ============================================================================
-:: OPTION 2 : Ouvrir le site (avec vérification serveur)
+:: OPTION 2 : Ouvrir le site (avec verification serveur)
 :: ============================================================================
 :OPEN_SITE
 cls
 echo.
-echo ╔════════════════════════════════════════════════════════════════╗
-echo ║           🌐 OUVERTURE DU SITE                                 ║
-echo ╚════════════════════════════════════════════════════════════════╝
+echo ================================================================
+echo            OUVERTURE DU SITE
+echo ================================================================
 echo.
 
-echo 🔍 Vérification du serveur...
+echo [*] Verification du serveur...
 echo.
 
-:: Vérifier si Node.js est en cours d'exécution
+:: Verifier si Node.js est en cours d'execution
 tasklist /FI "IMAGENAME eq node.exe" 2>NUL | find /I /N "node.exe">NUL
 if "%ERRORLEVEL%"=="0" (
-    echo ✅ Le serveur est déjà en cours d'exécution
+    echo [OK] Le serveur est deja en cours d'execution
     echo.
     timeout /t 1 /nobreak >nul
 ) else (
-    echo 🚀 Démarrage du serveur en arrière-plan...
+    echo [+] Demarrage du serveur en arriere-plan...
     echo.
     
-    :: Lancer le backend en mode caché
+    :: Lancer le backend en mode cache
     start /min "" cmd /c "cd /d "%~dp0server-new" && npm run dev"
     
-    echo ⏳ Attente du démarrage du backend (5 secondes)...
+    echo [...] Attente du demarrage du backend (5 secondes)...
     timeout /t 5 /nobreak >nul
     
-    :: Lancer le frontend en mode caché
+    :: Lancer le frontend en mode cache
     start /min "" cmd /c "cd /d "%~dp0client" && npm run dev"
     
-    echo ⏳ Attente du démarrage du frontend (3 secondes)...
+    echo [...] Attente du demarrage du frontend (3 secondes)...
     timeout /t 3 /nobreak >nul
     
-    echo ✅ Serveur démarré avec succès
+    echo [OK] Serveur demarre avec succes
     echo.
 )
 
-echo 🌐 Ouverture du site dans le navigateur...
+echo [+] Ouverture du site dans le navigateur...
 start "" http://localhost:5173
 
 echo.
-echo ✅ Opération terminée
+echo [OK] Operation terminee
 timeout /t 2 /nobreak >nul
 goto MENU
 
