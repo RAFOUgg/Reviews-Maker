@@ -158,7 +158,14 @@ if "%ERRORLEVEL%"=="0" (
 )
 
 echo [+] Ouverture du site dans le navigateur...
-start "" http://localhost:5173
+
+:: Detecter automatiquement le bon port
+powershell -NoProfile -Command "try { $null = Invoke-WebRequest -Uri 'http://localhost:5173' -TimeoutSec 1 -UseBasicParsing; exit 0 } catch { exit 1 }" >nul 2>&1
+if %errorlevel% equ 0 (
+    start "" http://localhost:5173
+) else (
+    start "" http://localhost:5174
+)
 
 echo.
 echo [OK] Operation terminee
@@ -226,17 +233,25 @@ echo.
 echo ════════════════════════════════════════════════════════════════
 echo.
 echo 🌐 URLs de l'application :
-echo    Frontend : http://localhost:5173
+echo    Frontend : http://localhost:5173 (ou 5174)
 echo    Backend  : http://localhost:3000
 echo.
 
-:: Vérifier si le port 5173 est écouté
+:: Vérifier si le port 5173 ou 5174 est écouté
 netstat -an | find "5173" >nul
 if "%ERRORLEVEL%"=="0" (
-    echo ✅ Frontend accessible
+    echo ✅ Frontend accessible sur port 5173
+    goto CHECK_BACKEND
+)
+
+netstat -an | find "5174" >nul
+if "%ERRORLEVEL%"=="0" (
+    echo ✅ Frontend accessible sur port 5174
 ) else (
     echo ❌ Frontend non disponible
 )
+
+:CHECK_BACKEND
 
 :: Vérifier si le port 3000 est écouté
 netstat -an | find "3000" >nul
@@ -311,15 +326,25 @@ for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /c:"IPv4"') do (
         echo.
         echo 📱 Accédez au site depuis votre mobile/tablette :
         echo.
-        echo    http://!ip!:5173
+        
+        :: Detecter le port du frontend
+        netstat -an | find "5173" >nul
+        if !errorlevel! equ 0 (
+            set frontend_port=5173
+        ) else (
+            set frontend_port=5174
+        )
+        
+        echo    http://!ip!:!frontend_port!
         echo.
         echo 💡 Assurez-vous que votre appareil est sur le même réseau Wi-Fi
+        echo 💡 Le port détecté est : !frontend_port!
         echo.
         
         :: Ouvrir l'URL dans le navigateur
         set /p open="Voulez-vous ouvrir cette URL ? [O]ui / [N]on : "
         if /i "!open!"=="O" (
-            start "" http://!ip!:5173
+            start "" http://!ip!:!frontend_port!
         )
         
         goto :NETWORK_END
