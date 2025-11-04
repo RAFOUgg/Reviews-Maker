@@ -20,14 +20,9 @@ export default function Layout() {
 
                         {/* Navigation Links */}
                         <div className="flex items-center space-x-6">
-                            <Link to="/" className="text-dark-text hover:text-primary-400 transition-colors">
+                            <Link to="/" className="text-dark-text hover:text-primary-400 transition-colors font-medium">
                                 Accueil
                             </Link>
-                            {isAuthenticated && (
-                                <Link to="/create" className="btn btn-primary">
-                                    Nouvelle Review
-                                </Link>
-                            )}
                             {!isAuthenticated ? (
                                 <button
                                     onClick={loginWithDiscord}

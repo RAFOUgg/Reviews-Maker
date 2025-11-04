@@ -1,17 +1,26 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 
 export default function CreateReviewPage() {
     const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
     const { isAuthenticated } = useStore()
-    
+
+    const typeFromUrl = searchParams.get('type') || 'Fleur'
+
     const [formData, setFormData] = useState({
         holderName: '',
-        type: 'Fleur',
+        type: typeFromUrl,
         description: '',
         overallRating: 5
     })
+
+    useEffect(() => {
+        if (typeFromUrl) {
+            setFormData(prev => ({ ...prev, type: typeFromUrl }))
+        }
+    }, [typeFromUrl])
     const [images, setImages] = useState([])
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState('')
@@ -54,7 +63,7 @@ export default function CreateReviewPage() {
             submitData.append('type', formData.type)
             submitData.append('description', formData.description || '')
             submitData.append('overallRating', formData.overallRating)
-            
+
             images.forEach((image) => {
                 submitData.append('images', image)
             })
@@ -104,11 +113,10 @@ export default function CreateReviewPage() {
                                     key={type}
                                     type="button"
                                     onClick={() => handleInputChange('type', type)}
-                                    className={`p-4 rounded-xl text-center transition-all ${
-                                        formData.type === type
+                                    className={`p-4 rounded-xl text-center transition-all ${formData.type === type
                                             ? 'bg-green-600 text-white shadow-lg shadow-green-600/50'
                                             : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700'
-                                    }`}
+                                        }`}
                                 >
                                     <div className="text-2xl mb-1">
                                         {type === 'Fleur' && String.fromCodePoint(0x1F33F)}
