@@ -4,6 +4,7 @@ import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import ReviewDetailPage from './pages/ReviewDetailPage'
 import CreateReviewPage from './pages/CreateReviewPage'
+import LibraryPage from './pages/LibraryPage'
 import AuthCallback from './components/AuthCallback'
 import { useStore } from './store/useStore'
 
@@ -40,6 +41,7 @@ function App() {
                     <Route index element={<HomePage />} />
                     <Route path="/review/:id" element={<ReviewDetailPage />} />
                     <Route path="/create" element={<CreateReviewPage />} />
+                    <Route path="/library" element={<LibraryPage />} />
                 </Route>
                 <Route path="/auth/callback" element={<AuthCallback />} />
             </Routes>

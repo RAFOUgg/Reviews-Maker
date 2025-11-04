@@ -1,5 +1,6 @@
 import { Outlet, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import UserProfileDropdown from './UserProfileDropdown'
 
 export default function Layout() {
     const { user, isAuthenticated, loginWithDiscord, logout } = useAuth()
@@ -34,24 +35,7 @@ export default function Layout() {
                                     Se connecter
                                 </button>
                             ) : (
-                                <div className="flex items-center space-x-3 group relative">
-                                    <img
-                                        src={user?.avatar || `https://cdn.discordapp.com/embed/avatars/${Math.floor(Math.random() * 5)}.png`}
-                                        alt={user?.username}
-                                        className="w-8 h-8 rounded-full border-2 border-primary-500"
-                                    />
-                                    <span className="text-dark-text">{user?.username}</span>
-
-                                    {/* Dropdown menu */}
-                                    <div className="absolute top-full right-0 mt-2 w-48 glass rounded-xl p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                                        <button
-                                            onClick={logout}
-                                            className="w-full text-left px-4 py-2 text-sm text-dark-text hover:bg-dark-border/30 rounded-lg transition-colors"
-                                        >
-                                            Déconnexion
-                                        </button>
-                                    </div>
-                                </div>
+                                <UserProfileDropdown />
                             )}
                         </div>
                     </div>
