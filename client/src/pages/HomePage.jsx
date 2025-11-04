@@ -344,33 +344,79 @@ export default function HomePage() {
                                 return (
                                     <div
                                         key={review.id}
-                                        className="group relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl rounded-3xl overflow-hidden border border-gray-700 hover:border-green-500 transition-all duration-500 cursor-pointer hover:shadow-2xl hover:shadow-green-500/30 hover:scale-105 transform"
+                                        className="group relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl rounded-3xl overflow-hidden border border-gray-700 hover:border-green-500 transition-all duration-500 cursor-pointer hover:shadow-2xl hover:shadow-green-500/30 hover:scale-[1.02] transform"
                                     >
-                                        {/* Image Grid 2x2 avec overlay gradient */}
+                                        {/* Image Grid adaptatif selon le nombre d'images */}
                                         <div
-                                            className="relative grid grid-cols-2 gap-1 bg-gray-900 aspect-square"
+                                            className="relative bg-gray-900 aspect-square"
                                             onClick={() => navigate(`/review/${review.id}`)}
                                         >
                                             {images && images.length > 0 ? (
-                                                <>
-                                                    {images.slice(0, 4).map((img, idx) => (
-                                                        <div key={idx} className="relative aspect-square overflow-hidden">
+                                                <div className={`h-full w-full ${images.length === 1 ? '' :
+                                                        images.length === 2 ? 'grid grid-cols-2 gap-1' :
+                                                            images.length === 3 ? 'grid grid-rows-2 gap-1' :
+                                                                'grid grid-cols-2 grid-rows-2 gap-1'
+                                                    }`}>
+                                                    {images.length === 1 && (
+                                                        <div className="relative w-full h-full overflow-hidden">
+                                                            <img
+                                                                src={images[0]}
+                                                                alt={review.holderName}
+                                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                                            />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                                        </div>
+                                                    )}
+
+                                                    {images.length === 2 && images.slice(0, 2).map((img, idx) => (
+                                                        <div key={idx} className="relative overflow-hidden">
                                                             <img
                                                                 src={img}
                                                                 alt={`${review.holderName} ${idx + 1}`}
-                                                                className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-700"
+                                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                                             />
                                                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                                         </div>
                                                     ))}
-                                                    {Array.from({ length: Math.max(0, 4 - images.length) }).map((_, idx) => (
-                                                        <div key={`empty-${idx}`} className="bg-gradient-to-br from-gray-800 to-gray-900 aspect-square flex items-center justify-center">
-                                                            <span className="text-gray-600 text-4xl">🌿</span>
+
+                                                    {images.length === 3 && (
+                                                        <>
+                                                            <div className="grid grid-cols-2 gap-1">
+                                                                {images.slice(0, 2).map((img, idx) => (
+                                                                    <div key={idx} className="relative overflow-hidden">
+                                                                        <img
+                                                                            src={img}
+                                                                            alt={`${review.holderName} ${idx + 1}`}
+                                                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                                                        />
+                                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                            <div className="relative overflow-hidden">
+                                                                <img
+                                                                    src={images[2]}
+                                                                    alt={`${review.holderName} 3`}
+                                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                                                />
+                                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                                            </div>
+                                                        </>
+                                                    )}
+
+                                                    {images.length >= 4 && images.slice(0, 4).map((img, idx) => (
+                                                        <div key={idx} className="relative overflow-hidden">
+                                                            <img
+                                                                src={img}
+                                                                alt={`${review.holderName} ${idx + 1}`}
+                                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                                            />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                                         </div>
                                                     ))}
-                                                </>
+                                                </div>
                                             ) : (
-                                                <div className="col-span-2 flex items-center justify-center bg-gradient-to-br from-gray-800 via-gray-900 to-black">
+                                                <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-800 via-gray-900 to-black">
                                                     <span className="text-8xl opacity-20">
                                                         {review.type === 'Fleur' ? '🌿' :
                                                             review.type === 'Hash' ? '🟫' :
@@ -379,73 +425,97 @@ export default function HomePage() {
                                                 </div>
                                             )}
 
-                                            {/* Rating badge flottant */}
-                                            <div className={`absolute top-3 right-3 px-3 py-1 rounded-full bg-gradient-to-r from-${ratingColor}-500 to-${ratingColor}-600 backdrop-blur-xl shadow-lg flex items-center gap-1`}>
-                                                <span className="text-white font-black text-sm">{rating}</span>
-                                                <span className="text-white/80 text-xs">/10</span>
-                                            </div>
-
-                                            {/* Type badge */}
-                                            <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-xl text-white text-xs font-semibold">
-                                                {review.type}
+                                            {/* Rating badge flottant - Top Left */}
+                                            <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-xl bg-gradient-to-r ${rating >= 9 ? 'from-green-500 to-emerald-600' :
+                                                rating >= 7 ? 'from-yellow-500 to-amber-600' :
+                                                    rating >= 5 ? 'from-orange-500 to-red-600' : 'from-red-500 to-pink-600'
+                                                } backdrop-blur-xl shadow-xl flex items-center gap-1`}>
+                                                <span className="text-white font-black text-lg">{rating}</span>
+                                                <span className="text-white/90 text-xs font-bold">/10</span>
                                             </div>
                                         </div>
 
-                                        {/* Review Info avec glassmorphism */}
-                                        <div className="p-4 space-y-3">
-                                            <div onClick={() => navigate(`/review/${review.id}`)}>
-                                                <h3 className="font-black text-white text-lg group-hover:text-green-400 transition-colors line-clamp-1">
+                                        {/* Like/Dislike - À cheval sur la bordure (milieu droit) */}
+                                        <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-0 flex flex-col gap-2 z-20">
+                                            <button
+                                                onClick={(e) => handleLike(review.id, e)}
+                                                className={`flex flex-col items-center justify-center w-14 h-14 rounded-l-2xl shadow-2xl transition-all duration-300 group/like ${review.userLikeState === 'like'
+                                                    ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-green-500/50 scale-110'
+                                                    : 'bg-gray-800/95 backdrop-blur-xl text-gray-400 hover:bg-gradient-to-br hover:from-green-500 hover:to-emerald-600 hover:text-white hover:scale-110'
+                                                    }`}
+                                            >
+                                                <svg className="w-5 h-5 group-hover/like:scale-125 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+                                                </svg>
+                                                <span className="text-xs font-black mt-0.5">{review.likesCount || 0}</span>
+                                            </button>
+                                            <button
+                                                onClick={(e) => handleDislike(review.id, e)}
+                                                className={`flex flex-col items-center justify-center w-14 h-14 rounded-l-2xl shadow-2xl transition-all duration-300 group/dislike ${review.userLikeState === 'dislike'
+                                                    ? 'bg-gradient-to-br from-red-500 to-pink-600 text-white shadow-red-500/50 scale-110'
+                                                    : 'bg-gray-800/95 backdrop-blur-xl text-gray-400 hover:bg-gradient-to-br hover:from-red-500 hover:to-pink-600 hover:text-white hover:scale-110'
+                                                    }`}
+                                            >
+                                                <svg className="w-5 h-5 group-hover/dislike:scale-125 transition-transform rotate-180" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+                                                </svg>
+                                                <span className="text-xs font-black mt-0.5">{review.dislikesCount || 0}</span>
+                                            </button>
+                                        </div>
+
+                                        {/* Review Info - Redesign complet */}
+                                        <div className="p-5 space-y-3">
+                                            {/* Type en emoji + Nom de la variété */}
+                                            <div onClick={() => navigate(`/review/${review.id}`)} className="space-y-2">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-3xl">
+                                                        {review.type === 'Fleur' ? '🌿' :
+                                                            review.type === 'Hash' ? '🟫' :
+                                                                review.type === 'Concentré' ? '🔮' : '🍰'}
+                                                    </span>
+                                                    <span className="px-3 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-purple-300 text-xs font-bold uppercase tracking-wider">
+                                                        {review.type}
+                                                    </span>
+                                                </div>
+                                                <h3 className="font-black text-white text-xl group-hover:text-green-400 transition-colors line-clamp-2 leading-tight">
                                                     {review.holderName}
                                                 </h3>
                                             </div>
 
-                                            {/* Author avec hover effect */}
+                                            {/* Infos principales claires */}
+                                            {review.description && (
+                                                <p className="text-sm text-gray-400 line-clamp-2 leading-relaxed">
+                                                    {review.description}
+                                                </p>
+                                            )}
+
+                                            {/* Auteur en évidence avec encadrement stylé */}
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation()
                                                     setSelectedAuthor(review.authorId || review.ownerId || review.author?.id)
                                                 }}
-                                                className="flex items-center gap-2 text-sm text-gray-400 hover:text-green-400 transition-all group/author"
+                                                className="w-full mt-3 p-3 rounded-2xl bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 border-2 border-green-500/30 hover:border-green-400 backdrop-blur-xl transition-all duration-300 group/author hover:shadow-lg hover:shadow-green-500/20 hover:scale-[1.02]"
                                             >
-                                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-xs font-bold group-hover/author:scale-110 transition-transform">
-                                                    {(review.ownerName || review.author?.username || 'A')[0].toUpperCase()}
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-base font-black shadow-lg shadow-green-500/50 group-hover/author:scale-110 transition-transform">
+                                                        {(review.ownerName || review.author?.username || 'A')[0].toUpperCase()}
+                                                    </div>
+                                                    <div className="flex-1 text-left">
+                                                        <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Créé par</div>
+                                                        <div className="text-sm font-black text-white group-hover/author:text-green-400 transition-colors">
+                                                            {review.ownerName || review.author?.username || 'Anonyme'}
+                                                        </div>
+                                                    </div>
+                                                    <svg className="w-5 h-5 text-green-500 group-hover/author:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                    </svg>
                                                 </div>
-                                                <span className="font-semibold group-hover/author:underline">
-                                                    {review.ownerName || review.author?.username || 'Anonyme'}
-                                                </span>
                                             </button>
 
-                                            {/* Actions (Like/Dislike) */}
-                                            <div className="flex items-center justify-between pt-2 border-t border-gray-700">
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        onClick={(e) => handleLike(review.id, e)}
-                                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all group/like ${review.userLikeState === 'like'
-                                                            ? 'bg-green-600 text-white shadow-lg shadow-green-500/50'
-                                                            : 'bg-gray-700 hover:bg-green-600 text-gray-300 hover:text-white'
-                                                            }`}
-                                                    >
-                                                        <svg className="w-4 h-4 group-hover/like:scale-125 transition-transform" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
-                                                        </svg>
-                                                        <span className="text-xs font-bold">{review.likesCount || 0}</span>
-                                                    </button>
-                                                    <button
-                                                        onClick={(e) => handleDislike(review.id, e)}
-                                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all group/dislike ${review.userLikeState === 'dislike'
-                                                            ? 'bg-red-600 text-white shadow-lg shadow-red-500/50'
-                                                            : 'bg-gray-700 hover:bg-red-600 text-gray-300 hover:text-white'
-                                                            }`}
-                                                    >
-                                                        <svg className="w-4 h-4 group-hover/dislike:scale-125 transition-transform rotate-180" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
-                                                        </svg>
-                                                        <span className="text-xs font-bold">{review.dislikesCount || 0}</span>
-                                                    </button>
-                                                </div>
-                                                <span className="text-xs text-gray-500 font-medium">
-                                                    {new Date(review.createdAt).toLocaleDateString('fr-FR')}
-                                                </span>
+                                            {/* Date en bas */}
+                                            <div className="flex items-center justify-center pt-2 text-xs text-gray-500 font-medium">
+                                                📅 {new Date(review.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                                             </div>
                                         </div>
                                     </div>
