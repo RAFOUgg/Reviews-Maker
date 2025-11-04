@@ -2,9 +2,24 @@
 
 Application moderne de gestion et création de reviews de cannabis, avec authentification Discord et interface React.
 
-**⚠️ Mode développement uniquement - Application locale**
+**⚠️ Mode développement local uniquement**
 
-## 🚀 Installation & Lancement
+## 🚀 Démarrage Rapide
+
+### Option 1 : Démarrage Manuel (première fois)
+
+Suis le guide complet ci-dessous pour installer et configurer.
+
+### Option 2 : Démarrage Automatique (après installation)
+
+Double-clique sur **`START_DEV_AUTO.bat`** pour lancer backend + frontend !
+
+**💡 Pour que ça se lance au démarrage de Windows :**
+- Suis le guide dans **`INSTALL_AUTO_START.md`**
+
+---
+
+## � Installation Complète (Première Fois)
 
 ### 1. Prérequis
 - Node.js 18+ et npm installés
@@ -71,6 +86,43 @@ npm run dev
 - **Frontend** : http://localhost:5173
 - **Backend API** : http://localhost:3000
 - **Prisma Studio** : `npx prisma studio` (interface DB)
+
+## 🌐 Accès Réseau Local
+
+Ton site est accessible depuis **n'importe quel appareil** sur ton réseau WiFi !
+
+### Trouver ton IP
+
+```powershell
+ipconfig | Select-String "IPv4"
+```
+
+Tu verras : `192.168.1.X` (ou `192.168.0.X`)
+
+### Accéder depuis un autre appareil
+
+Sur ton téléphone, tablette, ou un autre PC connecté au **même WiFi** :
+
+1. Ouvre un navigateur
+2. Va sur : `http://192.168.1.X:5173` (remplace X par ton IP)
+3. Le site Reviews-Maker s'affiche ! 🎉
+
+**Exemple** : Si ton IP est `192.168.1.42`, tape `http://192.168.1.42:5173`
+
+### ⚠️ Pare-feu Windows
+
+Si ça ne fonctionne pas depuis un autre appareil, autorise Vite dans le pare-feu :
+
+```powershell
+# Commande PowerShell (admin)
+New-NetFirewallRule -DisplayName "Vite Dev Server" -Direction Inbound -LocalPort 5173 -Protocol TCP -Action Allow
+```
+
+## 🔄 Scripts Utiles
+
+- **`START_DEV_AUTO.bat`** - Lance backend + frontend automatiquement
+- **`STOP_DEV.bat`** - Arrête tous les services
+- **`INSTALL_AUTO_START.md`** - Guide pour démarrage automatique Windows
 
 ## 📁 Structure du Projet
 
