@@ -9,9 +9,6 @@
  * Adapté pour React + Express + Prisma
  */
 
-import { validateReviewData } from './validation'
-import { calculateReviewMetrics } from './metrics'
-
 // ============================================================================
 // 1. STRUCTURES DE DONNÉES COMPLÈTES
 // ============================================================================

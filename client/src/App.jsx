@@ -1,11 +1,36 @@
+import { useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import ReviewDetailPage from './pages/ReviewDetailPage'
 import CreateReviewPage from './pages/CreateReviewPage'
 import AuthCallback from './components/AuthCallback'
+import { useStore } from './store/useStore'
 
 function App() {
+    const setUser = useStore((state) => state.setUser)
+
+    // ✅ Vérifier la session au démarrage
+    useEffect(() => {
+        const checkSession = async () => {
+            try {
+                const response = await fetch('/api/auth/me', {
+                    credentials: 'include' // ✅ Important pour envoyer les cookies
+                })
+
+                if (response.ok) {
+                    const userData = await response.json()
+                    setUser(userData)
+                    console.log('✅ Session restaurée:', userData.username)
+                }
+            } catch (error) {
+                console.error('Session check failed:', error)
+            }
+        }
+
+        checkSession()
+    }, [setUser])
+
     return (
         <div className="min-h-screen bg-dark-bg">
             <Routes>
@@ -18,4 +43,6 @@ function App() {
             </Routes>
         </div>
     )
-} export default App
+}
+
+export default App

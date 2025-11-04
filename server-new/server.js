@@ -4,14 +4,21 @@ import session from 'express-session'
 import passport from 'passport'
 import cors from 'cors'
 import { PrismaClient } from '@prisma/client'
+import sqliteStore from 'connect-sqlite3'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
 // Import routes
 import authRoutes from './routes/auth.js'
 import reviewRoutes from './routes/reviews.js'
 import userRoutes from './routes/users.js'
+import { requireAuth, optionalAuth, logAuthRequest } from './middleware/auth.js'
 
 // Import config
 import './config/passport.js'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const Store = sqliteStore(session)
 
 const app = express()
 const prisma = new PrismaClient()
@@ -20,28 +27,41 @@ const PORT = process.env.PORT || 3000
 // Middleware
 app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    credentials: true
+    credentials: true, // ✅ Essencial pour les cookies
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 86400 // 24h preflight cache
 }))
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-// Session configuration
+// Session configuration avec persistance SQLite
 app.use(session({
-    secret: process.env.SESSION_SECRET,
+    store: new Store({
+        dir: path.join(__dirname, '../db'),
+        db: 'sessions.db',
+        concurrentDb: true
+    }),
+    secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
     resave: false,
     saveUninitialized: false,
     cookie: {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax'
-    }
+        sameSite: 'lax',
+        path: '/'
+    },
+    name: 'sessionId' // Nom du cookie pour éviter les conflits
 }))
 
 // Passport middleware
 app.use(passport.initialize())
 app.use(passport.session())
+
+// Log auth requests
+app.use(logAuthRequest)
 
 // Static files (images)
 app.use('/images', express.static('../db/review_images'))

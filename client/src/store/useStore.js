@@ -23,13 +23,25 @@ export const useStore = create((set) => ({
     setError: (error) => set({ error }),
     setFilters: (filters) => set((state) => ({ filters: { ...state.filters, ...filters } })),
     setUser: (user) => set({ user, isAuthenticated: !!user }),
-    logout: () => set({ user: null, isAuthenticated: false }),
+    logout: async () => {
+        try {
+            await fetch('/api/auth/logout', {
+                method: 'POST',
+                credentials: 'include'
+            })
+        } catch (error) {
+            console.error('Logout error:', error)
+        }
+        set({ user: null, isAuthenticated: false })
+    },
 
     // Fetch reviews
     fetchReviews: async () => {
         set({ loading: true, error: null })
         try {
-            const response = await fetch('/api/reviews')
+            const response = await fetch('/api/reviews', {
+                credentials: 'include'
+            })
             if (!response.ok) throw new Error('Failed to fetch reviews')
             const data = await response.json()
             set({ reviews: data, loading: false })
