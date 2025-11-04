@@ -22,6 +22,8 @@ function App() {
                     const userData = await response.json()
                     setUser(userData)
                     console.log('✅ Session restaurée:', userData.username)
+                } else {
+                    console.log('No session found - user not authenticated')
                 }
             } catch (error) {
                 console.error('Session check failed:', error)
@@ -32,7 +34,7 @@ function App() {
     }, [setUser])
 
     return (
-        <div className="min-h-screen bg-dark-bg">
+        <div className="min-h-screen bg-dark-bg text-dark-text">
             <Routes>
                 <Route path="/" element={<Layout />}>
                     <Route index element={<HomePage />} />

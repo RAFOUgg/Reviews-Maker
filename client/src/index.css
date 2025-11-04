@@ -4,29 +4,34 @@
 
 @layer base {
     * {
-        @apply border-dark-border;
+        border-color: #404040;
     }
 
     body {
-        @apply bg-dark-bg text-dark-text antialiased;
+        background-color: #0f0f0f;
+        color: #e5e5e5;
         font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Roboto', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
     /* Scrollbar styling */
     ::-webkit-scrollbar {
-        @apply w-2 h-2;
+        width: 0.5rem;
+        height: 0.5rem;
     }
 
     ::-webkit-scrollbar-track {
-        @apply bg-dark-surface;
+        background-color: #1a1a1a;
     }
 
     ::-webkit-scrollbar-thumb {
-        @apply bg-primary-600 rounded-full;
+        background-color: #9333ea;
+        border-radius: 9999px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-        @apply bg-primary-500;
+        background-color: #a855f7;
     }
 }
 
@@ -34,42 +39,98 @@
 
     /* Glass morphism effect */
     .glass {
-        @apply bg-dark-card/60 backdrop-blur-xl border border-dark-border/50;
+        background-color: rgba(38, 38, 38, 0.6);
+        backdrop-filter: blur(44px);
+        border: 1px solid rgba(64, 64, 64, 0.5);
     }
 
     .glass-hover {
-        @apply transition-all duration-300 hover:bg-dark-card/80 hover:shadow-glass;
+        transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .glass-hover:hover {
+        background-color: rgba(38, 38, 38, 0.8);
+        box-shadow: 0 8px 32px rgba(139, 92, 246, 0.15);
     }
 
     /* Button styles */
     .btn {
-        @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-bg;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        transition: all 200ms;
+        outline: none;
+    }
+
+    .btn:focus {
+        outline: 2px solid #a855f7;
+        outline-offset: 2px;
     }
 
     .btn-primary {
-        @apply bg-primary-600 text-white hover:bg-primary-500 active:bg-primary-700;
+        background-color: #9333ea;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background-color: #a855f7;
+    }
+
+    .btn-primary:active {
+        background-color: #7e22ce;
     }
 
     .btn-secondary {
-        @apply bg-dark-card text-dark-text hover:bg-dark-border/30;
+        background-color: #262626;
+        color: #e5e5e5;
+    }
+
+    .btn-secondary:hover {
+        background-color: rgba(64, 64, 64, 0.3);
     }
 
     /* Card styles */
     .card {
-        @apply glass rounded-2xl p-6 glass-hover;
+        background-color: rgba(38, 38, 38, 0.6);
+        backdrop-filter: blur(44px);
+        border: 1px solid rgba(64, 64, 64, 0.5);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        transition: all 300ms;
+    }
+
+    .card:hover {
+        background-color: rgba(38, 38, 38, 0.8);
+        box-shadow: 0 8px 32px rgba(139, 92, 246, 0.15);
     }
 
     /* Input styles */
     .input {
-        @apply w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200;
+        width: 100%;
+        padding: 0.5rem 1rem;
+        background-color: #1a1a1a;
+        border: 1px solid #404040;
+        border-radius: 0.5rem;
+        color: #e5e5e5;
+        transition: all 200ms;
     }
-}
 
-@layer utilities {
+    .input::placeholder {
+        color: #a3a3a3;
+    }
 
-    /* Custom utilities */
+    .input:focus {
+        outline: none;
+        border-color: #a855f7;
+        box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+    }
+
+    /* Text gradient */
     .text-gradient {
-        @apply bg-gradient-to-r from-primary-500 to-accent-500 bg-clip-text text-transparent;
+        background: linear-gradient(to right, #a855f7, #10b981);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
     .animate-smooth {
@@ -77,7 +138,7 @@
     }
 }
 
-/* Custom animations for 60fps */
+/* Animations */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -94,7 +155,6 @@
     animation: fadeIn 0.4s ease-out;
 }
 
-/* Loading spinner */
 @keyframes spin {
     to {
         transform: rotate(360deg);
