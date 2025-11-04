@@ -24,6 +24,7 @@ model User {
   // Relations
   reviews  Review[]
   sessions Session[]
+  likes    ReviewLike[]
 
   @@map("users")
 }
@@ -56,7 +57,7 @@ model Review {
   // Profil terpénique et tags
   terpenes    String? // JSON: ["Myrcène", "Limonène", "Pinène"]
   tastes      String? // JSON: ["Citron", "Terreux", "Pin"]
-  aromas      String? // JSON: ["Citronné", "Boisé", "Fruité"]
+  aromas      String? // JSON: ["Citron", "Boisé", "Fruité"]
   effects     String? // JSON: ["Relaxant", "Euphorique", "Créatif"]
   
   // Type de variété
@@ -76,9 +77,30 @@ model Review {
   // Auteur
   authorId    String
   author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  // Likes
+  likes       ReviewLike[]
 
   @@index([authorId])
   @@index([type])
   @@index([createdAt])
   @@map("reviews")
+}
+
+// Modèle ReviewLike (likes/dislikes des reviews)
+model ReviewLike {
+  id        String   @id @default(uuid())
+  reviewId  String
+  userId    String
+  isLike    Boolean  // true = like, false = dislike
+  createdAt DateTime @default(now())
+
+  // Relations
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, userId]) // Un utilisateur ne peut liker/disliker qu'une fois
+  @@index([reviewId])
+  @@index([userId])
+  @@map("review_likes")
 }

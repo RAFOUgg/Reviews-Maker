@@ -73,28 +73,46 @@ router.get('/', async (req, res) => {
                         avatar: true,
                         discordId: true
                     }
-                }
+                },
+                likes: true // Inclure tous les likes pour calculer les stats
             },
             orderBy: { [sortBy]: order }
         })
 
         // Parser les champs JSON et formater les données
-        const formattedReviews = reviews.map(review => ({
-            ...review,
-            terpenes: review.terpenes ? JSON.parse(review.terpenes) : [],
-            tastes: review.tastes ? JSON.parse(review.tastes) : [],
-            aromas: review.aromas ? JSON.parse(review.aromas) : [],
-            effects: review.effects ? JSON.parse(review.effects) : [],
-            images: review.images ? JSON.parse(review.images) : [],
-            ratings: review.ratings ? JSON.parse(review.ratings) : null,
-            mainImageUrl: review.mainImage ? `/images/${review.mainImage}` : null,
-            author: {
-                ...review.author,
-                avatar: review.author.avatar
-                    ? `https://cdn.discordapp.com/avatars/${review.author.discordId}/${review.author.avatar}.png`
-                    : null
+        const formattedReviews = reviews.map(review => {
+            // Calculer les likes et dislikes
+            const likesCount = review.likes.filter(like => like.isLike).length
+            const dislikesCount = review.likes.filter(like => !like.isLike).length
+
+            // Vérifier si l'utilisateur a liké/disliké cette review
+            let userLikeState = null
+            if (req.isAuthenticated()) {
+                const userLike = review.likes.find(like => like.userId === req.user.id)
+                userLikeState = userLike ? (userLike.isLike ? 'like' : 'dislike') : null
             }
-        }))
+
+            return {
+                ...review,
+                terpenes: review.terpenes ? JSON.parse(review.terpenes) : [],
+                tastes: review.tastes ? JSON.parse(review.tastes) : [],
+                aromas: review.aromas ? JSON.parse(review.aromas) : [],
+                effects: review.effects ? JSON.parse(review.effects) : [],
+                images: review.images ? JSON.parse(review.images) : [],
+                ratings: review.ratings ? JSON.parse(review.ratings) : null,
+                mainImageUrl: review.mainImage ? `/images/${review.mainImage}` : null,
+                likesCount,
+                dislikesCount,
+                userLikeState,
+                likes: undefined, // Retirer le tableau de likes pour ne pas exposer les IDs users
+                author: {
+                    ...review.author,
+                    avatar: review.author.avatar
+                        ? `https://cdn.discordapp.com/avatars/${review.author.discordId}/${review.author.avatar}.png`
+                        : null
+                }
+            }
+        })
 
         res.json(formattedReviews)
     } catch (error) {
@@ -418,6 +436,174 @@ router.patch('/:id/visibility', requireAuth, async (req, res) => {
     } catch (error) {
         console.error('Error updating visibility:', error)
         res.status(500).json({ error: 'Failed to update visibility' })
+    }
+})
+
+// POST /api/reviews/:id/like - Ajouter un like à une review
+router.post('/:id/like', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params
+        const userId = req.user.id
+
+        // Vérifier si la review existe
+        const review = await prisma.review.findUnique({
+            where: { id }
+        })
+
+        if (!review) {
+            return res.status(404).json({ error: 'Review not found' })
+        }
+
+        // Vérifier si l'utilisateur a déjà liké/disliké cette review
+        const existingLike = await prisma.reviewLike.findUnique({
+            where: {
+                reviewId_userId: {
+                    reviewId: id,
+                    userId: userId
+                }
+            }
+        })
+
+        if (existingLike) {
+            if (existingLike.isLike) {
+                // L'utilisateur avait déjà liké, on retire le like
+                await prisma.reviewLike.delete({
+                    where: {
+                        reviewId_userId: {
+                            reviewId: id,
+                            userId: userId
+                        }
+                    }
+                })
+                return res.json({ action: 'removed', type: 'like' })
+            } else {
+                // L'utilisateur avait disliké, on change en like
+                await prisma.reviewLike.update({
+                    where: {
+                        reviewId_userId: {
+                            reviewId: id,
+                            userId: userId
+                        }
+                    },
+                    data: { isLike: true }
+                })
+                return res.json({ action: 'updated', type: 'like' })
+            }
+        } else {
+            // Nouveau like
+            await prisma.reviewLike.create({
+                data: {
+                    reviewId: id,
+                    userId: userId,
+                    isLike: true
+                }
+            })
+            return res.json({ action: 'added', type: 'like' })
+        }
+    } catch (error) {
+        console.error('Error liking review:', error)
+        res.status(500).json({ error: 'Failed to like review' })
+    }
+})
+
+// POST /api/reviews/:id/dislike - Ajouter un dislike à une review
+router.post('/:id/dislike', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params
+        const userId = req.user.id
+
+        // Vérifier si la review existe
+        const review = await prisma.review.findUnique({
+            where: { id }
+        })
+
+        if (!review) {
+            return res.status(404).json({ error: 'Review not found' })
+        }
+
+        // Vérifier si l'utilisateur a déjà liké/disliké cette review
+        const existingLike = await prisma.reviewLike.findUnique({
+            where: {
+                reviewId_userId: {
+                    reviewId: id,
+                    userId: userId
+                }
+            }
+        })
+
+        if (existingLike) {
+            if (!existingLike.isLike) {
+                // L'utilisateur avait déjà disliké, on retire le dislike
+                await prisma.reviewLike.delete({
+                    where: {
+                        reviewId_userId: {
+                            reviewId: id,
+                            userId: userId
+                        }
+                    }
+                })
+                return res.json({ action: 'removed', type: 'dislike' })
+            } else {
+                // L'utilisateur avait liké, on change en dislike
+                await prisma.reviewLike.update({
+                    where: {
+                        reviewId_userId: {
+                            reviewId: id,
+                            userId: userId
+                        }
+                    },
+                    data: { isLike: false }
+                })
+                return res.json({ action: 'updated', type: 'dislike' })
+            }
+        } else {
+            // Nouveau dislike
+            await prisma.reviewLike.create({
+                data: {
+                    reviewId: id,
+                    userId: userId,
+                    isLike: false
+                }
+            })
+            return res.json({ action: 'added', type: 'dislike' })
+        }
+    } catch (error) {
+        console.error('Error disliking review:', error)
+        res.status(500).json({ error: 'Failed to dislike review' })
+    }
+})
+
+// GET /api/reviews/:id/likes - Obtenir les stats de likes/dislikes d'une review
+router.get('/:id/likes', async (req, res) => {
+    try {
+        const { id } = req.params
+
+        const likes = await prisma.reviewLike.count({
+            where: { reviewId: id, isLike: true }
+        })
+
+        const dislikes = await prisma.reviewLike.count({
+            where: { reviewId: id, isLike: false }
+        })
+
+        // Si l'utilisateur est authentifié, vérifier son état de like/dislike
+        let userLikeState = null
+        if (req.isAuthenticated()) {
+            const userLike = await prisma.reviewLike.findUnique({
+                where: {
+                    reviewId_userId: {
+                        reviewId: id,
+                        userId: req.user.id
+                    }
+                }
+            })
+            userLikeState = userLike ? (userLike.isLike ? 'like' : 'dislike') : null
+        }
+
+        res.json({ likes, dislikes, userLikeState })
+    } catch (error) {
+        console.error('Error fetching likes:', error)
+        res.status(500).json({ error: 'Failed to fetch likes' })
     }
 })
 

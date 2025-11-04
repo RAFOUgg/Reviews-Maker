@@ -22,14 +22,7 @@ export default function HomePage() {
             const response = await fetch('/api/reviews')
             if (response.ok) {
                 const data = await response.json()
-                // Initialiser likesCount et dislikesCount si non définis
-                const reviewsWithCounts = data.map(review => ({
-                    ...review,
-                    likesCount: review.likesCount || 0,
-                    dislikesCount: review.dislikesCount || 0,
-                    userLikeState: review.userLikeState || null
-                }))
-                setReviews(reviewsWithCounts)
+                setReviews(data)
             }
         } catch (error) {
             console.error('Erreur chargement reviews:', error)
@@ -64,47 +57,8 @@ export default function HomePage() {
             alert('Connectez-vous pour liker')
             return
         }
-
-        try {
-            const response = await fetch(`http://localhost:3000/api/reviews/${reviewId}/like`, {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-
-            if (!response.ok) {
-                throw new Error('Erreur lors du like')
-            }
-
-            const result = await response.json()
-
-            // Mettre à jour localement les reviews
-            setReviews(prevReviews =>
-                prevReviews.map(review =>
-                    review.id === reviewId
-                        ? {
-                            ...review,
-                            likesCount: result.action === 'removed'
-                                ? review.likesCount - 1
-                                : result.action === 'added'
-                                    ? review.likesCount + 1
-                                    : review.dislikesCount > 0 && result.action === 'updated'
-                                        ? review.likesCount + 1
-                                        : review.likesCount,
-                            dislikesCount: result.action === 'updated' && review.dislikesCount > 0
-                                ? review.dislikesCount - 1
-                                : review.dislikesCount,
-                            userLikeState: result.action === 'removed' ? null : 'like'
-                        }
-                        : review
-                )
-            )
-        } catch (error) {
-            console.error('Erreur like:', error)
-            alert('Erreur lors du like')
-        }
+        // TODO: Implémenter like API
+        console.log('Like:', reviewId)
     }
 
     const handleDislike = async (reviewId, e) => {
@@ -113,47 +67,8 @@ export default function HomePage() {
             alert('Connectez-vous pour disliker')
             return
         }
-
-        try {
-            const response = await fetch(`http://localhost:3000/api/reviews/${reviewId}/dislike`, {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-
-            if (!response.ok) {
-                throw new Error('Erreur lors du dislike')
-            }
-
-            const result = await response.json()
-
-            // Mettre à jour localement les reviews
-            setReviews(prevReviews =>
-                prevReviews.map(review =>
-                    review.id === reviewId
-                        ? {
-                            ...review,
-                            dislikesCount: result.action === 'removed'
-                                ? review.dislikesCount - 1
-                                : result.action === 'added'
-                                    ? review.dislikesCount + 1
-                                    : review.likesCount > 0 && result.action === 'updated'
-                                        ? review.dislikesCount + 1
-                                        : review.dislikesCount,
-                            likesCount: result.action === 'updated' && review.likesCount > 0
-                                ? review.likesCount - 1
-                                : review.likesCount,
-                            userLikeState: result.action === 'removed' ? null : 'dislike'
-                        }
-                        : review
-                )
-            )
-        } catch (error) {
-            console.error('Erreur dislike:', error)
-            alert('Erreur lors du dislike')
-        }
+        // TODO: Implémenter dislike API
+        console.log('Dislike:', reviewId)
     }
 
     // Filtrer et trier les reviews
@@ -214,8 +129,8 @@ export default function HomePage() {
                                 onClick={() => handleCreateReview(type.name)}
                                 disabled={!isAuthenticated}
                                 className={`group relative overflow-hidden rounded-3xl p-8 transition-all duration-500 transform ${isAuthenticated
-                                    ? 'hover:scale-110 hover:rotate-2 cursor-pointer shadow-2xl hover:shadow-green-500/50'
-                                    : 'opacity-40 cursor-not-allowed'
+                                        ? 'hover:scale-110 hover:rotate-2 cursor-pointer shadow-2xl hover:shadow-green-500/50'
+                                        : 'opacity-40 cursor-not-allowed'
                                     }`}
                             >
                                 {/* Gradient Background avec animation */}
@@ -262,8 +177,8 @@ export default function HomePage() {
                         <button
                             onClick={() => setFilters(f => ({ ...f, type: 'all' }))}
                             className={`px-4 py-2 rounded-xl font-semibold transition-all ${filters.type === 'all'
-                                ? 'bg-green-600 text-white shadow-lg shadow-green-600/50'
-                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                    ? 'bg-green-600 text-white shadow-lg shadow-green-600/50'
+                                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                 }`}
                         >
                             Tous
@@ -273,8 +188,8 @@ export default function HomePage() {
                                 key={type.name}
                                 onClick={() => setFilters(f => ({ ...f, type: type.name }))}
                                 className={`px-4 py-2 rounded-xl font-semibold transition-all flex items-center gap-2 ${filters.type === type.name
-                                    ? `bg-${type.color}-600 text-white shadow-lg shadow-${type.color}-600/50`
-                                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                        ? `bg-${type.color}-600 text-white shadow-lg shadow-${type.color}-600/50`
+                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                     }`}
                             >
                                 <span>{type.icon}</span>
@@ -420,27 +335,21 @@ export default function HomePage() {
                                                 <div className="flex gap-2">
                                                     <button
                                                         onClick={(e) => handleLike(review.id, e)}
-                                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all group/like ${review.userLikeState === 'like'
-                                                            ? 'bg-green-600 text-white shadow-lg shadow-green-500/50'
-                                                            : 'bg-gray-700 hover:bg-green-600 text-gray-300 hover:text-white'
-                                                            }`}
+                                                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-green-600 text-gray-300 hover:text-white transition-all group/like"
                                                     >
                                                         <svg className="w-4 h-4 group-hover/like:scale-125 transition-transform" fill="currentColor" viewBox="0 0 20 20">
                                                             <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
                                                         </svg>
-                                                        <span className="text-xs font-bold">{review.likesCount || 0}</span>
+                                                        <span className="text-xs font-bold">{review.likes || 0}</span>
                                                     </button>
                                                     <button
                                                         onClick={(e) => handleDislike(review.id, e)}
-                                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all group/dislike ${review.userLikeState === 'dislike'
-                                                            ? 'bg-red-600 text-white shadow-lg shadow-red-500/50'
-                                                            : 'bg-gray-700 hover:bg-red-600 text-gray-300 hover:text-white'
-                                                            }`}
+                                                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-red-600 text-gray-300 hover:text-white transition-all group/dislike"
                                                     >
                                                         <svg className="w-4 h-4 group-hover/dislike:scale-125 transition-transform rotate-180" fill="currentColor" viewBox="0 0 20 20">
                                                             <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
                                                         </svg>
-                                                        <span className="text-xs font-bold">{review.dislikesCount || 0}</span>
+                                                        <span className="text-xs font-bold">{review.dislikes || 0}</span>
                                                     </button>
                                                 </div>
                                                 <span className="text-xs text-gray-500 font-medium">
