@@ -99,6 +99,40 @@
         transition: all 300ms;
     }
 
+    /* Compact horizontal layouts */
+    .category-row {
+        @apply flex items-center gap-4 py-3 px-4 rounded-xl bg-gray-800/30 border border-gray-700/50 transition-all;
+    }
+
+    .category-label {
+        @apply flex-shrink-0 w-40 flex items-center gap-2 font-semibold text-sm;
+    }
+
+    .category-items {
+        @apply flex-1 flex flex-wrap gap-2 overflow-x-auto pb-2;
+    }
+
+    .compact-badge {
+        @apply px-3 py-1.5 rounded-lg text-sm whitespace-nowrap font-medium transition-all;
+    }
+
+    /* Fixed viewport layout */
+    .viewport-container {
+        @apply fixed inset-0 flex flex-col overflow-hidden;
+    }
+
+    .viewport-header {
+        @apply flex-shrink-0 h-20 bg-gray-900/80 backdrop-blur-xl border-b border-gray-700/50;
+    }
+
+    .viewport-main {
+        @apply flex-1 overflow-y-auto;
+    }
+
+    .viewport-footer {
+        @apply flex-shrink-0 h-20 bg-gray-900/80 backdrop-blur-xl border-t border-gray-700/50;
+    }
+
     .card:hover {
         background-color: rgba(38, 38, 38, 0.8);
         box-shadow: 0 8px 32px rgba(139, 92, 246, 0.15);
