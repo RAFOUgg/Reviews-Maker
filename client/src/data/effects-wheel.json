@@ -1,0 +1,61 @@
+{
+    "mental": {
+        "label": "Effets Mentaux",
+        "positive": [
+            "Relaxant",
+            "Apaisant",
+            "Euphorique",
+            "Heureux",
+            "Énergisant",
+            "Stimulant",
+            "Créatif",
+            "Concentré",
+            "Motivant",
+            "Sociable",
+            "Rire",
+            "Lucide"
+        ],
+        "negative": [
+            "Paranoïa",
+            "Anxiété",
+            "Confusion"
+        ]
+    },
+    "physical": {
+        "label": "Effets Physiques",
+        "positive": [
+            "Détente musculaire",
+            "Soulagement douleur",
+            "Anti-inflammatoire",
+            "Sédatif",
+            "Appétit stimulé",
+            "Sensation corporelle",
+            "Fourmillements",
+            "Sensation de chaleur"
+        ],
+        "negative": [
+            "Bouche sèche",
+            "Yeux secs",
+            "Étourdissements",
+            "Fatigue intense",
+            "Somnolence excessive"
+        ]
+    },
+    "therapeutic": {
+        "label": "Effets Thérapeutiques",
+        "items": [
+            "Anti-stress",
+            "Anti-anxiété",
+            "Anti-dépression",
+            "Aide au sommeil",
+            "Anti-nausée",
+            "Augmentation appétit",
+            "Soulagement migraines",
+            "Anti-inflammatoire",
+            "Relaxation musculaire",
+            "Aide à la concentration",
+            "Boost créativité",
+            "Soulagement PTSD"
+        ]
+    }
+}

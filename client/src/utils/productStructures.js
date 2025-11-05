@@ -37,8 +37,8 @@ export const productStructures = {
                 title: "Odeur",
                 fields: [
                     { key: "intensiteOdeur", label: "Intensité", type: "number", max: 10, min: 0, step: 0.5 },
-                    { key: "notesDominantesOdeur", label: "Notes dominantes", type: "textarea" },
-                    { key: "notesSecondairesOdeur", label: "Notes secondaires", type: "textarea" }
+                    { key: "notesDominantesOdeur", label: "Notes dominantes", type: "wheel-aromas" },
+                    { key: "notesSecondairesOdeur", label: "Notes secondaires", type: "wheel-aromas" }
                 ],
                 total: true,
                 totalKeys: ["intensiteOdeur"]
@@ -57,9 +57,9 @@ export const productStructures = {
             {
                 title: "Goûts & Expérience fumée",
                 fields: [
-                    { key: "dryPuff", label: "Notes (dry puff/tirage à sec/froid)", type: "textarea" },
-                    { key: "inhalation", label: "Notes (inhalation)", type: "textarea" },
-                    { key: "expiration", label: "Notes (expiration)", type: "textarea" },
+                    { key: "dryPuff", label: "Notes (dry puff/tirage à sec/froid)", type: "wheel-tastes" },
+                    { key: "inhalation", label: "Notes (inhalation)", type: "wheel-tastes" },
+                    { key: "expiration", label: "Notes (expiration)", type: "wheel-tastes" },
                     { key: "intensiteFumee", label: "Intensité", type: "number", max: 10, min: 0, step: 0.5 },
                     { key: "agressivite", label: "Agressivité/piquant", type: "number", max: 10, min: 0, step: 0.5 },
                     { key: "cendre", label: "Cendre", type: "number", max: 10, min: 0, step: 0.5 }
@@ -72,7 +72,7 @@ export const productStructures = {
                 fields: [
                     { key: "montee", label: "Montée", type: "number", max: 10, min: 0, step: 0.5 },
                     { key: "intensiteEffet", label: "Intensité", type: "number", max: 10, min: 0, step: 0.5 },
-                    { key: "typeEffet", label: "Type d'effet", type: "textarea" },
+                    { key: "typeEffet", label: "Type d'effet", type: "effects" },
                     {
                         key: "duree",
                         label: "Durée",
@@ -121,8 +121,8 @@ export const productStructures = {
                 title: "Odeur",
                 fields: [
                     { key: "intensiteAromatique", label: "Intensité aromatique", type: "number", max: 10, min: 0, step: 0.5 },
-                    { key: "notesDominantesOdeur", label: "Notes dominantes", type: "textarea" },
-                    { key: "notesSecondairesOdeur", label: "Notes secondaires", type: "textarea" },
+                    { key: "notesDominantesOdeur", label: "Notes dominantes", type: "wheel-aromas" },
+                    { key: "notesSecondairesOdeur", label: "Notes secondaires", type: "wheel-aromas" },
                     { key: "fideliteCultivars", label: "Fidélité aux cultivars", type: "number", max: 10, min: 0, step: 0.5 }
                 ],
                 total: true,
@@ -143,9 +143,9 @@ export const productStructures = {
             {
                 title: "Goûts & expérience fumée",
                 fields: [
-                    { key: "dryPuff", label: "Notes (dry puff)", type: "textarea" },
-                    { key: "inhalation", label: "Notes (inhalation)", type: "textarea" },
-                    { key: "expiration", label: "Notes (expiration)", type: "textarea" },
+                    { key: "dryPuff", label: "Notes (dry puff)", type: "wheel-tastes" },
+                    { key: "inhalation", label: "Notes (inhalation)", type: "wheel-tastes" },
+                    { key: "expiration", label: "Notes (expiration)", type: "wheel-tastes" },
                     { key: "intensiteFumee", label: "Intensité", type: "number", max: 10, min: 0, step: 0.5 },
                     { key: "agressivite", label: "Agressivité/piquant", type: "number", max: 10, min: 0, step: 0.5 },
                     { key: "cendre", label: "Cendre", type: "number", max: 10, min: 0, step: 0.5 }
@@ -158,7 +158,7 @@ export const productStructures = {
                 fields: [
                     { key: "montee", label: "Montée (rapidité)", type: "number", max: 10, min: 0, step: 0.5 },
                     { key: "intensiteEffet", label: "Intensité", type: "number", max: 10, min: 0, step: 0.5 },
-                    { key: "typeEffet", label: "Type d'effet", type: "textarea" },
+                    { key: "typeEffet", label: "Type d'effet", type: "effects" },
                     {
                         key: "duree",
                         label: "Durée",
@@ -202,8 +202,8 @@ export const productStructures = {
                 title: "Odeur",
                 fields: [
                     { key: "intensiteAromatique", label: "Intensité aromatique", type: "number", max: 10, min: 0, step: 0.5 },
-                    { key: "notesDominantesOdeur", label: "Notes dominantes", type: "textarea" },
-                    { key: "notesSecondairesOdeur", label: "Notes secondaires", type: "textarea" },
+                    { key: "notesDominantesOdeur", label: "Notes dominantes", type: "wheel-aromas" },
+                    { key: "notesSecondairesOdeur", label: "Notes secondaires", type: "wheel-aromas" },
                     { key: "fideliteCultivars", label: "Fidélité aux cultivars", type: "number", max: 10, min: 0, step: 0.5 }
                 ],
                 total: true,
@@ -223,9 +223,9 @@ export const productStructures = {
             {
                 title: "Expérience Inhalation",
                 fields: [
-                    { key: "dryPuff", label: "Notes (dry puff)", type: "textarea" },
-                    { key: "inhalation", label: "Notes (inhalation)", type: "textarea" },
-                    { key: "expiration", label: "Notes (expiration)", type: "textarea" },
+                    { key: "dryPuff", label: "Notes (dry puff)", type: "wheel-tastes" },
+                    { key: "inhalation", label: "Notes (inhalation)", type: "wheel-tastes" },
+                    { key: "expiration", label: "Notes (expiration)", type: "wheel-tastes" },
                     { key: "textureBouche", label: "Texture en bouche", type: "number", max: 10, min: 0, step: 0.5 },
                     { key: "douceur", label: "Douceur / Agressivité", type: "number", max: 10, min: 0, step: 0.5 },
                     { key: "intensite", label: "Intensité", type: "number", max: 10, min: 0, step: 0.5 }
@@ -238,7 +238,7 @@ export const productStructures = {
                 fields: [
                     { key: "montee", label: "Montée", type: "number", max: 10, min: 0, step: 0.5 },
                     { key: "intensiteEffets", label: "Intensité des effets", type: "number", max: 10, min: 0, step: 0.5 },
-                    { key: "typeEffet", label: "Type d'effet", type: "textarea" },
+                    { key: "typeEffet", label: "Type d'effet", type: "effects" },
                     {
                         key: "duree",
                         label: "Durée",
@@ -288,7 +288,7 @@ export const productStructures = {
                     { key: "apparence", label: "Apparence", type: "number", max: 10, min: 0, step: 0.5 },
                     { key: "intensiteOdeur", label: "Intensité odeur", type: "number", max: 10, min: 0, step: 0.5 },
                     { key: "gout", label: "Goût", type: "number", max: 10, min: 0, step: 0.5 },
-                    { key: "notesDominantes", label: "Notes dominantes", type: "textarea" },
+                    { key: "notesDominantes", label: "Notes dominantes", type: "wheel-tastes" },
                     { key: "texture", label: "Texture", type: "number", max: 10, min: 0, step: 0.5 },
                     { key: "qualiteAlimentaire", label: "Qualité globale du produit alimentaire", type: "number", max: 10, min: 0, step: 0.5 }
                 ],
@@ -312,7 +312,7 @@ export const productStructures = {
                         type: "select",
                         choices: ["<1h", "1-2h", "2-4h", "4h+"]
                     },
-                    { key: "typeEffet", label: "Type d'effet", type: "textarea" }
+                    { key: "typeEffet", label: "Type d'effet", type: "effects" }
                 ],
                 total: true,
                 totalKeys: ["intensiteMax"]

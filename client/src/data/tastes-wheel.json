@@ -1,0 +1,89 @@
+{
+    "categories": {
+        "fruity": {
+            "label": "Fruités",
+            "items": [
+                "Citron",
+                "Citron vert",
+                "Orange",
+                "Pamplemousse",
+                "Mangue",
+                "Ananas",
+                "Fruits rouges",
+                "Fraise",
+                "Myrtille",
+                "Cerise",
+                "Raisin",
+                "Pomme",
+                "Banane",
+                "Melon",
+                "Pastèque"
+            ]
+        },
+        "sweet": {
+            "label": "Sucrés",
+            "items": [
+                "Sucré",
+                "Miel",
+                "Caramel",
+                "Vanille",
+                "Chocolat",
+                "Bonbon",
+                "Crème",
+                "Dessert"
+            ]
+        },
+        "earthy": {
+            "label": "Terreux & Boisés",
+            "items": [
+                "Terreux",
+                "Bois",
+                "Pin",
+                "Cèdre",
+                "Noisette",
+                "Noisetté",
+                "Café",
+                "Tabac",
+                "Cuir"
+            ]
+        },
+        "spicy": {
+            "label": "Épicés & Herbacés",
+            "items": [
+                "Épicé",
+                "Poivré",
+                "Piquant",
+                "Herbes",
+                "Menthe",
+                "Eucalyptus",
+                "Thé",
+                "Lavande",
+                "Romarin",
+                "Basilic",
+                "Sauge"
+            ]
+        },
+        "floral": {
+            "label": "Floraux",
+            "items": [
+                "Floral",
+                "Rose",
+                "Jasmin",
+                "Lilas",
+                "Violette"
+            ]
+        },
+        "other": {
+            "label": "Autres",
+            "items": [
+                "Diesel",
+                "Chimique",
+                "Skunk",
+                "Ammoniaque",
+                "Fromage",
+                "Ail",
+                "Oignon"
+            ]
+        }
+    }
+}

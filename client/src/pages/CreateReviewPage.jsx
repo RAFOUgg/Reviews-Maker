@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import { productStructures, calculateSectionTotal } from '../utils/productStructures'
+import QuickSelectModal from '../components/QuickSelectModal'
+import WheelSelector from '../components/WheelSelector'
+import EffectSelector from '../components/EffectSelector'
+import { getLexicon, saveHistoryForField, getHistoryForField } from '../services/lexiconService'
 
 export default function CreateReviewPage() {
     const navigate = useNavigate()
@@ -25,10 +29,25 @@ export default function CreateReviewPage() {
     const [images, setImages] = useState([])
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState('')
+    const [unknownFields, setUnknownFields] = useState({}) // Track fields marked as "unknown"
 
     // États pour l'aperçu et les paramètres
-    const [showPreview, setShowPreview] = useState(false) // Masqué par défaut
+    const [showPreview, setShowPreview] = useState(false) // Masqué par défaut (sidebar)
+    const [quickSelectOpen, setQuickSelectOpen] = useState(false)
+    const [quickSelectField, setQuickSelectField] = useState(null)
+    const [quickSelectCategory, setQuickSelectCategory] = useState('tastes')
     const [previewStyle, setPreviewStyle] = useState('compact') // compact, detaille, resume, jolie, instagram, mobile
+    const [previewModalOpen, setPreviewModalOpen] = useState(false) // Modal overlay
+    const [previewModalSettings, setPreviewModalSettings] = useState({
+        style: 'compact',
+        showRating: true,
+        showType: true,
+        cardSize: 'medium', // small | medium | large
+        theme: 'dark', // dark | light
+        rounded: true,
+        shadow: true,
+        showImages: true
+    })
     const [showSaveModal, setShowSaveModal] = useState(false)
     const [saveSettings, setSaveSettings] = useState({
         isPublic: true,
@@ -48,27 +67,54 @@ export default function CreateReviewPage() {
         return null
     }
 
-    const productTypes = ['Fleur', 'Hash', 'Concentre', 'Comestible']
-
     const handleInputChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }))
         setError('')
     }
 
-    const handleTypeSelection = (type) => {
-        if (!typeSelected) {
-            setFormData(prev => ({ ...prev, type }))
-            setTypeSelected(true)
-        }
+    const toggleUnknownField = (field) => {
+        setUnknownFields(prev => {
+            const newState = { ...prev, [field]: !prev[field] }
+
+            // Si on marque comme inconnu, on efface la valeur du champ
+            if (newState[field]) {
+                setFormData(prevData => ({ ...prevData, [field]: '' }))
+            }
+
+            return newState
+        })
     }
+
+    // Fermer la modal preview avec ESC
+    useEffect(() => {
+        const onKey = (e) => {
+            if (e.key === 'Escape' && previewModalOpen) setPreviewModalOpen(false)
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+    }, [previewModalOpen])
 
     const handleImageChange = (e) => {
         const files = Array.from(e.target.files)
-        setImages(prev => [...prev, ...files])
+        const remainingSlots = 4 - images.length
+
+        if (remainingSlots <= 0) {
+            setError('⚠️ Maximum 4 images autorisées')
+            return
+        }
+
+        const filesToAdd = files.slice(0, remainingSlots)
+        setImages(prev => [...prev, ...filesToAdd])
+        setError('') // Clear error if any
+
+        if (files.length > remainingSlots) {
+            setError(`⚠️ Seulement ${remainingSlots} image(s) ajoutée(s) (max 4 au total)`)
+        }
     }
 
     const removeImage = (index) => {
         setImages(prev => prev.filter((_, i) => i !== index))
+        setError('') // Clear error when removing
     }
 
     const goToNextSection = () => {
@@ -91,8 +137,21 @@ export default function CreateReviewPage() {
         e.preventDefault()
         setError('')
 
+        // Validation : au moins 1 image
+        if (images.length === 0) {
+            setError('⚠️ Au moins une image est obligatoire pour publier votre review')
+            return
+        }
+
+        // Validation : max 4 images
+        if (images.length > 4) {
+            setError('⚠️ Maximum 4 images autorisées')
+            return
+        }
+
+        // Validation : nom commercial
         if (!formData.holderName.trim()) {
-            setError('Le nom du produit est requis')
+            setError('Le nom commercial est requis (ou tapez "Inconnu")')
             return
         }
 
@@ -111,6 +170,9 @@ export default function CreateReviewPage() {
             submitData.append('overallRating', formData.overallRating)
             submitData.append('isPublic', saveSettings.isPublic)
             submitData.append('displayStyle', saveSettings.displayStyle)
+
+            // Ajouter les champs marqués comme "inconnu"
+            submitData.append('unknownFields', JSON.stringify(unknownFields))
 
             images.forEach((image) => {
                 submitData.append('images', image)
@@ -139,6 +201,20 @@ export default function CreateReviewPage() {
         }
     }
 
+    // Quick select handlers
+    const handleQuickApply = (selectedItems) => {
+        if (!quickSelectField || !selectedItems || selectedItems.length === 0) {
+            setQuickSelectOpen(false)
+            return
+        }
+
+        const labels = selectedItems.map(i => i.label).join(', ')
+        const newVal = (formData[quickSelectField] || '').trim() ? (formData[quickSelectField] + '\n' + labels) : labels
+        handleInputChange(quickSelectField, newVal)
+        // save to history
+        try { saveHistoryForField(quickSelectField, labels) } catch (e) { console.warn(e) }
+    }
+
     const previewStyles = [
         { id: 'compact', name: 'Compact', icon: '📦', desc: 'Vue miniature simple' },
         { id: 'detaille', name: 'Détaillé', icon: '📋', desc: 'Toutes les infos visibles' },
@@ -147,37 +223,45 @@ export default function CreateReviewPage() {
         { id: 'instagram', name: 'Post Insta', icon: '📸', desc: 'Format carré' },
         { id: 'mobile', name: 'Format Mobile', icon: '📱', desc: 'Optimisé téléphone' }
     ]
-
-    const renderPreview = () => {
+    const renderPreview = (overrideStyle = null, modalSettings = null) => {
         const previewImages = images.map(img => URL.createObjectURL(img))
         const rating = formData.overallRating || 0
+        const style = overrideStyle || previewStyle
+        const s = modalSettings || previewModalSettings
 
-        switch (previewStyle) {
+        const baseCardClass = `overflow-hidden border ${s.theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}` +
+            (s.rounded ? ' rounded-2xl' : ' rounded') + (s.shadow ? ' shadow-2xl' : '')
+
+        const sizeClass = s.cardSize === 'small' ? 'max-w-xs' : s.cardSize === 'large' ? 'max-w-2xl' : 'max-w-md'
+
+        switch (style) {
             case 'compact':
                 return (
-                    <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 rounded-2xl overflow-hidden border border-gray-700 max-w-xs mx-auto">
+                    <div className={`${baseCardClass} ${sizeClass} mx-auto`} style={{ background: s.theme === 'dark' ? undefined : undefined }}>
                         <div className="relative aspect-square bg-gray-900">
-                            {previewImages.length > 0 ? (
+                            {s.showImages && previewImages.length > 0 ? (
                                 <img src={previewImages[0]} alt="Preview" className="w-full h-full object-cover" />
                             ) : (
                                 <div className="flex items-center justify-center h-full text-6xl opacity-20">
                                     {formData.type === 'Fleur' ? '🌿' : formData.type === 'Hash' ? '🟫' : formData.type === 'Concentré' ? '🔮' : '🍰'}
                                 </div>
                             )}
-                            <div className="absolute top-2 left-2 px-2 py-1 bg-green-600 rounded-lg text-white text-sm font-bold">
-                                {rating}/10
-                            </div>
+                            {s.showRating && (
+                                <div className="absolute top-2 left-2 px-2 py-1 bg-green-600 rounded-lg text-white text-sm font-bold">
+                                    {rating}/10
+                                </div>
+                            )}
                         </div>
                         <div className="p-3">
                             <h3 className="text-white font-bold">{formData.holderName || 'Nom du produit'}</h3>
-                            <p className="text-gray-400 text-xs">{formData.type}</p>
+                            {s.showType && <p className="text-gray-400 text-xs">{formData.type}</p>}
                         </div>
                     </div>
                 )
 
             case 'detaille':
                 return (
-                    <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 border border-gray-700 max-w-md mx-auto">
+                    <div className={`${baseCardClass} p-6 ${sizeClass} mx-auto`}>
                         <div className="flex items-center gap-4 mb-4">
                             <div className="text-4xl">
                                 {formData.type === 'Fleur' ? '🌿' : formData.type === 'Hash' ? '🟫' : formData.type === 'Concentré' ? '🔮' : '🍰'}
@@ -337,11 +421,11 @@ export default function CreateReviewPage() {
                     </div>
                     <button
                         type="button"
-                        onClick={() => setShowPreview(!showPreview)}
+                        onClick={() => setPreviewModalOpen(true)}
                         className="flex items-center gap-2 px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-xl font-medium transition-all border border-gray-700"
                     >
-                        <span className="text-xl">{showPreview ? '👁️' : '🔍'}</span>
-                        <span>{showPreview ? 'Masquer l\'aperçu' : 'Afficher l\'aperçu'}</span>
+                        <span className="text-xl"></span>
+                        <span>Aperçu avancé</span>
                     </button>
                 </div>
 
@@ -354,77 +438,66 @@ export default function CreateReviewPage() {
                             </div>
                         )}
 
-                        <div className="mb-6">
+                        {/* 1. IMAGES (OBLIGATOIRE) */}
+                        <div className="mb-8">
                             <label className="block text-sm font-medium text-gray-300 mb-3">
-                                Type de produit
-                                {typeSelected && <span className="ml-2 text-xs text-green-400">✓ Sélectionné</span>}
+                                Photos / Vidéos * <span className="text-xs text-gray-500">(min 1, max 4)</span>
                             </label>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                {productTypes.map((type) => (
-                                    <button
-                                        key={type}
-                                        type="button"
-                                        onClick={() => handleTypeSelection(type)}
-                                        disabled={typeSelected && formData.type !== type}
-                                        className={`p-4 rounded-xl text-center transition-all ${formData.type === type
-                                                ? 'bg-green-600 text-white shadow-lg shadow-green-600/50'
-                                                : typeSelected
-                                                    ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed opacity-50'
-                                                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 cursor-pointer'
-                                            }`}
-                                    >
-                                        <div className="text-2xl mb-1">
-                                            {type === 'Fleur' && String.fromCodePoint(0x1F33F)}
-                                            {type === 'Hash' && String.fromCodePoint(0x1F7EB)}
-                                            {type === 'Concentre' && String.fromCodePoint(0x1F52E)}
-                                            {type === 'Comestible' && String.fromCodePoint(0x1F370)}
-                                        </div>
-                                        <div className="text-xs font-medium">{type}</div>
-                                    </button>
-                                ))}
+                            <div className="space-y-4">
+                                <input
+                                    type="file"
+                                    accept="image/*,video/*"
+                                    multiple
+                                    onChange={handleImageChange}
+                                    className="hidden"
+                                    id="imageUpload"
+                                />
+                                <label
+                                    htmlFor="imageUpload"
+                                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer hover:border-green-600 transition-all bg-gray-900/30 hover:bg-gray-900/50"
+                                >
+                                    <div className="text-4xl mb-2">📸</div>
+                                    <span className="text-sm text-gray-400">Cliquez pour ajouter des médias</span>
+                                    <span className="text-xs text-gray-500 mt-1">{images.length}/4 fichiers</span>
+                                </label>
+                                {images.length > 0 && (
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                        {images.map((img, idx) => (
+                                            <div key={idx} className="relative group">
+                                                <img
+                                                    src={URL.createObjectURL(img)}
+                                                    alt={`Preview ${idx + 1}`}
+                                                    className="w-full h-24 object-cover rounded-lg border border-gray-700"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeImage(idx)}
+                                                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    ×
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {images.length === 0 && (
+                                    <p className="text-xs text-red-400 mt-2">⚠️ Au moins une image est obligatoire pour publier</p>
+                                )}
                             </div>
                         </div>
 
-                        <div className="mb-6">
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Nom du produit *</label>
+                        {/* 2. NOM COMMERCIAL (OBLIGATOIRE) */}
+                        <div className="mb-8">
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                                Nom commercial * <span className="text-xs text-gray-500">(ou tapez "Inconnu")</span>
+                            </label>
                             <input
                                 type="text"
-                                placeholder="Ex: Blue Dream, Sour Diesel..."
+                                placeholder="Ex: Blue Dream, Sour Diesel, ou Inconnu"
                                 value={formData.holderName}
                                 onChange={(e) => handleInputChange('holderName', e.target.value)}
                                 className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-green-600 focus:ring-2 focus:ring-green-600/20 transition-all"
                                 required
-                            />
-                        </div>
-
-                        <div className="mb-6">
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Note globale: {formData.overallRating}/10
-                            </label>
-                            <input
-                                type="range"
-                                min="0"
-                                max="10"
-                                step="0.5"
-                                value={formData.overallRating}
-                                onChange={(e) => handleInputChange('overallRating', parseFloat(e.target.value))}
-                                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-600"
-                            />
-                            <div className="flex justify-between text-xs text-gray-500 mt-1">
-                                <span>0</span>
-                                <span>5</span>
-                                <span>10</span>
-                            </div>
-                        </div>
-
-                        <div className="mb-6">
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
-                            <textarea
-                                placeholder="Decrivez votre experience..."
-                                value={formData.description}
-                                onChange={(e) => handleInputChange('description', e.target.value)}
-                                rows="4"
-                                className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-green-600 focus:ring-2 focus:ring-green-600/20 transition-all resize-none"
                             />
                         </div>
 
@@ -447,10 +520,10 @@ export default function CreateReviewPage() {
                                                 type="button"
                                                 onClick={() => goToSection(idx)}
                                                 className={`flex-1 h-2 rounded-full transition-all ${idx === currentSectionIndex
-                                                        ? 'bg-green-600 shadow-lg shadow-green-600/50'
-                                                        : idx < currentSectionIndex
-                                                            ? 'bg-green-800 hover:bg-green-700 cursor-pointer'
-                                                            : 'bg-gray-700 hover:bg-gray-600 cursor-pointer'
+                                                    ? 'bg-green-600 shadow-lg shadow-green-600/50'
+                                                    : idx < currentSectionIndex
+                                                        ? 'bg-green-800 hover:bg-green-700 cursor-pointer'
+                                                        : 'bg-gray-700 hover:bg-gray-600 cursor-pointer'
                                                     }`}
                                             />
                                         ))}
@@ -466,10 +539,23 @@ export default function CreateReviewPage() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {currentSection.fields.map((field, fieldIdx) => (
                                             <div key={fieldIdx} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
-                                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                                    {field.label}
-                                                    {field.required && <span className="text-red-400 ml-1">*</span>}
-                                                </label>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <label className="block text-sm font-medium text-gray-300">
+                                                        {field.label}
+                                                        {field.required && <span className="text-red-400 ml-1">*</span>}
+                                                    </label>
+                                                    {!field.required && (
+                                                        <label className="flex items-center gap-1.5 cursor-pointer group">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={unknownFields[field.key] || false}
+                                                                onChange={() => toggleUnknownField(field.key)}
+                                                                className="w-4 h-4 rounded bg-gray-900/50 border-gray-600 text-amber-500 focus:ring-amber-500 focus:ring-offset-0 transition-all"
+                                                            />
+                                                            <span className="text-xs text-gray-400 group-hover:text-amber-400 transition-colors">Inconnu</span>
+                                                        </label>
+                                                    )}
+                                                </div>
 
                                                 {field.type === 'text' && (
                                                     <input
@@ -477,7 +563,8 @@ export default function CreateReviewPage() {
                                                         value={formData[field.key] || ''}
                                                         onChange={(e) => handleInputChange(field.key, e.target.value)}
                                                         required={field.required}
-                                                        className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600/20 transition-all"
+                                                        disabled={unknownFields[field.key]}
+                                                        className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                                     />
                                                 )}
 
@@ -488,13 +575,16 @@ export default function CreateReviewPage() {
                                                             min={field.min}
                                                             max={field.max}
                                                             step={field.step}
-                                                            value={formData[field.key] || 0}
+                                                            value={unknownFields[field.key] ? 0 : (formData[field.key] || 0)}
                                                             onChange={(e) => handleInputChange(field.key, parseFloat(e.target.value))}
-                                                            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-600"
+                                                            disabled={unknownFields[field.key]}
+                                                            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                                         />
                                                         <div className="flex justify-between text-xs text-gray-500 mt-1">
                                                             <span>{field.min}</span>
-                                                            <span className="text-green-400 font-bold">{formData[field.key] || 0}</span>
+                                                            <span className={`font-bold ${unknownFields[field.key] ? 'text-amber-400' : 'text-green-400'}`}>
+                                                                {unknownFields[field.key] ? 'Inconnu' : (formData[field.key] || 0)}
+                                                            </span>
                                                             <span>{field.max}</span>
                                                         </div>
                                                     </div>
@@ -502,24 +592,60 @@ export default function CreateReviewPage() {
 
                                                 {field.type === 'select' && (
                                                     <select
-                                                        value={formData[field.key] || ''}
+                                                        value={unknownFields[field.key] ? '' : (formData[field.key] || '')}
                                                         onChange={(e) => handleInputChange(field.key, e.target.value)}
-                                                        className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600/20 transition-all"
+                                                        disabled={unknownFields[field.key]}
+                                                        className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                                     >
-                                                        <option value="">Sélectionner...</option>
-                                                        {field.choices.map((choice, idx) => (
+                                                        <option value="">{unknownFields[field.key] ? 'Inconnu' : 'Sélectionner...'}</option>
+                                                        {!unknownFields[field.key] && field.choices.map((choice, idx) => (
                                                             <option key={idx} value={choice}>{choice}</option>
                                                         ))}
                                                     </select>
                                                 )}
 
                                                 {field.type === 'textarea' && (
-                                                    <textarea
-                                                        value={formData[field.key] || ''}
-                                                        onChange={(e) => handleInputChange(field.key, e.target.value)}
-                                                        rows="3"
-                                                        className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600/20 transition-all resize-none"
-                                                    />
+                                                    <div className="relative">
+                                                        <div className="flex items-center justify-end mb-2 gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    // decide category based on field key
+                                                                    const cat = field.key.toLowerCase().includes('odeur') || field.key.toLowerCase().includes('odor') || field.key.toLowerCase().includes('smell') ? 'smells' : 'tastes'
+                                                                    setQuickSelectCategory(cat)
+                                                                    setQuickSelectField(field.key)
+                                                                    setQuickSelectOpen(true)
+                                                                }}
+                                                                className="px-3 py-1 text-xs rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300"
+                                                            >
+                                                                Sélection rapide
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    // apply last history for this field if exists
+                                                                    const hist = getHistoryForField(field.key) || []
+                                                                    if (hist.length > 0) {
+                                                                        const last = hist[hist.length - 1]
+                                                                        const newVal = (formData[field.key] || '').trim() ? (formData[field.key] + '\n' + last) : last
+                                                                        handleInputChange(field.key, newVal)
+                                                                    }
+                                                                }}
+                                                                className="px-3 py-1 text-xs rounded-md bg-gray-800 hover:bg-gray-700 text-gray-300"
+                                                            >
+                                                                Appliquer dernier
+                                                            </button>
+                                                        </div>
+
+                                                        <textarea
+                                                            value={unknownFields[field.key] ? '' : (formData[field.key] || '')}
+                                                            onChange={(e) => handleInputChange(field.key, e.target.value)}
+                                                            rows="3"
+                                                            disabled={unknownFields[field.key]}
+                                                            placeholder={unknownFields[field.key] ? 'Marqué comme inconnu' : ''}
+                                                            className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600/20 transition-all resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        />
+                                                    </div>
                                                 )}
 
                                                 {field.type === 'boolean' && (
@@ -533,11 +659,39 @@ export default function CreateReviewPage() {
                                                         <span className="text-sm text-gray-300">Oui</span>
                                                     </label>
                                                 )}
+
+                                                {field.type === 'wheel-aromas' && (
+                                                    <WheelSelector
+                                                        value={formData[field.key] || ''}
+                                                        onChange={(value) => handleInputChange(field.key, value)}
+                                                        type="aromas"
+                                                        label={field.label}
+                                                        maxSelections={5}
+                                                    />
+                                                )}
+
+                                                {field.type === 'wheel-tastes' && (
+                                                    <WheelSelector
+                                                        value={formData[field.key] || ''}
+                                                        onChange={(value) => handleInputChange(field.key, value)}
+                                                        type="tastes"
+                                                        label={field.label}
+                                                        maxSelections={5}
+                                                    />
+                                                )}
+
+                                                {field.type === 'effects' && (
+                                                    <EffectSelector
+                                                        value={formData[field.key] || ''}
+                                                        onChange={(value) => handleInputChange(field.key, value)}
+                                                        maxSelections={8}
+                                                    />
+                                                )}
                                             </div>
                                         ))}
                                     </div>
 
-                                    {section.total && (
+                                    {currentSection.total && (
                                         <div className="mt-4 pt-4 border-t border-gray-700/50">
                                             {(() => {
                                                 const total = calculateSectionTotal(currentSection, formData)
@@ -576,46 +730,6 @@ export default function CreateReviewPage() {
                                 </div>
                             </>
                         )}
-
-                        <div className="mb-8">
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Photos</label>
-                            <input
-                                type="file"
-                                id="image-upload"
-                                multiple
-                                accept="image/*"
-                                onChange={handleImageChange}
-                                className="hidden"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => document.getElementById('image-upload').click()}
-                                className="w-full py-3 px-4 bg-gray-700/50 hover:bg-gray-700 border-2 border-dashed border-gray-600 rounded-xl text-gray-300 transition-colors"
-                            >
-                                Ajouter des photos
-                            </button>
-
-                            {images.length > 0 && (
-                                <div className="grid grid-cols-3 md:grid-cols-4 gap-3 mt-4">
-                                    {images.map((image, index) => (
-                                        <div key={index} className="relative group">
-                                            <img
-                                                src={URL.createObjectURL(image)}
-                                                alt={`Preview ${index}`}
-                                                className="w-full h-24 object-cover rounded-lg"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => removeImage(index)}
-                                                className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
-                                            >
-                                                &times;
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
 
                         <div className="flex gap-4">
                             <button
@@ -670,6 +784,78 @@ export default function CreateReviewPage() {
                         </div>
                     )}
                 </div>
+
+                {/* Preview Modal Overlay */}
+                {previewModalOpen && (
+                    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+                        <div className="bg-gray-900 rounded-2xl w-full max-w-6xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 border border-gray-700 shadow-2xl">
+                            <div className="lg:col-span-1">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-bold text-white">Aperçu — Paramètres</h3>
+                                    <button type="button" onClick={() => setPreviewModalOpen(false)} className="text-gray-400 hover:text-white">✕</button>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm text-gray-300 mb-2">Style</label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {previewStyles.map(s => (
+                                                <button key={s.id} type="button" onClick={() => setPreviewModalSettings(prev => ({ ...prev, style: s.id }))} className={`p-2 rounded-md text-left text-sm ${previewModalSettings.style === s.id ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-300'}`}>
+                                                    <div className="font-semibold">{s.icon} {s.name}</div>
+                                                    <div className="text-xs opacity-75">{s.desc}</div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm text-gray-300 mb-2">Taille de la carte</label>
+                                        <div className="flex gap-2">
+                                            {['small', 'medium', 'large'].map(sz => (
+                                                <button key={sz} type="button" onClick={() => setPreviewModalSettings(prev => ({ ...prev, cardSize: sz }))} className={`px-3 py-2 rounded-md ${previewModalSettings.cardSize === sz ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-300'}`}>{sz}</button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm text-gray-300 mb-2">Thème</label>
+                                        <div className="flex gap-2">
+                                            {['dark', 'light'].map(t => (
+                                                <button key={t} type="button" onClick={() => setPreviewModalSettings(prev => ({ ...prev, theme: t }))} className={`px-3 py-2 rounded-md ${previewModalSettings.theme === t ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-300'}`}>{t}</button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <label className="flex items-center gap-2 text-sm text-gray-300"><input type="checkbox" checked={previewModalSettings.showRating} onChange={(e) => setPreviewModalSettings(prev => ({ ...prev, showRating: e.target.checked }))} />Afficher note</label>
+                                        <label className="flex items-center gap-2 text-sm text-gray-300"><input type="checkbox" checked={previewModalSettings.showType} onChange={(e) => setPreviewModalSettings(prev => ({ ...prev, showType: e.target.checked }))} />Afficher type</label>
+                                        <label className="flex items-center gap-2 text-sm text-gray-300"><input type="checkbox" checked={previewModalSettings.showImages} onChange={(e) => setPreviewModalSettings(prev => ({ ...prev, showImages: e.target.checked }))} />Afficher images</label>
+                                        <label className="flex items-center gap-2 text-sm text-gray-300"><input type="checkbox" checked={previewModalSettings.rounded} onChange={(e) => setPreviewModalSettings(prev => ({ ...prev, rounded: e.target.checked }))} />Bord arrondi</label>
+                                        <label className="flex items-center gap-2 text-sm text-gray-300"><input type="checkbox" checked={previewModalSettings.shadow} onChange={(e) => setPreviewModalSettings(prev => ({ ...prev, shadow: e.target.checked }))} />Ombre</label>
+                                    </div>
+
+                                    <div className="flex gap-2 mt-2">
+                                        <button type="button" onClick={() => { setPreviewModalSettings(prev => ({ ...prev, style: 'compact', cardSize: 'medium', theme: 'dark', showRating: true, showType: true, showImages: true, rounded: true, shadow: true })); }} className="px-3 py-2 rounded-md bg-gray-800 text-gray-300">Réinitialiser</button>
+                                        <button type="button" onClick={() => setPreviewModalOpen(false)} className="px-3 py-2 rounded-md bg-green-600 text-white">Fermer</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="lg:col-span-2">
+                                <div className={`p-6 rounded-xl ${previewModalSettings.theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h4 className="text-sm font-semibold text-gray-300">Aperçu en direct</h4>
+                                        <div className="text-xs text-gray-400">Style: {previewModalSettings.style} • Taille: {previewModalSettings.cardSize}</div>
+                                    </div>
+
+                                    <div className="flex items-center justify-center p-6">
+                                        {renderPreview(previewModalSettings.style, previewModalSettings)}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Modal de sauvegarde */}
                 {showSaveModal && (
@@ -754,6 +940,15 @@ export default function CreateReviewPage() {
                         </div>
                     </div>
                 )}
+                {/* Quick select modal for tastes / smells */}
+                <QuickSelectModal
+                    open={quickSelectOpen}
+                    onClose={() => setQuickSelectOpen(false)}
+                    items={getLexicon(quickSelectCategory)}
+                    onApply={handleQuickApply}
+                    multiple={true}
+                    title={quickSelectCategory === 'smells' ? 'Sélectionner des odeurs' : 'Sélectionner des goûts'}
+                />
             </div>
         </div>
     )

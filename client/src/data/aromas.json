@@ -1,0 +1,109 @@
+{
+    "categories": {
+        "citrus": {
+            "label": "Agrumes",
+            "items": [
+                "Citronné",
+                "Citrus",
+                "Orange",
+                "Pamplemousse",
+                "Lime",
+                "Zeste d'agrumes"
+            ]
+        },
+        "fruity": {
+            "label": "Fruités",
+            "items": [
+                "Fruits tropicaux",
+                "Fruits rouges",
+                "Baies",
+                "Raisin",
+                "Pomme verte",
+                "Melon",
+                "Mangue"
+            ]
+        },
+        "earthy": {
+            "label": "Terreux & Naturel",
+            "items": [
+                "Terreux profond",
+                "Humide",
+                "Mousse",
+                "Forêt",
+                "Bois humide",
+                "Champignon",
+                "Terre fraîche"
+            ]
+        },
+        "woody": {
+            "label": "Boisés & Résineux",
+            "items": [
+                "Pin",
+                "Sapin",
+                "Cèdre",
+                "Bois de santal",
+                "Bois brûlé",
+                "Résine",
+                "Sève"
+            ]
+        },
+        "spicy": {
+            "label": "Épicés & Herbacés",
+            "items": [
+                "Poivré",
+                "Piquant",
+                "Épices douces",
+                "Cannelle",
+                "Clou de girofle",
+                "Herbes fraîches",
+                "Menthe",
+                "Eucalyptus"
+            ]
+        },
+        "floral": {
+            "label": "Floraux",
+            "items": [
+                "Lavande",
+                "Rose",
+                "Jasmin",
+                "Lilas",
+                "Fleurs blanches"
+            ]
+        },
+        "sweet": {
+            "label": "Sucrés & Gourmands",
+            "items": [
+                "Vanille",
+                "Caramel",
+                "Miel",
+                "Bonbon",
+                "Chocolat",
+                "Crème",
+                "Dessert"
+            ]
+        },
+        "chemical": {
+            "label": "Chimiques & Puissants",
+            "items": [
+                "Diesel",
+                "Skunk",
+                "Ammoniaque",
+                "Chimique",
+                "Fuel",
+                "Gaz"
+            ]
+        },
+        "other": {
+            "label": "Autres",
+            "items": [
+                "Fromage",
+                "Cuir",
+                "Tabac",
+                "Café",
+                "Ail",
+                "Oignon",
+                "Noisette"
+            ]
+        }
+    }
+}
