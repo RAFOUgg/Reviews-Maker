@@ -1,10 +1,11 @@
+// FICHIER COMPLET CreateReviewPage.jsx - Version étape par étape
+// Copiez ce contenu dans: client/src/pages/CreateReviewPage.jsx
+
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import WheelSelector from '../components/WheelSelector';
 import EffectSelector from '../components/EffectSelector';
-import CultivarList from '../components/CultivarList';
-import PipelineWithCultivars from '../components/PipelineWithCultivars';
 import { productStructures } from '../data/productStructures';
 
 export default function CreateReviewPage() {
@@ -72,8 +73,6 @@ export default function CreateReviewPage() {
             case 'checkbox': return <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={!!value} onChange={(e) => handleInputChange(field.key, e.target.checked)} className="w-5 h-5 rounded border-gray-700 bg-gray-900/50 text-green-600 focus:ring-green-500" /><span className="text-gray-300">{field.label}</span></label>;
             case 'wheel': return <WheelSelector value={value} onChange={(v) => handleInputChange(field.key, v)} type={field.key} maxSelections={5} />;
             case 'effects': return <EffectSelector value={value} onChange={(v) => handleInputChange(field.key, v)} maxSelections={8} />;
-            case 'cultivar-list': return <CultivarList value={value} onChange={(v) => handleInputChange(field.key, v)} matiereChoices={field.matiereChoices || []} />;
-            case 'pipeline-with-cultivars': const cultivarsListData = formData[field.cultivarsSource] || []; return <PipelineWithCultivars value={value} onChange={(v) => handleInputChange(field.key, v)} choices={field.choices || []} cultivarsList={cultivarsListData} />;
             case 'images': return <div><input type="file" accept="image/*,video/*" multiple onChange={handleImageChange} className="hidden" id="imageUpload" />{images.length === 0 ? <label htmlFor="imageUpload" className="flex flex-col items-center justify-center h-56 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer hover:border-green-500 transition-all bg-gray-900/30"><div className="text-6xl mb-3">📸</div><span className="text-lg text-gray-300">Cliquez pour ajouter des photos</span><span className="text-sm text-gray-500 mt-1">1 à 4 fichiers</span></label> : <div className="space-y-4"><div className="grid grid-cols-2 gap-4">{images.map((img, idx) => <div key={idx} className="relative group aspect-square"><img src={URL.createObjectURL(img)} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover rounded-xl border-2 border-gray-700" /><button type="button" onClick={() => removeImage(idx)} className="absolute top-3 right-3 bg-red-600 hover:bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg">×</button></div>)}</div>{images.length < 4 && <label htmlFor="imageUpload" className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer hover:border-green-500 transition-colors text-gray-400 hover:text-gray-300"><span className="text-2xl">+</span><span>Ajouter ({images.length}/4)</span></label>}</div>}</div>;
             default: return null;
         }
