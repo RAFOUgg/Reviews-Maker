@@ -26,7 +26,9 @@ const PORT = process.env.PORT || 3000
 
 // Middleware
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    // Allow the explicit FRONTEND_URL if provided. In development, allow any origin
+    // so the frontend served from the machine IP (e.g. http://192.168.x.y:5173) can access the API.
+    origin: process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? 'http://localhost:5173' : true),
     credentials: true, // ✅ Essencial pour les cookies
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -96,10 +98,12 @@ process.on('SIGINT', async () => {
 })
 
 // Start server
-app.listen(PORT, () => {
-    console.log(`\n🚀 Server running on http://localhost:${PORT}`)
+// Bind to 0.0.0.0 so the server is reachable from other machines on the LAN.
+app.listen(PORT, '0.0.0.0', () => {
+    const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? 'http://localhost:5173' : 'dev:any-origin')
+    console.log(`\n🚀 Server running on http://0.0.0.0:${PORT}`)
     console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`)
-    console.log(`🎯 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`)
+    console.log(`🎯 Frontend URL: ${frontendUrl}`)
     console.log(`\n✅ Ready to accept requests!\n`)
 })
 

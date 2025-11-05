@@ -72,8 +72,8 @@ export default function WheelSelector({
         if (!searchFilter) return true
         const items = category.items || category
         const categoryLabel = (category.label || key).toLowerCase()
-        return categoryLabel.includes(searchFilter.toLowerCase()) || 
-               (Array.isArray(items) && items.some(item => item.toLowerCase().includes(searchFilter.toLowerCase())))
+        return categoryLabel.includes(searchFilter.toLowerCase()) ||
+            (Array.isArray(items) && items.some(item => item.toLowerCase().includes(searchFilter.toLowerCase())))
     })
 
     return (
@@ -92,11 +92,10 @@ export default function WheelSelector({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
-                
+
                 {/* Compteur */}
-                <div className={`px-4 py-2 rounded-lg text-sm font-semibold ${
-                    selectedItems.length >= maxSelections ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'
-                }`}>
+                <div className={`px-4 py-2 rounded-lg text-sm font-semibold ${selectedItems.length >= maxSelections ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'
+                    }`}>
                     {selectedItems.length}/{maxSelections}
                 </div>
 
@@ -139,9 +138,8 @@ export default function WheelSelector({
                     return (
                         <div
                             key={categoryKey}
-                            className={`flex items-center gap-3 p-3 rounded-xl bg-gray-800/30 border transition-all ${
-                                categoryHasSelection ? 'border-green-500/50 bg-green-500/5' : 'border-gray-700/50'
-                            }`}
+                            className={`flex items-center gap-3 p-3 rounded-xl bg-gray-800/30 border transition-all ${categoryHasSelection ? 'border-green-500/50 bg-green-500/5' : 'border-gray-700/50'
+                                }`}
                         >
                             {/* Label fixe */}
                             <div className="flex-shrink-0 w-32 flex items-center gap-2">
@@ -161,11 +159,10 @@ export default function WheelSelector({
                                                 key={item}
                                                 type="button"
                                                 onClick={() => toggleItem(item)}
-                                                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                                                    isSelected
+                                                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
                                                         ? `bg-gradient-to-r ${theme.gradient} text-white shadow-md`
                                                         : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
-                                                }`}
+                                                    }`}
                                             >
                                                 {item}
                                             </button>

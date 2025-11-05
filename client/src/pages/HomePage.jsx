@@ -45,7 +45,7 @@ export default function HomePage() {
 
     const productTypes = [
         { name: 'Fleur', icon: '🌿', gradient: 'from-green-500 via-emerald-500 to-teal-500', color: 'green' },
-        { name: 'Hash', icon: '🟫', gradient: 'from-amber-500 via-yellow-600 to-orange-500', color: 'amber' },
+        { name: 'Hash', icon: '🍫', gradient: 'from-amber-500 via-yellow-600 to-orange-500', color: 'amber' },
         { name: 'Concentré', icon: '🔮', gradient: 'from-purple-500 via-violet-500 to-indigo-500', color: 'purple' },
         { name: 'Comestible', icon: '🍰', gradient: 'from-pink-500 via-rose-500 to-red-500', color: 'pink' }
     ]
@@ -353,9 +353,9 @@ export default function HomePage() {
                                         >
                                             {images && images.length > 0 ? (
                                                 <div className={`h-full w-full ${images.length === 1 ? '' :
-                                                        images.length === 2 ? 'grid grid-cols-2 gap-1' :
-                                                            images.length === 3 ? 'grid grid-rows-2 gap-1' :
-                                                                'grid grid-cols-2 grid-rows-2 gap-1'
+                                                    images.length === 2 ? 'grid grid-cols-2 gap-1' :
+                                                        images.length === 3 ? 'grid grid-rows-2 gap-1' :
+                                                            'grid grid-cols-2 grid-rows-2 gap-1'
                                                     }`}>
                                                     {images.length === 1 && (
                                                         <div className="relative w-full h-full overflow-hidden">
@@ -419,7 +419,7 @@ export default function HomePage() {
                                                 <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-800 via-gray-900 to-black">
                                                     <span className="text-8xl opacity-20">
                                                         {review.type === 'Fleur' ? '🌿' :
-                                                            review.type === 'Hash' ? '🟫' :
+                                                            review.type === 'Hash' ? '🍫' :
                                                                 review.type === 'Concentré' ? '🔮' : '🍰'}
                                                     </span>
                                                 </div>
@@ -470,7 +470,7 @@ export default function HomePage() {
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-3xl">
                                                         {review.type === 'Fleur' ? '🌿' :
-                                                            review.type === 'Hash' ? '🟫' :
+                                                            review.type === 'Hash' ? '🍫' :
                                                                 review.type === 'Concentré' ? '🔮' : '🍰'}
                                                     </span>
                                                     <span className="px-3 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-purple-300 text-xs font-bold uppercase tracking-wider">

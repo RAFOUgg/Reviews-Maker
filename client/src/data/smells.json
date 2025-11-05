@@ -1,0 +1,33 @@
+[
+    {
+        "id": "smell_skunk",
+        "label": "Skunk",
+        "aliases": [],
+        "category": "smell"
+    },
+    {
+        "id": "smell_citron",
+        "label": "Agrumes / Citron",
+        "aliases": [
+            "citron",
+            "agrume"
+        ],
+        "category": "smell"
+    },
+    {
+        "id": "smell_terreux",
+        "label": "Terreux",
+        "aliases": [
+            "earthy"
+        ],
+        "category": "smell"
+    },
+    {
+        "id": "smell_epice",
+        "label": "Épicé / Poivré",
+        "aliases": [
+            "poivré"
+        ],
+        "category": "smell"
+    }
+]

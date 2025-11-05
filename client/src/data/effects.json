@@ -1,0 +1,26 @@
+[
+    {
+        "id": "effect_relaxant",
+        "label": "Relaxant",
+        "aliases": [],
+        "category": "effect"
+    },
+    {
+        "id": "effect_energisant",
+        "label": "Énergisant",
+        "aliases": [],
+        "category": "effect"
+    },
+    {
+        "id": "effect_sedatif",
+        "label": "Sédatif",
+        "aliases": [],
+        "category": "effect"
+    },
+    {
+        "id": "effect_creatif",
+        "label": "Créatif",
+        "aliases": [],
+        "category": "effect"
+    }
+]

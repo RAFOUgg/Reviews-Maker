@@ -1,0 +1,35 @@
+[
+    {
+        "id": "taste_citron",
+        "label": "Citron",
+        "aliases": [
+            "agrume",
+            "lemon"
+        ],
+        "category": "taste"
+    },
+    {
+        "id": "taste_pin",
+        "label": "Pin",
+        "aliases": [
+            "pine"
+        ],
+        "category": "taste"
+    },
+    {
+        "id": "taste_terreux",
+        "label": "Terreux",
+        "aliases": [
+            "earthy"
+        ],
+        "category": "taste"
+    },
+    {
+        "id": "taste_sucré",
+        "label": "Sucré",
+        "aliases": [
+            "sucre"
+        ],
+        "category": "taste"
+    }
+]

@@ -31,7 +31,7 @@ export default function HomePage() {
 
     const productTypes = [
         { name: 'Fleur', icon: '🌿', gradient: 'from-green-600 to-green-400' },
-        { name: 'Hash', icon: '🟫', gradient: 'from-amber-600 to-amber-400' },
+        { name: 'Hash', icon: '🍫', gradient: 'from-amber-600 to-amber-400' },
         { name: 'Concentré', icon: '🔮', gradient: 'from-purple-600 to-purple-400' },
         { name: 'Comestible', icon: '🍰', gradient: 'from-pink-600 to-pink-400' }
     ]
@@ -174,7 +174,7 @@ export default function HomePage() {
                                                 <div className="col-span-2 flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
                                                     <span className="text-6xl">
                                                         {review.type === 'Fleur' ? '🌿' :
-                                                            review.type === 'Hash' ? '🟫' :
+                                                            review.type === 'Hash' ? '🍫' :
                                                                 review.type === 'Concentré' ? '🔮' : '🍰'}
                                                     </span>
                                                 </div>

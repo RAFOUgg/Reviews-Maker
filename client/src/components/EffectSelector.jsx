@@ -79,36 +79,32 @@ export default function EffectSelector({
                     <button
                         type="button"
                         onClick={() => setFilterType('all')}
-                        className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${
-                            filterType === 'all' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
-                        }`}
+                        className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${filterType === 'all' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
+                            }`}
                     >
                         Tous
                     </button>
                     <button
                         type="button"
                         onClick={() => setFilterType('positive')}
-                        className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${
-                            filterType === 'positive' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
-                        }`}
+                        className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${filterType === 'positive' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
+                            }`}
                     >
                         ✓ Positifs
                     </button>
                     <button
                         type="button"
                         onClick={() => setFilterType('negative')}
-                        className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${
-                            filterType === 'negative' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'
-                        }`}
+                        className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${filterType === 'negative' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'
+                            }`}
                     >
                         ✗ Négatifs
                     </button>
                 </div>
 
                 {/* Compteur */}
-                <div className={`ml-auto px-4 py-1.5 rounded-lg text-sm font-semibold ${
-                    selectedItems.length >= maxSelections ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'
-                }`}>
+                <div className={`ml-auto px-4 py-1.5 rounded-lg text-sm font-semibold ${selectedItems.length >= maxSelections ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'
+                    }`}>
                     {selectedItems.length}/{maxSelections}
                 </div>
 
@@ -163,11 +159,10 @@ export default function EffectSelector({
                                             key={effect}
                                             type="button"
                                             onClick={() => toggleItem(effect)}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                                                isSelected
+                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
                                                     ? `${categoryThemes.mental.positiveColor} text-white shadow-md`
                                                     : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
-                                            }`}
+                                                }`}
                                         >
                                             {effect}
                                         </button>
@@ -189,11 +184,10 @@ export default function EffectSelector({
                                             key={effect}
                                             type="button"
                                             onClick={() => toggleItem(effect)}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                                                isSelected
+                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
                                                     ? `${categoryThemes.mental.negativeColor} text-white shadow-md`
                                                     : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
-                                            }`}
+                                                }`}
                                         >
                                             {effect}
                                         </button>
@@ -224,11 +218,10 @@ export default function EffectSelector({
                                             key={effect}
                                             type="button"
                                             onClick={() => toggleItem(effect)}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                                                isSelected
+                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
                                                     ? `${categoryThemes.physical.positiveColor} text-white shadow-md`
                                                     : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
-                                            }`}
+                                                }`}
                                         >
                                             {effect}
                                         </button>
@@ -249,11 +242,10 @@ export default function EffectSelector({
                                             key={effect}
                                             type="button"
                                             onClick={() => toggleItem(effect)}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                                                isSelected
+                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
                                                     ? `${categoryThemes.physical.negativeColor} text-white shadow-md`
                                                     : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
-                                            }`}
+                                                }`}
                                         >
                                             {effect}
                                         </button>
@@ -281,11 +273,10 @@ export default function EffectSelector({
                                     key={effect}
                                     type="button"
                                     onClick={() => toggleItem(effect)}
-                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                                        isSelected
+                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
                                             ? `${categoryThemes.therapeutic.color} text-white shadow-md`
                                             : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
-                                    }`}
+                                        }`}
                                 >
                                     {effect}
                                 </button>

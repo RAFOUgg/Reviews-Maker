@@ -38,7 +38,7 @@ export default function HomePage() {
 
     const productTypes = [
         { name: 'Fleur', icon: '🌿', gradient: 'from-green-500 via-emerald-500 to-teal-500', color: 'green' },
-        { name: 'Hash', icon: '🟫', gradient: 'from-amber-500 via-yellow-600 to-orange-500', color: 'amber' },
+        { name: 'Hash', icon: '🍫', gradient: 'from-amber-500 via-yellow-600 to-orange-500', color: 'amber' },
         { name: 'Concentré', icon: '🔮', gradient: 'from-purple-500 via-violet-500 to-indigo-500', color: 'purple' },
         { name: 'Comestible', icon: '🍰', gradient: 'from-pink-500 via-rose-500 to-red-500', color: 'pink' }
     ]
@@ -129,8 +129,8 @@ export default function HomePage() {
                                 onClick={() => handleCreateReview(type.name)}
                                 disabled={!isAuthenticated}
                                 className={`group relative overflow-hidden rounded-3xl p-8 transition-all duration-500 transform ${isAuthenticated
-                                        ? 'hover:scale-110 hover:rotate-2 cursor-pointer shadow-2xl hover:shadow-green-500/50'
-                                        : 'opacity-40 cursor-not-allowed'
+                                    ? 'hover:scale-110 hover:rotate-2 cursor-pointer shadow-2xl hover:shadow-green-500/50'
+                                    : 'opacity-40 cursor-not-allowed'
                                     }`}
                             >
                                 {/* Gradient Background avec animation */}
@@ -177,8 +177,8 @@ export default function HomePage() {
                         <button
                             onClick={() => setFilters(f => ({ ...f, type: 'all' }))}
                             className={`px-4 py-2 rounded-xl font-semibold transition-all ${filters.type === 'all'
-                                    ? 'bg-green-600 text-white shadow-lg shadow-green-600/50'
-                                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                ? 'bg-green-600 text-white shadow-lg shadow-green-600/50'
+                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                 }`}
                         >
                             Tous
@@ -188,8 +188,8 @@ export default function HomePage() {
                                 key={type.name}
                                 onClick={() => setFilters(f => ({ ...f, type: type.name }))}
                                 className={`px-4 py-2 rounded-xl font-semibold transition-all flex items-center gap-2 ${filters.type === type.name
-                                        ? `bg-${type.color}-600 text-white shadow-lg shadow-${type.color}-600/50`
-                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                    ? `bg-${type.color}-600 text-white shadow-lg shadow-${type.color}-600/50`
+                                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                     }`}
                             >
                                 <span>{type.icon}</span>
@@ -288,7 +288,7 @@ export default function HomePage() {
                                                 <div className="col-span-2 flex items-center justify-center bg-gradient-to-br from-gray-800 via-gray-900 to-black">
                                                     <span className="text-8xl opacity-20">
                                                         {review.type === 'Fleur' ? '🌿' :
-                                                            review.type === 'Hash' ? '🟫' :
+                                                            review.type === 'Hash' ? '🍫' :
                                                                 review.type === 'Concentré' ? '🔮' : '🍰'}
                                                     </span>
                                                 </div>
