@@ -9,7 +9,7 @@ export default function UserProfileDropdown() {
     if (!user) return null
 
     return (
-        <div className="relative z-[100]">
+        <div className="relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -36,12 +36,12 @@ export default function UserProfileDropdown() {
                 <>
                     {/* Backdrop */}
                     <div
-                        className="fixed inset-0 z-[60]"
+                        className="fixed inset-0 z-[9998]"
                         onClick={() => setIsOpen(false)}
                     />
 
                     {/* Dropdown menu */}
-                    <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-[70] overflow-hidden">
+                    <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-[9999] overflow-hidden">
                         {/* User info header */}
                         <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-br from-indigo-500 to-purple-600">
                             <div className="flex items-center gap-3">
