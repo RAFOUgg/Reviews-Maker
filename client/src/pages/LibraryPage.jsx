@@ -8,18 +8,24 @@ export default function LibraryPage() {
     const [reviews, setReviews] = useState([])
     const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState('all') // all, public, private
+    const [typeFilter, setTypeFilter] = useState('all') // all, Fleur, Hash, Concentré, Comestible
 
     const fetchMyReviews = async () => {
         try {
+            console.log('👤 User connecté:', user)
             const response = await fetch('/api/reviews/my', {
                 credentials: 'include'
             })
             if (response.ok) {
                 const data = await response.json()
+                console.log('📚 Reviews chargées:', data.length)
+                console.log('📋 Données reviews:', data)
                 setReviews(data)
+            } else {
+                console.error('❌ Erreur HTTP:', response.status)
             }
         } catch (error) {
-            console.error('Erreur lors du chargement des reviews:', error)
+            console.error('❌ Erreur lors du chargement des reviews:', error)
         } finally {
             setLoading(false)
         }
@@ -71,8 +77,13 @@ export default function LibraryPage() {
     }
 
     const filteredReviews = reviews.filter(r => {
-        if (filter === 'public') return r.isPublic
-        if (filter === 'private') return !r.isPublic
+        // Filter by visibility
+        if (filter === 'public' && !r.isPublic) return false
+        if (filter === 'private' && r.isPublic) return false
+
+        // Filter by type
+        if (typeFilter !== 'all' && r.type !== typeFilter) return false
+
         return true
     })
 
@@ -164,28 +175,76 @@ export default function LibraryPage() {
                 </div>
 
                 {/* Filter tabs */}
-                <div className="flex gap-2 mb-6">
-                    {['all', 'public', 'private'].map(f => (
-                        <button
-                            key={f}
-                            onClick={() => setFilter(f)}
-                            className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === f
-                                ? 'bg-indigo-600 text-white'
-                                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                }`}
-                        >
-                            {f === 'all' ? 'Toutes' : f === 'public' ? 'Publiques' : 'Privées'}
-                        </button>
-                    ))}
+                <div className="space-y-4 mb-6">
+                    {/* Visibility filters */}
+                    <div>
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                            Visibilité
+                        </label>
+                        <div className="flex gap-2">
+                            {['all', 'public', 'private'].map(f => (
+                                <button
+                                    key={f}
+                                    onClick={() => setFilter(f)}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === f
+                                        ? 'bg-indigo-600 text-white'
+                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+                                        }`}
+                                >
+                                    {f === 'all' ? 'Toutes' : f === 'public' ? 'Publiques' : 'Privées'}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Type filters */}
+                    <div>
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                            Type de produit
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                            {['all', 'Fleur', 'Hash', 'Concentré', 'Comestible'].map(type => (
+                                <button
+                                    key={type}
+                                    onClick={() => setTypeFilter(type)}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${typeFilter === type
+                                        ? 'bg-green-600 text-white'
+                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+                                        }`}
+                                >
+                                    {type === 'all' ? '🔍 Tous' :
+                                        type === 'Fleur' ? '🌸 Fleur' :
+                                            type === 'Hash' ? '🧊 Hash' :
+                                                type === 'Concentré' ? '💎 Concentré' : '🍪 Comestible'}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
 
                 {/* Reviews list */}
                 {filteredReviews.length === 0 ? (
-                    <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-                        <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        <p className="text-gray-600 dark:text-gray-400">Aucune review pour le moment</p>
+                    <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                        <div className="max-w-sm mx-auto px-6">
+                            <svg className="w-20 h-20 mx-auto text-purple-500 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                                Aucune review pour le moment
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-400 mb-6">
+                                Commencez à créer vos premières reviews pour les voir apparaître ici
+                            </p>
+                            <button
+                                onClick={() => navigate('/create')}
+                                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-green-600 text-white rounded-xl hover:from-purple-700 hover:to-green-700 transition-all shadow-lg hover:shadow-xl"
+                            >
+                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Créer ma première review
+                            </button>
+                        </div>
                     </div>
                 ) : (
                     <div className="space-y-4">

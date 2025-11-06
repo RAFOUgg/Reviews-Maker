@@ -9,7 +9,7 @@ export default function UserProfileDropdown() {
     if (!user) return null
 
     return (
-        <div className="relative">
+        <div className="relative z-[100]">
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -36,12 +36,12 @@ export default function UserProfileDropdown() {
                 <>
                     {/* Backdrop */}
                     <div
-                        className="fixed inset-0 z-10"
+                        className="fixed inset-0 z-[60]"
                         onClick={() => setIsOpen(false)}
                     />
 
                     {/* Dropdown menu */}
-                    <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-20 overflow-hidden">
+                    <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-[70] overflow-hidden">
                         {/* User info header */}
                         <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-br from-indigo-500 to-purple-600">
                             <div className="flex items-center gap-3">
@@ -73,22 +73,19 @@ export default function UserProfileDropdown() {
                                 </div>
                             </Link>
 
-                            <button
-                                onClick={() => {
-                                    setIsOpen(false)
-                                    // TODO: Open stats modal
-                                    console.log('Open stats modal')
-                                }}
-                                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            <Link
+                                to="/stats"
+                                className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                onClick={() => setIsOpen(false)}
                             >
                                 <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                 </svg>
-                                <div className="text-left">
+                                <div>
                                     <p className="font-medium text-gray-900 dark:text-white">Mes statistiques</p>
                                     <p className="text-xs text-gray-500 dark:text-gray-400">Voir mes stats détaillées</p>
                                 </div>
-                            </button>
+                            </Link>
 
                             <Link
                                 to="/settings"

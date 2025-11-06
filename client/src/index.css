@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes slide-in-right {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.animate-slide-in-right {
+    animation: slide-in-right 0.3s ease-out;
+}
+
 @layer base {
     * {
         border-color: #404040;
@@ -197,4 +213,377 @@
 
 .animate-spin {
     animation: spin 1s linear infinite;
+}
+
+/* ============================================================================
+   🎨 SYSTÈME DE THÈMES - Variables CSS Globales
+   ============================================================================ */
+
+:root,
+[data-theme="violet-lean"] {
+    --primary: 147 51 234;
+    --primary-light: 168 85 247;
+    --primary-dark: 126 34 206;
+    --accent: 236 72 153;
+    --accent-light: 249 168 212;
+    --accent-dark: 219 39 119;
+
+    --bg-page: 24 24 27;
+    --bg-card: 39 39 42;
+    --bg-hover: 63 63 70;
+    --border: 63 63 70;
+    --text: 250 250 250;
+    --text-muted: 161 161 170;
+}
+
+[data-theme="emerald"] {
+    --primary: 5 150 105;
+    --primary-light: 16 185 129;
+    --primary-dark: 4 120 87;
+    --accent: 13 148 136;
+    --accent-light: 20 184 166;
+    --accent-dark: 15 118 110;
+
+    --bg-page: 24 24 27;
+    --bg-card: 39 39 42;
+    --bg-hover: 63 63 70;
+    --border: 63 63 70;
+    --text: 250 250 250;
+    --text-muted: 161 161 170;
+}
+
+[data-theme="tahiti"] {
+    --primary: 37 99 235;
+    --primary-light: 59 130 246;
+    --primary-dark: 29 78 216;
+    --accent: 8 145 178;
+    --accent-light: 6 182 212;
+    --accent-dark: 14 116 144;
+
+    --bg-page: 24 24 27;
+    --bg-card: 39 39 42;
+    --bg-hover: 63 63 70;
+    --border: 63 63 70;
+    --text: 250 250 250;
+    --text-muted: 161 161 170;
+}
+
+[data-theme="rose-vif"] {
+    --primary: 236 72 153;
+    --primary-light: 244 114 182;
+    --primary-dark: 219 39 119;
+    --accent: 249 168 212;
+    --accent-light: 251 207 232;
+    --accent-dark: 244 114 182;
+
+    --bg-page: 24 24 27;
+    --bg-card: 39 39 42;
+    --bg-hover: 63 63 70;
+    --border: 63 63 70;
+    --text: 250 250 250;
+    --text-muted: 161 161 170;
+}
+
+[data-theme="dark"] {
+    --primary: 63 63 70;
+    --primary-light: 82 82 91;
+    --primary-dark: 39 39 42;
+    --accent: 113 113 122;
+    --accent-light: 161 161 170;
+    --accent-dark: 82 82 91;
+
+    --bg-page: 9 9 11;
+    --bg-card: 24 24 27;
+    --bg-hover: 39 39 42;
+    --border: 39 39 42;
+    --text: 250 250 250;
+    --text-muted: 161 161 170;
+}
+
+/* ============================================================================
+   🎯 APPLICATION GLOBALE DES THÈMES
+   ============================================================================ */
+
+/* Backgrounds */
+body {
+    background-color: rgb(var(--bg-page)) !important;
+    color: rgb(var(--text)) !important;
+}
+
+.bg-gradient-to-br,
+.min-h-screen.bg-gradient-to-br,
+.bg-gray-50,
+.dark\:bg-gray-900,
+.bg-white {
+    background-color: rgb(var(--bg-page)) !important;
+}
+
+/* Cards & Surfaces */
+.bg-white.dark\:bg-gray-800,
+.bg-gray-800,
+.dark\:bg-gray-800,
+.bg-gray-900\/95 {
+    background-color: rgb(var(--bg-card)) !important;
+    border-color: rgb(var(--border)) !important;
+}
+
+/* Hover States */
+.hover\:bg-gray-700:hover,
+.hover\:bg-gray-800:hover,
+.hover\:border-gray-600:hover {
+    background-color: rgb(var(--bg-hover)) !important;
+    border-color: rgb(var(--border)) !important;
+}
+
+/* Text Colors */
+.text-gray-900.dark\:text-white,
+.dark\:text-white,
+.text-white {
+    color: rgb(var(--text)) !important;
+}
+
+.text-gray-600.dark\:text-gray-400,
+.dark\:text-gray-400,
+.text-gray-400,
+.text-gray-500 {
+    color: rgb(var(--text-muted)) !important;
+}
+
+/* Borders */
+.border-gray-200.dark\:border-gray-700,
+.dark\:border-gray-700,
+.border-gray-700 {
+    border-color: rgb(var(--border)) !important;
+}
+
+/* Primary Colors - Buttons, Links, etc */
+.bg-purple-600,
+.bg-purple-500,
+.from-purple-600,
+.from-purple-500 {
+    background-color: rgb(var(--primary)) !important;
+}
+
+.hover\:bg-purple-700:hover,
+.to-purple-700 {
+    background-color: rgb(var(--primary-dark)) !important;
+}
+
+.text-purple-600,
+.text-purple-500 {
+    color: rgb(var(--primary)) !important;
+}
+
+.border-purple-600,
+.border-purple-500 {
+    border-color: rgb(var(--primary)) !important;
+}
+
+/* Accent Colors */
+.bg-green-600,
+.bg-green-500,
+.to-green-600,
+.from-green-600 {
+    background-color: rgb(var(--accent)) !important;
+}
+
+.hover\:to-green-700:hover,
+.to-green-500 {
+    background-color: rgb(var(--accent-dark)) !important;
+}
+
+.text-green-600,
+.text-green-500 {
+    color: rgb(var(--accent)) !important;
+}
+
+.border-green-600,
+.border-green-500 {
+    border-color: rgb(var(--accent)) !important;
+}
+
+/* Gradients */
+.bg-gradient-to-r.from-purple-600.to-green-600,
+.bg-gradient-to-r.from-green-600.to-green-500 {
+    background: linear-gradient(135deg, rgb(var(--primary)), rgb(var(--accent))) !important;
+}
+
+/* Ring/Focus States */
+.ring-purple-500,
+.focus\:ring-purple-500:focus {
+    --tw-ring-color: rgb(var(--primary)) !important;
+}
+
+/* ============================================================================
+   🎨 EFFETS VISUELS SUBTILS
+   ============================================================================ */
+
+/* Buttons avec effet hover */
+button:hover,
+.hover-lift:hover {
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* Ombres thématiques pour les boutons */
+.bg-purple-600,
+.bg-gradient-to-r {
+    box-shadow: 0 4px 14px 0 rgba(var(--primary), 0.25);
+}
+
+.bg-purple-600:hover,
+.bg-gradient-to-r:hover {
+    box-shadow: 0 6px 20px 0 rgba(var(--primary), 0.35);
+}
+
+/* Cards avec bordure subtile */
+.bg-gray-800,
+.bg-white.dark\:bg-gray-800 {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1),
+        0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgb(var(--bg-card));
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgb(var(--primary));
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--primary-light));
+}
+
+/* Transitions globales */
+* {
+    transition-property: background-color, border-color, color, box-shadow, transform;
+    transition-timing-function: ease-in-out;
+    transition-duration: 150ms;
+}
+
+[data-theme="rose-vif"] {
+    --primary: 236 72 153;
+    --accent: 244 114 182;
+    --bg-page: 63 7 30;
+    --bg-card: 71 10 37;
+    --text: 252 231 243;
+    --text-muted: 251 207 232;
+}
+
+[data-theme="dark"] {
+    --primary: 107 114 128;
+    --accent: 156 163 175;
+    --bg-page: 0 0 0;
+    --bg-card: 17 24 39;
+    --text: 243 244 246;
+    --text-muted: 156 163 175;
+}
+
+/* ============================================================================
+   � APPLICATION GLOBALE DES THÈMES
+   ============================================================================ */
+
+/* Backgrounds */
+body,
+.min-h-screen.bg-gradient-to-br,
+.bg-gradient-to-br.from-gray-900 {
+    background: rgb(var(--bg-page)) !important;
+}
+
+.bg-white,
+.bg-gray-50,
+.bg-gray-800,
+.bg-gray-900,
+.dark\:bg-gray-800,
+.dark\:bg-gray-900 {
+    background-color: rgb(var(--bg-card)) !important;
+}
+
+/* Textes */
+.text-white,
+.text-gray-100,
+.text-gray-200 {
+    color: rgb(var(--text)) !important;
+}
+
+.text-gray-400,
+.text-gray-500,
+.text-gray-600 {
+    color: rgb(var(--text-muted)) !important;
+}
+
+/* Boutons et accents */
+.bg-purple-600,
+.bg-purple-500,
+button.bg-purple-600 {
+    background-color: rgb(var(--primary)) !important;
+}
+
+.bg-green-600,
+.bg-green-500 {
+    background-color: rgb(var(--accent)) !important;
+}
+
+.text-purple-600,
+.text-purple-500 {
+    color: rgb(var(--primary)) !important;
+}
+
+.text-green-600,
+.text-green-500 {
+    color: rgb(var(--accent)) !important;
+}
+
+/* Bordures */
+.border-purple-600,
+.border-purple-500 {
+    border-color: rgb(var(--primary)) !important;
+}
+
+.border-green-600,
+.border-green-500,
+.border-gray-700 {
+    border-color: rgb(var(--accent)) !important;
+}
+
+/* Gradients */
+.bg-gradient-to-r.from-purple-600.to-green-600,
+.bg-gradient-to-r.from-purple-600.to-green-500 {
+    background: linear-gradient(to right, rgb(var(--primary)), rgb(var(--accent))) !important;
+}
+
+/* Rings (focus) */
+.ring-purple-500,
+.focus\:ring-purple-500:focus {
+    --tw-ring-color: rgb(var(--primary)) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgb(var(--bg-card));
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgb(var(--primary));
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--accent));
 }

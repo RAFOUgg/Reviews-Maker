@@ -1,16 +1,19 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useStore } from '../store/useStore';
+import { useToast } from '../components/ToastContainer';
 import WheelSelector from '../components/WheelSelector';
 import EffectSelector from '../components/EffectSelector';
 import CultivarList from '../components/CultivarList';
 import PipelineWithCultivars from '../components/PipelineWithCultivars';
-import { productStructures } from '../data/productStructures';
+import GlobalRating from '../components/GlobalRating';
+import { productStructures } from '../utils/productStructures';
 
 export default function CreateReviewPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { isAuthenticated } = useStore();
+    const toast = useToast();
 
     const typeFromUrl = searchParams.get('type') || 'Fleur';
     const structure = productStructures[typeFromUrl] || productStructures.Fleur;
@@ -23,6 +26,7 @@ export default function CreateReviewPage() {
     const [images, setImages] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
+    const [hasSolvents, setHasSolvents] = useState(false);
 
     if (!isAuthenticated) { navigate('/'); return null; }
 
@@ -30,8 +34,12 @@ export default function CreateReviewPage() {
     const handleImageChange = (e) => {
         const files = Array.from(e.target.files);
         const remainingSlots = 4 - images.length;
-        if (files.length > remainingSlots) { setError(`Maximum 4 images. Il vous reste ${remainingSlots} emplacements.`); return; }
+        if (files.length > remainingSlots) {
+            toast.warning(`Maximum 4 images. Il vous reste ${remainingSlots} emplacements.`);
+            return;
+        }
         setImages(prev => [...prev, ...files].slice(0, 4));
+        toast.success(`${files.length} image(s) ajoutée(s)`);
         setError('');
     };
     const removeImage = (idx) => { setImages(prev => prev.filter((_, i) => i !== idx)); };
@@ -41,9 +49,18 @@ export default function CreateReviewPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (images.length === 0) { setError('Au moins une image est requise'); return; }
-        if (!formData.holderName || !formData.holderName.trim()) { setError('Le nom commercial est requis'); return; }
-        setIsSubmitting(true); setError('');
+        if (images.length === 0) {
+            toast.error('Au moins une image est requise');
+            return;
+        }
+        if (!formData.holderName || !formData.holderName.trim()) {
+            toast.error('Le nom commercial est requis');
+            return;
+        }
+        setIsSubmitting(true);
+        setError('');
+        const loadingToast = toast.loading('Création de la review...');
+
         try {
             const submitData = new FormData();
             Object.keys(formData).forEach(key => {
@@ -55,9 +72,21 @@ export default function CreateReviewPage() {
             submitData.append('isPublic', true);
             images.forEach((image) => { submitData.append('images', image); });
             const response = await fetch('/api/reviews', { method: 'POST', credentials: 'include', body: submitData });
-            if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.message || 'Erreur lors de la création'); }
-            navigate('/');
-        } catch (err) { console.error('Erreur:', err); setError(err.message || 'Une erreur est survenue'); } finally { setIsSubmitting(false); }
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Erreur lors de la création');
+            }
+            toast.remove(loadingToast);
+            toast.success('Review créée avec succès ! ✅');
+            setTimeout(() => navigate('/'), 1000);
+        } catch (err) {
+            console.error('Erreur:', err);
+            toast.remove(loadingToast);
+            toast.error(err.message || 'Une erreur est survenue');
+            setError(err.message || 'Une erreur est survenue');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const renderField = (field) => {
@@ -69,17 +98,53 @@ export default function CreateReviewPage() {
             case 'slider': return <div><input type="range" min="0" max={field.max || 10} step="0.5" value={value} onChange={(e) => handleInputChange(field.key, parseFloat(e.target.value))} className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500" /><div className="flex justify-between items-center mt-2"><span className="text-xs text-gray-500">0</span><span className="text-2xl font-bold text-green-400">{value}/{field.max || 10}</span><span className="text-xs text-gray-500">{field.max || 10}</span></div></div>;
             case 'select': return <select value={value} onChange={(e) => handleInputChange(field.key, e.target.value)} className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-500"><option value="">-- Sélectionner --</option>{field.choices?.map((choice, i) => <option key={i} value={choice}>{choice}</option>)}</select>;
             case 'multiselect': const selected = Array.isArray(value) ? value : []; return <div className="flex flex-wrap gap-2">{field.choices?.map((choice, i) => <button key={i} type="button" onClick={() => { const newVal = selected.includes(choice) ? selected.filter(v => v !== choice) : [...selected, choice]; handleInputChange(field.key, newVal); }} className={`px-3 py-1.5 rounded-lg text-sm transition-all ${selected.includes(choice) ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}>{choice}</button>)}</div>;
-            case 'checkbox': return <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={!!value} onChange={(e) => handleInputChange(field.key, e.target.checked)} className="w-5 h-5 rounded border-gray-700 bg-gray-900/50 text-green-600 focus:ring-green-500" /><span className="text-gray-300">{field.label}</span></label>;
+            case 'checkbox':
+                // Ne pas afficher "Purge à vide" si pas de solvants
+                if (field.key === 'purgevide' && !hasSolvents) return null;
+                return <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={!!value} onChange={(e) => handleInputChange(field.key, e.target.checked)} className="w-5 h-5 rounded border-gray-700 bg-gray-900/50 text-green-600 focus:ring-green-500" /><span className="text-gray-300">{field.label}</span></label>;
             case 'wheel': return <WheelSelector value={value} onChange={(v) => handleInputChange(field.key, v)} type={field.key} maxSelections={5} />;
             case 'effects': return <EffectSelector value={value} onChange={(v) => handleInputChange(field.key, v)} maxSelections={8} />;
-            case 'cultivar-list': return <CultivarList value={value} onChange={(v) => handleInputChange(field.key, v)} matiereChoices={field.matiereChoices || []} />;
-            case 'pipeline-with-cultivars': const cultivarsListData = formData[field.cultivarsSource] || []; return <PipelineWithCultivars value={value} onChange={(v) => handleInputChange(field.key, v)} choices={field.choices || []} cultivarsList={cultivarsListData} />;
+            case 'cultivar-list': return <CultivarList value={value} onChange={(v) => handleInputChange(field.key, v)} matiereChoices={field.matiereChoices || []} showBreeder={field.showBreeder} />;
+            case 'pipeline-with-cultivars': const cultivarsListData = formData[field.cultivarsSource] || []; return <PipelineWithCultivars value={value} onChange={(v) => handleInputChange(field.key, v)} choices={field.choices || []} cultivarsList={cultivarsListData} onSolventDetected={setHasSolvents} />;
             case 'images': return <div><input type="file" accept="image/*,video/*" multiple onChange={handleImageChange} className="hidden" id="imageUpload" />{images.length === 0 ? <label htmlFor="imageUpload" className="flex flex-col items-center justify-center h-56 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer hover:border-green-500 transition-all bg-gray-900/30"><div className="text-6xl mb-3">📸</div><span className="text-lg text-gray-300">Cliquez pour ajouter des photos</span><span className="text-sm text-gray-500 mt-1">1 à 4 fichiers</span></label> : <div className="space-y-4"><div className="grid grid-cols-2 gap-4">{images.map((img, idx) => <div key={idx} className="relative group aspect-square"><img src={URL.createObjectURL(img)} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover rounded-xl border-2 border-gray-700" /><button type="button" onClick={() => removeImage(idx)} className="absolute top-3 right-3 bg-red-600 hover:bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg">×</button></div>)}</div>{images.length < 4 && <label htmlFor="imageUpload" className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer hover:border-green-500 transition-colors text-gray-400 hover:text-gray-300"><span className="text-2xl">+</span><span>Ajouter ({images.length}/4)</span></label>}</div>}</div>;
             default: return null;
         }
     };
 
-    const progressPercent = ((currentSectionIndex + 1) / sections.length) * 100;
+    // Calculer les notes par catégorie
+    const calculateCategoryRatings = () => {
+        const categoryFieldMap = {
+            visual: ['densite', 'trichomes', 'malleabilite', 'transparence'],
+            smell: [],
+            taste: [],
+            effects: []
+        };
+
+        const ratings = {};
+        Object.keys(categoryFieldMap).forEach(category => {
+            const fields = categoryFieldMap[category];
+            const validValues = fields
+                .map(fieldKey => formData[fieldKey])
+                .filter(v => v !== undefined && v !== null && v !== '' && !isNaN(v))
+                .map(v => parseFloat(v));
+
+            if (validValues.length > 0) {
+                const average = validValues.reduce((sum, v) => sum + v, 0) / validValues.length;
+                ratings[category] = Math.round(average * 2) / 2;
+            } else {
+                ratings[category] = 0;
+            }
+        });
+
+        const categoryValues = Object.values(ratings).filter(v => v > 0);
+        const overallRating = categoryValues.length > 0
+            ? Math.round((categoryValues.reduce((sum, v) => sum + v, 0) / categoryValues.length) * 2) / 2
+            : 0;
+
+        return { ...ratings, overall: overallRating };
+    };
+
+    const categoryRatings = calculateCategoryRatings();
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
@@ -90,7 +155,34 @@ export default function CreateReviewPage() {
                         <div className="text-center"><h1 className="text-xl font-bold text-white">{formData.type}</h1><p className="text-xs text-gray-400">Section {currentSectionIndex + 1}/{sections.length}</p></div>
                         <div className="w-16"></div>
                     </div>
-                    <div className="w-full bg-gray-700/50 rounded-full h-2"><div className="bg-gradient-to-r from-green-600 to-green-400 h-2 rounded-full transition-all duration-300" style={{ width: `${progressPercent}%` }} /></div>
+                    {/* Résumé des notes par catégorie */}
+                    <div className="flex items-center justify-center gap-4 text-sm">
+                        <span className="flex items-center gap-1.5">
+                            <span className="text-gray-400">👁️</span>
+                            <span className="font-bold text-green-400">{categoryRatings.visual.toFixed(1)}</span>
+                        </span>
+                        <span className="text-gray-600">•</span>
+                        <span className="flex items-center gap-1.5">
+                            <span className="text-gray-400">👃</span>
+                            <span className="font-bold text-green-400">{categoryRatings.smell.toFixed(1)}</span>
+                        </span>
+                        <span className="text-gray-600">•</span>
+                        <span className="flex items-center gap-1.5">
+                            <span className="text-gray-400">👅</span>
+                            <span className="font-bold text-green-400">{categoryRatings.taste.toFixed(1)}</span>
+                        </span>
+                        <span className="text-gray-600">•</span>
+                        <span className="flex items-center gap-1.5">
+                            <span className="text-gray-400">⚡</span>
+                            <span className="font-bold text-green-400">{categoryRatings.effects.toFixed(1)}</span>
+                        </span>
+                        <span className="text-gray-600">│</span>
+                        <span className="flex items-center gap-1.5">
+                            <span className="text-gray-400 font-semibold">Global</span>
+                            <span className="font-bold text-2xl text-green-400">{categoryRatings.overall.toFixed(1)}</span>
+                            <span className="text-gray-500 text-xs">/10</span>
+                        </span>
+                    </div>
                 </div>
             </div>
             <div className="sticky top-[88px] z-40 bg-gray-900/90 backdrop-blur-xl border-b border-gray-700/50 overflow-x-auto">
@@ -111,4 +203,4 @@ export default function CreateReviewPage() {
             <div className="h-24"></div>
         </div>
     );
-}
+} 

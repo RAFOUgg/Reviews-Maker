@@ -121,6 +121,44 @@ router.get('/', async (req, res) => {
     }
 })
 
+// GET /api/reviews/my - Récupérer les reviews de l'utilisateur connecté
+router.get('/my', requireAuth, async (req, res) => {
+    try {
+        const reviews = await prisma.review.findMany({
+            where: { authorId: req.user.id },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        username: true,
+                        avatar: true,
+                        discordId: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        })
+
+        const formattedReviews = reviews.map(review => ({
+            ...review,
+            terpenes: review.terpenes ? JSON.parse(review.terpenes) : [],
+            tastes: review.tastes ? JSON.parse(review.tastes) : [],
+            aromas: review.aromas ? JSON.parse(review.aromas) : [],
+            effects: review.effects ? JSON.parse(review.effects) : [],
+            images: review.images ? JSON.parse(review.images) : [],
+            ratings: review.ratings ? JSON.parse(review.ratings) : null,
+            mainImageUrl: review.mainImage ? `/images/${review.mainImage}` : null,
+            ownerName: review.author.username,
+            ownerId: review.author.id
+        }))
+
+        res.json(formattedReviews)
+    } catch (error) {
+        console.error('Error fetching user reviews:', error)
+        res.status(500).json({ error: 'Failed to fetch reviews' })
+    }
+})
+
 // GET /api/reviews/:id - Récupérer une review spécifique
 router.get('/:id', async (req, res) => {
     try {
@@ -175,11 +213,15 @@ router.get('/:id', async (req, res) => {
 // POST /api/reviews - Créer une nouvelle review
 router.post('/', requireAuth, upload.array('images', 10), async (req, res) => {
     try {
+        console.log('📝 Creating review with data:', JSON.stringify(req.body, null, 2));
+        console.log('📎 Files uploaded:', req.files?.length || 0);
+
         const {
             holderName,
             type,
             description,
             note,
+            overallRating,
             ratings,
             terpenes,
             tastes,
@@ -188,7 +230,18 @@ router.post('/', requireAuth, upload.array('images', 10), async (req, res) => {
             strainType,
             indicaRatio,
             isPublic = true,
-            isPrivate = false
+            isPrivate = false,
+            // Nouveaux champs pour Hash/Concentré
+            cultivarsList,
+            pipelineExtraction,
+            pipelineSeparation,
+            purgevide,
+            hashmaker,
+            breeder,
+            farm,
+            cultivars,
+            // Autres champs possibles
+            ...otherFields
         } = req.body
 
         if (!holderName || !type) {
@@ -199,25 +252,59 @@ router.post('/', requireAuth, upload.array('images', 10), async (req, res) => {
         const imageFilenames = req.files?.map(file => file.filename) || []
         const mainImage = imageFilenames[0] || null
 
+        // Préparer les données à stocker
+        const reviewData = {
+            holderName,
+            type,
+            description,
+            note: overallRating ? parseFloat(overallRating) : (note ? parseFloat(note) : null),
+            ratings: ratings ? (typeof ratings === 'string' ? ratings : JSON.stringify(ratings)) : null,
+            terpenes: terpenes ? (typeof terpenes === 'string' ? terpenes : JSON.stringify(terpenes)) : null,
+            tastes: tastes ? (typeof tastes === 'string' ? tastes : JSON.stringify(tastes)) : null,
+            aromas: aromas ? (typeof aromas === 'string' ? aromas : JSON.stringify(aromas)) : null,
+            effects: effects ? (typeof effects === 'string' ? effects : JSON.stringify(effects)) : null,
+            strainType,
+            indicaRatio: indicaRatio ? parseInt(indicaRatio) : null,
+            images: JSON.stringify(imageFilenames),
+            mainImage,
+            isPublic: isPublic === 'true' || isPublic === true,
+            isPrivate: isPrivate === 'true' || isPrivate === true,
+            authorId: req.user.id
+        };
+
+        // Ajouter les champs spécifiques Hash/Concentré s'ils existent
+        if (cultivarsList) {
+            reviewData.cultivarsList = typeof cultivarsList === 'string' ? cultivarsList : JSON.stringify(cultivarsList);
+        }
+        if (pipelineExtraction) {
+            reviewData.pipelineExtraction = typeof pipelineExtraction === 'string' ? pipelineExtraction : JSON.stringify(pipelineExtraction);
+        }
+        if (pipelineSeparation) {
+            reviewData.pipelineSeparation = typeof pipelineSeparation === 'string' ? pipelineSeparation : JSON.stringify(pipelineSeparation);
+        }
+        if (purgevide !== undefined) {
+            reviewData.purgevide = purgevide === 'true' || purgevide === true;
+        }
+        if (hashmaker) reviewData.hashmaker = hashmaker;
+        if (breeder) reviewData.breeder = breeder;
+        if (farm) reviewData.farm = farm;
+        if (cultivars) reviewData.cultivars = cultivars;
+
+        // Stocker tous les autres champs dans un JSON "extraData"
+        const extraData = {};
+        for (const [key, value] of Object.entries(otherFields)) {
+            if (value !== undefined && value !== null && value !== '') {
+                extraData[key] = value;
+            }
+        }
+        if (Object.keys(extraData).length > 0) {
+            reviewData.extraData = JSON.stringify(extraData);
+        }
+
+        console.log('💾 Data to save:', JSON.stringify(reviewData, null, 2));
+
         const review = await prisma.review.create({
-            data: {
-                holderName,
-                type,
-                description,
-                note: note ? parseFloat(note) : null,
-                ratings: ratings ? JSON.stringify(JSON.parse(ratings)) : null,
-                terpenes: terpenes ? JSON.stringify(JSON.parse(terpenes)) : null,
-                tastes: tastes ? JSON.stringify(JSON.parse(tastes)) : null,
-                aromas: aromas ? JSON.stringify(JSON.parse(aromas)) : null,
-                effects: effects ? JSON.stringify(JSON.parse(effects)) : null,
-                strainType,
-                indicaRatio: indicaRatio ? parseInt(indicaRatio) : null,
-                images: JSON.stringify(imageFilenames),
-                mainImage,
-                isPublic: isPublic === 'true' || isPublic === true,
-                isPrivate: isPrivate === 'true' || isPrivate === true,
-                authorId: req.user.id
-            },
+            data: reviewData,
             include: {
                 author: {
                     select: {
@@ -266,6 +353,8 @@ router.put('/:id', requireAuth, upload.array('images', 10), async (req, res) => 
             type,
             description,
             note,
+            overallRating,
+            categoryRatings,
             ratings,
             terpenes,
             tastes,
@@ -274,37 +363,96 @@ router.put('/:id', requireAuth, upload.array('images', 10), async (req, res) => 
             strainType,
             indicaRatio,
             isPublic,
-            isPrivate
+            isPrivate,
+            cultivarsList,
+            pipelineExtraction,
+            pipelineSeparation,
+            purgevide,
+            hashmaker,
+            breeder,
+            farm,
+            cultivars,
+            dureeEffet,
+            existingImages,
+            ...otherFields
         } = req.body
 
-        // Traiter nouvelles images
+        // Gérer les images: nouvelles + conserver les existantes sélectionnées
         const newImages = req.files?.map(file => file.filename) || []
-        const existingImages = review.images ? JSON.parse(review.images) : []
-        const allImages = [...existingImages, ...newImages]
+        const keepImages = existingImages ? JSON.parse(existingImages) : []
+        const allImages = [...keepImages, ...newImages]
+
+        // Supprimer les images qui ne sont plus dans la liste
+        const oldImages = review.images ? JSON.parse(review.images) : []
+        const imagesToDelete = oldImages.filter(img => !keepImages.includes(`/images/${img}`) && !keepImages.includes(img))
+
+        for (const image of imagesToDelete) {
+            try {
+                const filename = image.replace('/images/', '')
+                await fs.unlink(path.join(__dirname, '../../db/review_images', filename))
+                console.log(`Deleted image: ${filename}`)
+            } catch (err) {
+                console.error(`Failed to delete image ${image}:`, err)
+            }
+        }
+
+        // Préparer les données de mise à jour
+        const updateData = {
+            ...(holderName && { holderName }),
+            ...(type && { type }),
+            ...(description !== undefined && { description }),
+            ...(overallRating && { note: parseFloat(overallRating) }),
+            ...(note && { note: parseFloat(note) }),
+            ...(categoryRatings && { categoryRatings: typeof categoryRatings === 'string' ? categoryRatings : JSON.stringify(categoryRatings) }),
+            ...(ratings && { ratings: typeof ratings === 'string' ? ratings : JSON.stringify(ratings) }),
+            ...(terpenes && { terpenes: typeof terpenes === 'string' ? terpenes : JSON.stringify(terpenes) }),
+            ...(tastes && { tastes: typeof tastes === 'string' ? tastes : JSON.stringify(tastes) }),
+            ...(aromas && { aromas: typeof aromas === 'string' ? aromas : JSON.stringify(aromas) }),
+            ...(effects && { effects: typeof effects === 'string' ? effects : JSON.stringify(effects) }),
+            ...(strainType && { strainType }),
+            ...(indicaRatio !== undefined && { indicaRatio: parseInt(indicaRatio) }),
+            ...(allImages.length > 0 && {
+                images: JSON.stringify(allImages.map(img => img.replace('/images/', ''))),
+                mainImage: allImages[0].replace('/images/', '')
+            }),
+            ...(isPublic !== undefined && { isPublic: isPublic === 'true' || isPublic === true }),
+            ...(isPrivate !== undefined && { isPrivate: isPrivate === 'true' || isPrivate === true }),
+            ...(cultivarsList && { cultivarsList: typeof cultivarsList === 'string' ? cultivarsList : JSON.stringify(cultivarsList) }),
+            ...(pipelineExtraction && { pipelineExtraction: typeof pipelineExtraction === 'string' ? pipelineExtraction : JSON.stringify(pipelineExtraction) }),
+            ...(pipelineSeparation && { pipelineSeparation: typeof pipelineSeparation === 'string' ? pipelineSeparation : JSON.stringify(pipelineSeparation) }),
+            ...(purgevide !== undefined && { purgevide: purgevide === 'true' || purgevide === true }),
+            ...(hashmaker && { hashmaker }),
+            ...(breeder && { breeder }),
+            ...(farm && { farm }),
+            ...(cultivars && { cultivars }),
+            ...(dureeEffet && { dureeEffet })
+        }
+
+        // Stocker autres champs dans extraData
+        const extraData = {};
+        for (const [key, value] of Object.entries(otherFields)) {
+            if (value !== undefined && value !== null && value !== '') {
+                extraData[key] = value;
+            }
+        }
+        if (Object.keys(extraData).length > 0) {
+            updateData.extraData = JSON.stringify(extraData);
+        }
+
+        console.log('💾 Updating review with data:', JSON.stringify(updateData, null, 2));
 
         const updated = await prisma.review.update({
             where: { id: req.params.id },
-            data: {
-                ...(holderName && { holderName }),
-                ...(type && { type }),
-                ...(description !== undefined && { description }),
-                ...(note && { note: parseFloat(note) }),
-                ...(ratings && { ratings: JSON.stringify(JSON.parse(ratings)) }),
-                ...(terpenes && { terpenes: JSON.stringify(JSON.parse(terpenes)) }),
-                ...(tastes && { tastes: JSON.stringify(JSON.parse(tastes)) }),
-                ...(aromas && { aromas: JSON.stringify(JSON.parse(aromas)) }),
-                ...(effects && { effects: JSON.stringify(JSON.parse(effects)) }),
-                ...(strainType && { strainType }),
-                ...(indicaRatio && { indicaRatio: parseInt(indicaRatio) }),
-                ...(allImages.length > 0 && {
-                    images: JSON.stringify(allImages),
-                    mainImage: allImages[0]
-                }),
-                ...(isPublic !== undefined && { isPublic: isPublic === 'true' || isPublic === true }),
-                ...(isPrivate !== undefined && { isPrivate: isPrivate === 'true' || isPrivate === true })
-            },
+            data: updateData,
             include: {
-                author: true
+                author: {
+                    select: {
+                        id: true,
+                        username: true,
+                        avatar: true,
+                        discordId: true
+                    }
+                }
             }
         })
 
@@ -315,7 +463,11 @@ router.put('/:id', requireAuth, upload.array('images', 10), async (req, res) => 
             aromas: updated.aromas ? JSON.parse(updated.aromas) : [],
             effects: updated.effects ? JSON.parse(updated.effects) : [],
             images: updated.images ? JSON.parse(updated.images) : [],
-            ratings: updated.ratings ? JSON.parse(updated.ratings) : null
+            ratings: updated.ratings ? JSON.parse(updated.ratings) : null,
+            categoryRatings: updated.categoryRatings ? JSON.parse(updated.categoryRatings) : null,
+            cultivarsList: updated.cultivarsList ? JSON.parse(updated.cultivarsList) : [],
+            pipelineExtraction: updated.pipelineExtraction ? JSON.parse(updated.pipelineExtraction) : null,
+            pipelineSeparation: updated.pipelineSeparation ? JSON.parse(updated.pipelineSeparation) : null
         })
     } catch (error) {
         console.error('Error updating review:', error)
@@ -358,44 +510,6 @@ router.delete('/:id', requireAuth, async (req, res) => {
     } catch (error) {
         console.error('Error deleting review:', error)
         res.status(500).json({ error: 'Failed to delete review' })
-    }
-})
-
-// GET /api/reviews/my - Récupérer les reviews de l'utilisateur connecté
-router.get('/my', requireAuth, async (req, res) => {
-    try {
-        const reviews = await prisma.review.findMany({
-            where: { authorId: req.user.id },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatar: true,
-                        discordId: true
-                    }
-                }
-            },
-            orderBy: { createdAt: 'desc' }
-        })
-
-        const formattedReviews = reviews.map(review => ({
-            ...review,
-            terpenes: review.terpenes ? JSON.parse(review.terpenes) : [],
-            tastes: review.tastes ? JSON.parse(review.tastes) : [],
-            aromas: review.aromas ? JSON.parse(review.aromas) : [],
-            effects: review.effects ? JSON.parse(review.effects) : [],
-            images: review.images ? JSON.parse(review.images) : [],
-            ratings: review.ratings ? JSON.parse(review.ratings) : null,
-            mainImageUrl: review.mainImage ? `/images/${review.mainImage}` : null,
-            ownerName: review.author.username,
-            ownerId: review.author.id
-        }))
-
-        res.json(formattedReviews)
-    } catch (error) {
-        console.error('Error fetching user reviews:', error)
-        res.status(500).json({ error: 'Failed to fetch reviews' })
     }
 })
 

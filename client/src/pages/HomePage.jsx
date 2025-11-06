@@ -1,21 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore'
+import { parseImages } from '../utils/imageUtils'
+import FilterBar from '../components/FilterBar'
 
 export default function HomePage() {
     const navigate = useNavigate()
     const { user, isAuthenticated } = useStore()
     const [reviews, setReviews] = useState([])
+    const [filteredReviews, setFilteredReviews] = useState([])
     const [loading, setLoading] = useState(true)
     const [showAll, setShowAll] = useState(false)
     const [selectedAuthor, setSelectedAuthor] = useState(null)
-
-    // Filtres
-    const [filters, setFilters] = useState({
-        type: 'all', // all, Fleur, Hash, Concentré, Comestible
-        minRating: 0,
-        sortBy: 'date' // date, rating
-    })
 
     const fetchReviews = async () => {
         try {
@@ -30,6 +26,7 @@ export default function HomePage() {
                     userLikeState: review.userLikeState || null
                 }))
                 setReviews(reviewsWithCounts)
+                setFilteredReviews(reviewsWithCounts)
             }
         } catch (error) {
             console.error('Erreur chargement reviews:', error)
@@ -156,23 +153,6 @@ export default function HomePage() {
         }
     }
 
-    // Filtrer et trier les reviews
-    const filteredReviews = reviews
-        .filter(r => {
-            if (filters.type !== 'all' && r.type !== filters.type) return false
-            const rating = r.overallRating || r.note || 0
-            if (rating < filters.minRating) return false
-            return true
-        })
-        .sort((a, b) => {
-            if (filters.sortBy === 'rating') {
-                const ratingA = a.overallRating || a.note || 0
-                const ratingB = b.overallRating || b.note || 0
-                return ratingB - ratingA
-            }
-            return new Date(b.createdAt) - new Date(a.createdAt)
-        })
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
             <div className="max-w-7xl mx-auto px-4 py-12 space-y-12">
@@ -255,60 +235,8 @@ export default function HomePage() {
                     </div>
                 </div>
 
-                {/* Filtres stylisés */}
-                <div className="flex flex-wrap items-center gap-4 p-6 rounded-2xl bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700">
-                    {/* Type Filter */}
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => setFilters(f => ({ ...f, type: 'all' }))}
-                            className={`px-4 py-2 rounded-xl font-semibold transition-all ${filters.type === 'all'
-                                ? 'bg-green-600 text-white shadow-lg shadow-green-600/50'
-                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                }`}
-                        >
-                            Tous
-                        </button>
-                        {productTypes.map(type => (
-                            <button
-                                key={type.name}
-                                onClick={() => setFilters(f => ({ ...f, type: type.name }))}
-                                className={`px-4 py-2 rounded-xl font-semibold transition-all flex items-center gap-2 ${filters.type === type.name
-                                    ? `bg-${type.color}-600 text-white shadow-lg shadow-${type.color}-600/50`
-                                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                    }`}
-                            >
-                                <span>{type.icon}</span>
-                                <span className="hidden md:inline">{type.name}</span>
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Rating Filter */}
-                    <div className="flex items-center gap-3 ml-auto">
-                        <label className="text-gray-300 font-semibold">Note min:</label>
-                        <select
-                            value={filters.minRating}
-                            onChange={(e) => setFilters(f => ({ ...f, minRating: Number(e.target.value) }))}
-                            className="px-4 py-2 rounded-xl bg-gray-700 text-white font-semibold border border-gray-600 focus:border-green-500 focus:ring-2 focus:ring-green-500/50 outline-none"
-                        >
-                            <option value={0}>Toutes</option>
-                            <option value={5}>5+</option>
-                            <option value={7}>7+</option>
-                            <option value={8}>8+</option>
-                            <option value={9}>9+</option>
-                        </select>
-
-                        {/* Sort */}
-                        <select
-                            value={filters.sortBy}
-                            onChange={(e) => setFilters(f => ({ ...f, sortBy: e.target.value }))}
-                            className="px-4 py-2 rounded-xl bg-gray-700 text-white font-semibold border border-gray-600 focus:border-green-500 focus:ring-2 focus:ring-green-500/50 outline-none"
-                        >
-                            <option value="date">Plus récent</option>
-                            <option value="rating">Mieux noté</option>
-                        </select>
-                    </div>
-                </div>
+                {/* FilterBar Component */}
+                <FilterBar reviews={reviews} onFilteredChange={setFilteredReviews} />
 
                 {/* Reviews Grid amélioré */}
                 {loading ? (
@@ -334,9 +262,7 @@ export default function HomePage() {
                     <>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {(showAll ? filteredReviews : filteredReviews.slice(0, 8)).map((review) => {
-                                const images = typeof review.images === 'string'
-                                    ? JSON.parse(review.images)
-                                    : (Array.isArray(review.images) ? review.images : [])
+                                const images = parseImages(review.images)
 
                                 const rating = review.overallRating || review.note || 0
                                 const ratingColor = rating >= 9 ? 'green' : rating >= 7 ? 'yellow' : rating >= 5 ? 'orange' : 'red'

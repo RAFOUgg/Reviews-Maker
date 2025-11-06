@@ -1,18 +1,32 @@
 # 📋 TODO - Reviews-Maker V1DEV
 
-**Dernière mise à jour** : 18 décembre 2025
+**Dernière mise à jour** : 6 novembre 2025
 
 ---
 
-## ✅ Complété récemment (Décembre 2025)
+## ✅ Complété récemment (Novembre 2025)
 
-- [x] **Système professionnel cultivars & pipelines** (18 déc 2025)
+- [x] **Système profil, bibliothèque & paramètres complet** (6 nov 2025)
+  - [x] Page Statistiques (StatsPage.jsx) avec graphiques et top cultivars
+  - [x] Page Paramètres (SettingsPage.jsx) avec thème dynamique
+  - [x] Système de thème (clair/sombre/auto) avec persistence localStorage
+  - [x] Menu profil dropdown professionnel avec navigation claire
+  - [x] Bibliothèque améliorée avec double filtrage (visibilité + type)
+  - [x] Routes /stats et /settings ajoutées à App.jsx
+  - [x] Documentation complète (4 fichiers MD créés)
+  - [x] 0 erreur compilation, production-ready
+
+- [x] **Remplacement champ couleur** (6 nov 2025)
+  - [x] Nouveau champ `pistils` (slider /10)
+  - [x] Nouveau champ `moisissure` (slider /10, 10=aucune)
+  - [x] Nouveau champ `graines` (slider /10, 10=aucune)
+  - [x] Appliqué sur Fleur, Hash, Concentré
+
+- [x] **Système professionnel cultivars & pipelines** (déc 2025)
   - [x] Composant CultivarList pour gestion multi-cultivars
   - [x] Composant PipelineWithCultivars pour extraction/séparation
   - [x] Intégration dans productStructures (Hash & Concentré)
   - [x] Support mailles/microns pour tamisages
-  - [x] Documentation complète (SYSTEME_PROFESSIONNEL_CULTIVARS.md)
-  - [x] Plan de tests exhaustif (TESTS_CULTIVARS_PIPELINES.md)
 
 ---
 

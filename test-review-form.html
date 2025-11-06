@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Création Review - Reviews Maker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section h2 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .rating-slider {
+            margin-bottom: 20px;
+        }
+
+        .rating-value {
+            display: inline-block;
+            min-width: 40px;
+            font-weight: bold;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .overall-rating {
+            font-size: 32px;
+            text-align: center;
+            color: #667eea;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .auth-note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #856404;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧪 Test Création de Review</h1>
+        <p class="subtitle">Test du système de notes par catégorie + nouvelles fonctionnalités</p>
+
+        <div class="auth-note">
+            ⚠️ <strong>Note:</strong> Ce test nécessite d'être connecté. Si vous n'êtes pas connecté, la requête
+            échouera avec une erreur 401.
+            <br>Pour vous connecter, utilisez l'application principale sur <a href="http://localhost:5173"
+                target="_blank">localhost:5173</a>
+        </div>
+
+        <form id="testForm">
+            <div class="section">
+                <h2>📋 Informations générales</h2>
+                <label>Nom commercial *</label>
+                <input type="text" name="holderName" value="Test Auto CategoryRatings" required>
+
+                <label>Cultivar</label>
+                <input type="text" name="cultivars" value="Test Strain OG">
+
+                <label>Breeder</label>
+                <input type="text" name="breeder" value="Test Genetics">
+
+                <label>Farm</label>
+                <input type="text" name="farm" value="Test Farm Inc">
+
+                <label>Type de variété</label>
+                <select name="strainType">
+                    <option value="Indica Pur">Indica Pur</option>
+                    <option value="Hybride Indica">Hybride Indica</option>
+                    <option value="Équilibré" selected>Équilibré</option>
+                    <option value="Hybride Sativa">Hybride Sativa</option>
+                    <option value="Sativa Pur">Sativa Pur</option>
+                </select>
+            </div>
+
+            <div class="section">
+                <h2>📊 Notes par Catégorie (Nouveau système)</h2>
+
+                <div class="rating-slider">
+                    <label>👁️ Visuel & Technique: <span class="rating-value" id="visualValue">8.5</span>/10</label>
+                    <input type="range" name="categoryRatings[visual]" min="0" max="10" step="0.5" value="8.5"
+                        oninput="updateRating('visual', this.value)">
+                </div>
+
+                <div class="rating-slider">
+                    <label>👃 Intensité Odeurs & Arômes: <span class="rating-value" id="smellValue">9</span>/10</label>
+                    <input type="range" name="categoryRatings[smell]" min="0" max="10" step="0.5" value="9"
+                        oninput="updateRating('smell', this.value)">
+                </div>
+
+                <div class="rating-slider">
+                    <label>👅 Intensité Goûts & Saveurs: <span class="rating-value"
+                            id="tasteValue">7.5</span>/10</label>
+                    <input type="range" name="categoryRatings[taste]" min="0" max="10" step="0.5" value="7.5"
+                        oninput="updateRating('taste', this.value)">
+                </div>
+
+                <div class="rating-slider">
+                    <label>⚡ Intensité des Effets: <span class="rating-value" id="effectsValue">8</span>/10</label>
+                    <input type="range" name="categoryRatings[effects]" min="0" max="10" step="0.5" value="8"
+                        oninput="updateRating('effects', this.value)">
+                </div>
+
+                <div class="overall-rating">
+                    ⭐ Note Globale: <span id="overallValue">8.25</span>/10 ✨
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>⚡ Durée des Effets (Nouveau champ)</h2>
+                <select name="dureeEffet">
+                    <option value="5-15min">5-15 minutes</option>
+                    <option value="15-30min">15-30 minutes</option>
+                    <option value="30min-1h">30 minutes - 1 heure</option>
+                    <option value="1h-2h">1-2 heures</option>
+                    <option value="2h-4h" selected>2-4 heures</option>
+                    <option value="4h-8h">4-8 heures</option>
+                    <option value="8h+">Plus de 8 heures</option>
+                </select>
+            </div>
+
+            <div class="section">
+                <h2>💭 Notes personnelles</h2>
+                <textarea name="description" rows="4"
+                    placeholder="Vos impressions, commentaires...">Test automatique du système de notes par catégorie. Toutes les fonctionnalités semblent opérationnelles. ✅</textarea>
+            </div>
+
+            <input type="hidden" name="productType" value="Fleur">
+            <input type="hidden" name="aromas" value='["Fruité","Citronné","Terreux"]'>
+            <input type="hidden" name="tastes" value='["Sucré","Épicé","Pin"]'>
+            <input type="hidden" name="effects" value='["Relaxant","Créatif","Euphorique"]'>
+
+            <button type="submit" id="submitBtn">🚀 Créer la Review</button>
+        </form>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        function updateRating(category, value) {
+            document.getElementById(category + 'Value').textContent = value;
+            calculateOverall();
+        }
+
+        function calculateOverall() {
+            const visual = parseFloat(document.querySelector('[name="categoryRatings[visual]"]').value);
+            const smell = parseFloat(document.querySelector('[name="categoryRatings[smell]"]').value);
+            const taste = parseFloat(document.querySelector('[name="categoryRatings[taste]"]').value);
+            const effects = parseFloat(document.querySelector('[name="categoryRatings[effects]"]').value);
+
+            const average = (visual + smell + taste + effects) / 4;
+            const rounded = Math.round(average * 2) / 2; // Arrondi à 0.5
+
+            document.getElementById('overallValue').textContent = rounded.toFixed(1);
+        }
+
+        document.getElementById('testForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const btn = document.getElementById('submitBtn');
+            const result = document.getElementById('result');
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Création en cours...';
+            result.style.display = 'none';
+
+            try {
+                const formData = new FormData(e.target);
+
+                // Ajout de la note globale calculée
+                const overallRating = document.getElementById('overallValue').textContent;
+                formData.append('overallRating', overallRating);
+
+                const response = await fetch('http://localhost:3000/api/reviews', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include' // Important pour les cookies de session
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    result.className = 'result success';
+                    result.innerHTML = `
+                        <strong>✅ Review créée avec succès !</strong><br><br>
+                        <strong>ID:</strong> ${data.id}<br>
+                        <strong>Nom:</strong> ${data.holderName}<br>
+                        <strong>Note globale:</strong> ${data.overallRating}/10<br>
+                        <strong>Durée effets:</strong> ${data.dureeEffet || 'Non spécifiée'}<br>
+                        <br>
+                        <a href="http://localhost:5173/review/${data.id}" target="_blank">Voir la review →</a>
+                    `;
+                } else {
+                    throw new Error(data.message || 'Erreur inconnue');
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.innerHTML = `
+                    <strong>❌ Erreur lors de la création</strong><br><br>
+                    ${error.message}<br><br>
+                    ${error.message.includes('401') || error.message.includes('unauthorized')
+                        ? '💡 <em>Conseil: Connectez-vous d\'abord sur <a href="http://localhost:5173" target="_blank">l\'application principale</a></em>'
+                        : ''}
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🚀 Créer la Review';
+                result.style.display = 'block';
+            }
+        });
+
+        // Calcul initial
+        calculateOverall();
+    </script>
+</body>
+
+</html>

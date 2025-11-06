@@ -64,6 +64,17 @@ model Review {
   strainType  String? // "Indica Pur", "Hybride Indica", "Équilibré", "Hybride Sativa", "Sativa Pur"
   indicaRatio Int?    // 0-100 (0 = Sativa pur, 100 = Indica pur)
   
+  // Champs spécifiques Hash/Concentré/Comestible
+  cultivarsList        String? // JSON: Array de cultivars utilisés
+  pipelineExtraction   String? // JSON: Pipeline d'extraction
+  pipelineSeparation   String? // JSON: Pipeline de séparation
+  purgevide            Boolean? // Purge à vide pour extraits solvants
+  hashmaker            String? // Nom du hash maker
+  breeder              String? // Breeder de la graine
+  farm                 String? // Farm productrice
+  cultivars            String? // Nom du/des cultivar(s)
+  extraData            String? // JSON: Autres données dynamiques
+  
   // Images
   images      String? // JSON: ["image1.jpg", "image2.jpg", ...]
   mainImage   String? // Image principale

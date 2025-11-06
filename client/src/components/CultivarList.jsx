@@ -1,15 +1,36 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import CultivarLibraryModal from './CultivarLibraryModal';
 
-export default function CultivarList({ value, onChange, matiereChoices = [] }) {
+export default function CultivarList({ value, onChange, matiereChoices = [], showBreeder = false }) {
     const cultivars = Array.isArray(value) ? value : [];
+    const navigate = useNavigate();
+    const [showLibraryModal, setShowLibraryModal] = useState(false);
 
     const addCultivar = () => {
         const newCultivar = {
             id: Date.now(),
             name: '',
             farm: '',
+            breeder: '',
             matiere: matiereChoices[0] || '',
-            percentage: ''
+            percentage: '',
+            reviewId: null, // ID de la review liée (si depuis bibliothèque)
+            reviewType: null
+        };
+        onChange([...cultivars, newCultivar]);
+    };
+
+    const addCultivarFromLibrary = (cultivarData) => {
+        const newCultivar = {
+            id: Date.now(),
+            name: cultivarData.name,
+            farm: cultivarData.farm,
+            breeder: cultivarData.breeder,
+            matiere: matiereChoices[0] || '',
+            percentage: '',
+            reviewId: cultivarData.reviewId,
+            reviewType: cultivarData.reviewType
         };
         onChange([...cultivars, newCultivar]);
     };
@@ -40,13 +61,25 @@ export default function CultivarList({ value, onChange, matiereChoices = [] }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
                             <label className="block text-xs text-gray-400 mb-1">Nom du cultivar</label>
-                            <input
-                                type="text"
-                                placeholder="Ex: Blue Dream"
-                                value={cultivar.name || ''}
-                                onChange={(e) => updateCultivar(cultivar.id, 'name', e.target.value)}
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-green-500"
-                            />
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Ex: Blue Dream"
+                                    value={cultivar.name || ''}
+                                    onChange={(e) => updateCultivar(cultivar.id, 'name', e.target.value)}
+                                    className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-green-500"
+                                />
+                                {cultivar.reviewId && (
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate(`/review/${cultivar.reviewId}`)}
+                                        className="px-3 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                                        title="Voir la review d'origine"
+                                    >
+                                        <span>🔗</span>
+                                    </button>
+                                )}
+                            </div>
                         </div>
 
                         <div>
@@ -59,6 +92,19 @@ export default function CultivarList({ value, onChange, matiereChoices = [] }) {
                                 className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-green-500"
                             />
                         </div>
+
+                        {showBreeder && (
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1">Breeder de la graine</label>
+                                <input
+                                    type="text"
+                                    placeholder="Ex: Barney's Farm"
+                                    value={cultivar.breeder || ''}
+                                    onChange={(e) => updateCultivar(cultivar.id, 'breeder', e.target.value)}
+                                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-green-500"
+                                />
+                            </div>
+                        )}
 
                         <div>
                             <label className="block text-xs text-gray-400 mb-1">Matière première</label>
@@ -87,14 +133,31 @@ export default function CultivarList({ value, onChange, matiereChoices = [] }) {
                 </div>
             ))}
 
-            <button
-                type="button"
-                onClick={addCultivar}
-                className="w-full py-3 border-2 border-dashed border-gray-600 hover:border-green-500 rounded-xl text-gray-400 hover:text-green-400 transition-colors flex items-center justify-center gap-2"
-            >
-                <span className="text-2xl">+</span>
-                <span>Ajouter un cultivar</span>
-            </button>
+            <div className="grid grid-cols-2 gap-3">
+                <button
+                    type="button"
+                    onClick={addCultivar}
+                    className="py-3 border-2 border-dashed border-gray-600 hover:border-green-500 rounded-xl text-gray-400 hover:text-green-400 transition-colors flex items-center justify-center gap-2"
+                >
+                    <span className="text-2xl">✏️</span>
+                    <span>Nouveau cultivar</span>
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() => setShowLibraryModal(true)}
+                    className="py-3 border-2 border-dashed border-blue-600/50 hover:border-blue-500 rounded-xl text-blue-400 hover:text-blue-300 transition-colors flex items-center justify-center gap-2 bg-blue-500/5"
+                >
+                    <span className="text-2xl">🌿</span>
+                    <span>Depuis bibliothèque</span>
+                </button>
+            </div>
+
+            <CultivarLibraryModal
+                isOpen={showLibraryModal}
+                onClose={() => setShowLibraryModal(false)}
+                onSelect={addCultivarFromLibrary}
+            />
         </div>
     );
 }
