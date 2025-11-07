@@ -485,10 +485,133 @@
 }
 
 /* ========================================
-   MAPPING COMPLET: TOUTES LES COULEURS → VARIABLES CSS
+   STRUCTURAL COLORS (Backgrounds, Text, Borders)
+   Couleurs structurelles adaptées au thème
    ======================================== */
 
-/* PRIMARY COLORS (Indigo, Purple, Violet) → var(--primary) */
+/* BACKGROUNDS - Light mode */
+.bg-white {
+    background-color: var(--bg-primary) !important;
+}
+
+.bg-gray-50 {
+    background-color: var(--bg-secondary) !important;
+}
+
+.bg-gray-100 {
+    background-color: var(--bg-tertiary) !important;
+}
+
+.bg-gray-200,
+.bg-gray-300 {
+    background-color: var(--border) !important;
+}
+
+/* BACKGROUNDS - Dark mode */
+[class*="dark"] .bg-gray-800,
+.bg-gray-900 {
+    background-color: var(--bg-primary) !important;
+}
+
+[class*="dark"] .bg-gray-700 {
+    background-color: var(--bg-secondary) !important;
+}
+
+[class*="dark"] .bg-gray-600 {
+    background-color: var(--bg-tertiary) !important;
+}
+
+/* BACKGROUNDS WITH OPACITY */
+.bg-gray-800\/80,
+.bg-gray-900\/80,
+.bg-gray-800\/50,
+.bg-gray-700\/50 {
+    background-color: var(--bg-secondary) !important;
+}
+
+/* HOVER BACKGROUNDS */
+.hover\:bg-gray-100:hover,
+[class*="dark"] .hover\:bg-gray-700:hover {
+    background-color: var(--bg-tertiary) !important;
+}
+
+.hover\:bg-gray-800:hover {
+    background-color: var(--bg-secondary) !important;
+}
+
+/* TEXT COLORS */
+.text-gray-900,
+[class*="dark"] .text-white {
+    color: var(--text-primary) !important;
+}
+
+.text-gray-600,
+.text-gray-500 {
+    color: var(--text-secondary) !important;
+}
+
+.text-gray-400,
+.text-gray-300 {
+    color: var(--text-tertiary) !important;
+}
+
+/* BORDERS */
+.border-gray-200,
+.border-gray-300,
+[class*="dark"] .border-gray-700 {
+    border-color: var(--border) !important;
+}
+
+.border-gray-600 {
+    border-color: var(--text-tertiary) !important;
+}
+
+/* BACKGROUND GRADIENTS (Gray/Black) → Background variables */
+.bg-gradient-to-br.from-gray-900.via-gray-800.to-gray-900,
+.bg-gradient-to-br.from-gray-900.via-gray-800.to-black,
+.bg-gradient-to-br.from-gray-800.to-gray-900,
+.bg-gradient-to-r.from-gray-900.to-black {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-primary) 100%) !important;
+}
+
+.from-gray-900,
+.from-gray-800 {
+    --tw-gradient-from: var(--bg-primary) !important;
+}
+
+.via-gray-800,
+.via-gray-900 {
+    --tw-gradient-via: var(--bg-secondary) !important;
+}
+
+.to-gray-900,
+.to-black {
+    --tw-gradient-to: var(--bg-primary) !important;
+}
+
+.from-gray-600,
+.to-gray-700 {
+    background-color: var(--text-secondary) !important;
+}
+
+/* Text gradients */
+.bg-gradient-to-r.from-white.to-gray-400 {
+    background: linear-gradient(to right, var(--text-primary), var(--text-tertiary)) !important;
+}
+
+.from-white,
+.to-gray-400 {
+    --tw-gradient-from: var(--text-primary) !important;
+    --tw-gradient-to: var(--text-tertiary) !important;
+}
+
+/* Overlay gradients avec noir/transparent - conservés pour effets de profondeur */
+/* Note: Les gradients to-transparent créent des effets de glassmorphism
+   et ne doivent PAS être mappés aux variables de thème */
+
+/* ========================================
+   PRIMARY COLORS (Indigo, Purple, Violet) → var(--primary)
+   ======================================== */
 .bg-purple-600,
 .bg-purple-500,
 .bg-indigo-600,
