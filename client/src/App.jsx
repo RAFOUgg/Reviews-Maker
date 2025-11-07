@@ -36,8 +36,8 @@ function App() {
                     root.setAttribute('data-theme', 'tahiti')
                     root.classList.remove('dark')
                     break
-                case 'rose-vif':
-                    root.setAttribute('data-theme', 'rose-vif')
+                case 'sakura':
+                    root.setAttribute('data-theme', 'sakura')
                     root.classList.remove('dark')
                     break
                 case 'dark':

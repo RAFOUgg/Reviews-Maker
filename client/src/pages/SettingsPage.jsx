@@ -52,8 +52,8 @@ export default function SettingsPage() {
                     root.setAttribute('data-theme', 'tahiti')
                     root.classList.remove('dark')
                     break
-                case 'rose-vif':
-                    root.setAttribute('data-theme', 'rose-vif')
+                case 'sakura':
+                    root.setAttribute('data-theme', 'sakura')
                     root.classList.remove('dark')
                     break
                 case 'dark':
@@ -143,7 +143,7 @@ export default function SettingsPage() {
                             { value: 'violet-lean', label: 'Violet Lean', icon: '🟣', desc: 'Par défaut', colors: 'from-purple-500 to-pink-500' },
                             { value: 'emerald', label: 'Vert Émeraude', icon: '💚', desc: 'Vert profond', colors: 'from-emerald-600 to-teal-600' },
                             { value: 'tahiti', label: 'Bleu Tahiti', icon: '🔵', desc: 'Bleu océan', colors: 'from-blue-600 to-cyan-600' },
-                            { value: 'rose-vif', label: 'Rose Vif', icon: '🌸', desc: 'Rose flashy', colors: 'from-pink-500 to-pink-300' },
+                            { value: 'sakura', label: 'Sakura', icon: '🌸', desc: 'Rose Sakura doux', colors: 'from-pink-500 to-pink-200' },
                             { value: 'dark', label: 'Sombre', icon: '⚫', desc: 'Noir/Gris', colors: 'from-gray-800 to-gray-900' },
                             { value: 'auto', label: 'Selon système', icon: '🔄', desc: 'Automatique', colors: 'from-gray-600 to-gray-700' }
                         ].map((option) => (
