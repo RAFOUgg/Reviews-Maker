@@ -252,7 +252,7 @@
     /* Rose-800 */
 
     --shadow: rgba(236, 72, 153, 0.2);
-    
+
     --gradient-primary: linear-gradient(135deg, #EC4899 0%, #F8E8F0 100%);
     --gradient-accent: linear-gradient(135deg, #F472B6 0%, #FDF2F8 100%);
 }
@@ -293,7 +293,7 @@
 
     --shadow: rgba(0, 0, 0, 0.3);
     --shadow-lg: rgba(0, 0, 0, 0.5);
-    
+
     --gradient-primary: linear-gradient(135deg, #6B7280 0%, #111827 100%);
     --gradient-accent: linear-gradient(135deg, #374151 0%, #1F2937 100%);
 }
