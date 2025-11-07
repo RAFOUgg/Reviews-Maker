@@ -41,6 +41,24 @@
     --gradient-primary: linear-gradient(135deg, #A855F7 0%, #EC4899 100%);
     --gradient-accent: linear-gradient(135deg, #DB2777 0%, #F472B6 100%);
     --gradient-bg: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 50%, #7C3AED 100%);
+
+    /* COULEURS HARMONISÉES - Types de produits dans la palette VIOLET/ROSE */
+    --color-fleur: #C084FC;
+    /* Violet clair - au lieu de vert */
+    --color-hash: #A855F7;
+    /* Violet moyen - au lieu de orange */
+    --color-concentre: #9333EA;
+    /* Violet intense - reste violet */
+    --color-comestible: #EC4899;
+    /* Rose - reste rose mais harmonisé */
+
+    /* Notes/Rating colors harmonisées */
+    --color-success: #A855F7;
+    /* Violet au lieu de vert */
+    --color-warning: #DB2777;
+    /* Rose au lieu de jaune */
+    --color-danger: #BE185D;
+    /* Rose foncé au lieu de rouge */
 }
 
 /* === STYLES GLOBAUX - Applique le thème PARTOUT === */
@@ -63,7 +81,12 @@ body {
 }
 
 /* Titres avec couleurs du thème */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     color: var(--text-primary) !important;
 }
 
@@ -134,6 +157,24 @@ h2 {
     --gradient-primary: linear-gradient(135deg, #10B981 0%, #06B6D4 100%);
     --gradient-accent: linear-gradient(135deg, #34D399 0%, #22D3EE 100%);
     --gradient-bg: linear-gradient(135deg, #34D399 0%, #10B981 50%, #059669 100%);
+
+    /* COULEURS HARMONISÉES - Types de produits dans la palette VERT/CYAN */
+    --color-fleur: #34D399;
+    /* Vert clair - harmonisé */
+    --color-hash: #10B981;
+    /* Vert moyen - au lieu de orange */
+    --color-concentre: #059669;
+    /* Vert foncé - au lieu de violet */
+    --color-comestible: #06B6D4;
+    /* Cyan - au lieu de rose */
+
+    /* Notes/Rating colors harmonisées */
+    --color-success: #10B981;
+    /* Vert */
+    --color-warning: #06B6D4;
+    /* Cyan au lieu de jaune */
+    --color-danger: #0E7490;
+    /* Cyan foncé au lieu de rouge */
 }
 
 [data-theme="emerald"].dark {
@@ -196,6 +237,24 @@ h2 {
     --gradient-primary: linear-gradient(135deg, #06B6D4 0%, #14B8A6 100%);
     --gradient-accent: linear-gradient(135deg, #22D3EE 0%, #0891B2 100%);
     --gradient-bg: linear-gradient(135deg, #22D3EE 0%, #06B6D4 50%, #0891B2 100%);
+
+    /* COULEURS HARMONISÉES - Types de produits dans la palette CYAN/BLEU */
+    --color-fleur: #67E8F9;
+    /* Cyan clair - au lieu de vert */
+    --color-hash: #22D3EE;
+    /* Cyan moyen - au lieu de orange */
+    --color-concentre: #0891B2;
+    /* Cyan foncé - au lieu de violet */
+    --color-comestible: #14B8A6;
+    /* Teal - au lieu de rose */
+
+    /* Notes/Rating colors harmonisées */
+    --color-success: #06B6D4;
+    /* Cyan au lieu de vert */
+    --color-warning: #14B8A6;
+    /* Teal au lieu de jaune */
+    --color-danger: #0E7490;
+    /* Cyan foncé au lieu de rouge */
 }
 
 /* === THÈME: SAKURA === */
@@ -234,6 +293,24 @@ h2 {
     --gradient-primary: linear-gradient(135deg, #EC4899 0%, #F472B6 100%);
     --gradient-accent: linear-gradient(135deg, #F472B6 0%, #F9A8D4 100%);
     --gradient-bg: linear-gradient(135deg, #F472B6 0%, #EC4899 50%, #DB2777 100%);
+
+    /* COULEURS HARMONISÉES - Types de produits dans la palette ROSE/PINK */
+    --color-fleur: #FBCFE8;
+    /* Rose pâle - au lieu de vert */
+    --color-hash: #F9A8D4;
+    /* Rose clair - au lieu de orange */
+    --color-concentre: #EC4899;
+    /* Rose moyen - au lieu de violet */
+    --color-comestible: #F472B6;
+    /* Rose vif - harmonisé */
+
+    /* Notes/Rating colors harmonisées */
+    --color-success: #F472B6;
+    /* Rose au lieu de vert */
+    --color-warning: #EC4899;
+    /* Rose moyen au lieu de jaune */
+    --color-danger: #BE185D;
+    /* Rose foncé au lieu de rouge */
 }
 
 [data-theme="sakura"].dark {
@@ -713,6 +790,40 @@ button.bg-indigo-600 {
     background-color: var(--accent) !important;
 }
 
+/* ORANGE/AMBER (Hash) → Harmonisé avec le thème via color-hash */
+.bg-orange-600,
+.bg-orange-500,
+.bg-amber-600,
+.bg-amber-500,
+.from-orange-600,
+.to-orange-600 {
+    background-color: var(--color-hash) !important;
+}
+
+.text-orange-600,
+.text-orange-500,
+.text-amber-600,
+.text-amber-500 {
+    color: var(--color-hash) !important;
+}
+
+/* ROSE/PINK (Comestible) → Harmonisé via color-comestible */
+.bg-rose-600,
+.bg-rose-500,
+.bg-pink-600,
+.bg-pink-500,
+.from-pink-600,
+.to-pink-600 {
+    background-color: var(--color-comestible) !important;
+}
+
+.text-rose-600,
+.text-rose-500,
+.text-pink-600,
+.text-pink-500 {
+    color: var(--color-comestible) !important;
+}
+
 .hover\:to-green-700:hover,
 .to-green-500 {
     background-color: var(--accent-dark) !important;
@@ -852,13 +963,42 @@ button.bg-indigo-600 {
 }
 
 /* ========================================
-   SECONDARY TYPE COLORS (AMBER, PINK, ROSE)
-   Thèmes secondaires pour les types de produits
+   SECONDARY TYPE COLORS - HARMONISÉS AVEC LE THÈME
+   Mapping des couleurs de types vers les variables thématiques
    ======================================== */
 
-/* Note: Amber/Yellow/Orange et Pink/Rose conservent leurs couleurs originales
-   pour différencier visuellement les types de produits (Hash, Comestible)
-   Ces couleurs restent statiques indépendamment du thème choisi */
+/* GREEN → color-success (notes/ratings positifs) */
+.text-green-400,
+.text-green-500,
+.from-green-400,
+.bg-green-400 {
+    color: var(--color-success) !important;
+    background-color: var(--color-success) !important;
+}
+
+/* YELLOW/AMBER → color-warning (notes moyennes) */
+.text-yellow-400,
+.text-yellow-500,
+.text-amber-400,
+.bg-yellow-400 {
+    color: var(--color-warning) !important;
+    background-color: var(--color-warning) !important;
+}
+
+/* ORANGE → color-hash (type Hash) */
+.text-orange-400,
+.bg-orange-400 {
+    color: var(--color-hash) !important;
+    background-color: var(--color-hash) !important;
+}
+
+/* RED → color-danger (notes négatives) */
+.text-red-400,
+.text-red-500,
+.bg-red-400 {
+    color: var(--color-danger) !important;
+    background-color: var(--color-danger) !important;
+}
 
 /* ========================================
    RATING COLORS (Dynamic badge colors)
