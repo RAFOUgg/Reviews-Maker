@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Visuel des Thèmes - Reviews-Maker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Copie des variables CSS de index.css */
+        :root {
+            --primary: #A855F7;
+            --primary-light: #D8B4FE;
+            --primary-dark: #7E22CE;
+            --accent: #E91E63;
+            --accent-light: #F48FB1;
+            --accent-dark: #AD1457;
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F3E8FF;
+            --bg-tertiary: #EDE9FE;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --text-tertiary: #9CA3AF;
+            --border: #E5E7EB;
+            --gradient-primary: linear-gradient(135deg, #A855F7 0%, #E91E63 100%);
+            --gradient-accent: linear-gradient(135deg, #E91E63 0%, #F48FB1 100%);
+        }
+
+        [data-theme="emerald"] {
+            --primary: #06B6D4;
+            --primary-light: #22D3EE;
+            --primary-dark: #0891B2;
+            --accent: #10B981;
+            --accent-light: #34D399;
+            --accent-dark: #059669;
+            --gradient-primary: linear-gradient(135deg, #06B6D4 0%, #10B981 100%);
+            --gradient-accent: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+        }
+
+        [data-theme="tahiti"] {
+            --primary: #06D6D0;
+            --primary-light: #5EEAD4;
+            --primary-dark: #0891B2;
+            --accent: #0891B2;
+            --accent-light: #06B6D4;
+            --accent-dark: #0E7490;
+            --gradient-primary: linear-gradient(135deg, #06D6D0 0%, #0891B2 100%);
+            --gradient-accent: linear-gradient(135deg, #0891B2 0%, #06B6D4 100%);
+        }
+
+        [data-theme="sakura"] {
+            --primary: #EC4899;
+            --primary-light: #F9A8D4;
+            --primary-dark: #BE185D;
+            --accent: #F8E8F0;
+            --accent-light: #FFF1F8;
+            --accent-dark: #FCE7F3;
+            --gradient-primary: linear-gradient(135deg, #EC4899 0%, #F8E8F0 100%);
+            --gradient-accent: linear-gradient(135deg, #F8E8F0 0%, #FFF1F8 100%);
+        }
+
+        [data-theme="dark"] {
+            --primary: #6B7280;
+            --primary-light: #9CA3AF;
+            --primary-dark: #4B5563;
+            --accent: #111827;
+            --accent-light: #1F2937;
+            --accent-dark: #030712;
+            --gradient-primary: linear-gradient(135deg, #6B7280 0%, #111827 100%);
+            --gradient-accent: linear-gradient(135deg, #111827 0%, #1F2937 100%);
+        }
+
+        /* Mapping des classes Tailwind vers les variables */
+        .theme-primary {
+            background: var(--primary) !important;
+        }
+
+        .theme-accent {
+            background: var(--accent) !important;
+        }
+
+        .theme-gradient-primary {
+            background: var(--gradient-primary) !important;
+        }
+
+        .theme-gradient-accent {
+            background: var(--gradient-accent) !important;
+        }
+
+        .theme-text-primary {
+            color: var(--text-primary) !important;
+        }
+
+        .theme-border {
+            border-color: var(--primary) !important;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gray-900 text-white p-8">
+    <div class="max-w-7xl mx-auto space-y-8">
+        <h1 class="text-5xl font-black text-center mb-12 text-green-400">
+            🎨 Test Visuel des Thèmes Reviews-Maker
+        </h1>
+
+        <!-- Sélecteur de thème -->
+        <div class="bg-gray-800 rounded-2xl p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4 text-white">Changer de thème :</h2>
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
+                <button onclick="setTheme('violet-lean')"
+                    class="px-6 py-4 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 hover:scale-105 transition-transform font-bold">
+                    💜 Violet Lean
+                </button>
+                <button onclick="setTheme('emerald')"
+                    class="px-6 py-4 rounded-xl bg-gradient-to-br from-cyan-600 to-green-600 hover:scale-105 transition-transform font-bold">
+                    💎 Émeraude
+                </button>
+                <button onclick="setTheme('tahiti')"
+                    class="px-6 py-4 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 hover:scale-105 transition-transform font-bold">
+                    🔵 Tahiti
+                </button>
+                <button onclick="setTheme('sakura')"
+                    class="px-6 py-4 rounded-xl bg-gradient-to-br from-pink-500 to-pink-200 hover:scale-105 transition-transform font-bold">
+                    🌸 Sakura
+                </button>
+                <button onclick="setTheme('dark')"
+                    class="px-6 py-4 rounded-xl bg-gradient-to-br from-gray-800 to-gray-900 hover:scale-105 transition-transform font-bold">
+                    ⚫ Sombre
+                </button>
+                <button onclick="setTheme('auto')"
+                    class="px-6 py-4 rounded-xl bg-gradient-to-br from-gray-600 to-gray-700 hover:scale-105 transition-transform font-bold">
+                    🔄 Auto
+                </button>
+            </div>
+            <p class="mt-4 text-gray-400 text-sm">Thème actuel : <span id="current-theme"
+                    class="font-bold text-green-400">violet-lean</span></p>
+        </div>
+
+        <!-- Démo des couleurs primaires -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="theme-primary rounded-2xl p-8 text-white text-center shadow-2xl">
+                <div class="text-6xl mb-4">🎨</div>
+                <h3 class="text-2xl font-bold">Primaire</h3>
+                <p class="text-sm opacity-80 mt-2">var(--primary)</p>
+            </div>
+            <div class="theme-accent rounded-2xl p-8 text-white text-center shadow-2xl">
+                <div class="text-6xl mb-4">✨</div>
+                <h3 class="text-2xl font-bold">Accent</h3>
+                <p class="text-sm opacity-80 mt-2">var(--accent)</p>
+            </div>
+            <div class="theme-gradient-primary rounded-2xl p-8 text-white text-center shadow-2xl">
+                <div class="text-6xl mb-4">🌈</div>
+                <h3 class="text-2xl font-bold">Gradient Primaire</h3>
+                <p class="text-sm opacity-80 mt-2">var(--gradient-primary)</p>
+            </div>
+        </div>
+
+        <!-- Boutons et éléments interactifs -->
+        <div class="bg-gray-800 rounded-2xl p-8">
+            <h2 class="text-2xl font-bold mb-6 text-white">Éléments interactifs</h2>
+            <div class="flex flex-wrap gap-4">
+                <button
+                    class="px-8 py-4 theme-primary text-white rounded-xl font-bold hover:scale-110 transition-transform shadow-lg">
+                    Bouton Primaire
+                </button>
+                <button
+                    class="px-8 py-4 theme-accent text-white rounded-xl font-bold hover:scale-110 transition-transform shadow-lg">
+                    Bouton Accent
+                </button>
+                <button
+                    class="px-8 py-4 theme-gradient-primary text-white rounded-xl font-bold hover:scale-110 transition-transform shadow-lg">
+                    Bouton Gradient
+                </button>
+                <button
+                    class="px-8 py-4 bg-gray-700 text-white rounded-xl font-bold hover:bg-gray-600 transition-colors shadow-lg border-2 theme-border">
+                    Avec Bordure Thématique
+                </button>
+            </div>
+        </div>
+
+        <!-- Cartes simulées -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div
+                class="bg-gray-800 rounded-2xl p-6 border-2 theme-border hover:scale-105 transition-transform shadow-2xl">
+                <div
+                    class="w-16 h-16 theme-gradient-primary rounded-full mx-auto mb-4 flex items-center justify-center text-3xl">
+                    🌿
+                </div>
+                <h3 class="text-xl font-bold text-center text-white mb-2">Fleur</h3>
+                <p class="text-gray-400 text-center text-sm">Exemple de carte stylisée</p>
+            </div>
+            <div
+                class="bg-gray-800 rounded-2xl p-6 border-2 theme-border hover:scale-105 transition-transform shadow-2xl">
+                <div
+                    class="w-16 h-16 theme-gradient-accent rounded-full mx-auto mb-4 flex items-center justify-center text-3xl">
+                    🍫
+                </div>
+                <h3 class="text-xl font-bold text-center text-white mb-2">Hash</h3>
+                <p class="text-gray-400 text-center text-sm">Exemple de carte stylisée</p>
+            </div>
+            <div
+                class="bg-gray-800 rounded-2xl p-6 border-2 theme-border hover:scale-105 transition-transform shadow-2xl">
+                <div
+                    class="w-16 h-16 theme-primary rounded-full mx-auto mb-4 flex items-center justify-center text-3xl">
+                    🔮
+                </div>
+                <h3 class="text-xl font-bold text-center text-white mb-2">Concentré</h3>
+                <p class="text-gray-400 text-center text-sm">Exemple de carte stylisée</p>
+            </div>
+        </div>
+
+        <!-- Console de diagnostic -->
+        <div class="bg-gray-800 rounded-2xl p-6">
+            <h2 class="text-2xl font-bold mb-4 text-white">Console de diagnostic CSS</h2>
+            <div class="bg-gray-900 rounded-xl p-4 font-mono text-sm space-y-2">
+                <div class="text-green-400">
+                    --primary: <span id="diag-primary" class="text-white font-bold">#A855F7</span>
+                </div>
+                <div class="text-green-400">
+                    --accent: <span id="diag-accent" class="text-white font-bold">#E91E63</span>
+                </div>
+                <div class="text-green-400">
+                    data-theme: <span id="diag-theme" class="text-white font-bold">violet-lean</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setTheme(theme) {
+            const html = document.documentElement;
+
+            // Supprimer tous les data-theme
+            html.removeAttribute('data-theme');
+
+            // Appliquer le nouveau thème
+            if (theme !== 'violet-lean' && theme !== 'auto') {
+                html.setAttribute('data-theme', theme);
+            }
+
+            // Mettre à jour l'affichage
+            document.getElementById('current-theme').textContent = theme;
+            document.getElementById('diag-theme').textContent = theme;
+
+            // Lire les valeurs CSS
+            const styles = getComputedStyle(html);
+            const primary = styles.getPropertyValue('--primary').trim();
+            const accent = styles.getPropertyValue('--accent').trim();
+
+            document.getElementById('diag-primary').textContent = primary;
+            document.getElementById('diag-accent').textContent = accent;
+
+            console.log(`Thème changé: ${theme}`);
+            console.log(`--primary: ${primary}`);
+            console.log(`--accent: ${accent}`);
+        }
+
+        // Initialiser
+        setTheme('violet-lean');
+    </script>
+</body>
+
+</html>
