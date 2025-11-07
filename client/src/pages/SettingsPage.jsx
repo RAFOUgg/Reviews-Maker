@@ -150,20 +150,17 @@ export default function SettingsPage() {
                             <button
                                 key={option.value}
                                 onClick={() => handleThemeChange(option.value)}
-                                className={`relative p-5 rounded-xl border-2 transition-all ${theme === option.value
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20 shadow-lg'
-                                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                                    }`}
+                                className={`relative p-5 rounded-xl border-2 transition-all ${theme === option.value ? 'theme-selected' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
                             >
                                 {theme === option.value && (
-                                    <div className="absolute top-2 right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                                    <div className="absolute top-2 right-2 theme-dot flex items-center justify-center">
                                         <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>
                                 )}
                                 <div className="text-4xl mb-2">{option.icon}</div>
-                                <div className={`h-2 rounded-full mb-3 bg-gradient-to-r ${option.colors}`}></div>
+                                <div className="theme-gradient-bar mb-3" style={{ background: 'linear-gradient(90deg, rgb(var(--primary)), rgb(var(--accent)))' }}></div>
                                 <div className="font-bold text-gray-900 dark:text-white mb-1">{option.label}</div>
                                 <div className="text-xs text-gray-500 dark:text-gray-400">{option.desc}</div>
                             </button>

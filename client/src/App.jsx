@@ -50,6 +50,7 @@ function App() {
                         root.setAttribute('data-theme', 'dark')
                         root.classList.add('dark')
                     } else {
+                        // keep default accent theme when system is light
                         root.setAttribute('data-theme', 'violet-lean')
                         root.classList.remove('dark')
                     }
@@ -60,6 +61,22 @@ function App() {
         }
 
         applyTheme(savedTheme)
+
+        // If user chose 'auto', listen to system changes globally so the whole app respects system theme
+        if (savedTheme === 'auto') {
+            const mq = window.matchMedia('(prefers-color-scheme: dark)')
+            const handler = (e) => {
+                applyTheme('auto')
+            }
+            // Modern API
+            if (mq.addEventListener) mq.addEventListener('change', handler)
+            else if (mq.addListener) mq.addListener(handler)
+
+            return () => {
+                if (mq.removeEventListener) mq.removeEventListener('change', handler)
+                else if (mq.removeListener) mq.removeListener(handler)
+            }
+        }
     }, [])
 
     // ✅ Vérifier la session au démarrage
