@@ -8,42 +8,30 @@
 :root,
 [data-theme="violet-lean"] {
     --primary: #A855F7;
-    /* Violet-500 */
     --primary-light: #D8B4FE;
-    /* Violet-300 */
     --primary-dark: #7E22CE;
-    /* Violet-700 */
-
     --accent: #E91E63;
-    /* Rose-Rouge-Pourpre */
     --accent-light: #F48FB1;
-    /* Pink-light */
     --accent-dark: #AD1457;
-    /* Pink-dark */
 
-    --bg-primary: #F3E8FF;
-    /* Violet très pâle - PAS blanc pour différenciation */
-    --bg-secondary: #EDE9FE;
-    /* Violet pâle */
-    --bg-tertiary: #DDD6FE;
-    /* Violet pastel */
+    /* Backgrounds VIOLET partout */
+    --bg-primary: #FAF5FF;        /* Violet ultra-pâle - fond principal */
+    --bg-secondary: #F3E8FF;      /* Violet pâle - containers */
+    --bg-tertiary: #E9D5FF;       /* Violet pastel - cards */
+    --bg-surface: #FEFBFF;        /* Blanc légèrement violet - modals */
+    --bg-input: #F5F3FF;          /* Violet très pâle - inputs */
 
     --text-primary: #1F2937;
-    /* Gray-800 */
     --text-secondary: #6B7280;
-    /* Gray-500 */
     --text-tertiary: #9CA3AF;
-    /* Gray-400 */
+    --border: #C084FC;            /* Violet visible */
+    --shadow: rgba(168, 85, 247, 0.2);
+    --shadow-lg: rgba(168, 85, 247, 0.4);
+    --glow: rgba(168, 85, 247, 0.6);
 
-    --border: #A855F7;
-    /* Violet primaire */
-
-    --shadow: rgba(139, 92, 246, 0.15);
-    --shadow-lg: rgba(139, 92, 246, 0.25);
-
-    /* Gradients */
     --gradient-primary: linear-gradient(135deg, #A855F7 0%, #E91E63 100%);
     --gradient-accent: linear-gradient(135deg, #E91E63 0%, #F48FB1 100%);
+    --gradient-bg: linear-gradient(135deg, #FAF5FF 0%, #F3E8FF 50%, #E9D5FF 100%);
 }
 
 /* Mode Sombre */
@@ -72,42 +60,30 @@
 /* === THÈME: ÉMERAUDE === */
 [data-theme="emerald"] {
     --primary: #06B6D4;
-    /* Cyan/Turquoise */
     --primary-light: #22D3EE;
-    /* Cyan-400 */
     --primary-dark: #0891B2;
-    /* Cyan-600 */
-
     --accent: #10B981;
-    /* Émeraude */
     --accent-light: #34D399;
-    /* Green-400 */
     --accent-dark: #059669;
-    /* Green-600 */
 
-    /* Light backgrounds par défaut */
-    --bg-primary: #ECFDF5;
-    /* Vert très pâle */
-    --bg-secondary: #D1FAE5;
-    /* Vert pâle */
-    --bg-tertiary: #A7F3D0;
-    /* Vert pastel */
+    /* Backgrounds CYAN/VERT partout */
+    --bg-primary: #ECFEFF;        /* Cyan ultra-pâle - fond principal */
+    --bg-secondary: #CFFAFE;      /* Cyan pâle - containers */
+    --bg-tertiary: #A5F3FC;       /* Cyan pastel - cards */
+    --bg-surface: #F0FDFA;        /* Blanc légèrement cyan - modals */
+    --bg-input: #E0F2FE;          /* Cyan très pâle - inputs */
 
     --text-primary: #064E3B;
-    /* Green-900 */
     --text-secondary: #047857;
-    /* Green-700 */
     --text-tertiary: #059669;
-    /* Green-600 */
-
-    --border: #10B981;
-    /* Green-500 */
-
-    --shadow: rgba(6, 182, 212, 0.2);
-    --shadow-lg: rgba(6, 182, 212, 0.3);
+    --border: #22D3EE;            /* Cyan brillant */
+    --shadow: rgba(6, 182, 212, 0.25);
+    --shadow-lg: rgba(6, 182, 212, 0.5);
+    --glow: rgba(16, 185, 129, 0.7);
 
     --gradient-primary: linear-gradient(135deg, #06B6D4 0%, #10B981 100%);
     --gradient-accent: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+    --gradient-bg: linear-gradient(135deg, #ECFEFF 0%, #CFFAFE 50%, #A5F3FC 100%);
 }
 
 [data-theme="emerald"].dark {
@@ -137,103 +113,59 @@
 /* === THÈME: BLEU TAHITI === */
 [data-theme="tahiti"] {
     --primary: #06D6D0;
-    /* Cyan brillant */
-    --primary-light: #2DD4CF;
-    /* Cyan-400 */
+    --primary-light: #5EEAD4;
     --primary-dark: #0D9488;
-    /* Teal-600 */
-
     --accent: #0891B2;
-    /* Bleu eau */
     --accent-light: #06B6D4;
-    /* Cyan-500 */
     --accent-dark: #0E7490;
-    /* Cyan-700 */
 
-    --bg-primary: #FFFFFF;
-    --bg-secondary: #ECFFFE;
-    /* Cyan très pâle */
-    --bg-tertiary: #CCFBF1;
-    /* Teal très pâle */
+    /* Backgrounds TURQUOISE/BLEU partout */
+    --bg-primary: #F0FDFA;        /* Turquoise ultra-pâle - fond principal */
+    --bg-secondary: #CCFBF1;      /* Turquoise pâle - containers */
+    --bg-tertiary: #99F6E4;       /* Turquoise pastel - cards */
+    --bg-surface: #ECFEFF;        /* Blanc légèrement turquoise - modals */
+    --bg-input: #E0F7FA;          /* Turquoise très pâle - inputs */
 
     --text-primary: #0C3839;
-    /* Teal-900 */
     --text-secondary: #0F766E;
-    /* Teal-700 */
     --text-tertiary: #14919B;
-    /* Teal-600 */
-
-    --border: #99F6E4;
-    /* Teal-300 */
-
-    --shadow: rgba(6, 214, 208, 0.2);
-    --shadow-lg: rgba(6, 214, 208, 0.3);
-
-    --gradient-primary: linear-gradient(135deg, #06D6D0 0%, #0891B2 100%);
-    --gradient-accent: linear-gradient(135deg, #0891B2 0%, #06B6D4 100%);
-}
-
-[data-theme="tahiti"].dark {
-    --bg-primary: #0C3839;
-    /* Teal-900 */
-    --bg-secondary: #0C2F3A;
-    /* Bleu très foncé */
-    --bg-tertiary: #0F4C51;
-    /* Teal foncé */
-
-    --text-primary: #ECFFFE;
-    /* Cyan très pâle */
-    --text-secondary: #99F6E4;
-    /* Teal-300 */
-    --text-tertiary: #67E8F9;
-    /* Cyan-400 */
-
-    --border: #0F766E;
-    /* Teal-700 */
-
+    --border: #5EEAD4;            /* Turquoise brillant */
     --shadow: rgba(6, 214, 208, 0.25);
+    --shadow-lg: rgba(6, 214, 208, 0.5);
+    --glow: rgba(8, 145, 178, 0.7);
 
     --gradient-primary: linear-gradient(135deg, #06D6D0 0%, #0891B2 100%);
     --gradient-accent: linear-gradient(135deg, #0891B2 0%, #06B6D4 100%);
+    --gradient-bg: linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 50%, #99F6E4 100%);
 }
 
 /* === THÈME: SAKURA === */
 [data-theme="sakura"] {
     --primary: #EC4899;
-    /* Rose Sakura */
     --primary-light: #F472B6;
-    /* Pink-400 */
-    --primary-dark: #BE123C;
-    /* Rose-800 */
+    --primary-dark: #BE185D;
+    --accent: #F472B6;
+    --accent-light: #FBCFE8;
+    --accent-dark: #DB2777;
 
-    --accent: #F8E8F0;
-    /* Blanc très légèrement rosé */
-    --accent-light: #FDF2F8;
-    /* Pink-50 */
-    --accent-dark: #F1E7EC;
-    /* Pink-100 */
+    /* Backgrounds ROSE partout */
+    --bg-primary: #FEF3F9;        /* Rose ultra-pâle - fond principal */
+    --bg-secondary: #FCE7F3;      /* Rose pâle - containers */
+    --bg-tertiary: #FBCFE8;       /* Rose pastel - cards */
+    --bg-surface: #FFF5FB;        /* Blanc légèrement rose - modals */
+    --bg-input: #FDF2F8;          /* Rose très pâle - inputs */
 
-    --bg-primary: #FFFFFF;
-    --bg-secondary: #FEE2E8;
-    /* Rose très pâle */
-    --bg-tertiary: #FBCFE8;
-    /* Rose pâle */
-
-    --text-primary: #500724;
-    /* Rose-900 */
-    --text-secondary: #831843;
-    /* Rose-800 */
+    --text-primary: #831843;
+    --text-secondary: #9D174D;
     --text-tertiary: #BE185D;
-    /* Rose-700 */
+    --border: #F472B6;            /* Rose brillant */
+    --shadow: rgba(236, 72, 153, 0.25);
+    --shadow-lg: rgba(236, 72, 153, 0.5);
+    --glow: rgba(244, 114, 182, 0.7);
 
-    --border: #FBCFE8;
-    /* Rose-200 */
-
-    --shadow: rgba(236, 72, 153, 0.15);
-    --shadow-lg: rgba(236, 72, 153, 0.25);
-
-    --gradient-primary: linear-gradient(135deg, #EC4899 0%, #F8E8F0 100%);
-    --gradient-accent: linear-gradient(135deg, #F472B6 0%, #FDF2F8 100%);
+    --gradient-primary: linear-gradient(135deg, #EC4899 0%, #F472B6 100%);
+    --gradient-accent: linear-gradient(135deg, #F472B6 0%, #FBCFE8 100%);
+    --gradient-bg: linear-gradient(135deg, #FEF3F9 0%, #FCE7F3 50%, #FBCFE8 100%);
 }
 
 [data-theme="sakura"].dark {
@@ -260,45 +192,34 @@
     --gradient-accent: linear-gradient(135deg, #F472B6 0%, #FDF2F8 100%);
 }
 
-/* === THÈME: MINUIT === */
+/* === THÈME: MINUIT / DARK === */
 [data-theme="dark"],
 [data-theme="minuit"] {
-    --primary: #6B7280;
-    /* Gris-600 */
-    --primary-light: #9CA3AF;
-    /* Gris-400 */
-    --primary-dark: #374151;
-    /* Gris-700 */
+    --primary: #A855F7;           /* Purple accent pour contraste */
+    --primary-light: #C084FC;
+    --primary-dark: #9333EA;
+    --accent: #06B6D4;            /* Cyan accent pour contraste */
+    --accent-light: #22D3EE;
+    --accent-dark: #0891B2;
 
-    --accent: #111827;
-    /* Noir-900 */
-    --accent-light: #1F2937;
-    /* Gray-800 */
-    --accent-dark: #000000;
-    /* Noir pur */
+    /* Backgrounds SOMBRES avec TEINTES COLORÉES */
+    --bg-primary: #0F0A1A;        /* Noir violacé - fond principal */
+    --bg-secondary: #1A1425;      /* Noir-violet - containers */
+    --bg-tertiary: #251A33;       /* Violet très sombre - cards */
+    --bg-surface: #1E1733;        /* Violet foncé - modals */
+    --bg-input: #221838;          /* Violet foncé - inputs */
 
-    --bg-primary: #0F0F0F;
-    /* Noir pur */
-    --bg-secondary: #1A1A1A;
-    /* Gris très foncé */
-    --bg-tertiary: #262626;
-    /* Gris foncé */
+    --text-primary: #F3E8FF;      /* Violet très pâle */
+    --text-secondary: #E9D5FF;    /* Violet pâle */
+    --text-tertiary: #C084FC;     /* Violet moyen */
+    --border: #7C3AED;            /* Violet brillant */
+    --shadow: rgba(168, 85, 247, 0.3);
+    --shadow-lg: rgba(168, 85, 247, 0.6);
+    --glow: rgba(6, 182, 212, 0.5);
 
-    --text-primary: #F3F4F6;
-    /* Gris très pâle */
-    --text-secondary: #D1D5DB;
-    /* Gris-300 */
-    --text-tertiary: #9CA3AF;
-    /* Gris-400 */
-
-    --border: #404040;
-    /* Gris-700 */
-
-    --shadow: rgba(0, 0, 0, 0.3);
-    --shadow-lg: rgba(0, 0, 0, 0.5);
-
-    --gradient-primary: linear-gradient(135deg, #6B7280 0%, #111827 100%);
-    --gradient-accent: linear-gradient(135deg, #374151 0%, #1F2937 100%);
+    --gradient-primary: linear-gradient(135deg, #A855F7 0%, #06B6D4 100%);
+    --gradient-accent: linear-gradient(135deg, #06B6D4 0%, #9333EA 100%);
+    --gradient-bg: linear-gradient(135deg, #0F0A1A 0%, #1A1425 50%, #251A33 100%);
 }
 
 @keyframes slide-in-right {
