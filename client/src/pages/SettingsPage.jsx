@@ -140,11 +140,11 @@ export default function SettingsPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {[
-                            { value: 'violet-lean', label: 'Violet Lean', icon: '🟣', desc: 'Par défaut', colors: 'from-purple-500 to-pink-500' },
-                            { value: 'emerald', label: 'Vert Émeraude', icon: '💚', desc: 'Vert profond', colors: 'from-emerald-600 to-teal-600' },
-                            { value: 'tahiti', label: 'Bleu Tahiti', icon: '🔵', desc: 'Bleu océan', colors: 'from-blue-600 to-cyan-600' },
-                            { value: 'sakura', label: 'Sakura', icon: '🌸', desc: 'Rose Sakura doux', colors: 'from-pink-500 to-pink-200' },
-                            { value: 'dark', label: 'Sombre', icon: '⚫', desc: 'Noir/Gris', colors: 'from-gray-800 to-gray-900' },
+                            { value: 'violet-lean', label: 'Violet Lean', icon: '🟣', desc: 'Par défaut', colors: 'from-purple-400 to-pink-400' },
+                            { value: 'emerald', label: 'Vert Émeraude', icon: '💚', desc: 'Vert profond', colors: 'from-emerald-400 to-green-300' },
+                            { value: 'tahiti', label: 'Bleu Tahiti', icon: '🔵', desc: 'Bleu océan', colors: 'from-cyan-400 to-blue-400' },
+                            { value: 'sakura', label: 'Sakura', icon: '🌸', desc: 'Rose Sakura doux', colors: 'from-pink-400 to-pink-300' },
+                            { value: 'dark', label: 'Sombre', icon: '⚫', desc: 'Indigo sombre', colors: 'from-indigo-900 to-purple-900' },
                             { value: 'auto', label: 'Selon système', icon: '🔄', desc: 'Automatique', colors: 'from-gray-600 to-gray-700' }
                         ].map((option) => (
                             <button

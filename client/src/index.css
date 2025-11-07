@@ -15,16 +15,22 @@
     --accent-dark: #AD1457;
 
     /* Backgrounds VIOLET SATURÉ - VRAIMENT VISIBLE */
-    --bg-primary: #E9D5FF;        /* Violet pastel SATURÉ - fond principal */
-    --bg-secondary: #DDD6FE;      /* Violet clair SATURÉ - containers */
-    --bg-tertiary: #C4B5FD;       /* Violet moyen SATURÉ - cards */
-    --bg-surface: #F3E8FF;        /* Violet pâle - modals */
-    --bg-input: #EDE9FE;          /* Violet pâle - inputs */
+    --bg-primary: #E9D5FF;
+    /* Violet pastel SATURÉ - fond principal */
+    --bg-secondary: #DDD6FE;
+    /* Violet clair SATURÉ - containers */
+    --bg-tertiary: #C4B5FD;
+    /* Violet moyen SATURÉ - cards */
+    --bg-surface: #F3E8FF;
+    /* Violet pâle - modals */
+    --bg-input: #EDE9FE;
+    /* Violet pâle - inputs */
 
     --text-primary: #1F2937;
     --text-secondary: #6B7280;
     --text-tertiary: #9CA3AF;
-    --border: #A855F7;            /* Violet FORT */
+    --border: #A855F7;
+    /* Violet FORT */
     --shadow: rgba(168, 85, 247, 0.3);
     --shadow-lg: rgba(168, 85, 247, 0.5);
     --glow: rgba(168, 85, 247, 0.8);
@@ -67,16 +73,22 @@
     --accent-dark: #059669;
 
     /* Backgrounds VERT/CYAN SATURÉ - VRAIMENT VISIBLE */
-    --bg-primary: #A7F3D0;        /* Vert pastel SATURÉ - fond principal */
-    --bg-secondary: #6EE7B7;      /* Vert clair SATURÉ - containers */
-    --bg-tertiary: #34D399;       /* Vert moyen SATURÉ - cards */
-    --bg-surface: #D1FAE5;        /* Vert pâle - modals */
-    --bg-input: #CCFBF1;          /* Cyan pâle - inputs */
+    --bg-primary: #A7F3D0;
+    /* Vert pastel SATURÉ - fond principal */
+    --bg-secondary: #6EE7B7;
+    /* Vert clair SATURÉ - containers */
+    --bg-tertiary: #34D399;
+    /* Vert moyen SATURÉ - cards */
+    --bg-surface: #D1FAE5;
+    /* Vert pâle - modals */
+    --bg-input: #CCFBF1;
+    /* Cyan pâle - inputs */
 
     --text-primary: #064E3B;
     --text-secondary: #047857;
     --text-tertiary: #059669;
-    --border: #10B981;            /* Vert FORT */
+    --border: #10B981;
+    /* Vert FORT */
     --shadow: rgba(16, 185, 129, 0.3);
     --shadow-lg: rgba(16, 185, 129, 0.6);
     --glow: rgba(6, 182, 212, 0.8);
@@ -120,16 +132,22 @@
     --accent-dark: #0E7490;
 
     /* Backgrounds BLEU/TURQUOISE SATURÉ - VRAIMENT VISIBLE */
-    --bg-primary: #67E8F9;        /* Cyan pastel SATURÉ - fond principal */
-    --bg-secondary: #22D3EE;      /* Cyan clair SATURÉ - containers */
-    --bg-tertiary: #06B6D4;       /* Cyan moyen SATURÉ - cards */
-    --bg-surface: #A5F3FC;        /* Cyan pâle - modals */
-    --bg-input: #CFFAFE;          /* Cyan très pâle - inputs */
+    --bg-primary: #67E8F9;
+    /* Cyan pastel SATURÉ - fond principal */
+    --bg-secondary: #22D3EE;
+    /* Cyan clair SATURÉ - containers */
+    --bg-tertiary: #06B6D4;
+    /* Cyan moyen SATURÉ - cards */
+    --bg-surface: #A5F3FC;
+    /* Cyan pâle - modals */
+    --bg-input: #CFFAFE;
+    /* Cyan très pâle - inputs */
 
     --text-primary: #0C3839;
     --text-secondary: #0F766E;
     --text-tertiary: #14919B;
-    --border: #0891B2;            /* Bleu FORT */
+    --border: #0891B2;
+    /* Bleu FORT */
     --shadow: rgba(6, 182, 212, 0.3);
     --shadow-lg: rgba(6, 182, 212, 0.6);
     --glow: rgba(34, 211, 238, 0.8);
@@ -149,16 +167,22 @@
     --accent-dark: #DB2777;
 
     /* Backgrounds ROSE SATURÉ - VRAIMENT VISIBLE */
-    --bg-primary: #FBCFE8;        /* Rose pastel SATURÉ - fond principal */
-    --bg-secondary: #F9A8D4;      /* Rose clair SATURÉ - containers */
-    --bg-tertiary: #F472B6;       /* Rose moyen SATURÉ - cards */
-    --bg-surface: #FCE7F3;        /* Rose pâle - modals */
-    --bg-input: #FDF2F8;          /* Rose très pâle - inputs */
+    --bg-primary: #FBCFE8;
+    /* Rose pastel SATURÉ - fond principal */
+    --bg-secondary: #F9A8D4;
+    /* Rose clair SATURÉ - containers */
+    --bg-tertiary: #F472B6;
+    /* Rose moyen SATURÉ - cards */
+    --bg-surface: #FCE7F3;
+    /* Rose pâle - modals */
+    --bg-input: #FDF2F8;
+    /* Rose très pâle - inputs */
 
     --text-primary: #831843;
     --text-secondary: #9D174D;
     --text-tertiary: #BE185D;
-    --border: #EC4899;            /* Rose FORT */
+    --border: #EC4899;
+    /* Rose FORT */
     --shadow: rgba(236, 72, 153, 0.3);
     --shadow-lg: rgba(236, 72, 153, 0.6);
     --glow: rgba(244, 114, 182, 0.8);
@@ -195,24 +219,35 @@
 /* === THÈME: MINUIT / DARK === */
 [data-theme="dark"],
 [data-theme="minuit"] {
-    --primary: #A855F7;           /* Purple accent */
+    --primary: #A855F7;
+    /* Purple accent */
     --primary-light: #C084FC;
     --primary-dark: #9333EA;
-    --accent: #06B6D4;            /* Cyan accent */
+    --accent: #06B6D4;
+    /* Cyan accent */
     --accent-light: #22D3EE;
     --accent-dark: #0891B2;
 
     /* Backgrounds SOMBRES VISIBLES avec accents violets */
-    --bg-primary: #1E1B4B;        /* Indigo sombre - fond principal */
-    --bg-secondary: #312E81;      /* Indigo moyen - containers */
-    --bg-tertiary: #4C1D95;       /* Violet sombre - cards */
-    --bg-surface: #2E1065;        /* Violet moyen - modals */
-    --bg-input: #3B0764;          /* Violet foncé - inputs */
+    --bg-primary: #1E1B4B;
+    /* Indigo sombre - fond principal */
+    --bg-secondary: #312E81;
+    /* Indigo moyen - containers */
+    --bg-tertiary: #4C1D95;
+    /* Violet sombre - cards */
+    --bg-surface: #2E1065;
+    /* Violet moyen - modals */
+    --bg-input: #3B0764;
+    /* Violet foncé - inputs */
 
-    --text-primary: #F3E8FF;      /* Violet très pâle */
-    --text-secondary: #E9D5FF;    /* Violet pâle */
-    --text-tertiary: #C084FC;     /* Violet moyen */
-    --border: #A855F7;            /* Violet brillant */
+    --text-primary: #F3E8FF;
+    /* Violet très pâle */
+    --text-secondary: #E9D5FF;
+    /* Violet pâle */
+    --text-tertiary: #C084FC;
+    /* Violet moyen */
+    --border: #A855F7;
+    /* Violet brillant */
     --shadow: rgba(168, 85, 247, 0.4);
     --shadow-lg: rgba(168, 85, 247, 0.7);
     --glow: rgba(6, 182, 212, 0.6);
