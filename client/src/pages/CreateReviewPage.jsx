@@ -158,28 +158,28 @@ export default function CreateReviewPage() {
                     {/* Résumé des notes par catégorie */}
                     <div className="flex items-center justify-center gap-4 text-sm">
                         <span className="flex items-center gap-1.5">
-                            <span className="text-gray-400">👁️</span>
-                            <span className="font-bold text-green-400">{categoryRatings.visual.toFixed(1)}</span>
+                            <span className="opacity-70">👁️</span>
+                            <span className="font-bold text-white glow-text-subtle">{categoryRatings.visual.toFixed(1)}</span>
                         </span>
-                        <span className="text-gray-600">•</span>
+                        <span className="text-white opacity-30">•</span>
                         <span className="flex items-center gap-1.5">
-                            <span className="text-gray-400">👃</span>
-                            <span className="font-bold text-green-400">{categoryRatings.smell.toFixed(1)}</span>
+                            <span className="opacity-70">👃</span>
+                            <span className="font-bold text-white glow-text-subtle">{categoryRatings.smell.toFixed(1)}</span>
                         </span>
-                        <span className="text-gray-600">•</span>
+                        <span className="text-white opacity-30">•</span>
                         <span className="flex items-center gap-1.5">
-                            <span className="text-gray-400">👅</span>
-                            <span className="font-bold text-green-400">{categoryRatings.taste.toFixed(1)}</span>
+                            <span className="opacity-70">👅</span>
+                            <span className="font-bold text-white glow-text-subtle">{categoryRatings.taste.toFixed(1)}</span>
                         </span>
-                        <span className="text-gray-600">•</span>
+                        <span className="text-white opacity-30">•</span>
                         <span className="flex items-center gap-1.5">
-                            <span className="text-gray-400">⚡</span>
-                            <span className="font-bold text-green-400">{categoryRatings.effects.toFixed(1)}</span>
+                            <span className="opacity-70">⚡</span>
+                            <span className="font-bold text-white glow-text-subtle">{categoryRatings.effects.toFixed(1)}</span>
                         </span>
-                        <span className="text-gray-600">│</span>
+                        <span className="text-white opacity-30">│</span>
                         <span className="flex items-center gap-1.5">
                             <span className="font-semibold text-white opacity-70">Global</span>
-                            <span className="font-bold text-2xl text-white glow-text-subtle">{categoryRatings.overall.toFixed(1)}</span>
+                            <span className="font-bold text-2xl text-white glow-text">{categoryRatings.overall.toFixed(1)}</span>
                             <span className="text-xs text-white opacity-50">/10</span>
                         </span>
                     </div>
