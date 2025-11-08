@@ -73,7 +73,7 @@ export default function CultivarList({ value, onChange, matiereChoices = [], sho
                                     <button
                                         type="button"
                                         onClick={() => navigate(`/review/${cultivar.reviewId}`)}
-                                        className="px-3 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                                        className="px-3 py-2 bg-transparent border border-white/40 hover:border-white/60 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1 glow-container-subtle hover:glow-text"
                                         title="Voir la review d'origine"
                                     >
                                         <span>🔗</span>

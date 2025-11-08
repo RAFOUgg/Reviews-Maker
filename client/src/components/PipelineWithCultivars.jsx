@@ -89,7 +89,7 @@ export default function PipelineWithCultivars({ value, onChange, choices = [], c
                                     <div className="flex flex-wrap gap-2">
                                         {cultivarsList.map((cultivar, i) => {
                                             const isChecked = (step.cultivars || []).includes(cultivar.name);
-                                            return <label key={i} className={`px-3 py-1.5 rounded-lg text-sm cursor-pointer transition-all ${isChecked ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}><input type="checkbox" className="hidden" checked={isChecked} onChange={() => toggleCultivar(step.id, cultivar.name)} />{cultivar.name}</label>;
+                                            return <label key={i} className={`px-3 py-1.5 rounded-lg text-sm cursor-pointer transition-all border ${isChecked ? 'bg-transparent border-white/40 text-white glow-text-subtle' : 'bg-transparent border-white/20 text-white/70 hover:border-white/30'}`}><input type="checkbox" className="hidden" checked={isChecked} onChange={() => toggleCultivar(step.id, cultivar.name)} />{cultivar.name}</label>;
                                         })}
                                     </div>
                                 </div>

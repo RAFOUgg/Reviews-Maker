@@ -94,7 +94,7 @@ export default function WheelSelector({
                 </div>
 
                 {/* Compteur */}
-                <div className={`px-4 py-2 rounded-lg text-sm font-semibold ${selectedItems.length >= maxSelections ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'
+                <div className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-all ${selectedItems.length >= maxSelections ? 'bg-transparent border-amber-400/40 text-amber-400 glow-text-subtle' : 'bg-transparent border-white/30 text-white glow-text-subtle'
                     }`}>
                     {selectedItems.length}/{maxSelections}
                 </div>
@@ -112,13 +112,13 @@ export default function WheelSelector({
 
             {/* Sélections actives */}
             {selectedItems.length > 0 && (
-                <div className="flex flex-wrap gap-2 p-3 bg-green-500/10 rounded-lg border border-green-500/30">
+                <div className="flex flex-wrap gap-2 p-3 bg-transparent rounded-lg border border-white/20 glow-border">
                     {selectedItems.map((item, idx) => (
                         <button
                             key={idx}
                             type="button"
                             onClick={() => toggleItem(item)}
-                            className="group px-3 py-1.5 bg-green-600 hover:bg-green-500 rounded-lg text-white text-sm font-medium transition-all shadow-lg shadow-green-600/20"
+                            className="group px-3 py-1.5 bg-transparent border border-white/30 hover:border-white/50 rounded-lg text-white text-sm font-medium transition-all glow-text-subtle"
                         >
                             {item}
                             <span className="ml-2 opacity-60 group-hover:opacity-100">×</span>
@@ -138,7 +138,7 @@ export default function WheelSelector({
                     return (
                         <div
                             key={categoryKey}
-                            className={`flex items-center gap-3 p-3 rounded-xl bg-gray-800/30 border transition-all ${categoryHasSelection ? 'border-green-500/50 bg-green-500/5' : 'border-gray-700/50'
+                            className={`flex items-center gap-3 p-3 rounded-xl bg-transparent border transition-all ${categoryHasSelection ? 'border-white/40 glow-container-subtle' : 'border-white/10'
                                 }`}
                         >
                             {/* Label fixe */}
@@ -173,7 +173,7 @@ export default function WheelSelector({
 
                             {/* Compteur pour cette catégorie */}
                             {categoryHasSelection && (
-                                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 flex items-center justify-center text-white text-xs font-bold">
+                                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-transparent border border-white/40 flex items-center justify-center text-white text-xs font-bold glow-text-subtle">
                                     {items.filter(item => selectedItems.includes(item)).length}
                                 </div>
                             )}

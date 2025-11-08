@@ -155,7 +155,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                     <span>{showAdvanced ? '▼' : '▶'}</span>
                     <span>Filtres avancés</span>
                     {activeFiltersCount > 0 && (
-                        <span className="px-2 py-1 bg-green-600 text-white text-xs rounded-full">
+                        <span className="px-2 py-1 bg-transparent border border-white/40 text-white text-xs rounded-full glow-text-subtle">
                             {activeFiltersCount}
                         </span>
                     )}
