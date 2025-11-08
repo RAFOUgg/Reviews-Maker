@@ -95,13 +95,13 @@ export default function CreateReviewPage() {
             case 'text': return <input type="text" placeholder={`Ex: ${field.label}`} value={value} onChange={(e) => handleInputChange(field.key, e.target.value)} className="w-full px-4 py-3 bg-transparent border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:border-white/40 glow-container-subtle" required={field.required} />;
             case 'textarea': return <textarea value={value} onChange={(e) => handleInputChange(field.key, e.target.value)} rows={field.rows || 3} placeholder={field.label} className="w-full px-4 py-3 bg-transparent border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:border-white/40 resize-none glow-container-subtle" />;
             case 'number': return <input type="number" min="0" max={field.max || 100} value={value} onChange={(e) => handleInputChange(field.key, parseFloat(e.target.value))} className="w-full px-4 py-3 bg-transparent border border-white/20 rounded-xl text-white focus:outline-none focus:border-white/40 glow-container-subtle" />;
-            case 'slider': return <div><input type="range" min="0" max={field.max || 10} step="0.5" value={value} onChange={(e) => handleInputChange(field.key, parseFloat(e.target.value))} className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer" style={{accentColor: 'var(--primary)'}} /><div className="flex justify-between items-center mt-2"><span className="text-xs text-white/50">0</span><span className="text-2xl font-bold text-white glow-text-subtle">{value}/{field.max || 10}</span><span className="text-xs text-white/50">{field.max || 10}</span></div></div>;
+            case 'slider': return <div><input type="range" min="0" max={field.max || 10} step="0.5" value={value} onChange={(e) => handleInputChange(field.key, parseFloat(e.target.value))} className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer" style={{ accentColor: 'var(--primary)' }} /><div className="flex justify-between items-center mt-2"><span className="text-xs text-white/50">0</span><span className="text-2xl font-bold text-white glow-text-subtle">{value}/{field.max || 10}</span><span className="text-xs text-white/50">{field.max || 10}</span></div></div>;
             case 'select': return <select value={value} onChange={(e) => handleInputChange(field.key, e.target.value)} className="w-full px-4 py-3 bg-transparent border border-white/20 rounded-xl text-white focus:outline-none focus:border-white/40 glow-container-subtle"><option value="">-- Sélectionner --</option>{field.choices?.map((choice, i) => <option key={i} value={choice}>{choice}</option>)}</select>;
             case 'multiselect': const selected = Array.isArray(value) ? value : []; return <div className="flex flex-wrap gap-2">{field.choices?.map((choice, i) => <button key={i} type="button" onClick={() => { const newVal = selected.includes(choice) ? selected.filter(v => v !== choice) : [...selected, choice]; handleInputChange(field.key, newVal); }} className={`px-3 py-1.5 rounded-lg text-sm transition-all ${selected.includes(choice) ? 'bg-transparent text-white border border-white/40 glow-text-subtle' : 'bg-transparent text-white/70 border border-white/20 hover:border-white/30'}`}>{choice}</button>)}</div>;
             case 'checkbox':
                 // Ne pas afficher "Purge à vide" si pas de solvants
                 if (field.key === 'purgevide' && !hasSolvents) return null;
-                return <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={!!value} onChange={(e) => handleInputChange(field.key, e.target.checked)} className="w-5 h-5 rounded border-white/20 bg-transparent focus:ring-offset-0" style={{accentColor: 'var(--primary)'}} /><span className="text-white">{field.label}</span></label>;
+                return <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={!!value} onChange={(e) => handleInputChange(field.key, e.target.checked)} className="w-5 h-5 rounded border-white/20 bg-transparent focus:ring-offset-0" style={{ accentColor: 'var(--primary)' }} /><span className="text-white">{field.label}</span></label>;
             case 'wheel': return <WheelSelector value={value} onChange={(v) => handleInputChange(field.key, v)} type={field.key} maxSelections={5} />;
             case 'effects': return <EffectSelector value={value} onChange={(v) => handleInputChange(field.key, v)} maxSelections={8} />;
             case 'cultivar-list': return <CultivarList value={value} onChange={(v) => handleInputChange(field.key, v)} matiereChoices={field.matiereChoices || []} showBreeder={field.showBreeder} />;
@@ -178,9 +178,9 @@ export default function CreateReviewPage() {
                         </span>
                         <span className="text-gray-600">│</span>
                         <span className="flex items-center gap-1.5">
-                            <span className="text-gray-400 font-semibold">Global</span>
-                            <span className="font-bold text-2xl text-green-400">{categoryRatings.overall.toFixed(1)}</span>
-                            <span className="text-gray-500 text-xs">/10</span>
+                            <span className="font-semibold text-white opacity-70">Global</span>
+                            <span className="font-bold text-2xl text-white glow-text-subtle">{categoryRatings.overall.toFixed(1)}</span>
+                            <span className="text-xs text-white opacity-50">/10</span>
                         </span>
                     </div>
                 </div>
@@ -192,7 +192,7 @@ export default function CreateReviewPage() {
             <div className="max-w-4xl mx-auto px-4 py-8">
                 <div className="bg-transparent backdrop-blur-xl rounded-2xl p-8 border border-white/10 glow-container">
                     <h2 className="text-2xl font-bold text-white mb-6 glow-text-subtle">{currentSection.title}</h2>
-                    <div className="space-y-6">{currentSection.fields.map((field, idx) => <div key={idx} className="space-y-2">{field.type !== 'checkbox' && field.type !== 'images' && <label className="block text-sm font-semibold text-gray-300">{field.label}{field.required && <span className="text-red-400 ml-1">*</span>}{field.max && field.type === 'slider' && <span className="text-gray-500 ml-1">/10</span>}</label>}{renderField(field)}</div>)}</div>
+                    <div className="space-y-6">{currentSection.fields.map((field, idx) => <div key={idx} className="space-y-2">{field.type !== 'checkbox' && field.type !== 'images' && <label className="block text-sm font-semibold text-white">{field.label}{field.required && <span className="ml-1" style={{ color: '#ef4444' }}>*</span>}{field.max && field.type === 'slider' && <span className="ml-1 opacity-50" style={{ color: '#ffffff' }}>/{field.max}</span>}</label>}{renderField(field)}</div>)}</div>
                 </div>
             </div>
             <div className="fixed bottom-0 left-0 right-0 bg-transparent backdrop-blur-xl border-t border-white/10 glow-border py-4 z-50">
