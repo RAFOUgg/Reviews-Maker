@@ -736,8 +736,10 @@ h2 {
     background-color: var(--bg-secondary) !important;
 }
 
-/* TEXT COLORS */
+/* TEXT COLORS - BLANC PARTOUT sur thèmes colorés */
 .text-gray-900,
+.text-gray-800,
+.text-gray-700,
 [class*="dark"] .text-white {
     color: var(--text-primary) !important;
 }
@@ -748,8 +750,37 @@ h2 {
 }
 
 .text-gray-400,
-.text-gray-300 {
+.text-gray-300,
+.text-gray-200 {
     color: var(--text-tertiary) !important;
+}
+
+/* LABELS et SPANS - Force blanc */
+label,
+span:not([class*="bg-"]):not([class*="badge"]) {
+    color: var(--text-primary) !important;
+}
+
+/* PLACEHOLDERS - Force blanc transparent */
+::placeholder,
+::-webkit-input-placeholder,
+::-moz-placeholder,
+:-ms-input-placeholder {
+    color: var(--text-tertiary) !important;
+    opacity: 0.7;
+}
+
+/* INPUTS et SELECT - Texte blanc */
+input,
+textarea,
+select {
+    color: var(--text-primary) !important;
+}
+
+/* P et DIV - Texte blanc par défaut */
+p,
+div:not([class*="bg-"]) {
+    color: inherit;
 }
 
 /* BORDERS */
