@@ -160,8 +160,8 @@ export default function EffectSelector({
                                             type="button"
                                             onClick={() => toggleItem(effect)}
                                             className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                                    ? `${categoryThemes.mental.positiveColor} text-white shadow-md`
-                                                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
+                                                ? `${categoryThemes.mental.positiveColor} text-white shadow-md text-stroke-white-thin`
+                                                : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
                                                 }`}
                                         >
                                             {effect}
@@ -185,8 +185,8 @@ export default function EffectSelector({
                                             type="button"
                                             onClick={() => toggleItem(effect)}
                                             className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                                    ? `${categoryThemes.mental.negativeColor} text-white shadow-md`
-                                                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
+                                                ? `${categoryThemes.mental.negativeColor} text-white shadow-md text-stroke-white-thin`
+                                                : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
                                                 }`}
                                         >
                                             {effect}
@@ -219,8 +219,8 @@ export default function EffectSelector({
                                             type="button"
                                             onClick={() => toggleItem(effect)}
                                             className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                                    ? `${categoryThemes.physical.positiveColor} text-white shadow-md`
-                                                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
+                                                ? `${categoryThemes.physical.positiveColor} text-white shadow-md text-stroke-white-thin`
+                                                : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
                                                 }`}
                                         >
                                             {effect}
@@ -243,8 +243,8 @@ export default function EffectSelector({
                                             type="button"
                                             onClick={() => toggleItem(effect)}
                                             className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                                    ? `${categoryThemes.physical.negativeColor} text-white shadow-md`
-                                                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
+                                                ? `${categoryThemes.physical.negativeColor} text-white shadow-md text-stroke-white-thin`
+                                                : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
                                                 }`}
                                         >
                                             {effect}
@@ -274,8 +274,8 @@ export default function EffectSelector({
                                     type="button"
                                     onClick={() => toggleItem(effect)}
                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                            ? `${categoryThemes.therapeutic.color} text-white shadow-md`
-                                            : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
+                                        ? `${categoryThemes.therapeutic.color} text-white shadow-md text-stroke-white-thin`
+                                        : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
                                         }`}
                                 >
                                     {effect}

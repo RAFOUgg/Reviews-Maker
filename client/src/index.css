@@ -121,6 +121,19 @@ h1 {
     box-shadow: 0 0 20px var(--shadow), inset 0 0 20px rgba(255, 255, 255, 0.05);
 }
 
+/* CONTOUR BLANC pour textes sur backgrounds colorés/gradients */
+.text-stroke-white {
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.8);
+    text-stroke: 1px rgba(255, 255, 255, 0.8);
+    paint-order: stroke fill;
+}
+
+.text-stroke-white-thin {
+    -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.6);
+    text-stroke: 0.5px rgba(255, 255, 255, 0.6);
+    paint-order: stroke fill;
+}
+
 /* Textes blancs sur fonds colorés - OVERRIDE pour contraste PRO */
 .text-white {
     color: #FFFFFF !important;
