@@ -159,8 +159,8 @@ export default function WheelSelector({
                                                 key={item}
                                                 type="button"
                                                 onClick={() => toggleItem(item)}
-                                                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                                    ? `bg-gradient-to-r ${theme.gradient} text-white shadow-md text-stroke-white-thin`
+                                                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all text-stroke-white-thin ${isSelected
+                                                    ? `bg-gradient-to-r ${theme.gradient} text-white shadow-md`
                                                     : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
                                                     }`}
                                             >

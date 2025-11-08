@@ -159,8 +159,8 @@ export default function EffectSelector({
                                             key={effect}
                                             type="button"
                                             onClick={() => toggleItem(effect)}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                                ? `${categoryThemes.mental.positiveColor} text-white shadow-md text-stroke-white-thin`
+                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all text-stroke-white-thin ${isSelected
+                                                ? `${categoryThemes.mental.positiveColor} text-white shadow-md`
                                                 : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
                                                 }`}
                                         >
@@ -184,8 +184,8 @@ export default function EffectSelector({
                                             key={effect}
                                             type="button"
                                             onClick={() => toggleItem(effect)}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                                ? `${categoryThemes.mental.negativeColor} text-white shadow-md text-stroke-white-thin`
+                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all text-stroke-white-thin ${isSelected
+                                                ? `${categoryThemes.mental.negativeColor} text-white shadow-md`
                                                 : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
                                                 }`}
                                         >
@@ -218,8 +218,8 @@ export default function EffectSelector({
                                             key={effect}
                                             type="button"
                                             onClick={() => toggleItem(effect)}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                                ? `${categoryThemes.physical.positiveColor} text-white shadow-md text-stroke-white-thin`
+                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all text-stroke-white-thin ${isSelected
+                                                ? `${categoryThemes.physical.positiveColor} text-white shadow-md`
                                                 : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
                                                 }`}
                                         >
@@ -242,8 +242,8 @@ export default function EffectSelector({
                                             key={effect}
                                             type="button"
                                             onClick={() => toggleItem(effect)}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                                ? `${categoryThemes.physical.negativeColor} text-white shadow-md text-stroke-white-thin`
+                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all text-stroke-white-thin ${isSelected
+                                                ? `${categoryThemes.physical.negativeColor} text-white shadow-md`
                                                 : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
                                                 }`}
                                         >
@@ -273,8 +273,8 @@ export default function EffectSelector({
                                     key={effect}
                                     type="button"
                                     onClick={() => toggleItem(effect)}
-                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                        ? `${categoryThemes.therapeutic.color} text-white shadow-md text-stroke-white-thin`
+                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all text-stroke-white-thin ${isSelected
+                                        ? `${categoryThemes.therapeutic.color} text-white shadow-md`
                                         : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
                                         }`}
                                 >
