@@ -85,7 +85,7 @@ body {
     min-height: 100vh;
 }
 
-/* Titres avec couleurs du thème */
+/* Titres avec couleurs du thème - BLANC pour contraste */
 h1,
 h2,
 h3,
@@ -97,6 +97,23 @@ h6 {
 
 h1 {
     font-weight: 700;
+}
+
+/* Textes blancs sur fonds colorés - OVERRIDE pour contraste PRO */
+.text-white {
+    color: #FFFFFF !important;
+}
+
+.text-white\/90 {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.text-white\/80 {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.text-white\/70 {
+    color: rgba(255, 255, 255, 0.7) !important;
 }
 
 h2 {
@@ -138,17 +155,26 @@ h2 {
     --accent-dark: #0E7490;
 
     /* Backgrounds VERT/ÉMERAUDE SATURÉ - FONCÉ ET VISIBLE */
-    --bg-primary: #34D399;        /* Emerald 400 SATURÉ - fond principal */
-    --bg-secondary: #10B981;      /* Emerald 500 SATURÉ - containers */
-    --bg-tertiary: #059669;       /* Emerald 600 SATURÉ - cards */
-    --bg-surface: #6EE7B7;        /* Emerald 300 - modals */
-    --bg-input: #A7F3D0;          /* Emerald 200 - inputs */
+    --bg-primary: #34D399;
+    /* Emerald 400 SATURÉ - fond principal */
+    --bg-secondary: #10B981;
+    /* Emerald 500 SATURÉ - containers */
+    --bg-tertiary: #059669;
+    /* Emerald 600 SATURÉ - cards */
+    --bg-surface: #6EE7B7;
+    /* Emerald 300 - modals */
+    --bg-input: #A7F3D0;
+    /* Emerald 200 - inputs */
 
     /* TEXTES - Blanc sur fond vert */
-    --text-primary: #FFFFFF;      /* Blanc pur - titres */
-    --text-secondary: #ECFDF5;    /* Blanc légèrement vert - sous-titres */
-    --text-tertiary: #D1FAE5;     /* Vert très pâle - textes secondaires */
-    --text-on-light: #064E3B;     /* Texte sombre pour inputs clairs */
+    --text-primary: #FFFFFF;
+    /* Blanc pur - titres */
+    --text-secondary: #ECFDF5;
+    /* Blanc légèrement vert - sous-titres */
+    --text-tertiary: #D1FAE5;
+    /* Vert très pâle - textes secondaires */
+    --text-on-light: #064E3B;
+    /* Texte sombre pour inputs clairs */
     --border: #059669;
     /* Vert INTENSE */
     --shadow: rgba(5, 150, 105, 0.4);
@@ -214,17 +240,26 @@ h2 {
     --accent-dark: #0F766E;
 
     /* Backgrounds CYAN/BLEU SATURÉ - FONCÉ ET VISIBLE */
-    --bg-primary: #22D3EE;        /* Cyan 400 SATURÉ - fond principal */
-    --bg-secondary: #06B6D4;      /* Cyan 500 SATURÉ - containers */
-    --bg-tertiary: #0891B2;       /* Cyan 600 SATURÉ - cards */
-    --bg-surface: #67E8F9;        /* Cyan 300 - modals */
-    --bg-input: #A5F3FC;          /* Cyan 200 - inputs */
+    --bg-primary: #22D3EE;
+    /* Cyan 400 SATURÉ - fond principal */
+    --bg-secondary: #06B6D4;
+    /* Cyan 500 SATURÉ - containers */
+    --bg-tertiary: #0891B2;
+    /* Cyan 600 SATURÉ - cards */
+    --bg-surface: #67E8F9;
+    /* Cyan 300 - modals */
+    --bg-input: #A5F3FC;
+    /* Cyan 200 - inputs */
 
     /* TEXTES - Blanc sur fond cyan */
-    --text-primary: #FFFFFF;      /* Blanc pur - titres */
-    --text-secondary: #ECFEFF;    /* Blanc légèrement cyan - sous-titres */
-    --text-tertiary: #CFFAFE;     /* Cyan très pâle - textes secondaires */
-    --text-on-light: #0C3839;     /* Texte sombre pour inputs clairs */
+    --text-primary: #FFFFFF;
+    /* Blanc pur - titres */
+    --text-secondary: #ECFEFF;
+    /* Blanc légèrement cyan - sous-titres */
+    --text-tertiary: #CFFAFE;
+    /* Cyan très pâle - textes secondaires */
+    --text-on-light: #0C3839;
+    /* Texte sombre pour inputs clairs */
     --text-tertiary: #0E7490;
     --border: #0891B2;
     /* Cyan INTENSE */
@@ -267,17 +302,26 @@ h2 {
     --accent-dark: #DB2777;
 
     /* Backgrounds ROSE SATURÉ - FONCÉ ET VISIBLE */
-    --bg-primary: #F472B6;        /* Pink 400 SATURÉ - fond principal */
-    --bg-secondary: #EC4899;      /* Pink 500 SATURÉ - containers */
-    --bg-tertiary: #DB2777;       /* Pink 600 SATURÉ - cards */
-    --bg-surface: #F9A8D4;        /* Pink 300 - modals */
-    --bg-input: #FBCFE8;          /* Pink 200 - inputs */
+    --bg-primary: #F472B6;
+    /* Pink 400 SATURÉ - fond principal */
+    --bg-secondary: #EC4899;
+    /* Pink 500 SATURÉ - containers */
+    --bg-tertiary: #DB2777;
+    /* Pink 600 SATURÉ - cards */
+    --bg-surface: #F9A8D4;
+    /* Pink 300 - modals */
+    --bg-input: #FBCFE8;
+    /* Pink 200 - inputs */
 
     /* TEXTES - Blanc sur fond rose */
-    --text-primary: #FFFFFF;      /* Blanc pur - titres */
-    --text-secondary: #FDF2F8;    /* Blanc légèrement rose - sous-titres */
-    --text-tertiary: #FCE7F3;     /* Rose très pâle - textes secondaires */
-    --text-on-light: #831843;     /* Texte sombre pour inputs clairs */
+    --text-primary: #FFFFFF;
+    /* Blanc pur - titres */
+    --text-secondary: #FDF2F8;
+    /* Blanc légèrement rose - sous-titres */
+    --text-tertiary: #FCE7F3;
+    /* Rose très pâle - textes secondaires */
+    --text-on-light: #831843;
+    /* Texte sombre pour inputs clairs */
     --text-tertiary: #BE185D;
     --border: #DB2777;
     /* Rose INTENSE */
@@ -363,11 +407,16 @@ h2 {
     /* TEXTES - Blanc sur fond sombre */
     --text-primary: #F9FAFB;
     /* Blanc cassé - titres */
-    --text-primary: #F9FAFB;      /* Blanc cassé - titres */
-    --text-secondary: #E5E7EB;    /* Gris très clair - sous-titres */
-    --text-tertiary: #D1D5DB;     /* Gris clair - textes secondaires */
-    --text-on-light: #F9FAFB;     /* Blanc pour tous les textes */
-    --border: #4B5563;            /* Gris 600 */
+    --text-primary: #F9FAFB;
+    /* Blanc cassé - titres */
+    --text-secondary: #E5E7EB;
+    /* Gris très clair - sous-titres */
+    --text-tertiary: #D1D5DB;
+    /* Gris clair - textes secondaires */
+    --text-on-light: #F9FAFB;
+    /* Blanc pour tous les textes */
+    --border: #4B5563;
+    /* Gris 600 */
     --shadow: rgba(107, 114, 128, 0.4);
     --shadow-lg: rgba(107, 114, 128, 0.7);
     --glow: rgba(96, 165, 250, 0.6);
@@ -377,15 +426,22 @@ h2 {
     --gradient-bg: linear-gradient(135deg, #1F2937 0%, #374151 50%, #4B5563 100%);
 
     /* COULEURS HARMONISÉES - Gris avec accents bleus subtils */
-    --color-fleur: #6B7280;       /* Gris moyen */
-    --color-hash: #9CA3AF;        /* Gris clair */
-    --color-concentre: #4B5563;   /* Gris foncé */
-    --color-comestible: #60A5FA;  /* Bleu subtil */
-    
+    --color-fleur: #6B7280;
+    /* Gris moyen */
+    --color-hash: #9CA3AF;
+    /* Gris clair */
+    --color-concentre: #4B5563;
+    /* Gris foncé */
+    --color-comestible: #60A5FA;
+    /* Bleu subtil */
+
     /* Notes/Rating colors */
-    --color-success: #60A5FA;     /* Bleu au lieu de vert */
-    --color-warning: #9CA3AF;     /* Gris au lieu de jaune */
-    --color-danger: #6B7280;      /* Gris foncé au lieu de rouge */
+    --color-success: #60A5FA;
+    /* Bleu au lieu de vert */
+    --color-warning: #9CA3AF;
+    /* Gris au lieu de jaune */
+    --color-danger: #6B7280;
+    /* Gris foncé au lieu de rouge */
 }
 
 @keyframes slide-in-right {

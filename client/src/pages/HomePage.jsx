@@ -159,18 +159,18 @@ export default function HomePage() {
                 {/* Hero Section avec animation */}
                 <div className="text-center space-y-6 animate-fade-in">
                     <div className="relative inline-block">
-                        <h1 className="text-7xl font-black bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 bg-clip-text text-transparent drop-shadow-2xl">
+                        <h1 className="text-7xl font-black text-white drop-shadow-2xl">
                             Reviews-Maker
                         </h1>
-                        <div className="absolute -inset-4 bg-gradient-to-r from-green-400/20 via-emerald-400/20 to-teal-400/20 blur-2xl -z-10"></div>
+                        <div className="absolute -inset-4 bg-white/10 blur-3xl -z-10"></div>
                     </div>
-                    <p className="text-xl text-gray-300 font-light">
+                    <p className="text-xl text-white/80 font-light">
                         Créez et partagez vos avis sur les produits cannabis
                     </p>
                     {isAuthenticated && (
-                        <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30">
-                            <span className="text-gray-300">Bienvenue</span>
-                            <span className="font-bold text-green-400">{user?.username}</span>
+                        <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm">
+                            <span className="text-white/90">Bienvenue</span>
+                            <span className="font-bold text-white">{user?.username}</span>
                             <span className="text-2xl">👋</span>
                         </div>
                     )}
@@ -179,10 +179,10 @@ export default function HomePage() {
                 {/* Create Review Section avec cards stylisées */}
                 <div className="space-y-6">
                     <div className="text-center">
-                        <h2 className="text-4xl font-bold text-white mb-3 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+                        <h2 className="text-4xl font-bold text-white mb-3">
                             {isAuthenticated ? 'Créer une nouvelle review' : 'Connectez-vous pour créer'}
                         </h2>
-                        <p className="text-gray-400 text-lg">
+                        <p className="text-white/70 text-lg">
                             Choisissez le type de produit à reviewer
                         </p>
                     </div>
