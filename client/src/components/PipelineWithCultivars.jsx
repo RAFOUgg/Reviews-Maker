@@ -118,8 +118,8 @@ export default function PipelineWithCultivars({ value, onChange, choices = [], c
                     onClick={() => hasValidCultivars && setShowMenu(!showMenu)}
                     disabled={!hasValidCultivars}
                     className={`w-full py-3 border-2 border-dashed rounded-xl transition-colors flex items-center justify-center gap-2 ${hasValidCultivars
-                            ? 'border-gray-600 hover:border-green-500 text-gray-400 hover:text-green-400 cursor-pointer'
-                            : 'border-gray-700 text-gray-600 cursor-not-allowed opacity-50'
+                        ? 'border-gray-600 hover:border-green-500 text-gray-400 hover:text-green-400 cursor-pointer'
+                        : 'border-gray-700 text-gray-600 cursor-not-allowed opacity-50'
                         }`}
                 >
                     <span className="text-2xl">+</span>

@@ -10,10 +10,11 @@ import StatsPage from './pages/StatsPage'
 import SettingsPage from './pages/SettingsPage'
 import AuthCallback from './components/AuthCallback'
 import ToastContainer from './components/ToastContainer'
+import ErrorBoundary from './components/ErrorBoundary'
 import { useStore } from './store/useStore'
 
 function App() {
-    const setUser = useStore((state) => state.setUser)
+    const checkAuth = useStore((state) => state.checkAuth)
 
     // ✅ Appliquer le thème au démarrage
     useEffect(() => {
@@ -81,43 +82,28 @@ function App() {
 
     // ✅ Vérifier la session au démarrage
     useEffect(() => {
-        const checkSession = async () => {
-            try {
-                const response = await fetch('/api/auth/me', {
-                    credentials: 'include' // ✅ Important pour envoyer les cookies
-                })
-
-                if (response.ok) {
-                    const userData = await response.json()
-                    setUser(userData)
-                    console.log('✅ Session restaurée:', userData.username)
-                } else {
-                    console.log('No session found - user not authenticated')
-                }
-            } catch (error) {
-                console.error('Session check failed:', error)
-            }
-        }
-
-        checkSession()
-    }, [setUser])
+        checkAuth()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     return (
-        <div className="min-h-screen bg-dark-bg text-dark-text">
-            <ToastContainer />
-            <Routes>
-                <Route path="/" element={<Layout />}>
-                    <Route index element={<HomePage />} />
-                    <Route path="/review/:id" element={<ReviewDetailPage />} />
-                    <Route path="/create" element={<CreateReviewPage />} />
-                    <Route path="/edit/:id" element={<EditReviewPage />} />
-                    <Route path="/library" element={<LibraryPage />} />
-                    <Route path="/stats" element={<StatsPage />} />
-                    <Route path="/settings" element={<SettingsPage />} />
-                </Route>
-                <Route path="/auth/callback" element={<AuthCallback />} />
-            </Routes>
-        </div>
+        <ErrorBoundary>
+            <div className="min-h-screen bg-dark-bg text-dark-text">
+                <ToastContainer />
+                <Routes>
+                    <Route path="/" element={<Layout />}>
+                        <Route index element={<HomePage />} />
+                        <Route path="/review/:id" element={<ReviewDetailPage />} />
+                        <Route path="/create" element={<CreateReviewPage />} />
+                        <Route path="/edit/:id" element={<EditReviewPage />} />
+                        <Route path="/library" element={<LibraryPage />} />
+                        <Route path="/stats" element={<StatsPage />} />
+                        <Route path="/settings" element={<SettingsPage />} />
+                    </Route>
+                    <Route path="/auth/callback" element={<AuthCallback />} />
+                </Routes>
+            </div>
+        </ErrorBoundary>
     )
 }
 

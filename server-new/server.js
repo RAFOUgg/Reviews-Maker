@@ -82,11 +82,32 @@ app.get('/api/health', (req, res) => {
     })
 })
 
-// Error handling
+// 404 handler - must be after all routes
+app.use((req, res) => {
+    res.status(404).json({
+        error: 'not_found',
+        message: `Route ${req.method} ${req.path} not found`
+    })
+})
+
+// Error handling middleware - must be last
 app.use((err, req, res, next) => {
-    console.error('Error:', err)
-    res.status(err.status || 500).json({
-        error: err.message || 'Internal Server Error'
+    // Log error for debugging
+    console.error('Error occurred:', {
+        message: err.message,
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+        url: req.url,
+        method: req.method
+    })
+
+    // Determine status code
+    const statusCode = err.statusCode || err.status || 500
+
+    // Send error response
+    res.status(statusCode).json({
+        error: err.code || 'internal_error',
+        message: err.message || 'Internal Server Error',
+        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
     })
 })
 

@@ -6,13 +6,14 @@ import WheelSelector from '../components/WheelSelector';
 import EffectSelector from '../components/EffectSelector';
 import CultivarList from '../components/CultivarList';
 import PipelineWithCultivars from '../components/PipelineWithCultivars';
-import GlobalRating from '../components/GlobalRating';
+import SectionNavigator from '../components/SectionNavigator';
+import CategoryRatingSummary from '../components/CategoryRatingSummary';
 import { productStructures } from '../utils/productStructures';
 
 export default function CreateReviewPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const { isAuthenticated } = useStore();
+    const { isAuthenticated, createReview } = useStore();
     const toast = useToast();
 
     const typeFromUrl = searchParams.get('type') || 'Fleur';
@@ -71,11 +72,9 @@ export default function CreateReviewPage() {
             });
             submitData.append('isPublic', true);
             images.forEach((image) => { submitData.append('images', image); });
-            const response = await fetch('/api/reviews', { method: 'POST', credentials: 'include', body: submitData });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Erreur lors de la création');
-            }
+
+            await createReview(submitData);
+
             toast.remove(loadingToast);
             toast.success('Review créée avec succès ! ✅');
             setTimeout(() => navigate('/'), 1000);
@@ -156,38 +155,14 @@ export default function CreateReviewPage() {
                         <div className="w-16"></div>
                     </div>
                     {/* Résumé des notes par catégorie */}
-                    <div className="flex items-center justify-center gap-4 text-sm">
-                        <span className="flex items-center gap-1.5">
-                            <span className="opacity-70">👁️</span>
-                            <span className="font-bold text-white glow-text-subtle">{categoryRatings.visual.toFixed(1)}</span>
-                        </span>
-                        <span className="text-white opacity-30">•</span>
-                        <span className="flex items-center gap-1.5">
-                            <span className="opacity-70">👃</span>
-                            <span className="font-bold text-white glow-text-subtle">{categoryRatings.smell.toFixed(1)}</span>
-                        </span>
-                        <span className="text-white opacity-30">•</span>
-                        <span className="flex items-center gap-1.5">
-                            <span className="opacity-70">👅</span>
-                            <span className="font-bold text-white glow-text-subtle">{categoryRatings.taste.toFixed(1)}</span>
-                        </span>
-                        <span className="text-white opacity-30">•</span>
-                        <span className="flex items-center gap-1.5">
-                            <span className="opacity-70">⚡</span>
-                            <span className="font-bold text-white glow-text-subtle">{categoryRatings.effects.toFixed(1)}</span>
-                        </span>
-                        <span className="text-white opacity-30">│</span>
-                        <span className="flex items-center gap-1.5">
-                            <span className="font-semibold text-white opacity-70">Global</span>
-                            <span className="font-bold text-2xl text-white glow-text">{categoryRatings.overall.toFixed(1)}</span>
-                            <span className="text-xs text-white opacity-50">/10</span>
-                        </span>
-                    </div>
+                    <CategoryRatingSummary ratings={categoryRatings} />
                 </div>
             </div>
-            <div className="sticky top-[88px] z-40 bg-transparent backdrop-blur-xl border-b border-white/10 glow-border overflow-x-auto">
-                <div className="max-w-4xl mx-auto px-4"><div className="flex gap-2 py-3">{sections.map((section, idx) => <button key={idx} onClick={() => goToSection(idx)} className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${idx === currentSectionIndex ? 'bg-transparent text-white glow-text border border-white/30 glow-container-subtle' : 'bg-transparent text-white/60 hover:text-white border border-white/10 hover:border-white/20'}`}>{section.title}</button>)}</div></div>
-            </div>
+            <SectionNavigator
+                sections={sections}
+                currentIndex={currentSectionIndex}
+                onSectionClick={goToSection}
+            />
             {error && <div className="max-w-4xl mx-auto px-4 mt-4"><div className="p-4 bg-red-500/10 border border-red-500/50 rounded-xl text-red-400">{error}</div></div>}
             <div className="max-w-4xl mx-auto px-4 py-8">
                 <div className="bg-transparent backdrop-blur-xl rounded-2xl p-8 border border-white/10 glow-container">
