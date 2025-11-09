@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Démo - Système de Filtrage Avancé</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .glow-text-subtle {
+            text-shadow: 0 0 10px rgba(74, 222, 128, 0.3);
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white min-h-screen">
+    <div class="container mx-auto px-4 py-12">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1
+                class="text-5xl font-bold mb-4 bg-gradient-to-r from-green-400 to-emerald-600 bg-clip-text text-transparent">
+                🔍 Système de Filtrage Avancé
+            </h1>
+            <p class="text-xl text-gray-400">
+                Démonstration du nouveau système de recherche et filtrage intelligent
+            </p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+            <div class="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-6 border border-green-500/30">
+                <div class="text-green-400 text-3xl mb-2">🌱</div>
+                <div class="text-4xl font-bold text-white mb-1">16+</div>
+                <div class="text-gray-400">Types de culture</div>
+            </div>
+            <div class="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-6 border border-purple-500/30">
+                <div class="text-purple-400 text-3xl mb-2">⚗️</div>
+                <div class="text-4xl font-bold text-white mb-1">26+</div>
+                <div class="text-gray-400">Méthodes d'extraction</div>
+            </div>
+            <div class="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-6 border border-orange-500/30">
+                <div class="text-orange-400 text-3xl mb-2">🍰</div>
+                <div class="text-4xl font-bold text-white mb-1">108+</div>
+                <div class="text-gray-400">Ingrédients cuisine</div>
+            </div>
+            <div class="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-6 border border-blue-500/30">
+                <div class="text-blue-400 text-3xl mb-2">🎯</div>
+                <div class="text-4xl font-bold text-white mb-1">195+</div>
+                <div class="text-gray-400">Options totales</div>
+            </div>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <!-- Recherche Intelligente -->
+            <div class="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-8 border border-gray-700">
+                <h2 class="text-2xl font-bold mb-4 flex items-center gap-3">
+                    <span class="text-3xl">🔍</span>
+                    Recherche Intelligente
+                </h2>
+                <ul class="space-y-3 text-gray-300">
+                    <li class="flex items-start gap-3">
+                        <span class="text-green-400 mt-1">✓</span>
+                        <span><strong>Autocomplétion</strong> en temps réel (dès 2 caractères)</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-green-400 mt-1">✓</span>
+                        <span><strong>Index inversé</strong> pour performance optimale</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-green-400 mt-1">✓</span>
+                        <span><strong>Navigation clavier</strong> (↑↓ Enter Escape)</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-green-400 mt-1">✓</span>
+                        <span><strong>Recherche multi-champs</strong> : nom, cultivar, breeder, ingrédients...</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-green-400 mt-1">✓</span>
+                        <span><strong>Suggestions contextuelles</strong> basées sur votre saisie</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Filtres Contextuels -->
+            <div class="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-8 border border-gray-700">
+                <h2 class="text-2xl font-bold mb-4 flex items-center gap-3">
+                    <span class="text-3xl">🎛️</span>
+                    Filtres Contextuels
+                </h2>
+                <ul class="space-y-3 text-gray-300">
+                    <li class="flex items-start gap-3">
+                        <span class="text-green-400 mt-1">✓</span>
+                        <span><strong>Filtres dynamiques</strong> selon le type de produit</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-green-400 mt-1">✓</span>
+                        <span><strong>Culture & Génétique</strong> pour les Fleurs</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-green-400 mt-1">✓</span>
+                        <span><strong>Extraction & Texture</strong> pour Hash/Concentrés</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-green-400 mt-1">✓</span>
+                        <span><strong>Ingrédients</strong> pour les Comestibles</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-green-400 mt-1">✓</span>
+                        <span><strong>Compteur actif</strong> pour feedback visuel</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Catégories de Filtres -->
+        <div class="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-8 border border-gray-700 mb-12">
+            <h2 class="text-3xl font-bold mb-8 text-center">🎯 Catégories de Filtres</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Fleur -->
+                <div
+                    class="bg-gradient-to-br from-green-900/50 to-green-800/30 rounded-xl p-6 border border-green-500/30">
+                    <div class="text-4xl mb-3">🌸</div>
+                    <h3 class="text-xl font-bold mb-3 text-green-400">Fleur</h3>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li>• Type de culture</li>
+                        <li>• Substrat/Système</li>
+                        <li>• Lignée (Landrace)</li>
+                        <li>• Breeder</li>
+                        <li>• Durée effets</li>
+                    </ul>
+                </div>
+
+                <!-- Hash -->
+                <div class="bg-gradient-to-br from-blue-900/50 to-blue-800/30 rounded-xl p-6 border border-blue-500/30">
+                    <div class="text-4xl mb-3">🧊</div>
+                    <h3 class="text-xl font-bold mb-3 text-blue-400">Hash</h3>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li>• Séparation physique</li>
+                        <li>• Texture (7 types)</li>
+                        <li>• Méthode extraction</li>
+                        <li>• Qualité/Grade</li>
+                        <li>• Durée effets</li>
+                    </ul>
+                </div>
+
+                <!-- Concentré -->
+                <div
+                    class="bg-gradient-to-br from-purple-900/50 to-purple-800/30 rounded-xl p-6 border border-purple-500/30">
+                    <div class="text-4xl mb-3">💎</div>
+                    <h3 class="text-xl font-bold mb-3 text-purple-400">Concentré</h3>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li>• Solvant utilisé</li>
+                        <li>• Sans solvant</li>
+                        <li>• Texture (9 types)</li>
+                        <li>• Purification</li>
+                        <li>• Durée effets</li>
+                    </ul>
+                </div>
+
+                <!-- Comestible -->
+                <div
+                    class="bg-gradient-to-br from-orange-900/50 to-orange-800/30 rounded-xl p-6 border border-orange-500/30">
+                    <div class="text-4xl mb-3">🍪</div>
+                    <h3 class="text-xl font-bold mb-3 text-orange-400">Comestible</h3>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li>• 108 ingrédients</li>
+                        <li>• Type de recette</li>
+                        <li>• Matières grasses</li>
+                        <li>• Temps de préparation</li>
+                        <li>• Durée effets</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exemples de Recherche -->
+        <div class="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-8 border border-gray-700 mb-12">
+            <h2 class="text-3xl font-bold mb-6 text-center">💡 Exemples de Recherche</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-semibold mb-3 text-green-400">Recherches Simples</h3>
+                    <div class="space-y-2 text-gray-300">
+                        <div class="bg-gray-900/50 rounded-lg p-3">
+                            <code class="text-green-300">"skunk"</code> → Toutes les genetics Skunk
+                        </div>
+                        <div class="bg-gray-900/50 rounded-lg p-3">
+                            <code class="text-green-300">"indoor"</code> → Cultures en intérieur
+                        </div>
+                        <div class="bg-gray-900/50 rounded-lg p-3">
+                            <code class="text-green-300">"rosin"</code> → Extraits Rosin
+                        </div>
+                        <div class="bg-gray-900/50 rounded-lg p-3">
+                            <code class="text-green-300">"chocolat"</code> → Comestibles au chocolat
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold mb-3 text-purple-400">Recherches Avancées</h3>
+                    <div class="space-y-2 text-gray-300">
+                        <div class="bg-gray-900/50 rounded-lg p-3">
+                            <code class="text-purple-300">"og kush indoor"</code> → Combinaison
+                        </div>
+                        <div class="bg-gray-900/50 rounded-lg p-3">
+                            <code class="text-purple-300">"bho shatter"</code> → Extraction + texture
+                        </div>
+                        <div class="bg-gray-900/50 rounded-lg p-3">
+                            <code class="text-purple-300">"living soil"</code> → Type de culture
+                        </div>
+                        <div class="bg-gray-900/50 rounded-lg p-3">
+                            <code class="text-purple-300">"beurre clarifié"</code> → Ingrédient précis
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance -->
+        <div
+            class="bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-2xl p-8 border border-green-500/30 mb-12">
+            <h2 class="text-3xl font-bold mb-6 text-center flex items-center justify-center gap-3">
+                <span>⚡</span>
+                Performance Optimale
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                <div>
+                    <div class="text-5xl font-bold text-green-400 mb-2">80%</div>
+                    <div class="text-gray-300">Plus rapide qu'avant</div>
+                    <div class="text-sm text-gray-500 mt-1">Grâce à l'index inversé</div>
+                </div>
+                <div>
+                    <div class="text-5xl font-bold text-green-400 mb-2">&lt;50ms</div>
+                    <div class="text-gray-300">Temps de recherche</div>
+                    <div class="text-sm text-gray-500 mt-1">Autocomplétion instantanée</div>
+                </div>
+                <div>
+                    <div class="text-5xl font-bold text-green-400 mb-2">15+</div>
+                    <div class="text-gray-300">Champs indexés</div>
+                    <div class="text-sm text-gray-500 mt-1">Recherche multi-critères</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technologies -->
+        <div class="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-8 border border-gray-700">
+            <h2 class="text-3xl font-bold mb-6 text-center">🛠️ Technologies Utilisées</h2>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div class="bg-gray-900/50 rounded-lg p-4">
+                    <div class="text-3xl mb-2">⚛️</div>
+                    <div class="font-semibold">React Hooks</div>
+                    <div class="text-sm text-gray-400">useState, useMemo</div>
+                </div>
+                <div class="bg-gray-900/50 rounded-lg p-4">
+                    <div class="text-3xl mb-2">🗂️</div>
+                    <div class="font-semibold">Index Inversé</div>
+                    <div class="text-sm text-gray-400">Map & Set</div>
+                </div>
+                <div class="bg-gray-900/50 rounded-lg p-4">
+                    <div class="text-3xl mb-2">🎨</div>
+                    <div class="font-semibold">TailwindCSS</div>
+                    <div class="text-sm text-gray-400">Styling moderne</div>
+                </div>
+                <div class="bg-gray-900/50 rounded-lg p-4">
+                    <div class="text-3xl mb-2">📦</div>
+                    <div class="font-semibold">PropTypes</div>
+                    <div class="text-sm text-gray-400">Type validation</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-12 text-gray-500">
+            <p class="text-sm">
+                🌿 Reviews Maker - Système de Filtrage Avancé v1.0.0
+            </p>
+            <p class="text-xs mt-2">
+                Créé avec ❤️ pour la communauté cannabis
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import { parseImages, getMainImageUrl } from '../utils/imageUtils'
 import FilterBar from '../components/FilterBar'
+import AuthorStatsModal from '../components/AuthorStatsModal'
 
 export default function HomePage() {
     const navigate = useNavigate()
@@ -18,6 +19,8 @@ export default function HomePage() {
             const response = await fetch('/api/reviews')
             if (response.ok) {
                 const data = await response.json()
+                console.log('🔍 DEBUG - Première review:', data[0])
+                console.log('🔍 DEBUG - Author data:', data[0]?.author)
                 setReviews(data)
                 setFilteredReviews(data)
             }
@@ -242,8 +245,59 @@ export default function HomePage() {
                                                 }}
                                                 className="flex items-center gap-2 text-sm text-gray-400 hover:text-green-400 transition-all group/author"
                                             >
-                                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-xs font-bold group-hover/author:scale-110 transition-transform">
-                                                    {(review.ownerName || review.author?.username || 'A')[0].toUpperCase()}
+                                                <div className="relative w-6 h-6 flex-shrink-0">
+                                                    {(() => {
+                                                        // Déterminer l'URL de l'avatar
+                                                        const avatarUrl = typeof review.author === 'string'
+                                                            ? review.author
+                                                            : review.author?.avatar;
+                                                        const username = typeof review.author === 'object'
+                                                            ? review.author?.username
+                                                            : review.ownerName;
+
+                                                        if (avatarUrl) {
+                                                            return (
+                                                                <>
+                                                                    <img
+                                                                        src={avatarUrl}
+                                                                        alt={username || 'Avatar'}
+                                                                        className="w-6 h-6 rounded-full object-cover border-2 group-hover/author:scale-110 transition-all shadow-sm"
+                                                                        style={{
+                                                                            borderColor: 'var(--primary)'
+                                                                        }}
+                                                                        onLoad={() => {
+                                                                            console.log('✅ Avatar chargé:', review.holderName, avatarUrl)
+                                                                        }}
+                                                                        onError={(e) => {
+                                                                            console.error('❌ Erreur chargement avatar:', review.holderName, avatarUrl)
+                                                                            e.target.style.display = 'none'
+                                                                            e.target.nextSibling.style.display = 'flex'
+                                                                        }}
+                                                                    />
+                                                                    <div
+                                                                        className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold group-hover/author:scale-110 transition-transform shadow-sm"
+                                                                        style={{
+                                                                            background: 'var(--gradient-primary)',
+                                                                            display: 'none'
+                                                                        }}
+                                                                    >
+                                                                        {(username || 'A')[0].toUpperCase()}
+                                                                    </div>
+                                                                </>
+                                                            );
+                                                        }
+
+                                                        return (
+                                                            <div
+                                                                className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold group-hover/author:scale-110 transition-transform shadow-sm"
+                                                                style={{
+                                                                    background: 'var(--gradient-primary)'
+                                                                }}
+                                                            >
+                                                                {(username || 'A')[0].toUpperCase()}
+                                                            </div>
+                                                        );
+                                                    })()}
                                                 </div>
                                                 <span className="font-semibold group-hover/author:underline">
                                                     {review.ownerName || review.author?.username || 'Anonyme'}
@@ -297,106 +351,12 @@ export default function HomePage() {
                             </div>
                         )}
 
-                        {/* Author Stats Modal amélioré */}
-                        {selectedAuthor && (
-                            <div
-                                className="fixed inset-0 bg-black/80 backdrop-blur-lg z-50 flex items-center justify-center p-4 animate-fade-in"
-                                onClick={() => setSelectedAuthor(null)}
-                            >
-                                <div
-                                    className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl p-8 max-w-3xl w-full border border-green-500/30 shadow-2xl shadow-green-500/20 transform scale-100 animate-scale-in"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <div className="flex justify-between items-start mb-8">
-                                        <h3 className="text-3xl font-black text-white bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
-                                            📊 Statistiques Publiques
-                                        </h3>
-                                        <button
-                                            onClick={() => setSelectedAuthor(null)}
-                                            className="p-2 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all"
-                                        >
-                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    </div>
-
-                                    {/* Author Info avec avatar stylisé */}
-                                    <div className="bg-gradient-to-r from-gray-900 to-black rounded-2xl p-6 mb-6 border border-gray-700">
-                                        <div className="flex items-center gap-6 mb-6">
-                                            <div className="relative">
-                                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-4xl font-black text-white shadow-xl">
-                                                    {(reviews.find(r => r.ownerId === selectedAuthor || r.authorId === selectedAuthor)?.ownerName ||
-                                                        reviews.find(r => r.ownerId === selectedAuthor || r.authorId === selectedAuthor)?.author?.username ||
-                                                        'A')[0].toUpperCase()}
-                                                </div>
-                                                <div className="absolute -inset-2 bg-gradient-to-r from-green-500/50 to-emerald-600/50 rounded-full blur-xl -z-10"></div>
-                                            </div>
-                                            <div>
-                                                <h4 className="text-2xl font-black text-white">
-                                                    {reviews.find(r => r.ownerId === selectedAuthor || r.authorId === selectedAuthor)?.ownerName ||
-                                                        reviews.find(r => r.ownerId === selectedAuthor || r.authorId === selectedAuthor)?.author?.username ||
-                                                        'Anonyme'}
-                                                </h4>
-                                                <p className="text-green-400 font-semibold">🎖️ Membre Actif</p>
-                                            </div>
-                                        </div>
-
-                                        {/* Stats Grid avec glassmorphism */}
-                                        <div className="grid grid-cols-3 gap-4">
-                                            <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl p-6 text-center border border-green-500/30 hover:scale-105 transition-transform">
-                                                <p className="text-4xl font-black text-green-400 mb-2">
-                                                    {reviews.filter(r => r.ownerId === selectedAuthor || r.authorId === selectedAuthor).length}
-                                                </p>
-                                                <p className="text-sm text-gray-400 font-semibold">📝 Reviews</p>
-                                            </div>
-                                            <div className="bg-gradient-to-br from-purple-500/10 to-violet-500/10 rounded-xl p-6 text-center border border-purple-500/30 hover:scale-105 transition-transform">
-                                                <p className="text-4xl font-black text-purple-400 mb-2">
-                                                    {(reviews
-                                                        .filter(r => r.ownerId === selectedAuthor || r.authorId === selectedAuthor)
-                                                        .reduce((acc, r) => acc + (r.overallRating || r.note || 0), 0) /
-                                                        reviews.filter(r => r.ownerId === selectedAuthor || r.authorId === selectedAuthor).length
-                                                    ).toFixed(1)}
-                                                </p>
-                                                <p className="text-sm text-gray-400 font-semibold">⭐ Note moy.</p>
-                                            </div>
-                                            <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl p-6 text-center border border-blue-500/30 hover:scale-105 transition-transform">
-                                                <p className="text-4xl font-black text-blue-400 mb-2">
-                                                    {reviews.filter(r => r.ownerId === selectedAuthor || r.authorId === selectedAuthor).reduce((acc, r) => acc + (r.views || 0), 0)}
-                                                </p>
-                                                <p className="text-sm text-gray-400 font-semibold">👁️ Vues</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Recent Reviews */}
-                                    <div>
-                                        <h5 className="text-xl font-bold text-white mb-4">🔥 Reviews récentes</h5>
-                                        <div className="space-y-3">
-                                            {reviews
-                                                .filter(r => r.ownerId === selectedAuthor || r.authorId === selectedAuthor)
-                                                .slice(0, 3)
-                                                .map(review => (
-                                                    <button
-                                                        key={review.id}
-                                                        className="w-full bg-gray-900 rounded-xl p-4 flex justify-between items-center hover:bg-gray-800 transition-all border border-gray-700 hover:border-green-500 group"
-                                                        onClick={() => {
-                                                            setSelectedAuthor(null)
-                                                            navigate(`/review/${review.id}`)
-                                                        }}
-                                                    >
-                                                        <div className="text-left">
-                                                            <p className="text-white font-bold group-hover:text-green-400 transition-colors">{review.holderName}</p>
-                                                            <p className="text-xs text-gray-400">{review.type}</p>
-                                                        </div>
-                                                        <span className="text-2xl font-black text-green-400">{review.overallRating || review.note}/10</span>
-                                                    </button>
-                                                ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        {/* Author Stats Modal */}
+                        <AuthorStatsModal
+                            authorId={selectedAuthor}
+                            reviews={reviews}
+                            onClose={() => setSelectedAuthor(null)}
+                        />
                     </>
                 )}
             </div>

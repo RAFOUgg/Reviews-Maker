@@ -6,6 +6,10 @@ import WheelSelector from '../components/WheelSelector';
 import EffectSelector from '../components/EffectSelector';
 import CultivarList from '../components/CultivarList';
 import PipelineWithCultivars from '../components/PipelineWithCultivars';
+import PurificationPipeline from '../components/PurificationPipeline';
+import FertilizationPipeline from '../components/FertilizationPipeline';
+import SubstratMixer from '../components/SubstratMixer';
+import RecipeSection from '../components/RecipeSection';
 import SectionNavigator from '../components/SectionNavigator';
 import CategoryRatingSummary from '../components/CategoryRatingSummary';
 import { productStructures } from '../utils/productStructures';
@@ -89,7 +93,15 @@ export default function CreateReviewPage() {
     };
 
     const renderField = (field) => {
-        const value = formData[field.key] || (field.type === 'slider' ? (field.default || 0) : '');
+        // Valeur par défaut en fonction du type
+        const getDefaultValue = () => {
+            if (formData[field.key] !== undefined) return formData[field.key];
+            if (field.type === 'slider') return field.default || 0;
+            if (['wheel', 'effects', 'cultivar-list', 'pipeline-with-cultivars', 'purification-pipeline', 'fertilization-pipeline', 'substrat-mixer', 'multiselect'].includes(field.type)) return [];
+            if (field.type === 'recipe') return {};
+            return '';
+        };
+        const value = getDefaultValue();
         switch (field.type) {
             case 'text': return <input type="text" placeholder={`Ex: ${field.label}`} value={value} onChange={(e) => handleInputChange(field.key, e.target.value)} className="w-full px-4 py-3 bg-transparent border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:border-white/40 glow-container-subtle" required={field.required} />;
             case 'textarea': return <textarea value={value} onChange={(e) => handleInputChange(field.key, e.target.value)} rows={field.rows || 3} placeholder={field.label} className="w-full px-4 py-3 bg-transparent border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:border-white/40 resize-none glow-container-subtle" />;
@@ -101,10 +113,16 @@ export default function CreateReviewPage() {
                 // Ne pas afficher "Purge à vide" si pas de solvants
                 if (field.key === 'purgevide' && !hasSolvents) return null;
                 return <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={!!value} onChange={(e) => handleInputChange(field.key, e.target.checked)} className="w-5 h-5 rounded border-white/20 bg-transparent focus:ring-offset-0" style={{ accentColor: 'var(--primary)' }} /><span className="text-white">{field.label}</span></label>;
-            case 'wheel': return <WheelSelector value={value} onChange={(v) => handleInputChange(field.key, v)} type={field.key} maxSelections={5} />;
+            case 'wheel': return <WheelSelector value={value} onChange={(v) => handleInputChange(field.key, v)} type={field.key} maxSelections={field.maxSelections || 5} />;
             case 'effects': return <EffectSelector value={value} onChange={(v) => handleInputChange(field.key, v)} maxSelections={8} />;
             case 'cultivar-list': return <CultivarList value={value} onChange={(v) => handleInputChange(field.key, v)} matiereChoices={field.matiereChoices || []} showBreeder={field.showBreeder} />;
             case 'pipeline-with-cultivars': const cultivarsListData = formData[field.cultivarsSource] || []; return <PipelineWithCultivars value={value} onChange={(v) => handleInputChange(field.key, v)} choices={field.choices || []} cultivarsList={cultivarsListData} onSolventDetected={setHasSolvents} />;
+            case 'purification-pipeline':
+                const extractionPipelineData = formData[field.extractionSource] || formData['pipelineSeparation'] || formData['pipelineExtraction'] || [];
+                return <PurificationPipeline value={value} onChange={(v) => handleInputChange(field.key, v)} availableMethods={field.availableMethods || []} extractionPipeline={extractionPipelineData} />;
+            case 'fertilization-pipeline': return <FertilizationPipeline value={value} onChange={(v) => handleInputChange(field.key, v)} availableFertilizers={field.availableFertilizers || []} />;
+            case 'substrat-mixer': return <SubstratMixer value={value} onChange={(v) => handleInputChange(field.key, v)} availableSubstrats={field.availableSubstrats || []} />;
+            case 'recipe': return <RecipeSection value={value} onChange={(v) => handleInputChange(field.key, v)} />;
             case 'images': return <div><input type="file" accept="image/*,video/*" multiple onChange={handleImageChange} className="hidden" id="imageUpload" />{images.length === 0 ? <label htmlFor="imageUpload" className="flex flex-col items-center justify-center h-56 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-white/40 transition-all bg-transparent glow-container-subtle"><div className="text-6xl mb-3">📸</div><span className="text-lg text-white">Cliquez pour ajouter des photos</span><span className="text-sm text-white/50 mt-1">1 à 4 fichiers</span></label> : <div className="space-y-4"><div className="grid grid-cols-2 gap-4">{images.map((img, idx) => <div key={idx} className="relative group aspect-square"><img src={URL.createObjectURL(img)} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover rounded-xl border-2 border-white/20 glow-container" /><button type="button" onClick={() => removeImage(idx)} className="absolute top-3 right-3 bg-red-600/80 hover:bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg">×</button></div>)}</div>{images.length < 4 && <label htmlFor="imageUpload" className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-white/40 transition-colors text-white/70 hover:text-white"><span className="text-2xl">+</span><span>Ajouter ({images.length}/4)</span></label>}</div>}</div>;
             default: return null;
         }
@@ -113,10 +131,13 @@ export default function CreateReviewPage() {
     // Calculer les notes par catégorie
     const calculateCategoryRatings = () => {
         const categoryFieldMap = {
-            visual: ['densite', 'trichomes', 'malleabilite', 'transparence'],
-            smell: [],
-            taste: [],
-            effects: []
+            visual: ['pistils', 'moisissure', 'graines', 'densite', 'trichomes', 'malleabilite', 'transparence'],
+            touche: ['toucheDensite', 'toucheFriabilite', 'toucheElasticite', 'toucheHumidite',
+                'toucheMalleabilite', 'toucheCollant', 'toucheFragilite',
+                'toucheViscosite', 'toucheStabilite'],
+            smell: ['aromasPiquant', 'aromasIntensity'],
+            taste: ['tastesIntensity'],
+            effects: ['effectsIntensity']
         };
 
         const ratings = {};
@@ -147,7 +168,7 @@ export default function CreateReviewPage() {
 
     return (
         <div className="min-h-screen">
-            <div className="sticky top-0 z-50 bg-transparent backdrop-blur-xl border-b border-white/10 glow-border">
+            <div className="sticky top-[73px] z-40 bg-[rgba(var(--color-primary),0.95)] backdrop-blur-xl border-b border-[rgba(var(--color-primary),0.3)]">
                 <div className="max-w-4xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between mb-3">
                         <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition-colors">← Retour</button>
@@ -157,12 +178,13 @@ export default function CreateReviewPage() {
                     {/* Résumé des notes par catégorie */}
                     <CategoryRatingSummary ratings={categoryRatings} />
                 </div>
+                {/* Barre de navigation des sections */}
+                <SectionNavigator
+                    sections={sections}
+                    currentIndex={currentSectionIndex}
+                    onSectionClick={goToSection}
+                />
             </div>
-            <SectionNavigator
-                sections={sections}
-                currentIndex={currentSectionIndex}
-                onSectionClick={goToSection}
-            />
             {error && <div className="max-w-4xl mx-auto px-4 mt-4"><div className="p-4 bg-red-500/10 border border-red-500/50 rounded-xl text-red-400">{error}</div></div>}
             <div className="max-w-4xl mx-auto px-4 py-8">
                 <div className="bg-transparent backdrop-blur-xl rounded-2xl p-8 border border-white/10 glow-container">

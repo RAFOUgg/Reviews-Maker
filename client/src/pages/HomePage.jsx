@@ -79,10 +79,10 @@ export default function HomePage() {
                 {/* Divider */}
                 <div className="relative py-8">
                     <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gradient-to-r from-transparent via-green-500/30 to-transparent"></div>
+                        <div className="w-full border-t border-[rgba(var(--color-accent),0.3)]"></div>
                     </div>
                     <div className="relative flex justify-center">
-                        <span className="bg-gray-900 px-6 py-2 text-green-400 font-semibold text-lg rounded-full border border-green-500/30">
+                        <span className="bg-[rgba(var(--color-primary),0.3)] backdrop-blur-md px-6 py-2 text-[rgb(var(--color-accent))] font-semibold text-lg rounded-full border border-[rgba(var(--color-accent),0.5)] shadow-[0_0_20px_rgba(var(--color-accent),0.3)]">
                             🎯 Galerie Publique
                         </span>
                     </div>

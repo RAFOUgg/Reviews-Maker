@@ -37,7 +37,7 @@ export default function StatsPage() {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[rgb(var(--color-primary))]"></div>
             </div>
         )
     }
@@ -45,7 +45,7 @@ export default function StatsPage() {
     if (!stats) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <p className="text-gray-600 dark:text-gray-400">Erreur lors du chargement des statistiques</p>
+                <p className="text-[rgb(var(--text-secondary))] opacity-80">Erreur lors du chargement des statistiques</p>
             </div>
         )
     }
@@ -104,21 +104,21 @@ export default function StatsPage() {
     const topCultivars = getTopCultivars()
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+        <div className="min-h-screen py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                    <h1 className="text-3xl font-bold mb-2">
                         📊 Mes statistiques
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400">
+                    <p className="text-[rgb(var(--text-secondary))] opacity-90">
                         Analyse détaillée de vos reviews et préférences
                     </p>
                 </div>
 
                 {/* Overview Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+                    <div className="bg-gradient-to-br from-[rgb(var(--color-primary))] to-[rgba(var(--color-primary),0.7)] rounded-xl p-6 text-white shadow-lg shadow-[rgba(var(--color-primary),0.3)]">
                         <div className="flex items-center justify-between mb-2">
                             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -128,7 +128,7 @@ export default function StatsPage() {
                         <p className="text-4xl font-bold">{stats.totalReviews}</p>
                     </div>
 
-                    <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-6 text-white shadow-lg">
+                    <div className="bg-gradient-to-br from-[rgb(var(--color-accent))] to-[rgba(var(--color-accent),0.7)] rounded-xl p-6 text-white shadow-lg shadow-[rgba(var(--color-accent),0.3)]">
                         <div className="flex items-center justify-between mb-2">
                             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
@@ -138,7 +138,7 @@ export default function StatsPage() {
                         <p className="text-4xl font-bold">{stats.avgRating.toFixed(1)}<span className="text-2xl">/10</span></p>
                     </div>
 
-                    <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl p-6 text-white shadow-lg">
+                    <div className="bg-gradient-to-br from-[rgba(var(--color-primary),0.9)] to-[rgb(var(--color-accent))] rounded-xl p-6 text-white shadow-lg shadow-[rgba(var(--color-accent),0.3)]">
                         <div className="flex items-center justify-between mb-2">
                             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
@@ -150,7 +150,7 @@ export default function StatsPage() {
                         </p>
                     </div>
 
-                    <div className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl p-6 text-white shadow-lg">
+                    <div className="bg-gradient-to-br from-[rgb(var(--color-accent))] to-[rgba(var(--color-accent),0.6)] rounded-xl p-6 text-white shadow-lg shadow-[rgba(var(--color-accent),0.3)]">
                         <div className="flex items-center justify-between mb-2">
                             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -164,25 +164,25 @@ export default function StatsPage() {
                 </div>
 
                 {/* Category Ratings */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Notes moyennes par catégorie</h2>
+                <div className="bg-[rgba(var(--color-primary),0.05)] backdrop-blur-sm rounded-xl p-6 shadow-sm border border-[rgba(var(--color-primary),0.2)] mb-8">
+                    <h2 className="text-xl font-bold text-[rgb(var(--text-primary))] mb-6">Notes moyennes par catégorie</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {[
-                            { key: 'visual', label: 'Visuel', icon: '👁️', value: categoryAvgs.visual, color: 'blue' },
-                            { key: 'smell', label: 'Odeurs', icon: '👃', value: categoryAvgs.smell, color: 'purple' },
-                            { key: 'taste', label: 'Goûts', icon: '👅', value: categoryAvgs.taste, color: 'pink' },
-                            { key: 'effects', label: 'Effets', icon: '⚡', value: categoryAvgs.effects, color: 'yellow' }
+                            { key: 'visual', label: 'Visuel', icon: '👁️', value: categoryAvgs.visual },
+                            { key: 'smell', label: 'Odeurs', icon: '👃', value: categoryAvgs.smell },
+                            { key: 'taste', label: 'Goûts', icon: '👅', value: categoryAvgs.taste },
+                            { key: 'effects', label: 'Effets', icon: '⚡', value: categoryAvgs.effects }
                         ].map(cat => (
                             <div key={cat.key} className="text-center">
                                 <div className={`text-4xl mb-2`}>{cat.icon}</div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{cat.label}</p>
-                                <div className="relative w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-2">
+                                <p className="text-sm text-[rgb(var(--text-secondary))] opacity-80 mb-2">{cat.label}</p>
+                                <div className="relative w-full h-2 bg-[rgba(var(--color-primary),0.1)] rounded-full overflow-hidden mb-2">
                                     <div
-                                        className={`absolute left-0 top-0 h-full bg-gradient-to-r from-${cat.color}-400 to-${cat.color}-600 transition-all duration-500`}
+                                        className="absolute left-0 top-0 h-full bg-gradient-to-r from-[rgb(var(--color-primary))] to-[rgb(var(--color-accent))] transition-all duration-500"
                                         style={{ width: `${(cat.value / 10) * 100}%` }}
                                     />
                                 </div>
-                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{cat.value.toFixed(1)}/10</p>
+                                <p className="text-2xl font-bold text-[rgb(var(--text-primary))]">{cat.value.toFixed(1)}/10</p>
                             </div>
                         ))}
                     </div>
@@ -190,18 +190,18 @@ export default function StatsPage() {
 
                 {/* Type Breakdown */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Répartition par type</h2>
+                    <div className="bg-[rgba(var(--color-primary),0.05)] backdrop-blur-sm rounded-xl p-6 shadow-sm border border-[rgba(var(--color-primary),0.2)]">
+                        <h2 className="text-xl font-bold text-[rgb(var(--text-primary))] mb-6">Répartition par type</h2>
                         <div className="space-y-4">
                             {Object.entries(stats.typeBreakdown || {}).map(([type, count]) => (
                                 <div key={type}>
                                     <div className="flex justify-between mb-2">
-                                        <span className="text-gray-700 dark:text-gray-300 font-medium">{type}</span>
-                                        <span className="text-gray-900 dark:text-white font-bold">{count}</span>
+                                        <span className="text-[rgb(var(--text-secondary))] font-medium">{type}</span>
+                                        <span className="text-[rgb(var(--text-primary))] font-bold">{count}</span>
                                     </div>
-                                    <div className="relative w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                    <div className="relative w-full h-3 bg-[rgba(var(--color-primary),0.1)] rounded-full overflow-hidden">
                                         <div
-                                            className="absolute left-0 top-0 h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-500"
+                                            className="absolute left-0 top-0 h-full bg-gradient-to-r from-[rgb(var(--color-primary))] to-[rgb(var(--color-accent))] transition-all duration-500"
                                             style={{ width: `${(count / stats.totalReviews) * 100}%` }}
                                         />
                                     </div>
@@ -211,52 +211,52 @@ export default function StatsPage() {
                     </div>
 
                     {/* Top Cultivars */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">🌿 Top Cultivars</h2>
+                    <div className="bg-[rgba(var(--color-primary),0.05)] backdrop-blur-sm rounded-xl p-6 shadow-sm border border-[rgba(var(--color-primary),0.2)]">
+                        <h2 className="text-xl font-bold text-[rgb(var(--text-primary))] mb-6">🌿 Top Cultivars</h2>
                         {topCultivars.length > 0 ? (
                             <div className="space-y-4">
                                 {topCultivars.map(([name, count], index) => (
                                     <div key={name} className="flex items-center gap-4">
-                                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold">
+                                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[rgb(var(--color-accent))] to-[rgba(var(--color-accent),0.7)] flex items-center justify-center text-white font-bold">
                                             {index + 1}
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-gray-900 dark:text-white font-medium">{name}</p>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">{count} review{count > 1 ? 's' : ''}</p>
+                                            <p className="text-[rgb(var(--text-primary))] font-medium">{name}</p>
+                                            <p className="text-sm text-[rgb(var(--text-secondary))] opacity-80">{count} review{count > 1 ? 's' : ''}</p>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-gray-500 dark:text-gray-400 text-center py-8">Aucun cultivar référencé</p>
+                            <p className="text-[rgb(var(--text-secondary))] opacity-70 text-center py-8">Aucun cultivar référencé</p>
                         )}
                     </div>
                 </div>
 
                 {/* Recent Activity */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">📈 Activité récente</h2>
+                <div className="bg-[rgba(var(--color-primary),0.05)] backdrop-blur-sm rounded-xl p-6 shadow-sm border border-[rgba(var(--color-primary),0.2)]">
+                    <h2 className="text-xl font-bold text-[rgb(var(--text-primary))] mb-6">📈 Activité récente</h2>
                     <div className="space-y-3">
                         {reviews.slice(0, 5).map((review) => (
                             <div
                                 key={review.id}
-                                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                                className="flex items-center justify-between p-3 bg-[rgba(var(--color-primary),0.08)] rounded-lg hover:bg-[rgba(var(--color-primary),0.15)] hover:shadow-[0_0_15px_rgba(var(--color-primary),0.2)] transition-all cursor-pointer border border-[rgba(var(--color-primary),0.1)]"
                                 onClick={() => navigate(`/review/${review.id}`)}
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xl">
+                                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[rgb(var(--color-primary))] to-[rgb(var(--color-accent))] flex items-center justify-center text-white text-xl shadow-lg">
                                         {review.type === 'Fleur' ? '🌸' : review.type === 'Hash' ? '🧊' : review.type === 'Concentré' ? '💎' : '🍪'}
                                     </div>
                                     <div>
-                                        <p className="font-medium text-gray-900 dark:text-white">{review.holderName}</p>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                        <p className="font-medium text-[rgb(var(--text-primary))]">{review.holderName}</p>
+                                        <p className="text-sm text-[rgb(var(--text-secondary))] opacity-80">
                                             {new Date(review.createdAt).toLocaleDateString('fr-FR')}
                                         </p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-yellow-500">⭐</span>
-                                    <span className="font-bold text-gray-900 dark:text-white">{review.overallRating || 'N/A'}</span>
+                                    <span className="text-[rgb(var(--color-accent))]">⭐</span>
+                                    <span className="font-bold text-[rgb(var(--text-primary))]">{review.overallRating || 'N/A'}</span>
                                 </div>
                             </div>
                         ))}

@@ -16,6 +16,13 @@ export default function CategoryRatingSummary({ ratings }) {
             </span>
             <span className="text-white opacity-30">•</span>
             <span className="flex items-center gap-1.5">
+                <span className="opacity-70">🤚</span>
+                <span className="font-bold text-white glow-text-subtle">
+                    {(ratings.touche || 0).toFixed(1)}
+                </span>
+            </span>
+            <span className="text-white opacity-30">•</span>
+            <span className="flex items-center gap-1.5">
                 <span className="opacity-70">👃</span>
                 <span className="font-bold text-white glow-text-subtle">
                     {(ratings.smell || 0).toFixed(1)}
@@ -38,7 +45,7 @@ export default function CategoryRatingSummary({ ratings }) {
             <span className="text-white opacity-30">│</span>
             <span className="flex items-center gap-1.5">
                 <span className="font-semibold text-white opacity-70">Global</span>
-                <span className="font-bold text-2xl text-white glow-text">
+                <span className="font-bold text-base text-white glow-text-subtle">
                     {(ratings.overall || 0).toFixed(1)}
                 </span>
                 <span className="text-xs text-white opacity-50">/10</span>
@@ -50,6 +57,7 @@ export default function CategoryRatingSummary({ ratings }) {
 CategoryRatingSummary.propTypes = {
     ratings: PropTypes.shape({
         visual: PropTypes.number,
+        touche: PropTypes.number,
         smell: PropTypes.number,
         taste: PropTypes.number,
         effects: PropTypes.number,

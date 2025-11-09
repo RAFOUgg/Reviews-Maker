@@ -112,7 +112,7 @@ export default function EffectSelector({
                     <button
                         type="button"
                         onClick={clearAll}
-                        className="px-3 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                        className="px-3 py-1.5 text-sm bg-[rgba(220,38,38,0.15)] hover:bg-[rgba(220,38,38,0.3)] text-[rgb(220,38,38)] rounded-lg transition-colors border border-[rgba(220,38,38,0.3)]"
                     >
                         × Effacer
                     </button>
@@ -140,9 +140,9 @@ export default function EffectSelector({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Mental */}
                 <div className="space-y-3">
-                    <div className="flex items-center gap-2 pb-2 border-b border-gray-700">
+                    <div className="flex items-center gap-2 pb-2 border-b border-[rgba(var(--color-primary),0.3)]">
                         <span className="text-2xl">{categoryThemes.mental.icon}</span>
-                        <h3 className={`font-semibold bg-gradient-to-r ${categoryThemes.mental.gradient} bg-clip-text text-transparent`}>
+                        <h3 className="font-bold text-[rgb(var(--color-primary))]">
                             {effectsData.mental.label}
                         </h3>
                     </div>
@@ -150,7 +150,7 @@ export default function EffectSelector({
                     {/* Effets positifs */}
                     {(filterType === 'all' || filterType === 'positive') && (
                         <div className="space-y-2">
-                            <div className="text-xs text-gray-400 uppercase tracking-wide">Positifs</div>
+                            <div className="text-xs text-[rgb(var(--text-secondary))] opacity-70 uppercase tracking-wide">Positifs</div>
                             <div className="flex flex-wrap gap-2">
                                 {effectsData.mental.positive.map(effect => {
                                     const isSelected = selectedItems.includes(effect)
@@ -159,9 +159,9 @@ export default function EffectSelector({
                                             key={effect}
                                             type="button"
                                             onClick={() => toggleItem(effect)}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all text-stroke-white-thin ${isSelected
-                                                ? `${categoryThemes.mental.positiveColor} text-white shadow-md`
-                                                : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
+                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
+                                                ? 'bg-[rgb(var(--color-accent))] text-white shadow-lg shadow-[rgba(var(--color-accent),0.4)]'
+                                                : 'bg-[rgba(var(--color-primary),0.2)] text-[rgb(var(--text-primary))] hover:bg-[rgba(var(--color-primary),0.3)] border border-[rgba(var(--color-primary),0.3)]'
                                                 }`}
                                         >
                                             {effect}
@@ -200,9 +200,9 @@ export default function EffectSelector({
 
                 {/* Physical */}
                 <div className="space-y-3">
-                    <div className="flex items-center gap-2 pb-2 border-b border-gray-700">
+                    <div className="flex items-center gap-2 pb-2 border-b border-[rgba(var(--color-primary),0.3)]">
                         <span className="text-2xl">{categoryThemes.physical.icon}</span>
-                        <h3 className={`font-semibold bg-gradient-to-r ${categoryThemes.physical.gradient} bg-clip-text text-transparent`}>
+                        <h3 className="font-bold text-[rgb(var(--color-primary))]">
                             {effectsData.physical.label}
                         </h3>
                     </div>
@@ -258,9 +258,9 @@ export default function EffectSelector({
 
                 {/* Therapeutic */}
                 <div className="space-y-3">
-                    <div className="flex items-center gap-2 pb-2 border-b border-gray-700">
+                    <div className="flex items-center gap-2 pb-2 border-b border-[rgba(var(--color-primary),0.3)]">
                         <span className="text-2xl">{categoryThemes.therapeutic.icon}</span>
-                        <h3 className={`font-semibold bg-gradient-to-r ${categoryThemes.therapeutic.gradient} bg-clip-text text-transparent`}>
+                        <h3 className="font-bold text-[rgb(var(--color-primary))]">
                             {effectsData.therapeutic.label}
                         </h3>
                     </div>

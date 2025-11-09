@@ -103,7 +103,7 @@ export default function WheelSelector({
                     <button
                         type="button"
                         onClick={clearAll}
-                        className="px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                        className="px-3 py-2 text-sm bg-[rgba(220,38,38,0.15)] hover:bg-[rgba(220,38,38,0.3)] text-[rgb(220,38,38)] rounded-lg transition-colors border border-[rgba(220,38,38,0.3)]"
                     >
                         × Effacer
                     </button>
@@ -138,13 +138,13 @@ export default function WheelSelector({
                     return (
                         <div
                             key={categoryKey}
-                            className={`flex items-center gap-3 p-3 rounded-xl bg-transparent border transition-all ${categoryHasSelection ? 'border-white/40 glow-container-subtle' : 'border-white/10'
+                            className={`flex items-center gap-3 p-3 rounded-xl bg-[rgba(var(--color-primary),0.05)] border transition-all ${categoryHasSelection ? 'border-[rgba(var(--color-accent),0.4)] shadow-[0_0_15px_rgba(var(--color-accent),0.2)]' : 'border-[rgba(var(--color-primary),0.2)]'
                                 }`}
                         >
-                            {/* Label fixe */}
+                            {/* Label fixe - TEXTE SOLIDE SANS GRADIENT pour lisibilité */}
                             <div className="flex-shrink-0 w-32 flex items-center gap-2">
                                 <span className="text-2xl">{theme.icon}</span>
-                                <span className={`text-sm font-semibold bg-gradient-to-r ${theme.gradient} bg-clip-text text-transparent`}>
+                                <span className="text-sm font-bold text-[rgb(var(--color-accent))]">
                                     {category.label || categoryKey}
                                 </span>
                             </div>
@@ -159,9 +159,9 @@ export default function WheelSelector({
                                                 key={item}
                                                 type="button"
                                                 onClick={() => toggleItem(item)}
-                                                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all text-stroke-white-thin ${isSelected
-                                                    ? `bg-gradient-to-r ${theme.gradient} text-white shadow-md`
-                                                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
+                                                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
+                                                    ? 'bg-[rgb(var(--color-accent))] text-white shadow-lg shadow-[rgba(var(--color-accent),0.4)]'
+                                                    : 'bg-[rgba(var(--color-primary),0.2)] text-[rgb(var(--text-primary))] hover:bg-[rgba(var(--color-primary),0.3)] border border-[rgba(var(--color-primary),0.3)]'
                                                     }`}
                                             >
                                                 {item}
@@ -173,7 +173,7 @@ export default function WheelSelector({
 
                             {/* Compteur pour cette catégorie */}
                             {categoryHasSelection && (
-                                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-transparent border border-white/40 flex items-center justify-center text-white text-xs font-bold glow-text-subtle">
+                                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[rgb(var(--color-accent))] flex items-center justify-center text-white text-xs font-bold shadow-lg">
                                     {items.filter(item => selectedItems.includes(item)).length}
                                 </div>
                             )}

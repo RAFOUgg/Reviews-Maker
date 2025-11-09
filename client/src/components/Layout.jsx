@@ -8,22 +8,19 @@ export default function Layout() {
     return (
         <div className="min-h-screen flex flex-col">
             {/* Navigation */}
-            <nav className="glass sticky top-0 z-50 border-b border-dark-border/50">
+            <nav className="glass sticky top-0 z-[100] border-b border-dark-border/50">
                 <div className="container mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
-                        {/* Logo */}
-                        <Link to="/" className="flex items-center space-x-3">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
+                        {/* Logo - Toujours visible avec les couleurs du thème */}
+                        <Link to="/" className="flex items-center space-x-3 group">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[rgb(var(--color-primary))] to-[rgb(var(--color-accent))] flex items-center justify-center shadow-lg group-hover:shadow-[0_0_20px_rgba(var(--color-accent),0.5)] transition-all">
                                 <span className="text-2xl">🌿</span>
                             </div>
-                            <span className="text-xl font-bold text-gradient">Reviews Maker</span>
+                            <span className="text-xl font-bold text-[rgb(var(--text-primary))] group-hover:text-[rgb(var(--color-accent))] transition-colors">Reviews Maker</span>
                         </Link>
 
                         {/* Navigation Links */}
                         <div className="flex items-center space-x-6">
-                            <Link to="/" className="text-dark-text hover:text-primary-400 transition-colors font-medium">
-                                Accueil
-                            </Link>
                             {!isAuthenticated ? (
                                 <button
                                     onClick={loginWithDiscord}

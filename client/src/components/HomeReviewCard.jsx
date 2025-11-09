@@ -40,9 +40,9 @@ export default function HomeReviewCard({
             >
                 {images && images.length > 0 ? (
                     <div className={`h-full w-full ${images.length === 1 ? '' :
-                            images.length === 2 ? 'grid grid-cols-2 gap-1' :
-                                images.length === 3 ? 'grid grid-rows-2 gap-1' :
-                                    'grid grid-cols-2 grid-rows-2 gap-1'
+                        images.length === 2 ? 'grid grid-cols-2 gap-1' :
+                            images.length === 3 ? 'grid grid-rows-2 gap-1' :
+                                'grid grid-cols-2 grid-rows-2 gap-1'
                         }`}>
                         {/* 1 image */}
                         {images.length === 1 && (
@@ -116,9 +116,9 @@ export default function HomeReviewCard({
 
                 {/* Rating badge flottant */}
                 <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-xl bg-gradient-to-r ${rating >= 9 ? 'from-green-500 to-emerald-600' :
-                        rating >= 7 ? 'from-yellow-500 to-amber-600' :
-                            rating >= 5 ? 'from-orange-500 to-red-600' :
-                                'from-red-500 to-pink-600'
+                    rating >= 7 ? 'from-yellow-500 to-amber-600' :
+                        rating >= 5 ? 'from-orange-500 to-red-600' :
+                            'from-red-500 to-pink-600'
                     } backdrop-blur-xl shadow-xl flex items-center gap-1`}>
                     <span className="text-white font-black text-lg">{rating}</span>
                     <span className="text-white/90 text-xs font-bold">/10</span>
@@ -130,8 +130,8 @@ export default function HomeReviewCard({
                 <button
                     onClick={(e) => onLike(review.id, e)}
                     className={`flex flex-col items-center justify-center w-14 h-14 rounded-l-2xl shadow-2xl transition-all duration-300 group/like ${review.userLikeState === 'like'
-                            ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-green-500/50 scale-110'
-                            : 'bg-gray-800/95 backdrop-blur-xl text-gray-400 hover:bg-gradient-to-br hover:from-green-500 hover:to-emerald-600 hover:text-white hover:scale-110'
+                        ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-green-500/50 scale-110'
+                        : 'bg-gray-800/95 backdrop-blur-xl text-gray-400 hover:bg-gradient-to-br hover:from-green-500 hover:to-emerald-600 hover:text-white hover:scale-110'
                         }`}
                 >
                     <svg className="w-5 h-5 group-hover/like:scale-125 transition-transform" fill="currentColor" viewBox="0 0 20 20">
@@ -142,8 +142,8 @@ export default function HomeReviewCard({
                 <button
                     onClick={(e) => onDislike(review.id, e)}
                     className={`flex flex-col items-center justify-center w-14 h-14 rounded-l-2xl shadow-2xl transition-all duration-300 group/dislike ${review.userLikeState === 'dislike'
-                            ? 'bg-gradient-to-br from-red-500 to-pink-600 text-white shadow-red-500/50 scale-110'
-                            : 'bg-gray-800/95 backdrop-blur-xl text-gray-400 hover:bg-gradient-to-br hover:from-red-500 hover:to-pink-600 hover:text-white hover:scale-110'
+                        ? 'bg-gradient-to-br from-red-500 to-pink-600 text-white shadow-red-500/50 scale-110'
+                        : 'bg-gray-800/95 backdrop-blur-xl text-gray-400 hover:bg-gradient-to-br hover:from-red-500 hover:to-pink-600 hover:text-white hover:scale-110'
                         }`}
                 >
                     <svg className="w-5 h-5 group-hover/dislike:scale-125 transition-transform rotate-180" fill="currentColor" viewBox="0 0 20 20">
@@ -177,25 +177,25 @@ export default function HomeReviewCard({
                     </p>
                 )}
 
-                {/* Auteur */}
+                {/* Auteur - Avatar avec première lettre clairement visible */}
                 <button
                     onClick={(e) => {
                         e.stopPropagation()
                         onAuthorClick(review.authorId || review.ownerId || review.author?.id)
                     }}
-                    className="w-full mt-3 p-3 rounded-2xl bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 border-2 border-green-500/30 hover:border-green-400 backdrop-blur-xl transition-all duration-300 group/author hover:shadow-lg hover:shadow-green-500/20 hover:scale-[1.02]"
+                    className="w-full mt-3 p-3 rounded-2xl bg-[rgba(var(--color-accent),0.1)] border-2 border-[rgba(var(--color-accent),0.3)] hover:border-[rgb(var(--color-accent))] backdrop-blur-xl transition-all duration-300 group/author hover:shadow-lg hover:shadow-[rgba(var(--color-accent),0.3)] hover:scale-[1.02]"
                 >
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-base font-black shadow-lg shadow-green-500/50 group-hover/author:scale-110 transition-transform">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[rgb(var(--color-primary))] to-[rgb(var(--color-accent))] flex items-center justify-center text-white text-base font-black shadow-lg shadow-[rgba(var(--color-accent),0.5)] group-hover/author:scale-110 transition-transform">
                             {(review.ownerName || review.author?.username || 'A')[0].toUpperCase()}
                         </div>
                         <div className="flex-1 text-left">
-                            <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Créé par</div>
-                            <div className="text-sm font-black text-white group-hover/author:text-green-400 transition-colors">
+                            <div className="text-xs text-[rgb(var(--text-secondary))] opacity-70 font-medium uppercase tracking-wide">Créé par</div>
+                            <div className="text-sm font-black text-[rgb(var(--text-primary))] group-hover/author:text-[rgb(var(--color-accent))] transition-colors">
                                 {review.ownerName || review.author?.username || 'Anonyme'}
                             </div>
                         </div>
-                        <svg className="w-5 h-5 text-green-500 group-hover/author:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-[rgb(var(--color-accent))] group-hover/author:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                     </div>

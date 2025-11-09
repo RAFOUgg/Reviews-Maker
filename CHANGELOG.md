@@ -9,7 +9,112 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
-### Phase 2 - Refonte Frontend Pages (9 Nov 2025)
+### Phase 2 - Système de Notation Complet (9 Nov 2025)
+
+#### ✨ Nouvelles Fonctionnalités Majeures
+
+**Section Touché Ajoutée** 🤚
+- **Fleur** : 4 critères (Densité, Friabilité, Élasticité, Humidité /10)
+- **Hash** : 5 critères (Texture dropdown, Malléabilité, Collant, Humidité, Fragilité /10)
+- **Concentré** : 4 critères (Texture dropdown, Viscosité, Collant, Stabilité /10)
+
+**Notes d'Intensité/Piquant** 📊
+- **Odeurs** : Piquant /10 + Intensité /10
+- **Goûts** : Intensité /10
+- **Effets** : Intensité /10
+
+**Renommage Catégories** 🏷️
+- "🌸 Odeurs & Arômes" → "👃 Odeurs"
+- "😋 Goûts" conservé inchangé
+
+#### 🗃️ Base de Données
+
+**Nouveaux Champs Prisma** (16 colonnes ajoutées)
+```prisma
+// Touché - Fleur
+toucheDensite        Float?
+toucheFriabilite     Float?
+toucheElasticite     Float?
+toucheHumidite       Float?
+
+// Touché - Hash
+toucheTexture        String?
+toucheMalleabilite   Float?
+toucheCollant        Float?
+toucheFragilite      Float?
+
+// Touché - Concentré
+toucheViscosite      Float?
+toucheStabilite      Float?
+
+// Intensité/Piquant
+aromasPiquant        Float?
+aromasIntensity      Float?
+tastesIntensity      Float?
+effectsIntensity     Float?
+```
+
+**Migration** : `add_touche_intensity_fields`
+
+#### 📝 Structures de Produits
+
+**productStructures.js** - Refonte complète
+- Ajout de `textureHash` et `textureConcentre` dans `choiceCatalog`
+- Section Touché intégrée pour les 3 types de produits
+- Sliders intensité/piquant ajoutés dans sections appropriées
+- Formatage du fichier (minifié → formaté avec indentation)
+
+#### 🧮 Calcul des Notes
+
+**calculateCategoryRatings()** mis à jour
+- **visual** : inclut maintenant pistils, moisissure, graines (avant manquants)
+- **touche** : nouvelle catégorie avec tous les champs touché
+- **smell** : inclut aromasPiquant + aromasIntensity
+- **taste** : inclut tastesIntensity
+- **effects** : inclut effectsIntensity
+- **overall** : moyenne de toutes les catégories avec notes > 0
+
+#### 🎨 Composants UI
+
+**CategoryRatingSummary.jsx** 
+- Ajout de l'icône 🤚 Touché entre Visuel et Odeurs
+- PropTypes mis à jour avec `touche: PropTypes.number`
+- Ordre d'affichage : 👁️ Visuel • 🤚 Touché • 👃 Odeurs • 👅 Goûts • ⚡ Effets │ Global
+
+#### 📈 Métriques de Complétude
+
+**Avant Phase 2** : 70% complet
+- ❌ Section Touché manquante (0/3 types)
+- ❌ Notes intensité/piquant absentes
+- ❌ Calcul de notes incomplet
+
+**Après Phase 2** : 95% complet ✅
+- ✅ Section Touché complète (3/3 types)
+- ✅ Notes intensité/piquant intégrées
+- ✅ Calcul de notes global correct
+- ✅ Affichage catégories complet
+
+#### 🔧 Fichiers Modifiés
+
+**Frontend**
+- `client/src/utils/productStructures.js` - Structures produits complètes
+- `client/src/pages/CreateReviewPage.jsx` - Calcul categoryRatings mis à jour
+- `client/src/components/CategoryRatingSummary.jsx` - Affichage Touché
+
+**Backend**
+- `server-new/prisma/schema.prisma` - 16 nouveaux champs
+- Migration Prisma générée et appliquée
+
+#### 🎯 Prochaines Étapes (Phase 2.5)
+
+- [ ] Système d'aperçu/preview des reviews
+- [ ] Export multi-formats (PNG, HTML, SVG)
+- [ ] Préréglages dimensionnels (Instagram, YouTube 16:9, Mobile)
+- [ ] Styles de rendu personnalisables
+
+---
+
+### Phase 2 - Refonte Frontend Pages (9 Nov 2025) ✅ TERMINÉ
 
 #### Pages Refactorisées
 - **HomePage.jsx** : 591 → 175 lignes (-70% 🔥)

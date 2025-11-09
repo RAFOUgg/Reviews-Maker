@@ -6,6 +6,10 @@ import WheelSelector from '../components/WheelSelector';
 import EffectSelector from '../components/EffectSelector';
 import CultivarList from '../components/CultivarList';
 import PipelineWithCultivars from '../components/PipelineWithCultivars';
+import PurificationPipeline from '../components/PurificationPipeline';
+import FertilizationPipeline from '../components/FertilizationPipeline';
+import SubstratMixer from '../components/SubstratMixer';
+import RecipeSection from '../components/RecipeSection';
 import GlobalRating from '../components/GlobalRating';
 import { productStructures } from '../utils/productStructures';
 import { parseImages } from '../utils/imageUtils';
@@ -79,10 +83,10 @@ export default function EditReviewPage() {
 
     if (!isAuthenticated || loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center space-y-4">
-                    <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                    <p className="text-gray-400">Chargement...</p>
+                    <div className="w-16 h-16 border-4 border-[rgb(var(--color-accent))] border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p className="text-[rgb(var(--text-secondary))] opacity-80">Chargement...</p>
                 </div>
             </div>
         );
@@ -194,7 +198,15 @@ export default function EditReviewPage() {
     };
 
     const renderField = (field) => {
-        const value = formData[field.key] || (field.type === 'slider' ? (field.default || 0) : '');
+        // Valeur par défaut en fonction du type
+        const getDefaultValue = () => {
+            if (formData[field.key] !== undefined) return formData[field.key];
+            if (field.type === 'slider') return field.default || 0;
+            if (['wheel', 'effects', 'cultivar-list', 'pipeline-with-cultivars', 'purification-pipeline', 'fertilization-pipeline', 'substrat-mixer', 'multiselect'].includes(field.type)) return [];
+            if (field.type === 'recipe') return {};
+            return '';
+        };
+        const value = getDefaultValue();
 
         switch (field.type) {
             case 'text':
@@ -204,7 +216,7 @@ export default function EditReviewPage() {
                         placeholder={`Ex: ${field.label}`}
                         value={value}
                         onChange={(e) => handleInputChange(field.key, e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+                        className="w-full px-4 py-3 bg-[rgba(var(--color-primary),0.1)] border border-[rgba(var(--color-primary),0.3)] rounded-xl text-[rgb(var(--text-primary))] placeholder-[rgb(var(--text-secondary))] placeholder:opacity-60 focus:outline-none focus:border-[rgb(var(--color-accent))] focus:shadow-[0_0_15px_rgba(var(--color-accent),0.3)]"
                         required={field.required}
                     />
                 );
@@ -216,7 +228,7 @@ export default function EditReviewPage() {
                         onChange={(e) => handleInputChange(field.key, e.target.value)}
                         rows={field.rows || 3}
                         placeholder={field.label}
-                        className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-green-500 resize-none"
+                        className="w-full px-4 py-3 bg-[rgba(var(--color-primary),0.1)] border border-[rgba(var(--color-primary),0.3)] rounded-xl text-[rgb(var(--text-primary))] placeholder-[rgb(var(--text-secondary))] placeholder:opacity-60 focus:outline-none focus:border-[rgb(var(--color-accent))] focus:shadow-[0_0_15px_rgba(var(--color-accent),0.3)] resize-none"
                     />
                 );
 
@@ -228,7 +240,7 @@ export default function EditReviewPage() {
                         max={field.max || 100}
                         value={value}
                         onChange={(e) => handleInputChange(field.key, parseFloat(e.target.value))}
-                        className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-500"
+                        className="w-full px-4 py-3 bg-[rgba(var(--color-primary),0.1)] border border-[rgba(var(--color-primary),0.3)] rounded-xl text-[rgb(var(--text-primary))] focus:outline-none focus:border-[rgb(var(--color-accent))] focus:shadow-[0_0_15px_rgba(var(--color-accent),0.3)]"
                     />
                 );
 
@@ -242,12 +254,12 @@ export default function EditReviewPage() {
                             step="0.5"
                             value={value}
                             onChange={(e) => handleInputChange(field.key, parseFloat(e.target.value))}
-                            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+                            className="w-full h-2 bg-[rgba(var(--color-primary),0.2)] rounded-lg appearance-none cursor-pointer accent-[rgb(var(--color-accent))]"
                         />
                         <div className="flex justify-between items-center mt-2">
-                            <span className="text-xs text-gray-500">0</span>
-                            <span className="text-2xl font-bold text-green-400">{value}/{field.max || 10}</span>
-                            <span className="text-xs text-gray-500">{field.max || 10}</span>
+                            <span className="text-xs text-[rgb(var(--text-secondary))] opacity-70">0</span>
+                            <span className="text-2xl font-bold text-[rgb(var(--color-accent))]">{value}/{field.max || 10}</span>
+                            <span className="text-xs text-[rgb(var(--text-secondary))] opacity-70">{field.max || 10}</span>
                         </div>
                     </div>
                 );
@@ -257,7 +269,7 @@ export default function EditReviewPage() {
                     <select
                         value={value}
                         onChange={(e) => handleInputChange(field.key, e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-500"
+                        className="w-full px-4 py-3 bg-[rgba(var(--color-primary),0.1)] border border-[rgba(var(--color-primary),0.3)] rounded-xl text-[rgb(var(--text-primary))] focus:outline-none focus:border-[rgb(var(--color-accent))] focus:shadow-[0_0_15px_rgba(var(--color-accent),0.3)]"
                     >
                         <option value="">-- Sélectionner --</option>
                         {field.choices?.map((choice, i) => (
@@ -281,8 +293,8 @@ export default function EditReviewPage() {
                                     handleInputChange(field.key, newVal);
                                 }}
                                 className={`px-3 py-1.5 rounded-lg text-sm transition-all ${selected.includes(choice)
-                                    ? 'bg-green-600 text-white'
-                                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                    ? 'bg-[rgb(var(--color-accent))] text-white shadow-[0_0_15px_rgba(var(--color-accent),0.4)]'
+                                    : 'bg-[rgba(var(--color-primary),0.2)] text-[rgb(var(--text-primary))] hover:bg-[rgba(var(--color-primary),0.3)]'
                                     }`}
                             >
                                 {choice}
@@ -299,9 +311,9 @@ export default function EditReviewPage() {
                             type="checkbox"
                             checked={!!value}
                             onChange={(e) => handleInputChange(field.key, e.target.checked)}
-                            className="w-5 h-5 rounded border-gray-700 bg-gray-900/50 text-green-600 focus:ring-green-500"
+                            className="w-5 h-5 rounded border-[rgba(var(--color-primary),0.3)] bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--color-accent))] focus:ring-[rgb(var(--color-accent))]"
                         />
-                        <span className="text-gray-300">{field.label}</span>
+                        <span className="text-[rgb(var(--text-primary))]">{field.label}</span>
                     </label>
                 );
 
@@ -311,7 +323,7 @@ export default function EditReviewPage() {
                         value={value}
                         onChange={(v) => handleInputChange(field.key, v)}
                         type={field.key}
-                        maxSelections={5}
+                        maxSelections={field.maxSelections || 5}
                     />
                 );
 
@@ -343,6 +355,43 @@ export default function EditReviewPage() {
                         choices={field.choices || []}
                         cultivarsList={cultivarsListData}
                         onSolventDetected={setHasSolvents}
+                    />
+                );
+
+            case 'purification-pipeline':
+                const extractionPipelineData = formData[field.extractionSource] || formData['pipelineSeparation'] || formData['pipelineExtraction'] || [];
+                return (
+                    <PurificationPipeline
+                        value={value}
+                        onChange={(v) => handleInputChange(field.key, v)}
+                        availableMethods={field.availableMethods || []}
+                        extractionPipeline={extractionPipelineData}
+                    />
+                );
+
+            case 'fertilization-pipeline':
+                return (
+                    <FertilizationPipeline
+                        value={value}
+                        onChange={(v) => handleInputChange(field.key, v)}
+                        availableFertilizers={field.availableFertilizers || []}
+                    />
+                );
+
+            case 'substrat-mixer':
+                return (
+                    <SubstratMixer
+                        value={value}
+                        onChange={(v) => handleInputChange(field.key, v)}
+                        availableSubstrats={field.availableSubstrats || []}
+                    />
+                );
+
+            case 'recipe':
+                return (
+                    <RecipeSection
+                        value={value}
+                        onChange={(v) => handleInputChange(field.key, v)}
                     />
                 );
 
@@ -466,22 +515,22 @@ export default function EditReviewPage() {
     const categoryRatings = calculateCategoryRatings();
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <div className="min-h-screen">
             {/* Header */}
-            <div className="sticky top-0 z-50 bg-gray-900/95 backdrop-blur-xl border-b border-gray-700/50">
+            <div className="sticky top-0 z-50 bg-[rgba(var(--color-primary),0.95)] backdrop-blur-xl border-b border-[rgba(var(--color-primary),0.3)]">
                 <div className="max-w-4xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between mb-3">
                         <button
                             onClick={() => navigate(`/review/${id}`)}
-                            className="text-gray-400 hover:text-white transition-colors"
+                            className="text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--text-primary))] transition-colors"
                         >
                             ← Annuler
                         </button>
                         <div className="text-center">
-                            <h1 className="text-xl font-bold text-white">
+                            <h1 className="text-xl font-bold text-[rgb(var(--text-primary))]">
                                 ✏️ Éditer: {formData.holderName}
                             </h1>
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-[rgb(var(--text-secondary))] opacity-80">
                                 Section {currentSectionIndex + 1}/{sections.length}
                             </p>
                         </div>
@@ -490,36 +539,36 @@ export default function EditReviewPage() {
                     {/* Résumé des notes par catégorie */}
                     <div className="flex items-center justify-center gap-4 text-sm">
                         <span className="flex items-center gap-1.5">
-                            <span className="text-gray-400">👁️</span>
-                            <span className="font-bold text-green-400">{categoryRatings.visual.toFixed(1)}</span>
+                            <span className="text-[rgb(var(--text-secondary))]">👁️</span>
+                            <span className="font-bold text-[rgb(var(--color-accent))]">{categoryRatings.visual.toFixed(1)}</span>
                         </span>
-                        <span className="text-gray-600">•</span>
+                        <span className="text-[rgb(var(--text-secondary))] opacity-50">•</span>
                         <span className="flex items-center gap-1.5">
-                            <span className="text-gray-400">👃</span>
-                            <span className="font-bold text-green-400">{categoryRatings.smell.toFixed(1)}</span>
+                            <span className="text-[rgb(var(--text-secondary))]">👃</span>
+                            <span className="font-bold text-[rgb(var(--color-accent))]">{categoryRatings.smell.toFixed(1)}</span>
                         </span>
-                        <span className="text-gray-600">•</span>
+                        <span className="text-[rgb(var(--text-secondary))] opacity-50">•</span>
                         <span className="flex items-center gap-1.5">
-                            <span className="text-gray-400">👅</span>
-                            <span className="font-bold text-green-400">{categoryRatings.taste.toFixed(1)}</span>
+                            <span className="text-[rgb(var(--text-secondary))]">👅</span>
+                            <span className="font-bold text-[rgb(var(--color-accent))]">{categoryRatings.taste.toFixed(1)}</span>
                         </span>
-                        <span className="text-gray-600">•</span>
+                        <span className="text-[rgb(var(--text-secondary))] opacity-50">•</span>
                         <span className="flex items-center gap-1.5">
-                            <span className="text-gray-400">⚡</span>
-                            <span className="font-bold text-green-400">{categoryRatings.effects.toFixed(1)}</span>
+                            <span className="text-[rgb(var(--text-secondary))]">⚡</span>
+                            <span className="font-bold text-[rgb(var(--color-accent))]">{categoryRatings.effects.toFixed(1)}</span>
                         </span>
-                        <span className="text-gray-600">│</span>
+                        <span className="text-[rgb(var(--text-secondary))] opacity-50">│</span>
                         <span className="flex items-center gap-1.5">
-                            <span className="text-gray-400 font-semibold">Global</span>
-                            <span className="font-bold text-2xl text-green-400">{categoryRatings.overall.toFixed(1)}</span>
-                            <span className="text-gray-500 text-xs">/10</span>
+                            <span className="text-[rgb(var(--text-secondary))] font-semibold">Global</span>
+                            <span className="font-bold text-2xl text-[rgb(var(--color-accent))]">{categoryRatings.overall.toFixed(1)}</span>
+                            <span className="text-[rgb(var(--text-secondary))] opacity-70 text-xs">/10</span>
                         </span>
                     </div>
                 </div>
             </div>
 
             {/* Section Navigation */}
-            <div className="sticky top-[88px] z-40 bg-gray-900/90 backdrop-blur-xl border-b border-gray-700/50 overflow-x-auto">
+            <div className="sticky top-[88px] z-40 bg-[rgba(var(--color-primary),0.9)] backdrop-blur-xl border-b border-[rgba(var(--color-primary),0.3)] overflow-x-auto">
                 <div className="max-w-4xl mx-auto px-4">
                     <div className="flex gap-2 py-3">
                         {sections.map((section, idx) => (
@@ -527,8 +576,8 @@ export default function EditReviewPage() {
                                 key={idx}
                                 onClick={() => goToSection(idx)}
                                 className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${idx === currentSectionIndex
-                                    ? 'bg-green-600 text-white shadow-lg'
-                                    : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
+                                    ? 'bg-[rgb(var(--color-accent))] text-white shadow-[0_0_20px_rgba(var(--color-accent),0.5)]'
+                                    : 'bg-[rgba(var(--color-primary),0.2)] text-[rgb(var(--text-secondary))] hover:bg-[rgba(var(--color-primary),0.3)] hover:text-[rgb(var(--text-primary))]'
                                     }`}
                             >
                                 {section.title}
@@ -541,7 +590,7 @@ export default function EditReviewPage() {
             {/* Error Display */}
             {error && (
                 <div className="max-w-4xl mx-auto px-4 mt-4">
-                    <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-xl text-red-400">
+                    <div className="p-4 bg-[rgba(220,38,38,0.1)] border border-[rgba(220,38,38,0.5)] rounded-xl text-red-400">
                         {error}
                     </div>
                 </div>
@@ -549,19 +598,19 @@ export default function EditReviewPage() {
 
             {/* Form Content */}
             <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-                <div className="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/50">
-                    <h2 className="text-2xl font-bold text-white mb-6">
+                <div className="bg-[rgba(var(--color-primary),0.1)] backdrop-blur-xl rounded-2xl p-8 border border-[rgba(var(--color-primary),0.3)]">
+                    <h2 className="text-2xl font-bold text-[rgb(var(--text-primary))] mb-6">
                         {currentSection?.title}
                     </h2>
                     <div className="space-y-6">
                         {currentSection?.fields.map((field, idx) => (
                             <div key={idx} className="space-y-2">
                                 {field.type !== 'checkbox' && field.type !== 'images' && (
-                                    <label className="block text-sm font-semibold text-gray-300">
+                                    <label className="block text-sm font-semibold text-[rgb(var(--text-primary))]">
                                         {field.label}
                                         {field.required && <span className="text-red-400 ml-1">*</span>}
                                         {field.max && field.type === 'slider' && (
-                                            <span className="text-gray-500 ml-1">/10</span>
+                                            <span className="text-[rgb(var(--text-secondary))] opacity-70 ml-1">/10</span>
                                         )}
                                     </label>
                                 )}
@@ -573,13 +622,13 @@ export default function EditReviewPage() {
             </div>
 
             {/* Navigation Buttons */}
-            <div className="fixed bottom-0 left-0 right-0 bg-gray-900/95 backdrop-blur-xl border-t border-gray-700/50 py-4 z-50">
+            <div className="fixed bottom-0 left-0 right-0 bg-[rgba(var(--color-primary),0.95)] backdrop-blur-xl border-t border-[rgba(var(--color-primary),0.3)] py-4 z-50">
                 <div className="max-w-4xl mx-auto px-4 flex gap-4">
                     <button
                         type="button"
                         onClick={prevSection}
                         disabled={currentSectionIndex === 0}
-                        className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="px-6 py-3 bg-[rgba(var(--color-primary),0.3)] hover:bg-[rgba(var(--color-primary),0.5)] text-[rgb(var(--text-primary))] rounded-xl font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                         ← Précédent
                     </button>
@@ -587,7 +636,7 @@ export default function EditReviewPage() {
                         <button
                             onClick={handleSubmit}
                             disabled={isSubmitting}
-                            className="flex-1 py-3 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded-xl font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            className="flex-1 py-3 bg-gradient-to-r from-[rgb(var(--color-accent))] to-[rgba(var(--color-accent),0.8)] hover:shadow-[0_0_30px_rgba(var(--color-accent),0.6)] text-white rounded-xl font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
                             {isSubmitting ? '⏳ Mise à jour...' : '💾 Sauvegarder les modifications'}
                         </button>
@@ -595,7 +644,7 @@ export default function EditReviewPage() {
                         <button
                             type="button"
                             onClick={nextSection}
-                            className="flex-1 py-3 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded-xl font-bold shadow-lg transition-all"
+                            className="flex-1 py-3 bg-gradient-to-r from-[rgb(var(--color-accent))] to-[rgba(var(--color-accent),0.8)] hover:shadow-[0_0_30px_rgba(var(--color-accent),0.6)] text-white rounded-xl font-bold shadow-lg transition-all"
                         >
                             Suivant →
                         </button>

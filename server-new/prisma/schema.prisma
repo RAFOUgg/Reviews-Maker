@@ -75,6 +75,96 @@ model Review {
   cultivars            String? // Nom du/des cultivar(s)
   extraData            String? // JSON: Autres données dynamiques
   
+  // Section Touché - Fleur
+  toucheDensite        Float? // Densité /10
+  toucheFriabilite     Float? // Friabilité /10
+  toucheElasticite     Float? // Élasticité /10
+  toucheHumidite       Float? // Humidité /10
+  
+  // Section Touché - Hash
+  toucheTexture        String? // Texture (Poudreuse, Sableuse, etc.)
+  toucheMalleabilite   Float? // Malléabilité /10
+  toucheCollant        Float? // Collant /10
+  toucheFragilite      Float? // Fragilité /10
+  
+  // Section Touché - Concentré
+  toucheViscosite      Float? // Viscosité /10
+  toucheStabilite      Float? // Stabilité /10
+  
+  // Notes d'intensité/piquant
+  aromasPiquant        Float? // Piquant des odeurs /10
+  aromasIntensity      Float? // Intensité des odeurs /10
+  tastesIntensity      Float? // Intensité des goûts /10
+  goutIntensity        Float? // Intensité gustative (Comestible) /10
+  effectsIntensity     Float? // Intensité des effets /10
+  
+  // --- NOUVEAUX CHAMPS LEGACY ---
+  
+  // Plan cultural (Fleur)
+  typeCulture          String? // Type de culture (Indoor, Outdoor, etc.)
+  spectre              String? // Spectre lumineux (HPS, LED, etc.)
+  substratSysteme      String? // Substrat & système cultural
+  techniquesPropagation String? // Techniques de propagation
+  engraisOrganiques    String? // Engrais organiques utilisés
+  engraisMineraux      String? // Engrais minéraux utilisés
+  additifsStimulants   String? // Additifs & stimulants
+  
+  // Visuel avancé
+  densite              Float? // Densité visuelle /10
+  trichome             Float? // Trichomes /10
+  pistil               Float? // Pistils /10
+  manucure             Float? // Manucure /10
+  moisissure           Float? // Moisissure (10=aucune) /10
+  graines              Float? // Graines (10=aucune) /10
+  couleurTransparence  Float? // Couleur/transparence (Hash/Concentré) /10
+  pureteVisuelle       Float? // Pureté visuelle (Hash/Concentré) /10
+  couleur              Float? // Couleur (Concentré) /10
+  viscosite            Float? // Viscosité (Concentré) /10
+  melting              Float? // Melting (Concentré) /10
+  residus              Float? // Résidus (Concentré) /10
+  
+  // Odeurs détaillées
+  intensiteAromatique  Float? // Intensité aromatique /10
+  notesDominantesOdeur String? // JSON: Notes dominantes (max 7)
+  notesSecondairesOdeur String? // JSON: Notes secondaires (max 7)
+  fideliteCultivars    Float? // Fidélité au cultivars (Hash/Concentré) /10
+  
+  // Texture détaillée
+  durete               Float? // Dureté /10
+  densiteTexture       Float? // Densité texture /10
+  elasticite           Float? // Élasticité (Fleur) /10
+  collant              Float? // Collant /10
+  friabiliteViscosite  Float? // Friabilité/Viscosité (Hash) /10
+  meltingResidus       Float? // Melting/Résidus (Hash) /10
+  aspectCollantGras    Float? // Aspect collant/gras (Hash) /10
+  viscositeTexture     Float? // Viscosité texture (Concentré) /10
+  
+  // Goûts & Expérience fumée
+  dryPuff              String? // JSON: Notes dry puff (max 7)
+  inhalation           String? // JSON: Notes inhalation (max 7)
+  expiration           String? // JSON: Notes expiration/arrière-goût (max 7)
+  intensiteFumee       Float? // Intensité fumée /10
+  agressivite          Float? // Agressivité/piquant /10
+  cendre               Float? // Cendre /10
+  textureBouche        Float? // Texture en bouche (Concentré) /10
+  douceur              Float? // Douceur/Agressivité (Concentré) /10
+  intensite            Float? // Intensité générale (Concentré) /10
+  
+  // Effets détaillés
+  montee               Float? // Montée (rapidité) /10
+  intensiteEffet       Float? // Intensité des effets /10
+  intensiteEffets      Float? // Alias pour Concentré /10
+  typeEffet            String? // Type d'effet (textarea)
+  dureeEffet           String? // Durée des effets (select)
+  
+  // Pipelines
+  purificationPipeline  String? // JSON: [{id, name, details}, ...] (Hash & Concentré)
+  fertilizationPipeline String? // JSON: [{id, name, phase, dose, frequency}, ...] (Fleur)
+  substratMix           String? // JSON: [{id, substrat, percentage}, ...] (Fleur)
+  
+  // Recette (Comestible) - Structure unifiée
+  recipe                String? // JSON: {ingredients: [{id, type: 'standard'|'cannabis', name, quantity, unit, ...}], protocol: [{id, action, details, ingredients: [ids]}]} (Comestible)
+  
   // Images
   images      String? // JSON: ["image1.jpg", "image2.jpg", ...]
   mainImage   String? // Image principale

@@ -56,18 +56,18 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(var(--color-primary),0.4)] backdrop-blur-md">
+            <div className="bg-[rgba(var(--color-primary),0.15)] backdrop-blur-xl border border-[rgba(var(--color-primary),0.3)] rounded-2xl shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
                 {/* Header */}
-                <div className="p-6 border-b border-gray-700">
+                <div className="p-6 border-b border-[rgba(var(--color-primary),0.3)]">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                        <h2 className="text-2xl font-bold text-[rgb(var(--text-primary))] flex items-center gap-3">
                             <span className="text-3xl">🌿</span>
                             Bibliothèque de Cultivars
                         </h2>
                         <button
                             onClick={onClose}
-                            className="text-gray-400 hover:text-white transition-colors text-2xl"
+                            className="text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--text-primary))] transition-colors text-2xl"
                         >
                             ✕
                         </button>
@@ -79,7 +79,7 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
                         placeholder="Rechercher un cultivar, breeder, farm..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+                        className="w-full px-4 py-3 bg-[rgba(var(--color-primary),0.1)] border border-[rgba(var(--color-primary),0.3)] rounded-xl text-[rgb(var(--text-primary))] placeholder-[rgba(var(--text-secondary),0.7)] focus:outline-none focus:border-[rgb(var(--color-accent))]"
                     />
                 </div>
 
@@ -87,13 +87,13 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
                 <div className="flex-1 overflow-y-auto p-6">
                     {loading && (
                         <div className="text-center py-12">
-                            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-700 border-t-green-500"></div>
-                            <p className="text-gray-400 mt-4">Chargement de vos cultivars...</p>
+                            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[rgba(var(--color-primary),0.3)] border-t-[rgb(var(--color-accent))]"></div>
+                            <p className="text-[rgb(var(--text-secondary))] mt-4">Chargement de vos cultivars...</p>
                         </div>
                     )}
 
                     {error && (
-                        <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-4 text-red-400">
+                        <div className="bg-[rgba(220,38,38,0.15)] border border-[rgba(220,38,38,0.5)] rounded-xl p-4 text-[rgb(220,38,38)]">
                             {error}
                         </div>
                     )}
@@ -101,10 +101,10 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
                     {!loading && !error && filteredReviews.length === 0 && (
                         <div className="text-center py-12">
                             <div className="text-6xl mb-4">🔍</div>
-                            <p className="text-gray-400 text-lg">
+                            <p className="text-[rgb(var(--text-secondary))] text-lg">
                                 {searchTerm ? 'Aucun cultivar trouvé' : 'Aucune review de fleur trouvée'}
                             </p>
-                            <p className="text-gray-500 text-sm mt-2">
+                            <p className="text-[rgb(var(--text-secondary))] opacity-70 text-sm mt-2">
                                 {searchTerm ? 'Essayez un autre terme de recherche' : 'Créez d\'abord des reviews de fleurs pour les utiliser comme ingrédients'}
                             </p>
                         </div>
@@ -116,32 +116,32 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
                                 <button
                                     key={review.id}
                                     onClick={() => handleSelect(review)}
-                                    className="w-full text-left bg-gray-800/50 hover:bg-gray-800 border border-gray-700 hover:border-green-500 rounded-xl p-4 transition-all group"
+                                    className="w-full text-left bg-[rgba(var(--color-primary),0.1)] hover:bg-[rgba(var(--color-primary),0.2)] border border-[rgba(var(--color-primary),0.3)] hover:border-[rgb(var(--color-accent))] rounded-xl p-4 transition-all group"
                                 >
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1">
-                                            <h3 className="text-lg font-bold text-white group-hover:text-green-400 transition-colors">
+                                            <h3 className="text-lg font-bold text-[rgb(var(--text-primary))] group-hover:text-[rgb(var(--color-accent))] transition-colors">
                                                 {review.cultivars || review.holderName}
                                             </h3>
                                             <div className="flex flex-wrap gap-2 mt-2 text-sm">
                                                 {review.breeder && (
-                                                    <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-lg">
+                                                    <span className="px-2 py-1 bg-[rgba(var(--color-primary),0.2)] text-[rgb(var(--color-primary))] rounded-lg">
                                                         🧬 {review.breeder}
                                                     </span>
                                                 )}
                                                 {review.farm && (
-                                                    <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-lg">
+                                                    <span className="px-2 py-1 bg-[rgba(var(--color-accent),0.2)] text-[rgb(var(--color-accent))] rounded-lg">
                                                         🏡 {review.farm}
                                                     </span>
                                                 )}
                                                 {review.overallRating && (
-                                                    <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-lg">
+                                                    <span className="px-2 py-1 bg-[rgba(var(--color-accent),0.15)] text-[rgb(var(--color-accent))] rounded-lg">
                                                         ⭐ {review.overallRating}/10
                                                     </span>
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="ml-4 text-green-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="ml-4 text-[rgb(var(--color-accent))] opacity-0 group-hover:opacity-100 transition-opacity">
                                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                             </svg>
@@ -154,8 +154,8 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-gray-700 bg-gray-900/50">
-                    <div className="flex items-center justify-between text-sm text-gray-400">
+                <div className="p-6 border-t border-[rgba(var(--color-primary),0.3)] bg-[rgba(var(--color-primary),0.1)]">
+                    <div className="flex items-center justify-between text-sm text-[rgb(var(--text-secondary))]">
                         <span>💡 Sélectionnez un cultivar pour l'ajouter comme ingrédient</span>
                         <span>{filteredReviews.length} cultivar(s) disponible(s)</span>
                     </div>
