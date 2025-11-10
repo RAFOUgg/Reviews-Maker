@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { useOrchardStore, useOrchardActions, DEFAULT_TEMPLATES } from '../../../store/orchardStore';
+import { useOrchardStore, useOrchardActions } from '../../../store/orchardStore';
+import { DEFAULT_TEMPLATES } from '../../../store/orchardConstants';
 
 export default function TemplateSelector() {
     const config = useOrchardStore((state) => state.config);
