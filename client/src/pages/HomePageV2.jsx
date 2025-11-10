@@ -245,60 +245,25 @@ export default function HomePage() {
                                                 }}
                                                 className="flex items-center gap-2 text-sm text-gray-400 hover:text-green-400 transition-all group/author"
                                             >
-                                                <div className="relative w-6 h-6 flex-shrink-0">
-                                                    {(() => {
-                                                        // Déterminer l'URL de l'avatar
-                                                        const avatarUrl = typeof review.author === 'string'
-                                                            ? review.author
-                                                            : review.author?.avatar;
-                                                        const username = typeof review.author === 'object'
-                                                            ? review.author?.username
-                                                            : review.ownerName;
-
-                                                        if (avatarUrl) {
-                                                            return (
-                                                                <>
-                                                                    <img
-                                                                        src={avatarUrl}
-                                                                        alt={username || 'Avatar'}
-                                                                        className="w-6 h-6 rounded-full object-cover border-2 group-hover/author:scale-110 transition-all shadow-sm"
-                                                                        style={{
-                                                                            borderColor: 'var(--primary)'
-                                                                        }}
-                                                                        onLoad={() => {
-                                                                            console.log('✅ Avatar chargé:', review.holderName, avatarUrl)
-                                                                        }}
-                                                                        onError={(e) => {
-                                                                            console.error('❌ Erreur chargement avatar:', review.holderName, avatarUrl)
-                                                                            e.target.style.display = 'none'
-                                                                            e.target.nextSibling.style.display = 'flex'
-                                                                        }}
-                                                                    />
-                                                                    <div
-                                                                        className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold group-hover/author:scale-110 transition-transform shadow-sm"
-                                                                        style={{
-                                                                            background: 'var(--gradient-primary)',
-                                                                            display: 'none'
-                                                                        }}
-                                                                    >
-                                                                        {(username || 'A')[0].toUpperCase()}
-                                                                    </div>
-                                                                </>
-                                                            );
-                                                        }
-
-                                                        return (
-                                                            <div
-                                                                className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold group-hover/author:scale-110 transition-transform shadow-sm"
-                                                                style={{
-                                                                    background: 'var(--gradient-primary)'
-                                                                }}
-                                                            >
-                                                                {(username || 'A')[0].toUpperCase()}
-                                                            </div>
-                                                        );
-                                                    })()}
-                                                </div>
+                                                {review.author && review.author.avatar ? (
+                                                    <img
+                                                        src={review.author.avatar}
+                                                        alt={review.author.username || 'Avatar'}
+                                                        className="w-6 h-6 rounded-full object-cover border-2 group-hover/author:scale-110 transition-all shadow-sm"
+                                                        style={{
+                                                            borderColor: 'var(--primary)'
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <div
+                                                        className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold group-hover/author:scale-110 transition-transform shadow-sm"
+                                                        style={{
+                                                            background: 'var(--gradient-primary)'
+                                                        }}
+                                                    >
+                                                        {(review.ownerName || review.author?.username || 'A')[0].toUpperCase()}
+                                                    </div>
+                                                )}
                                                 <span className="font-semibold group-hover/author:underline">
                                                     {review.ownerName || review.author?.username || 'Anonyme'}
                                                 </span>

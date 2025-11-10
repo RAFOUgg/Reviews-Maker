@@ -73,7 +73,7 @@ export default function PurificationPipeline({ value, onChange, availableMethods
                                     <button
                                         type="button"
                                         onClick={() => removeStep(step.id)}
-                                        className="w-8 h-8 flex items-center justify-center text-red-400 hover:text-red-300 transition-colors"
+                                        className="w-8 h-8 flex items-center justify-center text-[rgb(var(--color-danger))] hover:text-[rgb(var(--color-danger))] hover:opacity-80 transition-colors"
                                         title="Supprimer"
                                     >
                                         ✕
@@ -95,14 +95,14 @@ export default function PurificationPipeline({ value, onChange, availableMethods
 
             {/* Message de blocage si pas d'extraction */}
             {!hasExtractionSteps && (
-                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-4">
+                <div className="bg-[rgba(var(--color-warning),0.1)] border border-[rgba(var(--color-warning),0.3)] rounded-xl p-4 mb-4">
                     <div className="flex items-start gap-3">
                         <span className="text-2xl">⚠️</span>
                         <div>
-                            <p className="text-yellow-300 font-medium mb-1">
+                            <p className="text-[rgb(var(--color-warning))] font-medium mb-1">
                                 Étape d'extraction requise
                             </p>
-                            <p className="text-yellow-200/80 text-sm">
+                            <p className="text-[rgb(var(--text-secondary))] opacity-90 text-sm">
                                 Vous devez définir les cultivars avant de définir les étapes du pipeline
                             </p>
                         </div>
@@ -117,8 +117,8 @@ export default function PurificationPipeline({ value, onChange, availableMethods
                         onClick={() => setShowMenu(true)}
                         disabled={!hasExtractionSteps}
                         className={`w-full py-3 border-2 border-dashed rounded-xl transition-all flex items-center justify-center gap-2 ${hasExtractionSteps
-                                ? 'border-white/20 hover:border-white/40 text-white/70 hover:text-white glow-container-subtle cursor-pointer'
-                                : 'border-gray-700 text-gray-600 cursor-not-allowed opacity-50'
+                            ? 'border-white/20 hover:border-white/40 text-white/70 hover:text-white glow-container-subtle cursor-pointer'
+                            : 'border-gray-700 text-gray-600 cursor-not-allowed opacity-50'
                             }`}
                     >
                         <span className="text-2xl">+</span>

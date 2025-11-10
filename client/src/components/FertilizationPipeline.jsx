@@ -79,18 +79,18 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
     return (
         <div className="space-y-4">
             {/* Formulaire d'ajout */}
-            <div className="p-4 bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/30">
-                <h4 className="text-sm font-medium text-green-400 mb-3">🌱 Ajouter un engrais</h4>
+            <div className="p-4 bg-[rgba(var(--color-primary),0.1)] rounded-xl border border-[rgba(var(--color-primary),0.3)]">
+                <h4 className="text-sm font-medium text-[rgb(var(--color-accent))] mb-3">🌱 Ajouter un engrais</h4>
 
                 <div className="space-y-3">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {/* Phase */}
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1">Phase</label>
+                            <label className="block text-xs text-[rgb(var(--text-secondary))] opacity-80 mb-1">Phase</label>
                             <select
                                 value={phase}
                                 onChange={(e) => setPhase(e.target.value)}
-                                className="w-full px-3 py-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:border-green-500 focus:outline-none"
+                                className="w-full px-3 py-2 bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--text-primary))] rounded-lg border border-[rgba(var(--color-primary),0.3)] focus:border-[rgb(var(--color-accent))] focus:outline-none"
                             >
                                 <option value="croissance">🌿 Croissance</option>
                                 <option value="floraison">🌸 Floraison</option>
@@ -100,7 +100,7 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
 
                         {/* Engrais */}
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1">Type d'engrais</label>
+                            <label className="block text-xs text-[rgb(var(--text-secondary))] opacity-80 mb-1">Type d'engrais</label>
                             <select
                                 value={selectedFertilizer}
                                 onChange={(e) => {
@@ -108,7 +108,7 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                     setCommercialName('');
                                     setNpk({ n: '', p: '', k: '' });
                                 }}
-                                className="w-full px-3 py-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:border-green-500 focus:outline-none"
+                                className="w-full px-3 py-2 bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--text-primary))] rounded-lg border border-[rgba(var(--color-primary),0.3)] focus:border-[rgb(var(--color-accent))] focus:outline-none"
                             >
                                 <option value="">-- Sélectionner --</option>
                                 {availableFertilizers.map((fert, idx) => (
@@ -121,13 +121,13 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                     {/* Nom commercial (si engrais commercial) */}
                     {isCommercial && (
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1">Nom commercial *</label>
+                            <label className="block text-xs text-[rgb(var(--text-secondary))] opacity-80 mb-1">Nom commercial *</label>
                             <input
                                 type="text"
                                 value={commercialName}
                                 onChange={(e) => setCommercialName(e.target.value)}
                                 placeholder="Ex: BioBizz Grow, Advanced Nutrients..."
-                                className="w-full px-3 py-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:border-green-500 focus:outline-none placeholder-gray-500"
+                                className="w-full px-3 py-2 bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--text-primary))] rounded-lg border border-[rgba(var(--color-primary),0.3)] focus:border-[rgb(var(--color-accent))] focus:outline-none placeholder-[rgb(var(--text-secondary))] placeholder:opacity-50"
                             />
                         </div>
                     )}
@@ -135,7 +135,7 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                     {/* NPK (si Solutions nutritives NPK) */}
                     {isNPK && (
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1">Valeurs NPK *</label>
+                            <label className="block text-xs text-[rgb(var(--text-secondary))] opacity-80 mb-1">Valeurs NPK *</label>
                             <div className="grid grid-cols-3 gap-2">
                                 <input
                                     type="number"
@@ -144,7 +144,7 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                     value={npk.n}
                                     onChange={(e) => setNpk({ ...npk, n: e.target.value })}
                                     placeholder="N"
-                                    className="w-full px-3 py-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:border-green-500 focus:outline-none placeholder-gray-500 text-center"
+                                    className="w-full px-3 py-2 bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--text-primary))] rounded-lg border border-[rgba(var(--color-primary),0.3)] focus:border-[rgb(var(--color-accent))] focus:outline-none placeholder-[rgb(var(--text-secondary))] placeholder:opacity-50 text-center"
                                 />
                                 <input
                                     type="number"
@@ -153,7 +153,7 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                     value={npk.p}
                                     onChange={(e) => setNpk({ ...npk, p: e.target.value })}
                                     placeholder="P"
-                                    className="w-full px-3 py-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:border-green-500 focus:outline-none placeholder-gray-500 text-center"
+                                    className="w-full px-3 py-2 bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--text-primary))] rounded-lg border border-[rgba(var(--color-primary),0.3)] focus:border-[rgb(var(--color-accent))] focus:outline-none placeholder-[rgb(var(--text-secondary))] placeholder:opacity-50 text-center"
                                 />
                                 <input
                                     type="number"
@@ -162,16 +162,16 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                     value={npk.k}
                                     onChange={(e) => setNpk({ ...npk, k: e.target.value })}
                                     placeholder="K"
-                                    className="w-full px-3 py-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:border-green-500 focus:outline-none placeholder-gray-500 text-center"
+                                    className="w-full px-3 py-2 bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--text-primary))] rounded-lg border border-[rgba(var(--color-primary),0.3)] focus:border-[rgb(var(--color-accent))] focus:outline-none placeholder-[rgb(var(--text-secondary))] placeholder:opacity-50 text-center"
                                 />
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">Format: Azote (N) - Phosphore (P) - Potassium (K)</p>
+                            <p className="text-xs text-[rgb(var(--text-secondary))] opacity-70 mt-1">Format: Azote (N) - Phosphore (P) - Potassium (K)</p>
                         </div>
                     )}
 
                     {/* Dose */}
                     <div>
-                        <label className="block text-xs text-gray-400 mb-1">Dose *</label>
+                        <label className="block text-xs text-[rgb(var(--text-secondary))] opacity-80 mb-1">Dose *</label>
                         <div className="flex gap-2">
                             <input
                                 type="number"
@@ -180,12 +180,12 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                 value={doseAmount}
                                 onChange={(e) => setDoseAmount(e.target.value)}
                                 placeholder="Quantité"
-                                className="flex-1 px-3 py-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:border-green-500 focus:outline-none placeholder-gray-500"
+                                className="flex-1 px-3 py-2 bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--text-primary))] rounded-lg border border-[rgba(var(--color-primary),0.3)] focus:border-[rgb(var(--color-accent))] focus:outline-none placeholder-[rgb(var(--text-secondary))] placeholder:opacity-50"
                             />
                             <select
                                 value={doseUnit}
                                 onChange={(e) => setDoseUnit(e.target.value)}
-                                className="px-3 py-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:border-green-500 focus:outline-none"
+                                className="px-3 py-2 bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--text-primary))] rounded-lg border border-[rgba(var(--color-primary),0.3)] focus:border-[rgb(var(--color-accent))] focus:outline-none"
                             >
                                 <option value="ml/L">ml/L</option>
                                 <option value="g/L">g/L</option>
@@ -197,7 +197,7 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
 
                     {/* Fréquence */}
                     <div>
-                        <label className="block text-xs text-gray-400 mb-1">Fréquence *</label>
+                        <label className="block text-xs text-[rgb(var(--text-secondary))] opacity-80 mb-1">Fréquence *</label>
                         <div className="flex gap-2">
                             <input
                                 type="number"
@@ -215,8 +215,8 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                         type="button"
                                         onClick={() => setFrequencyUnit(unit)}
                                         className={`flex-1 px-2 py-2 rounded-lg text-sm font-medium transition ${frequencyUnit === unit
-                                                ? 'bg-green-500 text-white'
-                                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                            ? 'bg-green-500 text-white'
+                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                             }`}
                                     >
                                         {unit}
@@ -239,18 +239,18 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
             {/* Liste des étapes */}
             {steps.length > 0 && (
                 <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-gray-400">
+                    <h4 className="text-sm font-medium text-[rgb(var(--text-secondary))] opacity-80">
                         📋 Routine d'engraissage ({steps.length} engrais)
                     </h4>
 
                     {steps.map((step, index) => (
                         <div
                             key={step.id}
-                            className="flex items-start gap-3 p-4 bg-white/5 hover:bg-white/10 rounded-xl border border-gray-700/50 transition group"
+                            className="flex items-start gap-3 p-4 bg-[rgba(var(--color-primary),0.05)] hover:bg-[rgba(var(--color-primary),0.1)] rounded-xl border border-[rgba(var(--color-primary),0.2)] transition group"
                         >
                             {/* Numéro + Phase icon */}
                             <div className="flex flex-col items-center gap-1 min-w-[50px]">
-                                <span className="text-2xl font-bold text-green-400/60">
+                                <span className="text-2xl font-bold text-[rgb(var(--color-accent))] opacity-70">
                                     {index + 1}
                                 </span>
                                 <span className="text-lg">
@@ -264,18 +264,18 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                             <div className="flex-1 space-y-2">
                                 {/* Nom engrais + infos complémentaires */}
                                 <div>
-                                    <h5 className="font-medium text-white">{step.name}</h5>
+                                    <h5 className="font-medium text-[rgb(var(--text-primary))]">{step.name}</h5>
                                     <div className="flex flex-wrap gap-2 mt-1">
-                                        <span className="text-xs px-2 py-0.5 bg-gray-700/50 rounded text-gray-400 capitalize">
+                                        <span className="text-xs px-2 py-0.5 bg-[rgba(var(--color-primary),0.2)] rounded text-[rgb(var(--text-secondary))] capitalize">
                                             {step.phase === 'tout' ? 'Tout au long' : step.phase}
                                         </span>
                                         {step.commercialName && (
-                                            <span className="text-xs px-2 py-0.5 bg-blue-500/20 rounded text-blue-300">
+                                            <span className="text-xs px-2 py-0.5 bg-[rgba(var(--color-accent),0.2)] rounded text-[rgb(var(--color-accent))]">
                                                 {step.commercialName}
                                             </span>
                                         )}
                                         {step.npk && (
-                                            <span className="text-xs px-2 py-0.5 bg-purple-500/20 rounded text-purple-300 font-mono">
+                                            <span className="text-xs px-2 py-0.5 bg-[rgba(var(--color-primary),0.3)] rounded text-[rgb(var(--text-primary))] font-mono">
                                                 NPK {step.npk}
                                             </span>
                                         )}
@@ -285,14 +285,14 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                 {/* Dose & Fréquence (lecture seule avec badges) */}
                                 <div className="flex flex-wrap gap-3 items-center">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-xs text-gray-500">💧 Dose:</span>
-                                        <span className="text-sm font-medium text-white px-2 py-1 bg-gray-800/50 rounded">
+                                        <span className="text-xs text-[rgb(var(--text-secondary))] opacity-70">💧 Dose:</span>
+                                        <span className="text-sm font-medium text-[rgb(var(--text-primary))] px-2 py-1 bg-[rgba(var(--color-primary),0.2)] rounded">
                                             {step.dose}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-xs text-gray-500">📅 Fréquence:</span>
-                                        <span className="text-sm font-medium text-white px-2 py-1 bg-gray-800/50 rounded">
+                                        <span className="text-xs text-[rgb(var(--text-secondary))] opacity-70">📅 Fréquence:</span>
+                                        <span className="text-sm font-medium text-[rgb(var(--text-primary))] px-2 py-1 bg-[rgba(var(--color-primary),0.2)] rounded">
                                             {step.frequency}
                                         </span>
                                     </div>
@@ -304,7 +304,7 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                 <button
                                     onClick={() => moveStep(index, 'up')}
                                     disabled={index === 0}
-                                    className="p-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded text-sm transition"
+                                    className="p-1 bg-[rgba(var(--color-primary),0.3)] hover:bg-[rgba(var(--color-primary),0.4)] disabled:opacity-30 disabled:cursor-not-allowed text-[rgb(var(--text-primary))] rounded text-sm transition"
                                     title="Déplacer vers le haut"
                                 >
                                     ↑
@@ -312,14 +312,14 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                 <button
                                     onClick={() => moveStep(index, 'down')}
                                     disabled={index === steps.length - 1}
-                                    className="p-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded text-sm transition"
+                                    className="p-1 bg-[rgba(var(--color-primary),0.3)] hover:bg-[rgba(var(--color-primary),0.4)] disabled:opacity-30 disabled:cursor-not-allowed text-[rgb(var(--text-primary))] rounded text-sm transition"
                                     title="Déplacer vers le bas"
                                 >
                                     ↓
                                 </button>
                                 <button
                                     onClick={() => removeStep(step.id)}
-                                    className="p-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded text-sm transition"
+                                    className="p-1 bg-[rgba(var(--color-danger),0.2)] hover:bg-[rgba(var(--color-danger),0.3)] text-[rgb(var(--color-danger))] rounded text-sm transition"
                                     title="Supprimer"
                                 >
                                     ✕
@@ -332,7 +332,7 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
 
             {/* Message si vide */}
             {steps.length === 0 && (
-                <div className="text-center py-6 text-gray-500 text-sm">
+                <div className="text-center py-6 text-[rgb(var(--text-secondary))] opacity-70 text-sm">
                     Aucun engrais ajouté. Utilisez le formulaire ci-dessus pour construire votre routine d'engraissage.
                 </div>
             )}

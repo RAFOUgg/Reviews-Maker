@@ -141,12 +141,15 @@ router.get('/:id', asyncHandler(async (req, res) => {
     }
 
     // Vérifier les permissions pour les reviews privées
-    if (!review.isPublic && (!req.isAuthenticated() || review.authorId !== req.user.id)) {
+    const isAuthenticated = req.isAuthenticated()
+    const currentUser = isAuthenticated ? req.user : null
+
+    if (!review.isPublic && (!isAuthenticated || !currentUser || review.authorId !== currentUser.id)) {
         throw Errors.FORBIDDEN()
     }
 
     // Formater la review
-    const formattedReview = formatReview(review, req.isAuthenticated() ? req.user : null)
+    const formattedReview = formatReview(review, currentUser)
 
     res.json(formattedReview)
 }))

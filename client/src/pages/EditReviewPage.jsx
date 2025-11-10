@@ -31,14 +31,6 @@ export default function EditReviewPage() {
     const [error, setError] = useState('');
     const [hasSolvents, setHasSolvents] = useState(false);
 
-    useEffect(() => {
-        if (!isAuthenticated) {
-            navigate('/');
-            return;
-        }
-        fetchReview();
-    }, [id, isAuthenticated]);
-
     const fetchReview = async () => {
         try {
             const response = await fetch(`/api/reviews/${id}`);
@@ -46,26 +38,54 @@ export default function EditReviewPage() {
 
             const data = await response.json();
 
+            // Debug logs
+            console.log('🔍 DEBUG - Review data:', data);
+            console.log('🔍 DEBUG - data.authorId:', data.authorId);
+            console.log('🔍 DEBUG - user:', user);
+            console.log('🔍 DEBUG - user.id:', user?.id);
+
             // Vérifier ownership
             if (data.authorId !== user?.id) {
+                console.error('❌ Ownership check failed:', {
+                    reviewAuthorId: data.authorId,
+                    userId: user?.id,
+                    match: data.authorId === user?.id
+                });
                 toast.error('Vous ne pouvez pas éditer cette review');
                 navigate('/');
                 return;
             }
 
+            console.log('✅ Ownership check passed');
+
             setReview(data);
 
-            // Parse JSON fields
+            // Parse JSON fields (seulement si ce sont des strings, sinon l'API les a déjà parsés)
+            const safeParseJSON = (value, defaultValue) => {
+                if (!value) return defaultValue;
+                if (typeof value === 'string') {
+                    try {
+                        return JSON.parse(value);
+                    } catch (e) {
+                        console.error('JSON parse error:', e);
+                        return defaultValue;
+                    }
+                }
+                return value; // Déjà un objet
+            };
+
             const parsedData = {
                 ...data,
-                categoryRatings: data.categoryRatings ? JSON.parse(data.categoryRatings) : null,
-                aromas: data.aromas ? JSON.parse(data.aromas) : [],
-                tastes: data.tastes ? JSON.parse(data.tastes) : [],
-                effects: data.effects ? JSON.parse(data.effects) : [],
-                cultivarsList: data.cultivarsList ? JSON.parse(data.cultivarsList) : [],
-                pipelineExtraction: data.pipelineExtraction ? JSON.parse(data.pipelineExtraction) : null,
-                pipelineSeparation: data.pipelineSeparation ? JSON.parse(data.pipelineSeparation) : null,
+                categoryRatings: safeParseJSON(data.categoryRatings, null),
+                aromas: safeParseJSON(data.aromas, []),
+                tastes: safeParseJSON(data.tastes, []),
+                effects: safeParseJSON(data.effects, []),
+                cultivarsList: safeParseJSON(data.cultivarsList, []),
+                pipelineExtraction: safeParseJSON(data.pipelineExtraction, null),
+                pipelineSeparation: safeParseJSON(data.pipelineSeparation, null),
             };
+
+            console.log('✅ Parsed data:', parsedData);
 
             setFormData(parsedData);
             setExistingImages(parseImages(data.images));
@@ -80,6 +100,15 @@ export default function EditReviewPage() {
             navigate('/');
         }
     };
+
+    useEffect(() => {
+        if (!isAuthenticated) {
+            navigate('/');
+            return;
+        }
+        fetchReview();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id, isAuthenticated]);
 
     if (!isAuthenticated || loading) {
         return (
@@ -401,19 +430,19 @@ export default function EditReviewPage() {
                         {/* Existing Images */}
                         {existingImages.length > 0 && (
                             <div>
-                                <p className="text-sm text-gray-400 mb-2">Images existantes ({existingImages.length})</p>
+                                <p className="text-sm text-[rgb(var(--text-secondary))] opacity-80 mb-2">Images existantes ({existingImages.length})</p>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     {existingImages.map((imgUrl, idx) => (
                                         <div key={idx} className="relative group aspect-square">
                                             <img
                                                 src={imgUrl}
                                                 alt={`Image ${idx + 1}`}
-                                                className="w-full h-full object-cover rounded-xl border-2 border-green-700"
+                                                className="w-full h-full object-cover rounded-xl border-2 border-[rgba(var(--color-primary),0.5)]"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => removeExistingImage(idx)}
-                                                className="absolute top-2 right-2 bg-red-600 hover:bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+                                                className="absolute top-2 right-2 bg-[rgba(var(--color-danger),0.9)] hover:bg-[rgb(var(--color-danger))] text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg"
                                             >
                                                 ×
                                             </button>
@@ -426,23 +455,23 @@ export default function EditReviewPage() {
                         {/* New Images */}
                         {images.length > 0 && (
                             <div>
-                                <p className="text-sm text-gray-400 mb-2">Nouvelles images ({images.length})</p>
+                                <p className="text-sm text-[rgb(var(--text-secondary))] opacity-80 mb-2">Nouvelles images ({images.length})</p>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     {images.map((img, idx) => (
                                         <div key={idx} className="relative group aspect-square">
                                             <img
                                                 src={URL.createObjectURL(img)}
                                                 alt={`Nouvelle ${idx + 1}`}
-                                                className="w-full h-full object-cover rounded-xl border-2 border-amber-700"
+                                                className="w-full h-full object-cover rounded-xl border-2 border-[rgba(var(--color-accent),0.5)]"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => removeImage(idx)}
-                                                className="absolute top-2 right-2 bg-red-600 hover:bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+                                                className="absolute top-2 right-2 bg-[rgba(var(--color-danger),0.9)] hover:bg-[rgb(var(--color-danger))] text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg"
                                             >
                                                 ×
                                             </button>
-                                            <span className="absolute bottom-2 left-2 px-2 py-1 bg-amber-600 text-white text-xs rounded-full">
+                                            <span className="absolute bottom-2 left-2 px-2 py-1 bg-[rgba(var(--color-accent),0.9)] text-white text-xs rounded-full">
                                                 Nouveau
                                             </span>
                                         </div>
@@ -464,7 +493,7 @@ export default function EditReviewPage() {
                                 />
                                 <label
                                     htmlFor="imageUpload"
-                                    className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer hover:border-green-500 transition-colors text-gray-400 hover:text-gray-300"
+                                    className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-[rgba(var(--color-primary),0.3)] rounded-xl cursor-pointer hover:border-[rgb(var(--color-accent))] transition-colors text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--text-primary))]"
                                 >
                                     <span className="text-2xl">+</span>
                                     <span>Ajouter des images ({existingImages.length + images.length}/10)</span>
@@ -590,7 +619,7 @@ export default function EditReviewPage() {
             {/* Error Display */}
             {error && (
                 <div className="max-w-4xl mx-auto px-4 mt-4">
-                    <div className="p-4 bg-[rgba(220,38,38,0.1)] border border-[rgba(220,38,38,0.5)] rounded-xl text-red-400">
+                    <div className="p-4 bg-[rgba(var(--color-danger),0.1)] border border-[rgba(var(--color-danger),0.3)] rounded-xl text-[rgb(var(--color-danger))]">
                         {error}
                     </div>
                 </div>
@@ -608,7 +637,7 @@ export default function EditReviewPage() {
                                 {field.type !== 'checkbox' && field.type !== 'images' && (
                                     <label className="block text-sm font-semibold text-[rgb(var(--text-primary))]">
                                         {field.label}
-                                        {field.required && <span className="text-red-400 ml-1">*</span>}
+                                        {field.required && <span className="text-[rgb(var(--color-danger))] ml-1">*</span>}
                                         {field.max && field.type === 'slider' && (
                                             <span className="text-[rgb(var(--text-secondary))] opacity-70 ml-1">/10</span>
                                         )}
