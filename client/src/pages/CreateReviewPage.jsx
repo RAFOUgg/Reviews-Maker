@@ -12,12 +12,14 @@ import SubstratMixer from '../components/SubstratMixer';
 import RecipeSection from '../components/RecipeSection';
 import SectionNavigator from '../components/SectionNavigator';
 import CategoryRatingSummary from '../components/CategoryRatingSummary';
+import OrchardPanel from '../components/orchard/OrchardPanel';
+import { AnimatePresence } from 'framer-motion';
 import { productStructures } from '../utils/productStructures';
 
 export default function CreateReviewPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const { isAuthenticated, createReview } = useStore();
+    const { isAuthenticated, createReview, user } = useStore();
     const toast = useToast();
 
     const typeFromUrl = searchParams.get('type') || 'Fleur';
@@ -32,6 +34,7 @@ export default function CreateReviewPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [hasSolvents, setHasSolvents] = useState(false);
+    const [showOrchardStudio, setShowOrchardStudio] = useState(false);
 
     if (!isAuthenticated) { navigate('/'); return null; }
 
@@ -173,7 +176,12 @@ export default function CreateReviewPage() {
                     <div className="flex items-center justify-between mb-3">
                         <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white transition-colors">← Retour</button>
                         <div className="text-center"><h1 className="text-xl font-bold text-white">{formData.type}</h1><p className="text-xs text-gray-400">Section {currentSectionIndex + 1}/{sections.length}</p></div>
-                        <div className="w-16"></div>
+                        <button
+                            onClick={() => setShowOrchardStudio(true)}
+                            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-medium shadow-lg transition-all flex items-center gap-2"
+                        >
+                            🎨 Aperçu
+                        </button>
                     </div>
                     {/* Résumé des notes par catégorie */}
                     <CategoryRatingSummary ratings={categoryRatings} />
@@ -198,6 +206,30 @@ export default function CreateReviewPage() {
                     {currentSectionIndex === sections.length - 1 ? <button onClick={handleSubmit} disabled={isSubmitting || images.length === 0} className="flex-1 py-3 bg-transparent border border-white/40 text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all glow-container hover:glow-text">{isSubmitting ? '⏳ Enregistrement...' : '💾 Enregistrer la Review'}</button> : <button type="button" onClick={nextSection} className="flex-1 py-3 bg-transparent border border-white/40 text-white rounded-xl font-bold transition-all glow-container hover:glow-text">Suivant →</button>}</div>
             </div>
             <div className="h-24"></div>
+
+            {/* Orchard Studio Modal */}
+            <AnimatePresence>
+                {showOrchardStudio && (
+                    <OrchardPanel
+                        reviewData={{
+                            title: formData.holderName || 'Aperçu de la review',
+                            rating: categoryRatings.overall,
+                            author: user?.displayName || 'Auteur',
+                            date: new Date().toISOString(),
+                            category: formData.type,
+                            thcLevel: formData.thcLevel || 0,
+                            cbdLevel: formData.cbdLevel || 0,
+                            description: formData.description || '',
+                            effects: formData.selectedEffects || [],
+                            aromas: formData.selectedAromas || [],
+                            tags: formData.tags || [],
+                            cultivar: formData.cultivar || '',
+                            image: images.length > 0 ? URL.createObjectURL(images[0]) : undefined
+                        }}
+                        onClose={() => setShowOrchardStudio(false)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 } 

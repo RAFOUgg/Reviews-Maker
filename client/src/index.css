@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* === ORCHARD STUDIO STYLES === */
+@import './assets/orchard.css';
+
 /* === THÈMES CSS VARIABLES === */
 
 /* Par défaut - Violet Lean - VIOLET POURPRE INTENSE */

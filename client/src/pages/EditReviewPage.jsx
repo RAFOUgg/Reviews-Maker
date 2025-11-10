@@ -11,6 +11,8 @@ import FertilizationPipeline from '../components/FertilizationPipeline';
 import SubstratMixer from '../components/SubstratMixer';
 import RecipeSection from '../components/RecipeSection';
 import GlobalRating from '../components/GlobalRating';
+import OrchardPanel from '../components/orchard/OrchardPanel';
+import { AnimatePresence } from 'framer-motion';
 import { productStructures } from '../utils/productStructures';
 import { parseImages } from '../utils/imageUtils';
 
@@ -30,6 +32,7 @@ export default function EditReviewPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [hasSolvents, setHasSolvents] = useState(false);
+    const [showOrchardStudio, setShowOrchardStudio] = useState(false);
 
     const fetchReview = async () => {
         try {
@@ -563,7 +566,12 @@ export default function EditReviewPage() {
                                 Section {currentSectionIndex + 1}/{sections.length}
                             </p>
                         </div>
-                        <div className="w-16"></div>
+                        <button
+                            onClick={() => setShowOrchardStudio(true)}
+                            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-medium shadow-lg transition-all flex items-center gap-2"
+                        >
+                            🎨 Aperçu
+                        </button>
                     </div>
                     {/* Résumé des notes par catégorie */}
                     <div className="flex items-center justify-center gap-4 text-sm">
@@ -682,6 +690,30 @@ export default function EditReviewPage() {
             </div>
 
             <div className="h-24"></div>
+
+            {/* Orchard Studio Modal */}
+            <AnimatePresence>
+                {showOrchardStudio && (
+                    <OrchardPanel
+                        reviewData={{
+                            title: formData.holderName || 'Aperçu de la review',
+                            rating: categoryRatings.overall,
+                            author: review?.authorName || user?.displayName || 'Auteur',
+                            date: review?.createdAt || new Date().toISOString(),
+                            category: formData.type,
+                            thcLevel: formData.thcLevel || 0,
+                            cbdLevel: formData.cbdLevel || 0,
+                            description: formData.description || '',
+                            effects: formData.selectedEffects || [],
+                            aromas: formData.selectedAromas || [],
+                            tags: formData.tags || [],
+                            cultivar: formData.cultivar || '',
+                            image: existingImages.length > 0 ? existingImages[0] : (images.length > 0 ? URL.createObjectURL(images[0]) : undefined)
+                        }}
+                        onClose={() => setShowOrchardStudio(false)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 }
