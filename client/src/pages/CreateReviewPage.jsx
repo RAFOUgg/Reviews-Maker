@@ -224,7 +224,7 @@ export default function CreateReviewPage() {
                             aromas: formData.selectedAromas || [],
                             tags: formData.tags || [],
                             cultivar: formData.cultivar || '',
-                            image: images.length > 0 ? URL.createObjectURL(images[0]) : undefined
+                            imageUrl: images.length > 0 ? URL.createObjectURL(images[0]) : undefined
                         }}
                         onClose={() => setShowOrchardStudio(false)}
                     />

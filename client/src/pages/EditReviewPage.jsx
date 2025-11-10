@@ -708,7 +708,7 @@ export default function EditReviewPage() {
                             aromas: formData.selectedAromas || [],
                             tags: formData.tags || [],
                             cultivar: formData.cultivar || '',
-                            image: existingImages.length > 0 ? existingImages[0] : (images.length > 0 ? URL.createObjectURL(images[0]) : undefined)
+                            imageUrl: existingImages.length > 0 ? existingImages[0] : (images.length > 0 ? URL.createObjectURL(images[0]) : undefined)
                         }}
                         onClose={() => setShowOrchardStudio(false)}
                     />

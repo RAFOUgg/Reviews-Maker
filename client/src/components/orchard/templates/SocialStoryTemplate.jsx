@@ -2,6 +2,15 @@ import PropTypes from 'prop-types';
 
 // Template simplifié pour les stories (format vertical 9:16)
 export default function SocialStoryTemplate({ config, reviewData }) {
+    // Validation des props
+    if (!config || !reviewData) {
+        return (
+            <div className="w-full h-full flex items-center justify-center bg-red-50 dark:bg-red-900/20 p-8">
+                <p className="text-red-600 dark:text-red-400">Données manquantes</p>
+            </div>
+        );
+    }
+
     const { typography, colors, contentModules } = config;
 
     return (
