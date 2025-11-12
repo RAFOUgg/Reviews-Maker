@@ -22,7 +22,6 @@ export default function AuthCallback() {
                     navigate('/')
                 }
             } catch (error) {
-                console.error('Auth callback failed:', error)
                 navigate('/')
             }
         }

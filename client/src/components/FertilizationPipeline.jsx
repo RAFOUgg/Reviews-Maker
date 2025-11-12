@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
 const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = [] }) => {
-    const [steps, setSteps] = useState(value);
+    // ✅ Garantir que value est toujours un tableau
+    const safeValue = Array.isArray(value) ? value : [];
+
+    const [steps, setSteps] = useState(safeValue);
     const [selectedFertilizer, setSelectedFertilizer] = useState('');
     const [phase, setPhase] = useState('croissance');
     const [commercialName, setCommercialName] = useState('');
@@ -13,7 +16,8 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
     const [frequencyUnit, setFrequencyUnit] = useState('sem');
 
     useEffect(() => {
-        setSteps(value);
+        const newValue = Array.isArray(value) ? value : [];
+        setSteps(newValue);
     }, [value]);
 
     const isNPK = selectedFertilizer === 'Solutions nutritives NPK';

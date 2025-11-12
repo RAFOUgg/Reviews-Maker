@@ -5,7 +5,9 @@ import TemplateRenderer from './TemplateRenderer';
 
 export default function PreviewPane() {
     const previewRef = useRef(null);
-    const { config, reviewData, isPreviewFullscreen } = useOrchardStore();
+    const config = useOrchardStore((state) => state.config);
+    const reviewData = useOrchardStore((state) => state.reviewData);
+    const isPreviewFullscreen = useOrchardStore((state) => state.isPreviewFullscreen);
 
     // Validation des données
     if (!reviewData || !config) {

@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion';
-import { useOrchardStore, useOrchardActions } from '../../../store/orchardStore';
+import { useOrchardStore } from '../../../store/orchardStore';
 import { DEFAULT_TEMPLATES } from '../../../store/orchardConstants';
 
 export default function TemplateSelector() {
     const config = useOrchardStore((state) => state.config);
-    const { setTemplate, setRatio } = useOrchardActions();
+    const setTemplate = useOrchardStore((state) => state.setTemplate);
+    const setRatio = useOrchardStore((state) => state.setRatio);
     const templates = DEFAULT_TEMPLATES;
 
     const ratios = [
@@ -16,39 +17,39 @@ export default function TemplateSelector() {
     ];
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {/* Titre */}
             <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
                     Choix du Template
                 </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                     Sélectionnez un style de présentation pour votre review
                 </p>
             </div>
 
             {/* Galerie de templates */}
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-2">
                 {Object.values(templates).map((template) => (
                     <motion.button
                         key={template.id}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
                         onClick={() => setTemplate(template.id)}
                         className={`
-                            p-4 rounded-xl text-left transition-all border-2
+                            p-3 rounded-lg text-left transition-all border-2
                             ${config.template === template.id
                                 ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
                                 : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-purple-300'
                             }
                         `}
                     >
-                        <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-start justify-between mb-1.5">
                             <div>
-                                <h4 className="font-semibold text-gray-900 dark:text-white">
+                                <h4 className="font-medium text-sm text-gray-900 dark:text-white">
                                     {template.name}
                                 </h4>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
                                     {template.description}
                                 </p>
                             </div>
@@ -59,11 +60,11 @@ export default function TemplateSelector() {
                             )}
                         </div>
 
-                        <div className="flex gap-1 mt-2">
+                        <div className="flex gap-1 mt-1.5">
                             {template.supportedRatios.slice(0, 3).map((ratio) => (
                                 <span
                                     key={ratio}
-                                    className="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                    className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
                                 >
                                     {ratio}
                                 </span>
@@ -75,10 +76,10 @@ export default function TemplateSelector() {
 
             {/* Sélecteur de ratio */}
             <div>
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
                     Format d'affichage
                 </h4>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-1.5">
                     {ratios.map((ratio) => {
                         const currentTemplate = templates[config.template];
                         const isSupported = currentTemplate?.supportedRatios.includes(ratio.id);
@@ -86,23 +87,23 @@ export default function TemplateSelector() {
                         return (
                             <motion.button
                                 key={ratio.id}
-                                whileHover={isSupported ? { scale: 1.02 } : {}}
-                                whileTap={isSupported ? { scale: 0.98 } : {}}
+                                whileHover={isSupported ? { scale: 1.01 } : {}}
+                                whileTap={isSupported ? { scale: 0.99 } : {}}
                                 onClick={() => isSupported && setRatio(ratio.id)}
                                 disabled={!isSupported}
                                 className={`
-                                    p-3 rounded-lg text-sm font-medium transition-all
+                                    p-2 rounded-md text-xs font-medium transition-all
                                     ${config.ratio === ratio.id
-                                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md'
                                         : isSupported
                                             ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                                             : 'bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'
                                     }
                                 `}
                             >
-                                <div className="flex items-center justify-center gap-2">
-                                    <span className="text-lg">{ratio.icon}</span>
-                                    <span>{ratio.name}</span>
+                                <div className="flex items-center justify-center gap-1.5">
+                                    <span className="text-sm">{ratio.icon}</span>
+                                    <span className="text-[11px]">{ratio.name}</span>
                                 </div>
                             </motion.button>
                         );

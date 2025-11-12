@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore'
+import { useToast } from '../components/ToastContainer'
 import FilterBar from '../components/FilterBar'
 
 export default function LibraryPage() {
     const navigate = useNavigate()
+    const toast = useToast()
     const { user } = useStore()
     const [reviews, setReviews] = useState([])
     const [loading, setLoading] = useState(true)
@@ -13,20 +15,18 @@ export default function LibraryPage() {
 
     const fetchMyReviews = async () => {
         try {
-            console.log('👤 User connecté:', user)
             const response = await fetch('/api/reviews/my', {
                 credentials: 'include'
             })
             if (response.ok) {
                 const data = await response.json()
-                console.log('📚 Reviews chargées:', data.length)
-                console.log('📋 Données reviews:', data)
                 setReviews(data)
             } else {
-                console.error('❌ Erreur HTTP:', response.status)
+                const error = await response.json().catch(() => ({ message: 'Erreur inconnue' }))
+                toast.error(`Erreur de chargement: ${error.message}`)
             }
         } catch (error) {
-            console.error('❌ Erreur lors du chargement des reviews:', error)
+            toast.error('Erreur de connexion au serveur')
         } finally {
             setLoading(false)
         }
@@ -54,9 +54,12 @@ export default function LibraryPage() {
                 setReviews(reviews.map(r =>
                     r.id === reviewId ? { ...r, isPublic: !currentVisibility } : r
                 ))
+                toast.success(currentVisibility ? 'Review rendue privée' : 'Review rendue publique')
+            } else {
+                toast.error('Erreur lors du changement de visibilité')
             }
         } catch (error) {
-            console.error('Erreur lors de la modification de la visibilité:', error)
+            toast.error('Erreur de connexion')
         }
     }
 
@@ -71,9 +74,12 @@ export default function LibraryPage() {
 
             if (response.ok) {
                 setReviews(reviews.filter(r => r.id !== reviewId))
+                toast.success('Review supprimée avec succès')
+            } else {
+                toast.error('Erreur lors de la suppression')
             }
         } catch (error) {
-            console.error('Erreur lors de la suppression:', error)
+            toast.error('Erreur de connexion')
         }
     }
 

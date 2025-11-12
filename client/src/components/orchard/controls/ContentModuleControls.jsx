@@ -2,7 +2,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
-import { useOrchardStore, useOrchardActions } from '../../../store/orchardStore';
+import { useOrchardStore } from '../../../store/orchardStore';
 
 const MODULE_LABELS = {
     title: { name: 'Titre', icon: '📝' },
@@ -81,7 +81,8 @@ function SortableModule({ id, module, isVisible, onToggle }) {
 
 export default function ContentModuleControls() {
     const config = useOrchardStore((state) => state.config);
-    const { toggleContentModule, reorderModules } = useOrchardActions();
+    const toggleContentModule = useOrchardStore((state) => state.toggleContentModule);
+    const reorderModules = useOrchardStore((state) => state.reorderModules);
 
     const sensors = useSensors(
         useSensor(PointerSensor),

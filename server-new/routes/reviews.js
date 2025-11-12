@@ -117,8 +117,13 @@ router.get('/my', requireAuth, asyncHandler(async (req, res) => {
 
 // GET /api/reviews/:id - Récupérer une review spécifique
 router.get('/:id', asyncHandler(async (req, res) => {
+    console.log(`🔍 GET /api/reviews/${req.params.id}`)
+    console.log('👤 Authenticated:', req.isAuthenticated())
+    console.log('👤 User:', req.user ? { id: req.user.id, username: req.user.username } : null)
+
     // Valider l'ID
     if (!validateReviewId(req.params.id)) {
+        console.error('❌ Invalid review ID format:', req.params.id)
         throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
     }
 
@@ -137,19 +142,35 @@ router.get('/:id', asyncHandler(async (req, res) => {
     })
 
     if (!review) {
+        console.error('❌ Review not found:', req.params.id)
         throw Errors.REVIEW_NOT_FOUND()
     }
+
+    console.log('📄 Review found:', { id: review.id, authorId: review.authorId, isPublic: review.isPublic })
 
     // Vérifier les permissions pour les reviews privées
     const isAuthenticated = req.isAuthenticated()
     const currentUser = isAuthenticated ? req.user : null
 
     if (!review.isPublic && (!isAuthenticated || !currentUser || review.authorId !== currentUser.id)) {
+        console.error('🚫 Access forbidden:', {
+            isPublic: review.isPublic,
+            isAuthenticated,
+            reviewAuthorId: review.authorId,
+            currentUserId: currentUser?.id
+        })
         throw Errors.FORBIDDEN()
     }
 
     // Formater la review
     const formattedReview = formatReview(review, currentUser)
+
+    // ✅ S'assurer que authorId est toujours présent
+    if (!formattedReview.authorId) {
+        formattedReview.authorId = review.authorId
+    }
+
+    console.log('✅ Sending review:', { id: formattedReview.id, authorId: formattedReview.authorId })
 
     res.json(formattedReview)
 }))
@@ -270,35 +291,79 @@ router.put('/:id', requireAuth, upload.array('images', 10), asyncHandler(async (
     }
 
     // Préparer les données de mise à jour
-    const updateData = {
-        ...(holderName && { holderName }),
-        ...(type && { type }),
-        ...(description !== undefined && { description }),
-        ...(overallRating && { note: parseFloat(overallRating) }),
-        ...(note && { note: parseFloat(note) }),
-        ...(categoryRatings && { categoryRatings: typeof categoryRatings === 'string' ? categoryRatings : JSON.stringify(categoryRatings) }),
-        ...(ratings && { ratings: typeof ratings === 'string' ? ratings : JSON.stringify(ratings) }),
-        ...(terpenes && { terpenes: typeof terpenes === 'string' ? terpenes : JSON.stringify(terpenes) }),
-        ...(tastes && { tastes: typeof tastes === 'string' ? tastes : JSON.stringify(tastes) }),
-        ...(aromas && { aromas: typeof aromas === 'string' ? aromas : JSON.stringify(aromas) }),
-        ...(effects && { effects: typeof effects === 'string' ? effects : JSON.stringify(effects) }),
-        ...(strainType && { strainType }),
-        ...(indicaRatio !== undefined && { indicaRatio: parseInt(indicaRatio) }),
-        ...(allImages.length > 0 && {
-            images: JSON.stringify(allImages.map(img => img.replace('/images/', ''))),
-            mainImage: allImages[0].replace('/images/', '')
-        }),
-        ...(isPublic !== undefined && { isPublic: isPublic === 'true' || isPublic === true }),
-        ...(isPrivate !== undefined && { isPrivate: isPrivate === 'true' || isPrivate === true }),
-        ...(cultivarsList && { cultivarsList: typeof cultivarsList === 'string' ? cultivarsList : JSON.stringify(cultivarsList) }),
-        ...(pipelineExtraction && { pipelineExtraction: typeof pipelineExtraction === 'string' ? pipelineExtraction : JSON.stringify(pipelineExtraction) }),
-        ...(pipelineSeparation && { pipelineSeparation: typeof pipelineSeparation === 'string' ? pipelineSeparation : JSON.stringify(pipelineSeparation) }),
-        ...(purgevide !== undefined && { purgevide: purgevide === 'true' || purgevide === true }),
-        ...(hashmaker && { hashmaker }),
-        ...(breeder && { breeder }),
-        ...(farm && { farm }),
-        ...(cultivars && { cultivars }),
-        ...(dureeEffet && { dureeEffet })
+    // IMPORTANT: utiliser hasOwnProperty pour inclure les valeurs falsy (0, false, "", [])
+    const updateData = {}
+
+    const setIfPresent = (key, value) => {
+        if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+            updateData[key] = value
+        }
+    }
+
+    // Champs simples
+    setIfPresent('holderName', holderName)
+    setIfPresent('type', type)
+    // description peut être vide string => accepter explicitement
+    if (Object.prototype.hasOwnProperty.call(req.body, 'description')) {
+        updateData.description = description
+    }
+
+    // Note globale : overallRating a priorité si présent
+    if (Object.prototype.hasOwnProperty.call(req.body, 'overallRating') || Object.prototype.hasOwnProperty.call(req.body, 'note')) {
+        const rawNote = Object.prototype.hasOwnProperty.call(req.body, 'overallRating') ? overallRating : note
+        if (rawNote !== undefined && rawNote !== null && rawNote !== '') {
+            updateData.note = parseFloat(rawNote)
+        } else {
+            // si la valeur est fournie mais vide, définir à null pour effacer si besoin
+            updateData.note = null
+        }
+    }
+
+    // Champs JSON / tableaux : conserver même si tableau vide
+    const jsonFields = ['categoryRatings', 'ratings', 'terpenes', 'tastes', 'aromas', 'effects', 'cultivarsList', 'pipelineExtraction', 'pipelineSeparation']
+    for (const fieldName of jsonFields) {
+        if (Object.prototype.hasOwnProperty.call(req.body, fieldName)) {
+            const raw = req.body[fieldName]
+            if (typeof raw === 'string') {
+                updateData[fieldName] = raw
+            } else {
+                try {
+                    updateData[fieldName] = JSON.stringify(raw)
+                } catch (err) {
+                    updateData[fieldName] = JSON.stringify(String(raw))
+                }
+            }
+        }
+    }
+
+    // Champs textes simples
+    setIfPresent('strainType', strainType)
+    setIfPresent('hashmaker', hashmaker)
+    setIfPresent('breeder', breeder)
+    setIfPresent('farm', farm)
+    setIfPresent('cultivars', cultivars)
+    setIfPresent('dureeEffet', dureeEffet)
+
+    // Indica ratio: accepter 0
+    if (Object.prototype.hasOwnProperty.call(req.body, 'indicaRatio')) {
+        updateData.indicaRatio = indicaRatio === '' || indicaRatio === null ? null : parseInt(indicaRatio)
+    }
+
+    // Images
+    if (allImages.length > 0) {
+        updateData.images = JSON.stringify(allImages.map(img => img.replace('/images/', '')))
+        updateData.mainImage = allImages[0].replace('/images/', '')
+    }
+
+    // Booléens
+    if (Object.prototype.hasOwnProperty.call(req.body, 'isPublic')) {
+        updateData.isPublic = (isPublic === 'true' || isPublic === true)
+    }
+    if (Object.prototype.hasOwnProperty.call(req.body, 'isPrivate')) {
+        updateData.isPrivate = (isPrivate === 'true' || isPrivate === true)
+    }
+    if (Object.prototype.hasOwnProperty.call(req.body, 'purgevide')) {
+        updateData.purgevide = (purgevide === 'true' || purgevide === true)
     }
 
     // Stocker autres champs dans extraData

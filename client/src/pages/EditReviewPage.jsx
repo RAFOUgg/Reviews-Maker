@@ -15,12 +15,16 @@ import OrchardPanel from '../components/orchard/OrchardPanel';
 import { AnimatePresence } from 'framer-motion';
 import { productStructures } from '../utils/productStructures';
 import { parseImages } from '../utils/imageUtils';
+import { calculateCategoryRatings as calcCategoryRatings, CATEGORY_DISPLAY_ORDER } from '../utils/categoryMappings';
 
 export default function EditReviewPage() {
     const navigate = useNavigate();
     const { id } = useParams();
     const { isAuthenticated, user } = useStore();
     const toast = useToast();
+
+    // 🔍 Debug: Log l'ID immédiatement
+    console.log('🆔 EditReviewPage - ID from useParams:', id, typeof id);
 
     const [review, setReview] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -36,30 +40,34 @@ export default function EditReviewPage() {
 
     const fetchReview = async () => {
         try {
-            const response = await fetch(`/api/reviews/${id}`);
-            if (!response.ok) throw new Error('Review non trouvée');
+            console.log('🔍 Fetching review:', id);
+            console.log('👤 Current user:', user);
+
+            const response = await fetch(`/api/reviews/${id}`, {
+                credentials: 'include' // ✅ Important pour envoyer les cookies de session
+            });
+
+            console.log('📡 Response status:', response.status);
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('❌ Fetch error:', errorData);
+                throw new Error(errorData.message || 'Review non trouvée');
+            }
 
             const data = await response.json();
-
-            // Debug logs
-            console.log('🔍 DEBUG - Review data:', data);
-            console.log('🔍 DEBUG - data.authorId:', data.authorId);
-            console.log('🔍 DEBUG - user:', user);
-            console.log('🔍 DEBUG - user.id:', user?.id);
+            console.log('✅ Review data:', data);
 
             // Vérifier ownership
             if (data.authorId !== user?.id) {
-                console.error('❌ Ownership check failed:', {
+                console.warn('⚠️ Ownership check failed:', {
                     reviewAuthorId: data.authorId,
-                    userId: user?.id,
-                    match: data.authorId === user?.id
+                    currentUserId: user?.id
                 });
                 toast.error('Vous ne pouvez pas éditer cette review');
                 navigate('/');
                 return;
             }
-
-            console.log('✅ Ownership check passed');
 
             setReview(data);
 
@@ -70,27 +78,137 @@ export default function EditReviewPage() {
                     try {
                         return JSON.parse(value);
                     } catch (e) {
-                        console.error('JSON parse error:', e);
+                        console.warn('⚠️ Failed to parse JSON:', { value, error: e.message });
                         return defaultValue;
                     }
                 }
                 return value; // Déjà un objet
             };
 
+            // Convertir les champs numériques (sliders) en nombres
+            const toNumber = (value) => {
+                if (value === null || value === undefined || value === '') return null;
+                const num = parseFloat(value);
+                return isNaN(num) ? null : num;
+            };
+
+            const parsedExtra = safeParseJSON(data.extraData, {});
+
             const parsedData = {
                 ...data,
+                // JSON fields
                 categoryRatings: safeParseJSON(data.categoryRatings, null),
                 aromas: safeParseJSON(data.aromas, []),
                 tastes: safeParseJSON(data.tastes, []),
                 effects: safeParseJSON(data.effects, []),
                 cultivarsList: safeParseJSON(data.cultivarsList, []),
-                pipelineExtraction: safeParseJSON(data.pipelineExtraction, null),
-                pipelineSeparation: safeParseJSON(data.pipelineSeparation, null),
+                pipelineExtraction: safeParseJSON(data.pipelineExtraction, []),
+                pipelineSeparation: safeParseJSON(data.pipelineSeparation, []),
+                pipelinePurification: safeParseJSON(data.pipelinePurification, []),
+                fertilizationPipeline: safeParseJSON(data.fertilizationPipeline, []),
+                substratMix: safeParseJSON(data.substratMix, []),
+                extraData: parsedExtra,
+                // Numeric fields (sliders) - Convert to numbers when present at top-level
+                densite: toNumber(data.densite),
+                parfum: toNumber(data.parfum),
+                gout: toNumber(data.gout),
+                collant: toNumber(data.collant),
+                elasticite: toNumber(data.elasticite),
+                durete: toNumber(data.durete),
+                poudreux: toNumber(data.poudreux),
+                huileux: toNumber(data.huileux),
+                overallRating: toNumber(data.overallRating),
+                note: toNumber(data.note),
             };
 
-            console.log('✅ Parsed data:', parsedData);
+            // Merge extraData fields into the top-level parsedData so that
+            // form fields that were saved into extraData are accessible via formData[fieldKey]
+            const mergedFormData = { ...parsedData, ...parsedData.extraData };
 
-            setFormData(parsedData);
+            // Helper: lookup a value in multiple locations (top-level, extraData, categoryRatings, ratings)
+            const lookupAny = (obj, key) => {
+                if (!obj) return undefined;
+                const tryGet = (o, k) => (o && Object.prototype.hasOwnProperty.call(o, k) ? o[k] : undefined);
+                let v = tryGet(obj, key);
+                if (v !== undefined) return v;
+                v = tryGet(obj.extraData, key);
+                if (v !== undefined) return v;
+                v = tryGet(obj.categoryRatings, key);
+                if (v !== undefined) return v;
+                v = tryGet(obj.ratings, key);
+                if (v !== undefined) return v;
+                // plural / singular
+                const plural = key.endsWith('s') ? key : `${key}s`;
+                const singular = key.endsWith('s') ? key.replace(/s$/, '') : key;
+                v = tryGet(obj, plural) ?? tryGet(obj.extraData, plural) ?? tryGet(obj.categoryRatings, plural);
+                if (v !== undefined) return v;
+                v = tryGet(obj, singular) ?? tryGet(obj.extraData, singular) ?? tryGet(obj.categoryRatings, singular);
+                if (v !== undefined) return v;
+                // fuzzy match
+                const allKeys = Array.from(new Set([].concat(Object.keys(obj || {}), Object.keys(obj.extraData || {}), Object.keys(obj.categoryRatings || {}), Object.keys(obj.ratings || {}))));
+                const lower = key.toLowerCase();
+                const match = allKeys.find(k => k.toLowerCase() === lower || k.toLowerCase().includes(lower) || lower.includes(k.toLowerCase()));
+                if (match) return tryGet(obj, match) ?? tryGet(obj.extraData, match) ?? tryGet(obj.categoryRatings, match) ?? tryGet(obj.ratings, match);
+                return undefined;
+            };
+
+            // Ensure top-level form keys match what the UI expects by scanning the current structure
+            // and populating any missing keys from parsedData / extraData / categoryRatings
+            const filledFormData = { ...mergedFormData };
+            try {
+                const structureSections = productStructures[parsedData.type || 'Fleur']?.sections || [];
+                structureSections.forEach(section => {
+                    (section.fields || []).forEach(f => {
+                        const k = f.key;
+                        if (filledFormData[k] === undefined || filledFormData[k] === null || filledFormData[k] === '') {
+                            const found = lookupAny(parsedData, k);
+                            if (found !== undefined) {
+                                // convert numeric-like strings for sliders
+                                if (f.type === 'slider' && (typeof found === 'string' || typeof found === 'number')) {
+                                    const n = parseFloat(found);
+                                    filledFormData[k] = isNaN(n) ? (f.default || 0) : n;
+                                } else {
+                                    filledFormData[k] = found;
+                                }
+                            }
+                        }
+                    });
+                });
+            } catch (err) {
+                console.warn('⚠️ Failed to auto-fill form keys from parsedData:', err);
+            }
+
+            console.log('📊 Parsed form data (before merge):', parsedData);
+            console.log('🔍 Merged formData keys:', Object.keys(mergedFormData));
+            console.log('🔍 Sample merged values:', {
+                holderName: mergedFormData.holderName,
+                overallRating: mergedFormData.overallRating,
+                note: mergedFormData.note,
+                categoryRatings: mergedFormData.categoryRatings,
+                densite: mergedFormData.densite || mergedFormData['densiteTexture'] || mergedFormData['densite'],
+                parfum: mergedFormData.parfum,
+                gout: mergedFormData.gout
+            });
+
+            // DEBUG: dump filled form keys and relevant smell/taste/effects fields to help mapping
+            try {
+                console.log('🔎 filledFormData keys:', Object.keys(filledFormData || {}).sort());
+                console.log('🔎 tastes/aromas/effects and ratings sample:', {
+                    tastes: filledFormData.tastes,
+                    aromas: filledFormData.aromas,
+                    effects: filledFormData.effects,
+                    categoryRatings: filledFormData.categoryRatings,
+                    ratings: filledFormData.ratings,
+                    aromasIntensity: filledFormData.aromasIntensity,
+                    tastesIntensity: filledFormData.tastesIntensity,
+                    effectsIntensity: filledFormData.effectsIntensity
+                });
+            } catch (e) {
+                console.warn('⚠️ Failed to dump filledFormData debug info', e);
+            }
+
+            // Use the filled version (keys auto-populated from parsedData / extraData)
+            setFormData(filledFormData);
             setExistingImages(parseImages(data.images));
 
             const prodStructure = productStructures[data.type] || productStructures.Fleur;
@@ -98,20 +216,43 @@ export default function EditReviewPage() {
 
             setLoading(false);
         } catch (error) {
-            console.error('Erreur chargement review:', error);
-            toast.error('Erreur lors du chargement de la review');
+            console.error('💥 Error loading review:', error);
+            toast.error(`Erreur lors du chargement de la review: ${error.message}`);
             navigate('/');
         }
     };
 
     useEffect(() => {
-        if (!isAuthenticated) {
+        console.log('🔄 EditReviewPage useEffect triggered', {
+            id,
+            isAuthenticated,
+            user: user ? { id: user.id, username: user.username } : null
+        });
+
+        // ✅ Vérifier que l'ID est valide
+        if (!id || id === 'undefined' || id === 'null') {
+            console.error('❌ Invalid review ID:', id);
+            toast.error('ID de review invalide');
             navigate('/');
             return;
         }
+
+        if (!isAuthenticated) {
+            console.log('⚠️ User not authenticated, redirecting...');
+            toast.warning('Vous devez être connecté pour éditer une review');
+            navigate('/');
+            return;
+        }
+
+        // ✅ Attendre que l'utilisateur soit chargé avant de fetcher la review
+        if (!user) {
+            console.log('⏳ Waiting for user data...');
+            return;
+        }
+
         fetchReview();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id, isAuthenticated]);
+    }, [id, isAuthenticated, user]);
 
     if (!isAuthenticated || loading) {
         return (
@@ -181,14 +322,33 @@ export default function EditReviewPage() {
             return;
         }
 
+        // ✅ Vérification du preset Orchard défini
+        if (!formData.orchardPreset) {
+            toast.error('Vous devez définir un aperçu/rendu pour votre review avant de la publier. Cliquez sur le bouton "🎨 Aperçu"');
+            return;
+        }
+
         setIsSubmitting(true);
         const loadingToast = toast.loading('Mise à jour en cours...');
 
         try {
             const submitData = new FormData();
 
-            // Add all form fields
+            // ✅ Calculer categoryRatings AVANT d'envoyer les données
+            const categoryRatingsData = calculateCategoryRatings();
+
+            console.log('📊 Category Ratings Calculated (Edit):', categoryRatingsData);
+
+            // ⚠️ IMPORTANT: Ne pas envoyer 'note' ou 'overallRating' depuis formData
+            const excludedKeys = ['note', 'overallRating', 'categoryRatings'];
+
+            // Add all form fields SAUF les notes (on utilisera les valeurs calculées)
             Object.keys(formData).forEach(key => {
+                // Skip les champs de notes
+                if (excludedKeys.includes(key)) {
+                    return;
+                }
+
                 const value = formData[key];
                 if (value !== null && value !== undefined) {
                     if (typeof value === 'object') {
@@ -198,6 +358,13 @@ export default function EditReviewPage() {
                     }
                 }
             });
+
+            // ✅ Ajouter categoryRatings et note globale calculées (priorité absolue)
+            submitData.append('categoryRatings', JSON.stringify(categoryRatingsData));
+            submitData.append('overallRating', categoryRatingsData.overall);
+            submitData.append('note', categoryRatingsData.overall); // Fallback
+
+            console.log('📤 Sending overallRating (Edit):', categoryRatingsData.overall);
 
             // Add new images
             images.forEach(img => submitData.append('images', img));
@@ -221,7 +388,6 @@ export default function EditReviewPage() {
 
             setTimeout(() => navigate(`/review/${id}`), 1000);
         } catch (err) {
-            console.error('Erreur:', err);
             toast.remove(loadingToast);
             toast.error(err.message || 'Une erreur est survenue');
         } finally {
@@ -230,14 +396,78 @@ export default function EditReviewPage() {
     };
 
     const renderField = (field) => {
+        // Helper: cherche une clé dans formData, extraData, categoryRatings, ratings
+        const lookupValue = (key) => {
+            if (!formData) return undefined;
+
+            const tryGet = (obj, k) => (obj && Object.prototype.hasOwnProperty.call(obj, k) ? obj[k] : undefined);
+
+            // Direct hits
+            let v = tryGet(formData, key);
+            if (v !== undefined) return v;
+
+            v = tryGet(formData.extraData, key);
+            if (v !== undefined) return v;
+
+            v = tryGet(formData.categoryRatings, key);
+            if (v !== undefined) return v;
+
+            v = tryGet(formData.ratings, key);
+            if (v !== undefined) return v;
+
+            // Variantes simples: plural / singular
+            const plural = key.endsWith('s') ? key : `${key}s`;
+            const singular = key.endsWith('s') ? key.replace(/s$/, '') : key;
+            if (plural !== key) {
+                v = tryGet(formData, plural) ?? tryGet(formData.extraData, plural);
+                if (v !== undefined) return v;
+            }
+            if (singular !== key) {
+                v = tryGet(formData, singular) ?? tryGet(formData.extraData, singular);
+                if (v !== undefined) return v;
+            }
+
+            // Case-insensitive match among keys (fuzzy)
+            const allKeys = Object.keys(formData || {}).concat(Object.keys(formData.extraData || {})).concat(Object.keys(formData.categoryRatings || {})).concat(Object.keys(formData.ratings || {}));
+            const lower = key.toLowerCase();
+            const match = allKeys.find(k => k.toLowerCase() === lower || k.toLowerCase().includes(lower) || lower.includes(k.toLowerCase()));
+            if (match) {
+                return tryGet(formData, match) ?? tryGet(formData.extraData, match) ?? tryGet(formData.categoryRatings, match) ?? tryGet(formData.ratings, match);
+            }
+
+            return undefined;
+        };
+
         // Valeur par défaut en fonction du type
         const getDefaultValue = () => {
-            if (formData[field.key] !== undefined) return formData[field.key];
-            if (field.type === 'slider') return field.default || 0;
-            if (['wheel', 'effects', 'cultivar-list', 'pipeline-with-cultivars', 'purification-pipeline', 'fertilization-pipeline', 'substrat-mixer', 'multiselect'].includes(field.type)) return [];
-            if (field.type === 'recipe') return {};
-            return '';
+            const rawValue = lookupValue(field.key);
+
+            // Pour les sliders, convertir en nombre et gérer les valeurs nulles/undefined
+            if (field.type === 'slider') {
+                if (rawValue === null || rawValue === undefined || rawValue === '') {
+                    return field.default || 0;
+                }
+                const numValue = parseFloat(rawValue);
+                return isNaN(numValue) ? (field.default || 0) : numValue;
+            }
+
+            // Pour les types tableau
+            if ([
+                'wheel', 'effects', 'cultivar-list', 'pipeline-with-cultivars',
+                'purification-pipeline', 'fertilization-pipeline', 'substrat-mixer', 'multiselect'
+            ].includes(field.type)) {
+                return Array.isArray(rawValue) ? rawValue : (Array.isArray(formData?.[field.key]) ? formData[field.key] : []);
+            }
+
+            // Pour les objets (recipe)
+            if (field.type === 'recipe') {
+                return typeof rawValue === 'object' && rawValue !== null ? rawValue : (typeof formData?.[field.key] === 'object' ? formData[field.key] : {});
+            }
+
+            // Pour les autres types (text, textarea, etc.)
+            return rawValue !== undefined && rawValue !== null ? rawValue : (formData?.[field.key] ?? '');
         };
+
         const value = getDefaultValue();
 
         switch (field.type) {
@@ -511,37 +741,9 @@ export default function EditReviewPage() {
         }
     };
 
-    // Calculer les notes par catégorie
+    // ✅ Utiliser le mapping centralisé
     const calculateCategoryRatings = () => {
-        const categoryFieldMap = {
-            visual: ['densite', 'trichomes', 'malleabilite', 'transparence'],
-            smell: [],
-            taste: [],
-            effects: []
-        };
-
-        const ratings = {};
-        Object.keys(categoryFieldMap).forEach(category => {
-            const fields = categoryFieldMap[category];
-            const validValues = fields
-                .map(fieldKey => formData[fieldKey])
-                .filter(v => v !== undefined && v !== null && v !== '' && !isNaN(v))
-                .map(v => parseFloat(v));
-
-            if (validValues.length > 0) {
-                const average = validValues.reduce((sum, v) => sum + v, 0) / validValues.length;
-                ratings[category] = Math.round(average * 2) / 2;
-            } else {
-                ratings[category] = 0;
-            }
-        });
-
-        const categoryValues = Object.values(ratings).filter(v => v > 0);
-        const overallRating = categoryValues.length > 0
-            ? Math.round((categoryValues.reduce((sum, v) => sum + v, 0) / categoryValues.length) * 2) / 2
-            : 0;
-
-        return { ...ratings, overall: overallRating };
+        return calcCategoryRatings(formData, formData.type || 'Fleur');
     };
 
     const categoryRatings = calculateCategoryRatings();
@@ -568,9 +770,12 @@ export default function EditReviewPage() {
                         </div>
                         <button
                             onClick={() => setShowOrchardStudio(true)}
-                            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl font-medium shadow-lg transition-all flex items-center gap-2"
+                            className={`px-4 py-2 rounded-xl font-medium shadow-lg transition-all flex items-center gap-2 ${formData.orchardPreset
+                                ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500'
+                                : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500'
+                                } text-white`}
                         >
-                            🎨 Aperçu
+                            {formData.orchardPreset ? '✅ Aperçu défini' : '🎨 Définir aperçu'}
                         </button>
                     </div>
                     {/* Résumé des notes par catégorie */}
@@ -693,26 +898,57 @@ export default function EditReviewPage() {
 
             {/* Orchard Studio Modal */}
             <AnimatePresence>
-                {showOrchardStudio && (
-                    <OrchardPanel
-                        reviewData={{
-                            title: formData.holderName || 'Aperçu de la review',
-                            rating: categoryRatings.overall,
-                            author: review?.authorName || user?.displayName || 'Auteur',
-                            date: review?.createdAt || new Date().toISOString(),
-                            category: formData.type,
-                            thcLevel: formData.thcLevel || 0,
-                            cbdLevel: formData.cbdLevel || 0,
-                            description: formData.description || '',
-                            effects: formData.selectedEffects || [],
-                            aromas: formData.selectedAromas || [],
-                            tags: formData.tags || [],
-                            cultivar: formData.cultivar || '',
-                            imageUrl: existingImages.length > 0 ? existingImages[0] : (images.length > 0 ? URL.createObjectURL(images[0]) : undefined)
-                        }}
-                        onClose={() => setShowOrchardStudio(false)}
-                    />
-                )}
+                {showOrchardStudio && (() => {
+                    // ✅ Normaliser les données pour éviter les erreurs de type
+                    const normalizeArray = (value) => {
+                        if (Array.isArray(value)) return value;
+                        if (!value) return [];
+                        if (typeof value === 'object') return []; // Objet non-tableau
+                        return [];
+                    };
+
+                    return (
+                        <OrchardPanel
+                            reviewData={{
+                                // ✅ Infos de base complètes
+                                title: formData.holderName || 'Aperçu de la review',
+                                rating: categoryRatings.overall,
+                                author: review?.authorName || user?.displayName || 'Auteur',
+                                date: review?.createdAt || new Date().toISOString(),
+                                category: formData.type,
+
+                                // ✅ Tous les champs disponibles pour l'aperçu
+                                ...formData,
+
+                                // Notes par catégorie calculées
+                                categoryRatings,
+
+                                // Images
+                                imageUrl: existingImages.length > 0 ? existingImages[0] : (images.length > 0 ? URL.createObjectURL(images[0]) : undefined),
+                                images: existingImages.length > 0 ? existingImages : (images.length > 0 ? images.map(img => URL.createObjectURL(img)) : []),
+
+                                // ✅ Normalisation des tableaux pour compatibilité templates
+                                effects: normalizeArray(formData.effects || formData.selectedEffects),
+                                aromas: normalizeArray(formData.aromas || formData.selectedAromas || formData.notesDominantesOdeur),
+                                tastes: normalizeArray(formData.tastes || formData.selectedTastes || formData.inhalation),
+                                terpenes: normalizeArray(formData.terpenes),
+                                cultivar: formData.cultivars || formData.cultivar || '',
+                                breeder: formData.breeder || formData.hashmaker || '',
+                                farm: formData.farm || ''
+                            }}
+                            onClose={() => setShowOrchardStudio(false)}
+                            onPresetApplied={(orchardData) => {
+                                // Sauvegarder la configuration Orchard dans formData
+                                setFormData(prev => ({
+                                    ...prev,
+                                    orchardConfig: JSON.stringify(orchardData.orchardConfig),
+                                    orchardPreset: orchardData.orchardPreset || 'custom'
+                                }));
+                                toast.success('✅ Aperçu défini avec succès !');
+                            }}
+                        />
+                    );
+                })()}
             </AnimatePresence>
         </div>
     );

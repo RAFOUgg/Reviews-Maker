@@ -31,7 +31,7 @@ export const useStore = create((set, get) => ({
         try {
             await authService.logout()
         } catch (error) {
-            console.error('Logout error:', error)
+            // Erreur silencieuse
         }
         set({ user: null, isAuthenticated: false, reviews: [], _reviewsCache: {} })
     },

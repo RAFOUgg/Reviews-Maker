@@ -19,13 +19,11 @@ export default function HomePage() {
             const response = await fetch('/api/reviews')
             if (response.ok) {
                 const data = await response.json()
-                console.log('🔍 DEBUG - Première review:', data[0])
-                console.log('🔍 DEBUG - Author data:', data[0]?.author)
                 setReviews(data)
                 setFilteredReviews(data)
             }
         } catch (error) {
-            console.error('Erreur chargement reviews:', error)
+            // Erreur silencieuse
         } finally {
             setLoading(false)
         }
@@ -58,7 +56,6 @@ export default function HomePage() {
             return
         }
         // TODO: Implémenter like API
-        console.log('Like:', reviewId)
     }
 
     const handleDislike = async (reviewId, e) => {
@@ -68,7 +65,6 @@ export default function HomePage() {
             return
         }
         // TODO: Implémenter dislike API
-        console.log('Dislike:', reviewId)
     }
 
     return (

@@ -127,13 +127,11 @@ h1 {
 /* CONTOUR BLANC pour textes sur backgrounds colorés/gradients */
 .text-stroke-white {
     -webkit-text-stroke: 1px rgba(255, 255, 255, 0.8);
-    text-stroke: 1px rgba(255, 255, 255, 0.8);
     paint-order: stroke fill;
 }
 
 .text-stroke-white-thin {
     -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.6);
-    text-stroke: 0.5px rgba(255, 255, 255, 0.6);
     paint-order: stroke fill;
 }
 
@@ -1229,6 +1227,33 @@ button.bg-indigo-600 {
 /* Scrollbar */
 ::-webkit-scrollbar {
     width: 10px;
+}
+
+/* Scrollbar thin utility class for compact components */
+.scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.4);
+    border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.6);
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(75, 85, 99, 0.4);
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(75, 85, 99, 0.6);
 }
 
 /* scrollbar rules above already set for base; keep consistent */

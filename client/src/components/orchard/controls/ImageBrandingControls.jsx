@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useOrchardStore, useOrchardActions } from '../../../store/orchardStore';
+import { useOrchardStore } from '../../../store/orchardStore';
 
 const IMAGE_FILTERS = [
     { id: 'none', name: 'Aucun', preview: '🎨' },
@@ -25,7 +25,8 @@ const LOGO_SIZES = [
 
 export default function ImageBrandingControls() {
     const config = useOrchardStore((state) => state.config);
-    const { updateImage, updateBranding } = useOrchardActions();
+    const updateImage = useOrchardStore((state) => state.updateImage);
+    const updateBranding = useOrchardStore((state) => state.updateBranding);
     const [logoInput, setLogoInput] = useState(config.branding.logoUrl || '');
 
     const handleLogoUpload = (e) => {

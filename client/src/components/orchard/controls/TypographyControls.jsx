@@ -1,4 +1,4 @@
-import { useOrchardStore, useOrchardActions } from '../../../store/orchardStore';
+import { useOrchardStore } from '../../../store/orchardStore';
 
 const FONT_FAMILIES = [
     'Inter',
@@ -24,7 +24,7 @@ const FONT_WEIGHTS = [
 
 export default function TypographyControls() {
     const config = useOrchardStore((state) => state.config);
-    const { updateTypography } = useOrchardActions();
+    const updateTypography = useOrchardStore((state) => state.updateTypography);
 
     return (
         <div className="space-y-6">

@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { parseImages } from '../utils/imageUtils'
 import { useStore } from '../store/useStore'
+import { useToast } from '../components/ToastContainer'
 
 export default function ReviewDetailPage() {
     const { id } = useParams()
     const navigate = useNavigate()
+    const toast = useToast()
     const { user, isAuthenticated } = useStore()
     const [review, setReview] = useState(null)
     const [loading, setLoading] = useState(true)
@@ -47,15 +49,17 @@ export default function ReviewDetailPage() {
                         data.pipelineSeparation = JSON.parse(data.pipelineSeparation)
                     }
                 } catch (e) {
-                    console.error('Error parsing JSON fields:', e)
+                    // Erreur silencieuse lors du parsing JSON
                 }
 
                 setReview(data)
             } else {
+                const error = await response.json().catch(() => ({ message: 'Review non trouvée' }))
+                toast.error(error.message || 'Review non trouvée')
                 navigate('/')
             }
         } catch (error) {
-            console.error('Erreur:', error)
+            toast.error('Erreur lors du chargement de la review')
             navigate('/')
         } finally {
             setLoading(false)

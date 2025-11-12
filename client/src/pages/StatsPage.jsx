@@ -25,7 +25,7 @@ export default function StatsPage() {
                 if (statsRes.ok) setStats(await statsRes.json())
                 if (reviewsRes.ok) setReviews(await reviewsRes.json())
             } catch (error) {
-                console.error('Error loading stats:', error)
+                // Erreur silencieuse
             } finally {
                 setLoading(false)
             }

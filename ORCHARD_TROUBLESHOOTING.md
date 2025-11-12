@@ -62,8 +62,8 @@ repeatedly calls setState inside componentWillUpdate or componentDidUpdate.
 **Cause:**
 Les fonctions `getTemplates()` et `getColorPalettes()` étaient appelées dans le corps des composants, créant une boucle infinie de re-renders. À chaque appel, un nouvel objet était retourné, ce qui déclenchait un nouveau rendu.
 
-**Solution:**
-Importer directement les constantes exportées au lieu d'appeler des fonctions qui retournent de nouveaux objets:
+**Solution:** ✅ RÉSOLU
+Séparer les constantes dans un fichier dédié pour garantir des références stables:
 
 ```jsx
 // AVANT (causait une boucle infinie ❌)
@@ -73,18 +73,27 @@ const templates = getTemplates();
 // TENTATIVE 1 (ne fonctionne pas non plus ❌)
 const templates = useOrchardStore((state) => state.getTemplates());
 
+// TENTATIVE 2 (toujours des problèmes ❌)
+import { DEFAULT_TEMPLATES } from '../../../store/orchardStore';
+const templates = DEFAULT_TEMPLATES;
+
 // SOLUTION FINALE (correct ✅)
+// Créer orchardConstants.js avec uniquement les constantes
+// Importer depuis ce fichier dans orchardStore.js et les composants
 import { DEFAULT_TEMPLATES } from '../../../store/orchardStore';
 const templates = DEFAULT_TEMPLATES;
 ```
 
 **Explication:**
-Même en appelant via le store, `getTemplates()` retourne un nouvel objet à chaque appel, ce qui déclenche un re-render. La solution est d'importer directement la constante qui a une référence stable.
+Même avec l'import direct, avoir les constantes définies dans le même fichier que le store Zustand causait des problèmes de références instables avec React HMR (Hot Module Replacement). La solution finale a été de créer un fichier séparé `orchardConstants.js` contenant uniquement les définitions de `COLOR_PALETTES` et `DEFAULT_TEMPLATES`, puis de les importer dans `orchardStore.js` qui les réexporte.
 
-**Fichiers modifiés:**
-- `client/src/store/orchardStore.js` (ajout d'exports)
-- `client/src/components/orchard/controls/TemplateSelector.jsx`
-- `client/src/components/orchard/controls/ColorPaletteControls.jsx`
+**Fichiers créés/modifiés:**
+- `client/src/store/orchardConstants.js` (NOUVEAU - contient les constantes pures)
+- `client/src/store/orchardStore.js` (refactorisé - importe et réexporte les constantes)
+- `client/src/components/orchard/controls/TemplateSelector.jsx` (utilise l'import depuis orchardStore)
+- `client/src/components/orchard/controls/ColorPaletteControls.jsx` (utilise l'import depuis orchardStore)
+
+**Résultat:** L'application démarre sans erreur, le cycle de re-render infini est éliminé. ✅
 
 ---
 

@@ -15,6 +15,7 @@ import CategoryRatingSummary from '../components/CategoryRatingSummary';
 import OrchardPanel from '../components/orchard/OrchardPanel';
 import { AnimatePresence } from 'framer-motion';
 import { productStructures } from '../utils/productStructures';
+import { calculateCategoryRatings as calcCategoryRatings, CATEGORY_DISPLAY_ORDER } from '../utils/categoryMappings';
 
 export default function CreateReviewPage() {
     const navigate = useNavigate();
@@ -65,19 +66,47 @@ export default function CreateReviewPage() {
             toast.error('Le nom commercial est requis');
             return;
         }
+        // ✅ Vérification du preset Orchard défini
+        if (!formData.orchardPreset) {
+            toast.error('Vous devez définir un aperçu/rendu pour votre review avant de la publier. Cliquez sur le bouton "🎨 Aperçu"');
+            return;
+        }
         setIsSubmitting(true);
         setError('');
         const loadingToast = toast.loading('Création de la review...');
 
         try {
             const submitData = new FormData();
+
+            // ✅ Calculer categoryRatings AVANT d'envoyer les données
+            const categoryRatingsData = calculateCategoryRatings();
+
+            console.log('📊 Category Ratings Calculated:', categoryRatingsData);
+
+            // ⚠️ IMPORTANT: Ne pas envoyer 'note' ou 'overallRating' depuis formData
+            // On utilisera uniquement les valeurs calculées
+            const excludedKeys = ['note', 'overallRating', 'categoryRatings'];
+
             Object.keys(formData).forEach(key => {
+                // Skip les champs de notes (on utilisera les valeurs calculées)
+                if (excludedKeys.includes(key)) {
+                    return;
+                }
+
                 const value = formData[key];
                 if (value !== undefined && value !== null) {
-                    submitData.append(key, Array.isArray(value) ? JSON.stringify(value) : value);
+                    submitData.append(key, Array.isArray(value) || typeof value === 'object' ? JSON.stringify(value) : value);
                 }
             });
+
+            // ✅ Ajouter categoryRatings et note globale calculées (priorité absolue)
+            submitData.append('categoryRatings', JSON.stringify(categoryRatingsData));
+            submitData.append('overallRating', categoryRatingsData.overall);
+            submitData.append('note', categoryRatingsData.overall); // Fallback pour compatibilité
             submitData.append('isPublic', true);
+
+            console.log('📤 Sending overallRating:', categoryRatingsData.overall);
+
             images.forEach((image) => { submitData.append('images', image); });
 
             await createReview(submitData);
@@ -86,7 +115,6 @@ export default function CreateReviewPage() {
             toast.success('Review créée avec succès ! ✅');
             setTimeout(() => navigate('/'), 1000);
         } catch (err) {
-            console.error('Erreur:', err);
             toast.remove(loadingToast);
             toast.error(err.message || 'Une erreur est survenue');
             setError(err.message || 'Une erreur est survenue');
@@ -98,11 +126,29 @@ export default function CreateReviewPage() {
     const renderField = (field) => {
         // Valeur par défaut en fonction du type
         const getDefaultValue = () => {
-            if (formData[field.key] !== undefined) return formData[field.key];
-            if (field.type === 'slider') return field.default || 0;
-            if (['wheel', 'effects', 'cultivar-list', 'pipeline-with-cultivars', 'purification-pipeline', 'fertilization-pipeline', 'substrat-mixer', 'multiselect'].includes(field.type)) return [];
-            if (field.type === 'recipe') return {};
-            return '';
+            const rawValue = formData[field.key];
+
+            // Pour les sliders, convertir en nombre et gérer les valeurs nulles/undefined
+            if (field.type === 'slider') {
+                if (rawValue === null || rawValue === undefined || rawValue === '') {
+                    return field.default || 0;
+                }
+                const numValue = parseFloat(rawValue);
+                return isNaN(numValue) ? (field.default || 0) : numValue;
+            }
+
+            // Pour les types tableau
+            if (['wheel', 'effects', 'cultivar-list', 'pipeline-with-cultivars', 'purification-pipeline', 'fertilization-pipeline', 'substrat-mixer', 'multiselect'].includes(field.type)) {
+                return Array.isArray(rawValue) ? rawValue : [];
+            }
+
+            // Pour les objets (recipe)
+            if (field.type === 'recipe') {
+                return typeof rawValue === 'object' && rawValue !== null ? rawValue : {};
+            }
+
+            // Pour les autres types (text, textarea, etc.)
+            return rawValue !== undefined && rawValue !== null ? rawValue : '';
         };
         const value = getDefaultValue();
         switch (field.type) {
@@ -131,40 +177,9 @@ export default function CreateReviewPage() {
         }
     };
 
-    // Calculer les notes par catégorie
+    // ✅ Utiliser le mapping centralisé
     const calculateCategoryRatings = () => {
-        const categoryFieldMap = {
-            visual: ['pistils', 'moisissure', 'graines', 'densite', 'trichomes', 'malleabilite', 'transparence'],
-            touche: ['toucheDensite', 'toucheFriabilite', 'toucheElasticite', 'toucheHumidite',
-                'toucheMalleabilite', 'toucheCollant', 'toucheFragilite',
-                'toucheViscosite', 'toucheStabilite'],
-            smell: ['aromasPiquant', 'aromasIntensity'],
-            taste: ['tastesIntensity'],
-            effects: ['effectsIntensity']
-        };
-
-        const ratings = {};
-        Object.keys(categoryFieldMap).forEach(category => {
-            const fields = categoryFieldMap[category];
-            const validValues = fields
-                .map(fieldKey => formData[fieldKey])
-                .filter(v => v !== undefined && v !== null && v !== '' && !isNaN(v))
-                .map(v => parseFloat(v));
-
-            if (validValues.length > 0) {
-                const average = validValues.reduce((sum, v) => sum + v, 0) / validValues.length;
-                ratings[category] = Math.round(average * 2) / 2;
-            } else {
-                ratings[category] = 0;
-            }
-        });
-
-        const categoryValues = Object.values(ratings).filter(v => v > 0);
-        const overallRating = categoryValues.length > 0
-            ? Math.round((categoryValues.reduce((sum, v) => sum + v, 0) / categoryValues.length) * 2) / 2
-            : 0;
-
-        return { ...ratings, overall: overallRating };
+        return calcCategoryRatings(formData, formData.type || 'Fleur');
     };
 
     const categoryRatings = calculateCategoryRatings();
@@ -184,7 +199,7 @@ export default function CreateReviewPage() {
                         </button>
                     </div>
                     {/* Résumé des notes par catégorie */}
-                    <CategoryRatingSummary ratings={categoryRatings} />
+                    <CategoryRatingSummary ratings={categoryRatings} productType={formData.type || typeFromUrl} />
                 </div>
                 {/* Barre de navigation des sections */}
                 <SectionNavigator
@@ -209,26 +224,57 @@ export default function CreateReviewPage() {
 
             {/* Orchard Studio Modal */}
             <AnimatePresence>
-                {showOrchardStudio && (
-                    <OrchardPanel
-                        reviewData={{
-                            title: formData.holderName || 'Aperçu de la review',
-                            rating: categoryRatings.overall,
-                            author: user?.displayName || 'Auteur',
-                            date: new Date().toISOString(),
-                            category: formData.type,
-                            thcLevel: formData.thcLevel || 0,
-                            cbdLevel: formData.cbdLevel || 0,
-                            description: formData.description || '',
-                            effects: formData.selectedEffects || [],
-                            aromas: formData.selectedAromas || [],
-                            tags: formData.tags || [],
-                            cultivar: formData.cultivar || '',
-                            imageUrl: images.length > 0 ? URL.createObjectURL(images[0]) : undefined
-                        }}
-                        onClose={() => setShowOrchardStudio(false)}
-                    />
-                )}
+                {showOrchardStudio && (() => {
+                    // ✅ Normaliser les données pour éviter les erreurs de type
+                    const normalizeArray = (value) => {
+                        if (Array.isArray(value)) return value;
+                        if (!value) return [];
+                        if (typeof value === 'object') return []; // Objet non-tableau
+                        return [];
+                    };
+
+                    return (
+                        <OrchardPanel
+                            reviewData={{
+                                // ✅ Infos de base complètes
+                                title: formData.holderName || 'Aperçu de la review',
+                                rating: categoryRatings.overall,
+                                author: user?.displayName || 'Auteur',
+                                date: new Date().toISOString(),
+                                category: formData.type,
+
+                                // ✅ Tous les champs disponibles pour l'aperçu
+                                ...formData,
+
+                                // Notes par catégorie calculées
+                                categoryRatings,
+
+                                // Images
+                                imageUrl: images.length > 0 ? URL.createObjectURL(images[0]) : undefined,
+                                images: images.length > 0 ? images.map(img => URL.createObjectURL(img)) : [],
+
+                                // ✅ Normalisation des tableaux pour compatibilité templates
+                                effects: normalizeArray(formData.effects || formData.selectedEffects),
+                                aromas: normalizeArray(formData.aromas || formData.selectedAromas || formData.notesDominantesOdeur),
+                                tastes: normalizeArray(formData.tastes || formData.selectedTastes || formData.inhalation),
+                                terpenes: normalizeArray(formData.terpenes),
+                                cultivar: formData.cultivars || formData.cultivar || '',
+                                breeder: formData.breeder || formData.hashmaker || '',
+                                farm: formData.farm || ''
+                            }}
+                            onClose={() => setShowOrchardStudio(false)}
+                            onPresetApplied={(orchardData) => {
+                                // ✅ Sauvegarder la configuration Orchard dans formData
+                                setFormData(prev => ({
+                                    ...prev,
+                                    orchardConfig: JSON.stringify(orchardData.orchardConfig),
+                                    orchardPreset: orchardData.orchardPreset || 'custom'
+                                }));
+                                toast.success('✅ Aperçu défini avec succès !');
+                            }}
+                        />
+                    );
+                })()}
             </AnimatePresence>
         </div>
     );

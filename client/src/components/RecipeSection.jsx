@@ -54,7 +54,7 @@ const RecipeSection = ({ value = {}, onChange }) => {
                 setReviews(filtered);
             }
         } catch (error) {
-            console.error('Erreur chargement reviews:', error);
+            // Erreur silencieuse
         } finally {
             setLoadingReviews(false);
         }
@@ -624,11 +624,11 @@ const RecipeSection = ({ value = {}, onChange }) => {
                                             <span className="text-white text-sm font-medium">{step.action}</span>
                                             {step.category && (
                                                 <span className={`text-xs px-2 py-0.5 rounded ${step.category === 'cannabis' ? 'bg-green-600/30 text-green-300' :
-                                                        step.category === 'temperature' ? 'bg-orange-600/30 text-orange-300' :
-                                                            step.category === 'cuisson' ? 'bg-red-600/30 text-red-300' :
-                                                                step.category === 'melange' ? 'bg-blue-600/30 text-blue-300' :
-                                                                    step.category === 'refroidissement' ? 'bg-cyan-600/30 text-cyan-300' :
-                                                                        'bg-gray-600/30 text-gray-300'
+                                                    step.category === 'temperature' ? 'bg-orange-600/30 text-orange-300' :
+                                                        step.category === 'cuisson' ? 'bg-red-600/30 text-red-300' :
+                                                            step.category === 'melange' ? 'bg-blue-600/30 text-blue-300' :
+                                                                step.category === 'refroidissement' ? 'bg-cyan-600/30 text-cyan-300' :
+                                                                    'bg-gray-600/30 text-gray-300'
                                                     }`}>
                                                     {step.category}
                                                 </span>

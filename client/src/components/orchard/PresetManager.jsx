@@ -1,10 +1,15 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useOrchardStore, useOrchardActions } from '../../store/orchardStore';
+import { useOrchardStore } from '../../store/orchardStore';
 
 export default function PresetManager() {
-    const { presets, activePreset, config } = useOrchardStore();
-    const { savePreset, loadPreset, deletePreset, updatePreset } = useOrchardActions();
+    const presets = useOrchardStore((state) => state.presets);
+    const activePreset = useOrchardStore((state) => state.activePreset);
+    const config = useOrchardStore((state) => state.config);
+    const savePreset = useOrchardStore((state) => state.savePreset);
+    const loadPreset = useOrchardStore((state) => state.loadPreset);
+    const deletePreset = useOrchardStore((state) => state.deletePreset);
+    const updatePreset = useOrchardStore((state) => state.updatePreset);
 
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [presetName, setPresetName] = useState('');

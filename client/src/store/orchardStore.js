@@ -1,95 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { COLOR_PALETTES, DEFAULT_TEMPLATES } from './orchardConstants';
 
-// Palettes de couleurs harmonieuses prédéfinies
-const COLOR_PALETTES = {
-    modern: {
-        name: 'Moderne',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        textPrimary: '#ffffff',
-        textSecondary: '#e0e0e0',
-        accent: '#ffd700',
-        title: '#ffffff'
-    },
-    nature: {
-        name: 'Nature',
-        background: 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)',
-        textPrimary: '#ffffff',
-        textSecondary: '#ecf0f1',
-        accent: '#f39c12',
-        title: '#ffffff'
-    },
-    ocean: {
-        name: 'Océan',
-        background: 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)',
-        textPrimary: '#ffffff',
-        textSecondary: '#ecf0f1',
-        accent: '#e74c3c',
-        title: '#ffffff'
-    },
-    sunset: {
-        name: 'Coucher de Soleil',
-        background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)',
-        textPrimary: '#ffffff',
-        textSecondary: '#ffe0e0',
-        accent: '#ffd93d',
-        title: '#ffffff'
-    },
-    elegant: {
-        name: 'Élégant',
-        background: 'linear-gradient(135deg, #1e1e1e 0%, #2c2c2c 100%)',
-        textPrimary: '#ffffff',
-        textSecondary: '#b0b0b0',
-        accent: '#d4af37',
-        title: '#f0f0f0'
-    },
-    minimal: {
-        name: 'Minimaliste',
-        background: '#ffffff',
-        textPrimary: '#333333',
-        textSecondary: '#666666',
-        accent: '#007aff',
-        title: '#000000'
-    }
-};
+// Note: COLOR_PALETTES et DEFAULT_TEMPLATES sont maintenant importés depuis orchardConstants.js
+// pour éviter les problèmes de références circulaires et les re-renders infinis
 
-// Templates de base avec leurs configurations
-const DEFAULT_TEMPLATES = {
-    modernCompact: {
-        id: 'modernCompact',
-        name: 'Moderne Compact',
-        description: 'Design épuré et moderne, idéal pour les réseaux sociaux',
-        layout: 'compact',
-        defaultRatio: '1:1',
-        supportedRatios: ['1:1', '16:9', '9:16']
-    },
-    detailedCard: {
-        id: 'detailedCard',
-        name: 'Fiche Technique Détaillée',
-        description: 'Présentation complète avec tous les détails',
-        layout: 'detailed',
-        defaultRatio: '16:9',
-        supportedRatios: ['16:9', '4:3', 'A4']
-    },
-    blogArticle: {
-        id: 'blogArticle',
-        name: 'Article de Blog',
-        description: 'Format long adapté aux blogs',
-        layout: 'article',
-        defaultRatio: 'A4',
-        supportedRatios: ['A4', '16:9']
-    },
-    socialStory: {
-        id: 'socialStory',
-        name: 'Story Social Media',
-        description: 'Format vertical pour Instagram et TikTok',
-        layout: 'story',
-        defaultRatio: '9:16',
-        supportedRatios: ['9:16']
-    }
-};
-
-// Exporter les constantes pour utilisation directe dans les composants
+// Les constantes sont maintenant réexportées pour maintenir la compatibilité
 export { COLOR_PALETTES, DEFAULT_TEMPLATES };
 
 // Configuration par défaut

@@ -126,7 +126,7 @@ export function sanitizeInput(value) {
 }
 
 /**
- * Valide un ID de review (format UUID)
+ * Valide un ID de review (format UUID ou CUID)
  * @param {string} id - ID à valider
  * @returns {boolean} - true si valide
  */
@@ -135,10 +135,18 @@ export function validateReviewId(id) {
         return false
     }
 
-    // Prisma génère des IDs au format cuid
-    // Format: c[a-z0-9]{24}
+    // Accepter plusieurs formats d'ID :
+
+    // 1. CUID classique : c[a-z0-9]{24}
     const cuidRegex = /^c[a-z0-9]{24}$/
-    return cuidRegex.test(id)
+
+    // 2. UUID v4 standard avec tirets : xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+    // 3. CUID2 (nouveau format, plus long, peut contenir des tirets)
+    const cuid2Regex = /^[a-z][a-z0-9_-]{8,}$/i
+
+    return cuidRegex.test(id) || uuidRegex.test(id) || cuid2Regex.test(id)
 }
 
 /**
@@ -189,12 +197,17 @@ export function validateReviewData(data) {
         }
     }
 
-    // Note globale (0-10)
-    if (data.note !== undefined || data.overallRating !== undefined) {
-        const noteValue = data.overallRating || data.note
-        const note = validateNumber(noteValue, 0, 10)
-        if (note !== null) {
-            cleaned.note = note
+    // Note globale (0-10) - gérer explicitement les valeurs falsy (0)
+    if (Object.prototype.hasOwnProperty.call(data, 'overallRating') || Object.prototype.hasOwnProperty.call(data, 'note')) {
+        const raw = Object.prototype.hasOwnProperty.call(data, 'overallRating') ? data.overallRating : data.note
+        if (raw !== undefined && raw !== null && raw !== '') {
+            const note = validateNumber(raw, 0, 10)
+            if (note !== null) {
+                cleaned.note = note
+            }
+        } else {
+            // Valeur fournie mais vide -> définir explicitement à null
+            cleaned.note = null
         }
     }
 
