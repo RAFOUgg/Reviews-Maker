@@ -198,7 +198,27 @@ export default function CreateReviewPage() {
         }
     }, [isEditing, editId, getReviewById, navigate, toast, typeFromUrl]);
 
-    const handleInputChange = (field, value) => { setFormData(prev => ({ ...prev, [field]: value })); setError(''); };
+    const handleInputChange = (field, value) => {
+        // Instrumentation: don't allow accidental nulls from keyboard shortcuts
+        if (value === null) {
+            console.warn(`handleInputChange: ignoring null value for field ${field}`);
+            console.trace();
+            // convert explicit 'null' to empty string to avoid breaking default behavior
+            value = '';
+        }
+
+        setFormData(prev => ({ ...prev, [field]: value }));
+        setError('');
+    };
+
+    // Instrumentation: monitor for nulls in formData
+    useEffect(() => {
+        const nullKeys = Object.keys(formData).filter(k => formData[k] === null);
+        if (nullKeys.length > 0) {
+            console.warn('CreateReviewPage: formData contains null keys:', nullKeys);
+            console.trace();
+        }
+    }, [formData]);
     const handleImageChange = (e) => {
         const files = Array.from(e.target.files);
         const remainingSlots = 4 - images.length;
