@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { parseImages } from '../utils/imageUtils'
+import TemplateRenderer from '../components/orchard/TemplateRenderer'
 import { useStore } from '../store/useStore'
 import { useToast } from '../components/ToastContainer'
 
@@ -206,6 +207,18 @@ export default function ReviewDetailPage() {
 
                     {/* Right Column - Content */}
                     <div className="lg:col-span-2 space-y-6">
+                        {/* Orchard Template (if saved) */}
+                        {review.orchardConfig && (
+                            <div className="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-6 border border-gray-700 mb-6">
+                                <TemplateRenderer
+                                    config={typeof review.orchardConfig === 'string' ? (() => {
+                                        try { return JSON.parse(review.orchardConfig) } catch { return review.orchardConfig }
+                                    })() : review.orchardConfig}
+                                    reviewData={review}
+                                />
+                            </div>
+                        )}
+
                         {/* Header Card */}
                         <div className="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-8 border border-gray-700">
                             <h1 className="text-4xl font-bold text-white mb-4">{review.holderName}</h1>

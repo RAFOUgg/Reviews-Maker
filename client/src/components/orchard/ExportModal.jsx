@@ -38,7 +38,9 @@ const EXPORT_FORMATS = [
 export default function ExportModal({ onClose }) {
     const reviewData = useOrchardStore((state) => state.reviewData);
     const config = useOrchardStore((state) => state.config);
+    const authorName = reviewData?.ownerName || (reviewData?.author ? (typeof reviewData.author === 'string' ? reviewData.author : (reviewData.author.username || reviewData.author.id)) : null) || 'Orchard Studio'
     const [selectedFormat, setSelectedFormat] = useState('png');
+    const [selectedScope, setSelectedScope] = useState('full'); // full | canvas | openGraph
     const [exportOptions, setExportOptions] = useState({
         // PNG
         pngScale: 2,
@@ -50,6 +52,8 @@ export default function ExportModal({ onClose }) {
         // PDF
         pdfOrientation: 'portrait',
         pdfFormat: 'a4'
+        ,
+        includeBranding: true
     });
     const [isExporting, setIsExporting] = useState(false);
     const [exportStatus, setExportStatus] = useState(null);
@@ -59,7 +63,15 @@ export default function ExportModal({ onClose }) {
         setExportStatus('Génération en cours...');
 
         try {
-            const container = document.getElementById('orchard-preview-container');
+            // Determine container based on selected scope
+            let container = document.getElementById('orchard-preview-container');
+            if (selectedScope === 'canvas') {
+                container = document.getElementById('orchard-template-canvas') || container;
+            }
+            if (selectedScope === 'openGraph') {
+                // Open graph target: prefer canvas for exact composition
+                container = document.getElementById('orchard-template-canvas') || container;
+            }
 
             if (!container) {
                 throw new Error('Conteneur d\'aperçu introuvable');
@@ -94,9 +106,30 @@ export default function ExportModal({ onClose }) {
     };
 
     const exportPNG = async (container) => {
-        const dataUrl = await toPng(container, {
+        // clone node to allow temporary modifications for export
+        const target = container.cloneNode(true);
+        if (!exportOptions.includeBranding) {
+            const brands = target.querySelectorAll('.orchard-branding');
+            brands.forEach(b => b.style.display = 'none');
+        }
+        // Append to DOM to ensure external CSS/fonts/images are applied then remove
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'fixed';
+        wrapper.style.left = '-99999px';
+        wrapper.style.top = '0';
+        wrapper.style.opacity = '0';
+        wrapper.appendChild(target);
+        document.body.appendChild(wrapper);
+
+        // If exporting for Open Graph, set recommended OG dimensions
+        if (selectedScope === 'openGraph') {
+            target.style.width = '1200px';
+            target.style.height = '630px';
+        }
+
+        const dataUrl = await toPng(target, {
             cacheBust: true,
-            pixelRatio: exportOptions.pngScale,
+            pixelRatio: (selectedScope === 'openGraph' ? 3 : exportOptions.pngScale),
             backgroundColor: exportOptions.pngTransparent ? null : '#ffffff'
         });
 
@@ -104,19 +137,43 @@ export default function ExportModal({ onClose }) {
         link.download = `review-${reviewData.title || 'export'}-${Date.now()}.png`;
         link.href = dataUrl;
         link.click();
+        // cleanup
+        setTimeout(() => wrapper.remove(), 1000);
     };
 
     const exportJPEG = async (container) => {
-        const dataUrl = await toJpeg(container, {
+        const target = container.cloneNode(true);
+        if (!exportOptions.includeBranding) {
+            const brands = target.querySelectorAll('.orchard-branding');
+            brands.forEach(b => b.style.display = 'none');
+        }
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'fixed';
+        wrapper.style.left = '-99999px';
+        wrapper.style.top = '0';
+        wrapper.style.opacity = '0';
+        wrapper.appendChild(target);
+        document.body.appendChild(wrapper);
+
+        if (selectedScope === 'openGraph') {
+            target.style.width = '1200px';
+            target.style.height = '630px';
+        }
+
+        const dataUrl = await toJpeg(target, {
             cacheBust: true,
             quality: exportOptions.jpegQuality,
             backgroundColor: '#ffffff'
         });
 
+        // Cleanup
+        setTimeout(() => wrapper.remove(), 1000);
+
         const link = document.createElement('a');
         link.download = `review-${reviewData.title || 'export'}-${Date.now()}.jpg`;
         link.href = dataUrl;
         link.click();
+        setTimeout(() => wrapper.remove(), 1000);
     };
 
     const exportPDF = async (container) => {
@@ -178,8 +235,8 @@ export default function ExportModal({ onClose }) {
             markdown += `**Catégorie:** ${reviewData.category}\n\n`;
         }
 
-        if (reviewData.author) {
-            markdown += `**Auteur:** ${reviewData.author}\n`;
+        if (authorName) {
+            markdown += `**Auteur:** ${authorName}\n`;
         }
 
         if (reviewData.date) {
@@ -270,6 +327,16 @@ export default function ExportModal({ onClose }) {
 
                     {/* Content */}
                     <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+                        {/* Scope selection (what to export) */}
+                        <div>
+                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Étendue de l'export</h4>
+                            <div className="flex gap-2">
+                                <button onClick={() => setSelectedScope('full')} className={`px-3 py-2 rounded-lg text-sm ${selectedScope === 'full' ? 'bg-purple-500 text-white' : 'bg-gray-50 text-gray-700'}`}>Entrée complète</button>
+                                <button onClick={() => setSelectedScope('canvas')} className={`px-3 py-2 rounded-lg text-sm ${selectedScope === 'canvas' ? 'bg-purple-500 text-white' : 'bg-gray-50 text-gray-700'}`}>Canvas uniquement</button>
+                                <button onClick={() => setSelectedScope('openGraph')} className={`px-3 py-2 rounded-lg text-sm ${selectedScope === 'openGraph' ? 'bg-purple-500 text-white' : 'bg-gray-50 text-gray-700'}`}>Social (Open Graph)</button>
+                            </div>
+                            <p className="text-xs text-gray-400 mt-2">Choisissez si vous voulez exporter l'aperçu complet, le rendu (canvas) seulement, ou optimiser l'export pour les réseaux sociaux.</p>
+                        </div>
                         {/* Format selection */}
                         <div className="grid grid-cols-2 gap-3">
                             {EXPORT_FORMATS.map((format) => (
@@ -423,6 +490,19 @@ export default function ExportModal({ onClose }) {
                                     Le fichier Markdown contiendra tous les détails textuels de la review dans un format portable et réutilisable.
                                 </p>
                             )}
+
+                            {/* Option: include branding in export */}
+                            <div className="mt-4 border-t pt-4">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={exportOptions.includeBranding}
+                                        onChange={(e) => setExportOptions({ ...exportOptions, includeBranding: e.target.checked })}
+                                        className="w-4 h-4 rounded border-gray-300 text-purple-500 focus:ring-purple-500"
+                                    />
+                                    <span className="text-sm text-gray-700 dark:text-gray-300">Inclure le logo/filigrane</span>
+                                </label>
+                            </div>
                         </div>
 
                         {/* Status */}

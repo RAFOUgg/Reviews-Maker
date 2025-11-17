@@ -220,7 +220,7 @@ export function validateReviewData(data) {
     }
 
     // Champs JSON (terpenes, tastes, aromas, effects, etc.)
-    const jsonFields = ['terpenes', 'tastes', 'aromas', 'effects', 'ratings', 'cultivarsList', 'pipelineExtraction', 'pipelineSeparation']
+    const jsonFields = ['terpenes', 'tastes', 'aromas', 'effects', 'ratings', 'cultivarsList', 'pipelineExtraction', 'pipelineSeparation', 'substratMix']
     jsonFields.forEach(field => {
         if (data[field] !== undefined) {
             const validated = validateJSON(data[field], null)

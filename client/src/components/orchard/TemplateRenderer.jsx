@@ -1,8 +1,10 @@
 import PropTypes from 'prop-types';
+import { useOrchardStore } from '../../store/orchardStore';
 import ModernCompactTemplate from './templates/ModernCompactTemplate';
 import DetailedCardTemplate from './templates/DetailedCardTemplate';
 import BlogArticleTemplate from './templates/BlogArticleTemplate';
 import SocialStoryTemplate from './templates/SocialStoryTemplate';
+import CustomTemplate from './templates/CustomTemplate';
 
 // Mapping des templates
 const TEMPLATES = {
@@ -10,6 +12,8 @@ const TEMPLATES = {
     detailedCard: DetailedCardTemplate,
     blogArticle: BlogArticleTemplate,
     socialStory: SocialStoryTemplate
+    ,
+    custom: CustomTemplate
 };
 
 // Ratios et dimensions
@@ -22,7 +26,13 @@ const RATIO_DIMENSIONS = {
 };
 
 export default function TemplateRenderer({ config, reviewData }) {
-    const TemplateComponent = TEMPLATES[config.template];
+    let TemplateComponent = TEMPLATES[config.template];
+    const templatesMeta = useOrchardStore((state) => state.templates);
+    // If the configured template is a registered custom template (layout=custom) use CustomTemplate
+    if (!TemplateComponent && templatesMeta?.[config.template]?.layout === 'custom') {
+        // fallback to generic custom template
+        TemplateComponent = CustomTemplate;
+    }
 
     if (!TemplateComponent) {
         return (
@@ -44,6 +54,7 @@ export default function TemplateRenderer({ config, reviewData }) {
     return (
         <div
             className="orchard-template-container shadow-2xl rounded-xl overflow-hidden"
+            id="orchard-template-canvas"
             style={{
                 width: `${dimensions.width}px`,
                 height: `${dimensions.height}px`,

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url'
 import fs from 'fs/promises'
 import { prisma } from '../server.js'
 import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } from '../utils/errorHandler.js'
-import { formatReview, formatReviews, prepareReviewData, buildReviewFilters, extractImageFilenames } from '../utils/reviewFormatter.js'
+import { formatReview, formatReviews, prepareReviewData, buildReviewFilters, extractImageFilenames, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
 import { validateReviewData, validateReviewId } from '../utils/validation.js'
 
 const router = express.Router()
@@ -81,7 +81,9 @@ router.get('/', asyncHandler(async (req, res) => {
     })
 
     // Formater les reviews avec le helper centralisé
-    const formattedReviews = formatReviews(reviews, req.isAuthenticated() ? req.user : null)
+    let formattedReviews = formatReviews(reviews, req.isAuthenticated() ? req.user : null)
+    // Exposer orchardConfig/preset si présents
+    formattedReviews = formattedReviews.map(r => liftOrchardFromExtra(r))
 
     res.json(formattedReviews)
 }))
@@ -163,7 +165,9 @@ router.get('/:id', asyncHandler(async (req, res) => {
     }
 
     // Formater la review
-    const formattedReview = formatReview(review, currentUser)
+    let formattedReview = formatReview(review, currentUser)
+
+    formattedReview = liftOrchardFromExtra(formattedReview)
 
     // ✅ S'assurer que authorId est toujours présent
     if (!formattedReview.authorId) {
@@ -197,13 +201,30 @@ router.post('/', requireAuth, upload.array('images', 10), asyncHandler(async (re
 
     const mainImage = imageFilenames[0]
 
-    // Préparer les données pour Prisma
-    const reviewData = prepareReviewData({
+    // Collecter les champs supplémentaires (extraData) pour persister orchardConfig/orchardPreset etc.
+    const extraData = {}
+    for (const [key, value] of Object.entries(req.body)) {
+        // Ne pas recopier les champs déjà nettoyés par la validation
+        if (Object.prototype.hasOwnProperty.call(validation.cleaned, key)) continue
+        if (key === 'images' || key === 'existingImages') continue
+        if (value !== undefined && value !== null && value !== '') {
+            extraData[key] = value
+        }
+    }
+
+    // Préparer les données pour Prisma en incluant les champs validés + images + extraData
+    const reviewDataRaw = {
         ...validation.cleaned,
         images: imageFilenames,
         mainImage,
         authorId: req.user.id
-    })
+    }
+
+    if (Object.keys(extraData).length > 0) {
+        reviewDataRaw.extraData = JSON.stringify(extraData)
+    }
+
+    const reviewData = prepareReviewData(reviewDataRaw)
 
     console.log('💾 Data to save:', JSON.stringify(reviewData, null, 2))
 
@@ -223,7 +244,8 @@ router.post('/', requireAuth, upload.array('images', 10), asyncHandler(async (re
     })
 
     // Formater et retourner
-    const formattedReview = formatReview(review, req.user)
+    let formattedReview = formatReview(review, req.user)
+    formattedReview = liftOrchardFromExtra(formattedReview)
 
     res.status(201).json(formattedReview)
 }))
@@ -320,7 +342,7 @@ router.put('/:id', requireAuth, upload.array('images', 10), asyncHandler(async (
     }
 
     // Champs JSON / tableaux : conserver même si tableau vide
-    const jsonFields = ['categoryRatings', 'ratings', 'terpenes', 'tastes', 'aromas', 'effects', 'cultivarsList', 'pipelineExtraction', 'pipelineSeparation']
+    const jsonFields = ['categoryRatings', 'ratings', 'terpenes', 'tastes', 'aromas', 'effects', 'cultivarsList', 'pipelineExtraction', 'pipelineSeparation', 'substratMix']
     for (const fieldName of jsonFields) {
         if (Object.prototype.hasOwnProperty.call(req.body, fieldName)) {
             const raw = req.body[fieldName]
@@ -393,7 +415,8 @@ router.put('/:id', requireAuth, upload.array('images', 10), asyncHandler(async (
     })
 
     // Formater et retourner
-    const formattedReview = formatReview(updated, req.user)
+    let formattedReview = formatReview(updated, req.user)
+    formattedReview = liftOrchardFromExtra(formattedReview)
     res.json(formattedReview)
 }))
 
@@ -458,7 +481,8 @@ router.patch('/:id/visibility', requireAuth, asyncHandler(async (req, res) => {
     })
 
     // Formater et retourner
-    const formattedReview = formatReview(updatedReview, req.user)
+    let formattedReview = formatReview(updatedReview, req.user)
+    formattedReview = liftOrchardFromExtra(formattedReview)
     res.json(formattedReview)
 }))
 

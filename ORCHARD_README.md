@@ -63,6 +63,18 @@ Orchard Studio est un système complet, intuitif et esthétiquement raffiné pou
 - Édition et suppression des préréglages
 - Persistance locale (localStorage)
 
+### 🔲 Canvas et templates personnalisés (nouveauté)
+
+- Le canvas de personnalisation passe au niveau supérieur : vous pouvez désormais placer les modules où vous le souhaitez, redimensionner (width/height en pourcentage) et pivoter (rotation en degrés) chaque élément.
+- La configuration du layout est persistée dans le préréglage Orchard et peut être réappliquée avec le bouton "Appliquer".
+- Ajout d'un éditeur de templates minimal : créez un nouveau template (ID, nom) qui utilise un renderer générique (CustomTemplate) pour construire des templates variés à partir des modules activés et de l'ordre des modules.
+
+### 🧩 Exportation avancée (nouveauté)
+
+- Étendue d'export : choisissez entre l'aperçu complet, le canvas seul ou une exportation optimisée pour les réseaux sociaux (Open Graph 1200x630).
+- Possibilité d'enlever le logo/filigrane pour les exports (utile pour les images de démonstration ou les CGU). Les exports Open Graph appliquent automatiquement un ratio et une mise à l'échelle optimisée.
+
+
 ### 📦 Exportation Multi-Format
 
 #### PNG

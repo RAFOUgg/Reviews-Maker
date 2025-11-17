@@ -155,6 +155,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
         return (
             <div
                 className="absolute"
+                style={{ pointerEvents: 'none' }}
                 style={{
                     ...positionStyles[branding.position],
                     opacity: branding.opacity,
@@ -165,9 +166,10 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                 <img
                     src={branding.logoUrl}
                     alt="Logo"
-                    className="w-full h-full object-contain"
+                        className="w-full h-full object-contain orchard-branding"
                 />
             </div>
+            {/* Mark branding for targeted export toggles */}
         );
     };
 
@@ -313,18 +315,21 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 
                 {/* Author & Date */}
                 <div className="flex items-center justify-center gap-4 text-center">
-                    {contentModules.author && reviewData.author && (
-                        <span
-                            style={{
-                                fontFamily: typography.fontFamily,
-                                fontSize: `${typography.textSize - 2}px`,
-                                fontWeight: '500',
-                                color: colors.textSecondary
-                            }}
-                        >
-                            Par {reviewData.author}
-                        </span>
-                    )}
+                    {contentModules.author && (function() {
+                        const authorName = reviewData.ownerName || (reviewData.author ? (typeof reviewData.author === 'string' ? reviewData.author : (reviewData.author.username || reviewData.author.id)) : null) || 'Anonyme'
+                        return (
+                            <span
+                                style={{
+                                    fontFamily: typography.fontFamily,
+                                    fontSize: `${typography.textSize - 2}px`,
+                                    fontWeight: '500',
+                                    color: colors.textSecondary
+                                }}
+                            >
+                                Par {authorName}
+                            </span>
+                        )
+                    })()}
                     
                     {contentModules.date && reviewData.date && (
                         <span

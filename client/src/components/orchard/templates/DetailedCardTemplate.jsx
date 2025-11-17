@@ -299,16 +299,19 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         borderTop: `2px solid ${colors.accent}30`
                     }}
                 >
-                    {contentModules.author && reviewData.author && (
-                        <div
-                            style={{
-                                fontSize: `${typography.textSize}px`,
-                                color: colors.textSecondary
-                            }}
-                        >
-                            Par <span style={{ fontWeight: '600', color: colors.textPrimary }}>{reviewData.author}</span>
-                        </div>
-                    )}
+                    {contentModules.author && (function() {
+                        const authorName = reviewData.ownerName || (reviewData.author ? (typeof reviewData.author === 'string' ? reviewData.author : (reviewData.author.username || reviewData.author.id)) : null) || 'Anonyme'
+                        return (
+                            <div
+                                style={{
+                                    fontSize: `${typography.textSize}px`,
+                                    color: colors.textSecondary
+                                }}
+                            >
+                                Par <span style={{ fontWeight: '600', color: colors.textPrimary }}>{authorName}</span>
+                            </div>
+                        )
+                    })()}
                     
                     {contentModules.date && reviewData.date && (
                         <div

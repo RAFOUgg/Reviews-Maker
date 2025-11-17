@@ -39,6 +39,7 @@ export function formatReview(review, currentUser = null) {
         terpenes: safeJSONParse(review.terpenes, []),
         tastes: safeJSONParse(review.tastes, []),
         aromas: safeJSONParse(review.aromas, []),
+        substratMix: safeJSONParse(review.substratMix, []),
         effects: safeJSONParse(review.effects, []),
         images: safeJSONParse(review.images, []),
         ratings: safeJSONParse(review.ratings, null),
@@ -87,6 +88,24 @@ export function formatReview(review, currentUser = null) {
     return formatted
 }
 
+// Expose orchard config/preset if present inside extraData for convenience
+export function liftOrchardFromExtra(formatted) {
+    if (!formatted) return formatted
+    try {
+        const extra = formatted.extraData || {}
+        if (extra.orchardConfig) {
+            formatted.orchardConfig = safeJSONParse(extra.orchardConfig, extra.orchardConfig)
+        }
+        if (extra.orchardPreset) {
+            // orchardPreset is usually a simple string, keep as-is
+            formatted.orchardPreset = extra.orchardPreset
+        }
+    } catch (err) {
+        // ignore
+    }
+    return formatted
+}
+
 /**
  * Formatte plusieurs reviews
  * @param {object[]} reviews - Reviews à formater
@@ -114,6 +133,7 @@ export function prepareReviewData(data) {
     const jsonFields = [
         'terpenes',
         'tastes',
+        'substratMix',
         'aromas',
         'effects',
         'images',
@@ -174,11 +194,16 @@ export function buildReviewFilters(filters, currentUser = null) {
     const where = {}
 
     // Filtre de visibilité : publiques + privées de l'user
-    const visibilityConditions = [{ isPublic: true }]
-    if (currentUser && currentUser.id) {
-        visibilityConditions.push({ authorId: currentUser.id })
+    // Si filters.publicOnly === true, on force uniquement les reviews publiques
+    if (filters.publicOnly === true || filters.publicOnly === 'true') {
+        where.isPublic = true
+    } else {
+        const visibilityConditions = [{ isPublic: true }]
+        if (currentUser && currentUser.id) {
+            visibilityConditions.push({ authorId: currentUser.id })
+        }
+        where.OR = visibilityConditions
     }
-    where.OR = visibilityConditions
 
     // Filtre par type de produit
     if (filters.type && filters.type !== 'all') {

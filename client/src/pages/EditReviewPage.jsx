@@ -254,6 +254,15 @@ export default function EditReviewPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id, isAuthenticated, user]);
 
+    // Cleanup previews on unmount
+    useEffect(() => {
+        return () => {
+            images.forEach(img => {
+                try { if (img && img.preview) URL.revokeObjectURL(img.preview); } catch (e) { }
+            });
+        };
+    }, [images]);
+
     if (!isAuthenticated || loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -282,12 +291,18 @@ export default function EditReviewPage() {
             return;
         }
 
-        setImages(prev => [...prev, ...files]);
+        const wrapped = files.map(f => ({ file: f, preview: URL.createObjectURL(f) }));
+        setImages(prev => [...prev, ...wrapped]);
         toast.success(`${files.length} image(s) ajoutée(s)`);
     };
 
     const removeImage = (idx) => {
-        setImages(prev => prev.filter((_, i) => i !== idx));
+        // Revoke the preview URL if present
+        setImages(prev => {
+            const img = prev[idx];
+            try { if (img && img.preview) URL.revokeObjectURL(img.preview); } catch (e) { }
+            return prev.filter((_, i) => i !== idx);
+        });
     };
 
     const removeExistingImage = (idx) => {
@@ -366,8 +381,12 @@ export default function EditReviewPage() {
 
             console.log('📤 Sending overallRating (Edit):', categoryRatingsData.overall);
 
-            // Add new images
-            images.forEach(img => submitData.append('images', img));
+            // Add new images (append raw File objects)
+            images.forEach(img => {
+                if (img && img.file) {
+                    submitData.append('images', img.file);
+                }
+            });
 
             // Add existing images to keep
             submitData.append('existingImages', JSON.stringify(existingImages));
@@ -456,7 +475,20 @@ export default function EditReviewPage() {
                 'wheel', 'effects', 'cultivar-list', 'pipeline-with-cultivars',
                 'purification-pipeline', 'fertilization-pipeline', 'substrat-mixer', 'multiselect'
             ].includes(field.type)) {
-                return Array.isArray(rawValue) ? rawValue : (Array.isArray(formData?.[field.key]) ? formData[field.key] : []);
+                // Normalize array-like fields: allow arrays, JSON strings or comma-separated strings
+                if (Array.isArray(rawValue)) return rawValue;
+                if (typeof rawValue === 'string') {
+                    try {
+                        const parsed = JSON.parse(rawValue);
+                        if (Array.isArray(parsed)) return parsed;
+                    } catch (e) {
+                        // fallback to csv
+                        const csv = rawValue.split(',').map(s => s.trim()).filter(Boolean);
+                        if (csv.length > 0) return csv;
+                    }
+                }
+                if (Array.isArray(formData?.[field.key])) return formData[field.key];
+                return [];
             }
 
             // Pour les objets (recipe)
@@ -693,7 +725,7 @@ export default function EditReviewPage() {
                                     {images.map((img, idx) => (
                                         <div key={idx} className="relative group aspect-square">
                                             <img
-                                                src={URL.createObjectURL(img)}
+                                                src={img.preview || (img.file instanceof Blob ? URL.createObjectURL(img.file) : undefined)}
                                                 alt={`Nouvelle ${idx + 1}`}
                                                 className="w-full h-full object-cover rounded-xl border-2 border-[rgba(var(--color-accent),0.5)]"
                                             />
@@ -903,7 +935,8 @@ export default function EditReviewPage() {
                     const normalizeArray = (value) => {
                         if (Array.isArray(value)) return value;
                         if (!value) return [];
-                        if (typeof value === 'object') return []; // Objet non-tableau
+                        if (typeof value === 'string') return value.split(',').map(s => s.trim()).filter(Boolean);
+                        if (typeof value === 'object') return [];
                         return [];
                     };
 
@@ -924,8 +957,8 @@ export default function EditReviewPage() {
                                 categoryRatings,
 
                                 // Images
-                                imageUrl: existingImages.length > 0 ? existingImages[0] : (images.length > 0 ? URL.createObjectURL(images[0]) : undefined),
-                                images: existingImages.length > 0 ? existingImages : (images.length > 0 ? images.map(img => URL.createObjectURL(img)) : []),
+                                imageUrl: existingImages.length > 0 ? existingImages[0] : (images.length > 0 ? (images[0].preview || (images[0].file instanceof Blob ? URL.createObjectURL(images[0].file) : undefined)) : undefined),
+                                images: existingImages.length > 0 ? existingImages : (images.length > 0 ? images.map(img => img.preview || (img.file instanceof Blob ? URL.createObjectURL(img.file) : undefined)) : []),
 
                                 // ✅ Normalisation des tableaux pour compatibilité templates
                                 effects: normalizeArray(formData.effects || formData.selectedEffects),
@@ -942,7 +975,9 @@ export default function EditReviewPage() {
                                 setFormData(prev => ({
                                     ...prev,
                                     orchardConfig: JSON.stringify(orchardData.orchardConfig),
-                                    orchardPreset: orchardData.orchardPreset || 'custom'
+                                    orchardPreset: orchardData.orchardPreset || 'custom',
+                                    orchardCustomLayout: orchardData.customLayout || null,
+                                    orchardLayoutMode: orchardData.layoutMode || (orchardData.customLayout ? 'custom' : 'template')
                                 }));
                                 toast.success('✅ Aperçu défini avec succès !');
                             }}

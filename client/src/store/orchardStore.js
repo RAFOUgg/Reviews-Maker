@@ -101,6 +101,9 @@ export const useOrchardStore = create(
             presets: [],
             activePreset: null,
 
+            // Templates dynamiques (permet d'enregistrer et personnaliser de nouveaux templates)
+            templates: { ...DEFAULT_TEMPLATES },
+
             // Données de la review en cours de rendu
             reviewData: null,
 
@@ -109,7 +112,7 @@ export const useOrchardStore = create(
                 config: {
                     ...state.config,
                     template: templateId,
-                    ratio: DEFAULT_TEMPLATES[templateId].defaultRatio
+                    ratio: (get().templates[templateId]?.defaultRatio || DEFAULT_TEMPLATES[templateId]?.defaultRatio || '1:1')
                 }
             })),
 
@@ -230,7 +233,17 @@ export const useOrchardStore = create(
             }),
 
             // Obtenir les templates et palettes disponibles
-            getTemplates: () => DEFAULT_TEMPLATES,
+            getTemplates: () => get().templates,
+            registerTemplate: (id, data) => set((state) => ({
+                templates: { ...state.templates, [id]: { id, ...data } }
+            })),
+            unregisterTemplate: (id) => set((state) => ({
+                templates: Object.keys(state.templates).reduce((acc, k) => {
+                    if (k === id) return acc;
+                    acc[k] = state.templates[k];
+                    return acc;
+                }, {})
+            })),
             getColorPalettes: () => COLOR_PALETTES
         }),
         {

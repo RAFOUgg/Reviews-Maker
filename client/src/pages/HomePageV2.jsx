@@ -16,7 +16,7 @@ export default function HomePage() {
 
     const fetchReviews = async () => {
         try {
-            const response = await fetch('/api/reviews')
+            const response = await fetch('/api/reviews?publicOnly=true')
             if (response.ok) {
                 const data = await response.json()
                 setReviews(data)

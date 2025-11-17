@@ -11,7 +11,7 @@ import { DRAGGABLE_FIELD_TYPES } from './ContentPanel';
 import FieldRenderer from './FieldRenderer';
 
 // Composant pour un champ placé (avec bouton supprimer)
-function PlacedField({ field, value, onRemove, position }) {
+function PlacedField({ field, value, onRemove, position, width = 25, height = 20, rotation = 0, onUpdate }) {
     return (
         <motion.div
             initial={{ scale: 0, opacity: 0 }}
@@ -24,7 +24,7 @@ function PlacedField({ field, value, onRemove, position }) {
                 maxWidth: '300px'
             }}
         >
-            <div className="relative bg-gray-800/90 backdrop-blur-sm p-3 rounded-lg border border-purple-500/30 shadow-xl">
+            <div className="relative bg-gray-800/90 backdrop-blur-sm p-3 rounded-lg border border-purple-500/30 shadow-xl" style={{ width: width + '%', height: height + '%', transform: 'rotate(' + rotation + 'deg)' }}>
                 <button
                     onClick={() => onRemove(field.id)}
                     className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
@@ -35,6 +35,72 @@ function PlacedField({ field, value, onRemove, position }) {
                     </svg>
                 </button>
                 <FieldRenderer field={field} value={value} compact={true} />
+
+                {/* Resize handle bottom-right */}
+                <div
+                    onMouseDown={(e) => {
+                        e.stopPropagation();
+                        const startX = e.clientX;
+                        const startY = e.clientY;
+                        const startWidth = width;
+                        const startHeight = height;
+
+                        const onMove = (evt) => {
+                            const deltaX = evt.clientX - startX;
+                            const deltaY = evt.clientY - startY;
+                            // Calculate percent based on parent size
+                            const parent = evt.currentTarget ? evt.currentTarget.closest('.orchard-canvas-resize-parent') : null;
+                            let deltaW = (deltaX / window.innerWidth) * 100;
+                            let deltaH = (deltaY / window.innerHeight) * 100;
+                            if (parent) {
+                                const rect = parent.getBoundingClientRect();
+                                deltaW = (deltaX / rect.width) * 100;
+                                deltaH = (deltaY / rect.height) * 100;
+                            }
+                            onUpdate?.({ width: Math.max(5, Math.min(100, startWidth + deltaW)), height: Math.max(5, Math.min(100, startHeight + deltaH)) });
+                        };
+
+                        const onUp = () => {
+                            window.removeEventListener('mousemove', onMove);
+                            window.removeEventListener('mouseup', onUp);
+                        };
+
+                        window.addEventListener('mousemove', onMove);
+                        window.addEventListener('mouseup', onUp);
+                    }}
+                    className="absolute -right-2 -bottom-2 w-6 h-6 bg-white rounded-full text-gray-800 flex items-center justify-center shadow-md cursor-se-resize"
+                    title="Redimensionner"
+                >
+                    <svg className="w-3 h-3" viewBox="0 0 20 20" fill="none" stroke="currentColor"><path strokeWidth="2" d="M3 17L17 3M7 17H17V7" /></svg>
+                </div>
+
+                {/* Rotate handle top-left */}
+                <div
+                    onMouseDown={(e) => {
+                        e.stopPropagation();
+                        const startX = e.clientX;
+                        const startY = e.clientY;
+                        const startRotation = rotation;
+
+                        const onMove = (evt) => {
+                            const deltaX = evt.clientX - startX;
+                            const newRotation = (startRotation + deltaX / 2) % 360;
+                            onUpdate?.({ rotation: newRotation });
+                        };
+
+                        const onUp = () => {
+                            window.removeEventListener('mousemove', onMove);
+                            window.removeEventListener('mouseup', onUp);
+                        };
+
+                        window.addEventListener('mousemove', onMove);
+                        window.addEventListener('mouseup', onUp);
+                    }}
+                    className="absolute -left-2 -top-2 w-6 h-6 bg-white rounded-full text-gray-800 flex items-center justify-center shadow-md cursor-grab"
+                    title="Pivoter"
+                >
+                    <svg className="w-3 h-3" viewBox="0 0 20 20" fill="none" stroke="currentColor"><path strokeWidth="2" d="M11 3a8 8 0 11-1.999 4.999L7 7" /></svg>
+                </div>
             </div>
         </motion.div>
     );
@@ -48,6 +114,11 @@ PlacedField.propTypes = {
         x: PropTypes.number.isRequired,
         y: PropTypes.number.isRequired
     }).isRequired
+    ,
+    width: PropTypes.number,
+    height: PropTypes.number,
+    rotation: PropTypes.number,
+    onUpdate: PropTypes.func
 };
 
 // Zone de dépôt pour le canvas
@@ -74,7 +145,7 @@ function DropCanvas({ children, onDrop }) {
     return (
         <div
             ref={drop}
-            className={`
+            className={`orchard-canvas-resize-parent
                 relative w-full h-full overflow-hidden
                 ${isOver && canDrop ? 'ring-4 ring-green-500/50' : ''}
                 ${canDrop ? 'ring-2 ring-purple-500/30' : ''}
@@ -126,7 +197,8 @@ export default function CustomLayoutPane({ reviewData, layout, onLayoutChange })
             onLayoutChange?.(updated);
         } else {
             // Ajouter le nouveau champ
-            const updated = [...placedFields, { ...field, position }];
+            // Default size/rotation for new fields
+            const updated = [...placedFields, { ...field, position, width: 25, height: 20, rotation: 0 }];
             setPlacedFields(updated);
             onLayoutChange?.(updated);
         }
@@ -177,6 +249,14 @@ export default function CustomLayoutPane({ reviewData, layout, onLayoutChange })
                         key={placedField.id}
                         field={placedField}
                         value={getFieldValue(placedField)}
+                        width={placedField.width}
+                        height={placedField.height}
+                        rotation={placedField.rotation}
+                        onUpdate={(updates) => {
+                            const updated = placedFields.map(pf => pf.id === placedField.id ? { ...pf, ...updates } : pf);
+                            setPlacedFields(updated);
+                            onLayoutChange?.(updated);
+                        }}
                         position={placedField.position}
                         onRemove={handleRemove}
                     />

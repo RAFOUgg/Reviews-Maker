@@ -41,7 +41,10 @@ export default function ReviewDetailPage() {
                     </h1>
                     <div className="flex items-center gap-4">
                         <span className="text-lg text-gray-600 dark:text-gray-400">
-                            Par {reviewData.author}
+                            {(() => {
+                                const authorName = reviewData.ownerName || (reviewData.author ? (typeof reviewData.author === 'string' ? reviewData.author : (reviewData.author.username || reviewData.author.id)) : null) || 'Anonyme'
+                                return `Par ${authorName}`
+                            })()}
                         </span>
                         <span className="text-lg text-purple-500 font-semibold">
                             ⭐ {reviewData.rating}/5

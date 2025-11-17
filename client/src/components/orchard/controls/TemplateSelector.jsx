@@ -1,12 +1,13 @@
 import { motion } from 'framer-motion';
-import { useOrchardStore } from '../../../store/orchardStore';
-import { DEFAULT_TEMPLATES } from '../../../store/orchardConstants';
+import { useOrchardStore, DEFAULT_TEMPLATES } from '../../../store/orchardStore';
 
 export default function TemplateSelector() {
     const config = useOrchardStore((state) => state.config);
     const setTemplate = useOrchardStore((state) => state.setTemplate);
     const setRatio = useOrchardStore((state) => state.setRatio);
-    const templates = DEFAULT_TEMPLATES;
+    const registerTemplate = useOrchardStore((state) => state.registerTemplate);
+    const templates = useOrchardStore((state) => state.templates);
+    const unregisterTemplate = useOrchardStore((state) => state.unregisterTemplate);
 
     const ratios = [
         { id: '1:1', name: 'Carré (1:1)', icon: '⬜' },
@@ -29,6 +30,21 @@ export default function TemplateSelector() {
             </div>
 
             {/* Galerie de templates */}
+            <div className="flex items-center justify-between">
+                <div />
+                <button onClick={() => {
+                    const id = prompt('ID du template (ex: my-custom-template)');
+                    if (!id) return;
+                    const name = prompt('Nom du template (ex: Ma mise en page)') || id;
+                    registerTemplate(id, {
+                        name,
+                        description: 'Template personnalisé',
+                        layout: 'custom',
+                        defaultRatio: '1:1',
+                        supportedRatios: ['1:1', '16:9']
+                    });
+                }} className="px-3 py-2 bg-purple-500 text-white rounded-lg text-sm">➕ Créer Template</button>
+            </div>
             <div className="grid grid-cols-1 gap-2">
                 {Object.values(templates).map((template) => (
                     <motion.button
@@ -55,6 +71,10 @@ export default function TemplateSelector() {
                             </div>
                             {config.template === template.id && (
                                 <svg className="w-5 h-5 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                                    {/* Supprimer template custom */}
+                                    {!DEFAULT_TEMPLATES[template.id] && (
+                                        <button title="Supprimer le template" onClick={(e) => { e.stopPropagation(); if (window.confirm(`Supprimer le template ${template.name}?`)) unregisterTemplate(template.id); }} className="ml-2 p-1 text-xs bg-red-100 rounded">×</button>
+                                    )}
                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                 </svg>
                             )}

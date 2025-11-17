@@ -11,8 +11,14 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
     const [selectedSubstrat, setSelectedSubstrat] = useState('');
     const [percentage, setPercentage] = useState('');
 
+    // Normaliser la valeur: peut être string JSON, csv ou déjà array
+    const normalizedValue = Array.isArray(value) ? value : (typeof value === 'string' ? (() => {
+        try { const parsed = JSON.parse(value); if (Array.isArray(parsed)) return parsed; } catch (e) { }
+        return value.split(',').map(s => s.trim()).filter(Boolean).map((s, i) => ({ id: `legacy-${i}`, substrat: s, percentage: 0 }))
+    })() : []);
+
     // Calculer le pourcentage total actuel
-    const totalPercentage = value.reduce((sum, item) => sum + parseFloat(item.percentage || 0), 0);
+    const totalPercentage = normalizedValue.reduce((sum, item) => sum + parseFloat(item.percentage || 0), 0);
     const remainingPercentage = 100 - totalPercentage;
 
     /**
@@ -38,7 +44,7 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
             percentage: parseFloat(percentage)
         };
 
-        onChange([...value, newComponent]);
+        onChange([...normalizedValue, newComponent]);
 
         // Reset formulaire
         setSelectedSubstrat('');
@@ -49,7 +55,7 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
      * Supprimer un composant
      */
     const handleRemove = (id) => {
-        onChange(value.filter(item => item.id !== id));
+        onChange(normalizedValue.filter(item => item.id !== id));
     };
 
     /**
@@ -60,13 +66,13 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
         if (isNaN(pct) || pct <= 0 || pct > 100) return;
 
         // Vérifier que le total ne dépasse pas 100%
-        const otherTotal = value
+        const otherTotal = normalizedValue
             .filter(item => item.id !== id)
             .reduce((sum, item) => sum + parseFloat(item.percentage), 0);
 
         if (otherTotal + pct > 100) return;
 
-        onChange(value.map(item =>
+        onChange(normalizedValue.map(item =>
             item.id === id ? { ...item, percentage: pct } : item
         ));
     };
@@ -76,14 +82,14 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
      */
     const handleMoveUp = (index) => {
         if (index === 0) return;
-        const newArray = [...value];
+        const newArray = [...normalizedValue];
         [newArray[index - 1], newArray[index]] = [newArray[index], newArray[index - 1]];
         onChange(newArray);
     };
 
     const handleMoveDown = (index) => {
         if (index === value.length - 1) return;
-        const newArray = [...value];
+        const newArray = [...normalizedValue];
         [newArray[index], newArray[index + 1]] = [newArray[index + 1], newArray[index]];
         onChange(newArray);
     };
@@ -143,8 +149,8 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
                         onClick={handleAddComponent}
                         disabled={!canAddComponent()}
                         className={`w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors ${canAddComponent()
-                                ? 'bg-green-600 hover:bg-green-700 text-white'
-                                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                            ? 'bg-green-600 hover:bg-green-700 text-white'
+                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                             }`}
                     >
                         ➕ Ajouter au mélange
@@ -212,8 +218,8 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
                                             onClick={() => handleMoveUp(index)}
                                             disabled={index === 0}
                                             className={`px-2 py-1 rounded text-xs ${index === 0
-                                                    ? 'text-gray-600 cursor-not-allowed'
-                                                    : 'text-gray-400 hover:text-white hover:bg-gray-600'
+                                                ? 'text-gray-600 cursor-not-allowed'
+                                                : 'text-gray-400 hover:text-white hover:bg-gray-600'
                                                 }`}
                                             title="Monter"
                                         >
@@ -224,8 +230,8 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
                                             onClick={() => handleMoveDown(index)}
                                             disabled={index === value.length - 1}
                                             className={`px-2 py-1 rounded text-xs ${index === value.length - 1
-                                                    ? 'text-gray-600 cursor-not-allowed'
-                                                    : 'text-gray-400 hover:text-white hover:bg-gray-600'
+                                                ? 'text-gray-600 cursor-not-allowed'
+                                                : 'text-gray-400 hover:text-white hover:bg-gray-600'
                                                 }`}
                                             title="Descendre"
                                         >
@@ -264,10 +270,10 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
                         <div className="h-3 bg-gray-800 rounded-full overflow-hidden">
                             <div
                                 className={`h-full transition-all duration-300 ${totalPercentage === 100
-                                        ? 'bg-gradient-to-r from-green-500 to-green-400'
-                                        : totalPercentage > 100
-                                            ? 'bg-gradient-to-r from-red-500 to-red-400'
-                                            : 'bg-gradient-to-r from-yellow-500 to-yellow-400'
+                                    ? 'bg-gradient-to-r from-green-500 to-green-400'
+                                    : totalPercentage > 100
+                                        ? 'bg-gradient-to-r from-red-500 to-red-400'
+                                        : 'bg-gradient-to-r from-yellow-500 to-yellow-400'
                                     }`}
                                 style={{ width: `${Math.min(totalPercentage, 100)}%` }}
                             />
