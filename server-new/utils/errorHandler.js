@@ -228,7 +228,7 @@ export function notFoundHandler(req, res, next) {
  * @throws {APIError} Si non authentifié
  */
 export function requireAuthOrThrow(req) {
-    if (!req.isAuthenticated()) {
+    if (typeof req.isAuthenticated !== 'function' || !req.isAuthenticated()) {
         throw Errors.UNAUTHORIZED()
     }
 }

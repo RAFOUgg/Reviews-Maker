@@ -16,7 +16,11 @@ export default function HomePage() {
 
     const fetchReviews = async () => {
         try {
-            const response = await fetch('/api/reviews?publicOnly=true')
+            // Afficher par défaut les aperçus définis (Orchard) — pour les utilisateurs connectés,
+            // on affiche uniquement leurs aperçus personnels (car ils ont créé le rendu).
+            const base = '/api/reviews?publicOnly=true&hasOrchard=true'
+            const url = user ? `${base}&userId=${encodeURIComponent(user.id)}` : base
+            const response = await fetch(url)
             if (response.ok) {
                 const data = await response.json()
                 setReviews(data)

@@ -220,7 +220,7 @@ HomeReviewCard.propTypes = {
         holderName: PropTypes.string.isRequired,
         type: PropTypes.string.isRequired,
         description: PropTypes.string,
-        images: PropTypes.string,
+        images: PropTypes.oneOfType([PropTypes.string, PropTypes.array]),
         overallRating: PropTypes.number,
         note: PropTypes.number,
         likesCount: PropTypes.number,

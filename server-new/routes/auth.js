@@ -20,7 +20,7 @@ router.get('/discord/callback',
 
 // GET /api/auth/me - Récupérer l'utilisateur actuel
 router.get('/me', asyncHandler(async (req, res) => {
-    if (!req.isAuthenticated()) {
+    if (typeof req.isAuthenticated !== 'function' || !req.isAuthenticated()) {
         throw Errors.UNAUTHORIZED()
     }
 
@@ -41,7 +41,7 @@ router.get('/me', asyncHandler(async (req, res) => {
 
 // POST /api/auth/logout - Déconnexion
 router.post('/logout', asyncHandler(async (req, res) => {
-    if (!req.isAuthenticated()) {
+    if (typeof req.isAuthenticated !== 'function' || !req.isAuthenticated()) {
         throw Errors.UNAUTHORIZED()
     }
 

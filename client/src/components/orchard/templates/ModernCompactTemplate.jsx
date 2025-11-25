@@ -155,8 +155,8 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
         return (
             <div
                 className="absolute"
-                style={{ pointerEvents: 'none' }}
                 style={{
+                    pointerEvents: 'none',
                     ...positionStyles[branding.position],
                     opacity: branding.opacity,
                     width: sizeMap[branding.size],
@@ -169,7 +169,6 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                         className="w-full h-full object-contain orchard-branding"
                 />
             </div>
-            {/* Mark branding for targeted export toggles */}
         );
     };
 

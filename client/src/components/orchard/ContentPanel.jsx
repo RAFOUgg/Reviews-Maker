@@ -43,6 +43,12 @@ export const DRAGGABLE_FIELDS = {
     ]
 };
 
+// Add stickers / info bubbles
+DRAGGABLE_FIELDS.stickers = [
+    { id: 'infoBubble', label: 'Bulle info', icon: '💬', type: 'bubble' },
+    { id: 'emoji', label: 'Emoji', icon: '😊', type: 'bubble' }
+];
+
 // Composant pour un champ draggable
 function DraggableField({ field, isPlaced }) {
     const [{ isDragging }, drag] = useDrag(() => ({
@@ -115,7 +121,14 @@ FieldSection.propTypes = {
 // Panel principal de contenu
 export default function ContentPanel({ reviewData, placedFields, onFieldSelect }) {
     // Extraire les IDs des champs déjà placés
-    const placedFieldIds = placedFields.map(f => f.id);
+    // Includes fields assigned into zones (zone.assignedFields)
+    const placedFieldIds = placedFields.reduce((acc, f) => {
+        acc.push(f.id);
+        if (f.assignedFields && Array.isArray(f.assignedFields)) {
+            acc.push(...f.assignedFields);
+        }
+        return acc;
+    }, []);
 
     return (
         <div className="w-80 bg-gray-900/90 backdrop-blur-sm p-4 rounded-lg overflow-y-auto max-h-screen border border-purple-500/30">
@@ -150,12 +163,23 @@ export default function ContentPanel({ reviewData, placedFields, onFieldSelect }
                     fields={DRAGGABLE_FIELDS.advanced}
                     placedFieldIds={placedFieldIds}
                 />
+                <FieldSection
+                    title="Stickers & Bulles"
+                    fields={DRAGGABLE_FIELDS.stickers}
+                    placedFieldIds={placedFieldIds}
+                />
             </div>
 
             <div className="mt-6 p-3 bg-purple-500/10 rounded-lg border border-purple-500/30">
                 <p className="text-xs text-gray-300">
                     <strong className="text-purple-300">💡 Astuce :</strong> Les champs marqués d'un ✓ sont déjà placés dans votre layout.
                 </p>
+                <button
+                    onClick={() => onFieldSelect?.({ type: 'zone' })}
+                    className="mt-3 w-full px-3 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition-colors"
+                >
+                    ➕ Ajouter une zone
+                </button>
             </div>
         </div>
     );
@@ -166,3 +190,5 @@ ContentPanel.propTypes = {
     placedFields: PropTypes.array.isRequired,
     onFieldSelect: PropTypes.func
 };
+
+// Note: 'onFieldSelect' when called with { type: 'zone' } instructs the parent to create a new empty zone on the canvas

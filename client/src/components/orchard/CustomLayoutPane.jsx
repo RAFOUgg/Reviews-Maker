@@ -7,11 +7,26 @@ import { useState } from 'react';
 import { useDrop } from 'react-dnd';
 import { motion } from 'framer-motion';
 import PropTypes from 'prop-types';
-import { DRAGGABLE_FIELD_TYPES } from './ContentPanel';
-import FieldRenderer from './FieldRenderer';
+import { DRAGGABLE_FIELD_TYPES, DRAGGABLE_FIELDS } from './ContentPanel';
+import FieldRenderer from './FieldRendererClean';
+import { useToastStore } from '../ToastContainer';
 
 // Composant pour un champ placé (avec bouton supprimer)
-function PlacedField({ field, value, onRemove, position, width = 25, height = 20, rotation = 0, onUpdate }) {
+function PlacedField({ field, value, onRemove, position, width = 25, height = 20, rotation = 0, onUpdate, onAssignToZone }) {
+    const isZone = field.type === 'zone' || field.zone === true;
+    // If zone, create a drop target to accept fields
+    const [{ isOver, canDrop }, drop] = useDrop(() => ({
+        accept: DRAGGABLE_FIELD_TYPES.ORCHARD_FIELD,
+        drop: (item, monitor) => {
+            if (isZone) {
+                onAssignToZone?.(field.id, item.field);
+            }
+        },
+        collect: (monitor) => ({
+            isOver: monitor.isOver(),
+            canDrop: monitor.canDrop()
+        })
+    }), [field]);
     return (
         <motion.div
             initial={{ scale: 0, opacity: 0 }}
@@ -24,7 +39,7 @@ function PlacedField({ field, value, onRemove, position, width = 25, height = 20
                 maxWidth: '300px'
             }}
         >
-            <div className="relative bg-gray-800/90 backdrop-blur-sm p-3 rounded-lg border border-purple-500/30 shadow-xl" style={{ width: width + '%', height: height + '%', transform: 'rotate(' + rotation + 'deg)' }}>
+            <div ref={isZone ? drop : undefined} className="relative bg-gray-800/90 backdrop-blur-sm p-3 rounded-lg border border-purple-500/30 shadow-xl" style={{ width: width + '%', height: height + '%', transform: 'rotate(' + rotation + 'deg)' }}>
                 <button
                     onClick={() => onRemove(field.id)}
                     className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
@@ -34,7 +49,37 @@ function PlacedField({ field, value, onRemove, position, width = 25, height = 20
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
-                <FieldRenderer field={field} value={value} compact={true} />
+                {isZone ? (
+                    <div className="w-full h-full flex flex-col items-center justify-center border-2 border-dashed border-white/20 rounded-lg">
+                        <div className="text-sm text-gray-300">{field.label || 'Zone'}</div>
+                        {/* Section selector for zone */}
+                        <div className="mt-2">
+                            <label className="text-xs text-gray-400 mr-2">Section</label>
+                            <select
+                                value={field.sectionKey || ''}
+                                onChange={(e) => onUpdate?.({ sectionKey: e.target.value })}
+                                className="text-xs px-2 py-1 bg-gray-900 border border-white/10 rounded-lg"
+                            >
+                                <option value="">— Aucune —</option>
+                                <option value="basic">Informations de base</option>
+                                <option value="ratings">Notes & Évaluations</option>
+                                <option value="details">Détails Sensoriels</option>
+                                <option value="advanced">Informations Avancées</option>
+                            </select>
+                        </div>
+                        {isOver && canDrop && <div className="mt-2 text-xs text-green-400">Relâcher pour placer</div>}
+                        {/* Render assigned fields inside the zone */}
+                        <div className="mt-3 w-full">
+                            {(field.assignedFields || []).map((fid) => (
+                                <div key={fid} className="mb-2">
+                                    <FieldRenderer field={getFieldDef(fid)} value={getFieldValueById(fid)} compact={true} />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ) : (
+                    <FieldRenderer field={field} value={value} compact={true} />
+                )}
 
                 {/* Resize handle bottom-right */}
                 <div
@@ -186,6 +231,50 @@ export default function CustomLayoutPane({ reviewData, layout, onLayoutChange })
     const [placedFields, setPlacedFields] = useState(layout || []);
 
     const handleDrop = (field, position) => {
+        // Vérifier que le champ a bien une valeur dans `reviewData` avant d'accepter le drop
+        const hasValueForField = (fld) => {
+            try {
+                // Supporter les clés imbriquées type "categoryRatings.visual"
+                const id = fld.id || fld.key || fld.name
+                if (!id) return false
+                if (id.includes('.')) {
+                    const parts = id.split('.')
+                    let val = reviewData
+                    for (const p of parts) {
+                        val = val?.[p]
+                    }
+                    if (val === undefined || val === null) return false
+                    if (Array.isArray(val)) return val.length > 0
+                    if (typeof val === 'string') return val.trim().length > 0
+                    return true // numbers/objects considered present
+                }
+
+                const value = reviewData?.[id]
+                if (value === undefined || value === null) return false
+                if (Array.isArray(value)) return value.length > 0
+                if (typeof value === 'string') return value.trim().length > 0
+                return true
+            } catch (err) {
+                console.warn('hasValueForField error', err)
+                return false
+            }
+        }
+
+        if (!hasValueForField(field)) {
+            // Ne pas autoriser le drop d'un champ qui n'a pas de contenu
+            const idLabel = field.id || field.label || ''
+            console.warn(`Orchard: drop refusé, champ vide: ${idLabel}`)
+            try {
+                const store = useToastStore.getState()
+                if (store && typeof store.addToast === 'function') {
+                    store.addToast({ type: 'warning', message: `Champ vide — impossible de placer: ${idLabel}` })
+                }
+            } catch (e) {
+                // Ignore errors; fallback to console
+            }
+            return
+        }
+
         // Vérifier si le champ n'est pas déjà placé
         const alreadyPlaced = placedFields.find(pf => pf.id === field.id);
         if (alreadyPlaced) {
@@ -202,6 +291,40 @@ export default function CustomLayoutPane({ reviewData, layout, onLayoutChange })
             setPlacedFields(updated);
             onLayoutChange?.(updated);
         }
+    };
+
+    const assignFieldToZone = (zoneId, fieldToAssign) => {
+        // If the zone is restricted by section (sectionKey), prevent assigning fields from other sections
+        const getFieldCategory = (fid) => {
+            for (const sec in DRAGGABLE_FIELDS) {
+                if (DRAGGABLE_FIELDS[sec].some(f => f.id === fid)) return sec
+            }
+            return null
+        }
+        const updated = placedFields.map(pf => {
+            if (pf.id === zoneId) {
+                // avoid duplicates
+                const assignedFields = Array.from(new Set([...(pf.assignedFields || []), fieldToAssign.id]));
+                // Section check
+                if (pf.sectionKey) {
+                    const cat = getFieldCategory(fieldToAssign.id)
+                    if (cat && cat !== pf.sectionKey) {
+                        const store = useToastStore.getState()
+                        store?.addToast?.({ type: 'warning', message: `Le champ ${fieldToAssign.label || fieldToAssign.id} ne appartient pas à la section sélectionnée.` })
+                        return pf
+                    }
+                }
+                return { ...pf, assignedFields };
+            }
+            // If the field was previously placed outside, remove it
+            if (pf.id === fieldToAssign.id) {
+                return null; // remove direct placement
+            }
+            return pf;
+        }).filter(Boolean);
+
+        setPlacedFields(updated);
+        onLayoutChange?.(updated);
     };
 
     const handleRemove = (fieldId) => {
@@ -225,6 +348,27 @@ export default function CustomLayoutPane({ reviewData, layout, onLayoutChange })
         }
 
         return reviewData[field.id];
+    };
+
+    const getFieldDef = (id) => {
+        for (const section in DRAGGABLE_FIELDS) {
+            const arr = DRAGGABLE_FIELDS[section];
+            if (!Array.isArray(arr)) continue;
+            const found = arr.find(f => f.id === id);
+            if (found) return found;
+        }
+        return { id, label: id, icon: '🔲', type: 'text' };
+    };
+
+    const getFieldValueById = (id) => {
+        if (!reviewData) return null;
+        if (id.includes('.')) {
+            const parts = id.split('.')
+            let val = reviewData
+            for (const p of parts) val = val?.[p]
+            return val
+        }
+        return reviewData[id]
     };
 
     return (
@@ -259,6 +403,7 @@ export default function CustomLayoutPane({ reviewData, layout, onLayoutChange })
                         }}
                         position={placedField.position}
                         onRemove={handleRemove}
+                        onAssignToZone={assignFieldToZone}
                     />
                 ))}
             </DropCanvas>

@@ -398,8 +398,16 @@ export default function EditReviewPage() {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Erreur lors de la mise à jour');
+                const text = await response.text();
+                let parsed = null;
+                try {
+                    parsed = JSON.parse(text);
+                } catch (e) {
+                    // Not JSON — server returned HTML or plain text
+                }
+                const errorMessage = parsed?.message || text || 'Erreur lors de la mise à jour';
+                console.error('PUT /api/reviews/:id error response:', { status: response.status, body: text });
+                throw new Error(errorMessage);
             }
 
             toast.remove(loadingToast);

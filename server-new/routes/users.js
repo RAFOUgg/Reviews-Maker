@@ -121,7 +121,8 @@ router.get('/:id/reviews', asyncHandler(async (req, res) => {
         }
     })
 
-    const formattedReviews = formatReviews(reviews, req.isAuthenticated() ? req.user : null)
+    const currentUser = (typeof req.isAuthenticated === 'function' && req.isAuthenticated()) ? req.user : null
+    const formattedReviews = formatReviews(reviews, currentUser)
     res.json(formattedReviews)
 }))
 

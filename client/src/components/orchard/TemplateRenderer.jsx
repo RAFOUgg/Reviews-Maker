@@ -34,6 +34,11 @@ export default function TemplateRenderer({ config, reviewData }) {
         TemplateComponent = CustomTemplate;
     }
 
+    // If the stored review explicitly selected a custom layout mode, force the CustomTemplate
+    if (reviewData?.orchardLayoutMode === 'custom') {
+        TemplateComponent = CustomTemplate;
+    }
+
     if (!TemplateComponent) {
         return (
             <div className="w-full h-full flex items-center justify-center bg-red-50 dark:bg-red-900/20 rounded-xl p-8">

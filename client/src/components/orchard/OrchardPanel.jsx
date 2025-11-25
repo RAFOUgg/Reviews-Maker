@@ -24,6 +24,15 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
     useEffect(() => {
         if (reviewData) {
             setReviewData(reviewData);
+            // Charger le layout personnalisé s'il existe depuis la review
+            if (reviewData.orchardCustomLayout) {
+                try {
+                    const parsed = typeof reviewData.orchardCustomLayout === 'string' ? JSON.parse(reviewData.orchardCustomLayout) : reviewData.orchardCustomLayout
+                    setCustomLayout(Array.isArray(parsed) ? parsed : [])
+                } catch (err) {
+                    console.warn('Failed to parse orchardCustomLayout', err)
+                }
+            }
         }
     }, [reviewData, setReviewData]);
 
@@ -46,6 +55,21 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
 
     const handleLayoutChange = (newLayout) => {
         setCustomLayout(newLayout);
+    };
+
+    const handleAddZone = () => {
+        const id = `zone-${Date.now()}`;
+        const zone = {
+            id,
+            type: 'zone',
+            label: 'Zone',
+            position: { x: 10, y: 10 },
+            width: 40,
+            height: 25,
+            rotation: 0,
+            assignedFields: []
+        };
+        setCustomLayout(prev => [...prev, zone]);
     };
 
     return (
@@ -226,6 +250,11 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                                     <ContentPanel
                                         reviewData={reviewData}
                                         placedFields={customLayout}
+                                        onFieldSelect={(item) => {
+                                            if (item?.type === 'zone') {
+                                                handleAddZone();
+                                            }
+                                        }}
                                     />
                                 </div>
 

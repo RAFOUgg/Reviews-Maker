@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-const useToastStore = create((set) => ({
+export const useToastStore = create((set) => ({
     toasts: [],
     addToast: (toast) => {
         const id = Date.now() + Math.random()

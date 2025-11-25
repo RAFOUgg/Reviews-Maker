@@ -41,7 +41,8 @@ const upload = multer({
 
 // Middleware pour vérifier l'authentification
 const requireAuth = (req, res, next) => {
-    if (!req.isAuthenticated()) {
+    const _isAuthFunc = typeof req.isAuthenticated === 'function'
+    if (!_isAuthFunc || !req.isAuthenticated()) {
         return res.status(401).json({ error: 'Authentication required' })
     }
     next()
@@ -49,7 +50,7 @@ const requireAuth = (req, res, next) => {
 
 // GET /api/reviews - Liste toutes les reviews (publiques + privées de l'user)
 router.get('/', asyncHandler(async (req, res) => {
-    const { type, search, sortBy = 'createdAt', order = 'desc' } = req.query
+    const { type, search, sortBy = 'createdAt', order = 'desc', publicOnly, hasOrchard, userId } = req.query
 
     // Valider les paramètres de tri
     const validSortFields = ['createdAt', 'updatedAt', 'note', 'holderName']
@@ -59,9 +60,10 @@ router.get('/', asyncHandler(async (req, res) => {
     const safeOrder = validOrders.includes(order) ? order : 'desc'
 
     // Construire les filtres de recherche
+    const currentUser = (typeof req.isAuthenticated === 'function' && req.isAuthenticated()) ? req.user : null
     const where = buildReviewFilters(
-        { type, search },
-        req.isAuthenticated() ? req.user : null
+        { type, search, publicOnly, hasOrchard, userId },
+        currentUser
     )
 
     const reviews = await prisma.review.findMany({
@@ -81,7 +83,7 @@ router.get('/', asyncHandler(async (req, res) => {
     })
 
     // Formater les reviews avec le helper centralisé
-    let formattedReviews = formatReviews(reviews, req.isAuthenticated() ? req.user : null)
+    let formattedReviews = formatReviews(reviews, currentUser)
     // Exposer orchardConfig/preset si présents
     formattedReviews = formattedReviews.map(r => liftOrchardFromExtra(r))
 
@@ -120,7 +122,7 @@ router.get('/my', requireAuth, asyncHandler(async (req, res) => {
 // GET /api/reviews/:id - Récupérer une review spécifique
 router.get('/:id', asyncHandler(async (req, res) => {
     console.log(`🔍 GET /api/reviews/${req.params.id}`)
-    console.log('👤 Authenticated:', req.isAuthenticated())
+    console.log('👤 Authenticated:', typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : false)
     console.log('👤 User:', req.user ? { id: req.user.id, username: req.user.username } : null)
 
     // Valider l'ID
@@ -151,7 +153,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
     console.log('📄 Review found:', { id: review.id, authorId: review.authorId, isPublic: review.isPublic })
 
     // Vérifier les permissions pour les reviews privées
-    const isAuthenticated = req.isAuthenticated()
+    const isAuthenticated = typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : false
     const currentUser = isAuthenticated ? req.user : null
 
     if (!review.isPublic && (!isAuthenticated || !currentUser || review.authorId !== currentUser.id)) {
@@ -252,18 +254,23 @@ router.post('/', requireAuth, upload.array('images', 10), asyncHandler(async (re
 
 // PUT /api/reviews/:id - Mettre à jour une review
 router.put('/:id', requireAuth, upload.array('images', 10), asyncHandler(async (req, res) => {
+    console.log(`🔁 PUT /api/reviews/${req.params.id} by user: ${req.user?.id || 'unknown'}`, 'body keys:', Object.keys(req.body))
     // Valider l'ID
     if (!validateReviewId(req.params.id)) {
         throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
     }
 
-    // Vérifier ownership
-    await requireOwnershipOrThrow(prisma, req.params.id, req.user.id, 'review')
-
     // Récupérer la review existante
     const review = await prisma.review.findUnique({
         where: { id: req.params.id }
     })
+
+    if (!review) {
+        throw Errors.REVIEW_NOT_FOUND()
+    }
+
+    // Vérifier ownership du review (utilisateur courant doit être l'auteur)
+    await requireOwnershipOrThrow(review.authorId, req, 'review')
 
     const {
         holderName,
@@ -296,11 +303,34 @@ router.put('/:id', requireAuth, upload.array('images', 10), asyncHandler(async (
 
     // Gérer les images: nouvelles + conserver les existantes sélectionnées
     const newImages = req.files?.map(file => file.filename) || []
-    const keepImages = existingImages ? JSON.parse(existingImages) : []
+    // existingImages peut être un JSON stringifié ou déjà un tableau.
+    let keepImages = []
+    try {
+        if (existingImages) {
+            if (typeof existingImages === 'string') {
+                keepImages = JSON.parse(existingImages)
+            } else if (Array.isArray(existingImages)) {
+                keepImages = existingImages
+            } else {
+                // fallback: coerce to array if possible
+                keepImages = Array.isArray(JSON.parse(JSON.stringify(existingImages))) ? JSON.parse(JSON.stringify(existingImages)) : []
+            }
+        }
+    } catch (err) {
+        console.warn('Failed to parse existingImages from request, falling back to empty array', err)
+        keepImages = []
+    }
+
     const allImages = [...keepImages, ...newImages]
 
     // Supprimer les images qui ne sont plus dans la liste
-    const oldImages = review.images ? JSON.parse(review.images) : []
+    let oldImages = []
+    try {
+        oldImages = typeof review.images === 'string' ? JSON.parse(review.images) : (Array.isArray(review.images) ? review.images : [])
+    } catch (err) {
+        console.warn('Failed to parse review.images for deletion logic; falling back to empty array', err)
+        oldImages = []
+    }
     const imagesToDelete = oldImages.filter(img => !keepImages.includes(`/images/${img}`) && !keepImages.includes(img))
 
     for (const image of imagesToDelete) {
@@ -396,8 +426,19 @@ router.put('/:id', requireAuth, upload.array('images', 10), asyncHandler(async (
         }
     }
     if (Object.keys(extraData).length > 0) {
-        updateData.extraData = JSON.stringify(extraData)
+        // Merge with existing extraData on the review to avoid wiping unrelated values
+        let parsedExisting = {}
+        try {
+            parsedExisting = review.extraData ? JSON.parse(review.extraData) : {}
+        } catch (err) {
+            parsedExisting = {}
+        }
+
+        const merged = { ...parsedExisting, ...extraData }
+        updateData.extraData = JSON.stringify(merged)
     }
+
+    console.log('💾 Update payload:', JSON.stringify(updateData, null, 2))
 
     const updated = await prisma.review.update({
         where: { id: req.params.id },
@@ -427,12 +468,15 @@ router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
         throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
     }
 
-    // Vérifier ownership
-    await requireOwnershipOrThrow(prisma, req.params.id, req.user.id, 'review')
+    // Récupérer la review existante
+    const review = await prisma.review.findUnique({ where: { id: req.params.id } })
 
-    const review = await prisma.review.findUnique({
-        where: { id: req.params.id }
-    })
+    if (!review) {
+        throw Errors.REVIEW_NOT_FOUND()
+    }
+
+    // Vérifier ownership du review
+    await requireOwnershipOrThrow(review.authorId, req, 'review')
 
     // Supprimer les images associées
     const imageFilenames = extractImageFilenames(review)
@@ -461,8 +505,14 @@ router.patch('/:id/visibility', requireAuth, asyncHandler(async (req, res) => {
         throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
     }
 
-    // Vérifier ownership
-    await requireOwnershipOrThrow(prisma, id, req.user.id, 'review')
+    // Récupérer la review existante
+    const review = await prisma.review.findUnique({ where: { id } })
+    if (!review) {
+        throw Errors.REVIEW_NOT_FOUND()
+    }
+
+    // Vérifier ownership du review
+    await requireOwnershipOrThrow(review.authorId, req, 'review')
 
     // Mettre à jour la visibilité
     const updatedReview = await prisma.review.update({
@@ -635,7 +685,7 @@ router.get('/:id/likes', async (req, res) => {
 
         // Si l'utilisateur est authentifié, vérifier son état de like/dislike
         let userLikeState = null
-        if (req.isAuthenticated()) {
+        if (typeof req.isAuthenticated === 'function' && req.isAuthenticated()) {
             const userLike = await prisma.reviewLike.findUnique({
                 where: {
                     reviewId_userId: {

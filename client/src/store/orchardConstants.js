@@ -61,7 +61,14 @@ export const DEFAULT_TEMPLATES = {
         description: 'Design épuré et moderne, idéal pour les réseaux sociaux',
         layout: 'compact',
         defaultRatio: '1:1',
-        supportedRatios: ['1:1', '16:9', '9:16']
+        supportedRatios: ['1:1', '16:9', '9:16'],
+        // Zones par défaut (x,y in %, width/height in % relative to canvas)
+        defaultZones: [
+            { id: 'zone-title', label: 'Titre', type: 'zone', position: { x: 50, y: 8 }, width: 80, height: 12, placeholder: 'title' },
+            { id: 'zone-image', label: 'Image', type: 'zone', position: { x: 10, y: 20 }, width: 40, height: 45, placeholder: 'image' },
+            { id: 'zone-rating', label: 'Note', type: 'zone', position: { x: 62, y: 22 }, width: 28, height: 12, placeholder: 'rating' },
+            { id: 'zone-description', label: 'Description', type: 'zone', position: { x: 10, y: 68 }, width: 84, height: 22, placeholder: 'description' }
+        ]
     },
     detailedCard: {
         id: 'detailedCard',

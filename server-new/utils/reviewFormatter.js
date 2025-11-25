@@ -100,6 +100,13 @@ export function liftOrchardFromExtra(formatted) {
             // orchardPreset is usually a simple string, keep as-is
             formatted.orchardPreset = extra.orchardPreset
         }
+        // expose custom layout and layout mode if present (persisted in extraData)
+        if (extra.orchardCustomLayout) {
+            formatted.orchardCustomLayout = safeJSONParse(extra.orchardCustomLayout, extra.orchardCustomLayout)
+        }
+        if (extra.orchardLayoutMode) {
+            formatted.orchardLayoutMode = extra.orchardLayoutMode
+        }
     } catch (err) {
         // ignore
     }
@@ -192,17 +199,20 @@ export function extractImageFilenames(imageUrls) {
  */
 export function buildReviewFilters(filters, currentUser = null) {
     const where = {}
-
-    // Filtre de visibilité : publiques + privées de l'user
-    // Si filters.publicOnly === true, on force uniquement les reviews publiques
+    // Filtre de visibilité : par défaut, ne montrer que les reviews publiques.
+    // Pour inclure explicitement les reviews privées de l'utilisateur courant,
+    // appeler la fonction avec `filters.includeOwn === true` (et un `currentUser` présent).
+    // Ceci évite d'exposer les reviews privées dans la galerie publique même si l'appelant
+    // est authentifié.
+    // Si la requête inclut explicitement publicOnly=true, on force public only
     if (filters.publicOnly === true || filters.publicOnly === 'true') {
         where.isPublic = true
+    } else if (filters.includeOwn === true && currentUser && currentUser.id) {
+        // Montrer les reviews publiques + celles appartenant à l'utilisateur
+        where.OR = [{ isPublic: true }, { authorId: currentUser.id }]
     } else {
-        const visibilityConditions = [{ isPublic: true }]
-        if (currentUser && currentUser.id) {
-            visibilityConditions.push({ authorId: currentUser.id })
-        }
-        where.OR = visibilityConditions
+        // Par défaut seulement les reviews publiques
+        where.isPublic = true
     }
 
     // Filtre par type de produit
@@ -221,6 +231,12 @@ export function buildReviewFilters(filters, currentUser = null) {
         if (!currentUser || currentUser.id !== filters.userId) {
             where.isPublic = true
         }
+    }
+
+    // Filtre: seulement les reviews qui ont un Aperçu (orchardPreset) — utile pour la galerie d'aperçus
+    if (filters.hasOrchard === true || filters.hasOrchard === 'true') {
+        // extraData is stored as JSON string — check substring 'orchardPreset' for compatibility
+        where.extraData = { contains: 'orchardPreset' }
     }
 
     // Recherche textuelle
