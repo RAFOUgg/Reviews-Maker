@@ -6,13 +6,16 @@ const router = express.Router()
 
 // GET /api/auth/discord - Initier l'authentification Discord
 router.get('/discord', (req, res, next) => {
-    console.log(`[AUTH] Starting Discord OAuth for ${req.ip}`)
+    console.log(`[AUTH-DBG] Start discord route - method: ${req.method} originalUrl: ${req.originalUrl} path: ${req.path} ip: ${req.ip}`)
+    // Also log any X-Forwarded headers to inspect proxy behavior
+    console.log(`[AUTH-DBG] Headers: Host=${req.headers.host} X-Forwarded-For=${req.headers['x-forwarded-for']} X-Forwarded-Proto=${req.headers['x-forwarded-proto']}`)
     return passport.authenticate('discord')(req, res, next)
 })
 
 // GET /api/auth/discord/callback - Callback après autorisation Discord
 router.get('/discord/callback', (req, res, next) => {
-    console.log('[AUTH] Discord callback received', { query: req.query })
+    console.log(`[AUTH-DBG] Discord callback received - method: ${req.method} originalUrl: ${req.originalUrl} path: ${req.path} ip: ${req.ip}`, { query: req.query })
+    console.log(`[AUTH-DBG] Headers: Host=${req.headers.host} X-Forwarded-For=${req.headers['x-forwarded-for']} X-Forwarded-Proto=${req.headers['x-forwarded-proto']}`)
     return passport.authenticate('discord', {
         failureRedirect: process.env.FRONTEND_URL
     })(req, res, (err) => {

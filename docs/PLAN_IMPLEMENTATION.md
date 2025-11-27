@@ -622,10 +622,10 @@ CORS_ORIGIN="https://reviews-maker.fr"
 ```javascript
 module.exports = {
   apps: [{
-    name: 'reviews-maker',
-    script: './server/src/server.js',
+    name: 'reviews-backend',
+    script: './server-new/server.js',
     cwd: '/var/www/reviews-maker',
-    instances: 2,
+    instances: 'max',
     exec_mode: 'cluster',
     env_production: {
       NODE_ENV: 'production',

@@ -58,7 +58,12 @@ if (BASE_PATH) {
     app.use((req, res, next) => {
         if (req.path.startsWith(`${BASE_PATH}/api/`)) {
             // Rewrite URL so express sees the expected path
-            req.url = req.originalUrl.replace(`${BASE_PATH}/api/`, '/api/')
+            const newUrl = req.originalUrl.replace(`${BASE_PATH}/api/`, '/api/')
+            // Debug log to help troubleshooting on the server
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(`[BASE_PATH_REWRITE] ${req.method} ${req.originalUrl} -> ${newUrl}`)
+            }
+            req.url = newUrl
         }
         next()
     })
@@ -86,7 +91,10 @@ app.use(session({
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours
         httpOnly: true,
         // En production, il est recommandé d'utiliser HTTPS; secure doit être true.
-        secure: process.env.NODE_ENV === 'production',
+        // Optionally allow override using SESSION_SECURE=true|false
+        secure: typeof process.env.SESSION_SECURE !== 'undefined'
+            ? process.env.SESSION_SECURE === 'true'
+            : process.env.NODE_ENV === 'production',
         // Autoriser override via env var en cas de besoins particuliers
         sameSite: process.env.SESSION_SAME_SITE || (process.env.NODE_ENV === 'production' ? 'none' : 'lax'),
         path: '/'

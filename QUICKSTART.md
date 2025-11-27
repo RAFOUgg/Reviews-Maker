@@ -92,10 +92,22 @@ npm run dev
 
 ### Backend
 
+Production (PM2)
 ```powershell
-npm run dev              # Dev avec hot-reload
-npx prisma studio        # Interface admin DB (http://localhost:5555)
-npx prisma migrate dev   # Créer nouvelle migration
+# Make sure to run these commands from the project root
+cd /home/ubuntu/Reviews-Maker/server-new
+# Recommended: create ~/.env with the production vars and the correct FRONEND_URL and DISCORD_REDIRECT_URI
+pm2 stop reviews-backend || true
+pm2 delete reviews-backend || true
+# If you use the provided ecosystem.config.cjs to manage PM2 cluster mode (recommended):
+pm2 startOrReload ecosystem.config.cjs --env production || pm2 start ecosystem.config.cjs --env production
+
+pm2 logs reviews-backend --lines 200
+```
+
+If you want to run a single instance while debugging, start directly:
+```powershell
+pm2 start server-new/server.js --name reviews-backend -i 1 --update-env
 ```
 
 ### Frontend
