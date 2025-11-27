@@ -21,6 +21,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const Store = sqliteStore(session)
 
 const app = express()
+// If running behind a reverse proxy (Nginx), trust X-Forwarded-* headers so passport/session
+// and secure cookies behave correctly. `1` is the number of proxies in front of the app.
+app.set('trust proxy', 1)
 const prisma = new PrismaClient()
 const PORT = process.env.PORT || 3000
 

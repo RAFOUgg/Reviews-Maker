@@ -616,6 +616,11 @@ RESEND_API_KEY="..."
 NODE_ENV="production"
 PORT=3000
 SESSION_SECRET="..." # générer avec: openssl rand -hex 32
+# FRONTEND & API
+FRONTEND_URL="https://reviews-maker.fr"
+VITE_API_BASE=/api
+BASE_PATH=
+SESSION_SECURE=true
 CORS_ORIGIN="https://reviews-maker.fr"
 ```
 
