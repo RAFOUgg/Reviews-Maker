@@ -47,6 +47,23 @@ app.use(cors({
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+// Optional base path support (eg. /reviews). If the app is served under a
+// path prefix by a reverse proxy, incoming requests may include that prefix
+// (eg. `/reviews/api/*`) but the server only mounts routes under `/api/*`.
+// To handle this transparently, we rewrite requests that start with
+// `${BASE_PATH}/api/` into `/api/` so the router matching still works.
+// Configure a BASE_PATH env var when serving the app under a path prefix.
+const BASE_PATH = process.env.BASE_PATH || ''
+if (BASE_PATH) {
+    app.use((req, res, next) => {
+        if (req.path.startsWith(`${BASE_PATH}/api/`)) {
+            // Rewrite URL so express sees the expected path
+            req.url = req.originalUrl.replace(`${BASE_PATH}/api/`, '/api/')
+        }
+        next()
+    })
+}
+
 // Simple HTTP request logger to assist debugging in dev
 if (process.env.NODE_ENV !== 'production') {
     app.use((req, res, next) => {

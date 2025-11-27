@@ -570,6 +570,7 @@ server {
     }
     
     # Backend API
+    # In normal deployment (hosted at root)
     location /api {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
@@ -577,6 +578,17 @@ server {
         proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
         proxy_cache_bypass $http_upgrade;
+    }
+    # If you serve the app under a subpath like /reviews (eg. https://host/reviews),
+    # proxy /reviews/api/* to the backend and leave the rest to the SPA.
+    location /reviews/api {
+      rewrite ^/reviews/api/(.*)$ /api/$1 break;
+      proxy_pass http://localhost:3000;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection 'upgrade';
+      proxy_set_header Host $host;
+      proxy_cache_bypass $http_upgrade;
     }
 }
 

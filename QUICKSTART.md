@@ -127,6 +127,7 @@ Si vous voulez rendre l'app accessible sur votre réseau local (ex: http://192.1
 - Dans `server-new/.env` :
 	- `FRONTEND_URL` -> set à `http://192.168.1.38:5173` (ou votre IP/nom de domaine)
 	- `DISCORD_REDIRECT_URI` -> set à `http://<IP_DE_VOTRE_SERVEUR>:3000/api/auth/discord/callback`
+	 - If you host your app under a subpath (eg. https://host/reviews), set `BASE_PATH=/reviews` in `server-new/.env` and configure nginx to proxy `/reviews/api` to backend (see docs/PLAN_IMPLEMENTATION.md).
 
 - Dans le portail Discord Developers: ajouter la même `DISCORD_REDIRECT_URI` à la liste des Redirects autorisés
 - Si vous utilisez Vite en local pour servir le frontend, vous pouvez démarrer le frontend avec `npm run dev` et le backend avec `npm run dev`; Vite proxyera `/api` vers `http://localhost:3000` comme en développement. Pour le déploiement node/pm2 vous devez servir le frontend construit (`client/dist`) en statique et configurer le backend sur PM2.
