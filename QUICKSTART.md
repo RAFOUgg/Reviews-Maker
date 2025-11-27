@@ -42,7 +42,7 @@ DATABASE_URL="file:../db/reviews.sqlite"
 
 DISCORD_CLIENT_ID="ton_client_id_ici"
 DISCORD_CLIENT_SECRET="ton_secret_ici"
-DISCORD_CALLBACK_URL="http://localhost:3000/api/auth/discord/callback"
+DISCORD_REDIRECT_URI="http://localhost:3000/api/auth/discord/callback"
 
 SESSION_SECRET="genere_une_longue_chaine_aleatoire"
 ```
@@ -119,6 +119,21 @@ npm run lint     # Vérifier le code
 - Les clés Discord doivent être **entre guillemets** dans `.env`
 - Vérifier l'URL de callback sur Discord Developer Portal
 - `FRONTEND_URL` doit être `http://localhost:5173`
+
+### Déploiement local sur le LAN / petit serveur (production simple)
+
+Si vous voulez rendre l'app accessible sur votre réseau local (ex: http://192.168.1.38:5173) :
+
+- Dans `server-new/.env` :
+	- `FRONTEND_URL` -> set à `http://192.168.1.38:5173` (ou votre IP/nom de domaine)
+	- `DISCORD_REDIRECT_URI` -> set à `http://<IP_DE_VOTRE_SERVEUR>:3000/api/auth/discord/callback`
+
+- Dans le portail Discord Developers: ajouter la même `DISCORD_REDIRECT_URI` à la liste des Redirects autorisés
+- Si vous utilisez Vite en local pour servir le frontend, vous pouvez démarrer le frontend avec `npm run dev` et le backend avec `npm run dev`; Vite proxyera `/api` vers `http://localhost:3000` comme en développement. Pour le déploiement node/pm2 vous devez servir le frontend construit (`client/dist`) en statique et configurer le backend sur PM2.
+
+💡 Important: sur un VPS/serveur, assurez-vous que le port 3000 est ouvert et que `sessionId` cookie est accessible entre domaine(s) si vous servez frontend et backend sous des domaines différents (cross-domain cookies requièrent configuration `SameSite` et `secure`).
+
+🔒 Pour les environnements de production : utilisez HTTPS (certificat valide). Les navigateurs refusent d'envoyer des cookies cross-site si `SameSite` est `None` et `secure` n'est pas défini. Si vous servez en HTTP sur le LAN (ex: `http://192.168.x.x`), hostez frontend et backend sous le même domaine/port (ou utilisez un reverse proxy TLS) pour que la session fonctionne correctement.
 
 ### Images ne s'affichent pas
 - Créer le dossier `db/review_images/` si absent

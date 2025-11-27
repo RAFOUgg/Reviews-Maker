@@ -5,18 +5,25 @@ import { asyncHandler, Errors } from '../utils/errorHandler.js'
 const router = express.Router()
 
 // GET /api/auth/discord - Initier l'authentification Discord
-router.get('/discord', passport.authenticate('discord'))
+router.get('/discord', (req, res, next) => {
+    console.log(`[AUTH] Starting Discord OAuth for ${req.ip}`)
+    return passport.authenticate('discord')(req, res, next)
+})
 
 // GET /api/auth/discord/callback - Callback après autorisation Discord
-router.get('/discord/callback',
-    passport.authenticate('discord', {
+router.get('/discord/callback', (req, res, next) => {
+    console.log('[AUTH] Discord callback received', { query: req.query })
+    return passport.authenticate('discord', {
         failureRedirect: process.env.FRONTEND_URL
-    }),
-    (req, res) => {
+    })(req, res, (err) => {
+        if (err) {
+            console.error('[AUTH] Error during Discord callback:', err)
+            return next(err)
+        }
         // Succès : rediriger vers le frontend
         res.redirect(`${process.env.FRONTEND_URL}/auth/callback`)
-    }
-)
+    })
+})
 
 // GET /api/auth/me - Récupérer l'utilisateur actuel
 router.get('/me', asyncHandler(async (req, res) => {

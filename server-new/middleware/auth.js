@@ -29,84 +29,90 @@ export const optionalAuth = (req, res, next) => {
  */
 export const checkOwnershipOrAdmin = async (req, res, next) => {
     try {
-        if (!req.isAuthenticated()) {
-            if (typeof req.isAuthenticated !== 'function' || !req.isAuthenticated()) {
-                return res.status(401).json({
-                    error: 'unauthorized',
-                    message: 'Authentication required'
-                })
-            }
-
-            const { id } = req.params // ID de la ressource (review, etc.)
-            const { resourceType = 'review' } = req.body // Type de ressource
-
-            if (resourceType === 'review') {
-                const review = await prisma.review.findUnique({
-                    where: { id },
-                    select: { authorId: true }
-                })
-
-                if (!review) {
-                    return res.status(404).json({
-                        error: 'not_found',
-                        message: 'Review not found'
-                    })
-                }
-
-                // Vérifier ownership ou admin
-                if (review.authorId !== req.user.id) {
-                    return res.status(403).json({
-                        error: 'forbidden',
-                        message: 'You do not have permission to modify this review'
-                    })
-                }
-            }
-
-            next()
-        } catch (error) {
-            console.error('Ownership check error:', error)
-            res.status(500).json({
-                error: 'internal_error',
-                message: 'Error checking permissions'
+        // Ensure req.isAuthenticated exists and can be called
+        if (typeof req.isAuthenticated !== 'function' || !req.isAuthenticated()) {
+            return res.status(401).json({
+                error: 'unauthorized',
+                message: 'Authentication required'
             })
         }
+        const { id } = req.params // ID de la ressource (review, etc.)
+        const { resourceType = 'review' } = req.body // Type de ressource
+
+        if (resourceType === 'review') {
+            const review = await prisma.review.findUnique({
+                where: { id },
+                select: { authorId: true }
+            })
+
+            if (!review) {
+                return res.status(404).json({
+                    error: 'not_found',
+                    message: 'Review not found'
+                })
+            }
+
+            // Vérifier ownership ou admin
+            if (review.authorId !== req.user.id) {
+                return res.status(403).json({
+                    error: 'forbidden',
+                    message: 'You do not have permission to modify this review'
+                })
+            }
+        }
+
+        next()
+    } catch (error) {
+        console.error('Ownership check error:', error)
+        res.status(500).json({
+            error: 'internal_error',
+            message: 'Error checking permissions'
+        })
     }
+}
 
 /**
  * Middleware pour logger les requêtes authentifiées
  */
 export const logAuthRequest = (req, res, next) => {
-        if (req.isAuthenticated()) {
+    try {
+        // Guard in case Passport hasn't been applied yet
+        const isAuth = typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : false
+        if (isAuth && req.user) {
             console.log(`[AUTH] ${req.method} ${req.path} - User: ${req.user.username} (${req.user.discordId})`)
         }
-        next()
+    } catch (err) {
+        // Do not let logging break requests
+        console.warn('logAuthRequest: unable to read auth state', err.message)
+    }
+    next()
+}
+
+/**
+ * Middleware pour gérer les erreurs d'authentification
+ */
+export const handleAuthError = (err, req, res, next) => {
+    if (err.message === 'Unauthorized') {
+        return res.status(401).json({
+            error: 'unauthorized',
+            message: 'You must be logged in'
+        })
     }
 
-    /**
-     * Middleware pour gérer les erreurs d'authentification
-     */
-    export const handleAuthError = (err, req, res, next) => {
-        if (err.message === 'Unauthorized') {
-            return res.status(401).json({
-                error: 'unauthorized',
-                message: 'You must be logged in'
-            })
-        }
-
-        if (err.message === 'Forbidden') {
-            return res.status(403).json({
-                error: 'forbidden',
-                message: 'You do not have permission to access this resource'
-            })
-        }
-
-        next(err)
+    if (err.message === 'Forbidden') {
+        return res.status(403).json({
+            error: 'forbidden',
+            message: 'You do not have permission to access this resource'
+        })
     }
 
-    export default {
-        requireAuth,
-        optionalAuth,
-        checkOwnershipOrAdmin,
-        logAuthRequest,
-        handleAuthError
-    }
+    next(err)
+}
+
+export default {
+    requireAuth,
+    optionalAuth,
+    checkOwnershipOrAdmin,
+    logAuthRequest,
+    handleAuthError
+}

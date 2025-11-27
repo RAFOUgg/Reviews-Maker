@@ -7,7 +7,7 @@ import AuthorStatsModal from '../components/AuthorStatsModal'
 
 export default function HomePage() {
     const navigate = useNavigate()
-    const { user, isAuthenticated } = useStore()
+    const { user, isAuthenticated, likeReview, dislikeReview } = useStore()
     const [reviews, setReviews] = useState([])
     const [filteredReviews, setFilteredReviews] = useState([])
     const [loading, setLoading] = useState(true)
@@ -59,7 +59,14 @@ export default function HomePage() {
             alert('Connectez-vous pour liker')
             return
         }
-        // TODO: Implémenter like API
+        try {
+            const result = await likeReview(reviewId)
+            // Optionally: optimistic UI update handled in store
+            console.log('Like result', result)
+        } catch (err) {
+            console.error('Error liking review', err)
+            alert('Erreur lors du Like')
+        }
     }
 
     const handleDislike = async (reviewId, e) => {
@@ -68,7 +75,13 @@ export default function HomePage() {
             alert('Connectez-vous pour disliker')
             return
         }
-        // TODO: Implémenter dislike API
+        try {
+            const result = await dislikeReview(reviewId)
+            console.log('Dislike result', result)
+        } catch (err) {
+            console.error('Error disliking review', err)
+            alert('Erreur lors du Dislike')
+        }
     }
 
     return (

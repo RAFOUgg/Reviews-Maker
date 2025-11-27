@@ -26,9 +26,18 @@ const PORT = process.env.PORT || 3000
 
 // Middleware
 app.use(cors({
-    // Allow the explicit FRONTEND_URL if provided. In development, allow any origin
-    // so the frontend served from the machine IP (e.g. http://192.168.x.y:5173) can access the API.
-    origin: process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? 'http://localhost:5173' : true),
+    // Allow the explicit FRONTEND_URL if provided. If running in development, allow any origin
+    // to make it easier to test via network IPs. In production, validate origin strictly.
+    origin: (origin, callback) => {
+        // If no Origin header (eg. server-to-server/cli), allow
+        if (!origin) return callback(null, true)
+        // In development, allow any origin (dev convenience)
+        if (process.env.NODE_ENV !== 'production') return callback(null, true)
+        // Otherwise, only allow the configured front-end URL
+        const allowed = process.env.FRONTEND_URL || 'http://localhost:5173'
+        if (origin === allowed) return callback(null, true)
+        callback(new Error('Not allowed by CORS'))
+    },
     credentials: true, // ✅ Essencial pour les cookies
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -37,6 +46,14 @@ app.use(cors({
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+
+// Simple HTTP request logger to assist debugging in dev
+if (process.env.NODE_ENV !== 'production') {
+    app.use((req, res, next) => {
+        console.log(`[HTTP] ${req.method} ${req.path} -- from ${req.ip}`)
+        next()
+    })
+}
 
 // Session configuration avec persistance SQLite
 app.use(session({
@@ -51,8 +68,10 @@ app.use(session({
     cookie: {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours
         httpOnly: true,
+        // En production, il est recommandé d'utiliser HTTPS; secure doit être true.
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        // Autoriser override via env var en cas de besoins particuliers
+        sameSite: process.env.SESSION_SAME_SITE || (process.env.NODE_ENV === 'production' ? 'none' : 'lax'),
         path: '/'
     },
     name: 'sessionId' // Nom du cookie pour éviter les conflits
@@ -66,12 +85,20 @@ app.use(passport.session())
 app.use(logAuthRequest)
 
 // Static files (images)
-app.use('/images', express.static('../db/review_images'))
+app.use('/images', express.static(path.join(__dirname, '../db/review_images')))
 
 // Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/reviews', reviewRoutes)
 app.use('/api/users', userRoutes)
+
+// Serve frontend in production
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../client/dist')))
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(__dirname, '../client/dist', 'index.html'))
+    })
+}
 
 // Health check
 app.get('/api/health', (req, res) => {
