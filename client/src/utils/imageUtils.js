@@ -1,5 +1,6 @@
 // API Base URL configuration
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
+// Default to empty so we use relative paths; set VITE_API_BASE for special cases
+const API_BASE = import.meta.env.VITE_API_BASE || '';
 
 /**
  * Convert a filename or path to a full image URL
@@ -14,13 +15,13 @@ export function getImageUrl(imagePath) {
         return imagePath;
     }
 
-    // If it starts with /images, just prepend API_BASE
+    // If it starts with /images, just return a relative path
     if (imagePath.startsWith('/images/')) {
-        return `${API_BASE}${imagePath}`;
+        return `${imagePath}`;
     }
 
-    // Otherwise, assume it's just a filename
-    return `${API_BASE}/images/${imagePath}`;
+    // Otherwise assume it's just a filename
+    return `/images/${imagePath}`;
 }
 
 /**
