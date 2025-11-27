@@ -30,6 +30,25 @@ router.get('/ping', (req, res) => {
     })
 })
 
+// GET /api/auth/debug-session - Debug helper to inspect session and authentication info
+// Only enabled in non-production to avoid exposing session internals
+router.get('/debug-session', (req, res) => {
+    if (process.env.NODE_ENV === 'production') {
+        return res.status(404).json({ error: 'not_found' })
+    }
+    res.json({
+        sessionId: req.sessionID || null,
+        isAuthenticated: typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : false,
+        user: req.user ? { id: req.user.id, username: req.user.username, discordId: req.user.discordId } : null,
+        headers: {
+            host: req.headers.host,
+            xForwardedProto: req.headers['x-forwarded-proto'] || null,
+            xForwardedFor: req.headers['x-forwarded-for'] || null,
+            xOriginalUri: req.headers['x-original-uri'] || null
+        }
+    })
+})
+
 // GET /api/auth/discord/callback - Callback après autorisation Discord
 router.get('/discord/callback', (req, res, next) => {
     console.log(`[AUTH-DBG] Discord callback received - method: ${req.method} originalUrl: ${req.originalUrl} path: ${req.path} ip: ${req.ip} X-Original-Uri: ${req.headers['x-original-uri']}`)

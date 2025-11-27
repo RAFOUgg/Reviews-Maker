@@ -81,7 +81,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Session configuration avec persistance SQLite
-app.use(session({
+const sessionOptions = {
     store: new Store({
         dir: path.join(__dirname, '../db'),
         db: 'sessions.db',
@@ -102,8 +102,62 @@ app.use(session({
         sameSite: process.env.SESSION_SAME_SITE || (process.env.NODE_ENV === 'production' ? 'none' : 'lax'),
         path: '/'
     },
-    name: 'sessionId' // Nom du cookie pour éviter les conflits
+    name: 'sessionId'
+}
+
+// If SESSION_DOMAIN is provided, attach the domain to cookie options
+if (process.env.SESSION_DOMAIN) {
+    sessionOptions.cookie.domain = process.env.SESSION_DOMAIN
+}
+
+app.use(session(sessionOptions))
+store: new Store({
+    dir: path.join(__dirname, '../db'),
+    db: 'sessions.db',
+    concurrentDb: true
+}),
+    secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
+        resave: false,
+            saveUninitialized: false,
+                cookie: {
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours
+        httpOnly: true,
+            // En production, il est recommandé d'utiliser HTTPS; secure doit être true.
+            // Optionally allow override using SESSION_SECURE=true|false
+            secure: typeof process.env.SESSION_SECURE !== 'undefined'
+                ? process.env.SESSION_SECURE === 'true'
+                : process.env.NODE_ENV === 'production',
+                // Autoriser override via env var en cas de besoins particuliers
+                sameSite: process.env.SESSION_SAME_SITE || (process.env.NODE_ENV === 'production' ? 'none' : 'lax'),
+                    path: '/'
+},
+name: 'sessionId' // Nom du cookie pour éviter les conflits
 }))
+
+// Optional: allow specifying a cookie domain via env var for cases where frontend
+// is served from a specific subdomain and you need the cookie to be shared.
+if (process.env.SESSION_DOMAIN) {
+    console.log(`[SESSION] Cookie domain set to: ${process.env.SESSION_DOMAIN}`)
+}
+
+// Validate startup config (helpful for production debugging)
+const frontendUrl = process.env.FRONTEND_URL || ''
+const discordRedirect = process.env.DISCORD_REDIRECT_URI || ''
+try {
+    if (frontendUrl && discordRedirect) {
+        const frontendHost = new URL(frontendUrl).host
+        const redirectHost = new URL(discordRedirect).host
+        if (frontendHost !== redirectHost) {
+            console.warn(`[CONFIG] FRONTEND_URL host (${frontendHost}) does not match DISCORD_REDIRECT_URI host (${redirectHost}). This often causes OAuth issues (callback cookies mismatch).`)
+        }
+        if (!discordRedirect.endsWith('/api/auth/discord/callback')) {
+            console.warn('[CONFIG] DISCORD_REDIRECT_URI should end with /api/auth/discord/callback; please verify the URL configured in the Discord Developer Portal')
+        }
+    }
+} catch (err) {
+    // Avoid throwing for invalid URLs — just log
+    console.warn('[CONFIG] Unable to validate FRONTEND_URL / DISCORD_REDIRECT_URI:', err.message)
+}
 
 // Passport middleware
 app.use(passport.initialize())

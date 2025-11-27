@@ -20,6 +20,8 @@ fi
 cd "$CLIENT_DIR"
 echo "Building client..."
 npm ci
+# Ensure build uses the correct API base for production
+export VITE_API_BASE="/api"
 npm run build
 
 # Copy build to static folder

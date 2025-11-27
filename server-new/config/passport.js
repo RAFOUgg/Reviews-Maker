@@ -9,14 +9,17 @@ if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
     console.warn('[passport] Warning: DISCORD_CLIENT_ID or DISCORD_CLIENT_SECRET not set. Discord OAuth will not work without them.')
 }
 
+// Calculate callback url if DISCORD_REDIRECT_URI not set. If the app is hosted under a path prefix
+// use BASE_PATH to build the correct path
+const computedCallback = (process.env.DISCORD_REDIRECT_URI) || (process.env.FRONTEND_URL ? `${process.env.FRONTEND_URL}${process.env.BASE_PATH || ''}/api/auth/discord/callback` : undefined)
 // Debug startup info - show the callback url and client id (never log secrets in production)
 console.log('[passport] Discord ClientId set:', process.env.DISCORD_CLIENT_ID ? 'YES' : 'NO')
-console.log('[passport] Discord CallbackURL:', process.env.DISCORD_REDIRECT_URI || '(none)')
+console.log('[passport] Discord CallbackURL:', computedCallback || '(none)')
 
 passport.use(new DiscordStrategy({
     clientID: process.env.DISCORD_CLIENT_ID,
     clientSecret: process.env.DISCORD_CLIENT_SECRET,
-    callbackURL: process.env.DISCORD_REDIRECT_URI,
+    callbackURL: computedCallback,
     scope: ['identify', 'email']
 }, async (accessToken, refreshToken, profile, done) => {
     try {

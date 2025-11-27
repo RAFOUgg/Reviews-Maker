@@ -8,25 +8,32 @@ export default function AuthCallback() {
 
     useEffect(() => {
         // Vérifier l'authentification après callback Discord
-        const checkAuth = async () => {
-            try {
-                const response = await fetch('/api/auth/me', {
-                    credentials: 'include'
-                })
+        // Retry a few times to allow cookies to be set after the OAuth redirect
+        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
+        const tryCheckAuth = async (attempt = 1, maxAttempts = 5) => {
+            try {
+                const response = await fetch('/api/auth/me', { credentials: 'include' })
                 if (response.ok) {
                     const userData = await response.json()
                     setUser(userData)
                     navigate('/')
-                } else {
-                    navigate('/')
+                    return
                 }
-            } catch (error) {
-                navigate('/')
+            } catch (err) {
+                // swallow and retry
             }
+
+            if (attempt < maxAttempts) {
+                await delay(250 * attempt) // backoff: 250ms, 500ms, ...
+                return tryCheckAuth(attempt + 1, maxAttempts)
+            }
+
+            // If all attempts failed, go back to home
+            navigate('/')
         }
 
-        checkAuth()
+        tryCheckAuth()
     }, [navigate, setUser])
 
     return (
