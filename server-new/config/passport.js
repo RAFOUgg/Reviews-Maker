@@ -9,6 +9,10 @@ if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
     console.warn('[passport] Warning: DISCORD_CLIENT_ID or DISCORD_CLIENT_SECRET not set. Discord OAuth will not work without them.')
 }
 
+// Debug startup info - show the callback url and client id (never log secrets in production)
+console.log('[passport] Discord ClientId set:', process.env.DISCORD_CLIENT_ID ? 'YES' : 'NO')
+console.log('[passport] Discord CallbackURL:', process.env.DISCORD_REDIRECT_URI || '(none)')
+
 passport.use(new DiscordStrategy({
     clientID: process.env.DISCORD_CLIENT_ID,
     clientSecret: process.env.DISCORD_CLIENT_SECRET,
