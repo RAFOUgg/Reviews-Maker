@@ -571,8 +571,11 @@ server {
     
     # Backend API
     # In normal deployment (hosted at root)
-    location /api {
+    # Match /api/* and proxy to backend. Using '^~' ensures this prefix wins over regex locations
+    location ^~ /api {
         proxy_pass http://localhost:3000;
+      # Add original request URI for debugging and to track rewrites
+      proxy_set_header X-Original-Uri $request_uri;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';

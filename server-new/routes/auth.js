@@ -12,9 +12,28 @@ router.get('/discord', (req, res, next) => {
     return passport.authenticate('discord')(req, res, next)
 })
 
+// GET /api/auth/ping - Debug route to validate proxy path and headers
+router.get('/ping', (req, res) => {
+    const headers = {
+        'host': req.headers.host,
+        'x-forwarded-for': req.headers['x-forwarded-for'] || null,
+        'x-forwarded-proto': req.headers['x-forwarded-proto'] || null,
+        'x-original-uri': req.headers['x-original-uri'] || null
+    }
+
+    res.json({
+        ok: true,
+        method: req.method,
+        originalUrl: req.originalUrl,
+        path: req.path,
+        headers
+    })
+})
+
 // GET /api/auth/discord/callback - Callback après autorisation Discord
 router.get('/discord/callback', (req, res, next) => {
-    console.log(`[AUTH-DBG] Discord callback received - method: ${req.method} originalUrl: ${req.originalUrl} path: ${req.path} ip: ${req.ip}`, { query: req.query })
+    console.log(`[AUTH-DBG] Discord callback received - method: ${req.method} originalUrl: ${req.originalUrl} path: ${req.path} ip: ${req.ip} X-Original-Uri: ${req.headers['x-original-uri']}`)
+    console.log(`[AUTH-DBG] Headers: Host=${req.headers.host} X-Forwarded-For=${req.headers['x-forwarded-for']} X-Forwarded-Proto=${req.headers['x-forwarded-proto']}`)
     console.log(`[AUTH-DBG] Headers: Host=${req.headers.host} X-Forwarded-For=${req.headers['x-forwarded-for']} X-Forwarded-Proto=${req.headers['x-forwarded-proto']}`)
     return passport.authenticate('discord', {
         failureRedirect: process.env.FRONTEND_URL

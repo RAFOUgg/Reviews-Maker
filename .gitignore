@@ -24,6 +24,9 @@ db/*.sqlite
 db/*.sqlite-shm
 db/*.sqlite-wal
 db/review_images/*
+db/*.db
+db/*.db-shm
+db/*.db-wal
 !db/review_images/.gitkeep
 db/backups/*
 !db/backups/.gitkeep
