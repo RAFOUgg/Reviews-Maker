@@ -3,6 +3,7 @@ import express from 'express'
 import session from 'express-session'
 import passport from 'passport'
 import cors from 'cors'
+import fs from 'fs'
 import { PrismaClient } from '@prisma/client'
 import sqliteStore from 'connect-sqlite3'
 import path from 'path'
@@ -24,6 +25,35 @@ const app = express()
 // If running behind a reverse proxy (Nginx), trust X-Forwarded-* headers so passport/session
 // and secure cookies behave correctly. `1` is the number of proxies in front of the app.
 app.set('trust proxy', 1)
+// Normalize DATABASE_URL for sqlite file paths so Prisma always gets an absolute path.
+// This avoids issues when the process cwd differs (pm2/systemd) and relative paths break.
+const normalizeDatabaseUrl = () => {
+    const raw = process.env.DATABASE_URL || ''
+    if (!raw) return
+    if (raw.startsWith('file:')) {
+        const filePath = raw.slice(5)
+        // If path is already absolute, keep it; otherwise resolve relative to project root
+        const resolved = path.isAbsolute(filePath)
+            ? filePath
+            : path.resolve(__dirname, '..', filePath)
+
+        // Ensure parent directory exists so Sqlite can create the DB file
+        try {
+            fs.mkdirSync(path.dirname(resolved), { recursive: true })
+        } catch (err) {
+            console.warn('[DB] Unable to ensure DB directory exists:', err.message)
+        }
+
+        // Set an absolute DATABASE_URL so Prisma always opens the expected file
+        process.env.DATABASE_URL = `file:${resolved}`
+        if (process.env.NODE_ENV !== 'production') {
+            console.log(`[DB] Normalized DATABASE_URL -> ${process.env.DATABASE_URL}`)
+        }
+    }
+}
+
+normalizeDatabaseUrl()
+
 const prisma = new PrismaClient()
 const PORT = process.env.PORT || 3000
 
