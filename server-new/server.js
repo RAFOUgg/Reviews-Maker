@@ -80,7 +80,7 @@ if (process.env.NODE_ENV !== 'production') {
     })
 }
 
-// Session configuration avec persistance SQLite
+// Session configuration with persistent store (SQLite)
 const sessionOptions = {
     store: new Store({
         dir: path.join(__dirname, '../db'),
@@ -91,15 +91,15 @@ const sessionOptions = {
     resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         httpOnly: true,
-        // En production, il est recommandé d'utiliser HTTPS; secure doit être true.
-        // Optionally allow override using SESSION_SECURE=true|false
+        // In production, set secure to true and use HTTPS
         secure: typeof process.env.SESSION_SECURE !== 'undefined'
             ? process.env.SESSION_SECURE === 'true'
             : process.env.NODE_ENV === 'production',
-        // Autoriser override via env var en cas de besoins particuliers
-        sameSite: process.env.SESSION_SAME_SITE || (process.env.NODE_ENV === 'production' ? 'none' : 'lax'),
+        sameSite: (typeof process.env.SESSION_SAME_SITE !== 'undefined')
+            ? process.env.SESSION_SAME_SITE
+            : (process.env.NODE_ENV === 'production' ? 'none' : 'lax'),
         path: '/'
     },
     name: 'sessionId'
@@ -111,28 +111,6 @@ if (process.env.SESSION_DOMAIN) {
 }
 
 app.use(session(sessionOptions))
-store: new Store({
-    dir: path.join(__dirname, '../db'),
-    db: 'sessions.db',
-    concurrentDb: true
-}),
-    secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
-        resave: false,
-            saveUninitialized: false,
-                cookie: {
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours
-        httpOnly: true,
-            // En production, il est recommandé d'utiliser HTTPS; secure doit être true.
-            // Optionally allow override using SESSION_SECURE=true|false
-            secure: typeof process.env.SESSION_SECURE !== 'undefined'
-                ? process.env.SESSION_SECURE === 'true'
-                : process.env.NODE_ENV === 'production',
-                // Autoriser override via env var en cas de besoins particuliers
-                sameSite: process.env.SESSION_SAME_SITE || (process.env.NODE_ENV === 'production' ? 'none' : 'lax'),
-                    path: '/'
-},
-name: 'sessionId' // Nom du cookie pour éviter les conflits
-}))
 
 // Optional: allow specifying a cookie domain via env var for cases where frontend
 // is served from a specific subdomain and you need the cookie to be shared.
@@ -181,24 +159,6 @@ if (process.env.NODE_ENV === 'production') {
         res.sendFile(path.join(__dirname, '../client/dist', 'index.html'))
     })
 }
-
-// Health check
-app.get('/api/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime()
-    })
-})
-
-// 404 handler - must be after all routes
-app.use((req, res) => {
-    res.status(404).json({
-        error: 'not_found',
-        message: `Route ${req.method} ${req.path} not found`
-    })
-})
-
 // Error handling middleware - must be last
 app.use((err, req, res, next) => {
     // Log error for debugging
