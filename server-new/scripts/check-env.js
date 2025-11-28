@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import 'dotenv/config'
 import fs from 'fs'
 import path from 'path'
 
@@ -27,15 +28,26 @@ if (missing.length > 0) {
 }
 
 // Check DB file existence for local SQLite (DATABASE_URL="file:../db/reviews.sqlite")
+// Normalize resolution similarly to server.js so checks reflect actual runtime path
 const dbUrl = process.env.DATABASE_URL || 'file:../db/reviews.sqlite'
 if (dbUrl.startsWith('file:')) {
     const filePath = dbUrl.slice(5)
-    const resolved = path.resolve(filePath)
+    // Resolve relative to the project root (server-new/..)
+    const resolved = path.isAbsolute(filePath)
+        ? filePath
+        : path.resolve(__dirname, '..', filePath)
     try {
         const stats = fs.statSync(resolved)
         console.log(`\n✅ Database file found: ${resolved} (size: ${stats.size} bytes)`)
     } catch (err) {
         console.warn(`\n⚠️ Database file not found at ${resolved}. If you're using SQLite, run migrations and ensure the file is present and writable.`)
+        // Ensure parent directory exists so the server can create the file later
+        try {
+            fs.mkdirSync(path.dirname(resolved), { recursive: true })
+            console.log(`\nℹ️ Created missing parent directory: ${path.dirname(resolved)}`)
+        } catch (mkdirErr) {
+            console.warn(`\n⚠️ Unable to create parent directory ${path.dirname(resolved)}: ${mkdirErr.message}`)
+        }
     }
 }
 
