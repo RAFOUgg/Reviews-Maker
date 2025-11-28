@@ -12,6 +12,7 @@ package-lock.json
 .env.production
 .env.development
 *.local
+server-new/.env.save
 
 # Build outputs
 client/dist/
