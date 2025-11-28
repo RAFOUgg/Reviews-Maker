@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import express from 'express'
 import session from 'express-session'
+import { buildSessionOptions } from './session-options.js'
 import passport from 'passport'
 import cors from 'cors'
 import fs from 'fs'
@@ -141,7 +142,7 @@ if (process.env.SESSION_DOMAIN) {
     sessionOptions.cookie.domain = process.env.SESSION_DOMAIN
 }
 
-app.use(session(sessionOptions))
+app.use(session(buildSessionOptions(session)))
 
 // Optional: allow specifying a cookie domain via env var for cases where frontend
 // is served from a specific subdomain and you need the cookie to be shared.
