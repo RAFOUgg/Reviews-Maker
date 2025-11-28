@@ -117,14 +117,15 @@ const sessionOptions = {
         db: 'sessions.db',
         concurrentDb: true
     }),
-    secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
+    // Session secret used to sign cookies - require a strong secret in production
+    secret: (process.env.SESSION_SECRET || 'your-secret-key-change-in-production'),
     resave: false,
     saveUninitialized: false,
     cookie: {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         httpOnly: true,
         // In production, set secure to true and use HTTPS
-        secure: typeof process.env.SESSION_SECURE !== 'undefined'
+        secure: (typeof process.env.SESSION_SECURE !== 'undefined')
             ? process.env.SESSION_SECURE === 'true'
             : process.env.NODE_ENV === 'production',
         sameSite: (typeof process.env.SESSION_SAME_SITE !== 'undefined')
