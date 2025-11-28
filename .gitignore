@@ -68,3 +68,6 @@ coverage/
 # Archives (optionnel)
 archive/
 server-new/.env.save
+server-new/.env.bak*
+db/*.sqlite
+db/sessions.db*
