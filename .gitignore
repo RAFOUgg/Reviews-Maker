@@ -67,3 +67,4 @@ coverage/
 
 # Archives (optionnel)
 archive/
+server-new/.env.save
