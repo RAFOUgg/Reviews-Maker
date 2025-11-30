@@ -1,5 +1,10 @@
 import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
+import React from 'react';
+import PipelineRenderer from '../renderers/PipelineRenderer';
+import CultivarCard from '../renderers/CultivarCard';
+import SubstratViewer from '../renderers/SubstratViewer';
+import RatingsGrid from '../renderers/RatingsGrid';
 
 export default function DetailedCardTemplate({ config, reviewData, dimensions }) {
     // Validation des props
@@ -12,6 +17,31 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     }
 
     const { typography, colors, contentModules, image, branding } = config;
+    
+    // Helpers
+    const safeParse = (v, fallback = null) => {
+        if (v === undefined || v === null) return fallback
+        if (typeof v === 'string') {
+            try { return JSON.parse(v) } catch { return v }
+        }
+        return v
+    }
+
+    const asArray = (v) => {
+        const parsed = safeParse(v, [])
+        if (Array.isArray(parsed)) return parsed
+        if (parsed === null || parsed === undefined) return []
+        if (typeof parsed === 'string') return parsed.split(',').map(s => s.trim()).filter(Boolean)
+        if (typeof parsed === 'object') return Object.values(parsed)
+        return [parsed]
+    }
+
+    const renderKeyValue = (k, val) => (
+        <div key={k} className="p-3 rounded-lg bg-white/5">
+            <div className="text-xs text-gray-400">{k}</div>
+            <div className="text-sm text-white">{typeof val === 'object' ? JSON.stringify(val) : String(val)}</div>
+        </div>
+    )
 
     return (
         <div
@@ -31,7 +61,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 {/* En-tête avec image et infos principales */}
                 <div className="grid grid-cols-2 gap-8">
                     {/* Image */}
-                    {contentModules.image && reviewData.imageUrl && (
+                    {contentModules.image && (reviewData.imageUrl || reviewData.images) && (
                         <div
                             className="overflow-hidden"
                             style={{
@@ -39,9 +69,10 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                 aspectRatio: '1/1'
                             }}
                         >
+                            {/* prefer imageUrl then first of images */}
                             <img
-                                src={reviewData.imageUrl}
-                                alt={reviewData.title}
+                                src={reviewData.imageUrl || (Array.isArray(reviewData.images) ? reviewData.images[0] : null)}
+                                alt={reviewData.title || reviewData.holderName}
                                 className="w-full h-full object-cover"
                             />
                         </div>
@@ -49,7 +80,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
                     {/* Informations principales */}
                     <div className="space-y-6">
-                        {contentModules.title && reviewData.title && (
+                        {contentModules.title && (reviewData.title || reviewData.holderName) && (
                             <h1
                                 style={{
                                     fontSize: `${typography.titleSize}px`,
@@ -58,7 +89,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                     lineHeight: '1.2'
                                 }}
                             >
-                                {reviewData.title}
+                                {reviewData.title || reviewData.holderName}
                             </h1>
                         )}
 
@@ -193,6 +224,16 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                         }}
                                     >
                                         {reviewData.cultivar}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Cultivars list */}
+                            {contentModules.cultivarsList && asArray(reviewData.cultivarsList).length > 0 && (
+                                <div className="p-4 rounded-lg" style={{ backgroundColor: `${colors.accent}15` }}>
+                                    <div style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary, marginBottom: '4px' }}>Cultivars</div>
+                                    <div style={{ fontSize: `${typography.textSize}px`, fontWeight: '600', color: colors.accent }}>
+                                        {asArray(reviewData.cultivarsList).map((c,i) => typeof c === 'object' ? (c.cultivar || c.name || JSON.stringify(c)) : c).join(', ')}
                                     </div>
                                 </div>
                             )}
