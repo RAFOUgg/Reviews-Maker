@@ -27,14 +27,14 @@ export default function ReviewCard({ review }) {
                 {/* Image */}
                 <div className="relative aspect-square rounded-xl overflow-hidden mb-4">
                     {review.mainImageUrl ? (
-                            <img
-                                src={review.mainImageUrl}
-                                alt={review.holderName}
-                                loading="lazy"
-                                decoding="async"
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                            />
-                        ) : (
+                        <img
+                            src={review.mainImageUrl}
+                            alt={review.holderName}
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                    ) : (
                         <div className={`w-full h-full bg-gradient-to-br ${typeColors[review.type] || typeColors.Hybride} flex items-center justify-center`}>
                             <span className="text-6xl">{typeEmojis[review.type] || '🌿'}</span>
                         </div>

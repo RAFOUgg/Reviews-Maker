@@ -192,11 +192,11 @@ router.post('/:id/export', asyncHandler(async (req, res) => {
     function renderZone(zone) {
         let content = ''
         if (bound) {
-                if (zone.source === 'holderName') content = bound.holderName || ''
-                if (zone.source === 'images[0]') {
-                    const img = bound.mainImageUrl || bound.thumbnailUrl || (bound.images && Array.isArray(bound.images) && bound.images[0] ? (bound.images[0].startsWith('/images/') ? bound.images[0] : `/images/${bound.images[0]}`) : null)
-                    content = img ? `<img src="${img}" style="max-width:100%"/>` : ''
-                }
+            if (zone.source === 'holderName') content = bound.holderName || ''
+            if (zone.source === 'images[0]') {
+                const img = bound.mainImageUrl || bound.thumbnailUrl || (bound.images && Array.isArray(bound.images) && bound.images[0] ? (bound.images[0].startsWith('/images/') ? bound.images[0] : `/images/${bound.images[0]}`) : null)
+                content = img ? `<img src="${img}" style="max-width:100%"/>` : ''
+            }
         }
         const style = `position:absolute; left:${zone.x || 0}px; top:${zone.y || 0}px; width:${zone.w || 200}px; height:${zone.h || 50}px; overflow:hidden; padding:6px;`;
         return `<div style="${style}">${content}</div>`
