@@ -1,7 +1,7 @@
-**
+/**
  * CustomLayoutPane Component
-    * Mode personnalisé avec drag & drop pour placer les champs librement
-        */
+ * Mode personnalisé avec drag & drop pour placer les champs librement
+ */
 
 import { useState } from 'react';
 import { useDrop } from 'react-dnd';
