@@ -187,7 +187,8 @@ export default function HomePage() {
                     <>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {(showAll ? filteredReviews : filteredReviews.slice(0, 8)).map((review) => {
-                                const images = parseImages(review.images)
+                                // Prefer a defined preview (mainImageUrl) when present (Orchard/apercu définit)
+                                const images = review.mainImageUrl ? [review.mainImageUrl] : parseImages(review.images)
 
                                 const rating = review.overallRating || review.note || 0
                                 const ratingColor = rating >= 9 ? 'green' : rating >= 7 ? 'yellow' : rating >= 5 ? 'orange' : 'red'
