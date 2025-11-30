@@ -40,10 +40,14 @@ function hasPrismaTemplate() {
 // Helper wrappers that use Prisma if available, otherwise file store
 async function listTemplates(currentUser, publicOnly = false) {
     if (hasPrismaTemplate()) {
-        const where = publicOnly ? { isPublic: true } : {
-            OR: [{ isPublic: true }, ...(currentUser ? [{ ownerId: currentUser.id }] : [])]
+        try {
+            const where = publicOnly ? { isPublic: true } : {
+                OR: [{ isPublic: true }, ...(currentUser ? [{ ownerId: currentUser.id }] : [])]
+            }
+            return await prisma.template.findMany({ where, orderBy: { createdAt: 'desc' } })
+        } catch (e) {
+            console.warn('Prisma templates read failed, falling back to file store', e && e.message)
         }
-        return await prisma.template.findMany({ where, orderBy: { createdAt: 'desc' } })
     }
 
     const store = await readFileStore()
@@ -51,13 +55,21 @@ async function listTemplates(currentUser, publicOnly = false) {
 }
 
 async function getTemplateById(id) {
-    if (hasPrismaTemplate()) return await prisma.template.findUnique({ where: { id } })
+    if (hasPrismaTemplate()) {
+        try { return await prisma.template.findUnique({ where: { id } }) } catch (e) {
+            console.warn('Prisma getTemplateById failed, fallback to file store', e && e.message)
+        }
+    }
     const store = await readFileStore()
     return store.templates.find(t => t.id === id)
 }
 
 async function createTemplate(data) {
-    if (hasPrismaTemplate()) return await prisma.template.create({ data })
+    if (hasPrismaTemplate()) {
+        try { return await prisma.template.create({ data }) } catch (e) {
+            console.warn('Prisma createTemplate failed, fallback to file store', e && e.message)
+        }
+    }
     const store = await readFileStore()
     // generate simple uuid
     const id = (Date.now().toString(36) + Math.random().toString(36).slice(2, 8))
@@ -68,7 +80,11 @@ async function createTemplate(data) {
 }
 
 async function updateTemplate(id, data) {
-    if (hasPrismaTemplate()) return await prisma.template.update({ where: { id }, data })
+    if (hasPrismaTemplate()) {
+        try { return await prisma.template.update({ where: { id }, data }) } catch (e) {
+            console.warn('Prisma updateTemplate failed, fallback to file store', e && e.message)
+        }
+    }
     const store = await readFileStore()
     const idx = store.templates.findIndex(t => t.id === id)
     if (idx === -1) return null
@@ -78,7 +94,11 @@ async function updateTemplate(id, data) {
 }
 
 async function deleteTemplateById(id) {
-    if (hasPrismaTemplate()) return await prisma.template.delete({ where: { id } })
+    if (hasPrismaTemplate()) {
+        try { return await prisma.template.delete({ where: { id } }) } catch (e) {
+            console.warn('Prisma deleteTemplateById failed, fallback to file store', e && e.message)
+        }
+    }
     const store = await readFileStore()
     store.templates = store.templates.filter(t => t.id !== id)
     await writeFileStore(store)
