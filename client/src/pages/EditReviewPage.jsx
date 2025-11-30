@@ -125,6 +125,20 @@ export default function EditReviewPage() {
             // form fields that were saved into extraData are accessible via formData[fieldKey]
             const mergedFormData = { ...parsedData, ...parsedData.extraData };
 
+            // Charger orchardConfig et orchardPreset depuis extraData si présents
+            if (parsedData.extraData.orchardConfig) {
+                mergedFormData.orchardConfig = parsedData.extraData.orchardConfig;
+            }
+            if (parsedData.extraData.orchardPreset) {
+                mergedFormData.orchardPreset = parsedData.extraData.orchardPreset;
+            }
+            if (parsedData.extraData.orchardCustomLayout) {
+                mergedFormData.orchardCustomLayout = parsedData.extraData.orchardCustomLayout;
+            }
+            if (parsedData.extraData.orchardLayoutMode) {
+                mergedFormData.orchardLayoutMode = parsedData.extraData.orchardLayoutMode;
+            }
+
             // Helper: lookup a value in multiple locations (top-level, extraData, categoryRatings, ratings)
             const lookupAny = (obj, key) => {
                 if (!obj) return undefined;
