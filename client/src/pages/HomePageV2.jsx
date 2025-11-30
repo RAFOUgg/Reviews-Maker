@@ -208,10 +208,12 @@ export default function HomePage() {
                                                     {images.slice(0, 4).map((img, idx) => (
                                                         <div key={idx} className="relative aspect-square overflow-hidden">
                                                             <img
-                                                                src={img}
-                                                                alt={`${review.holderName} ${idx + 1}`}
-                                                                className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-700"
-                                                            />
+                                                                        src={img}
+                                                                        alt={`${review.holderName} ${idx + 1}`}
+                                                                        loading="lazy"
+                                                                        decoding="async"
+                                                                        className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-700"
+                                                                    />
                                                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                                         </div>
                                                     ))}

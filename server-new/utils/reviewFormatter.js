@@ -85,6 +85,64 @@ export function formatReview(review, currentUser = null) {
         delete formatted.likes
     }
 
+    // Compute per-section scores and overall computed score (out of 10)
+    try {
+        const source = formatted.categoryRatings && typeof formatted.categoryRatings === 'object' ? formatted.categoryRatings : (formatted.ratings && typeof formatted.ratings === 'object' ? formatted.ratings : null)
+        const sectionScores = {}
+        if (source) {
+            for (const [k, v] of Object.entries(source)) {
+                const n = Number(v)
+                if (!isNaN(n)) {
+                    let normalized = n
+                    // If likely on a 0-5 scale, scale to 0-10
+                    if (n <= 5) normalized = n * 2
+                    // If value seems larger than 10 but <=100, assume percent and scale
+                    else if (n > 10 && n <= 100) normalized = Math.round((n / 100) * 10 * 10) / 10
+                    // clamp
+                    if (normalized > 10) normalized = 10
+                    if (normalized < 0) normalized = 0
+                    sectionScores[k] = Math.round(normalized * 10) / 10
+                }
+            }
+        }
+
+        const sectionValues = Object.values(sectionScores)
+        let computedOverall = null
+        if (sectionValues.length > 0) {
+            const sum = sectionValues.reduce((a, b) => a + b, 0)
+            computedOverall = Math.round((sum / sectionValues.length) * 10) / 10
+        } else {
+            // fallback: try overallRating or note
+            const rawOverall = formatted.extraData && (formatted.extraData.overallRating || formatted.extraData.note) ? (formatted.extraData.overallRating || formatted.extraData.note) : (formatted.overallRating || formatted.note)
+            const n = rawOverall !== undefined && rawOverall !== null ? Number(rawOverall) : NaN
+            if (!isNaN(n)) {
+                // If on 0-5 scale
+                computedOverall = n <= 5 ? Math.round(n * 2 * 10) / 10 : Math.round(n * 10) / 10
+            }
+        }
+
+        formatted.sectionScores = sectionScores
+        formatted.computedOverall = computedOverall
+    } catch (err) {
+        // ignore
+        formatted.sectionScores = formatted.sectionScores || {}
+        formatted.computedOverall = formatted.computedOverall || null
+    }
+
+    // Determine thumbnail URL if available
+    try {
+        if (review.thumbnail) {
+            formatted.thumbnailUrl = review.thumbnail.startsWith('/images/') ? review.thumbnail : `/images/${review.thumbnail}`
+        } else if (formatted.extraData && (formatted.extraData.previewThumbnail || formatted.extraData.apercu_thumbnail)) {
+            const cand = formatted.extraData.previewThumbnail || formatted.extraData.apercu_thumbnail
+            formatted.thumbnailUrl = cand.startsWith('/images/') ? cand : `/images/${String(cand).replace(/^\//, '')}`
+        } else {
+            formatted.thumbnailUrl = null
+        }
+    } catch (err) {
+        formatted.thumbnailUrl = null
+    }
+
     return formatted
 }
 

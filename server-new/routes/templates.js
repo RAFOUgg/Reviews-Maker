@@ -1,5 +1,6 @@
 import express from 'express'
 import { prisma } from '../server.js'
+import { formatReview, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
 import { asyncHandler, Errors, requireAuthOrThrow } from '../utils/errorHandler.js'
 import fs from 'fs/promises'
 import path from 'path'
@@ -176,8 +177,8 @@ router.post('/:id/export', asyncHandler(async (req, res) => {
     let bound = reviewData || null
     if (reviewId) {
         try {
-            const review = await prisma.review.findUnique({ where: { id: reviewId } })
-            bound = review ? formatBoundReview(review) : null
+            const review = await prisma.review.findUnique({ where: { id: reviewId }, include: { author: { select: { id: true, username: true, avatar: true, discordId: true } }, likes: true } })
+            bound = review ? liftOrchardFromExtra(formatReview(review, null)) : null
         } catch (e) {
             // prisma may not be available or table missing
             bound = null
@@ -191,8 +192,11 @@ router.post('/:id/export', asyncHandler(async (req, res) => {
     function renderZone(zone) {
         let content = ''
         if (bound) {
-            if (zone.source === 'holderName') content = bound.holderName || ''
-            if (zone.source === 'images[0]') content = bound.mainImageUrl ? `<img src="${bound.mainImageUrl}" style="max-width:100%"/>` : ''
+                if (zone.source === 'holderName') content = bound.holderName || ''
+                if (zone.source === 'images[0]') {
+                    const img = bound.mainImageUrl || bound.thumbnailUrl || (bound.images && Array.isArray(bound.images) && bound.images[0] ? (bound.images[0].startsWith('/images/') ? bound.images[0] : `/images/${bound.images[0]}`) : null)
+                    content = img ? `<img src="${img}" style="max-width:100%"/>` : ''
+                }
         }
         const style = `position:absolute; left:${zone.x || 0}px; top:${zone.y || 0}px; width:${zone.w || 200}px; height:${zone.h || 50}px; overflow:hidden; padding:6px;`;
         return `<div style="${style}">${content}</div>`

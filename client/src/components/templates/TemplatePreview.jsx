@@ -17,7 +17,10 @@ export default function TemplatePreview({ template, reviewData }) {
         if (z.source && reviewData) {
           // naive source resolver: supports 'holderName' and 'images[0]'
           if (z.source === 'holderName') content = reviewData.holderName || ''
-          if (z.source === 'images[0]') content = reviewData.mainImageUrl ? <img src={reviewData.mainImageUrl} alt="main" style={{ maxWidth: '100%', height: 'auto' }} /> : null
+          if (z.source === 'images[0]') {
+            const imgSrc = reviewData.thumbnailUrl || reviewData.mainImageUrl
+            content = imgSrc ? <img loading="lazy" decoding="async" src={imgSrc} alt="main" style={{ maxWidth: '100%', height: 'auto' }} /> : null
+          }
         }
 
         const style = {

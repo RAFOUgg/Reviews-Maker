@@ -27,12 +27,14 @@ export default function ReviewCard({ review }) {
                 {/* Image */}
                 <div className="relative aspect-square rounded-xl overflow-hidden mb-4">
                     {review.mainImageUrl ? (
-                        <img
-                            src={review.mainImageUrl}
-                            alt={review.holderName}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                    ) : (
+                            <img
+                                src={review.mainImageUrl}
+                                alt={review.holderName}
+                                loading="lazy"
+                                decoding="async"
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                        ) : (
                         <div className={`w-full h-full bg-gradient-to-br ${typeColors[review.type] || typeColors.Hybride} flex items-center justify-center`}>
                             <span className="text-6xl">{typeEmojis[review.type] || '🌿'}</span>
                         </div>
@@ -54,23 +56,20 @@ export default function ReviewCard({ review }) {
                     </h3>
 
                     {/* Rating */}
-                    {review.note && (
-                        <div className="flex items-center gap-2">
-                            <div className="flex">
-                                {[...Array(5)].map((_, i) => (
-                                    <span
-                                        key={i}
-                                        className={i < Math.round(review.note / 2) ? 'text-amber-400' : 'text-gray-600'}
-                                    >
-                                        ⭐
-                                    </span>
-                                ))}
+                    {(() => {
+                        const displayScore = review.computedOverall || review.overallRating || review.note || 0
+                        const stars = Math.round(displayScore / 2)
+                        return (
+                            <div className="flex items-center gap-2">
+                                <div className="flex">
+                                    {[...Array(5)].map((_, i) => (
+                                        <span key={i} className={i < stars ? 'text-amber-400' : 'text-gray-600'}>⭐</span>
+                                    ))}
+                                </div>
+                                <span className="text-sm text-dark-muted">{displayScore}/10</span>
                             </div>
-                            <span className="text-sm text-dark-muted">
-                                {review.note}/10
-                            </span>
-                        </div>
-                    )}
+                        )
+                    })()}
 
                     {/* Description preview */}
                     {review.description && (
