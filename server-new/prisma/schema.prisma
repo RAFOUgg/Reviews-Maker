@@ -205,3 +205,20 @@ model ReviewLike {
   @@index([userId])
   @@map("review_likes")
 }
+
+// Template model for Orchard templates and custom layouts
+model Template {
+  id         String   @id @default(uuid())
+  name       String
+  description String?
+  ownerId    String
+  owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  isPublic   Boolean  @default(false)
+  config     Json
+  thumbnail  String?  // optional path to a generated thumbnail image
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([ownerId])
+  @@map("templates")
+}

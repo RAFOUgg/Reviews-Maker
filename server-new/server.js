@@ -14,6 +14,7 @@ import { fileURLToPath } from 'url'
 import authRoutes from './routes/auth.js'
 import reviewRoutes from './routes/reviews.js'
 import userRoutes from './routes/users.js'
+import templatesRoutes from './routes/templates.js'
 import { requireAuth, optionalAuth, logAuthRequest } from './middleware/auth.js'
 
 // Import config
@@ -183,6 +184,7 @@ app.use('/images', express.static(path.join(__dirname, '../db/review_images')))
 app.use('/api/auth', authRoutes)
 app.use('/api/reviews', reviewRoutes)
 app.use('/api/users', userRoutes)
+app.use('/api/templates', templatesRoutes)
 
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
