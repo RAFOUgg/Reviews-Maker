@@ -15,31 +15,46 @@ export const DRAGGABLE_FIELD_TYPES = {
 export const DRAGGABLE_FIELDS = {
     basic: [
         { id: 'holderName', label: 'Nom du cultivar/produit', icon: '🏷️', type: 'text' },
+        { id: 'title', label: 'Titre', icon: '🔖', type: 'text' },
+        { id: 'author', label: 'Auteur', icon: '👤', type: 'text' },
+        { id: 'ownerName', label: 'Publié par', icon: '🧾', type: 'text' },
         { id: 'breeder', label: 'Breeder', icon: '🧬', type: 'text' },
         { id: 'farm', label: 'Farm', icon: '🌱', type: 'text' },
         { id: 'hashmaker', label: 'Hash Maker', icon: '👨‍🔬', type: 'text' },
-        { id: 'images', label: 'Image principale', icon: '🖼️', type: 'image' }
+        { id: 'type', label: 'Type de produit', icon: '📦', type: 'text' },
+        { id: 'strainType', label: 'Type de strain', icon: '🌿', type: 'text' },
+        { id: 'mainImage', label: 'Image principale', icon: '🖼️', type: 'image' },
+        { id: 'images', label: 'Galerie d\'images', icon: '🖼️', type: 'gallery' }
     ],
     ratings: [
         { id: 'overallRating', label: 'Note globale', icon: '⭐', type: 'rating' },
+        { id: 'note', label: 'Note (fallback)', icon: '⭐', type: 'rating' },
         { id: 'categoryRatings.visual', label: 'Note visuelle', icon: '👁️', type: 'rating' },
         { id: 'categoryRatings.smell', label: 'Note odeur', icon: '👃', type: 'rating' },
-        { id: 'categoryRatings.texture', label: 'Note texture', icon: '🤚', type: 'rating' },
         { id: 'categoryRatings.taste', label: 'Note goût', icon: '👅', type: 'rating' },
-        { id: 'categoryRatings.effects', label: 'Note effets', icon: '⚡', type: 'rating' }
+        { id: 'categoryRatings.effects', label: 'Note effets', icon: '⚡', type: 'rating' },
+        { id: 'ratings', label: 'Notes détaillées (JSON)', icon: '📊', type: 'json' }
     ],
     details: [
-        { id: 'aromas', label: 'Arômes', icon: '🌸', type: 'wheel' },
-        { id: 'effects', label: 'Effets', icon: '⚡', type: 'effects' },
-        { id: 'tastes', label: 'Goûts', icon: '👅', type: 'wheel' },
-        { id: 'type', label: 'Type de produit', icon: '📦', type: 'text' },
-        { id: 'strainType', label: 'Type de strain', icon: '🌿', type: 'text' }
+        { id: 'terpenes', label: 'Terpènes', icon: '🌿', type: 'tags' },
+        { id: 'aromas', label: 'Arômes', icon: '🌸', type: 'tags' },
+        { id: 'tastes', label: 'Goûts', icon: '👅', type: 'tags' },
+        { id: 'effects', label: 'Effets', icon: '⚡', type: 'tags' },
+        { id: 'thcLevel', label: 'THC', icon: '💥', type: 'text' },
+        { id: 'cbdLevel', label: 'CBD', icon: '🛡️', type: 'text' },
+        { id: 'indicaRatio', label: 'Indica Ratio', icon: '⚖️', type: 'text' },
+        { id: 'dureeEffet', label: 'Durée des effets', icon: '⏱️', type: 'text' }
     ],
     advanced: [
-        { id: 'holderComment', label: 'Commentaire', icon: '💬', type: 'textarea' },
         { id: 'description', label: 'Description', icon: '📝', type: 'textarea' },
-        { id: 'fertilization', label: 'Pipeline fertilisation', icon: '🧪', type: 'pipeline' },
-        { id: 'purification', label: 'Pipeline purification', icon: '✨', type: 'pipeline' }
+        { id: 'cultivarsList', label: 'Liste des cultivars', icon: '🌱', type: 'cultivar-list' },
+        { id: 'substratMix', label: 'Substrat Mix', icon: '🧩', type: 'substrat-mix' },
+        { id: 'pipelineExtraction', label: 'Pipeline Extraction', icon: '⚗️', type: 'pipeline' },
+        { id: 'pipelineSeparation', label: 'Pipeline Separation', icon: '🧪', type: 'pipeline' },
+        { id: 'pipelinePurification', label: 'Pipeline Purification', icon: '✨', type: 'pipeline' },
+        { id: 'fertilizationPipeline', label: 'Pipeline fertilisation', icon: '🌾', type: 'pipeline' },
+        { id: 'purgevide', label: 'Purge à vide', icon: '🫧', type: 'boolean' },
+        { id: 'substratMix', label: 'Substrat (détails)', icon: '🪴', type: 'json' }
     ]
 };
 

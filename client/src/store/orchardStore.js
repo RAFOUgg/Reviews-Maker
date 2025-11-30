@@ -37,19 +37,64 @@ const DEFAULT_CONFIG = {
 
     // Modules de contenu visibles
     contentModules: {
+        // Basic
         title: true,
-        rating: true,
+        holderName: true,
         author: true,
+        ownerName: true,
         image: true,
-        tags: true,
+        images: true,
+        mainImage: true,
         description: true,
         date: true,
         category: true,
+        type: true,
+
+        // Cultivar / provenance
+        cultivar: true,
+        cultivarsList: true,
+        breeder: true,
+        farm: true,
+        hashmaker: true,
+
+        // Ratings
+        rating: true,
+        overallRating: true,
+        note: true,
+        categoryRatings: true,
+        'categoryRatings.visual': true,
+        'categoryRatings.smell': true,
+        'categoryRatings.taste': true,
+        'categoryRatings.effects': true,
+        ratings: true,
+
+        // Sensorial details
+        terpenes: true,
+        aromas: true,
+        tastes: true,
+        effects: true,
+        aromasIntensity: true,
+        tastesIntensity: true,
+        effectsIntensity: true,
+
+        // Technical / cultivation
         thcLevel: true,
         cbdLevel: true,
-        effects: true,
-        aromas: true,
-        cultivar: true
+        strainType: true,
+        indicaRatio: true,
+        dureeEffet: true,
+        purgevide: true,
+
+        // Pipelines / complex structures
+        pipelineExtraction: true,
+        pipelineSeparation: true,
+        pipelinePurification: true,
+        fertilizationPipeline: true,
+        substratMix: true,
+
+        // Extra / custom fields
+        extraData: true,
+        tags: true
     },
 
     // Ordre des modules (pour le drag-and-drop)

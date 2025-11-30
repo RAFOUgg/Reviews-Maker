@@ -312,6 +312,31 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                 {/* Tags */}
                 {renderTags()}
 
+                {/* Category Ratings */}
+                {reviewData.categoryRatings && (
+                    <div className="w-full text-center mt-2">
+                        <div className="flex items-center justify-center gap-4">
+                            {reviewData.categoryRatings.visual !== undefined && <div className="text-sm text-gray-300">👁️ Visuel: <strong style={{color: colors.accent}}>{reviewData.categoryRatings.visual}</strong></div>}
+                            {reviewData.categoryRatings.smell !== undefined && <div className="text-sm text-gray-300">👃 Odeur: <strong style={{color: colors.accent}}>{reviewData.categoryRatings.smell}</strong></div>}
+                            {reviewData.categoryRatings.taste !== undefined && <div className="text-sm text-gray-300">👅 Goût: <strong style={{color: colors.accent}}>{reviewData.categoryRatings.taste}</strong></div>}
+                            {reviewData.categoryRatings.effects !== undefined && <div className="text-sm text-gray-300">⚡ Effets: <strong style={{color: colors.accent}}>{reviewData.categoryRatings.effects}</strong></div>}
+                        </div>
+                    </div>
+                )}
+
+                {/* Substrat Mix summary */}
+                {contentModules.substratMix && reviewData.substratMix && reviewData.substratMix.length > 0 && (
+                    <div className="w-full text-center mt-4">
+                        <h4 style={{fontFamily: typography.fontFamily, color: colors.textSecondary}}>Substrat</h4>
+                        <div className="flex flex-wrap justify-center gap-2 mt-2">
+                            {reviewData.substratMix.slice(0,5).map((s, i) => (
+                                <span key={i} style={{backgroundColor: `${colors.accent}20`, color: colors.accent, padding: '4px 8px', borderRadius: '999px'}}>{s.component || s.name || JSON.stringify(s)}</span>
+                            ))}
+                            {reviewData.substratMix.length > 5 && <span className="text-sm text-gray-400">+{reviewData.substratMix.length - 5}</span>}
+                        </div>
+                    </div>
+                )}
+
                 {/* Author & Date */}
                 <div className="flex items-center justify-center gap-4 text-center">
                     {contentModules.author && (function() {

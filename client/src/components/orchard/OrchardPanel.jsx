@@ -23,7 +23,24 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
 
     useEffect(() => {
         if (reviewData) {
-            setReviewData(reviewData);
+            // Flatten extraData (JSON string or object) into top-level for templates
+            let normalized = { ...reviewData };
+            try {
+                const parsedExtra = reviewData?.extraData && typeof reviewData.extraData === 'string'
+                    ? JSON.parse(reviewData.extraData)
+                    : (reviewData?.extraData || {});
+                if (parsedExtra && typeof parsedExtra === 'object') {
+                    // Only copy keys that don't overwrite existing top-level fields unless necessary
+                    Object.keys(parsedExtra).forEach(k => {
+                        if (normalized[k] === undefined) normalized[k] = parsedExtra[k];
+                    });
+                    normalized.extraData = parsedExtra;
+                }
+            } catch (err) {
+                console.warn('Failed to normalize extraData for OrchardPanel', err);
+            }
+
+            setReviewData(normalized);
             // Charger le layout personnalisé s'il existe depuis la review
             if (reviewData.orchardCustomLayout) {
                 try {
