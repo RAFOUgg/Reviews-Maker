@@ -49,8 +49,8 @@ export function formatReview(review, currentUser = null) {
         pipelineSeparation: safeJSONParse(review.pipelineSeparation, null),
         extraData: safeJSONParse(review.extraData, {}),
 
-        // URL de l'image principale
-        mainImageUrl: review.mainImage ? `/images/${review.mainImage}` : null
+        // URL de l'image principale (will be resolved below, possibly from extraData)
+        mainImageUrl: null
     }
 
     // Formater l'avatar de l'auteur si présent
@@ -88,7 +88,19 @@ export function formatReview(review, currentUser = null) {
     return formatted
 }
 
-// Expose orchard config/preset if present inside extraData for convenience
+// Try to resolve a preview URL from a candidate value
+function resolvePreviewUrl(candidate) {
+    if (!candidate) return null
+    if (typeof candidate !== 'string') return null
+    const v = candidate.trim()
+    if (v.length === 0) return null
+    if (v.startsWith('http://') || v.startsWith('https://')) return v
+    if (v.startsWith('/images/')) return v
+    // if it's a filename, return images path
+    return `/images/${v.replace(/^\//, '')}`
+}
+
+// Lift orchard / preview shortcuts from extraData into formatted fields
 export function liftOrchardFromExtra(formatted) {
     if (!formatted) return formatted
     try {
@@ -107,11 +119,44 @@ export function liftOrchardFromExtra(formatted) {
         if (extra.orchardLayoutMode) {
             formatted.orchardLayoutMode = extra.orchardLayoutMode
         }
+
+        // Common preview keys produced by the Orchard editor or legacy naming.
+        const previewKeys = [
+            'apercu_definit', 'apercuDefinit', 'previewUrl', 'preview', 'orchardPreview', 'orchardFinalPreview', 'finalPreview', 'mainImageUrl'
+        ]
+
+        for (const key of previewKeys) {
+            if (extra[key]) {
+                const resolved = resolvePreviewUrl(extra[key])
+                if (resolved) {
+                    formatted.mainImageUrl = resolved
+                    break
+                }
+            }
+        }
+
+        // If no preview found in extraData, fall back to existing fields
+        if (!formatted.mainImageUrl) {
+            if (formatted.mainImageUrl) {
+                // already set
+            } else if (formatted.mainImage) {
+                formatted.mainImageUrl = `/images/${formatted.mainImage}`
+            } else if (Array.isArray(formatted.images) && formatted.images.length > 0) {
+                // images may be filenames or full URLs
+                const first = formatted.images[0]
+                formatted.mainImageUrl = resolvePreviewUrl(first) || `/images/${String(first).replace(/^\//, '')}`
+            } else if (formatted.mainImageUrl == null) {
+                formatted.mainImageUrl = null
+            }
+        }
+
     } catch (err) {
-        // ignore
+        // ignore silently
     }
     return formatted
 }
+
+// (liftOrchardFromExtra implemented above with preview handling)
 
 /**
  * Formatte plusieurs reviews
