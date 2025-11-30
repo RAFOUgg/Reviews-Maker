@@ -1,0 +1,3429 @@
+4b91c09 feat: Update session configuration for production with secure cookie handling
+server-new/ecosystem.config.cjs
+
+e261340 feat: Simplify session secret and cookie configuration logic
+server-new/server.js
+
+9097fd8 feat: Refactor session handling with dynamic options and SQLite store integration
+server-new/server.js
+server-new/session-options.js
+
+63edee7 feat: Enhance session configuration with improved secret handling and security comments
+server-new/server.js
+
+a203dba feat: Update environment configuration for production and enhance database file checks
+server-new/ecosystem.config.cjs
+server-new/scripts/check-env.js
+
+0361b59 Merge branch 'feat/theme-refactor' of https://github.com/RAFOUgg/Reviews-Maker into feat/theme-refactor
+705055f feat: Refactor database URL handling and update environment example for production readiness
+server-new/.env.example
+server-new/archived-scripts/fix-prod-ready.sh
+server-new/archived-scripts/secure-deploy.sh
+server-new/archived-scripts/test-rewrite.sh
+server-new/server.js
+
+776b1b1 feat: Improve session configuration comments and clean up unused code
+server-new/server.js
+
+9680fd0 chore: remove and ignore env backups and sqlite files from repo
+.gitignore
+db/sessions.db
+db/sessions.db-shm
+db/sessions.db-wal
+
+9db52fd chore: ignore env save files and untrack env-save
+.gitignore
+
+9d550db feat: Update environment configurations for production readiness and add script for managing .env files
+.gitignore
+server-new/.env.example
+server-new/ecosystem.config.cjs
+server-new/scripts/fix-prod-ready.sh
+
+73d673f feat: Add secure deployment script for production environment configuration
+client/src/components/orchard/CustomLayoutPane.jsx
+server-new/scripts/README.md
+server-new/scripts/secure-deploy.sh
+
+4bdbe8f feat: Refactor authentication flow with retry logic and enhance production readiness documentation
+client/src/components/AuthCallback.jsx
+docs/PRODUCTION_CHECKLIST.md
+scripts/db-backup.sh
+scripts/db-restore.sh
+scripts/start-prod.sh
+server-new/.env.example
+server-new/config/passport.js
+server-new/routes/auth.js
+server-new/server.js
+
+09cbda6 feat: Add production readiness checklist and update deployment scripts
+docs/PLAN_IMPLEMENTATION.md
+docs/PRODUCTION_CHECKLIST.md
+scripts/README.md
+scripts/start-prod.sh
+server-new/server.js
+
+1325566 feat: Refactor image URL handling to use relative paths and improve clarity
+client/src/utils/imageUtils.js
+
+a60370c feat: Add debug logging for Discord OAuth configuration
+server-new/config/passport.js
+
+c676290 feat: Enhance diagnostics and authentication routes with improved logging and debugging information
+.gitignore
+docs/PLAN_IMPLEMENTATION.md
+scripts/diagnostics.sh
+scripts/pm2-clean-restart.sh
+server-new/routes/auth.js
+
+dce6be5 feat: Refactor backend setup and enhance debugging capabilities
+QUICKSTART.md
+docs/PLAN_IMPLEMENTATION.md
+scripts/diagnostics.sh
+scripts/pm2-clean-restart.sh
+server-new/.env.example
+server-new/ecosystem.config.cjs
+server-new/routes/auth.js
+server-new/server.js
+
+5dd714e feat: Add support for serving app under a base path and update related documentation
+QUICKSTART.md
+docs/PLAN_IMPLEMENTATION.md
+server-new/.env.example
+server-new/scripts/test-rewrite.sh
+server-new/server.js
+
+0899ce9 feat: Refactor Discord authentication and enhance environment variable checks
+QUICKSTART.md
+client/src/pages/HomePageV2.jsx
+db/sessions.db-shm
+db/sessions.db-wal
+server-new/config/passport.js
+server-new/middleware/auth.js
+server-new/package.json
+server-new/routes/auth.js
+server-new/scripts/check-env.js
+server-new/server.js
+
+96ed021 feat: Implement custom layout functionality in OrchardPanel and TemplateRenderer
+client/src/components/HomeReviewCard.jsx
+client/src/components/ToastContainer.jsx
+client/src/components/orchard/ContentPanel.jsx
+client/src/components/orchard/CustomLayoutPane.jsx
+client/src/components/orchard/FieldRenderer.jsx
+client/src/components/orchard/FieldRendererClean.jsx
+client/src/components/orchard/OrchardPanel.jsx
+client/src/components/orchard/TemplateRenderer.jsx
+client/src/components/orchard/templates/CustomTemplate.jsx
+client/src/components/orchard/templates/ModernCompactTemplate.jsx
+client/src/pages/EditReviewPage.jsx
+client/src/pages/HomePageV2.jsx
+client/src/store/orchardConstants.js
+db/sessions.db-wal
+server-new/db/reviews.sqlite
+server-new/middleware/auth.js
+server-new/routes/auth.js
+server-new/routes/reviews.js
+server-new/routes/users.js
+server-new/utils/errorHandler.js
+server-new/utils/reviewFormatter.js
+
+cf7dfa0 feat: Add debug instrumentation for form resets and input changes in review creation
+client/src/hooks/useReviewCompletion.js
+client/src/pages/CreateReviewPage.jsx
+db/sessions.db-shm
+
+89e30a9 feat: Enhance review creation and editing experience
+ORCHARD_README.md
+client/src/components/SubstratMixer.jsx
+client/src/components/orchard/CustomLayoutPane.jsx
+client/src/components/orchard/ExportModal.jsx
+client/src/components/orchard/TemplateRenderer.jsx
+client/src/components/orchard/controls/TemplateSelector.jsx
+client/src/components/orchard/templates/CustomTemplate.jsx
+client/src/components/orchard/templates/DetailedCardTemplate.jsx
+client/src/components/orchard/templates/ModernCompactTemplate.jsx
+client/src/examples/OrchardIntegrationExample.jsx
+client/src/pages/CreateReviewPage.jsx
+client/src/pages/EditReviewPage.jsx
+client/src/pages/HomePageV2.jsx
+client/src/pages/ReviewDetailPage.jsx
+client/src/store/orchardStore.js
+db/sessions.db
+db/sessions.db-shm
+db/sessions.db-wal
+server-new/db/reviews.sqlite
+server-new/routes/reviews.js
+server-new/utils/reviewFormatter.js
+server-new/utils/validation.js
+
+ba5385e chore: Update binary database files for session and review management
+db/sessions.db-shm
+db/sessions.db-wal
+server-new/db/reviews.sqlite
+
+fc4539a feat: Implement Drag & Drop and Multi-Page Support for Orchard
+COMMIT_MESSAGE.md
+CORRECTIF_APERCU_OBLIGATOIRE.md
+CORRECTIF_COMPLET_FINAL.md
+CORRECTIF_EDITION_REVIEW.md
+CORRECTIF_HASH_NOTES_APERCU.md
+HOTFIX_NOTES_DEBUG.md
+HOTFIX_ORCHARD_CALCUL_NOTES.md
+HOT_FIX_ORCHARD_IMPORTS.md
+INDEX_GENERAL.md
+ORCHARD_FIX_SUMMARY.md
+ORCHARD_STUDIO_AUDIT_AND_REFACTOR_PLAN.md
+ORCHARD_TROUBLESHOOTING.md
+PLAN_IMPLEMENTATION_ORCHARD_AVANCE.md
+REFONTE_MAPPINGS_COMPLETE.md
+RESUME_REFONTE_MAPPINGS.md
+RESUME_SESSION_DIAGNOSTIC.md
+ROADMAP_ORCHARD_FEATURES.md
+client/package-lock.json
+client/package.json
+client/src/components/AuthCallback.jsx
+client/src/components/CategoryRatingSummary.jsx
+client/src/components/FertilizationPipeline.jsx
+client/src/components/RecipeSection.jsx
+client/src/components/orchard/ConfigPane.jsx
+client/src/components/orchard/ContentPanel.jsx
+client/src/components/orchard/CustomLayoutPane.jsx
+client/src/components/orchard/ExportModal.jsx
+client/src/components/orchard/FieldRenderer.jsx
+client/src/components/orchard/OrchardPanel.jsx
+client/src/components/orchard/PresetManager.jsx
+client/src/components/orchard/PreviewPane.jsx
+client/src/components/orchard/controls/ColorPaletteControls.jsx
+client/src/components/orchard/controls/ContentModuleControls.jsx
+client/src/components/orchard/controls/ImageBrandingControls.jsx
+client/src/components/orchard/controls/TemplateSelector.jsx
+client/src/components/orchard/controls/TypographyControls.jsx
+client/src/index.css
+client/src/pages/CreateReviewPage.jsx
+client/src/pages/EditReviewPage.jsx
+client/src/pages/HomePageV2.jsx
+client/src/pages/LibraryPage.jsx
+client/src/pages/ReviewDetailPage.jsx
+client/src/pages/StatsPage.jsx
+client/src/store/orchardStore.js
+client/src/store/useStore.js
+client/src/utils/categoryMappings.js
+db/sessions.db-shm
+db/sessions.db-wal
+server-new/db/reviews.sqlite
+server-new/routes/reviews.js
+server-new/utils/validation.js
+
+9994e72 fix: Correction des imports dans les composants de contrôle Orchard
+client/src/components/orchard/controls/ColorPaletteControls.jsx
+client/src/components/orchard/controls/TemplateSelector.jsx
+client/src/store/orchardConstants.js
+
+8242be3 fix: Correction du système d'export et d'aperçu Orchard Studio
+CORRECTIF_EXPORT_ORCHARD.md
+CORRECTIF_EXPORT_RESUME.md
+client/src/components/orchard/PreviewPane.jsx
+client/src/components/orchard/templates/BlogArticleTemplate.jsx
+client/src/components/orchard/templates/DetailedCardTemplate.jsx
+client/src/components/orchard/templates/ModernCompactTemplate.jsx
+client/src/components/orchard/templates/SocialStoryTemplate.jsx
+client/src/pages/CreateReviewPage.jsx
+client/src/pages/EditReviewPage.jsx
+
+e03a410 Add comprehensive user guides for Orchard Studio and preview functionality
+ORCHARD_CHANGELOG.md
+ORCHARD_INTEGRATION_COMPLETE.md
+ORCHARD_INTEGRATION_SUMMARY.md
+ORCHARD_PROJECT_OVERVIEW.md
+ORCHARD_QUICKSTART.md
+ORCHARD_README.md
+ORCHARD_SUMMARY.md
+ORCHARD_TESTS.md
+ORCHARD_TROUBLESHOOTING.md
+client/package-lock.json
+client/package.json
+client/src/assets/orchard.css
+client/src/components/orchard/ConfigPane.jsx
+client/src/components/orchard/ExportModal.jsx
+client/src/components/orchard/OrchardPanel.jsx
+client/src/components/orchard/PresetManager.jsx
+client/src/components/orchard/PreviewPane.jsx
+client/src/components/orchard/TemplateRenderer.jsx
+client/src/components/orchard/controls/ColorPaletteControls.jsx
+client/src/components/orchard/controls/ContentModuleControls.jsx
+client/src/components/orchard/controls/ImageBrandingControls.jsx
+client/src/components/orchard/controls/TemplateSelector.jsx
+client/src/components/orchard/controls/TypographyControls.jsx
+client/src/components/orchard/templates/BlogArticleTemplate.jsx
+client/src/components/orchard/templates/DetailedCardTemplate.jsx
+client/src/components/orchard/templates/ModernCompactTemplate.jsx
+client/src/components/orchard/templates/SocialStoryTemplate.jsx
+client/src/examples/OrchardIntegrationExample.jsx
+client/src/index.css
+client/src/pages/CreateReviewPage.jsx
+client/src/pages/EditReviewPage.jsx
+client/src/store/orchardStore.js
+db/sessions.db-wal
+orchard-guide-utilisation.html
+orchard-preview.html
+
+6e00a14 feat: harmonize color scheme across components with CSS variables
+HARMONISATION_COULEURS.md
+client/src/components/FertilizationPipeline.jsx
+client/src/components/PipelineWithCultivars.jsx
+client/src/components/PurificationPipeline.jsx
+client/src/components/ToastContainer.jsx
+client/src/pages/EditReviewPage.jsx
+client/src/pages/HomePageV2.jsx
+db/sessions.db
+db/sessions.db-shm
+db/sessions.db-wal
+server-new/routes/reviews.js
+
+682543e feat: Add SubstratMixer component for custom substrate mixing functionality
+ANALYSE_PHASE_1_COMPLETE.md
+CARTE_SYSTEME_FILTRAGE.md
+CHANGELOG.md
+CORRECTIF_AVATAR_GALERIE.md
+CORRECTIF_PROFIL_MEMBRE.md
+FERTILIZATION_PIPELINE_V2.2.1.md
+GUIDE_RAPIDE_FILTRAGE.md
+INDEX_DOCUMENTATION_FILTRAGE.md
+MISSION_FILTRAGE_COMPLETE.md
+PHASE_2.5_KICKOFF.md
+PHASE_2_APPROFONDIE_TERMINEE.md
+PHASE_2_NOTATION_COMPLETE.md
+README_FILTRAGE_AVANCE.md
+RECAP_MODIFICATIONS_FILTRAGE.md
+REFONTE_RECIPE_SYSTEM.md
+SUBSTRAT_MIXER_V2.2.2.md
+SYSTEME_FILTRAGE_AVANCE.md
+client/src/components/AdvancedSearchBar.jsx
+client/src/components/AuthorStatsModal.jsx
+client/src/components/CategoryRatingSummary.jsx
+client/src/components/CultivarLibraryModal.jsx
+client/src/components/CultivarList.jsx
+client/src/components/EffectSelector.jsx
+client/src/components/FertilizationPipeline.jsx
+client/src/components/FilterBar.jsx
+client/src/components/HomeReviewCard.jsx
+client/src/components/Layout.jsx
+client/src/components/ProductSourceSelector.jsx
+client/src/components/PurificationPipeline.jsx
+client/src/components/RecipeSection.jsx
+client/src/components/SectionNavigator.jsx
+client/src/components/SubstratMixer.jsx
+client/src/components/UserProfileDropdown.jsx
+client/src/components/WheelSelector.jsx
+client/src/pages/CreateReviewPage.jsx
+client/src/pages/EditReviewPage.jsx
+client/src/pages/HomePage.jsx
+client/src/pages/HomePageV2.jsx
+client/src/pages/LibraryPage.jsx
+client/src/pages/StatsPage.jsx
+client/src/utils/filterHelpers.js
+client/src/utils/productStructures.js
+client/src/utils/searchHelpers.js
+db/sessions.db-wal
+demo-filtrage-avance.html
+server-new/db/reviews.sqlite
+server-new/prisma/migrations/20251109122332_add_touche_intensity_fields/migration.sql
+server-new/prisma/migrations/20251109134723_add_legacy_fields_comprehensive/migration.sql
+server-new/prisma/migrations/20251109145633_add_fertilization_pipeline_and_gout_intensity/migration.sql
+server-new/prisma/migrations/20251109151411_add_substrat_mix/migration.sql
+server-new/prisma/migrations/20251109161437_add_substrat_mix/migration.sql
+server-new/prisma/schema.prisma
+
+76a2b19 feat: Add reusable LoadingSpinner component for loading states
+AUDIT_QUALITE_CODE_2025-11-08.md
+CHANGELOG.md
+COMMENCEZ_ICI.md
+DEMARRAGE_RAPIDE_POST_REFONTE.md
+GUIDE_MIGRATION_RAPIDE.md
+INDEX_DOCUMENTATION.md
+LISTE_FICHIERS_CREES.md
+LIVRABLE_QUALITE_CODE.md
+PHASE_2_COMPLETE.md
+PHASE_2_PLAN_ACTION.md
+QUALITE_CODE_README.md
+REFONTE_STRUCTURELLE_2025-11-09.md
+RESUME_EXECUTIF_REFONTE.md
+RESUME_TRAVAUX_QUALITE.md
+TLDR_QUALITE_CODE.md
+client/package-lock.json
+client/package.json
+client/src/App.jsx
+client/src/components/AuthorStatsModal.jsx
+client/src/components/CategoryRatingSummary.jsx
+client/src/components/ConfirmDialog.jsx
+client/src/components/EmptyState.jsx
+client/src/components/ErrorBoundary.jsx
+client/src/components/ErrorMessage.jsx
+client/src/components/HeroSection.jsx
+client/src/components/HomeReviewCard.jsx
+client/src/components/LoadingSpinner.jsx
+client/src/components/PipelineWithCultivars.jsx
+client/src/components/ProductTypeCards.jsx
+client/src/components/SectionNavigator.jsx
+client/src/hooks/useAuth.js
+client/src/pages/CreateReviewPage.jsx
+client/src/pages/HomePage.jsx
+client/src/services/apiService.js
+client/src/store/useStore.js
+db/sessions.db
+db/sessions.db-shm
+db/sessions.db-wal
+server-new/db/reviews.sqlite
+server-new/routes/auth.js
+server-new/routes/reviews.js
+server-new/routes/users.js
+server-new/server.js
+server-new/utils/errorHandler.js
+server-new/utils/reviewFormatter.js
+server-new/utils/validation.js
+
+0679bb9 fix: Apply white text-stroke to ALL category buttons (selected and unselected)
+client/src/components/EffectSelector.jsx
+client/src/components/WheelSelector.jsx
+
+720836d feat: Add white text-stroke to category badges for better readability
+client/src/components/EffectSelector.jsx
+client/src/components/WheelSelector.jsx
+client/src/index.css
+
+29e0608 feat: Replace colored backgrounds with glow effects on category scores
+client/src/pages/CreateReviewPage.jsx
+
+f044159 fix: Remove colored backgrounds from * and /10 text elements
+client/src/pages/CreateReviewPage.jsx
+
+2f44d32 feat: Remove colored backgrounds in all components, apply glow effects
+client/src/components/CultivarList.jsx
+client/src/components/EffectSelector.jsx
+client/src/components/FilterBar.jsx
+client/src/components/PipelineWithCultivars.jsx
+client/src/components/QuickSelectModal.jsx
+client/src/components/WheelSelector.jsx
+
+ef8d1c5 feat: Remove colored backgrounds, add glow effects in CreateReviewPage
+client/src/index.css
+client/src/pages/CreateReviewPage.jsx
+
+2486e53 fix(themes): Textes BLANCS partout - contraste PRO parfait
+client/src/index.css
+
+b35a4a6 fix(ui): Suppression backgrounds moches sur textes + typo PRO
+client/src/index.css
+client/src/pages/HomePage.jsx
+client/src/pages/HomePageV2.jsx
+db/sessions.db-shm
+db/sessions.db-wal
+
+cc41d22 fix(themes): Thème Dark GRIS + Textes BLANCS contrastés PRO
+client/src/index.css
+
+958f392 feat(themes): Harmonisation complète des couleurs dans chaque thème
+client/src/index.css
+
+467a963 fix(themes): Body gradient + mappings ultra-agressifs + titres colorés
+client/src/index.css
+
+ae42f00 fix(themes): Violet POURPRE intense + fond noir corrigé + tous thèmes plus foncés
+client/src/index.css
+
+a97a66d fix(themes): Aperçus thèmes dans Settings + description dark corrigée
+client/src/index.css
+client/src/pages/SettingsPage.jsx
+db/sessions.db-wal
+
+415ee45 fix(themes): Backgrounds SATURÉS + thème dark corrigé
+client/src/index.css
+
+8d2ee2c feat(themes): Add comprehensive theme testing documentation and visual test page
+ACTIONS_IMMEDIATES_THEMES.md
+REFONTE_THEMES_COMPLETE.md
+client/src/index.css
+db/sessions.db-shm
+db/sessions.db-wal
+test-themes-visuel.html
+
+e640079 feat(themes): ULTRA-colorisation complète - fonds/containers/modals/inputs 100% thématisés
+client/src/index.css
+
+e455ed1 fix(themes): Backgrounds principaux mappés + violet-lean explicite
+client/src/index.css
+
+4932812 feat(themes): Mapping couleurs structurelles
+client/src/index.css
+
+1147a5e feat(themes): Mapping exhaustif toutes couleurs → variables CSS
+client/src/index.css
+
+18353ca feat: Add diagnostic scripts and HTML for theme variable testing
+RESOLUTION_THEMES.md
+db/sessions.db-wal
+diagnostic-console.js
+test-diagnostic-themes.html
+
+f542a5f feat: Add comprehensive theme system with 6 themes and auto-detection
+ARCHITECTURE_THEMES_STRATEGY.md
+AUDIT_TERMINE.md
+COMPLETE_SUMMARY.md
+FINAL_AUDIT_COMPLETE.md
+INDEX_ANALYSE_THEMES.md
+LIRE_D_ABORD.md
+RESUME_AUDIT_THEMES.md
+SHOWCASE_THEMES.md
+SYNTHESE_EXECUTIF_THEMES.md
+TABLEAU_RECAPITULATIF_THEMES.md
+THEMES_AUDIT_START.md
+client/src/index.css
+db/sessions.db-shm
+db/sessions.db-wal
+test-themes-standalone.html
+
+cddf40a docs: Add theme system diagnostic and testing guide
+CORRECTIF_THEMES.md
+GUIDE_TEST_THEMES.md
+
+2658cd2 fix: Correct CSS variables usage for theme system
+client/src/index.css
+
+bf2dc82 feat: Implement complete theme system with CSS variables
+client/src/App.jsx
+client/src/index.css
+client/src/pages/SettingsPage.jsx
+
+7f42ac0 feat: Implement complete theme system with improved visual themes and CSS variables
+ANALYSE_SYSTEME_THEMES.md
+APERCU_VISUAL_THEMES.md
+PLAN_IMPLEMENTATION_THEMES.md
+client/src/App.jsx
+client/src/components/UserProfileDropdown.jsx
+client/src/index.css
+client/src/pages/SettingsPage.jsx
+db/sessions.db-shm
+db/sessions.db-wal
+
+5d89bbc fix(ui): Increase z-index for UserProfileDropdown to ensure proper layering
+client/src/components/UserProfileDropdown.jsx
+db/sessions.db-shm
+db/sessions.db-wal
+
+f54d07e fix(ui): Adjust z-index values for UserProfileDropdown components to improve layering
+client/src/components/UserProfileDropdown.jsx
+db/sessions.db-shm
+db/sessions.db-wal
+
+fbdddcf feat: Implement conditional purge checkbox based on solvent presence in extraction pipeline
+AMELIORATIONS_UI_UX.md
+BIENVENUE.txt
+BIENVENUE_RETOUR.txt
+DEMARRAGE_RAPIDE_COMPLET.md
+ERREURS_RESOLUES.md
+LIRE_EN_PREMIER.md
+MISSION_ACCOMPLIE.md
+NETTOYER_ET_RELANCER.ps1
+PROGRESSION_2025-11-06.md
+RAPPORT_FINAL_2025-11-06.md
+TODO.md
+TRAVAIL_COMPLETE_PROFIL_SETTINGS.md
+TRAVAIL_TERMINE.md
+client/src/App.jsx
+client/src/components/CategoryRatings.jsx
+client/src/components/CompletionBar.jsx
+client/src/components/CultivarLibraryModal.jsx
+client/src/components/CultivarList.jsx
+client/src/components/FilterBar.jsx
+client/src/components/GlobalRating.jsx
+client/src/components/PipelineWithCultivars.jsx
+client/src/components/ToastContainer.jsx
+client/src/components/UserProfileDropdown.jsx
+client/src/data/productStructures.js
+client/src/index.css
+client/src/pages/CreateReviewPage.jsx
+client/src/pages/EditReviewPage.jsx
+client/src/pages/HomePage.jsx
+client/src/pages/HomePageV2.jsx
+client/src/pages/LibraryPage.jsx
+client/src/pages/ReviewDetailPage.jsx
+client/src/pages/SettingsPage.jsx
+client/src/pages/StatsPage.jsx
+client/src/utils/imageUtils.js
+client/src/utils/productStructures.js
+client/src/utils/productStructures.js.backup-20251106-172656
+client/src/utils/productStructures.js.backup-couleur-20251106-173630
+client/tailwind.config.js
+db/sessions.db
+db/sessions.db-shm
+db/sessions.db-wal
+docs/CULTIVARS_LIBRARY_SYSTEM.md
+docs/PURGE_VIDE_CONDITIONAL.md
+docs/THEMES_ET_PREFERENCES_AMELIORES.md
+server-new/db/reviews.sqlite
+server-new/prisma/migrations/20251106105334_add_cultivars_pipeline_fields/migration.sql
+server-new/prisma/schema.prisma
+server-new/routes/reviews.js
+test-review-creation.ps1
+test-review-form.html
+
+62be6e9 feat: Implement professional cultivars & pipeline system for Hash/Concentré
+TODO.md
+client/src/components/CultivarList.jsx
+client/src/components/PipelineWithCultivars.jsx
+client/src/data/productStructures.js
+client/src/pages/CreateReviewPage.jsx
+db/sessions.db-shm
+db/sessions.db-wal
+docs/CHANGELOG_TECHNIQUE_CULTIVARS.md
+docs/CreateReviewPage-COMPLET.jsx
+docs/FICHIERS_CULTIVARS_PIPELINES.md
+docs/GUIDE_TEST_RAPIDE_CULTIVARS.md
+docs/RECAPITULATIF_FINAL_STEP_BY_STEP.md
+docs/REFONTE_STEP_BY_STEP.md
+docs/RESUME_CULTIVARS_PIPELINES.md
+docs/SYSTEME_PROFESSIONNEL_CULTIVARS.md
+docs/TESTS_CULTIVARS_PIPELINES.md
+
+6517a35 fix(infra): Démarrage simplifié et persistence session complète
+START.bat
+START_SIMPLE.bat
+client/vite.config.js
+docs/SESSION_ET_DEMARRAGE.md
+
+7c4b7a4 feat: update icons for product types and improve layout in HomePage components
+client/src/components/EffectSelector.jsx
+client/src/components/QuickSelectModal.jsx
+client/src/components/WheelSelector.jsx
+client/src/data/aromas.json
+client/src/data/effects-wheel.json
+client/src/data/effects.json
+client/src/data/smells.json
+client/src/data/tastes-wheel.json
+client/src/data/tastes.json
+client/src/pages/CreateReviewPage.jsx
+client/src/pages/HomePage.jsx
+client/src/pages/HomePage.old.jsx
+client/src/pages/HomePageV2.jsx
+client/src/services/lexiconService.js
+client/vite.config.js
+db/sessions.db-shm
+db/sessions.db-wal
+server-new/db/reviews.sqlite
+server-new/server.js
+
+4291d08 refactor(ui): Interface compacte exhaustive sans scroll inutile
+client/src/components/EffectSelector.jsx
+client/src/components/WheelSelector.jsx
+client/src/index.css
+docs/REFONTE_COMPLETE_UI_COMPACT.md
+docs/REFONTE_UI_NO_SCROLL.md
+
+1e11ae8 docs: Guide complet de l'interface immersive Apple-like
+docs/INTERFACE_IMMERSIVE_GUIDE.md
+
+3e79af9 feat: Interface immersive Apple-like pour sélecteurs de roue
+client/src/components/EffectSelector.jsx
+client/src/components/WheelSelector.jsx
+
+f8d8ace feat: Système de roues de sélection pour odeurs, saveurs et effets
+CHANGEMENTS_ROUE_SELECTION.md
+client/src/components/EffectSelector.jsx
+client/src/components/WheelSelector.jsx
+client/src/data/aromas.json
+client/src/data/effects-wheel.json
+client/src/data/tastes-wheel.json
+client/src/pages/CreateReviewPage.jsx
+client/src/utils/productStructures.js
+docs/GUIDE_ROUE_VISUEL.md
+docs/SYSTEME_ROUE_SELECTION.md
+
+e561543 Enhance HomePage component with adaptive image grid and improved styling
+client/src/pages/CreateReviewPage.jsx
+client/src/pages/HomePage.jsx
+db/sessions.db-shm
+db/sessions.db-wal
+server-new/db/reviews.sqlite
+
+d63c90f feat: Implement review likes functionality and enhance HomePage UI
+client/src/pages/HomePage.jsx
+client/src/pages/HomePage.old.jsx
+client/src/pages/HomePageV2.jsx
+db/sessions.db-shm
+db/sessions.db-wal
+server-new/db/reviews.sqlite
+server-new/prisma/migrations/20251104221650_add_review_likes/migration.sql
+server-new/prisma/schema.prisma
+server-new/routes/reviews.js
+
+dc499aa feat: update review image handling and improve author display in HomePage component
+client/src/pages/HomePage.jsx
+db/sessions.db-shm
+db/sessions.db-wal
+
+42999ff chore: update session database files to reflect recent changes
+db/sessions.db-shm
+db/sessions.db-wal
+
+b155a7e feat: implement user-specific review fetching and visibility update endpoints
+client/src/pages/HomePage.jsx
+client/src/pages/LibraryPage.jsx
+db/sessions.db-shm
+db/sessions.db-wal
+server-new/routes/reviews.js
+
+78cf805 style: clean up formatting in HomePage component for improved readability
+client/src/pages/HomePage.jsx
+db/sessions.db-wal
+
+70e26fa feat: add LibraryPage and UserProfileDropdown components, update routing and layout for user profile management
+client/src/App.jsx
+client/src/components/Layout.jsx
+client/src/components/UserProfileDropdown.jsx
+client/src/pages/HomePage.jsx
+client/src/pages/LibraryPage.jsx
+db/sessions.db-wal
+
+b6f5101 feat: enhance layout styles, implement review fetching, and add product structures for various product types
+client/src/components/Layout.jsx
+client/src/pages/CreateReviewPage.jsx
+client/src/pages/ReviewDetailPage.jsx
+client/src/utils/productStructures.js
+db/sessions.db-shm
+db/sessions.db-wal
+server-new/db/reviews.sqlite
+
+708a7a9 feat: implement review fetching and enhance HomePage layout
+client/src/pages/HomePage.jsx
+db/sessions.db-shm
+db/sessions.db-wal
+
+ee75276 feat: refactor CreateReviewPage for improved readability and maintainability
+README_START.md
+client/src/pages/CreateReviewPage.jsx
+
+2846858 feat: complete overhaul of the quick start guide with enhanced launch system and simplified creation form
+DEMARRAGE_RAPIDE.md
+
+3f9f361 fix: update session database file to resolve inconsistencies
+db/sessions.db-shm
+
+3b2e7da fix: update French translations and improve output formatting in START.ps1
+START.ps1
+
+b2917c1 feat: Refactor launch process and cleanup old scripts
+CHECK_STATUS.bat
+CLEANUP_RESTART.md
+CLEANUP_SUMMARY.md
+COMPLETION_CHECKLIST.md
+COMPLETION_FINAL_SUMMARY.md
+COMPLETION_INDEX.md
+COMPLETION_README.md
+COMPLETION_SUMMARY.md
+COMPLETION_VISUAL.md
+CREATE_DESKTOP_SHORTCUT.bat
+DOCUMENTATION_INDEX.md
+INSTALL_AUTO_START.bat
+INSTALL_AUTO_START.md
+MENU_REVIEWS_MAKER.bat
+OPEN_NETWORK.bat
+OPEN_SITE.bat
+START.bat
+START.ps1
+START_DEV_AUTO.bat
+START_SERVER.bat
+STOP_DEV.bat
+UNINSTALL_AUTO_START.bat
+V1DEV.md
+client/src/pages/CreateReviewPage.jsx
+client/src/pages/CreateReviewPage.jsx.backup
+start_backend.bat
+start_frontend.bat
+
+f6be781 fix: update API base configuration to use Vite environment variable
+client/src/utils/ReviewCompletionEngine.js
+db/sessions.db-shm
+db/sessions.db-wal
+server-new/db/reviews.sqlite
+
+55b0e16 feat: enhance session management and improve styling in App component
+client/src/App.jsx
+client/src/index.css
+
+4af53fd feat: add startup scripts for backend and frontend servers
+START_SERVERS.ps1
+start_backend.bat
+start_frontend.bat
+
+012102f feat: refactor HomePage to use mock reviews and simplify layout
+client/src/pages/HomePage.jsx
+
+543fb1e feat: add SQLite session store and enhance CORS configuration
+.vscode/PythonImportHelper-v2-Completion.json
+client/src/App.jsx
+client/src/pages/CreateReviewPage.jsx
+client/src/store/useStore.js
+client/src/utils/ReviewCompletionEngine.js
+db/sessions.db
+db/sessions.db-shm
+db/sessions.db-wal
+server-new/db/reviews.sqlite
+server-new/middleware/auth.js
+server-new/package-lock.json
+server-new/package.json
+server-new/server.js
+
+e907651 Add comprehensive review completion guide for new stack (React + Express + Prisma)
+COMPLETION_CHECKLIST.md
+COMPLETION_FINAL_SUMMARY.md
+COMPLETION_INDEX.md
+COMPLETION_README.md
+COMPLETION_SUMMARY.md
+COMPLETION_VISUAL.md
+client/src/hooks/useReviewCompletion.js
+client/src/utils/ReviewCompletionEngine.js
+client/src/utils/ReviewCompletionExamples.js
+docs/COMPLETION_REVIEWS_EXHAUSTIVE.md
+server-new/db/reviews.sqlite
+
+e79d93f feat: Add comprehensive documentation and project structure for Reviews-Maker V1DEV
+AI_DEV_GUIDE.md
+CHANGELOG.md
+CLEANUP_SUMMARY.md
+CORRECTION_DISCORD_AUTH.md
+DOCUMENTATION_INDEX.md
+FIX_DISCORD_AUTH.md
+PROJECT_FILES_LIST.txt
+START_HERE.md
+TODO.md
+V1DEV.md
+
+154c7ce feat: Add detailed Discord authentication correction guide and update related batch scripts
+CORRECTION_DISCORD_AUTH.md
+server-new/db/reviews.sqlite
+server-new/db/reviews.sqlite-journal
+
+3d9963a feat: Implement automatic port detection for frontend in batch scripts
+CHECK_STATUS.bat
+FIX_DISCORD_AUTH.md
+MENU_REVIEWS_MAKER.bat
+OPEN_SITE.bat
+START_DEV_AUTO.bat
+START_SERVER.bat
+
+7aa01e1 style: Update menu display and messages in MENU_REVIEWS_MAKER.bat for improved readability
+MENU_REVIEWS_MAKER.bat
+
+87c584f feat: Add main menu batch script for Reviews-Maker with auto-start options and server controls
+-la server
+MENU_REVIEWS_MAKER.bat
+README.md
+
+24084dc feat: Add auto-start system with Windows batch scripts - START_DEV_AUTO.bat: Launch backend + frontend + browser - INSTALL_AUTO_START.bat: Enable Windows startup - Desktop shortcuts and network access - Complete guide in INSTALL_AUTO_START.md
+CREATE_DESKTOP_SHORTCUT.bat
+INSTALL_AUTO_START.bat
+INSTALL_AUTO_START.md
+OPEN_NETWORK.bat
+OPEN_SITE.bat
+START_DEV_AUTO.bat
+STOP_DEV.bat
+UNINSTALL_AUTO_START.bat
+
+926fb7f feat: Add automatic startup scripts for Windows - START_DEV_AUTO.bat for automatic backend/frontend launch - STOP_DEV.bat to stop services - INSTALL_AUTO_START.md with local network access guide - Updated README.md with network access instructions
+INSTALL_AUTO_START.md
+README.md
+START_DEV_AUTO.bat
+STOP_DEV.bat
+
+91ca9f0 clean: Remove all VPS/production/LaFoncedalle references - Dev mode only
+.ssh_config_example
+DEPLOIEMENT_VPS.md
+QUICKSTART.md
+README.md
+archive/debug/scripts/vps-diagnostics.sh
+archive/debug/scripts/vps-redeploy-and-fix.sh
+archive/debug/vps-diagnostics.sh
+archive/debug/vps-redeploy-and-fix.sh
+deploy.ps1
+deploy.sh
+ecosystem.config.cjs
+nginx.conf
+
+fe0e64b feat: remove .env.example file as it is no longer needed
+.env.example
+
+eb42bcd docs: Add VPS deployment guide for v2.0
+DEPLOIEMENT_VPS.md
+
+a06c95b feat: Add comprehensive work plan for Reviews-Maker refonte including phases for frontend and backend setup, data migration, UI/UX implementation, and deployment configurations
+.dockerignore
+.gitignore
+.vscode/PythonImportHelper-v2-Completion.json
+CORRECTIF_CACHE_BUG.md
+CORRECTIF_MODAL_2025-11-02.md
+DEMARRAGE_RAPIDE.md
+Dockerfile
+EXPORT_STUDIO_README.md
+OPEN_SITE.bat
+QUICKSTART.md
+README.md
+START_SERVER.bat
+app.js
+app.js.bak.2025-10-19-183302
+db-backup-2025-10-23_131255.tgz
+deploy.ps1
+deploy.sh
+docs/ARCHITECTURE_V2.md
+docs/CONFIG_DB_LAFONCEDALLE_VPS.md
+docs/DEMARRAGE_REFONTE.md
+docs/DEPLOIEMENT_INTEGRATION_LAFONCEDALLE.md
+docs/DEPLOIEMENT_VPS.md
+docs/DESIGN_SYSTEM.md
+docs/DISCORD_OAUTH_SETUP.md
+docs/DOCKER_INTEGRATION.md
+docs/DONNEES_CANNABIS.md
+docs/ENDPOINTS_LAFONCEDALLE.md
+docs/EXPORT_STUDIO.md
+docs/EXPORT_STUDIO_IMPLEMENTATION.md
+docs/EXTRACTIONS_SUCCESSIVES.md
+docs/GUIDE_IMPLEMENTATION_LAFONCEDALLE.md
+docs/INDEX_REFONTE.md
+docs/MIGRATION_RAPIDE_V2.md
+docs/MODAL_CHECKLIST.md
+docs/MODAL_FIX_2025-11-02.md
+docs/MODAL_SYSTEM.md
+docs/PLAN_IMPLEMENTATION.md
+docs/PREVIEW_STUDIO.md
+docs/README.md
+docs/RECAPITULATIF_FINAL.md
+docs/REFONTE_AUTONOME_2025.md
+docs/REFONTE_PLAN_TRAVAIL.md
+docs/UX_SAISIE_FACILITEE.md
+docs/scripts data LaFoncedalleBot/API_REVIEW_MAKER.md
+docs/scripts data LaFoncedalleBot/README.md
+docs/scripts data LaFoncedalleBot/app.py
+docs/scripts data LaFoncedalleBot/schema.sql
+ecosystem.config.cjs
+export-studio-ui.js
+export-studio.css
+export-studio.js
+index.html
+ink/Generated Image October 04, 2025 - 5_29AM.psd
+ink/logo.png
+ink/logo3.png
+nginx.conf
+node_modules/.package-lock.json
+node_modules/dotenv/CHANGELOG.md
+node_modules/dotenv/LICENSE
+node_modules/dotenv/README-es.md
+node_modules/dotenv/README.md
+node_modules/dotenv/SECURITY.md
+node_modules/dotenv/config.d.ts
+node_modules/dotenv/config.js
+node_modules/dotenv/lib/cli-options.js
+node_modules/dotenv/lib/env-options.js
+node_modules/dotenv/lib/main.d.ts
+node_modules/dotenv/lib/main.js
+node_modules/dotenv/package.json
+package-lock.json
+package.json
+preview-studio.css
+preview-studio.js
+review.html
+reviews_error.log.1
+scripts/RESTORE_DATABASE_EMERGENCY.js
+scripts/RESTORE_NOW.js
+scripts/backup-before-migration.js
+scripts/check_braces.js
+scripts/check_braces.py
+scripts/clean_review_images.js
+scripts/clean_review_images.py
+scripts/cleanup_prod_backups.sh
+scripts/diagnostic-complet.js
+scripts/diagnostic-integration.js
+scripts/export-users-list.js
+scripts/find_unmatched_open.py
+scripts/logger.js
+scripts/modal-diagnostic.js
+scripts/modal-diagnostics.js
+scripts/restore-auth.js
+scripts/test-fonctionnalites.html
+scripts/vps-diagnostics.sh
+scripts/vps-redeploy-and-fix.sh
+server/.env.example
+server/.htaccess
+server/MIGRATION_V2.md
+server/README.md
+server/analyze_db.js
+server/ecosystem.config.cjs
+server/fix_reviews.cjs
+server/fix_reviews.js
+server/middleware/auth.js
+server/package.json
+server/routes/admin.js
+server/routes/auth.js
+server/routes/reviews.js
+server/routes/votes.js
+server/scripts/backfill_users.js
+server/server-v2.js
+server/server.js
+server/test_security_fixes.ps1
+server/test_server_v2.ps1
+server/test_smoke.ps1
+server/tokens/09ca82ec7f1f700509ac11d9913babbc7ba32164886da307
+server/tokens/11f9d5165274233145cd371c7988dd60653beaf099674882
+server/tokens/132c67fc39dc9b8ae80670ccc1f9961486b7e8e889fdaec7
+server/tokens/188973805ed10fb8827e02a0d231a93440b1e1efd49cec79
+server/tokens/351322c694beef3219c36bb7cf766696a5aaa9921d772875
+server/tokens/4e4daa306f6793c980d99ab51e38883be5bd5785dedf955a
+server/tokens/665d00ab16e7fd4e4bf158fe8bbd6489ad5afd9f3da48c2a
+server/tokens/7066e2cc918ac34726d99cdc2b1641858d7e1be496e49a24
+server/tokens/8583e38a4d0767d9c8e5fb2ee10d744471e65ff6072b279e
+server/tokens/97fe9780d6be62f33d5ed534bf92695403c80a3539d5f586
+server/tokens/YmdtZ2FtaW5nMDlAZ21haWwuY29tOjE3NTk3NDkzNDMzNTI6MC44MDc3NzQ3MzU3MzQ0MDU0
+server/tokens/a8890f0638b5bb9428e3da05428d7e6ee872ef0d7223e20f
+server/tokens/b49e176ab7fd8ad80ea3f769f74abd974c8a222b6558f2cd
+server/tokens/bc55c6ef6a0f468014c2cd60ab64049be888b9b9e45dcccc
+server/tokens/d713c6a4a63d2f8b21819d1e4694c3edeca06868f1c5e314
+server/tokens/e747decea2f2005dd29807aadc1f504ef72e75a75885142c
+server/utils/database.js
+server/utils/lafoncedalle.js
+server/utils/validation.js
+src/compat/auth-compat.js
+src/compat/compat-layer.js
+src/compat/quickentry-compat.js
+src/components/Modal.js
+src/components/ProfileStats.js
+src/core/ModalManager.js
+src/core/ReviewsAPI.js
+src/core/Router.js
+src/core/StateManager.js
+src/core/StorageManager.js
+src/core/UserDataManager.js
+src/core/Utils.js
+src/modules/PublicGallery.js
+src/modules/ReviewStudio.js
+src/storage-manager.js
+src/style/base.css
+src/style/components.css
+src/style/variables.css
+src/v2/App.js
+src/v2/compat.js
+src/v2/core/ErrorHandler.js
+src/v2/core/EventBus.js
+src/v2/core/Logger.js
+src/v2/core/StateManager.js
+src/v2/services/AuthService.js
+src/v2/services/UserService.js
+src/v2/ui/ModalController.js
+styles.css
+tests/quick-validation.js
+ui/ui-base.css
+
+0d9c381 feat: implement Discord authentication with Passport and Prisma, add user and review models, and set up routes for user reviews and stats
+server-new/.env.example
+server-new/config/passport.js
+server-new/db/reviews.sqlite
+server-new/db/reviews.sqlite-journal
+server-new/package-lock.json
+server-new/package.json
+server-new/prisma/migrations/20251103231322_init/migration.sql
+server-new/prisma/schema.prisma
+server-new/routes/auth.js
+server-new/routes/reviews.js
+server-new/routes/users.js
+server-new/server.js
+
+1193e68 feat: replace server logic with mock data and remove unused files
+client/src/pages/HomePage.jsx
+server-new/config/passport.js
+server-new/index.js
+server-new/middleware/auth.js
+server-new/package.json
+server-new/prisma/schema.prisma
+server-new/routes/auth.js
+server-new/routes/reviews.js
+server-new/routes/users.js
+
+8bd0a85 feat: implement Discord authentication with Passport and Prisma integration
+client/src/pages/HomePage.jsx
+server-new/config/passport.js
+server-new/index.js
+server-new/middleware/auth.js
+server-new/routes/auth.js
+server-new/routes/reviews.js
+server-new/routes/users.js
+
+e1384a5 style: format keywords section in package.json for better readability
+server-new/package.json
+
+e875f13 feat: initialize server with Prisma and Express setup
+client/src/App.jsx
+client/src/components/AuthCallback.jsx
+client/src/components/Layout.jsx
+client/src/hooks/useAuth.js
+docs-refonte/DISCORD_OAUTH_SETUP.md
+server-new/.gitignore
+server-new/db/reviews.sqlite
+server-new/db/reviews.sqlite-journal
+server-new/package-lock.json
+server-new/package.json
+server-new/prisma/migrations/20251103230450_init/migration.sql
+server-new/prisma/migrations/migration_lock.toml
+server-new/prisma/schema.prisma
+
+86a658d Refactor code formatting and structure across multiple components
+client/index.html
+client/package.json
+client/postcss.config.js
+client/src/App.jsx
+client/src/components/Button.jsx
+client/src/components/Layout.jsx
+client/src/components/ReviewCard.jsx
+client/src/index.css
+client/src/main.jsx
+client/src/pages/CreateReviewPage.jsx
+client/src/pages/HomePage.jsx
+client/src/pages/ReviewDetailPage.jsx
+client/src/store/useStore.js
+client/tailwind.config.js
+client/vite.config.js
+
+d9b1146 feat: Initialize client application with React, Vite, and Tailwind CSS
+.vscode/PythonImportHelper-v2-Completion.json
+README.md
+archive/debug/diagnostic-bugs.html
+archive/debug/export-studio-test.html
+archive/debug/index-v2.html
+archive/debug/test-auth.html
+archive/debug/test-library-modal.html
+archive/debug/test-library-simple.html
+archive/debug/test-storage.html
+archive/docs-old/BUGS_CORRIGES_2025-11.md
+archive/docs-old/CORRECTIFS_2025-11-02.md
+archive/docs-old/CORRECTIFS_FINAL_SUMMARY.md
+archive/docs-old/CORRECTIONS_APPLIQUEES.md
+archive/docs-old/CORRECTIONS_BUGS_GRAPHIQUES.md
+archive/docs-old/DEBUG_LIBRARY_MODAL.md
+archive/docs-old/DIAGNOSTIC_BUGS_CRITIQUES.md
+archive/docs-old/DIAGNOSTIC_CODE_2025-11-02.md
+archive/docs-old/ETAT_FINAL_AUTH.md
+archive/docs-old/FINAL_RECAP_V2.md
+archive/docs-old/GUIDE_DEBUG_AUTH.md
+archive/docs-old/GUIDE_MIGRATION.md
+archive/docs-old/GUIDE_SERVEUR_LOCAL.md
+archive/docs-old/GUIDE_TEST_UTILISATEUR.md
+archive/docs-old/GUIDE_VIDER_CACHE.md
+archive/docs-old/INTEGRATION_STORAGEMANAGER_COMPLETE.md
+archive/docs-old/LIVRABLE_FINAL.md
+archive/docs-old/README_CORRECTION.md
+archive/docs-old/README_REFONTE.md
+archive/docs-old/RECAPITULATIF_COMPLET.md
+archive/docs-old/REFONTE_COMPLETE_2025-11-02.md
+archive/docs-old/RESTAURATION_URGENCE.md
+archive/docs-old/RESTAURER_CONNEXION.md
+archive/docs-old/RESUME_INTEGRATION_ES6.md
+archive/docs-old/RESUME_REFACTORING.md
+archive/docs-old/ROLLBACK_COMPLET.md
+archive/docs-old/START_HERE.md
+archive/docs-old/START_HERE_FINAL.md
+archive/docs-old/STATUS_REFONTE.md
+archive/docs-old/V2_README.md
+archive/old-frontend/code_pour_lafoncedalle.py
+archive/old-frontend/export-studio-examples.js
+archive/old-frontend/feedback.js
+client/.gitignore
+client/index.html
+client/package-lock.json
+client/package.json
+client/postcss.config.js
+client/src/App.jsx
+client/src/components/Button.jsx
+client/src/components/Layout.jsx
+client/src/components/ReviewCard.jsx
+client/src/index.css
+client/src/main.jsx
+client/src/pages/CreateReviewPage.jsx
+client/src/pages/HomePage.jsx
+client/src/pages/ReviewDetailPage.jsx
+client/src/store/useStore.js
+client/tailwind.config.js
+client/vite.config.js
+export-studio-test.html
+
+a747d06 feat: Add comprehensive work plan and UX documentation for Reviews-Maker refonte
+"UI-Graphics-REFONTE/roue des terp\303\250nes.png"
+data/aromas.json
+data/effects.json
+data/tastes.json
+data/terpenes.json
+docs-refonte/DEMARRAGE_REFONTE.md
+docs-refonte/DESIGN_SYSTEM.md
+docs-refonte/DONNEES_CANNABIS.md
+docs-refonte/INDEX_REFONTE.md
+docs-refonte/PLAN_IMPLEMENTATION.md
+docs-refonte/REFONTE_AUTONOME_2025.md
+docs-refonte/REFONTE_PLAN_TRAVAIL.md
+docs-refonte/UX_SAISIE_FACILITEE.md
+
+9fa6159 feat: Update email service details and enhance implementation plan with obsolete script removal
+INDEX_REFONTE.md
+
+0b85c05 feat: Implement complete backup and user export scripts before migration
+DEMARRAGE_REFONTE.md
+DESIGN_SYSTEM.md
+INDEX_REFONTE.md
+PLAN_IMPLEMENTATION.md
+REFONTE_AUTONOME_2025.md
+scripts/backup-before-migration.js
+scripts/export-users-list.js
+
+6932e59 feat: Update global window object to include previewPresets and colorVariants
+preview-studio.js
+
+465c63e feat: Improve display name fetching in populatePublicProfile with error handling and logging
+app.js
+
+0408312 feat: Enhance user stats fetching with contextual endpoints and detailed logging
+app.js
+
+7bc95de feat: Implement public stats endpoint for user reviews and adjust profile data fetching logic
+app.js
+server/server.js
+styles.css
+
+426d6b4 feat: Require authentication for retrieving current user's review statistics
+server/server.js
+
+d520172 feat: Add endpoint to retrieve current user's review statistics with aggregation by type and privacy
+server/server.js
+
+b605858 feat: Enhance account view stats fetching with debug logging and cache refresh; improve modal z-index for better layering
+app.js
+styles.css
+
+8491cd8 feat: Adjust library item vote controls positioning and layout for improved visibility
+styles.css
+
+5b0743b feat: Improve library modal handling by updating display logic and enhancing accessibility attributes
+app.js
+
+26d8809 feat: Refactor account modal setup to improve button event handling and ensure accessibility after modal opens
+app.js
+
+184d1ff feat: Enhance account modal event handling with debug logging and improved element querying feat: Add a simplified test page for the library modal functionality
+app.js
+test-library-simple.html
+
+50863c6 Merge branch 'main' of https://github.com/RAFOUgg/Reviews-Maker into prod/from-vps-2025-10-28
+664c83b feat: Add debug logging and test page for library modal functionality
+BUGS_CORRIGES_2025-11.md
+DEBUG_LIBRARY_MODAL.md
+app.js
+diagnostic-bugs.html
+test-library-modal.html
+
+65556e3 fix: Resolve duplicate event handlers in account settings modal and improve review content display logic
+BUGS_CORRIGES_2025-11.md
+app.js
+diagnostic-bugs.html
+
+eed262c feat: Add comprehensive setup instructions for local server and site access
+DEMARRAGE_RAPIDE.md
+GUIDE_SERVEUR_LOCAL.md
+OPEN_SITE.bat
+START_SERVER.bat
+
+7fda8f2 feat: Update script loading order in review.html and add cache clearing guide
+GUIDE_VIDER_CACHE.md
+RECAPITULATIF_COMPLET.md
+review.html
+
+5fc989f fix: Resolve modal z-index conflicts and add overlay for public profile
+CORRECTIONS_BUGS_GRAPHIQUES.md
+app.js
+styles.css
+
+3ca755a feat: Add user stats endpoint and improve modal dropdown behavior
+CORRECTIONS_APPLIQUEES.md
+DIAGNOSTIC_BUGS_CRITIQUES.md
+app.js
+server/routes/reviews.js
+
+c910b25 feat: Integrate StorageManager with dual-write strategy
+INTEGRATION_STORAGEMANAGER_COMPLETE.md
+app.js
+index.html
+review.html
+test-storage.html
+
+28b2ff9 feat: Implement Reviews-Maker Server v2.0 with modular architecture, image upload, and enhanced error handling
+LIVRABLE_FINAL.md
+README_REFONTE.md
+REFONTE_COMPLETE_2025-11-02.md
+STATUS_REFONTE.md
+server/MIGRATION_V2.md
+server/routes/admin.js
+server/routes/auth.js
+server/routes/votes.js
+server/server-v2.js
+server/test_server_v2.ps1
+src/storage-manager.js
+
+77a1a72 feat: Major refactoring and new features for reviews system
+COMMIT_MESSAGE.txt
+COMMIT_MESSAGE_CACHE_FIX.txt
+COMMIT_MESSAGE_ES6_FIX.txt
+COMMIT_MESSAGE_REFACTORING.md
+server/middleware/auth.js
+server/routes/reviews.js
+server/utils/database.js
+server/utils/lafoncedalle.js
+server/utils/validation.js
+
+1320f82 feat: Update Copilot instructions with architecture snapshot, frontend and backend playbooks, and operational notes
+.github/copilot-instructions.md
+
+7919f1a feat: Add comprehensive test functionality for Reviews Maker with detailed logging and UI enhancements
+scripts/test-fonctionnalites.html
+
+66c0f51 feat: Implement Logger class for structured logging with levels, filters, and performance tracking
+FINAL_RECAP_V2.md
+V2_README.md
+docs/ARCHITECTURE_V2.md
+docs/MIGRATION_RAPIDE_V2.md
+index-v2.html
+src/v2/App.js
+src/v2/compat.js
+src/v2/core/ErrorHandler.js
+src/v2/core/EventBus.js
+src/v2/core/Logger.js
+src/v2/core/StateManager.js
+src/v2/services/AuthService.js
+src/v2/services/UserService.js
+src/v2/ui/ModalController.js
+
+c4eb74d feat: Add restoration scripts for authentication with enhanced logging and UI updates
+RESTAURER_CONNEXION.md
+scripts/RESTORE_NOW.js
+
+679f08b feat: Add comprehensive setup guide and restore authentication functionality with debugging tools
+START_HERE_FINAL.md
+
+07e0743 feat: Add diagnostic tools and restore auth scripts with detailed logging
+ETAT_FINAL_AUTH.md
+GUIDE_DEBUG_AUTH.md
+app.js
+scripts/diagnostic-complet.js
+scripts/restore-auth.js
+test-auth.html
+
+2719242 refactor: Restore original application state by removing ES6 modules and simplifying initialization
+README_CORRECTION.md
+ROLLBACK_COMPLET.md
+app.js
+index.html
+
+5115b3d refactor: Remove unnecessary whitespace in emergency restore script
+scripts/RESTORE_DATABASE_EMERGENCY.js
+
+703644c fix: Désactiver la migration automatique des clés localStorage et ajouter un script de restauration d'urgence
+RESTAURATION_URGENCE.md
+scripts/RESTORE_DATABASE_EMERGENCY.js
+src/compat/compat-layer.js
+
+90e3334 fix: Corriger le modal de compte et synchroniser les modules ES6
+COMMIT_MESSAGE_ES6_FIX.txt
+COMMIT_MESSAGE_REFACTORING.md
+CORRECTIF_MODAL_2025-11-02.md
+GUIDE_TEST_UTILISATEUR.md
+RESUME_INTEGRATION_ES6.md
+START_HERE.md
+app.js
+scripts/diagnostic-integration.js
+src/compat/compat-layer.js
+
+27f00e3 feat: Implement centralized ReviewsAPI for review operations
+DIAGNOSTIC_CODE_2025-11-02.md
+GUIDE_MIGRATION.md
+RESUME_REFACTORING.md
+index.html
+review.html
+src/compat/compat-layer.js
+src/core/ModalManager.js
+src/core/ReviewsAPI.js
+src/core/StorageManager.js
+src/core/UserDataManager.js
+tests/quick-validation.js
+
+397978a feat(cache): Invalidate user-specific cache on account disconnect
+COMMIT_MESSAGE_CACHE_FIX.txt
+CORRECTIF_CACHE_BUG.md
+app.js
+
+503b071 refactor(cache): Remove unnecessary blank line in cache cleanup function
+app.js
+
+358c578 feat(cache): Implement user-specific cache invalidation and clear legacy cache on startup
+app.js
+
+50fa543 feat(auth): Complete refactor of user data management and critical security fixes
+COMMIT_MESSAGE.txt
+CORRECTIFS_FINAL_SUMMARY.md
+
+9a2ab66 feat(security): Implement critical security fixes and refactor user data management
+CORRECTIFS_2025-11-02.md
+app.js
+server/server.js
+server/test_security_fixes.ps1
+
+b5086f8 refactor(modal): enhance logging for library modal interactions and account stats computation
+app.js
+
+d132b1e refactor(modal): add account preferences and settings panels to enhance user experience
+index.html
+
+caa5084 refactor(modal): improve logging and error handling in library modal functions
+app.js
+
+752fc6d refactor(modal): enhance openLibraryModal with logging and error handling
+app.js
+
+437a402 refactor(modal): enhance openLibraryFromAccount event handling with logging and error checks
+app.js
+
+c1d5b6b refactor(modal): remove redundant delegated click handlers and improve account stats fetching logic
+app.js
+
+3715250 refactor(modal): streamline account modal functionality and improve diagnostic script
+app.js
+docs/MODAL_CHECKLIST.md
+docs/MODAL_FIX_2025-11-02.md
+docs/MODAL_SYSTEM.md
+scripts/modal-diagnostic.js
+styles.css
+
+83f1a14 refactor(modal): enhance account modal event handling with improved logging and error reporting
+app.js
+
+93ca373 refactor(modal): update account modal structure for improved visibility and accessibility
+app.js
+index.html
+
+f1bc424 refactor(modal): enhance account modal functionality with improved error handling and logging
+app.js
+index.html
+
+1022b1e refactor(modal): streamline account modal structure by removing duplicate overlay
+index.html
+
+aa8f147 refactor(modal): improve error handling when managing hidden attribute on account modal
+app.js
+
+b4ee886 refactor(ui): remove unnecessary whitespace in Preview Studio class
+preview-studio.js
+
+520e275 refactor(ui): remove unused zoom controls and streamline button functionality in Preview Studio
+preview-studio.js
+
+fe70dfc refactor(ui): remove zoom controls and update button styles for a cleaner interface
+preview-studio.css
+preview-studio.js
+
+eb12a52 refactor(ui): update preview configuration for style presets and color variants
+preview-studio.css
+review.html
+
+2a72493 refactor(ui): update preview configuration to streamline style presets and color variants
+preview-studio.js
+
+8a95734 refactor(ui): adjust layout dimensions and styling for improved usability in Preview Studio
+preview-studio.css
+
+6b49cc2 refactor(ui): enhance responsiveness of Preview Studio layout and adjust styling for better usability
+preview-studio.css
+
+f0ab89d refactor(ui): simplify layout styles in Preview Studio for improved responsiveness
+app.js
+preview-studio.css
+
+e54fe2f refactor(ui): update Preview Studio initialization to use global instance defined in preview-studio.js
+app.js
+
+5e12578 fix(ui): remove unnecessary whitespace in preview studio panel styling
+preview-studio.css
+
+491c1cf feat(ui): initialize Preview Studio instance and enhance modal styling for better responsiveness
+app.js
+preview-studio.css
+
+64d64b6 feat(ui): add local variables for styling and improve error handling in Preview Studio
+preview-studio.css
+preview-studio.js
+
+01c4612 fix(ui): remove unnecessary whitespace in Preview Studio close button logic
+preview-studio.js
+
+9b549b9 feat(ui): add close button functionality to Preview Studio
+preview-studio.js
+
+2e3d011 feat(ui): add close functionality to Preview Studio modal via overlay click and Escape key
+preview-studio.js
+
+f1fbc9f feat(ui): enhance Preview Studio with modal overlay and close button functionality
+docs/PREVIEW_STUDIO.md
+preview-studio.css
+preview-studio.js
+review.html
+
+baeb279 feat: add Preview Studio with advanced real-time preview system
+app.js
+preview-studio.css
+preview-studio.js
+review.html
+
+2d4d5b6 fix(ui): update panel and section styles for improved appearance and usability
+app.js
+review.html
+styles.css
+
+b615f8e fix(ui): update panel styles to remove background and border for a cleaner appearance
+styles.css
+
+fb93bc7 fix(ui): refine mobile-specific styles for improved layout and usability
+styles.css
+
+3b7bfde fix(ui): update panel styles for a cleaner appearance by removing background, border, box-shadow, and backdrop-filter
+styles.css
+
+a349a48 fix(ui): update panel styles for improved appearance with background, border, and padding adjustments
+styles.css
+
+a0c7b26 fix(ui): update padding and background styles for cleaner section and panel appearance
+styles.css
+
+e72ebef fix(ui): update panel styles to remove background and border for a cleaner appearance
+styles.css
+
+0f51772 fix(ui): update section styles by removing background and shadow for a cleaner appearance
+styles.css
+
+d85a45c fix(ui): update panel styles for a cleaner look by removing background and shadow effects
+styles.css
+
+6eb1f0f fix(ui): adjust padding in workspace and hero-section for better visibility under sticky header
+styles.css
+
+494fc2c fix(ui): remove redundant top padding in hero-section to prevent double spacing under sticky header
+styles.css
+
+bf8b9d0 fix(ui): adjust hero-section padding to ensure title visibility below sticky header
+styles.css
+
+1dd50f2 fix(ui): add padding to body and app-shell for consistent layout under sticky header
+styles.css
+
+034d104 fix(ui): implement scalable dimensions for thumbnails and mobile navigation to enhance responsiveness
+styles.css
+
+89e8a37 fix(ui): harmonize modal and overlay stacking to ensure consistent display across environments
+styles.css
+
+b6cab6b fix(ui): ensure top-nav remains above side panels and overlays; adjust z-index for consistent stacking
+styles.css
+
+45e75d7 fix(css): standardize header height variable to improve scrolling behavior across viewports
+styles.css
+
+d1dfd61 fix(ui): enforce single-column layout for type selector on small viewports to improve mobile usability
+styles.css
+
+065b6ba fix(html): add cache-bust parameter to stylesheet link for updated CSS fetching after deploys
+index.html
+
+a5d86ba fix(ui): enforce a 2-column layout for type selectors on desktop/tablet to maintain a consistent 2x2 button arrangement
+styles.css
+
+9cfdd9d fix(ui): ensure modals use centralized z-index vars so overlays sit below modal content; top-nav uses var(--z-top-nav)
+styles.css
+
+aeacb30 chore(server): add missing 'cors' dependency required by server.js
+server/package.json
+
+fafe026 Implement feature X to enhance user experience and fix bug Y in module Z
+.vscode/PythonImportHelper-v2-Completion.json
+
+e002846 fix(server): correct catch block formatting in smoke test script
+server/test_smoke.ps1
+
+7dd0f5b fix(ui): make hero height dynamic; add server/test_smoke.ps1 for smoke checks
+server/test_smoke.ps1
+styles.css
+
+acfc047 chore(server): remove invalid 'cons' dependency to fix npm install
+server/package.json
+
+5cb0f71 fix: improve accessibility and responsiveness of account modal and hero title styles
+app.js
+styles.css
+
+3418e5b fix: clean up whitespace and formatting inconsistencies in server.js
+server/server.js
+
+88fcb7f fix: remove merge conflict markers in app.js and remove broken fallback in server insert handler
+app.js
+server/server.js
+
+40896a7 Merge branch 'main' of https://github.com/RAFOUgg/Reviews-Maker into prod/from-vps-2025-10-28
+079dbcf Nettoyage des fichiers avec noms invalides
+app.js.bak.2025-10-19-18:48:30
+db/review_images.backup.2025-10-19-18:44:38/1759544213441-196827819.jpg
+db/review_images.backup.2025-10-19-18:44:38/1759545765404-310647187.jpg
+db/review_images.backup.2025-10-19-18:44:38/1759545868956-955367924.jpg
+
+b5631e4 fix: remove duplicate dependencies in package.json
+server/package.json
+
+48b79f4 fix: resolve duplicate entries in package.json dependencies
+server/package.json
+
+4e306a0 Ajout de fichiers/dossiers utiles
+app.js.bak.2025-10-19-183302
+app.js.bak.2025-10-19-18:48:30
+archive/debug/server-scripts/backfill_users.js
+archive/debug/vps-diagnostics.sh
+archive/debug/vps-redeploy-and-fix.sh
+db-backup-2025-10-23_131255.tgz
+db/backups/reviews.sqlite.2025-10-23_131252.bak
+db/backups/reviews.sqlite.2025-10-23_131810.bak
+db/review_images.backup.2025-10-19-18:44:38/1759544213441-196827819.jpg
+db/review_images.backup.2025-10-19-18:44:38/1759545765404-310647187.jpg
+db/review_images.backup.2025-10-19-18:44:38/1759545868956-955367924.jpg
+server/tokens/11f9d5165274233145cd371c7988dd60653beaf099674882
+server/tokens/188973805ed10fb8827e02a0d231a93440b1e1efd49cec79
+server/tokens/351322c694beef3219c36bb7cf766696a5aaa9921d772875
+server/tokens/4e4daa306f6793c980d99ab51e38883be5bd5785dedf955a
+server/tokens/665d00ab16e7fd4e4bf158fe8bbd6489ad5afd9f3da48c2a
+server/tokens/8583e38a4d0767d9c8e5fb2ee10d744471e65ff6072b279e
+server/tokens/97fe9780d6be62f33d5ed534bf92695403c80a3539d5f586
+server/tokens/a8890f0638b5bb9428e3da05428d7e6ee872ef0d7223e20f
+server/tokens/b49e176ab7fd8ad80ea3f769f74abd974c8a222b6558f2cd
+server/tokens/e747decea2f2005dd29807aadc1f504ef72e75a75885142c
+
+99f868d Merge branch 'main' of https://github.com/RAFOUgg/Reviews-Maker
+0ded7ab Résolution des conflits et nettoyage
+559d9e7 ui(fix): enhance mobile layout for type-selector and type-card components
+app.js
+styles.css
+
+142baf3 docs: update copilot instructions for clarity and conciseness
+.github/copilot-instructions.md
+
+4fa60f2 ui(fix): add fallback delegation for type-card navigation and clean up HTML formatting
+app.js
+index.html
+
+0f454ed Implement feature X to enhance user experience and optimize performance
+app.js
+
+21ee3d1 ui(fix): avoid header height reflow and update top-nav height after window load to reduce layout shift
+app.js
+styles.css
+
+eee0352 Merge branch 'main' of https://github.com/RAFOUgg/Reviews-Maker
+a381329 ui(refactor): standardize section-header spacing using clamp()
+styles.css
+
+1198290 Merge branch 'main' of https://github.com/RAFOUgg/Reviews-Maker
+70e32ab Implement feature X to enhance user experience and fix bug Y in module Z
+styles.css
+
+02f7100 Refactor CSS for improved readability and consistency; add empty README and cleanup script
+app.js
+archive/debug/README.md
+scripts/cleanup_prod_backups.sh
+ui/ui-base.css
+
+13806a3 chore(logger): add RMLogger console gate, central z-index variable usage and ignore DB backups
+.gitignore
+app.js
+ui/ui-base.css
+
+53ef00a feat: refactor z-index values and improve responsive layout for body and modal components
+styles.css
+
+dc7e3f8 feat: centralize z-index variables for improved stacking management
+styles.css
+
+36805b5 feat: adjust z-index for hero title to ensure proper layering above side panels
+styles.css
+
+ca147c0 mh
+README.md
+app.js
+archive/debug/export-studio-examples.js
+archive/debug/export-studio-test.html
+archive/debug/modal-diagnostics.js
+archive/debug/scripts/check_braces.js
+archive/debug/scripts/clean_review_images.js
+archive/debug/scripts/vps-diagnostics.sh
+archive/debug/scripts/vps-redeploy-and-fix.sh
+archive/debug/server/fix_reviews.cjs
+archive/debug/server/fix_reviews.js
+archive/debug/server/scripts/backfill_users.js
+db/reviews.sqlite.2025-10-23_131252.bak
+db/reviews.sqlite.2025-10-23_131810.bak
+export-studio-examples.js
+export-studio-test.html
+index.html
+review.html
+scripts/check_braces.js
+scripts/clean_review_images.js
+scripts/logger.js
+scripts/modal-diagnostics.js
+scripts/vps-diagnostics.sh
+scripts/vps-redeploy-and-fix.sh
+server/README.md
+server/fix_reviews.cjs
+server/fix_reviews.js
+server/scripts/backfill_users.js
+server/server.js
+styles.css
+
+c55123c feat: simplify overlay positioning by relying on CSS and add marker class for moved overlays
+src/components/Modal.js
+
+0feedef feat: centralize overlay stacking rules and improve modal z-index management
+src/style/components.css
+
+ca54606 feat: update z-index values for account and public profile modals to ensure proper stacking order
+app.js
+
+28eebc3 feat: adjust z-index values for overlay and account modal to improve stacking context
+styles.css
+
+4ca1b02 feat: increase modal z-index to ensure content is above overlay
+src/style/components.css
+
+9586d88 feat: enhance hero title styling with gradient support and fallback color
+styles.css
+
+672bc55 feat: update CSS variables to use rem units for better scalability and responsiveness
+styles.css
+ui/ui-base.css
+
+397f991 feat: implement dynamic header height adjustment for improved scroll-padding
+app.js
+styles.css
+
+f828ba4 feat: update app.js version for production fixes in index and review pages
+index.html
+review.html
+
+8699355 feat: remove forced modal-show debug code to prevent accidental overlays on startup
+app.js
+
+78e5c44 feat: disable overlays to ensure visibility of modals and prevent interaction issues
+src/style/components.css
+
+50508ba feat: add safety overrides for public profile modal to ensure proper stacking and visibility
+src/style/components.css
+
+d459197 feat: move public profile modal to root for improved visibility and prevent clipping
+review.html
+
+d3cdabc feat: raise z-index for modal and overlay to improve stacking context
+src/style/components.css
+
+e5d79ea feat: implement header style toggle for improved readability over hero section during scroll
+app.js
+styles.css
+
+19412ce feat: enhance header opacity and z-index for better visibility over hero text
+styles.css
+
+bf57633 feat: adjust header background opacity and z-index for improved visibility over hero text
+styles.css
+
+e158141 feat: adjust hero section padding to prevent overlap with sticky header
+styles.css
+
+a81a36e feat: disable interaction for own review vote buttons while displaying counts
+app.js
+styles.css
+
+014afd6 feat: add client-side ownership check to hide vote controls for own reviews
+app.js
+styles.css
+
+79d6d8b feat: update vote button styles to pill format for improved UI consistency
+app.js
+
+73a0520 feat: update vote button styles to pill format for improved UI and accessibility
+app.js
+styles.css
+
+0fd5e05 feat: remove redundant modal image grid styles and vote controls for cleaner layout
+styles.css
+
+ac0593b feat: implement voting controls for reviews with like/dislike functionality
+app.js
+styles.css
+
+340d123 feat: simplify image handling and remove redundant vote handlers in compact and full library views
+app.js
+styles.css
+
+f4e474e feat: adjust voting controls styles and positioning for improved interaction
+app.js
+styles.css
+
+56248c4 feat: update voting controls positioning and styles for improved visibility in compact and library views
+app.js
+styles.css
+
+664e5a7 feat: update voting controls layout and styles for improved visibility and interaction
+app.js
+styles.css
+
+f41388b feat: integrate voting controls within the first image of the library grid for improved user interaction
+app.js
+
+ed28135 feat: remove voting buttons from compact library view for cleaner layout
+app.js
+
+ab7f246 feat: add relative positioning to compact and library image grids for improved layout
+styles.css
+
+8b33717 feat: add inline voting controls to compact and full library views with updated styles
+app.js
+styles.css
+
+0547ea2 feat: add voting functionality with inline controls for reviews in compact and full library views
+app.js
+styles.css
+
+1ff315e feat: enhance library modal image grid by setting width and height to 100%
+styles.css
+
+e5785e7 feat: enhance library modal layout with specific grid variants for thumbnails
+styles.css
+
+27053e7 feat: adjust library modal grid layout for improved readability on small screens
+styles.css
+
+dcee79d feat: enhance library modal layout with responsive cards and consistent image proportions
+styles.css
+
+c974502 refactor: remove strong overrides for library modal styling to improve maintainability
+styles.css
+
+427058f feat: enhance library modal layout with improved dimensions and grid styling
+styles.css
+
+62081a3 feat: enhance library modal visibility with improved styling and layout
+styles.css
+
+05d311d feat: enhance library modal image grid for improved visibility and layout on small screens
+styles.css
+
+4a929f5 feat: implement gallery-style grid and card appearance for library modal
+styles.css
+
+cc6c21c feat: update library image grid dimensions and padding for improved prominence and layout consistency
+styles.css
+
+d545948 feat: enhance library item image grid styling for improved layout and consistency
+styles.css
+
+8cb37da feat: update library card image grid dimensions for improved layout and responsiveness
+styles.css
+
+d439488 feat: add library card image grid variants for improved layout options
+styles.css
+
+704f5b0 feat: enhance library card preview with dynamic thumbnail generation and fallback image
+app.js
+
+45c1028 Refactor styles for thumbnail lists and viewer components; enhance scrollbar styling and add responsive design tweaks
+app.js
+review.html
+server/README.md
+server/analyze_db.js
+server/server.js
+src/style/components.css
+styles.css
+
+7423b9e feat: refine scrollbar styling and enhance thumbnail layout for improved media display
+styles.css
+
+8a8b807 feat: enhance thumbnail layout and scrollbar styling for improved media display
+styles.css
+
+85567b5 feat: enhance viewer layout and controls with improved styling and responsiveness for thumbnails
+README.md
+styles.css
+
+3a9d4d9 feat: enhance media handling in library and review previews with support for multiple file thumbnails
+app.js
+styles.css
+
+1c87817 feat: update image handling in reviews API to support incoming image paths
+server/server.js
+
+e4a596a feat: support multiple file uploads in reviews API and enhance payload handling
+app.js
+server/server.js
+
+7b573e4 feat: enhance file input handling by merging selected files and enforcing a maximum limit
+app.js
+
+cc5312b feat: add file removal functionality in multi-file input with updated UI
+app.js
+styles.css
+
+0fe691f refactor: enhance modal styling by hiding legacy pseudo-elements and improving background visibility
+review.html
+
+370d270 refactor: improve modal visibility on editor page by adjusting background and shadow styles
+review.html
+
+f4c973e refactor: simplify preview rendering by removing object URL handling and thumbnail removal button
+app.js
+styles.css
+
+11dd771 feat: implement object URL tracking for previews to manage memory efficiently
+app.js
+
+9f4e7fe feat: enhance file upload functionality with preview support and removal option for thumbnails
+app.js
+styles.css
+
+2c9f13c feat: optimize image handling in saveReview to prevent large base64 uploads when file attachments exist
+app.js
+
+da7a3ba feat: add multi-file input styles with thumbnail previews and layout adjustments
+app.js
+styles.css
+
+b9cff21 feat: enhance file upload handling to support multiple files with validation and previews
+app.js
+
+4c63e06 feat: refine decorative frame suppression for editor page, ensuring interactive elements remain visible
+review.html
+styles.css
+
+dbe91d5 feat: add inline overrides to remove decorative frames and force-hide overlays on editor page
+review.html
+
+de168fe feat: add global defensive overrides to hide decorative frames in workspace and panel elements
+styles.css
+
+881dabe feat: add inline styles to remove decorative frames behind editor content for a cleaner UI
+review.html
+styles.css
+
+49cc750 feat: remove reset button from UI and adjust related event handling for compatibility
+app.js
+review.html
+src/style/components.css
+
+a8802ff feat: block save modal for unauthenticated users and when remote backend is disabled
+app.js
+
+9b5696c feat: enforce authentication for review creation and disable local saves
+app.js
+server/README.md
+server/analyze_db.js
+
+3bcc2f9 feat: require authentication for review creation to enhance security
+server/scripts/backfill_users.js
+server/server.js
+
+eb1cbe2 feat: add backfill script to create and populate users table from reviews
+server/README.md
+server/scripts/backfill_users.js
+
+92ee5d0 feat: implement fallback mechanism for owner stats retrieval based on display/holder names
+server/server.js
+
+b0fa8e9 feat: add author label and button to compact library items for improved visibility
+app.js
+
+62c7d9c feat: wire actions for library list buttons to improve interactivity
+app.js
+
+39b71f5 Implement new feature for user authentication and improve error handling
+app.js
+
+621b491 Implement feature X to enhance user experience and fix bug Y in module Z
+app.js
+
+4307238 feat: remove convenience endpoint for retrieving user stats by ownerId
+server/server.js
+
+3b68970 feat: streamline user stats retrieval by consolidating API calls and enhancing error handling
+app.js
+
+88542b8 feat: enhance library list rendering with safe author label display
+app.js
+
+03c7b6b feat: add convenience endpoint to retrieve user stats by ownerId or email
+app.js
+server/server.js
+
+13cceb1 feat: enhance public profile population with remote fetch fallback for reviews
+app.js
+
+e82fe4c feat: implement exact rank retrieval for users by email or ownerId in API
+app.js
+server/server.js
+
+7b3234c feat: add user stats display for likes, dislikes, and leaderboard rank in account and public profile modals
+app.js
+review.html
+
+3f567b3 feat: enhance user stats retrieval by prioritizing memberMeta.email and improving API call logic
+app.js
+
+7aa7afc feat: remove obsolete features from the functionalities list in index.html
+index.html
+
+dd74f84 feat: add animation and styles for vote buttons in voting controls
+styles.css
+
+2d5a9c1 feat: implement self-vote prevention and enhance vote controls in library views
+app.js
+
+670ae8c feat: enhance voting controls in personal library with improved layout and styling
+app.js
+
+ecac213 feat: add likes/dislikes functionality and user stats endpoint for reviews
+app.js
+review.html
+server/server.js
+
+5ad0ed7 feat: implement review voting system with likes and dislikes functionality
+app.js
+server/server.js
+
+a674ae7 fix: enhance populatePublicProfile and openPublicProfile to accept member metadata for improved efficiency
+app.js
+
+877e40c fix: enhance populatePublicProfile to normalize display names for improved matching
+app.js
+
+5dba35d fix: enhance populatePublicProfile to improve email and display name matching logic
+app.js
+
+70206a3 fix: enhance populatePublicProfile to include remote fallback for reviews when IndexedDB is empty
+app.js
+
+fc03ccc fix: add debug panel to public profile modal for matched reviews display
+app.js
+
+59866a0 fix: remove legacy localStorage migration for cannaReviews and switch to in-memory fallback
+app.js
+
+386f420 fix: enhance public profile modal to improve member metadata handling and add debug logging
+app.js
+
+34054a4 fix: enhance public profile population logic to include member metadata and improve display name handling
+app.js
+
+83b855b fix: enhance review filtering logic to improve user-specific data retrieval and deduplication
+app.js
+
+43c785a fix: improve public profile modal handling by removing conflicting overlays and adjusting z-index values
+app.js
+
+fe35e76 fix: enhance modal handling by temporarily disabling floating auth button to prevent accidental clicks
+app.js
+
+9b3d236 fix: update public profile modal handling to ensure data is populated before display
+.github/workflows/docker-image.yml
+.vscode/PythonImportHelper-v2-Completion.json
+app.js
+
+1d6a612 fix: ensure public profile modal DOM references and handlers are initialized properly
+app.js
+
+aa44b5e fix: enhance account modal functionality with improved overlay handling and event bindings
+app.js
+
+db07ea6 fix: standardize account modal positioning and responsiveness across pages
+review.html
+src/style/components.css
+
+0f5fe66 fix: remove redundant actions panel from account modal for cleaner layout
+review.html
+
+802d89a fix: add actions panel to account modal for improved user navigation
+review.html
+
+ca639e6 fix: remove redundant account preferences section from account modal
+review.html
+
+60827d1 fix: update account modal structure and styling for improved accessibility and layout
+review.html
+
+cd2ead2 fix: enhance account modal overlay handling to prevent interference with inputs and dialogs
+app.js
+src/style/components.css
+
+17cc3a5 fix: prevent global overlays when account modal is open and enhance modal styling
+app.js
+src/style/components.css
+
+4671bfe fix: update account modal to prevent overlay display when backdrop is set to none
+index.html
+review.html
+src/style/components.css
+
+84966ad fix: enhance product type card styles for improved visibility and modal layering
+src/style/components.css
+
+227d5f7 feat: ensure account modal DOM references and event handlers are updated for late injections
+app.js
+
+192aff5 fix: enhance account modal opening logic with fallback for DOM reference
+app.js
+
+48b33b1 refactor: update account modal class for improved styling consistency
+review.html
+
+57facba feat: implement unified confirmation modal for review deletion
+app.js
+
+587a72f feat: implement confirmation modal for delete actions with body scroll locking
+.github/copilot-instructions.md
+app.js
+index.html
+review.html
+styles.css
+
+66ca969 Keep local files, merge remote
+89019e1 backup
+.dockerignore
+.env.example
+.github/copilot-instructions.md
+.github/instructions/vps.instructions.md
+.github/workflows/docker-image.yml
+.gitignore
+.ssh_config_example
+.vscode/PythonImportHelper-v2-Completion.json
+.vscode/SSH_SETUP.md
+.vscode/settings.json
+.vscode/tasks.json
+Dockerfile
+EXPORT_STUDIO_README.md
+README.md
+app.js
+code_pour_lafoncedalle.py
+docs/CONFIG_DB_LAFONCEDALLE_VPS.md
+docs/DEPLOIEMENT_INTEGRATION_LAFONCEDALLE.md
+docs/DEPLOIEMENT_VPS.md
+docs/DOCKER_INTEGRATION.md
+docs/ENDPOINTS_LAFONCEDALLE.md
+docs/EXPORT_STUDIO.md
+docs/EXPORT_STUDIO_IMPLEMENTATION.md
+docs/EXTRACTIONS_SUCCESSIVES.md
+docs/GUIDE_IMPLEMENTATION_LAFONCEDALLE.md
+docs/README.md
+docs/scripts data LaFoncedalleBot/API_REVIEW_MAKER.md
+docs/scripts data LaFoncedalleBot/README.md
+docs/scripts data LaFoncedalleBot/app.py
+docs/scripts data LaFoncedalleBot/schema.sql
+export-studio-examples.js
+export-studio-test.html
+export-studio-ui.js
+export-studio.css
+export-studio.js
+feedback.js
+index.html
+ink/Generated Image October 04, 2025 - 5_29AM.psd
+ink/logo.png
+ink/logo3.png
+node_modules/.package-lock.json
+node_modules/dotenv/CHANGELOG.md
+node_modules/dotenv/LICENSE
+node_modules/dotenv/README-es.md
+node_modules/dotenv/README.md
+node_modules/dotenv/SECURITY.md
+node_modules/dotenv/config.d.ts
+node_modules/dotenv/config.js
+node_modules/dotenv/lib/cli-options.js
+node_modules/dotenv/lib/env-options.js
+node_modules/dotenv/lib/main.d.ts
+node_modules/dotenv/lib/main.js
+node_modules/dotenv/package.json
+package-lock.json
+package.json
+review.html
+reviews_error.log.1
+scripts/clean_review_images.js
+scripts/clean_review_images.py
+scripts/vps-diagnostics.sh
+scripts/vps-redeploy-and-fix.sh
+server/.env.example
+server/.htaccess
+server/README.md
+server/ecosystem.config.cjs
+server/fix_reviews.cjs
+server/fix_reviews.js
+server/package.json
+server/server.js
+server/tokens/09ca82ec7f1f700509ac11d9913babbc7ba32164886da307
+server/tokens/132c67fc39dc9b8ae80670ccc1f9961486b7e8e889fdaec7
+server/tokens/7066e2cc918ac34726d99cdc2b1641858d7e1be496e49a24
+server/tokens/YmdtZ2FtaW5nMDlAZ21haWwuY29tOjE3NTk3NDkzNDMzNTI6MC44MDc3NzQ3MzU3MzQ0MDU0
+server/tokens/bc55c6ef6a0f468014c2cd60ab64049be888b9b9e45dcccc
+server/tokens/d713c6a4a63d2f8b21819d1e4694c3edeca06868f1c5e314
+styles.css
+ui/ui-base.css
+
+3535196 refactor: tag modals as intentional state changes to enhance MutationObserver handling
+app.js
+
+973d6ee refactor: integrate markOpening helper for modal opening to streamline attribute handling
+app.js
+export-studio-ui.js
+feedback.js
+src/components/Modal.js
+
+efa3e0c refactor: replace direct attribute setting with markOpening helper for modal opening
+app.js
+feedback.js
+
+cca39cd refactor: move express app initialization to the top to avoid TDZ issues
+server/server.js
+
+04d1ca0 refactor: add data attribute to modals during opening to prevent mutation guard interference
+app.js
+
+1f50a85 feat: add brace checking scripts to analyze brace balance in app.js
+.vscode/PythonImportHelper-v2-Completion.json
+app.js
+scripts/check_braces.py
+scripts/find_unmatched_open.py
+
+58218c9 feat: add brace checking script to analyze and report brace balance in app.js
+scripts/check_braces.js
+
+a43f92d refactor: enhance feedback modal initialization and styling for improved display
+app.js
+feedback.js
+
+759ee32 refactor: implement modal opening guard to prevent transient display issues
+app.js
+export-studio-ui.js
+feedback.js
+
+302a4e2 refactor: add inline modal guard to prevent flashes during initialization
+app.js
+export-studio-test.html
+index.html
+review.html
+
+6851cbb refactor: centralize modal opening logic to improve consistency and reduce redundancy
+app.js
+export-studio-ui.js
+
+8e61bc6 refactor: improve modal visibility handling to prevent stray displays and enhance diagnostics
+app.js
+
+037be7a refactor: enhance modal display handling for legacy support with important CSS properties
+app.js
+feedback.js
+
+0382a6a refactor: implement modal visibility guard to correct stray inline styles and ensure proper display
+app.js
+
+77b426f refactor: enhance modal diagnostics to include timestamps and caller stack for better debugging
+scripts/modal-diagnostics.js
+
+887fe26 refactor: implement final cleanup for modals on window load to prevent visibility issues
+app.js
+
+3273fe1 refactor: enhance modal centering and viewport constraints to ensure consistent display across all viewports
+src/style/components.css
+
+5eeb3cc refactor: prevent auto-opening of account modal on page load and ensure modals are hidden initially
+app.js
+
+6dd0c5e refactor: improve modal centering and stacking context for better visibility and responsiveness
+src/style/components.css
+
+cdf428f refactor: add modal diagnostics script to log modal behavior and computed styles
+index.html
+scripts/modal-diagnostics.js
+
+301227b refactor: ensure account modal is centered on screen with improved positioning rules
+src/style/components.css
+
+9a45934 refactor: enhance modal visibility control to prevent unintended display at page load
+app.js
+src/style/components.css
+
+6967db3 refactor: prevent auto-opening of auth modal, requiring explicit user action for better user experience
+app.js
+
+fc82dd7 refactor: simplify modal behavior by removing automatic opening and queuing, ensuring modals are displayed only on explicit user actions
+app.js
+
+012e593 refactor: enforce centered layout for modals across all viewports to ensure consistent user experience
+app.js
+src/style/components.css
+
+a095379 refactor: enhance modal visibility management and improve styling for better user experience
+app.js
+src/style/components.css
+
+2701140 refactor: enable debug logging for modal opens to assist in troubleshooting
+app.js
+
+0211715 refactor: add debug logging for modal opening and showModalById calls to aid in troubleshooting
+app.js
+
+25873b5 refactor: ensure no modals are left visible on startup and handle modal visibility more robustly
+app.js
+
+384cca0 refactor: enhance modal centering and styling for key modals to improve visibility and consistency
+app.js
+src/style/components.css
+
+997d38c refactor: streamline modal z-index management and remove legacy centering styles for improved consistency
+app.js
+src/components/Modal.js
+src/style/components.css
+
+48e1656 refactor: enhance modal z-index management for improved overlay and modal visibility
+app.js
+
+becad42 refactor: enhance modal positioning and styling for improved desktop centering and visibility
+src/components/Modal.js
+src/style/components.css
+
+e120d9f refactor: enhance modal overlay handling for improved positioning and visibility
+app.js
+src/components/Modal.js
+
+6d6075b refactor: improve modal styles for better responsiveness and usability on desktop and mobile
+src/style/components.css
+
+18704ad refactor: enhance modal positioning and overlay styles for improved visibility and responsiveness
+src/style/components.css
+
+9a52d80 refactor: enhance modal centering and sizing for improved visibility and usability on desktop
+src/style/components.css
+
+2d693e9 refactor: adjust account modal positioning and dimensions for improved visibility and responsiveness
+src/style/components.css
+
+ff3098a refactor: enhance responsiveness and styling for product type and gallery cards
+src/style/components.css
+
+a8b51dd refactor: update thumbnail styles for improved responsiveness and alignment in lists
+app.js
+src/style/components.css
+
+ae9ee76 refactor: improve modal overlay positioning and z-index for better stacking and visibility
+src/style/components.css
+
+40dd0f5 refactor: implement sheet mode for tall modals to enhance usability on larger viewports
+app.js
+src/style/components.css
+
+e3dbfed refactor: enhance modal visibility handling and account modal positioning for improved user experience
+app.js
+feedback.js
+src/style/components.css
+
+900ce7a refactor: center modals vertically and improve account modal styles for better usability
+src/style/components.css
+
+d1124c1 refactor: update modal z-index values for improved stacking and overlay visibility
+app.js
+src/style/components.css
+
+d1d2bec refactor: improve modal focus handling and visibility with updated styles and focus trapping
+app.js
+src/style/components.css
+
+2f55657 refactor: enhance modal accessibility and visuals with improved focus handling and entrance animations
+app.js
+src/style/components.css
+
+7b8f1df refactor: update modal content positioning to use absolute positioning for better centering and layout consistency
+src/style/components.css
+
+9e2f9fe refactor: enhance modal handling with centralized open/close logic and improved content centering
+app.js
+
+844c0f4 refactor: enhance modal display logic with improved CSS centering and important style properties
+app.js
+src/style/components.css
+
+a4d3ed7 refactor: improve modal display handling with fixed positioning and centralized modal invocation
+app.js
+
+23fbb8e refactor: enhance modal display handling with error handling for style manipulations
+app.js
+feedback.js
+
+00b875a refactor: replace inline display manipulation with modal helper functions for consistency
+app.js
+src/components/Modal.js
+
+8108443 refactor: centralize modal display logic with helper functions for consistency
+app.js
+feedback.js
+src/components/Modal.js
+src/style/components.css
+
+bcfe799 refactor: hide dark backdrop for public profile modal to enhance visibility
+src/style/components.css
+
+35eeef3 refactor: move public profile modal styles to components.css to reduce duplication and conflicts
+styles.css
+
+cc2d2fe refactor: unify modal display styles to use flex layout for improved alignment and interaction
+app.js
+src/components/Modal.js
+src/style/components.css
+
+9fb71d5 refactor: add public profile modal with structured layout and statistics display
+review.html
+
+844698a refactor: enhance Account modal styling with improved layout, padding, and scrollbar customization
+src/style/components.css
+
+a9cfef7 refactor: improve modal behavior by adding modal-open class and adjusting z-index for overlays
+app.js
+src/style/components.css
+styles.css
+
+027618e refactor: enhance modal behavior with improved scrolling and interaction handling
+src/style/components.css
+
+b2afc7e refactor: add components.css stylesheet for improved component styling and harmonization
+export-studio-test.html
+index.html
+review.html
+src/style/components.css
+
+1517eca refactor: enhance account modal logout process and integrate Auth preferences
+app.js
+index.html
+review.html
+
+99e7462 feat: implement ModalCompat class for improved modal management and accessibility feat: add Auth compatibility layer for client-side account management with localStorage feat: introduce QuickEntry compatibility for quick token insertion in inputs feat: create generic Modal component for consistent modal behavior across the app feat: develop ProfileStats component to render public profile statistics feat: establish lightweight Router for view navigation using history API feat: implement StateManager for centralized state management with pub/sub pattern feat: add utility functions for DOM manipulation and event handling feat: initialize PublicGallery module for managing public gallery events feat: set up ReviewStudio module for review editing functionality style: enhance base styles and component-specific styles for better UI consistency style: define design tokens for consistent theming across the application
+app.js
+src/compat/auth-compat.js
+src/compat/quickentry-compat.js
+src/components/Modal.js
+src/components/ProfileStats.js
+src/core/Router.js
+src/core/StateManager.js
+src/core/Utils.js
+src/modules/PublicGallery.js
+src/modules/ReviewStudio.js
+src/style/base.css
+src/style/components.css
+src/style/variables.css
+
+cf23173 refactor: streamline modal management to prevent visual stacking and improve user experience
+app.js
+
+eb3a29d refactor: improve pointer event handling for account modal and public profile modal
+app.js
+
+e1c0dd6 refactor: enhance public profile modal with settings button and centralized profile display logic
+app.js
+index.html
+review.html
+
+62b5f48 refactor: unify account modal structure and enhance accessibility features
+app.js
+index.html
+
+d146155 refactor: improve review loading logic for correct form structure during reset
+app.js
+
+7ae2fab refactor: add public profile modal and enhance author button visibility in compact items
+review.html
+styles.css
+
+62cf984 refactor: hide remaining draft visuals and prevent focus on draft controls
+styles.css
+
+abd5ab7 refactor: remove draft handling and visuals from review logic and styles
+app.js
+styles.css
+
+c7f29f1 refactor: remove draft handling from saveReview function and related logic
+app.js
+
+1d69701 refactor: update draftSaveTimer comment for clarity on legacy usage
+app.js
+
+50e4feb refactor: remove draft handling from review retrieval and management logic
+server/server.js
+
+f744332 refactor: remove draft handling from review sorting and saving logic
+app.js
+
+0968361 refactor: remove draft functionality and related UI elements from the application
+app.js
+index.html
+
+408e538 refactor: remove draft system and related UI elements for review saving
+app.js
+review.html
+
+cee0325 fix: remove draft flag consideration in review normalization and filtering
+app.js
+
+3057cbe fix: update item click behavior to always preview in public gallery and adjust modal styling for read-only mode
+app.js
+ui/ui-base.css
+
+d8164d1 feat: add ui-base.css for consistent styling across pages
+index.html
+review.html
+ui/ui-base.css
+
+c6d991f feat: add comprehensive Copilot instructions for project setup and development workflows
+.github/copilot-instructions.md
+
+1e4244a feat: add comprehensive README with features, usage instructions, and technical stack
+README.md
+
+d8ae2c4 fix: optimize user review filtering and simplify public profile modal structure
+app.js
+index.html
+styles.css
+
+087d07c fix: adjust z-index for floating account button and mobile clone to ensure visibility above modals
+styles.css
+
+012c6fc fix: improve user review filtering and enhance public profile modal structure
+app.js
+index.html
+
+4e1e279 fix: enhance account modal functionality to support display names and improve user identification
+app.js
+
+b0df736 fix: centralisation et robustesse de l’attachement des listeners du modal de compte utilisateur
+app.js
+
+eea3da7 fix: attachement des listeners du modal dans DOMContentLoaded pour garantir l’interactivité des boutons
+app.js
+
+1d2a8ca fix: forçage JS de l’affichage et de l’interactivité du modal de compte utilisateur et de ses boutons
+app.js
+
+e41e6ec fix: correction CSS pour rendre le modal de compte utilisateur interactif et visible (z-index, pointer-events)
+styles.css
+
+a263a70 fix: suppression de la logique JS dupliquant le bouton Paramètres dans le modal compte utilisateur
+app.js
+
+cb60b57 fix: amélioration JS modals compte utilisateur et profil public (pointer-events, interactivité, focus)
+app.js
+
+8f9690d fix(modal): Enhance account and public profile modal handling with improved aria attributes and fallback visibility
+app.js
+
+da7187d fix(modal): Improve account modal handling with enhanced z-index management and visibility control
+app.js
+
+7431622 fix(styles): Adjust z-index for textarea and prevent auth-status notifications from intercepting clicks when modal is open
+styles.css
+
+1d15755 fix(modal): Enhance modal interactivity and prevent click interception when modals are open
+styles.css
+
+ef97d58 fix(modal): Improve modal handling by ensuring overlays are hidden and z-index is set correctly
+app.js
+
+8736f88 feat(profile): Add read-only public profile modal with user stats and close functionality
+index.html
+
+c852d70 refactor(profile): Simplify author button click handling and remove public profile modal from index.html
+app.js
+index.html
+
+5ac4b7a feat(profile): Re-add public profile modal with updated structure and event handling
+app.js
+index.html
+
+1d2eaf5 feat(profile): Remove public profile modal from index.html, accessible via floating auth button only
+app.js
+index.html
+styles.css
+
+538ef3a feat(profile): Add public profile action buttons and associated event handling
+app.js
+index.html
+styles.css
+
+8899083 feat(profile): Implement delegated click handling for author links and add public profile modal
+app.js
+index.html
+
+01d3200 feat(account): Implement account disconnect functionality and improve modal event handling
+app.js
+styles.css
+
+74028e2 feat(feedback): Remove floating feedback button and associated styles
+styles.css
+
+feb9da5 feat(feedback): Remove feedback widget and associated scripts from index and review pages
+index.html
+review.html
+
+e7e74a3 feat(debug): Add debug logging for user connection status in modal events and account view rendering
+app.js
+
+81f8c09 feat(profile): Remove public profile modal from index and review pages for streamlined access
+index.html
+review.html
+
+2d3125d feat(profile): Update public profile modal title for clarity
+index.html
+
+7b597a5 feat(modal): Update public profile modal styles to ensure proper visibility and positioning
+styles.css
+
+279d9ef feat(profile): Enhance public profile modal handling with debug logging and display fixes
+app.js
+
+834ac4a feat(feedback): Implement feedback widget with modal and local storage support
+feedback.js
+index.html
+review.html
+styles.css
+
+421a20d feat(modal): Add public profile modal styles and visibility control
+styles.css
+
+2f79496 feat(cleanup): Implement orphaned image detection and deletion script
+.vscode/PythonImportHelper-v2-Completion.json
+scripts/clean_review_images.js
+scripts/clean_review_images.py
+server/server.js
+
+9ff473d feat(fetch): Add fetchWithTimeout helper for API calls with timeout handling
+app.js
+
+e28d53f fix(icon): Correct file path separators for logo image in HTML
+index.html
+review.html
+
+936eb3e Initial plan
+da7d397 feat(instructions): Add clarification on SSH key authentication for VPS access
+.github/instructions/vps.instructions.md
+
+85054c3 feat(instructions): Clarify SSH connection command for VPS access
+.github/instructions/vps.instructions.md
+.vscode/settings.json
+
+a5c389d feat(reviews): Improve image deletion logic on review deletion
+server/server.js
+
+38bc4af feat(reviews): Simplify review listing to only include public reviews from the server
+app.js
+
+b0feec2 feat(ui): Update public gallery icon for improved visual representation
+index.html
+
+b9666ef feat(server): Correctly expose images for front-end compatibility
+.github/instructions/vps.instructions.md
+server/server.js
+
+be7cf5e feat(library): Update public gallery display and enhance messaging for reviews
+app.js
+index.html
+
+dd282ad feat(reviews): Enhance image handling on review deletion and expose images for front-end
+server/server.js
+
+ca6d3ef feat(mail): Add backwards-compatible mail endpoints for verification and forwarding
+server/server.js
+
+59e7061 feat(auth): Update API endpoints for sending verification code and verifying user
+app.js
+docs/scripts data LaFoncedalleBot/API_REVIEW_MAKER.md
+
+f667ed3 feat(auth): Update API endpoints for verification and user retrieval
+app.js
+
+f7807f4 feat(auth): Update API endpoint for sending verification code
+app.js
+
+6e59fcb o
+9d081e3 feat(reviews): Enhance remote public reviews fetching with error handling
+app.js
+
+66040ee Résolution des conflits
+351f129 Sauvegarde mes modifs locales
+server/package.json
+
+84e752b feat(account): Disable fetching account stats from API, use local stats only
+app.js
+
+4ffd9d6 feat(script): Add vps-redeploy-and-fix script for automated diagnostics and fixes
+scripts/vps-redeploy-and-fix.sh
+
+8740826 feat(setup): Add SSH configuration and diagnostics script for remote access
+.ssh_config_example
+.vscode/SSH_SETUP.md
+.vscode/settings.json
+scripts/vps-diagnostics.sh
+server/package.json
+
+4310e9a feat(library): Update default library mode to personal and remove public gallery references
+app.js
+index.html
+reviews_error.log.1
+server/server.js
+
+06d584b feat(account): Enhance account summary with avatar and improved stats layout
+index.html
+
+34b3f64 feat(profile): Remove 'Voir la bibliothèque publique' button from public profile modal
+app.js
+index.html
+
+f08acf8 feat(profile): Add settings button to public profile modal for owner actions
+app.js
+index.html
+review.html
+
+d17cbdb feat(profile): Add public profile modal with read-only user statistics and actions
+app.js
+index.html
+review.html
+
+9b3a099 feat(account): Refactor account modal for improved accessibility and visual clarity
+app.js
+index.html
+review.html
+
+e5e5d94 feat(account): Redesign account modal and overlay for improved aesthetics and usability
+styles.css
+
+c935acc feat(account): Add account settings panel with privacy and theme options
+app.js
+index.html
+review.html
+
+baae128 feat(account): Implement theme selection with button options and add account settings button in modal
+app.js
+index.html
+review.html
+styles.css
+
+87a244e feat(account): Add account settings button and update theme options in modal
+index.html
+styles.css
+
+18a0f70 feat(account): Enhance account modal functionality and styles to prevent background scroll and improve layout
+app.js
+styles.css
+
+6b91707 feat(account): Update account modal styles to remove backdrop blur and ensure content clarity
+styles.css
+
+bc47fd0 feat(account): Add redesigned account modal with profile, stats, and preferences sections
+index.html
+
+32db308 feat(account): Add back button in library modal and update app version for deployment
+app.js
+index.html
+review.html
+
+36722ff feat(account): Update section titles and styles for improved layout and consistency
+review.html
+styles.css
+
+c907a80 feat(account): Implement focus trap for account modal to enhance accessibility
+app.js
+
+7c7214a feat(account): Update class names for account view elements to improve consistency
+app.js
+
+c5ad698 feat(account): Refactor account modal layout and styling for improved clarity and organization
+review.html
+
+0a7a1f2 feat(account): Add account modal styles and layout for improved user experience
+styles.css
+
+5eb2864 feat(account): Redesign account modal with improved layout and preferences section
+review.html
+
+cbfc7eb feat(account): Add account settings button and preferences toggle in account modal
+app.js
+review.html
+
+3433539 feat(auth): Add account summary display in authentication modal
+app.js
+index.html
+
+2cd8bfc feat(auth): Add connected account summary to auth modal
+app.js
+review.html
+
+e745d22 refactor(account): Remove top account button and enhance account stats display
+app.js
+index.html
+review.html
+
+dc48047 fix(auth): Update floating button icon and title for better clarity
+app.js
+
+485da64 feat(account): Add account modal with summary, stats, and theme selector
+app.js
+index.html
+review.html
+
+e9d66f7 feat(email): Enhance verification email format with HTML and plain text versions
+server/server.js
+
+ca1a231 feat(auth): Implement resend verification code and user lookup by email endpoints
+app.js
+server/server.js
+
+8d95f00 fix(config): Update LaFoncedalle API URL to correct local development address
+server/.env.example
+server/server.js
+
+e0ebc2d fix(server): Correct LAFONCEDALLE_DB_FILE assignment by removing extraneous command
+server/server.js
+
+4e34781 Stop tracking .env (add to .gitignore)
+.env
+.gitignore
+
+f9d7c25 feat(config): Update environment variables and add explicit logging for LaFoncedalle API configuration
+.env
+server/server.js
+
+499d250 feat(server): Add support for frontend hosting under a base path with request rewriting
+server/server.js
+
+4422a5b feat(config): Add explicit startup log for LAFONCEDALLE_DB_FILE to assist with debugging
+server/server.js
+
+284911e feat(database): Add support for direct LaFoncedalleBot database access and update configuration instructions
+.env.example
+docs/CONFIG_DB_LAFONCEDALLE_VPS.md
+server/README.md
+server/server.js
+
+9ab6b5b feat(database): Implement new LaFoncedalleBot database configuration and add user retrieval from DB
+server/server.js
+
+6292fd2 feat(database): Add new schema for LaFoncedalleBot with user links, email history, reminders, and product tracking
+.vscode/PythonImportHelper-v2-Completion.json
+docs/scripts data LaFoncedalleBot/README.md
+docs/scripts data LaFoncedalleBot/app.py
+docs/scripts data LaFoncedalleBot/schema.sql
+
+6536ca3 feat: enhance Discord user retrieval and email verification with multiple API endpoint candidates
+app.js
+server/server.js
+
+adb9bf6 feat: update authentication API base to use relative path for server handling
+app.js
+
+62893b9 feat: update authentication API base URL to use current origin
+app.js
+
+93d14dd feat: update API key and refactor remote API base URL handling
+.env
+app.js
+
+94b893d feat: add environment configuration file for API integration
+.env
+
+079dd30 feat: update remote API base URL for LaFoncedalleBot integration
+app.js
+
+f77223c feat: implement Discord email verification and authentication flow with API integration
+.env.example
+app.js
+
+17a4172 feat: add export studio module with customizable templates and styles
+EXPORT_STUDIO_README.md
+app.js
+docs/EXPORT_STUDIO.md
+docs/EXPORT_STUDIO_IMPLEMENTATION.md
+export-studio-examples.js
+export-studio-test.html
+export-studio-ui.js
+export-studio.css
+export-studio.js
+review.html
+
+547ad36 feat: Remove 'My Library' section and related event listeners from modal setup
+app.js
+
+60c38ce feat: Remove 'My Library' section from HTML and related rendering logic
+app.js
+index.html
+
+cf4087a feat: Add user library section with authentication checks and dynamic content display
+app.js
+index.html
+
+2ca44fa Remove obsolete HTML files and integration test script for Reviews Maker
+AUTHENTIFICATION_EMAIL.md
+CHECKLIST_INTEGRATION.md
+CORRECTIFS_APERCU_GALERIE.md
+CORRECTIFS_CRITIQUES_MOBILE.md
+CORRECTIFS_MOBILE_COMPACT.md
+CORRECTIFS_URGENTS.md
+CULTIVARS_MULTIPLES.md
+DESIGN_MOBILE_PRO_V2.md
+GUIDE_SIMPLE_LAFONCEDALLE.md
+GUIDE_TEST.md
+GUIDE_VERSION_MOBILE.md
+INTEGRATION_LAFONCEDALLE.md
+INTEGRATION_LAFONCEDALLE_API.md
+MISE_A_JOUR_VPS.md
+MODIFICATIONS.md
+NAVIGATION_FIXE_MOBILE.md
+RECAP_INTEGRATION.md
+RECAP_MODIFICATIONS_2.md
+REPARATION_REVIEW_HTML.md
+SYSTEME_APERCU_MULTI_MODES.md
+TROUBLESHOOTING.md
+TROUBLESHOOTING_LAFONCEDALLE.md
+VISUELS_MOBILE_UI.md
+admin.html
+docs/DEPLOIEMENT_INTEGRATION_LAFONCEDALLE.md
+docs/DEPLOIEMENT_VPS.md
+docs/DOCKER_INTEGRATION.md
+docs/ENDPOINTS_LAFONCEDALLE.md
+docs/EXTRACTIONS_SUCCESSIVES.md
+docs/GUIDE_IMPLEMENTATION_LAFONCEDALLE.md
+docs/README.md
+gallery.html
+review_backup.html
+review_propre.html
+test-integration.sh
+
+3216b34 feat: Clean up project by removing obsolete backup files in preparation for V1
+README.md
+
+9a2885e feat: Add emoji to library modal title for improved visual appeal
+index.html
+
+120d86b feat: Update library modal title to enhance clarity
+index.html
+
+c8af60a feat: Update font size and min-height for radio, checkbox, and multi-select elements to enhance mobile usability
+styles.css
+
+816854e feat: Adjust min-height and font-weight for radio and checkbox items to enhance usability
+styles.css
+
+1b01389 feat: Reduce max-height of kbd element for improved visibility and usability
+styles.css
+
+1cd7c0a feat: Reduce max-height of kbd element to improve visibility and usability
+styles.css
+
+48418ec feat: Update ultra-compact styles for radio and checkbox elements to improve mobile UX
+styles.css
+
+22f27d1 feat: Add ultra-compact styles for multi-select and checkbox/radio lists to enhance mobile UX
+styles.css
+
+5f319ed feat: Refine ultra-compact styles for interactive elements and form controls to enhance mobile UX
+styles.css
+
+400320b feat: Update styles for ultra-compact interactive elements and improve layout for better mobile UX
+styles.css
+
+a122db3 feat: Optimize compact styles for form controls and multi-select menus
+styles.css
+
+666e285 feat: Enhance mobile UX with ultra-compact styles and improved element visibility
+styles.css
+
+76ad8be feat: Optimize UX for form fields with improved auto-resize and enhanced visibility on mobile
+app.js
+styles.css
+
+01ba0f5 feat: Enhance UX for form fields with ultra-compact styles and improved auto-resize functionality
+app.js
+styles.css
+
+7d34f64 feat: Optimize UX for input fields with reduced sizes and improved auto-resize functionality
+app.js
+styles.css
+
+b5eb766 feat: Enhance form fields UX with auto-resize, improved focus effects, and dynamic placeholders
+app.js
+styles.css
+
+5946106 feat: Update modal title from 'Galerie Publique' to 'Ma Bibliothèque' for improved clarity
+index.html
+
+3d0f8fc feat: Update library grid layout to two columns and adjust body padding for mobile compatibility
+styles.css
+
+5881763 feat: Implement mobile bottom navigation and adjust top navigation styles for improved usability
+app.js
+styles.css
+
+f32affc feat: Implement fixed top navigation for mobile and adjust body padding for improved layout
+NAVIGATION_FIXE_MOBILE.md
+gallery.html
+styles.css
+
+163f2a6 feat: Update button styles for mobile UI to improve accessibility and compactness
+CORRECTIFS_CRITIQUES_MOBILE.md
+styles.css
+
+42c661f feat: Enforce display of 'My Library' button when connected and adjust button styles for improved consistency
+styles.css
+
+3b83dfd feat: Update mobile UI for improved compactness and usability, including button size reduction and two-column gallery layout
+CORRECTIFS_MOBILE_COMPACT.md
+index.html
+styles.css
+
+22edf9d feat: Add comprehensive design guide and visual mockups for mobile UI v2
+DESIGN_MOBILE_PRO_V2.md
+VISUELS_MOBILE_UI.md
+styles.css
+
+232f83b feat: Add comprehensive mobile design guide and responsive styles for optimal user experience
+GUIDE_VERSION_MOBILE.md
+styles.css
+
+1c9bd71 fix: Update title in product structures to include 'Technique'
+app.js
+
+31d50db feat: Enhance preview functionality and improve public gallery design
+CORRECTIFS_APERCU_GALERIE.md
+app.js
+gallery.html
+
+7ffbe5e feat: Enhance extraction pipeline with previous steps selection and dynamic updates
+EXTRACTIONS_SUCCESSIVES.md
+app.js
+styles.css
+
+98d3678 fix: Make setPreviewMode function globally accessible
+app.js
+
+8e78011 feat: Implement multi-cultivar management system and multi-mode preview functionality
+CULTIVARS_MULTIPLES.md
+SYSTEME_APERCU_MULTI_MODES.md
+app.js
+styles.css
+
+809646e fix: Implement cultivar list and pipeline with cultivars features in product structures
+app.js
+styles.css
+
+df82ae4 fix: Add "Trichomes" option to multiple-choice for plant material type
+app.js
+
+3cf3796 fix: Add multiple-choice option for type of plant material in product structures
+app.js
+
+fdb6f20 fix: Update product structure labels for consistency and clarity
+app.js
+
+c750767 fix: Correct formatting of product structure fields for consistency
+app.js
+
+a920c29 fix: Add choice catalogs for various product types to streamline data entry
+README.md
+
+daf3274 fix: Update product structure fields and labels for clarity and add new sections for odor and texture
+app.js
+
+39bb0af fix: Update product structure labels and add new density field in editor
+.vscode/PythonImportHelper-v2-Completion.json
+app.js
+
+8bd18a8 fix: Improve tips modal loading logic and suppress toast notifications for backend detection
+app.js
+
+06965a8 fix: Add tips modal with keyboard shortcuts and review completion steps
+review.html
+
+bd938cc fix: Enhance user info retrieval by fetching Discord username from LaFoncedalle database
+server/server.js
+
+cdaed28 fix: Enhance Discord username retrieval by checking multiple fields and improve localStorage handling
+app.js
+
+89d40e9 fix: Improve Discord username retrieval logic and add loading message
+app.js
+
+dbdce4a fix: Update API call to use remote base URL for fetching user info
+app.js
+
+d011492 fix: Update API call to use remote base URL for user authentication
+app.js
+
+a915ece feat: Implement async holder display update for improved user experience
+app.js
+
+35d25a2 fix: Update localStorage key for user email to 'authEmail' for consistency
+app.js
+
+a8893f8 feat: Update review holder input to display automatic Discord username or email
+app.js
+review.html
+
+d962386 feat: Add authentication modal and related functionality for user account linking
+review.html
+review_backup.html
+
+2ccfd50 fix: Update draft item styles and controls for better visibility and interaction
+app.js
+styles.css
+
+9a03509 fix: Update library header title for clarity and personalization
+review.html
+
+bc24867 style: Update library body padding and background for improved aesthetics
+styles.css
+
+c6d5b16 style: Improve layout and styling of library items for better visibility and interaction
+app.js
+styles.css
+
+aaf937e fix: Update library button icon and label for consistency across pages
+index.html
+review.html
+
+25e8440 feat: Add urgent fixes for review ownership and visibility in the database
+CORRECTIFS_URGENTS.md
+server/fix_reviews.js
+
+419c1b0 Separate public gallery (read-only) from personal library (full actions)
+app.js
+
+cd95f34 feat: Enhance library functionality with public and personal review modes
+app.js
+
+deec13d Improve Discord username display and remove gallery tabs on home page
+app.js
+index.html
+
+4cc0c8c Fix: Synchronize authentication UI between index and review pages
+app.js
+
+525c749 fix: Update LaFoncedalleBot API URL to use localhost for production environment
+server/ecosystem.config.cjs
+
+5b796ab feat: Update ecosystem configuration for LaFoncedalleBot API and add troubleshooting guide
+DOCKER_INTEGRATION.md
+GUIDE_SIMPLE_LAFONCEDALLE.md
+TROUBLESHOOTING_LAFONCEDALLE.md
+server/ecosystem.config.cjs
+
+babc6b7 feat: Add API integration for Reviews-Maker with LaFoncedalleBot endpoints
+CHECKLIST_INTEGRATION.md
+GUIDE_IMPLEMENTATION_LAFONCEDALLE.md
+GUIDE_SIMPLE_LAFONCEDALLE.md
+code_pour_lafoncedalle.py
+review.html
+
+3a7d0fe feat: Enhance integration with LaFoncedalleBot
+DEPLOIEMENT_INTEGRATION_LAFONCEDALLE.md
+ENDPOINTS_LAFONCEDALLE.md
+README.md
+RECAP_INTEGRATION.md
+server/README.md
+test-integration.sh
+
+5a1a545 Update meta description in review.html and enhance .env.example with detailed comments for environment variables
+INTEGRATION_LAFONCEDALLE_API.md
+review.html
+server/.env.example
+server/ecosystem.config.cjs
+
+d2d0e78 Fix toast container position: move from right to left
+styles.css
+
+778a66f Add DOM element references for authentication modal in initHomePage function
+app.js
+
+62af64a Add authentication modal with multi-step verification process in review.html
+review.html
+
+b2770cc Refactor review.html: improve layout, fix typos, and enhance accessibility features
+review.html
+
+d78a0bc Add initial implementation of review_propre.html with complete layout and functionality
+review_propre.html
+
+1959ff8 Add comprehensive VPS update guide with troubleshooting steps
+MISE_A_JOUR_VPS.md
+
+76e841f Fix: Remove global UTF-8 middleware that was breaking API JSON responses
+server/server.js
+
+b8228a6 Fix UTF-8 encoding: add charset headers in Express server
+server/.htaccess
+server/server.js
+
+0bd10a7 Add repair guide for review.html corruption issues
+REPARATION_REVIEW_HTML.md
+
+ac4cc2e Fix: UTF-8 encoding, notifications positioning (bottom-left + clickable), and add troubleshooting guide
+TROUBLESHOOTING.md
+
+a5b090d Enhance authentication UI: implement global notification system, improve styling, and add auto-dismiss feature
+app.js
+review.html
+styles.css
+
+86dd96f Fix review.html: add floating auth button and authentication modal + deployment guide
+review_backup.html
+
+2a5e380 Add deployment guide for Reviews Maker on Ubuntu VPS; include environment setup, service restart instructions, and API integration details
+DEPLOIEMENT_VPS.md
+review.html
+
+7a54928 Remove unused authentication modal and floating button; update tips section in review.html
+review.html
+
+71954c1 Add review backup HTML file with authentication modal and tips section
+review_backup.html
+
+ec70a39 Add authentication modal with email verification steps; implement floating auth button and enhance accessibility
+review.html
+
+5aee73d Enhance authentication flow by clearing Discord info on logout; update user info retrieval to include Discord username and ID
+INTEGRATION_LAFONCEDALLE.md
+app.js
+server/.env.example
+server/README.md
+server/server.js
+
+173d4a2 Enhance email verification process by integrating Discord user lookup; store Discord user info with verification codes and tokens
+server/server.js
+
+d4b2cff Enhance email authentication by adding discordUser to verification code storage; update API configuration comments
+server/server.js
+
+6faea5a Implement email authentication system with verification code; update UI and API routes for email-based login
+AUTHENTIFICATION_EMAIL.md
+app.js
+server/server.js
+
+f1d844c Refactor tips modal in review.html for consistency and improved accessibility; add filter for local private reviews
+RECAP_MODIFICATIONS_2.md
+index.html
+server/server.js
+styles.css
+
+8e726f9 Refactor tips modal implementation for improved accessibility and user experience
+app.js
+review.html
+
+12cdd4b Remove preview button from compact library and add comprehensive testing guide for new features
+GUIDE_TEST.md
+MODIFICATIONS.md
+app.js
+
+8499051 Add authentication modal UI and related styles
+app.js
+styles.css
+
+a40e930 Add authentication modal and update library button text
+index.html
+review.html
+
+57caee2 Add new logo image file and update logo reference
+ink/logo.png
+ink/logo3.png
+
+cd88681 Update favicon and logo references in HTML files
+gallery.html
+index.html
+review.html
+
+79e4d17 Replace old image with new logo file
+ink/logo.png
+
+e7054f1 Remove outdated generated image and add new image file
+ink/Generated Image October 04, 2025 - 5_29AM.png
+ink/image.png
+
+4b2f445 Add favicon and implement privacy toggle in review submission
+admin.html
+app.js
+gallery.html
+index.html
+ink/Generated Image October 04, 2025 - 5_29AM.png
+ink/Generated Image October 04, 2025 - 5_29AM.psd
+review.html
+
+dd8ca52 Add tab navigation for public and personal library views on the home page
+app.js
+index.html
+
+6dc09ed Enhance admin interface with reviews management features, including search and filter options, and implement privacy toggle functionality for reviews.
+admin.html
+app.js
+index.html
+
+d099d22 Add new fields for dry puff, inhalation, and expiration notes in product structures
+app.js
+server/server.js
+
+695cfb8 Add token-based authentication and admin features for review management
+admin.html
+gallery.html
+server/README.md
+server/server.js
+
+021cd4e Add authentication token handling and owner-based access control for reviews
+app.js
+server/server.js
+
+0d7d56c Refactor product structures by removing redundant extraction methods section and enhancing metadata handling for rosin and CO2 steps
+app.js
+
+1b53d49 Refactor review merging logic to use strict and loose keys for improved deduplication and sorting
+app.js
+
+4847d14 Add conditional deduplication on database initialization and improve image normalization in review listing
+app.js
+
+133e8f4 Implement unified review listing to merge local and remote reviews with deduplication
+app.js
+
+8458dd4 Enhance save modal functionality by hiding preview overlays and ensuring proper z-index for visibility
+app.js
+styles.css
+
+dbc0ed2 Fix save modal structure by closing the preview modal body div
+review.html
+
+0ac6cf4 Add fallback listener to ensure Save modal opens and pre-fills data on click
+app.js
+
+a019664 Improve save modal handling by opening it immediately and pre-filling data; enhance error logging for pre-fill failures
+app.js
+
+715d0a8 Disable review deletion from the editor; deletion is now only available from the gallery
+app.js
+review.html
+
+b1fd7f7 Enhance review saving process with validation for holder name and improved error handling
+app.js
+
+ba8ab03 Add save modal functionality with validation for holder name
+app.js
+review.html
+server/server.js
+styles.css
+
+693609f Implement remote review deletion and enhance local deletion handling
+app.js
+
+988caa5 Enhance DOM readiness handling for app initialization
+app.js
+
+4c3de59 Update product structure to include 'meltingResidus' and adjust totalKeys for consistency
+app.js
+
+c7fa15f Refactor mesh input handling to support min/max values and enhance layout in sequence steps
+app.js
+styles.css
+
+21dab88 Add filtration techniques section to README and implement boolean control styles in CSS
+README.md
+app.js
+styles.css
+
+0512297 Refactor extraction choices and implement boolean handling for purge field in product structure
+app.js
+
+22d96d9 Add new product structure fields for mesh sizes and expand extraction choices
+app.js
+
+8cf11a2 Refactor review handling to improve navigation and reset logic after deletion and loading
+app.js
+
+b662c06 Refactor product structure to include 'Farm' and 'Hash Maker' fields, and enhance review loading logic for improved data handling
+README.md
+app.js
+
+7773505 Refactor tips overlay implementation to use CSS classes for styling and improve structure of the dialog
+app.js
+
+47f9507 Add tips overlay and dialog styles for enhanced user experience in the editor
+styles.css
+
+8adb192 Refactor modal setup to improve content handling and styling for tips popover
+app.js
+
+cfab24f Refactor tips overlay implementation for improved styling and interaction
+app.js
+
+260f6be Refactor tips popover functionality to use a centered overlay on the editor page
+app.js
+
+21d30e5 Enhance tips popover functionality to prefer modal on home page and improve positioning
+app.js
+
+0b93159 Add drawer-based library elements and enhance tips popover functionality in the editor
+app.js
+
+a6f7220 Implement base-path support for API calls when hosted under /reviews
+app.js
+
+8c97dec Add missing workspace wrapper in review.html for proper layout
+review.html
+
+37e8dcc Implement fallback handling for product type selection and update UI elements in the editor
+app.js
+review.html
+
+e640045 Remove unused sidebar section from review.html to streamline the layout
+review.html
+
+014c4a6 Enhance application functionality with base-path support for API calls, auto-advance feature in the editor, and update documentation for Docker deployment and PM2 configuration.
+.dockerignore
+.github/workflows/docker-image.yml
+Dockerfile
+app.js
+review.html
+server/README.md
+server/ecosystem.config.cjs
+
+1cbf46e Update README.md to enhance documentation on local setup, deployment, and common issues
+server/README.md
+
+6c17094 Add server.js and .gitignore for API implementation and file management
+.gitignore
+server/server.js
+
+15b0663 Add initial package.json for project setup
+server/package.json
+
+dcddd6d Implement code changes to enhance functionality and improve performance
+.vscode/tasks.json
+README.md
+app.js
+index.html
+review.html
+server/README.md
+styles.css
