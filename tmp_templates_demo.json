@@ -1,0 +1,45 @@
+{
+    "templates": [
+        {
+            "id": "tpl-demo-1",
+            "name": "Demo Card",
+            "description": "Demo public template",
+            "ownerId": "system",
+            "isPublic": true,
+            "config": {
+                "pages": [
+                    {
+                        "size": "A4",
+                        "format": "portrait",
+                        "zones": [
+                            {
+                                "id": "z1",
+                                "name": "CoverImage",
+                                "x": 0,
+                                "y": 0,
+                                "w": 400,
+                                "h": 400,
+                                "source": "images[0]"
+                            },
+                            {
+                                "id": "z2",
+                                "name": "Title",
+                                "x": 410,
+                                "y": 10,
+                                "w": 300,
+                                "h": 60,
+                                "source": "holderName"
+                            }
+                        ]
+                    }
+                ],
+                "styles": {
+                    "fontFamily": "Inter",
+                    "baseColor": "#ff2a8f"
+                }
+            },
+            "createdAt": "2025-11-30T00:00:00.000Z",
+            "updatedAt": "2025-11-30T00:00:00.000Z"
+        }
+    ]
+}
