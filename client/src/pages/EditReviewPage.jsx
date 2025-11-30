@@ -33,6 +33,7 @@ export default function EditReviewPage() {
     const [formData, setFormData] = useState({});
     const [images, setImages] = useState([]);
     const [existingImages, setExistingImages] = useState([]);
+    const [promotedNewIndex, setPromotedNewIndex] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [hasSolvents, setHasSolvents] = useState(false);
@@ -324,6 +325,29 @@ export default function EditReviewPage() {
         toast.info('Image supprimée (changement enregistré lors de la sauvegarde)');
     };
 
+    const setExistingAsMain = (idx) => {
+        setExistingImages(prev => {
+            const clone = [...prev];
+            const [item] = clone.splice(idx, 1);
+            clone.unshift(item);
+            return clone;
+        });
+        setPromotedNewIndex(null);
+        toast.success('Image définie comme principale');
+    };
+
+    const setNewAsMain = (idx) => {
+        // Move selected new image to front of images array for preview and mark promoted index
+        setImages(prev => {
+            const clone = [...prev];
+            const [item] = clone.splice(idx, 1);
+            clone.unshift(item);
+            return clone;
+        });
+        setPromotedNewIndex(0); // promoted now at index 0
+        toast.success('Nouvelle image définie comme principale (sera appliquée après sauvegarde)');
+    };
+
     const nextSection = () => {
         if (currentSectionIndex < sections.length - 1) {
             setCurrentSectionIndex(currentSectionIndex + 1);
@@ -396,14 +420,20 @@ export default function EditReviewPage() {
             console.log('📤 Sending overallRating (Edit):', categoryRatingsData.overall);
 
             // Add new images (append raw File objects)
-            images.forEach(img => {
+            const imagesToSend = images;
+            imagesToSend.forEach(img => {
                 if (img && img.file) {
                     submitData.append('images', img.file);
                 }
             });
 
-            // Add existing images to keep
+            // Add existing images to keep (order matters; existingImages[0] is main if set)
             submitData.append('existingImages', JSON.stringify(existingImages));
+
+            // If a new image was promoted as main, inform the server (we placed it at index 0 in the files)
+            if (promotedNewIndex !== null) {
+                submitData.append('preferredMain', `new:0`);
+            }
 
             const response = await fetch(`/api/reviews/${id}`, {
                 method: 'PUT',
@@ -726,13 +756,23 @@ export default function EditReviewPage() {
                                                 alt={`Image ${idx + 1}`}
                                                 className="w-full h-full object-cover rounded-xl border-2 border-[rgba(var(--color-primary),0.5)]"
                                             />
-                                            <button
-                                                type="button"
-                                                onClick={() => removeExistingImage(idx)}
-                                                className="absolute top-2 right-2 bg-[rgba(var(--color-danger),0.9)] hover:bg-[rgb(var(--color-danger))] text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg"
-                                            >
-                                                ×
-                                            </button>
+                                            <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setExistingAsMain(idx)}
+                                                    className="bg-[rgba(var(--color-accent),0.9)] text-white rounded-full w-8 h-8 flex items-center justify-center hover:scale-105 shadow-lg"
+                                                    title="Définir comme image principale"
+                                                >
+                                                    ★
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeExistingImage(idx)}
+                                                    className="bg-[rgba(var(--color-danger),0.9)] hover:bg-[rgb(var(--color-danger))] text-white rounded-full w-8 h-8 flex items-center justify-center transition-all shadow-lg"
+                                                >
+                                                    ×
+                                                </button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -751,13 +791,23 @@ export default function EditReviewPage() {
                                                 alt={`Nouvelle ${idx + 1}`}
                                                 className="w-full h-full object-cover rounded-xl border-2 border-[rgba(var(--color-accent),0.5)]"
                                             />
-                                            <button
-                                                type="button"
-                                                onClick={() => removeImage(idx)}
-                                                className="absolute top-2 right-2 bg-[rgba(var(--color-danger),0.9)] hover:bg-[rgb(var(--color-danger))] text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg"
-                                            >
-                                                ×
-                                            </button>
+                                            <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setNewAsMain(idx)}
+                                                    className="bg-[rgba(var(--color-accent),0.9)] text-white rounded-full w-8 h-8 flex items-center justify-center hover:scale-105 shadow-lg"
+                                                    title="Définir comme image principale"
+                                                >
+                                                    ★
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeImage(idx)}
+                                                    className="bg-[rgba(var(--color-danger),0.9)] hover:bg-[rgb(var(--color-danger))] text-white rounded-full w-8 h-8 flex items-center justify-center transition-all shadow-lg"
+                                                >
+                                                    ×
+                                                </button>
+                                            </div>
                                             <span className="absolute bottom-2 left-2 px-2 py-1 bg-[rgba(var(--color-accent),0.9)] text-white text-xs rounded-full">
                                                 Nouveau
                                             </span>

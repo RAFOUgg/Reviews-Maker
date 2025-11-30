@@ -321,7 +321,48 @@ router.put('/:id', requireAuth, upload.array('images', 10), asyncHandler(async (
         keepImages = []
     }
 
-    const allImages = [...keepImages, ...newImages]
+    // Respect preferredMain if provided (client can specify a promoted new image or existing image)
+    const preferredMain = req.body.preferredMain;
+    let allImages = [];
+    if (preferredMain) {
+        try {
+            if (String(preferredMain).startsWith('new:')) {
+                const idx = parseInt(String(preferredMain).split(':')[1], 10);
+                if (!Number.isNaN(idx) && idx >= 0 && idx < newImages.length) {
+                    const selectedNew = newImages.splice(idx, 1)[0];
+                    // Place selected new as absolute first so it becomes mainImage even if keepImages exist
+                    if (keepImages.length > 0) {
+                        allImages = [selectedNew, ...keepImages, ...newImages];
+                    } else {
+                        allImages = [selectedNew, ...newImages];
+                    }
+                } else {
+                    allImages = [...keepImages, ...newImages];
+                }
+            } else {
+                // preferredMain may reference an existing image (filename or /images/filename)
+                const pref = String(preferredMain).replace(/^\/images\//, '');
+                if (keepImages.length > 0) {
+                    const idx = keepImages.findIndex(k => k.endsWith(pref) || k === (`/images/${pref}`) || k === pref);
+                    if (idx > -1) {
+                        const clone = [...keepImages];
+                        const [item] = clone.splice(idx, 1);
+                        clone.unshift(item);
+                        allImages = [...clone, ...newImages];
+                    } else {
+                        allImages = [...keepImages, ...newImages];
+                    }
+                } else {
+                    allImages = [...keepImages, ...newImages];
+                }
+            }
+        } catch (err) {
+            console.warn('Failed to apply preferredMain ordering', err)
+            allImages = [...keepImages, ...newImages];
+        }
+    } else {
+        allImages = [...keepImages, ...newImages]
+    }
 
     // Supprimer les images qui ne sont plus dans la liste
     let oldImages = []

@@ -132,10 +132,14 @@ export default function ReviewDetailPage() {
                                 try { return JSON.parse(review.orchardConfig) } catch { return review.orchardConfig }
                             })() : review.orchardConfig}
                             reviewData={{
-                                // Mapping des données de review aux propriétés attendues par les templates
+                                // Start from raw review so fields like mainImageUrl are present
+                                ...review,
+
+                                // Mapping des données de review aux propriétés attendues par les templates (override)
                                 title: review.holderName,
                                 rating: review.overallRating || review.note || 0,
-                                imageUrl: review.images && review.images.length > 0 ? review.images[0] : null,
+                                imageUrl: review.mainImageUrl || (review.images && review.images.length > 0 ? review.images[0] : null),
+                                images: review.images || [],
                                 tags: [
                                     ...(review.terpenes || []),
                                     ...(review.aromas || []),
@@ -148,9 +152,7 @@ export default function ReviewDetailPage() {
                                 date: review.createdAt,
                                 cultivar: review.cultivars,
                                 breeder: review.breeder || review.hashmaker,
-                                farm: review.farm,
-                                // Inclure toutes les autres propriétés de la review pour compatibilité
-                                ...review
+                                farm: review.farm
                             }}
                         />
                     </div>

@@ -61,7 +61,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 {/* En-tête avec image et infos principales */}
                 <div className="grid grid-cols-2 gap-8">
                     {/* Image */}
-                    {contentModules.image && (reviewData.imageUrl || reviewData.images) && (
+                    {contentModules.image && (reviewData.mainImageUrl || reviewData.imageUrl || reviewData.images) && (
                         <div
                             className="overflow-hidden"
                             style={{
@@ -71,7 +71,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         >
                             {/* prefer imageUrl then first of images */}
                             <img
-                                src={reviewData.imageUrl || (Array.isArray(reviewData.images) ? reviewData.images[0] : null)}
+                                src={reviewData.mainImageUrl || reviewData.imageUrl || (Array.isArray(reviewData.images) ? reviewData.images[0] : null)}
                                 alt={reviewData.title || reviewData.holderName}
                                 className="w-full h-full object-cover"
                             />
@@ -334,7 +334,35 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 </div>
 
                 {/* Footer */}
-                <div
+                    {/* Additional Data: pipeline / substrat / ratings / cultivars */}
+                    <div className="grid grid-cols-2 gap-8">
+                        {(contentModules.pipeline || contentModules.pipelineExtraction || contentModules.fertilizationPipeline || contentModules.pipelineSeparation) && (
+                            <div>
+                                <PipelineRenderer data={reviewData.pipeline || reviewData.pipelineExtraction || reviewData.fertilizationPipeline || reviewData.pipelineSeparation} />
+                            </div>
+                        )}
+
+                        {contentModules.substratMix && reviewData.substratMix && (
+                            <div>
+                                <SubstratViewer data={reviewData.substratMix} />
+                            </div>
+                        )}
+
+                        {contentModules.categoryRatings && reviewData.categoryRatings && (
+                            <div>
+                                <RatingsGrid data={reviewData.categoryRatings} />
+                            </div>
+                        )}
+
+                        {contentModules.cultivarsList && reviewData.cultivarsList && (
+                            <div>
+                                <CultivarCard data={reviewData.cultivarsList} />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    <div
                     className="flex justify-between items-center pt-6"
                     style={{
                         borderTop: `2px solid ${colors.accent}30`
