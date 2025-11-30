@@ -41,7 +41,7 @@ function hasPrismaTemplate() {
 async function listTemplates(currentUser, publicOnly = false) {
     if (hasPrismaTemplate()) {
         const where = publicOnly ? { isPublic: true } : {
-            OR: [ { isPublic: true }, ...(currentUser ? [{ ownerId: currentUser.id }] : []) ]
+            OR: [{ isPublic: true }, ...(currentUser ? [{ ownerId: currentUser.id }] : [])]
         }
         return await prisma.template.findMany({ where, orderBy: { createdAt: 'desc' } })
     }
@@ -60,7 +60,7 @@ async function createTemplate(data) {
     if (hasPrismaTemplate()) return await prisma.template.create({ data })
     const store = await readFileStore()
     // generate simple uuid
-    const id = (Date.now().toString(36) + Math.random().toString(36).slice(2,8))
+    const id = (Date.now().toString(36) + Math.random().toString(36).slice(2, 8))
     const tpl = { id, ...data, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     store.templates.unshift(tpl)
     await writeFileStore(store)
@@ -140,5 +140,54 @@ router.post('/:id/copy', asyncHandler(async (req, res) => {
     const copy = await createTemplate(copyData)
     res.status(201).json(copy)
 }))
+
+// POST /api/templates/:id/export - generate a simple HTML render of the template bound to review data
+router.post('/:id/export', asyncHandler(async (req, res) => {
+    // Accept either reviewData in body or reviewId to fetch
+    const tpl = await getTemplateById(req.params.id)
+    if (!tpl) throw Errors.NOT_FOUND('Template')
+
+    const { reviewId, reviewData } = req.body || {}
+    let bound = reviewData || null
+    if (reviewId) {
+        try {
+            const review = await prisma.review.findUnique({ where: { id: reviewId } })
+            bound = review ? formatBoundReview(review) : null
+        } catch (e) {
+            // prisma may not be available or table missing
+            bound = null
+        }
+    }
+
+    // Build a very small HTML based on template config
+    const config = typeof tpl.config === 'string' ? JSON.parse(tpl.config || '{}') : tpl.config
+    const page = (config.pages && config.pages[0]) || { zones: [] }
+
+    function renderZone(zone) {
+        let content = ''
+        if (bound) {
+            if (zone.source === 'holderName') content = bound.holderName || ''
+            if (zone.source === 'images[0]') content = bound.mainImageUrl ? `<img src="${bound.mainImageUrl}" style="max-width:100%"/>` : ''
+        }
+        const style = `position:absolute; left:${zone.x || 0}px; top:${zone.y || 0}px; width:${zone.w || 200}px; height:${zone.h || 50}px; overflow:hidden; padding:6px;`;
+        return `<div style="${style}">${content}</div>`
+    }
+
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${tpl.name}</title></head><body><div style="position:relative;width:800px;height:1100px;">${page.zones.map(renderZone).join('')}</div></body></html>`
+
+    res.setHeader('Content-Type', 'text/html')
+    res.send(html)
+}))
+
+function formatBoundReview(review) {
+    if (!review) return null
+    // normalize review fields we use
+    return {
+        holderName: review.holderName || review.holder_name || '',
+        mainImageUrl: review.mainImageUrl || (review.mainImage ? `/images/${review.mainImage}` : null),
+        // keep raw for frontend
+        ...review
+    }
+}
 
 export default router
