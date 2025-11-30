@@ -39,6 +39,12 @@ function hasPrismaTemplate() {
 
 // Helper wrappers that use Prisma if available, otherwise file store
 async function listTemplates(currentUser, publicOnly = false) {
+    // If a file-store has templates seeded, prefer those (fast path)
+    const store = await readFileStore()
+    if (store && Array.isArray(store.templates) && store.templates.length > 0) {
+        return store.templates.filter(t => publicOnly ? t.isPublic : (t.isPublic || (currentUser && t.ownerId === currentUser.id)))
+    }
+
     if (hasPrismaTemplate()) {
         try {
             const where = publicOnly ? { isPublic: true } : {
@@ -50,8 +56,7 @@ async function listTemplates(currentUser, publicOnly = false) {
         }
     }
 
-    const store = await readFileStore()
-    return store.templates.filter(t => publicOnly ? t.isPublic : (t.isPublic || (currentUser && t.ownerId === currentUser.id)))
+    return []
 }
 
 async function getTemplateById(id) {
