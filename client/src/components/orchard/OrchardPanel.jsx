@@ -19,8 +19,9 @@ function normalizeReviewData(reviewData) {
     let normalized = { ...reviewData };
 
     // Parse extraData si c'est une chaîne JSON
+    let parsedExtra = {};
     try {
-        const parsedExtra = reviewData?.extraData && typeof reviewData.extraData === 'string'
+        parsedExtra = reviewData?.extraData && typeof reviewData.extraData === 'string'
             ? JSON.parse(reviewData.extraData)
             : (reviewData?.extraData || {});
 
@@ -48,6 +49,50 @@ function normalizeReviewData(reviewData) {
         }
     }
 
+    // ============================================================================
+    // CONSTRUIRE categoryRatings depuis extraData si absent
+    // ============================================================================
+    if (!normalized.categoryRatings || Object.keys(normalized.categoryRatings).length === 0) {
+        const extra = parsedExtra;
+        const visual = {};
+        const smell = {};
+        const texture = {};
+        const taste = {};
+        const effects = {};
+
+        // Champs visuels
+        ['densite', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines', 'couleur', 'pureteVisuelle'].forEach(k => {
+            if (extra[k] !== undefined) visual[k] = parseFloat(extra[k]) || 0;
+        });
+
+        // Champs odeur
+        ['aromasIntensity', 'fideliteCultivars', 'complexiteAromas'].forEach(k => {
+            if (extra[k] !== undefined) smell[k] = parseFloat(extra[k]) || 0;
+        });
+
+        // Champs texture
+        ['durete', 'densiteTexture', 'elasticite', 'collant', 'friabilite', 'granularite'].forEach(k => {
+            if (extra[k] !== undefined) texture[k] = parseFloat(extra[k]) || 0;
+        });
+
+        // Champs goût
+        ['intensiteFumee', 'agressivite', 'cendre', 'douceur', 'persistanceGout'].forEach(k => {
+            if (extra[k] !== undefined) taste[k] = parseFloat(extra[k]) || 0;
+        });
+
+        // Champs effets
+        ['montee', 'intensiteEffet', 'dureeEffet'].forEach(k => {
+            if (extra[k] !== undefined) effects[k] = parseFloat(extra[k]) || 0;
+        });
+
+        normalized.categoryRatings = {};
+        if (Object.keys(visual).length > 0) normalized.categoryRatings.visual = visual;
+        if (Object.keys(smell).length > 0) normalized.categoryRatings.smell = smell;
+        if (Object.keys(texture).length > 0) normalized.categoryRatings.texture = texture;
+        if (Object.keys(taste).length > 0) normalized.categoryRatings.taste = taste;
+        if (Object.keys(effects).length > 0) normalized.categoryRatings.effects = effects;
+    }
+
     // Normaliser le titre - s'assurer que 'title' et 'holderName' existent
     if (!normalized.title) {
         normalized.title = normalized.holderName || normalized.productName || normalized.name || 'Sans titre';
@@ -70,7 +115,7 @@ function normalizeReviewData(reviewData) {
         normalized.imageUrl = normalized.mainImageUrl;
     }
 
-    // Normaliser categoryRatings depuis différentes sources
+    // Fallback categoryRatings depuis ratings
     if (!normalized.categoryRatings || Object.keys(normalized.categoryRatings).length === 0) {
         if (normalized.ratings && typeof normalized.ratings === 'object') {
             normalized.categoryRatings = normalized.ratings;
@@ -91,6 +136,9 @@ function normalizeReviewData(reviewData) {
                 // Si c'est une liste séparée par des virgules
                 if (normalized[field].includes(',')) {
                     normalized[field] = normalized[field].split(',').map(s => s.trim()).filter(Boolean);
+                } else if (normalized[field].length > 0) {
+                    // C'est une string simple, la convertir en array d'un élément
+                    normalized[field] = [normalized[field].trim()];
                 }
             }
         }
@@ -105,7 +153,22 @@ function normalizeReviewData(reviewData) {
                 normalized[field] = Object.values(normalized[field]);
             }
         }
+        // Si toujours pas un array, initialiser vide
+        if (!normalized[field]) {
+            normalized[field] = [];
+        }
     });
+
+    // ============================================================================
+    // NORMALISER LES CHAMPS SPÉCIAUX
+    // ============================================================================
+    
+    // Si effects est vide mais extraData.effects existe (string), parser
+    if ((!normalized.effects || normalized.effects.length === 0) && parsedExtra.effects) {
+        if (typeof parsedExtra.effects === 'string') {
+            normalized.effects = parsedExtra.effects.split(',').map(s => s.trim()).filter(Boolean);
+        }
+    }
 
     // Normaliser l'auteur
     if (!normalized.author && normalized.ownerName) {
