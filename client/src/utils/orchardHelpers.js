@@ -236,7 +236,7 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
             fromExtraData: Object.keys(extra).length,
             fromReviewData: Object.keys(reviewData).length,
             reconstructedCategories: Object.keys(ratings),
-            ratingsPreview: Object.entries(ratings).map(([k, v]) => 
+            ratingsPreview: Object.entries(ratings).map(([k, v]) =>
                 `${k}: ${typeof v === 'object' ? Object.keys(v).length + ' fields' : v}`
             )
         });
