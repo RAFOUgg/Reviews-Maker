@@ -421,18 +421,21 @@ export const useOrchardStore = create(
                 config: state.config
             }),
             // Version du storage - incrementer pour forcer une migration
-            version: 2,
+            // v3: Force reset des contentModules à 80+ modules
+            version: 3,
             // Migration pour les changements de version
             migrate: (persistedState, version) => {
-                console.log('🔄 Orchard Storage Migration:', { from: version, to: 2, hasState: !!persistedState });
+                console.log('🔄 Orchard Storage Migration:', { from: version, to: 3, hasState: !!persistedState });
 
-                // Si version < 2, reset les contentModules aux valeurs par défaut
-                if (version < 2) {
-                    console.log('📦 Resetting contentModules to default (80+ modules)');
+                // Si version < 3, reset COMPLET des contentModules et moduleOrder
+                if (version < 3) {
+                    console.log('📦 v3 Migration: Forcing contentModules reset to 80+ modules');
                     return {
                         ...persistedState,
                         config: {
+                            ...DEFAULT_CONFIG,
                             ...(persistedState?.config || {}),
+                            // FORCER les modules par défaut
                             contentModules: DEFAULT_CONFIG.contentModules,
                             moduleOrder: DEFAULT_CONFIG.moduleOrder
                         }
@@ -441,37 +444,37 @@ export const useOrchardStore = create(
                 return persistedState;
             },
             // Fusionner la config par défaut avec celle sauvegardée
-            // pour s'assurer que les nouveaux champs sont toujours présents
+            // TOUJOURS utiliser les modules par défaut comme base
             merge: (persistedState, currentState) => {
                 if (!persistedState) return currentState;
 
-                // Fusionner contentModules: garder les valeurs sauvegardées mais ajouter les nouveaux champs
-                const mergedContentModules = {
-                    ...DEFAULT_CONFIG.contentModules, // Tous les nouveaux champs par défaut
-                    ...(persistedState.config?.contentModules || {}) // Valeurs sauvegardées
-                };
-
-                // Fusionner moduleOrder: utiliser la nouvelle liste par défaut si elle a plus d'éléments
-                const savedModuleOrder = persistedState.config?.moduleOrder || [];
-                const defaultModuleOrder = DEFAULT_CONFIG.moduleOrder;
-                const mergedModuleOrder = defaultModuleOrder.length > savedModuleOrder.length
-                    ? defaultModuleOrder
-                    : savedModuleOrder;
+                // Compter les modules sauvegardés
+                const savedModulesCount = Object.keys(persistedState.config?.contentModules || {}).length;
+                const defaultModulesCount = Object.keys(DEFAULT_CONFIG.contentModules).length;
 
                 console.log('🔄 Orchard Storage Merge:', {
-                    savedModulesCount: Object.keys(persistedState.config?.contentModules || {}).length,
-                    defaultModulesCount: Object.keys(DEFAULT_CONFIG.contentModules).length,
-                    mergedModulesCount: Object.keys(mergedContentModules).length
+                    savedModulesCount,
+                    defaultModulesCount,
+                    willUseDefault: savedModulesCount < defaultModulesCount
                 });
+
+                // Si les modules sauvegardés sont incomplets, utiliser les défauts
+                const contentModules = savedModulesCount >= defaultModulesCount
+                    ? persistedState.config.contentModules
+                    : DEFAULT_CONFIG.contentModules;
+
+                const moduleOrder = (persistedState.config?.moduleOrder?.length || 0) >= DEFAULT_CONFIG.moduleOrder.length
+                    ? persistedState.config.moduleOrder
+                    : DEFAULT_CONFIG.moduleOrder;
 
                 return {
                     ...currentState,
                     ...persistedState,
                     config: {
-                        ...DEFAULT_CONFIG, // Toutes les valeurs par défaut
-                        ...(persistedState.config || {}), // Config sauvegardée
-                        contentModules: mergedContentModules,
-                        moduleOrder: mergedModuleOrder
+                        ...DEFAULT_CONFIG,
+                        ...(persistedState.config || {}),
+                        contentModules,
+                        moduleOrder
                     }
                 };
             }
