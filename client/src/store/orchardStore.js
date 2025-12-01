@@ -421,51 +421,51 @@ export const useOrchardStore = create(
                 config: state.config
             }),
             // Version du storage - incrementer pour forcer une migration
-            // v3: Force reset des contentModules à 80+ modules
-            version: 3,
+            // v4: Force RESET COMPLET des contentModules (80+ modules obligatoires)
+            version: 4,
             // Migration pour les changements de version
             migrate: (persistedState, version) => {
-                console.log('🔄 Orchard Storage Migration:', { from: version, to: 3, hasState: !!persistedState });
+                console.log('🔄 Orchard Storage Migration:', { from: version, to: 4, hasState: !!persistedState });
 
-                // Si version < 3, reset COMPLET des contentModules et moduleOrder
-                if (version < 3) {
-                    console.log('📦 v3 Migration: Forcing contentModules reset to 80+ modules');
+                // Si version < 4, reset COMPLET des contentModules et moduleOrder
+                if (version < 4) {
+                    console.log('📦 v4 Migration: Forcing COMPLETE contentModules reset to 80+ modules');
                     return {
                         ...persistedState,
                         config: {
                             ...DEFAULT_CONFIG,
                             ...(persistedState?.config || {}),
-                            // FORCER les modules par défaut
-                            contentModules: DEFAULT_CONFIG.contentModules,
-                            moduleOrder: DEFAULT_CONFIG.moduleOrder
+                            // FORCER ABSOLUMENT les modules par défaut
+                            contentModules: { ...DEFAULT_CONFIG.contentModules },
+                            moduleOrder: [...DEFAULT_CONFIG.moduleOrder]
                         }
                     };
                 }
                 return persistedState;
             },
-            // Fusionner la config par défaut avec celle sauvegardée
-            // TOUJOURS utiliser les modules par défaut comme base
+            // Fusionner la config - TOUJOURS utiliser les modules par défaut
             merge: (persistedState, currentState) => {
                 if (!persistedState) return currentState;
 
-                // Compter les modules sauvegardés
+                // Compter les modules
                 const savedModulesCount = Object.keys(persistedState.config?.contentModules || {}).length;
                 const defaultModulesCount = Object.keys(DEFAULT_CONFIG.contentModules).length;
 
                 console.log('🔄 Orchard Storage Merge:', {
                     savedModulesCount,
                     defaultModulesCount,
-                    willUseDefault: savedModulesCount < defaultModulesCount
+                    forceDefault: savedModulesCount < 50 // Moins de 50 = vieux format
                 });
 
-                // Si les modules sauvegardés sont incomplets, utiliser les défauts
-                const contentModules = savedModulesCount >= defaultModulesCount
-                    ? persistedState.config.contentModules
-                    : DEFAULT_CONFIG.contentModules;
+                // TOUJOURS utiliser les modules par défaut si moins de 50 modules
+                // Car l'ancien format avait ~13 modules seulement
+                const contentModules = savedModulesCount < 50
+                    ? { ...DEFAULT_CONFIG.contentModules }
+                    : { ...DEFAULT_CONFIG.contentModules, ...persistedState.config.contentModules };
 
-                const moduleOrder = (persistedState.config?.moduleOrder?.length || 0) >= DEFAULT_CONFIG.moduleOrder.length
-                    ? persistedState.config.moduleOrder
-                    : DEFAULT_CONFIG.moduleOrder;
+                const moduleOrder = (persistedState.config?.moduleOrder?.length || 0) < 30
+                    ? [...DEFAULT_CONFIG.moduleOrder]
+                    : persistedState.config.moduleOrder;
 
                 return {
                     ...currentState,
