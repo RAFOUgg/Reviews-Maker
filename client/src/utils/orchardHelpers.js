@@ -149,11 +149,11 @@ export function extractCategoryRatings(categoryRatings) {
 
     for (const cat of categories) {
         const catValue = ratings[cat.key];
-        
+
         if (catValue === undefined || catValue === null) continue;
-        
+
         let value;
-        
+
         // Si c'est un nombre directement
         if (typeof catValue === 'number') {
             value = catValue;
@@ -167,7 +167,7 @@ export function extractCategoryRatings(categoryRatings) {
             const subValues = Object.values(catValue)
                 .filter(v => typeof v === 'number' || (typeof v === 'string' && !isNaN(parseFloat(v))))
                 .map(v => parseFloat(v));
-            
+
             if (subValues.length > 0) {
                 value = subValues.reduce((sum, v) => sum + v, 0) / subValues.length;
             } else {
