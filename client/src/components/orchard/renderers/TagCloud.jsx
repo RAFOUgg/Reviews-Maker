@@ -32,7 +32,7 @@ const GRADIENT_COLORS = [
 // Parser les tags
 function parseTags(data) {
     if (!data) return [];
-    
+
     // String
     if (typeof data === 'string') {
         try {
@@ -42,7 +42,7 @@ function parseTags(data) {
             return data.split(',').map(t => t.trim()).filter(Boolean);
         }
     }
-    
+
     // Array
     if (Array.isArray(data)) {
         return data.map(item => {
@@ -50,7 +50,7 @@ function parseTags(data) {
             return item.name || item.label || item.tag || String(item);
         }).filter(Boolean);
     }
-    
+
     return [];
 }
 
@@ -65,7 +65,7 @@ export default function TagCloud({
     icon = null // emoji à mettre devant chaque tag
 }) {
     const parsedTags = parseTags(tags).slice(0, maxTags);
-    
+
     if (!parsedTags.length) {
         return null;
     }
@@ -85,7 +85,7 @@ export default function TagCloud({
             <div className={`flex ${wrap ? 'flex-wrap' : 'overflow-x-auto'} gap-2`}>
                 {parsedTags.map((tag, index) => {
                     const color = colorful ? TAG_COLORS[index % TAG_COLORS.length] : TAG_COLORS[0];
-                    
+
                     return (
                         <motion.span
                             key={index}
@@ -114,7 +114,7 @@ export default function TagCloud({
             <div className={`flex ${wrap ? 'flex-wrap' : 'overflow-x-auto'} gap-2`}>
                 {parsedTags.map((tag, index) => {
                     const gradient = colorful ? GRADIENT_COLORS[index % GRADIENT_COLORS.length] : GRADIENT_COLORS[0];
-                    
+
                     return (
                         <motion.span
                             key={index}
@@ -143,7 +143,7 @@ export default function TagCloud({
             <div className={`flex ${wrap ? 'flex-wrap' : 'overflow-x-auto'} gap-2`}>
                 {parsedTags.map((tag, index) => {
                     const color = colorful ? TAG_COLORS[index % TAG_COLORS.length] : TAG_COLORS[0];
-                    
+
                     return (
                         <motion.span
                             key={index}
@@ -197,7 +197,7 @@ export default function TagCloud({
             <div className={`flex ${wrap ? 'flex-wrap' : 'overflow-x-auto'} gap-x-3 gap-y-1`}>
                 {parsedTags.map((tag, index) => {
                     const color = colorful ? TAG_COLORS[index % TAG_COLORS.length] : TAG_COLORS[0];
-                    
+
                     return (
                         <motion.span
                             key={index}
