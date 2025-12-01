@@ -19,6 +19,21 @@ import {
  * Optimisé pour l'impression et le partage professionnel
  */
 export default function DetailedCardTemplate({ config, reviewData, dimensions }) {
+    // 🔍 Debug - Afficher les données reçues
+    console.log('📋 DetailedCardTemplate - Données reçues:', {
+        hasConfig: !!config,
+        hasReviewData: !!reviewData,
+        reviewDataKeys: reviewData ? Object.keys(reviewData) : [],
+        title: reviewData?.title,
+        holderName: reviewData?.holderName,
+        rating: reviewData?.rating,
+        categoryRatings: reviewData?.categoryRatings,
+        aromas: reviewData?.aromas,
+        effects: reviewData?.effects,
+        contentModulesEnabled: config?.contentModules ? 
+            Object.entries(config.contentModules).filter(([k, v]) => v).map(([k]) => k) : [],
+    });
+
     if (!config || !reviewData) {
         return (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 p-8">
@@ -472,6 +487,29 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         </div>
                     )}
                 </div>
+
+                {/* Section Debug - Visible si URL contient ?debug=1 */}
+                {typeof window !== 'undefined' && window.location.search.includes('debug=1') && (
+                    <div className="mt-8 p-4 bg-black/50 rounded-xl border border-yellow-500/30">
+                        <h4 className="text-yellow-400 font-bold mb-2">🔧 Debug - Données disponibles</h4>
+                        <div className="text-xs text-gray-300 max-h-64 overflow-y-auto">
+                            <div className="grid grid-cols-2 gap-2">
+                                {Object.entries(reviewData).map(([key, value]) => {
+                                    let displayValue = value;
+                                    if (value === null || value === undefined) displayValue = '(vide)';
+                                    else if (Array.isArray(value)) displayValue = `[${value.length} items]`;
+                                    else if (typeof value === 'object') displayValue = '{...}';
+                                    else if (typeof value === 'string' && value.length > 30) displayValue = value.slice(0, 30) + '...';
+                                    return (
+                                        <div key={key} className={`p-1 rounded ${value && value !== '' ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                                            <span className="text-purple-300">{key}:</span> {String(displayValue)}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </motion.div>
 
             {renderBranding()}

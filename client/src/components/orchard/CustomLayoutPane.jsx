@@ -249,6 +249,14 @@ DropCanvas.propTypes = {
 export default function CustomLayoutPane({ reviewData, layout, onLayoutChange }) {
     const [placedFields, setPlacedFields] = useState(layout || []);
 
+    // 🔍 Debug - Afficher les données reçues
+    console.log('🎨 CustomLayoutPane - Données:', {
+        hasReviewData: !!reviewData,
+        reviewDataKeys: reviewData ? Object.keys(reviewData).slice(0, 20) : [],
+        layoutLength: layout?.length || 0,
+        placedFieldsLength: placedFields.length
+    });
+
     // Vérifier si un champ a une valeur
     const hasValueForField = useCallback((fld) => {
         try {

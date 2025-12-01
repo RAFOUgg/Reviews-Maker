@@ -3,6 +3,7 @@
  * Panel gauche affichant tous les champs draggables disponibles pour l'aperçu Orchard
  */
 
+import { useMemo } from 'react';
 import { useDrag } from 'react-dnd';
 import PropTypes from 'prop-types';
 
@@ -27,13 +28,13 @@ export const DRAGGABLE_FIELDS = {
         { id: 'images', label: 'Galerie d\'images', icon: '🖼️', type: 'gallery' }
     ],
     ratings: [
-        { id: 'overallRating', label: 'Note globale', icon: '⭐', type: 'rating' },
-        { id: 'note', label: 'Note (fallback)', icon: '⭐', type: 'rating' },
+        { id: 'rating', label: 'Note globale', icon: '⭐', type: 'rating' },
+        { id: 'overallRating', label: 'Note (alt)', icon: '⭐', type: 'rating' },
+        { id: 'categoryRatings', label: 'Notes par catégorie', icon: '📊', type: 'json' },
         { id: 'categoryRatings.visual', label: 'Note visuelle', icon: '👁️', type: 'rating' },
         { id: 'categoryRatings.smell', label: 'Note odeur', icon: '👃', type: 'rating' },
         { id: 'categoryRatings.taste', label: 'Note goût', icon: '👅', type: 'rating' },
-        { id: 'categoryRatings.effects', label: 'Note effets', icon: '⚡', type: 'rating' },
-        { id: 'ratings', label: 'Notes détaillées (JSON)', icon: '📊', type: 'json' }
+        { id: 'categoryRatings.effects', label: 'Note effets', icon: '⚡', type: 'rating' }
     ],
     details: [
         { id: 'terpenes', label: 'Terpènes', icon: '🌿', type: 'tags' },
@@ -54,7 +55,7 @@ export const DRAGGABLE_FIELDS = {
         { id: 'pipelinePurification', label: 'Pipeline Purification', icon: '✨', type: 'pipeline' },
         { id: 'fertilizationPipeline', label: 'Pipeline fertilisation', icon: '🌾', type: 'pipeline' },
         { id: 'purgevide', label: 'Purge à vide', icon: '🫧', type: 'boolean' },
-        { id: 'substratMix', label: 'Substrat (détails)', icon: '🪴', type: 'json' }
+        { id: 'extraData', label: 'Données additionnelles', icon: '📋', type: 'json' }
     ]
 };
 
@@ -64,8 +65,52 @@ DRAGGABLE_FIELDS.stickers = [
     { id: 'emoji', label: 'Emoji', icon: '😊', type: 'bubble' }
 ];
 
+// Helper pour extraire la valeur d'un champ
+const getFieldValue = (id, data) => {
+    if (!data) return undefined;
+    if (id.includes('.')) {
+        const parts = id.split('.');
+        let val = data;
+        for (const p of parts) {
+            val = val?.[p];
+        }
+        return val;
+    }
+    return data[id];
+};
+
+// Vérifier si un champ a des données
+const hasData = (id, data) => {
+    const value = getFieldValue(id, data);
+    if (value === undefined || value === null) return false;
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === 'string') return value.trim().length > 0;
+    if (typeof value === 'object') return Object.keys(value).length > 0;
+    if (typeof value === 'number') return true;
+    return Boolean(value);
+};
+
+// Obtenir un aperçu de la valeur
+const getValuePreview = (id, data) => {
+    const value = getFieldValue(id, data);
+    if (value === undefined || value === null) return null;
+    
+    if (Array.isArray(value)) {
+        if (value.length === 0) return null;
+        const first = typeof value[0] === 'object' ? (value[0].name || value[0].label || JSON.stringify(value[0]).slice(0, 20)) : value[0];
+        return value.length > 1 ? `${first} +${value.length - 1}` : String(first);
+    }
+    if (typeof value === 'object') {
+        const keys = Object.keys(value);
+        return keys.length > 0 ? `{${keys.slice(0, 2).join(', ')}${keys.length > 2 ? '...' : ''}}` : null;
+    }
+    if (typeof value === 'number') return String(value);
+    if (typeof value === 'string') return value.length > 30 ? value.slice(0, 30) + '...' : value;
+    return String(value);
+};
+
 // Composant pour un champ draggable
-function DraggableField({ field, isPlaced }) {
+function DraggableField({ field, isPlaced, hasValue, valuePreview }) {
     const [{ isDragging }, drag] = useDrag(() => ({
         type: DRAGGABLE_FIELD_TYPES.ORCHARD_FIELD,
         item: { field },
@@ -82,16 +127,25 @@ function DraggableField({ field, isPlaced }) {
                 ${isDragging ? 'opacity-50 scale-95' : 'opacity-100 scale-100'}
                 ${isPlaced
                     ? 'bg-green-500/20 border-green-500 border-2'
-                    : 'bg-purple-500/20 border-purple-500/50 border-2 hover:border-purple-500 hover:bg-purple-500/30'
+                    : hasValue
+                        ? 'bg-purple-500/20 border-purple-500/50 border-2 hover:border-purple-500 hover:bg-purple-500/30'
+                        : 'bg-gray-700/30 border-gray-600/50 border border-dashed opacity-60'
                 }
                 hover:shadow-lg
             `}
             style={{ touchAction: 'none' }}
+            title={hasValue ? `Valeur: ${valuePreview}` : 'Aucune donnée'}
         >
             <div className="flex items-center gap-2">
                 <span className="text-xl">{field.icon}</span>
-                <span className="text-sm font-medium flex-1">{field.label}</span>
-                {isPlaced && <span className="text-xs text-green-400">✓ Placé</span>}
+                <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium block truncate">{field.label}</span>
+                    {hasValue && valuePreview && (
+                        <span className="text-xs text-green-400/80 block truncate">{valuePreview}</span>
+                    )}
+                </div>
+                {isPlaced && <span className="text-xs text-green-400 flex-shrink-0">✓</span>}
+                {hasValue && !isPlaced && <span className="text-xs text-purple-400 flex-shrink-0">●</span>}
             </div>
         </div>
     );
@@ -104,15 +158,22 @@ DraggableField.propTypes = {
         icon: PropTypes.string.isRequired,
         type: PropTypes.string.isRequired
     }).isRequired,
-    isPlaced: PropTypes.bool
+    isPlaced: PropTypes.bool,
+    hasValue: PropTypes.bool,
+    valuePreview: PropTypes.string
 };
 
 // Section de champs avec titre
-function FieldSection({ title, fields, placedFieldIds }) {
+function FieldSection({ title, fields, placedFieldIds, reviewData }) {
+    const fieldsWithData = fields.filter(f => hasData(f.id, reviewData)).length;
+    
     return (
         <div className="mb-4">
-            <h3 className="text-sm font-bold mb-2 text-purple-300 uppercase tracking-wide">
-                {title}
+            <h3 className="text-sm font-bold mb-2 text-purple-300 uppercase tracking-wide flex items-center justify-between">
+                <span>{title}</span>
+                <span className="text-xs text-gray-500 font-normal">
+                    {fieldsWithData}/{fields.length} rempli{fieldsWithData > 1 ? 's' : ''}
+                </span>
             </h3>
             <div className="space-y-2">
                 {fields.map(field => (
@@ -120,6 +181,8 @@ function FieldSection({ title, fields, placedFieldIds }) {
                         key={field.id}
                         field={field}
                         isPlaced={placedFieldIds.includes(field.id)}
+                        hasValue={hasData(field.id, reviewData)}
+                        valuePreview={getValuePreview(field.id, reviewData)}
                     />
                 ))}
             </div>
@@ -130,30 +193,54 @@ function FieldSection({ title, fields, placedFieldIds }) {
 FieldSection.propTypes = {
     title: PropTypes.string.isRequired,
     fields: PropTypes.array.isRequired,
-    placedFieldIds: PropTypes.array
+    placedFieldIds: PropTypes.array,
+    reviewData: PropTypes.object
 };
 
 // Panel principal de contenu
 export default function ContentPanel({ reviewData, placedFields, onFieldSelect }) {
+    // Debug: afficher les données reçues
+    console.log('📦 ContentPanel - reviewData:', {
+        hasData: !!reviewData,
+        keys: reviewData ? Object.keys(reviewData) : [],
+        title: reviewData?.title,
+        holderName: reviewData?.holderName,
+        rating: reviewData?.rating,
+        aromas: reviewData?.aromas,
+        effects: reviewData?.effects,
+    });
+
     // Extraire les IDs des champs déjà placés
-    // Includes fields assigned into zones (zone.assignedFields)
-    const placedFieldIds = placedFields.reduce((acc, f) => {
-        acc.push(f.id);
-        if (f.assignedFields && Array.isArray(f.assignedFields)) {
-            acc.push(...f.assignedFields);
-        }
-        return acc;
-    }, []);
+    const placedFieldIds = useMemo(() => {
+        return placedFields.reduce((acc, f) => {
+            acc.push(f.id);
+            if (f.assignedFields && Array.isArray(f.assignedFields)) {
+                acc.push(...f.assignedFields);
+            }
+            return acc;
+        }, []);
+    }, [placedFields]);
+
+    // Compter les champs avec données
+    const totalFieldsWithData = useMemo(() => {
+        let count = 0;
+        Object.values(DRAGGABLE_FIELDS).forEach(fields => {
+            fields.forEach(f => {
+                if (hasData(f.id, reviewData)) count++;
+            });
+        });
+        return count;
+    }, [reviewData]);
 
     return (
         <div className="w-80 bg-gray-900/90 backdrop-blur-sm p-4 rounded-lg overflow-y-auto max-h-screen border border-purple-500/30">
-            <div className="sticky top-0 bg-gray-900/95 pb-3 mb-4 border-b border-purple-500/30 -mx-4 px-4 -mt-4 pt-4">
+            <div className="sticky top-0 bg-gray-900/95 pb-3 mb-4 border-b border-purple-500/30 -mx-4 px-4 -mt-4 pt-4 z-10">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                     <span>📦</span>
                     <span>Contenu Disponible</span>
                 </h2>
                 <p className="text-xs text-gray-400 mt-1">
-                    Glissez les éléments vers la zone de prévisualisation
+                    {totalFieldsWithData} champs avec données • Glissez vers le canvas
                 </p>
             </div>
 
@@ -162,36 +249,43 @@ export default function ContentPanel({ reviewData, placedFields, onFieldSelect }
                     title="Informations de base"
                     fields={DRAGGABLE_FIELDS.basic}
                     placedFieldIds={placedFieldIds}
+                    reviewData={reviewData}
                 />
                 <FieldSection
                     title="Notes & Évaluations"
                     fields={DRAGGABLE_FIELDS.ratings}
                     placedFieldIds={placedFieldIds}
+                    reviewData={reviewData}
                 />
                 <FieldSection
                     title="Détails Sensoriels"
                     fields={DRAGGABLE_FIELDS.details}
                     placedFieldIds={placedFieldIds}
+                    reviewData={reviewData}
                 />
                 <FieldSection
                     title="Informations Avancées"
                     fields={DRAGGABLE_FIELDS.advanced}
                     placedFieldIds={placedFieldIds}
+                    reviewData={reviewData}
                 />
                 <FieldSection
                     title="Stickers & Bulles"
                     fields={DRAGGABLE_FIELDS.stickers}
                     placedFieldIds={placedFieldIds}
+                    reviewData={reviewData}
                 />
             </div>
 
             <div className="mt-6 p-3 bg-purple-500/10 rounded-lg border border-purple-500/30">
-                <p className="text-xs text-gray-300">
-                    <strong className="text-purple-300">💡 Astuce :</strong> Les champs marqués d'un ✓ sont déjà placés dans votre layout.
+                <p className="text-xs text-gray-300 mb-2">
+                    <span className="text-purple-400">●</span> = Données disponibles
+                    <br />
+                    <span className="text-green-400">✓</span> = Déjà placé
                 </p>
                 <button
                     onClick={() => onFieldSelect?.({ type: 'zone' })}
-                    className="mt-3 w-full px-3 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition-colors"
+                    className="mt-2 w-full px-3 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition-colors"
                 >
                     ➕ Ajouter une zone
                 </button>
@@ -205,5 +299,3 @@ ContentPanel.propTypes = {
     placedFields: PropTypes.array.isRequired,
     onFieldSelect: PropTypes.func
 };
-
-// Note: 'onFieldSelect' when called with { type: 'zone' } instructs the parent to create a new empty zone on the canvas
