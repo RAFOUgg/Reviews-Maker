@@ -10,6 +10,114 @@ import CustomLayoutPane from './CustomLayoutPane';
 import ContentPanel from './ContentPanel';
 import ExportModal from './ExportModal';
 
+/**
+ * Normalise les données d'une review pour s'assurer que tous les champs
+ * sont accessibles de manière cohérente dans les templates
+ */
+function normalizeReviewData(reviewData) {
+    if (!reviewData) return null;
+
+    let normalized = { ...reviewData };
+
+    // Parse extraData si c'est une chaîne JSON
+    try {
+        const parsedExtra = reviewData?.extraData && typeof reviewData.extraData === 'string'
+            ? JSON.parse(reviewData.extraData)
+            : (reviewData?.extraData || {});
+
+        if (parsedExtra && typeof parsedExtra === 'object') {
+            // Copier les clés d'extraData vers le niveau supérieur
+            Object.keys(parsedExtra).forEach(k => {
+                if (normalized[k] === undefined) normalized[k] = parsedExtra[k];
+            });
+            normalized.extraData = parsedExtra;
+        }
+    } catch (err) {
+        console.warn('Failed to normalize extraData for OrchardPanel', err);
+    }
+
+    // Normaliser les notes - s'assurer que 'rating' existe toujours
+    if (normalized.rating === undefined) {
+        if (normalized.overallRating !== undefined) {
+            normalized.rating = normalized.overallRating;
+        } else if (normalized.note !== undefined) {
+            normalized.rating = normalized.note;
+        } else if (normalized.score !== undefined) {
+            normalized.rating = normalized.score;
+        }
+    }
+
+    // Normaliser le titre
+    if (!normalized.title && normalized.holderName) {
+        normalized.title = normalized.holderName;
+    }
+
+    // Normaliser l'image principale
+    if (!normalized.mainImageUrl) {
+        if (normalized.imageUrl) {
+            normalized.mainImageUrl = normalized.imageUrl;
+        } else if (Array.isArray(normalized.images) && normalized.images.length > 0) {
+            const firstImg = normalized.images[0];
+            normalized.mainImageUrl = typeof firstImg === 'string' ? firstImg : firstImg?.url || firstImg?.src;
+        }
+    }
+
+    // Normaliser categoryRatings depuis différentes sources
+    if (!normalized.categoryRatings || Object.keys(normalized.categoryRatings).length === 0) {
+        if (normalized.ratings && typeof normalized.ratings === 'object') {
+            normalized.categoryRatings = normalized.ratings;
+        }
+    }
+
+    // Parser les champs qui peuvent être en JSON string
+    const jsonFields = ['aromas', 'tastes', 'effects', 'terpenes', 'cultivarsList', 'pipelineExtraction',
+        'pipelineSeparation', 'pipelinePurification', 'fertilizationPipeline', 'substratMix',
+        'categoryRatings', 'tags'];
+
+    jsonFields.forEach(field => {
+        if (typeof normalized[field] === 'string') {
+            try {
+                const parsed = JSON.parse(normalized[field]);
+                normalized[field] = parsed;
+            } catch {
+                // Si c'est une liste séparée par des virgules
+                if (normalized[field].includes(',')) {
+                    normalized[field] = normalized[field].split(',').map(s => s.trim()).filter(Boolean);
+                }
+            }
+        }
+    });
+
+    // S'assurer que les tableaux sont bien des tableaux
+    ['aromas', 'tastes', 'effects', 'terpenes', 'cultivarsList', 'tags', 'images'].forEach(field => {
+        if (normalized[field] && !Array.isArray(normalized[field])) {
+            if (typeof normalized[field] === 'string') {
+                normalized[field] = normalized[field].split(',').map(s => s.trim()).filter(Boolean);
+            } else if (typeof normalized[field] === 'object') {
+                normalized[field] = Object.values(normalized[field]);
+            }
+        }
+    });
+
+    // Normaliser l'auteur
+    if (!normalized.author && normalized.ownerName) {
+        normalized.author = normalized.ownerName;
+    } else if (typeof normalized.author === 'object') {
+        normalized.author = normalized.author.username || normalized.author.name || 'Anonyme';
+    }
+
+    console.log('🎯 OrchardPanel: Normalized reviewData', {
+        original: reviewData,
+        normalized,
+        hasRating: normalized.rating !== undefined,
+        hasCategoryRatings: !!normalized.categoryRatings,
+        hasAromas: Array.isArray(normalized.aromas) && normalized.aromas.length > 0,
+        hasEffects: Array.isArray(normalized.effects) && normalized.effects.length > 0
+    });
+
+    return normalized;
+}
+
 export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
     const [showExportModal, setShowExportModal] = useState(false);
     const [showPreview, setShowPreview] = useState(true);
@@ -23,32 +131,28 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
 
     useEffect(() => {
         if (reviewData) {
-            // Flatten extraData (JSON string or object) into top-level for templates
-            let normalized = { ...reviewData };
-            try {
-                const parsedExtra = reviewData?.extraData && typeof reviewData.extraData === 'string'
-                    ? JSON.parse(reviewData.extraData)
-                    : (reviewData?.extraData || {});
-                if (parsedExtra && typeof parsedExtra === 'object') {
-                    // Only copy keys that don't overwrite existing top-level fields unless necessary
-                    Object.keys(parsedExtra).forEach(k => {
-                        if (normalized[k] === undefined) normalized[k] = parsedExtra[k];
-                    });
-                    normalized.extraData = parsedExtra;
-                }
-            } catch (err) {
-                console.warn('Failed to normalize extraData for OrchardPanel', err);
+            // Utiliser la fonction de normalisation centralisée
+            const normalized = normalizeReviewData(reviewData);
+
+            if (normalized) {
+                setReviewData(normalized);
             }
 
-            setReviewData(normalized);
             // Charger le layout personnalisé s'il existe depuis la review
             if (reviewData.orchardCustomLayout) {
                 try {
-                    const parsed = typeof reviewData.orchardCustomLayout === 'string' ? JSON.parse(reviewData.orchardCustomLayout) : reviewData.orchardCustomLayout
-                    setCustomLayout(Array.isArray(parsed) ? parsed : [])
+                    const parsed = typeof reviewData.orchardCustomLayout === 'string'
+                        ? JSON.parse(reviewData.orchardCustomLayout)
+                        : reviewData.orchardCustomLayout;
+                    setCustomLayout(Array.isArray(parsed) ? parsed : []);
                 } catch (err) {
-                    console.warn('Failed to parse orchardCustomLayout', err)
+                    console.warn('Failed to parse orchardCustomLayout', err);
                 }
+            }
+
+            // Si la review a été sauvegardée en mode custom, activer le mode custom
+            if (reviewData.orchardLayoutMode === 'custom') {
+                setIsCustomMode(true);
             }
         }
     }, [reviewData, setReviewData]);
