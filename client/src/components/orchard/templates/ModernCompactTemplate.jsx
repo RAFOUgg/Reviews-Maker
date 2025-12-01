@@ -41,6 +41,17 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     const substrat = extractSubstrat(reviewData.substratMix);
     const extraData = extractExtraData(reviewData.extraData, reviewData);
 
+    // Debug log pour voir les données
+    console.log('🎨 ModernCompactTemplate render:', {
+        rating: reviewData.rating,
+        categoryRatingsInput: reviewData.categoryRatings,
+        categoryRatingsExtracted: categoryRatings,
+        effects: effects,
+        aromas: aromas,
+        hasImage: !!reviewData.mainImageUrl || !!reviewData.imageUrl,
+        contentModulesEnabled: Object.entries(contentModules).filter(([k, v]) => v).map(([k]) => k).slice(0, 10)
+    });
+
     // Image principale
     const mainImage = reviewData.mainImageUrl || reviewData.imageUrl || 
         (Array.isArray(reviewData.images) && reviewData.images[0]);
@@ -81,27 +92,31 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
         },
     };
 
-    // Render étoiles
+    // Render étoiles - Note sur 10, affichée avec 5 étoiles proportionnelles
     const renderStars = () => {
         if (!contentModules.rating || reviewData.rating === undefined) return null;
-        const { filled, empty, value } = formatRating(reviewData.rating, 5);
+        const ratingValue = parseFloat(reviewData.rating) || 0;
+        // 5 étoiles représentent la note /10 (donc 8/10 = 4 étoiles pleines)
+        const starsCount = 5;
+        const filledStars = Math.round((ratingValue / 10) * starsCount);
+        const emptyStars = starsCount - filledStars;
         
         return (
             <div className="flex items-center gap-3">
                 <div className="flex gap-0.5">
-                    {[...Array(filled)].map((_, i) => (
+                    {[...Array(filledStars)].map((_, i) => (
                         <svg key={`f${i}`} width="24" height="24" viewBox="0 0 24 24" fill={colors.accent} stroke={colors.accent} strokeWidth="1">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                         </svg>
                     ))}
-                    {[...Array(empty)].map((_, i) => (
+                    {[...Array(emptyStars)].map((_, i) => (
                         <svg key={`e${i}`} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={colors.accent} strokeWidth="1.5" opacity="0.4">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                         </svg>
                     ))}
                 </div>
                 <span style={{ fontSize: `${typography.titleSize - 6}px`, fontWeight: '700', color: colors.textPrimary }}>
-                    {value.toFixed(1)}/10
+                    {ratingValue.toFixed(1)}/10
                 </span>
             </div>
         );
