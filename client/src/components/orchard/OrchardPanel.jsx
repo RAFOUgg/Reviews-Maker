@@ -181,8 +181,8 @@ function normalizeReviewData(reviewData) {
         hasRating: normalized.rating !== undefined,
         hasCategoryRatings: !!normalized.categoryRatings,
         categoryRatingsKeys: normalized.categoryRatings ? Object.keys(normalized.categoryRatings) : [],
-        categoryRatingsPreview: normalized.categoryRatings ? 
-            Object.entries(normalized.categoryRatings).map(([k, v]) => 
+        categoryRatingsPreview: normalized.categoryRatings ?
+            Object.entries(normalized.categoryRatings).map(([k, v]) =>
                 `${k}: ${typeof v === 'object' ? Object.keys(v).length + ' fields' : v}`
             ) : [],
         hasAromas: Array.isArray(normalized.aromas) && normalized.aromas.length > 0,

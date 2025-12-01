@@ -154,7 +154,7 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
         smell: {
             fields: ['aromasIntensity', 'fideliteCultivars', 'complexiteAromas', 'intensiteAromatique'],
             labels: {
-                aromasIntensity: 'Intensité', fideliteCultivars: 'Fidélité cultivar', 
+                aromasIntensity: 'Intensité', fideliteCultivars: 'Fidélité cultivar',
                 complexiteAromas: 'Complexité', intensiteAromatique: 'Intensité aromatique'
             }
         },
@@ -258,10 +258,10 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
             const subLabels = categoryFields[cat.key]?.labels || {};
             const subEntries = Object.entries(catValue)
                 .filter(([k, v]) => typeof v === 'number' || (typeof v === 'string' && !isNaN(parseFloat(v))))
-                .map(([k, v]) => ({ 
-                    key: k, 
+                .map(([k, v]) => ({
+                    key: k,
                     label: subLabels[k] || k,
-                    value: parseFloat(v) 
+                    value: parseFloat(v)
                 }))
                 .filter(e => e.value > 0);
 
@@ -411,7 +411,7 @@ export function extractExtraData(extraData, reviewData = null) {
         });
 
     console.log('📦 extractExtraData - Found:', results.length, 'fields from merged data');
-    
+
     return results;
 }
 
