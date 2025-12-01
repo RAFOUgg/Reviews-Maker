@@ -44,12 +44,17 @@ function normalizeReviewData(reviewData) {
             normalized.rating = normalized.note;
         } else if (normalized.score !== undefined) {
             normalized.rating = normalized.score;
+        } else if (normalized.categoryRatings?.overall !== undefined) {
+            normalized.rating = normalized.categoryRatings.overall;
         }
     }
 
-    // Normaliser le titre
-    if (!normalized.title && normalized.holderName) {
-        normalized.title = normalized.holderName;
+    // Normaliser le titre - s'assurer que 'title' et 'holderName' existent
+    if (!normalized.title) {
+        normalized.title = normalized.holderName || normalized.productName || normalized.name || 'Sans titre';
+    }
+    if (!normalized.holderName) {
+        normalized.holderName = normalized.title || normalized.productName || normalized.name || 'Sans nom';
     }
 
     // Normaliser l'image principale
@@ -60,6 +65,10 @@ function normalizeReviewData(reviewData) {
             const firstImg = normalized.images[0];
             normalized.mainImageUrl = typeof firstImg === 'string' ? firstImg : firstImg?.url || firstImg?.src;
         }
+    }
+    // Aussi dans l'autre sens
+    if (!normalized.imageUrl && normalized.mainImageUrl) {
+        normalized.imageUrl = normalized.mainImageUrl;
     }
 
     // Normaliser categoryRatings depuis différentes sources
@@ -111,8 +120,19 @@ function normalizeReviewData(reviewData) {
         normalized,
         hasRating: normalized.rating !== undefined,
         hasCategoryRatings: !!normalized.categoryRatings,
+        categoryRatingsType: typeof normalized.categoryRatings,
+        categoryRatingsKeys: normalized.categoryRatings ? Object.keys(normalized.categoryRatings) : [],
         hasAromas: Array.isArray(normalized.aromas) && normalized.aromas.length > 0,
-        hasEffects: Array.isArray(normalized.effects) && normalized.effects.length > 0
+        aromasCount: Array.isArray(normalized.aromas) ? normalized.aromas.length : 0,
+        hasEffects: Array.isArray(normalized.effects) && normalized.effects.length > 0,
+        effectsCount: Array.isArray(normalized.effects) ? normalized.effects.length : 0,
+        title: normalized.title,
+        holderName: normalized.holderName,
+        rating: normalized.rating,
+        type: normalized.type,
+        imageUrl: normalized.imageUrl,
+        mainImageUrl: normalized.mainImageUrl,
+        imagesCount: Array.isArray(normalized.images) ? normalized.images.length : 0,
     });
 
     return normalized;
