@@ -424,20 +424,20 @@ export const useOrchardStore = create(
             // pour s'assurer que les nouveaux champs sont toujours présents
             merge: (persistedState, currentState) => {
                 if (!persistedState) return currentState;
-                
+
                 // Fusionner contentModules: garder les valeurs sauvegardées mais ajouter les nouveaux champs
                 const mergedContentModules = {
                     ...DEFAULT_CONFIG.contentModules, // Tous les nouveaux champs par défaut
                     ...(persistedState.config?.contentModules || {}) // Valeurs sauvegardées
                 };
-                
+
                 // Fusionner moduleOrder: utiliser la nouvelle liste par défaut si elle a plus d'éléments
                 const savedModuleOrder = persistedState.config?.moduleOrder || [];
                 const defaultModuleOrder = DEFAULT_CONFIG.moduleOrder;
-                const mergedModuleOrder = defaultModuleOrder.length > savedModuleOrder.length 
-                    ? defaultModuleOrder 
+                const mergedModuleOrder = defaultModuleOrder.length > savedModuleOrder.length
+                    ? defaultModuleOrder
                     : savedModuleOrder;
-                
+
                 return {
                     ...currentState,
                     ...persistedState,

@@ -619,8 +619,8 @@ export default function ContentModuleControls() {
                     <button
                         onClick={() => setViewMode('categories')}
                         className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${viewMode === 'categories'
-                                ? 'bg-purple-500 text-white'
-                                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                            ? 'bg-purple-500 text-white'
+                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                             }`}
                     >
                         📂 Catégories
@@ -628,8 +628,8 @@ export default function ContentModuleControls() {
                     <button
                         onClick={() => setViewMode('list')}
                         className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${viewMode === 'list'
-                                ? 'bg-purple-500 text-white'
-                                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                            ? 'bg-purple-500 text-white'
+                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                             }`}
                     >
                         📋 Liste
@@ -638,8 +638,8 @@ export default function ContentModuleControls() {
                 <button
                     onClick={() => setShowPresets(!showPresets)}
                     className={`px-4 py-2 rounded-xl text-xs font-medium transition-colors ${showPresets
-                            ? 'bg-purple-500 text-white'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                        ? 'bg-purple-500 text-white'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
                 >
                     ⚡ Presets
