@@ -20,14 +20,14 @@ const MODULE_LABELS = {
     category: { name: 'Catégorie', icon: '📂' },
     type: { name: 'Type de produit', icon: '📦' },
     tags: { name: 'Tags', icon: '🏷️' },
-    
+
     // Provenance & Cultivar
     cultivar: { name: 'Cultivar', icon: '🌱' },
     cultivarsList: { name: 'Liste des cultivars', icon: '🌿' },
     breeder: { name: 'Breeder / Génétique', icon: '🧬' },
     farm: { name: 'Farm / Producteur', icon: '🏡' },
     hashmaker: { name: 'Hash Maker', icon: '👨‍🔬' },
-    
+
     // Notes par catégorie
     categoryRatings: { name: 'Notes détaillées', icon: '📊' },
     'categoryRatings.visual': { name: 'Note Visuel', icon: '👁️' },
@@ -35,7 +35,7 @@ const MODULE_LABELS = {
     'categoryRatings.taste': { name: 'Note Goût', icon: '👅' },
     'categoryRatings.effects': { name: 'Note Effets', icon: '⚡' },
     ratings: { name: 'Toutes les notes', icon: '📋' },
-    
+
     // Détails sensoriels
     terpenes: { name: 'Terpènes', icon: '🍃' },
     aromas: { name: 'Arômes', icon: '🌸' },
@@ -44,7 +44,7 @@ const MODULE_LABELS = {
     aromasIntensity: { name: 'Intensité arômes', icon: '💨' },
     tastesIntensity: { name: 'Intensité goûts', icon: '🔥' },
     effectsIntensity: { name: 'Intensité effets', icon: '💪' },
-    
+
     // Informations techniques
     thcLevel: { name: 'Niveau THC', icon: '🔬' },
     cbdLevel: { name: 'Niveau CBD', icon: '💊' },
@@ -52,14 +52,14 @@ const MODULE_LABELS = {
     indicaRatio: { name: 'Ratio Indica', icon: '⚖️' },
     dureeEffet: { name: 'Durée des effets', icon: '⏱️' },
     purgevide: { name: 'Purge à vide', icon: '🫧' },
-    
+
     // Pipelines & process
     pipelineExtraction: { name: 'Pipeline Extraction', icon: '⚗️' },
     pipelineSeparation: { name: 'Pipeline Séparation', icon: '🧪' },
     pipelinePurification: { name: 'Pipeline Purification', icon: '✨' },
     fertilizationPipeline: { name: 'Fertilisation', icon: '🌾' },
     substratMix: { name: 'Substrat', icon: '🪴' },
-    
+
     // Extra
     extraData: { name: 'Données supplémentaires', icon: '📎' }
 };

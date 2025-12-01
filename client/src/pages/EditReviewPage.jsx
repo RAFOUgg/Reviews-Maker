@@ -389,23 +389,54 @@ export default function EditReviewPage() {
 
             console.log('📊 Category Ratings Calculated (Edit):', categoryRatingsData);
 
-            // ⚠️ IMPORTANT: Ne pas envoyer 'note' ou 'overallRating' depuis formData
-            const excludedKeys = ['note', 'overallRating', 'categoryRatings'];
+            // ⚠️ Liste des champs à exclure (champs calculés, métadonnées, ou gérés séparément)
+            const excludedKeys = [
+                'note', 'overallRating', 'categoryRatings', // Notes calculées
+                'images', 'mainImage', 'mainImageUrl', // Images gérées séparément
+                'author', 'authorId', 'ownerId', 'ownerName', // Métadonnées auteur
+                'createdAt', 'updatedAt', // Timestamps
+                'id', // ID de la review
+                'extraData', // Géré séparément pour éviter double encodage
+                'sectionScores', 'computedOverall', // Champs calculés
+                'likesCount', 'dislikesCount', 'userLikeState' // Stats likes
+            ];
 
-            // Add all form fields SAUF les notes (on utilisera les valeurs calculées)
+            // Champs qui doivent être envoyés en JSON
+            const jsonFields = [
+                'terpenes', 'tastes', 'aromas', 'effects',
+                'cultivarsList', 'pipelineExtraction', 'pipelineSeparation',
+                'pipelinePurification', 'fertilizationPipeline', 'substratMix',
+                'ratings'
+            ];
+
+            // Add form fields (sauf ceux exclus)
             Object.keys(formData).forEach(key => {
-                // Skip les champs de notes
+                // Skip les champs exclus
                 if (excludedKeys.includes(key)) {
                     return;
                 }
 
                 const value = formData[key];
-                if (value !== null && value !== undefined) {
-                    if (typeof value === 'object') {
-                        submitData.append(key, JSON.stringify(value));
-                    } else {
+                if (value === null || value === undefined) {
+                    return;
+                }
+
+                // Pour les champs JSON, s'assurer qu'on envoie une string JSON valide
+                if (jsonFields.includes(key)) {
+                    if (typeof value === 'string') {
+                        // Déjà une string, envoyer tel quel
                         submitData.append(key, value);
+                    } else if (Array.isArray(value) || typeof value === 'object') {
+                        submitData.append(key, JSON.stringify(value));
                     }
+                } else if (typeof value === 'object' && !Array.isArray(value)) {
+                    // Objet non-tableau : stringify seulement si c'est un vrai objet JS
+                    submitData.append(key, JSON.stringify(value));
+                } else if (Array.isArray(value)) {
+                    submitData.append(key, JSON.stringify(value));
+                } else {
+                    // Valeur primitive (string, number, boolean)
+                    submitData.append(key, String(value));
                 }
             });
 

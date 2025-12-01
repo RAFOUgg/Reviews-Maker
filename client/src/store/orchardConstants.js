@@ -61,7 +61,7 @@ export const DEFAULT_TEMPLATES = {
         description: 'Design épuré et moderne, idéal pour les réseaux sociaux',
         layout: 'compact',
         defaultRatio: '1:1',
-        supportedRatios: ['1:1', '16:9', '9:16'],
+        supportedRatios: ['1:1', '16:9', '9:16', '4:3', 'A4'],
         // Zones par défaut (x,y in %, width/height in % relative to canvas)
         defaultZones: [
             { id: 'zone-title', label: 'Titre', type: 'zone', position: { x: 50, y: 8 }, width: 80, height: 12, placeholder: 'title' },
@@ -73,18 +73,18 @@ export const DEFAULT_TEMPLATES = {
     detailedCard: {
         id: 'detailedCard',
         name: 'Fiche Technique Détaillée',
-        description: 'Présentation complète avec tous les détails',
+        description: 'Présentation complète avec tous les détails de la review',
         layout: 'detailed',
         defaultRatio: '16:9',
-        supportedRatios: ['16:9', '4:3', 'A4']
+        supportedRatios: ['1:1', '16:9', '9:16', '4:3', 'A4']
     },
     blogArticle: {
         id: 'blogArticle',
         name: 'Article de Blog',
-        description: 'Format long adapté aux blogs',
+        description: 'Format long adapté aux blogs et documentation',
         layout: 'article',
         defaultRatio: 'A4',
-        supportedRatios: ['A4', '16:9']
+        supportedRatios: ['1:1', '16:9', '9:16', '4:3', 'A4']
     },
     socialStory: {
         id: 'socialStory',
@@ -92,6 +92,6 @@ export const DEFAULT_TEMPLATES = {
         description: 'Format vertical pour Instagram et TikTok',
         layout: 'story',
         defaultRatio: '9:16',
-        supportedRatios: ['9:16']
+        supportedRatios: ['1:1', '16:9', '9:16', '4:3', 'A4']
     }
 };
