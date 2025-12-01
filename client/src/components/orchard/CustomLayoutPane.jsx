@@ -190,21 +190,29 @@ function DropCanvas({ children, onDrop }) {
     const [{ isOver, canDrop }, drop] = useDrop(() => ({
         accept: DRAGGABLE_FIELD_TYPES.ORCHARD_FIELD,
         drop: (item, monitor) => {
+            console.log('🎯 DropCanvas - Drop event:', { item, hasMonitor: !!monitor });
             const offset = monitor.getClientOffset();
             const canvasRect = monitor.getTargetClientRect();
+
+            console.log('📍 DropCanvas - Positions:', { offset, canvasRect });
 
             if (offset && canvasRect) {
                 const x = ((offset.x - canvasRect.left) / canvasRect.width) * 100;
                 const y = ((offset.y - canvasRect.top) / canvasRect.height) * 100;
 
+                console.log('✅ DropCanvas - Calling onDrop:', { field: item.field, position: { x, y } });
                 onDrop(item.field, { x, y });
+            } else {
+                console.warn('⚠️ DropCanvas - Missing offset or canvasRect');
             }
         },
         collect: (monitor) => ({
             isOver: monitor.isOver(),
             canDrop: monitor.canDrop()
         })
-    }));
+    }), [onDrop]);
+
+    console.log('🎨 DropCanvas - State:', { isOver, canDrop });
 
     return (
         <div

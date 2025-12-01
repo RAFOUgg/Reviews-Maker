@@ -113,7 +113,17 @@ const getValuePreview = (id, data) => {
 function DraggableField({ field, isPlaced, hasValue, valuePreview }) {
     const [{ isDragging }, drag] = useDrag(() => ({
         type: DRAGGABLE_FIELD_TYPES.ORCHARD_FIELD,
-        item: { field },
+        item: () => {
+            console.log('🚀 DraggableField - Starting drag:', field.id, field.label);
+            return { field };
+        },
+        end: (item, monitor) => {
+            console.log('🏁 DraggableField - Drag ended:', {
+                fieldId: field.id,
+                didDrop: monitor.didDrop(),
+                dropResult: monitor.getDropResult()
+            });
+        },
         collect: (monitor) => ({
             isDragging: monitor.isDragging()
         })
