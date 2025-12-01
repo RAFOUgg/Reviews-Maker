@@ -35,9 +35,11 @@ const DEFAULT_CONFIG = {
         title: '#ffffff'
     },
 
-    // Modules de contenu visibles
+    // ═══════════════════════════════════════════════════════════════════════
+    // MODULES DE CONTENU VISIBLES - LISTE EXHAUSTIVE
+    // ═══════════════════════════════════════════════════════════════════════
     contentModules: {
-        // Basic
+        // === INFORMATIONS DE BASE ===
         title: true,
         holderName: true,
         author: true,
@@ -45,100 +47,185 @@ const DEFAULT_CONFIG = {
         image: true,
         images: true,
         mainImage: true,
+        imageUrl: true,
         description: true,
         date: true,
+        createdAt: true,
         category: true,
         type: true,
 
-        // Cultivar / provenance
+        // === PROVENANCE & CULTIVAR ===
         cultivar: true,
         cultivarsList: true,
         breeder: true,
         farm: true,
         hashmaker: true,
+        origin: true,
+        country: true,
+        region: true,
 
-        // Ratings
+        // === NOTES GLOBALES ===
         rating: true,
         overallRating: true,
         note: true,
+        qualityScore: true,
+        ratings: true,
+
+        // === NOTES PAR CATÉGORIE (bloc) ===
         categoryRatings: true,
         'categoryRatings.visual': true,
         'categoryRatings.smell': true,
+        'categoryRatings.texture': true,
         'categoryRatings.taste': true,
         'categoryRatings.effects': true,
-        ratings: true,
 
-        // Sensorial details
+        // === NOTES VISUELLES DÉTAILLÉES ===
+        densite: true,
+        trichome: true,
+        pistil: true,
+        manucure: true,
+        moisissure: true,
+        graines: true,
+        couleur: true,
+        couleurTransparence: true,
+        pureteVisuelle: true,
+        viscosite: true,
+        melting: true,
+        residus: true,
+        pistils: true,
+
+        // === NOTES ODEUR DÉTAILLÉES ===
+        aromasIntensity: true,
+        intensiteAromatique: true,
+        fideliteCultivars: true,
+
+        // === NOTES TEXTURE DÉTAILLÉES ===
+        durete: true,
+        densiteTexture: true,
+        elasticite: true,
+        collant: true,
+        friabiliteViscosite: true,
+        meltingResidus: true,
+        aspectCollantGras: true,
+        viscositeTexture: true,
+
+        // === NOTES GOÛT DÉTAILLÉES ===
+        intensiteFumee: true,
+        agressivite: true,
+        cendre: true,
+        intensiteGout: true,
+        textureBouche: true,
+        douceur: true,
+        intensite: true,
+        goutIntensity: true,
+
+        // === NOTES EFFETS DÉTAILLÉES ===
+        montee: true,
+        intensiteEffet: true,
+        intensiteEffets: true,
+        effectsIntensity: true,
+        dureeEffet: true,
+
+        // === DONNÉES SENSORIELLES ===
         terpenes: true,
         aromas: true,
         tastes: true,
         effects: true,
-        aromasIntensity: true,
         tastesIntensity: true,
         effectsIntensity: true,
 
-        // Technical / cultivation
+        // === NIVEAUX THC/CBD ===
         thcLevel: true,
         cbdLevel: true,
         strainType: true,
         indicaRatio: true,
-        dureeEffet: true,
-        purgevide: true,
+        sativaRatio: true,
+        strainRatio: true,
 
-        // Pipelines / complex structures
+        // === PIPELINES & CULTURE ===
         pipelineExtraction: true,
         pipelineSeparation: true,
         pipelinePurification: true,
         fertilizationPipeline: true,
         substratMix: true,
+        purgevide: true,
+        curing: true,
+        drying: true,
+        processing: true,
+        yield: true,
+        floweringTime: true,
+        harvestDate: true,
 
-        // Extra / custom fields
+        // === CONTENU TEXTE ===
+        conclusion: true,
+        notes: true,
+        comments: true,
+        recommendations: true,
+        warnings: true,
+
+        // === EXTRA ===
         extraData: true,
-        tags: true
+        tags: true,
+        certifications: true,
+        awards: true,
+        labResults: true
     },
 
-    // Ordre des modules (pour le drag-and-drop)
+    // Ordre des modules (pour le drag-and-drop) - TOUS les champs
     moduleOrder: [
-        'image',
-        'title',
-        'holderName',
-        'rating',
+        // === ESSENTIEL ===
+        'image', 'title', 'holderName', 'rating', 'category', 'type',
+        
+        // === NOTES GLOBALES ===
         'categoryRatings',
-        'categoryRatings.visual',
-        'categoryRatings.smell',
-        'categoryRatings.taste',
-        'categoryRatings.effects',
-        'category',
-        'type',
-        'author',
-        'ownerName',
-        'date',
-        'cultivar',
-        'cultivarsList',
-        'breeder',
-        'farm',
-        'hashmaker',
-        'thcLevel',
-        'cbdLevel',
-        'strainType',
-        'indicaRatio',
-        'dureeEffet',
-        'description',
-        'effects',
-        'aromas',
-        'tastes',
+        'categoryRatings.visual', 'categoryRatings.smell', 
+        'categoryRatings.taste', 'categoryRatings.effects',
+        
+        // === DÉTAILS VISUELS ===
+        'densite', 'taille', 'texture', 'couleur', 'trichome', 
+        'pistil', 'collant', 'manucure', 'uniformite', 'maturite',
+        'humidite', 'conservation', 'presentation', 'bubblingLevel',
+        
+        // === DÉTAILS OLFACTIFS ===
+        'aromas', 'aromasIntensity', 'complexiteAromas', 'fideliteCultivars',
+        
+        // === DÉTAILS TEXTURE ===
+        'durete', 'elasticite', 'friabilite', 'collantTexture', 'granularite',
+        'homogeneite', 'residus', 'stabilitePression', 'reactiviteChaleur',
+        
+        // === DÉTAILS GOÛT ===
+        'tastes', 'tastesIntensity', 'intensiteFumee', 'agressivite', 
+        'cendre', 'persistanceGout', 'evolutionGout', 'retroGout', 
+        'complexiteGustative',
+        
+        // === DÉTAILS EFFETS ===
+        'effects', 'effectsIntensity', 'montee', 'intensiteEffet', 
+        'dureeEffet', 'dureeEffetDetail', 'typeEffet',
+        
+        // === IDENTITÉ ===
+        'author', 'ownerName', 'date',
+        
+        // === PROVENANCE ===
+        'cultivar', 'cultivarsList', 'breeder', 'farm', 'hashmaker',
+        
+        // === NIVEAUX ===
+        'thcLevel', 'cbdLevel', 'strainType', 'indicaRatio',
+        
+        // === PIPELINES ===
+        'pipelineExtraction', 'pipelineSeparation', 'pipelinePurification',
+        'fertilizationPipeline', 'substratMix', 'purgevide', 'sechage',
+        
+        // === TERPÈNES ===
         'terpenes',
-        'aromasIntensity',
-        'tastesIntensity',
-        'effectsIntensity',
-        'pipelineExtraction',
-        'pipelineSeparation',
-        'pipelinePurification',
-        'fertilizationPipeline',
-        'substratMix',
-        'purgevide',
-        'tags',
-        'extraData'
+        
+        // === DESCRIPTION ===
+        'description',
+        
+        // === STICKERS ===
+        'stickerAvis', 'stickerNote', 'stickerRank', 'stickerBadge',
+        
+        // === EXTRA ===
+        'extraData', 'tags', 'certifications', 'awards', 'labResults'
     ],
 
     // Image et branding
