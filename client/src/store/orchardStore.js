@@ -24,9 +24,9 @@ try {
         const stateConfig = parsed?.state?.config || parsed?.config || {};
         const modulesCount = Object.keys(stateConfig?.contentModules || {}).length;
 
-        console.log('🔍 Orchard Storage Check:', { 
-            storedVersion, 
-            currentVersion: CURRENT_STORAGE_VERSION, 
+        console.log('🔍 Orchard Storage Check:', {
+            storedVersion,
+            currentVersion: CURRENT_STORAGE_VERSION,
             modulesCount,
             needsReset: storedVersion < CURRENT_STORAGE_VERSION || modulesCount < 50
         });
@@ -39,7 +39,7 @@ try {
     }
 } catch (e) {
     console.warn('Orchard storage check failed, forcing removal:', e);
-    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    try { localStorage.removeItem(STORAGE_KEY); } catch { }
 }
 
 // Configuration par défaut
