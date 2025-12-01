@@ -243,27 +243,27 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
     const handleDragEnd = useCallback((event) => {
         const { active, over } = event;
         console.log('🏁 DragEnd:', { activeId: active.id, overId: over?.id });
-        
+
         setActiveDragId(null);
         setIsCanvasOver(false);
 
         // Si on a droppé sur le canvas
         if (over?.id === 'canvas-drop-zone' && active.data?.current?.field) {
             const field = active.data.current.field;
-            
+
             // Calculer la position relative au canvas
             const canvasElement = document.querySelector('.orchard-canvas-resize-parent');
             if (canvasElement && event.activatorEvent) {
                 const rect = canvasElement.getBoundingClientRect();
                 const clientX = event.activatorEvent.clientX || 0;
                 const clientY = event.activatorEvent.clientY || 0;
-                
+
                 // Position en pourcentage
                 const x = Math.max(5, Math.min(75, ((clientX - rect.left) / rect.width) * 100));
                 const y = Math.max(5, Math.min(75, ((clientY - rect.top) / rect.height) * 100));
-                
+
                 console.log('📍 Drop position:', { x, y, field: field.id });
-                
+
                 // Ajouter le champ au layout
                 const alreadyPlaced = customLayout.find(pf => pf.id === field.id);
                 if (alreadyPlaced) {
@@ -273,12 +273,12 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                     ));
                 } else {
                     // Ajouter le nouveau champ
-                    setCustomLayout(prev => [...prev, { 
-                        ...field, 
-                        position: { x, y }, 
-                        width: 25, 
-                        height: 20, 
-                        rotation: 0 
+                    setCustomLayout(prev => [...prev, {
+                        ...field,
+                        position: { x, y },
+                        width: 25,
+                        height: 20,
+                        rotation: 0
                     }]);
                 }
             }
@@ -288,7 +288,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
         if (over?.data?.current?.type === 'zone' && active.data?.current?.field) {
             const zoneId = over.data.current.zoneId;
             const fieldToAssign = active.data.current.field;
-            
+
             setCustomLayout(prev => prev.map(pf => {
                 if (pf.id === zoneId) {
                     const assignedFields = Array.from(new Set([...(pf.assignedFields || []), fieldToAssign.id]));
