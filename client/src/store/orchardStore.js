@@ -175,55 +175,55 @@ const DEFAULT_CONFIG = {
     moduleOrder: [
         // === ESSENTIEL ===
         'image', 'title', 'holderName', 'rating', 'category', 'type',
-        
+
         // === NOTES GLOBALES ===
         'categoryRatings',
-        'categoryRatings.visual', 'categoryRatings.smell', 
+        'categoryRatings.visual', 'categoryRatings.smell',
         'categoryRatings.taste', 'categoryRatings.effects',
-        
+
         // === DÉTAILS VISUELS ===
-        'densite', 'taille', 'texture', 'couleur', 'trichome', 
+        'densite', 'taille', 'texture', 'couleur', 'trichome',
         'pistil', 'collant', 'manucure', 'uniformite', 'maturite',
         'humidite', 'conservation', 'presentation', 'bubblingLevel',
-        
+
         // === DÉTAILS OLFACTIFS ===
         'aromas', 'aromasIntensity', 'complexiteAromas', 'fideliteCultivars',
-        
+
         // === DÉTAILS TEXTURE ===
         'durete', 'elasticite', 'friabilite', 'collantTexture', 'granularite',
         'homogeneite', 'residus', 'stabilitePression', 'reactiviteChaleur',
-        
+
         // === DÉTAILS GOÛT ===
-        'tastes', 'tastesIntensity', 'intensiteFumee', 'agressivite', 
-        'cendre', 'persistanceGout', 'evolutionGout', 'retroGout', 
+        'tastes', 'tastesIntensity', 'intensiteFumee', 'agressivite',
+        'cendre', 'persistanceGout', 'evolutionGout', 'retroGout',
         'complexiteGustative',
-        
+
         // === DÉTAILS EFFETS ===
-        'effects', 'effectsIntensity', 'montee', 'intensiteEffet', 
+        'effects', 'effectsIntensity', 'montee', 'intensiteEffet',
         'dureeEffet', 'dureeEffetDetail', 'typeEffet',
-        
+
         // === IDENTITÉ ===
         'author', 'ownerName', 'date',
-        
+
         // === PROVENANCE ===
         'cultivar', 'cultivarsList', 'breeder', 'farm', 'hashmaker',
-        
+
         // === NIVEAUX ===
         'thcLevel', 'cbdLevel', 'strainType', 'indicaRatio',
-        
+
         // === PIPELINES ===
         'pipelineExtraction', 'pipelineSeparation', 'pipelinePurification',
         'fertilizationPipeline', 'substratMix', 'purgevide', 'sechage',
-        
+
         // === TERPÈNES ===
         'terpenes',
-        
+
         // === DESCRIPTION ===
         'description',
-        
+
         // === STICKERS ===
         'stickerAvis', 'stickerNote', 'stickerRank', 'stickerBadge',
-        
+
         // === EXTRA ===
         'extraData', 'tags', 'certifications', 'awards', 'labResults'
     ],
