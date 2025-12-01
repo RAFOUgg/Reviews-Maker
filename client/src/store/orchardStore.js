@@ -8,6 +8,32 @@ import { COLOR_PALETTES, DEFAULT_TEMPLATES } from './orchardConstants';
 // Les constantes sont maintenant réexportées pour maintenir la compatibilité
 export { COLOR_PALETTES, DEFAULT_TEMPLATES };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// FORCE RESET: Si localStorage a une vieille version, le supprimer immédiatement
+// ═══════════════════════════════════════════════════════════════════════════════
+const CURRENT_STORAGE_VERSION = 5;
+const STORAGE_KEY = 'orchard-storage';
+
+try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+        const parsed = JSON.parse(stored);
+        const storedVersion = parsed?.version ?? 0;
+        const modulesCount = Object.keys(parsed?.state?.config?.contentModules || {}).length;
+
+        console.log('🔍 Orchard Storage Check:', { storedVersion, currentVersion: CURRENT_STORAGE_VERSION, modulesCount });
+
+        // Si version obsolète OU moins de 50 modules, forcer le reset
+        if (storedVersion < CURRENT_STORAGE_VERSION || modulesCount < 50) {
+            console.log('🗑️ Orchard Storage: Forcing reset (old version or incomplete modules)');
+            localStorage.removeItem(STORAGE_KEY);
+        }
+    }
+} catch (e) {
+    console.warn('Orchard storage check failed, removing:', e);
+    localStorage.removeItem(STORAGE_KEY);
+}
+
 // Configuration par défaut
 const DEFAULT_CONFIG = {
     // Template sélectionné
@@ -420,16 +446,16 @@ export const useOrchardStore = create(
                 presets: state.presets,
                 config: state.config
             }),
-            // Version du storage - incrementer pour forcer une migration
-            // v4: Force RESET COMPLET des contentModules (80+ modules obligatoires)
-            version: 4,
+            // Version du storage - doit correspondre à CURRENT_STORAGE_VERSION
+            // v5: Force reset automatique au chargement si version < 5 ou < 50 modules
+            version: CURRENT_STORAGE_VERSION,
             // Migration pour les changements de version
             migrate: (persistedState, version) => {
-                console.log('🔄 Orchard Storage Migration:', { from: version, to: 4, hasState: !!persistedState });
+                console.log('🔄 Orchard Storage Migration:', { from: version, to: CURRENT_STORAGE_VERSION, hasState: !!persistedState });
 
-                // Si version < 4, reset COMPLET des contentModules et moduleOrder
-                if (version < 4) {
-                    console.log('📦 v4 Migration: Forcing COMPLETE contentModules reset to 80+ modules');
+                // Si version < CURRENT, reset COMPLET des contentModules et moduleOrder
+                if (version < CURRENT_STORAGE_VERSION) {
+                    console.log('📦 Migration: Forcing COMPLETE contentModules reset to 80+ modules');
                     return {
                         ...persistedState,
                         config: {
