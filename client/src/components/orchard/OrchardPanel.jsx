@@ -21,9 +21,11 @@ function normalizeReviewData(reviewData) {
     // Parse extraData si c'est une chaîne JSON
     let parsedExtra = {};
     try {
-        parsedExtra = reviewData?.extraData && typeof reviewData.extraData === 'string'
-            ? JSON.parse(reviewData.extraData)
-            : (reviewData?.extraData || {});
+        if (reviewData?.extraData && typeof reviewData.extraData === 'string') {
+            parsedExtra = JSON.parse(reviewData.extraData);
+        } else if (reviewData?.extraData && typeof reviewData.extraData === 'object') {
+            parsedExtra = reviewData.extraData;
+        }
 
         if (parsedExtra && typeof parsedExtra === 'object') {
             // Copier les clés d'extraData vers le niveau supérieur
@@ -34,6 +36,46 @@ function normalizeReviewData(reviewData) {
         }
     } catch (err) {
         console.warn('Failed to normalize extraData for OrchardPanel', err);
+    }
+
+    // ============================================================================
+    // CONSTRUIRE categoryRatings depuis les champs plats (extraData ou reviewData)
+    // ============================================================================
+    const dataSource = { ...parsedExtra, ...normalized };
+
+    // Définition des champs par catégorie
+    const categoryFieldsMap = {
+        visual: ['densite', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines', 'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus'],
+        smell: ['aromasIntensity', 'fideliteCultivars', 'complexiteAromas', 'intensiteAromatique'],
+        texture: ['durete', 'densiteTexture', 'elasticite', 'collant', 'friabilite', 'granularite', 'homogeneite'],
+        taste: ['intensiteFumee', 'agressivite', 'cendre', 'douceur', 'persistanceGout', 'tastesIntensity', 'goutIntensity'],
+        effects: ['montee', 'intensiteEffet', 'dureeEffet', 'effectsIntensity', 'intensiteEffets']
+    };
+
+    // Reconstruire categoryRatings si absent ou vide
+    if (!normalized.categoryRatings || Object.keys(normalized.categoryRatings).length === 0) {
+        const reconstructed = {};
+
+        for (const [category, fields] of Object.entries(categoryFieldsMap)) {
+            const catValues = {};
+            for (const field of fields) {
+                const value = dataSource[field];
+                if (value !== undefined && value !== null && value !== '') {
+                    const numValue = parseFloat(value);
+                    if (!isNaN(numValue) && numValue > 0) {
+                        catValues[field] = numValue;
+                    }
+                }
+            }
+            if (Object.keys(catValues).length > 0) {
+                reconstructed[category] = catValues;
+            }
+        }
+
+        if (Object.keys(reconstructed).length > 0) {
+            normalized.categoryRatings = reconstructed;
+            console.log('🔧 OrchardPanel: Reconstructed categoryRatings from flat fields:', reconstructed);
+        }
     }
 
     // Normaliser les notes - s'assurer que 'rating' existe toujours
@@ -47,50 +89,6 @@ function normalizeReviewData(reviewData) {
         } else if (normalized.categoryRatings?.overall !== undefined) {
             normalized.rating = normalized.categoryRatings.overall;
         }
-    }
-
-    // ============================================================================
-    // CONSTRUIRE categoryRatings depuis extraData si absent
-    // ============================================================================
-    if (!normalized.categoryRatings || Object.keys(normalized.categoryRatings).length === 0) {
-        const extra = parsedExtra;
-        const visual = {};
-        const smell = {};
-        const texture = {};
-        const taste = {};
-        const effects = {};
-
-        // Champs visuels
-        ['densite', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines', 'couleur', 'pureteVisuelle'].forEach(k => {
-            if (extra[k] !== undefined) visual[k] = parseFloat(extra[k]) || 0;
-        });
-
-        // Champs odeur
-        ['aromasIntensity', 'fideliteCultivars', 'complexiteAromas'].forEach(k => {
-            if (extra[k] !== undefined) smell[k] = parseFloat(extra[k]) || 0;
-        });
-
-        // Champs texture
-        ['durete', 'densiteTexture', 'elasticite', 'collant', 'friabilite', 'granularite'].forEach(k => {
-            if (extra[k] !== undefined) texture[k] = parseFloat(extra[k]) || 0;
-        });
-
-        // Champs goût
-        ['intensiteFumee', 'agressivite', 'cendre', 'douceur', 'persistanceGout'].forEach(k => {
-            if (extra[k] !== undefined) taste[k] = parseFloat(extra[k]) || 0;
-        });
-
-        // Champs effets
-        ['montee', 'intensiteEffet', 'dureeEffet'].forEach(k => {
-            if (extra[k] !== undefined) effects[k] = parseFloat(extra[k]) || 0;
-        });
-
-        normalized.categoryRatings = {};
-        if (Object.keys(visual).length > 0) normalized.categoryRatings.visual = visual;
-        if (Object.keys(smell).length > 0) normalized.categoryRatings.smell = smell;
-        if (Object.keys(texture).length > 0) normalized.categoryRatings.texture = texture;
-        if (Object.keys(taste).length > 0) normalized.categoryRatings.taste = taste;
-        if (Object.keys(effects).length > 0) normalized.categoryRatings.effects = effects;
     }
 
     // Normaliser le titre - s'assurer que 'title' et 'holderName' existent
@@ -182,8 +180,11 @@ function normalizeReviewData(reviewData) {
         normalized,
         hasRating: normalized.rating !== undefined,
         hasCategoryRatings: !!normalized.categoryRatings,
-        categoryRatingsType: typeof normalized.categoryRatings,
         categoryRatingsKeys: normalized.categoryRatings ? Object.keys(normalized.categoryRatings) : [],
+        categoryRatingsPreview: normalized.categoryRatings ? 
+            Object.entries(normalized.categoryRatings).map(([k, v]) => 
+                `${k}: ${typeof v === 'object' ? Object.keys(v).length + ' fields' : v}`
+            ) : [],
         hasAromas: Array.isArray(normalized.aromas) && normalized.aromas.length > 0,
         aromasCount: Array.isArray(normalized.aromas) ? normalized.aromas.length : 0,
         hasEffects: Array.isArray(normalized.effects) && normalized.effects.length > 0,

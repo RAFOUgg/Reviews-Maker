@@ -132,6 +132,7 @@ export function isLightColor(hexColor) {
  * 1. Valeurs directes: { visual: 7.5, smell: 8 }
  * 2. Sous-objets: { visual: { densite: 6.5, trichome: 5.5 }, smell: { aromasIntensity: 8 } }
  * 3. Données imbriquées dans extraData
+ * 4. Champs plats dans extraData: { densite: "6.5", trichome: "5.5", ... }
  * @param {*} categoryRatings - Données des notes par catégorie
  * @param {Object} reviewData - Données complètes de la review (optionnel)
  * @returns {Array} Liste des notes formatées
@@ -140,16 +141,92 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
     let ratings = asObject(categoryRatings);
     const result = [];
 
-    // Si ratings est vide, essayer de reconstruire depuis reviewData
-    if (Object.keys(ratings).length === 0 && reviewData) {
-        const extra = asObject(reviewData.extraData);
-        ratings = {
-            visual: extra.visual || reviewData.visualRating,
-            smell: extra.smell || reviewData.smellRating,
-            texture: extra.texture || reviewData.textureRating,
-            taste: extra.taste || reviewData.tasteRating,
-            effects: extra.effects || reviewData.effectsRating,
-        };
+    // Définition des champs par catégorie pour reconstruction
+    const categoryFields = {
+        visual: {
+            fields: ['densite', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines', 'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus'],
+            labels: {
+                densite: 'Densité', trichome: 'Trichomes', pistil: 'Pistils', manucure: 'Manucure',
+                moisissure: 'Moisissure', graines: 'Graines', couleur: 'Couleur', pureteVisuelle: 'Pureté',
+                viscosite: 'Viscosité', melting: 'Melting', residus: 'Résidus'
+            }
+        },
+        smell: {
+            fields: ['aromasIntensity', 'fideliteCultivars', 'complexiteAromas', 'intensiteAromatique'],
+            labels: {
+                aromasIntensity: 'Intensité', fideliteCultivars: 'Fidélité cultivar', 
+                complexiteAromas: 'Complexité', intensiteAromatique: 'Intensité aromatique'
+            }
+        },
+        texture: {
+            fields: ['durete', 'densiteTexture', 'elasticite', 'collant', 'friabilite', 'granularite', 'homogeneite'],
+            labels: {
+                durete: 'Dureté', densiteTexture: 'Densité', elasticite: 'Élasticité',
+                collant: 'Collant', friabilite: 'Friabilité', granularite: 'Granularité', homogeneite: 'Homogénéité'
+            }
+        },
+        taste: {
+            fields: ['intensiteFumee', 'agressivite', 'cendre', 'douceur', 'persistanceGout', 'tastesIntensity', 'goutIntensity'],
+            labels: {
+                intensiteFumee: 'Intensité fumée', agressivite: 'Agressivité', cendre: 'Cendre',
+                douceur: 'Douceur', persistanceGout: 'Persistance', tastesIntensity: 'Intensité goût', goutIntensity: 'Intensité'
+            }
+        },
+        effects: {
+            fields: ['montee', 'intensiteEffet', 'dureeEffet', 'effectsIntensity', 'intensiteEffets'],
+            labels: {
+                montee: 'Montée', intensiteEffet: 'Intensité', dureeEffet: 'Durée',
+                effectsIntensity: 'Intensité effets', intensiteEffets: 'Intensité effets'
+            }
+        }
+    };
+
+    // Reconstruire depuis reviewData si ratings est vide ou incomplet
+    if (reviewData) {
+        // Parser extraData une seule fois
+        let extra = {};
+        try {
+            if (typeof reviewData.extraData === 'string') {
+                extra = JSON.parse(reviewData.extraData);
+            } else if (typeof reviewData.extraData === 'object' && reviewData.extraData !== null) {
+                extra = reviewData.extraData;
+            }
+        } catch (e) {
+            console.warn('extractCategoryRatings: Failed to parse extraData', e);
+        }
+
+        // Fusionner extra avec reviewData pour chercher les champs
+        const dataSource = { ...extra, ...reviewData };
+
+        // Reconstruire chaque catégorie depuis les champs plats
+        for (const [catKey, catDef] of Object.entries(categoryFields)) {
+            // Si la catégorie existe déjà dans ratings et est un objet avec des valeurs, la garder
+            if (ratings[catKey] && typeof ratings[catKey] === 'object' && Object.keys(ratings[catKey]).length > 0) {
+                continue;
+            }
+
+            // Sinon, reconstruire depuis les champs plats
+            const reconstructed = {};
+            for (const field of catDef.fields) {
+                const value = dataSource[field];
+                if (value !== undefined && value !== null && value !== '') {
+                    const numValue = parseFloat(value);
+                    if (!isNaN(numValue) && numValue > 0) {
+                        reconstructed[field] = numValue;
+                    }
+                }
+            }
+
+            if (Object.keys(reconstructed).length > 0) {
+                ratings[catKey] = reconstructed;
+            }
+        }
+
+        console.log('🔍 extractCategoryRatings - Rebuilt ratings:', {
+            fromExtraData: Object.keys(extra).length,
+            fromReviewData: Object.keys(reviewData).length,
+            reconstructedCategories: Object.keys(ratings)
+        });
     }
 
     const categories = [
@@ -178,9 +255,15 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
         }
         // Si c'est un objet avec des sous-champs (calcul de la moyenne)
         else if (typeof catValue === 'object' && catValue !== null) {
+            const subLabels = categoryFields[cat.key]?.labels || {};
             const subEntries = Object.entries(catValue)
                 .filter(([k, v]) => typeof v === 'number' || (typeof v === 'string' && !isNaN(parseFloat(v))))
-                .map(([k, v]) => ({ key: k, value: parseFloat(v) }));
+                .map(([k, v]) => ({ 
+                    key: k, 
+                    label: subLabels[k] || k,
+                    value: parseFloat(v) 
+                }))
+                .filter(e => e.value > 0);
 
             if (subEntries.length > 0) {
                 value = subEntries.reduce((sum, e) => sum + e.value, 0) / subEntries.length;
@@ -201,6 +284,13 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
         });
     }
 
+    console.log('📊 extractCategoryRatings - Result:', result.map(r => ({
+        cat: r.key,
+        value: r.value,
+        subCount: r.count,
+        subs: r.subDetails?.map(s => `${s.key}=${s.value}`).join(', ')
+    })));
+
     return result;
 }
 
@@ -211,19 +301,41 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
  * @returns {Array} Liste des données formatées
  */
 export function extractExtraData(extraData, reviewData = null) {
-    const extra = asObject(extraData);
+    // Parser extraData si c'est une chaîne
+    let extra = {};
+    try {
+        if (typeof extraData === 'string') {
+            extra = JSON.parse(extraData);
+        } else if (typeof extraData === 'object' && extraData !== null) {
+            extra = extraData;
+        }
+    } catch (e) {
+        console.warn('extractExtraData: Failed to parse extraData', e);
+    }
+
     // Fusionner avec les champs de reviewData directement
     const merged = { ...extra };
     if (reviewData) {
         // Copier les champs directs de reviewData qui ne sont pas dans extra
-        const directFields = ['densite', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines',
-            'durete', 'elasticite', 'collant', 'friabilite', 'granularite',
-            'intensiteFumee', 'agressivite', 'cendre', 'montee', 'intensiteEffet', 'dureeEffet',
-            'aromasIntensity', 'tastesIntensity', 'effectsIntensity', 'fideliteCultivars',
-            'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus',
-            'textureBouche', 'douceur', 'persistanceGout', 'retroGout'];
+        const directFields = [
+            // Visuel
+            'densite', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines',
+            'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus', 'pistils',
+            // Texture
+            'durete', 'elasticite', 'collant', 'friabilite', 'granularite', 'densiteTexture', 'homogeneite',
+            // Fumée/Goût
+            'intensiteFumee', 'agressivite', 'cendre', 'douceur', 'persistanceGout', 'retroGout', 'textureBouche',
+            // Effets
+            'montee', 'intensiteEffet', 'dureeEffet',
+            // Sensoriel
+            'aromasIntensity', 'tastesIntensity', 'effectsIntensity', 'fideliteCultivars', 'complexiteAromas',
+            // Process
+            'purgevide', 'sechage', 'curing',
+            // Culture
+            'typeCulture', 'spectre', 'techniquesPropagation'
+        ];
         directFields.forEach(f => {
-            if (merged[f] === undefined && reviewData[f] !== undefined) {
+            if (merged[f] === undefined && reviewData[f] !== undefined && reviewData[f] !== null && reviewData[f] !== '') {
                 merged[f] = reviewData[f];
             }
         });
@@ -249,10 +361,12 @@ export function extractExtraData(extraData, reviewData = null) {
         { key: 'graines', label: 'Graines', icon: '🫘', category: 'quality' },
         // Texture
         { key: 'durete', label: 'Dureté', icon: '💎', category: 'texture' },
+        { key: 'densiteTexture', label: 'Densité texture', icon: '🧱', category: 'texture' },
         { key: 'elasticite', label: 'Élasticité', icon: '🔄', category: 'texture' },
         { key: 'collant', label: 'Collant', icon: '🍯', category: 'texture' },
         { key: 'friabilite', label: 'Friabilité', icon: '🥧', category: 'texture' },
         { key: 'granularite', label: 'Granularité', icon: '🔘', category: 'texture' },
+        { key: 'homogeneite', label: 'Homogénéité', icon: '⚖️', category: 'texture' },
         { key: 'textureBouche', label: 'Texture bouche', icon: '👄', category: 'texture' },
         // Fumée/Combustion
         { key: 'intensiteFumee', label: 'Intensité fumée', icon: '💨', category: 'smoke' },
@@ -268,6 +382,7 @@ export function extractExtraData(extraData, reviewData = null) {
         { key: 'tastesIntensity', label: 'Intensité goûts', icon: '👅', category: 'sensory' },
         { key: 'effectsIntensity', label: 'Intensité effets', icon: '💪', category: 'sensory' },
         { key: 'fideliteCultivars', label: 'Fidélité cultivar', icon: '🎯', category: 'sensory' },
+        { key: 'complexiteAromas', label: 'Complexité arômes', icon: '🧩', category: 'sensory' },
         { key: 'persistanceGout', label: 'Persistance goût', icon: '⏳', category: 'sensory' },
         { key: 'retroGout', label: 'Rétro-goût', icon: '🔙', category: 'sensory' },
         { key: 'notesDominantesOdeur', label: 'Notes dominantes', icon: '🎵', category: 'sensory' },
@@ -278,16 +393,26 @@ export function extractExtraData(extraData, reviewData = null) {
         { key: 'curing', label: 'Curing', icon: '🫙', category: 'process' },
     ];
 
-    return fieldDefs
+    const results = fieldDefs
         .filter(({ key }) => merged[key] !== undefined && merged[key] !== null && merged[key] !== '')
         .map(({ key, label, icon, category }) => {
             let displayValue = merged[key];
             // Si c'est un nombre, formater
             if (typeof displayValue === 'number') {
                 displayValue = displayValue % 1 === 0 ? displayValue : displayValue.toFixed(1);
+            } else if (typeof displayValue === 'string') {
+                // Essayer de parser comme nombre
+                const numVal = parseFloat(displayValue);
+                if (!isNaN(numVal)) {
+                    displayValue = numVal % 1 === 0 ? numVal : numVal.toFixed(1);
+                }
             }
             return { key, label, icon, category, value: displayValue };
         });
+
+    console.log('📦 extractExtraData - Found:', results.length, 'fields from merged data');
+    
+    return results;
 }
 
 /**
