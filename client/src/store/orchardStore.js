@@ -232,6 +232,14 @@ export const useOrchardStore = create(
                 }
             })),
 
+            // Set all content modules at once (for presets)
+            setContentModules: (modules) => set((state) => ({
+                config: {
+                    ...state.config,
+                    contentModules: { ...state.config.contentModules, ...modules }
+                }
+            })),
+
             reorderModules: (newOrder) => set((state) => ({
                 config: { ...state.config, moduleOrder: newOrder }
             })),
@@ -339,6 +347,7 @@ export const useOrchardActions = () => useOrchardStore((state) => ({
     updateColors: state.updateColors,
     applyColorPalette: state.applyColorPalette,
     toggleContentModule: state.toggleContentModule,
+    setContentModules: state.setContentModules,
     reorderModules: state.reorderModules,
     updateImage: state.updateImage,
     updateBranding: state.updateBranding,
