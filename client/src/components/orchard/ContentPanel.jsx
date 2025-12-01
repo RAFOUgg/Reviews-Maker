@@ -94,7 +94,7 @@ const hasData = (id, data) => {
 const getValuePreview = (id, data) => {
     const value = getFieldValue(id, data);
     if (value === undefined || value === null) return null;
-    
+
     if (Array.isArray(value)) {
         if (value.length === 0) return null;
         const first = typeof value[0] === 'object' ? (value[0].name || value[0].label || JSON.stringify(value[0]).slice(0, 20)) : value[0];
@@ -166,7 +166,7 @@ DraggableField.propTypes = {
 // Section de champs avec titre
 function FieldSection({ title, fields, placedFieldIds, reviewData }) {
     const fieldsWithData = fields.filter(f => hasData(f.id, reviewData)).length;
-    
+
     return (
         <div className="mb-4">
             <h3 className="text-sm font-bold mb-2 text-purple-300 uppercase tracking-wide flex items-center justify-between">
