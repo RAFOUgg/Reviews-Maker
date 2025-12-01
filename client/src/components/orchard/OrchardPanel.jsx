@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, closestCenter } from '@dnd-kit/core';
 import { useOrchardStore } from '../../store/orchardStore';
 import ConfigPane from './ConfigPane';
 import PreviewPane from './PreviewPane';
@@ -143,11 +142,23 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
     const [showPreview, setShowPreview] = useState(true);
     const [isCustomMode, setIsCustomMode] = useState(false); // Nouveau: mode template vs custom
     const [customLayout, setCustomLayout] = useState([]); // Layout custom pour drag & drop
+    const [activeDragId, setActiveDragId] = useState(null); // ID du champ en cours de drag
+    const [isCanvasOver, setIsCanvasOver] = useState(false); // Canvas est survolé
+    const canvasRef = useRef(null);
     const setReviewData = useOrchardStore((state) => state.setReviewData);
     const isPreviewFullscreen = useOrchardStore((state) => state.isPreviewFullscreen);
     const togglePreviewFullscreen = useOrchardStore((state) => state.togglePreviewFullscreen);
     const config = useOrchardStore((state) => state.config);
     const activePreset = useOrchardStore((state) => state.activePreset);
+
+    // Configurer les sensors pour @dnd-kit
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8, // 8px de mouvement avant activation du drag
+            },
+        })
+    );
 
     useEffect(() => {
         if (reviewData) {
@@ -213,8 +224,96 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
         setCustomLayout(prev => [...prev, zone]);
     };
 
+    // ============================================================================
+    // GESTION DU DRAG & DROP AVEC @dnd-kit
+    // ============================================================================
+
+    const handleDragStart = useCallback((event) => {
+        const { active } = event;
+        console.log('🚀 DragStart:', active.id, active.data?.current?.field);
+        setActiveDragId(active.id);
+    }, []);
+
+    const handleDragOver = useCallback((event) => {
+        const { over } = event;
+        // Vérifier si on survole le canvas
+        setIsCanvasOver(over?.id === 'canvas-drop-zone');
+    }, []);
+
+    const handleDragEnd = useCallback((event) => {
+        const { active, over } = event;
+        console.log('🏁 DragEnd:', { activeId: active.id, overId: over?.id });
+        
+        setActiveDragId(null);
+        setIsCanvasOver(false);
+
+        // Si on a droppé sur le canvas
+        if (over?.id === 'canvas-drop-zone' && active.data?.current?.field) {
+            const field = active.data.current.field;
+            
+            // Calculer la position relative au canvas
+            const canvasElement = document.querySelector('.orchard-canvas-resize-parent');
+            if (canvasElement && event.activatorEvent) {
+                const rect = canvasElement.getBoundingClientRect();
+                const clientX = event.activatorEvent.clientX || 0;
+                const clientY = event.activatorEvent.clientY || 0;
+                
+                // Position en pourcentage
+                const x = Math.max(5, Math.min(75, ((clientX - rect.left) / rect.width) * 100));
+                const y = Math.max(5, Math.min(75, ((clientY - rect.top) / rect.height) * 100));
+                
+                console.log('📍 Drop position:', { x, y, field: field.id });
+                
+                // Ajouter le champ au layout
+                const alreadyPlaced = customLayout.find(pf => pf.id === field.id);
+                if (alreadyPlaced) {
+                    // Mettre à jour la position
+                    setCustomLayout(prev => prev.map(pf =>
+                        pf.id === field.id ? { ...pf, position: { x, y } } : pf
+                    ));
+                } else {
+                    // Ajouter le nouveau champ
+                    setCustomLayout(prev => [...prev, { 
+                        ...field, 
+                        position: { x, y }, 
+                        width: 25, 
+                        height: 20, 
+                        rotation: 0 
+                    }]);
+                }
+            }
+        }
+
+        // Si on a droppé sur une zone
+        if (over?.data?.current?.type === 'zone' && active.data?.current?.field) {
+            const zoneId = over.data.current.zoneId;
+            const fieldToAssign = active.data.current.field;
+            
+            setCustomLayout(prev => prev.map(pf => {
+                if (pf.id === zoneId) {
+                    const assignedFields = Array.from(new Set([...(pf.assignedFields || []), fieldToAssign.id]));
+                    return { ...pf, assignedFields };
+                }
+                // Si le champ était placé directement, le retirer
+                if (pf.id === fieldToAssign.id) {
+                    return null;
+                }
+                return pf;
+            }).filter(Boolean));
+        }
+    }, [customLayout]);
+
+    // Données normalisées pour les composants enfants
+    const normalizedData = normalizeReviewData(reviewData);
+
     return (
-        <DndProvider backend={HTML5Backend}>
+        <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+        >
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -387,9 +486,9 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                                 className="flex h-full"
                             >
                                 {/* Content Panel - Left */}
-                                <div className="w-96 border-r border-purple-500/30 overflow-y-auto bg-gray-900/50">
+                                <div className="w-80 flex-shrink-0 overflow-hidden">
                                     <ContentPanel
-                                        reviewData={normalizeReviewData(reviewData)}
+                                        reviewData={normalizedData}
                                         placedFields={customLayout}
                                         onFieldSelect={(item) => {
                                             if (item?.type === 'zone') {
@@ -400,11 +499,12 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                                 </div>
 
                                 {/* Custom Layout Canvas - Right */}
-                                <div className="flex-1 overflow-hidden">
+                                <div ref={canvasRef} className="flex-1 overflow-hidden">
                                     <CustomLayoutPane
-                                        reviewData={normalizeReviewData(reviewData)}
+                                        reviewData={normalizedData}
                                         layout={customLayout}
                                         onLayoutChange={handleLayoutChange}
+                                        isCanvasOver={isCanvasOver}
                                     />
                                 </div>
                             </motion.div>
@@ -449,7 +549,16 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                     <ExportModal onClose={() => setShowExportModal(false)} />
                 )}
             </AnimatePresence>
-        </DndProvider>
+
+            {/* Drag Overlay - Affiche l'élément en cours de drag */}
+            <DragOverlay>
+                {activeDragId ? (
+                    <div className="bg-purple-600 text-white px-3 py-2 rounded-lg shadow-2xl text-sm font-medium opacity-90">
+                        📦 {activeDragId}
+                    </div>
+                ) : null}
+            </DragOverlay>
+        </DndContext>
     );
 }
 

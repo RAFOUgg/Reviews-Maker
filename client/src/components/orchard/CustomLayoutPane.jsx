@@ -4,7 +4,7 @@
  * Utilise @dnd-kit pour une meilleure compatibilité
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
@@ -28,29 +28,32 @@ const getFieldValueFromData = (id, reviewData) => {
     if (id.includes('.')) {
         const parts = id.split('.');
         let val = reviewData;
-        for (const p of parts) val = val?.[p];
+        for (const p of parts) {
+            if (val === undefined || val === null) return null;
+            val = val[p];
+        }
+        // Si c'est un objet (sous-notes), calculer la moyenne
+        if (val && typeof val === 'object' && !Array.isArray(val)) {
+            const nums = Object.values(val).filter(v => typeof v === 'number');
+            if (nums.length > 0) {
+                return nums.reduce((a, b) => a + b, 0) / nums.length;
+            }
+        }
         return val;
     }
     return reviewData[id];
 };
 
 // Composant pour un champ placé (avec bouton supprimer)
-function PlacedField({ field, value, onRemove, position, width = 25, height = 20, rotation = 0, onUpdate, onAssignToZone, reviewData }) {
+function PlacedField({ field, value, onRemove, position, width = 25, height = 20, rotation = 0, onUpdate, reviewData }) {
     const isZone = field.type === 'zone' || field.zone === true;
 
-    // If zone, create a drop target to accept fields
-    const [{ isOver, canDrop }, drop] = useDrop(() => ({
-        accept: DRAGGABLE_FIELD_TYPES.ORCHARD_FIELD,
-        drop: (item) => {
-            if (isZone) {
-                onAssignToZone?.(field.id, item.field);
-            }
-        },
-        collect: (monitor) => ({
-            isOver: monitor.isOver(),
-            canDrop: monitor.canDrop()
-        })
-    }), [field, isZone, onAssignToZone]);
+    // Zone droppable pour accepter des champs à l'intérieur
+    const { setNodeRef: setZoneRef, isOver } = useDroppable({
+        id: `zone-drop-${field.id}`,
+        data: { type: 'zone', zoneId: field.id },
+        disabled: !isZone
+    });
 
     return (
         <motion.div
@@ -62,19 +65,19 @@ function PlacedField({ field, value, onRemove, position, width = 25, height = 20
                 left: `${position.x}%`,
                 top: `${position.y}%`,
                 width: `${width}%`,
-                minWidth: '100px',
+                minWidth: '120px',
                 zIndex: 10
             }}
         >
             <div
-                ref={isZone ? drop : undefined}
+                ref={isZone ? setZoneRef : undefined}
                 className={`
                     relative bg-gray-800/90 backdrop-blur-sm p-3 rounded-lg border shadow-xl
-                    ${isZone ? 'border-dashed border-2 border-blue-500/50' : 'border-purple-500/30'}
-                    ${isOver && canDrop ? 'border-green-500 bg-green-500/20' : ''}
+                    ${isZone ? 'border-dashed border-2 border-blue-500/50' : 'border-purple-500/50'}
+                    ${isOver ? 'border-green-500 bg-green-500/20' : ''}
                 `}
                 style={{
-                    minHeight: `${height * 2}px`,
+                    minHeight: `${Math.max(height * 2, 60)}px`,
                     transform: `rotate(${rotation}deg)`
                 }}
             >
@@ -103,12 +106,12 @@ function PlacedField({ field, value, onRemove, position, width = 25, height = 20
                                 <option value="">— Tous les champs —</option>
                                 <option value="basic">Informations de base</option>
                                 <option value="ratings">Notes & Évaluations</option>
-                                <option value="details">Détails Sensoriels</option>
-                                <option value="advanced">Informations Avancées</option>
+                                <option value="sensorial">Détails Sensoriels</option>
+                                <option value="pipelines">Pipelines & Culture</option>
                             </select>
                         </div>
 
-                        {isOver && canDrop && (
+                        {isOver && (
                             <div className="text-xs text-green-400 mb-2">📥 Relâcher pour placer</div>
                         )}
 
@@ -163,7 +166,9 @@ function PlacedField({ field, value, onRemove, position, width = 25, height = 20
                     className="absolute -right-2 -bottom-2 w-6 h-6 bg-white rounded-full text-gray-800 flex items-center justify-center shadow-md cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity z-20"
                     title="Redimensionner"
                 >
-                    <svg className="w-3 h-3" viewBox="0 0 20 20" fill="none" stroke="currentColor"><path strokeWidth="2" d="M3 17L17 3M7 17H17V7" /></svg>
+                    <svg className="w-3 h-3" viewBox="0 0 20 20" fill="none" stroke="currentColor">
+                        <path strokeWidth="2" d="M3 17L17 3M7 17H17V7" />
+                    </svg>
                 </div>
             </div>
         </motion.div>
@@ -182,46 +187,22 @@ PlacedField.propTypes = {
     height: PropTypes.number,
     rotation: PropTypes.number,
     onUpdate: PropTypes.func,
-    onAssignToZone: PropTypes.func,
     reviewData: PropTypes.object
 };
 
-// Zone de dépôt pour le canvas
-function DropCanvas({ children, onDrop }) {
-    const [{ isOver, canDrop }, drop] = useDrop(() => ({
-        accept: DRAGGABLE_FIELD_TYPES.ORCHARD_FIELD,
-        drop: (item, monitor) => {
-            console.log('🎯 DropCanvas - Drop event:', { item, hasMonitor: !!monitor });
-            const offset = monitor.getClientOffset();
-            const canvasRect = monitor.getTargetClientRect();
-
-            console.log('📍 DropCanvas - Positions:', { offset, canvasRect });
-
-            if (offset && canvasRect) {
-                const x = ((offset.x - canvasRect.left) / canvasRect.width) * 100;
-                const y = ((offset.y - canvasRect.top) / canvasRect.height) * 100;
-
-                console.log('✅ DropCanvas - Calling onDrop:', { field: item.field, position: { x, y } });
-                onDrop(item.field, { x, y });
-            } else {
-                console.warn('⚠️ DropCanvas - Missing offset or canvasRect');
-            }
-        },
-        collect: (monitor) => ({
-            isOver: monitor.isOver(),
-            canDrop: monitor.canDrop()
-        })
-    }), [onDrop]);
-
-    console.log('🎨 DropCanvas - State:', { isOver, canDrop });
+// Zone de dépôt principale (le canvas) - avec useDroppable de @dnd-kit
+function DropCanvas({ children, isOver }) {
+    const { setNodeRef } = useDroppable({
+        id: 'canvas-drop-zone',
+        data: { type: 'canvas' }
+    });
 
     return (
         <div
-            ref={drop}
+            ref={setNodeRef}
             className={`orchard-canvas-resize-parent
                 relative w-full h-full overflow-hidden
-                ${isOver && canDrop ? 'ring-4 ring-green-500/50' : ''}
-                ${canDrop ? 'ring-2 ring-purple-500/30' : ''}
+                ${isOver ? 'ring-4 ring-green-500/50' : 'ring-2 ring-purple-500/30'}
             `}
         >
             {/* Grille d'aide au positionnement */}
@@ -233,8 +214,8 @@ function DropCanvas({ children, onDrop }) {
             </div>
 
             {/* Indicateur de drop */}
-            {isOver && canDrop && (
-                <div className="absolute inset-0 bg-green-500/10 backdrop-blur-sm flex items-center justify-center pointer-events-none">
+            {isOver && (
+                <div className="absolute inset-0 bg-green-500/10 backdrop-blur-sm flex items-center justify-center pointer-events-none z-50">
                     <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-2xl flex items-center gap-2">
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -251,12 +232,13 @@ function DropCanvas({ children, onDrop }) {
 
 DropCanvas.propTypes = {
     children: PropTypes.node,
-    onDrop: PropTypes.func.isRequired
+    isOver: PropTypes.bool
 };
 
 // Composant principal
-export default function CustomLayoutPane({ reviewData, layout, onLayoutChange }) {
+export default function CustomLayoutPane({ reviewData, layout, onLayoutChange, isCanvasOver }) {
     const [placedFields, setPlacedFields] = useState(layout || []);
+    const canvasRef = useRef(null);
 
     // Synchroniser placedFields avec le prop layout quand il change
     useEffect(() => {
@@ -265,98 +247,13 @@ export default function CustomLayoutPane({ reviewData, layout, onLayoutChange })
         }
     }, [layout]);
 
-    // 🔍 Debug - Afficher les données reçues
-    console.log('🎨 CustomLayoutPane - Données:', {
+    // Debug
+    console.log('🎨 CustomLayoutPane:', {
         hasReviewData: !!reviewData,
-        reviewDataKeys: reviewData ? Object.keys(reviewData).slice(0, 20) : [],
-        sampleData: reviewData ? {
-            title: reviewData.title,
-            holderName: reviewData.holderName,
-            rating: reviewData.rating,
-            aromasLength: reviewData.aromas?.length || 0,
-            effectsLength: reviewData.effects?.length || 0
-        } : null,
-        layoutLength: layout?.length || 0,
-        placedFieldsLength: placedFields.length
+        keysCount: reviewData ? Object.keys(reviewData).length : 0,
+        placedCount: placedFields.length,
+        isCanvasOver
     });
-
-    // Vérifier si un champ a une valeur
-    const hasValueForField = useCallback((fld) => {
-        try {
-            const id = fld.id || fld.key || fld.name;
-            if (!id) return false;
-
-            const value = getFieldValueFromData(id, reviewData);
-            if (value === undefined || value === null) return false;
-            if (Array.isArray(value)) return value.length > 0;
-            if (typeof value === 'string') return value.trim().length > 0;
-            return true;
-        } catch (err) {
-            console.warn('hasValueForField error', err);
-            return false;
-        }
-    }, [reviewData]);
-
-    const handleDrop = useCallback((field, position) => {
-        // Pour les zones, on accepte toujours
-        if (field.type === 'zone') {
-            const zoneId = `zone_${Date.now()}`;
-            const newZone = {
-                ...field,
-                id: zoneId,
-                label: 'Zone personnalisée',
-                position,
-                width: 30,
-                height: 30,
-                rotation: 0,
-                assignedFields: []
-            };
-            const updated = [...placedFields, newZone];
-            setPlacedFields(updated);
-            onLayoutChange?.(updated);
-            return;
-        }
-
-        // Vérifier que le champ a une valeur
-        if (!hasValueForField(field)) {
-            const idLabel = field.label || field.id || '';
-            console.warn(`Orchard: champ vide, placement autorisé mais sans données: ${idLabel}`);
-        }
-
-        // Vérifier si le champ n'est pas déjà placé
-        const alreadyPlaced = placedFields.find(pf => pf.id === field.id);
-        if (alreadyPlaced) {
-            // Mettre à jour la position
-            const updated = placedFields.map(pf =>
-                pf.id === field.id ? { ...pf, position } : pf
-            );
-            setPlacedFields(updated);
-            onLayoutChange?.(updated);
-        } else {
-            // Ajouter le nouveau champ
-            const updated = [...placedFields, { ...field, position, width: 25, height: 20, rotation: 0 }];
-            setPlacedFields(updated);
-            onLayoutChange?.(updated);
-        }
-    }, [placedFields, hasValueForField, onLayoutChange]);
-
-    const assignFieldToZone = useCallback((zoneId, fieldToAssign) => {
-        const updated = placedFields.map(pf => {
-            if (pf.id === zoneId) {
-                // Éviter les doublons
-                const assignedFields = Array.from(new Set([...(pf.assignedFields || []), fieldToAssign.id]));
-                return { ...pf, assignedFields };
-            }
-            // Si le champ était placé directement, le retirer
-            if (pf.id === fieldToAssign.id) {
-                return null;
-            }
-            return pf;
-        }).filter(Boolean);
-
-        setPlacedFields(updated);
-        onLayoutChange?.(updated);
-    }, [placedFields, onLayoutChange]);
 
     const handleRemove = useCallback((fieldId) => {
         const updated = placedFields.filter(pf => pf.id !== fieldId);
@@ -378,8 +275,8 @@ export default function CustomLayoutPane({ reviewData, layout, onLayoutChange })
     }, [reviewData]);
 
     return (
-        <div className="w-full h-full bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
-            <DropCanvas onDrop={handleDrop}>
+        <div ref={canvasRef} className="w-full h-full bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
+            <DropCanvas isOver={isCanvasOver}>
                 <AnimatePresence>
                     {placedFields.length === 0 && (
                         <motion.div
@@ -411,7 +308,6 @@ export default function CustomLayoutPane({ reviewData, layout, onLayoutChange })
                             onUpdate={(updates) => handleFieldUpdate(placedField.id, updates)}
                             position={placedField.position}
                             onRemove={handleRemove}
-                            onAssignToZone={assignFieldToZone}
                             reviewData={reviewData}
                         />
                     ))}
@@ -422,7 +318,8 @@ export default function CustomLayoutPane({ reviewData, layout, onLayoutChange })
 }
 
 CustomLayoutPane.propTypes = {
-    reviewData: PropTypes.object.isRequired,
+    reviewData: PropTypes.object,
     layout: PropTypes.array,
-    onLayoutChange: PropTypes.func
+    onLayoutChange: PropTypes.func,
+    isCanvasOver: PropTypes.bool
 };
