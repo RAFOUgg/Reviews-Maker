@@ -1,13 +1,14 @@
 /**
  * CustomLayoutPane Component
  * Mode personnalisé avec drag & drop pour placer les champs librement
+ * Utilise @dnd-kit pour une meilleure compatibilité
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { useDrop } from 'react-dnd';
+import { useDroppable } from '@dnd-kit/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
-import { DRAGGABLE_FIELD_TYPES, DRAGGABLE_FIELDS } from './ContentPanel';
+import { DRAGGABLE_FIELDS } from './ContentPanel';
 import FieldRenderer from './FieldRendererClean';
 
 // Helper pour récupérer la définition d'un champ
