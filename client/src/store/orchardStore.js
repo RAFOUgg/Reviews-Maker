@@ -9,29 +9,37 @@ import { COLOR_PALETTES, DEFAULT_TEMPLATES } from './orchardConstants';
 export { COLOR_PALETTES, DEFAULT_TEMPLATES };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// FORCE RESET: Si localStorage a une vieille version, le supprimer immédiatement
+// FORCE RESET: Supprimer localStorage obsolète AVANT que zustand ne charge
 // ═══════════════════════════════════════════════════════════════════════════════
-const CURRENT_STORAGE_VERSION = 5;
+const CURRENT_STORAGE_VERSION = 6; // Incrémenté pour forcer reset
 const STORAGE_KEY = 'orchard-storage';
 
 try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
         const parsed = JSON.parse(stored);
+        // zustand persist peut stocker: { state: {...}, version: X } ou { version: X, state: {...} }
         const storedVersion = parsed?.version ?? 0;
-        const modulesCount = Object.keys(parsed?.state?.config?.contentModules || {}).length;
+        // Les modules peuvent être dans state.config.contentModules ou config.contentModules
+        const stateConfig = parsed?.state?.config || parsed?.config || {};
+        const modulesCount = Object.keys(stateConfig?.contentModules || {}).length;
 
-        console.log('🔍 Orchard Storage Check:', { storedVersion, currentVersion: CURRENT_STORAGE_VERSION, modulesCount });
+        console.log('🔍 Orchard Storage Check:', { 
+            storedVersion, 
+            currentVersion: CURRENT_STORAGE_VERSION, 
+            modulesCount,
+            needsReset: storedVersion < CURRENT_STORAGE_VERSION || modulesCount < 50
+        });
 
-        // Si version obsolète OU moins de 50 modules, forcer le reset
+        // TOUJOURS reset si version < 6 OU moins de 50 modules
         if (storedVersion < CURRENT_STORAGE_VERSION || modulesCount < 50) {
-            console.log('🗑️ Orchard Storage: Forcing reset (old version or incomplete modules)');
+            console.log('🗑️ FORCING localStorage reset - old version or incomplete modules');
             localStorage.removeItem(STORAGE_KEY);
         }
     }
 } catch (e) {
-    console.warn('Orchard storage check failed, removing:', e);
-    localStorage.removeItem(STORAGE_KEY);
+    console.warn('Orchard storage check failed, forcing removal:', e);
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
 }
 
 // Configuration par défaut
