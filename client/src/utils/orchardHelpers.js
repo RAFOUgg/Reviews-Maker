@@ -196,16 +196,23 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
         }
 
         // Fusionner extra avec reviewData pour chercher les champs
+        // reviewData a priorité car il contient les valeurs directes de formData
         const dataSource = { ...extra, ...reviewData };
 
-        // Reconstruire chaque catégorie depuis les champs plats
-        for (const [catKey, catDef] of Object.entries(categoryFields)) {
-            // Si la catégorie existe déjà dans ratings et est un objet avec des valeurs, la garder
-            if (ratings[catKey] && typeof ratings[catKey] === 'object' && Object.keys(ratings[catKey]).length > 0) {
-                continue;
-            }
+        console.log('🔍 extractCategoryRatings - DataSource sample:', {
+            densite: dataSource.densite,
+            trichome: dataSource.trichome,
+            aromasIntensity: dataSource.aromasIntensity,
+            durete: dataSource.durete,
+            montee: dataSource.montee,
+            hasReviewData: !!reviewData,
+            reviewDataKeys: reviewData ? Object.keys(reviewData).slice(0, 20) : []
+        });
 
-            // Sinon, reconstruire depuis les champs plats
+        // TOUJOURS reconstruire chaque catégorie depuis les champs plats
+        // car même si ratings[catKey] existe comme nombre, on veut les sous-détails
+        for (const [catKey, catDef] of Object.entries(categoryFields)) {
+            // Reconstruire depuis les champs plats
             const reconstructed = {};
             for (const field of catDef.fields) {
                 const value = dataSource[field];
@@ -217,15 +224,21 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
                 }
             }
 
+            // Si on a reconstruit des sous-champs, les utiliser
             if (Object.keys(reconstructed).length > 0) {
                 ratings[catKey] = reconstructed;
+                console.log(`  ✅ ${catKey} reconstructed:`, reconstructed);
             }
+            // Sinon garder la valeur existante (nombre ou objet)
         }
 
         console.log('🔍 extractCategoryRatings - Rebuilt ratings:', {
             fromExtraData: Object.keys(extra).length,
             fromReviewData: Object.keys(reviewData).length,
-            reconstructedCategories: Object.keys(ratings)
+            reconstructedCategories: Object.keys(ratings),
+            ratingsPreview: Object.entries(ratings).map(([k, v]) => 
+                `${k}: ${typeof v === 'object' ? Object.keys(v).length + ' fields' : v}`
+            )
         });
     }
 

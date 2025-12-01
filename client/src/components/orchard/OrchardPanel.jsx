@@ -43,6 +43,16 @@ function normalizeReviewData(reviewData) {
     // ============================================================================
     const dataSource = { ...parsedExtra, ...normalized };
 
+    console.log('🔧 OrchardPanel normalizeReviewData - DataSource sample:', {
+        densite: dataSource.densite,
+        trichome: dataSource.trichome,
+        aromasIntensity: dataSource.aromasIntensity,
+        durete: dataSource.durete,
+        montee: dataSource.montee,
+        categoryRatingsType: typeof normalized.categoryRatings,
+        categoryRatingsValue: normalized.categoryRatings
+    });
+
     // Définition des champs par catégorie
     const categoryFieldsMap = {
         visual: ['densite', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines', 'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus'],
@@ -52,30 +62,44 @@ function normalizeReviewData(reviewData) {
         effects: ['montee', 'intensiteEffet', 'dureeEffet', 'effectsIntensity', 'intensiteEffets']
     };
 
-    // Reconstruire categoryRatings si absent ou vide
-    if (!normalized.categoryRatings || Object.keys(normalized.categoryRatings).length === 0) {
-        const reconstructed = {};
+    // Parser categoryRatings si c'est une string JSON
+    let existingCategoryRatings = normalized.categoryRatings;
+    if (typeof existingCategoryRatings === 'string') {
+        try {
+            existingCategoryRatings = JSON.parse(existingCategoryRatings);
+        } catch (e) {
+            existingCategoryRatings = {};
+        }
+    }
 
-        for (const [category, fields] of Object.entries(categoryFieldsMap)) {
-            const catValues = {};
-            for (const field of fields) {
-                const value = dataSource[field];
-                if (value !== undefined && value !== null && value !== '') {
-                    const numValue = parseFloat(value);
-                    if (!isNaN(numValue) && numValue > 0) {
-                        catValues[field] = numValue;
-                    }
+    // TOUJOURS reconstruire categoryRatings avec les sous-champs depuis les champs plats
+    // même si categoryRatings existe déjà (car il peut contenir seulement des moyennes)
+    const reconstructed = {};
+    let foundAnyField = false;
+
+    for (const [category, fields] of Object.entries(categoryFieldsMap)) {
+        const catValues = {};
+        for (const field of fields) {
+            const value = dataSource[field];
+            if (value !== undefined && value !== null && value !== '') {
+                const numValue = parseFloat(value);
+                if (!isNaN(numValue) && numValue > 0) {
+                    catValues[field] = numValue;
+                    foundAnyField = true;
                 }
             }
-            if (Object.keys(catValues).length > 0) {
-                reconstructed[category] = catValues;
-            }
         }
+        if (Object.keys(catValues).length > 0) {
+            reconstructed[category] = catValues;
+        }
+    }
 
-        if (Object.keys(reconstructed).length > 0) {
-            normalized.categoryRatings = reconstructed;
-            console.log('🔧 OrchardPanel: Reconstructed categoryRatings from flat fields:', reconstructed);
-        }
+    if (foundAnyField) {
+        normalized.categoryRatings = reconstructed;
+        console.log('🔧 OrchardPanel: Reconstructed categoryRatings from flat fields:', reconstructed);
+    } else if (existingCategoryRatings && typeof existingCategoryRatings === 'object') {
+        // Garder les categoryRatings existantes si on n'a pas trouvé de champs plats
+        normalized.categoryRatings = existingCategoryRatings;
     }
 
     // Normaliser les notes - s'assurer que 'rating' existe toujours
