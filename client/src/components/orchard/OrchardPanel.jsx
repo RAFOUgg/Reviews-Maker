@@ -162,7 +162,7 @@ function normalizeReviewData(reviewData) {
     // ============================================================================
     // NORMALISER LES CHAMPS SPÉCIAUX
     // ============================================================================
-    
+
     // Si effects est vide mais extraData.effects existe (string), parser
     if ((!normalized.effects || normalized.effects.length === 0) && parsedExtra.effects) {
         if (typeof parsedExtra.effects === 'string') {
