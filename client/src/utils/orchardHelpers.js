@@ -128,6 +128,9 @@ export function isLightColor(hexColor) {
 
 /**
  * Extrait les données de categoryRatings
+ * Gère deux formats possibles:
+ * 1. Valeurs directes: { visual: 7.5, smell: 8 }
+ * 2. Sous-objets: { visual: { densite: 6.5, trichome: 5.5 }, smell: { aromasIntensity: 8 } }
  * @param {*} categoryRatings - Données des notes par catégorie
  * @returns {Array} Liste des notes formatées
  */
@@ -141,13 +144,45 @@ export function extractCategoryRatings(categoryRatings) {
         { key: 'texture', label: 'Texture', icon: '✋' },
         { key: 'taste', label: 'Goût', icon: '👅' },
         { key: 'effects', label: 'Effets', icon: '⚡' },
+        { key: 'overall', label: 'Global', icon: '⭐' },
     ];
 
     for (const cat of categories) {
-        if (ratings[cat.key] !== undefined && ratings[cat.key] !== null) {
+        const catValue = ratings[cat.key];
+        
+        if (catValue === undefined || catValue === null) continue;
+        
+        let value;
+        
+        // Si c'est un nombre directement
+        if (typeof catValue === 'number') {
+            value = catValue;
+        }
+        // Si c'est une chaîne numérique
+        else if (typeof catValue === 'string' && !isNaN(parseFloat(catValue))) {
+            value = parseFloat(catValue);
+        }
+        // Si c'est un objet avec des sous-champs (calcul de la moyenne)
+        else if (typeof catValue === 'object' && catValue !== null) {
+            const subValues = Object.values(catValue)
+                .filter(v => typeof v === 'number' || (typeof v === 'string' && !isNaN(parseFloat(v))))
+                .map(v => parseFloat(v));
+            
+            if (subValues.length > 0) {
+                value = subValues.reduce((sum, v) => sum + v, 0) / subValues.length;
+            } else {
+                continue; // Pas de valeurs numériques dans le sous-objet
+            }
+        }
+        else {
+            continue; // Format non reconnu
+        }
+
+        // Ne pas inclure 'overall' dans les affichages de catégories individuelles
+        if (cat.key !== 'overall' || value > 0) {
             result.push({
                 ...cat,
-                value: parseFloat(ratings[cat.key]) || 0
+                value: Math.round(value * 10) / 10 // Arrondi à 1 décimale
             });
         }
     }

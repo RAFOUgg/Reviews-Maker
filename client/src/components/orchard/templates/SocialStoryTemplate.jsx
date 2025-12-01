@@ -14,6 +14,26 @@ import {
  * Informations essentielles en un coup d'œil
  */
 export default function SocialStoryTemplate({ config, reviewData, dimensions }) {
+    // 🔍 Debug - Afficher toutes les données reçues
+    console.log('📱 SocialStoryTemplate - Données reçues:', {
+        hasConfig: !!config,
+        hasReviewData: !!reviewData,
+        reviewDataKeys: reviewData ? Object.keys(reviewData) : [],
+        title: reviewData?.title,
+        holderName: reviewData?.holderName,
+        rating: reviewData?.rating,
+        categoryRatingsRaw: reviewData?.categoryRatings,
+        categoryRatingsKeys: reviewData?.categoryRatings ? Object.keys(reviewData.categoryRatings) : [],
+        aromas: reviewData?.aromas,
+        effects: reviewData?.effects,
+        thcLevel: reviewData?.thcLevel,
+        cbdLevel: reviewData?.cbdLevel,
+        imageUrl: reviewData?.imageUrl,
+        mainImageUrl: reviewData?.mainImageUrl,
+        contentModulesEnabled: config?.contentModules ? 
+            Object.entries(config.contentModules).filter(([k, v]) => v).map(([k]) => k) : [],
+    });
+
     if (!config || !reviewData) {
         return (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-900 to-pink-900 p-8">
@@ -29,6 +49,21 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
     const aromas = asArray(reviewData.aromas).slice(0, 3);
     const effects = asArray(reviewData.effects).slice(0, 3);
     const { filled, value } = formatRating(reviewData.rating || 0, 5);
+
+    // 🔍 Debug - Données extraites
+    console.log('📱 SocialStoryTemplate - Données extraites:', {
+        categoryRatings,
+        aromas,
+        effects,
+        rating: { filled, value },
+        contentModules: {
+            rating: contentModules.rating,
+            categoryRatings: contentModules.categoryRatings,
+            effects: contentModules.effects,
+            aromas: contentModules.aromas,
+            thcLevel: contentModules.thcLevel,
+        }
+    });
 
     const mainImage = reviewData.mainImageUrl || reviewData.imageUrl || 
         (Array.isArray(reviewData.images) && reviewData.images[0]);
