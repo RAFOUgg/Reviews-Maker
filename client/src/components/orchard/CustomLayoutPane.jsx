@@ -3,7 +3,7 @@
  * Mode personnalisé avec drag & drop pour placer les champs librement
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDrop } from 'react-dnd';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
@@ -249,10 +249,24 @@ DropCanvas.propTypes = {
 export default function CustomLayoutPane({ reviewData, layout, onLayoutChange }) {
     const [placedFields, setPlacedFields] = useState(layout || []);
 
+    // Synchroniser placedFields avec le prop layout quand il change
+    useEffect(() => {
+        if (layout && JSON.stringify(layout) !== JSON.stringify(placedFields)) {
+            setPlacedFields(layout);
+        }
+    }, [layout]);
+
     // 🔍 Debug - Afficher les données reçues
     console.log('🎨 CustomLayoutPane - Données:', {
         hasReviewData: !!reviewData,
         reviewDataKeys: reviewData ? Object.keys(reviewData).slice(0, 20) : [],
+        sampleData: reviewData ? {
+            title: reviewData.title,
+            holderName: reviewData.holderName,
+            rating: reviewData.rating,
+            aromasLength: reviewData.aromas?.length || 0,
+            effectsLength: reviewData.effects?.length || 0
+        } : null,
         layoutLength: layout?.length || 0,
         placedFieldsLength: placedFields.length
     });

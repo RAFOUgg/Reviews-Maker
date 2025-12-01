@@ -389,7 +389,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                                 {/* Content Panel - Left */}
                                 <div className="w-96 border-r border-purple-500/30 overflow-y-auto bg-gray-900/50">
                                     <ContentPanel
-                                        reviewData={reviewData}
+                                        reviewData={normalizeReviewData(reviewData)}
                                         placedFields={customLayout}
                                         onFieldSelect={(item) => {
                                             if (item?.type === 'zone') {
@@ -402,7 +402,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                                 {/* Custom Layout Canvas - Right */}
                                 <div className="flex-1 overflow-hidden">
                                     <CustomLayoutPane
-                                        reviewData={reviewData}
+                                        reviewData={normalizeReviewData(reviewData)}
                                         layout={customLayout}
                                         onLayoutChange={handleLayoutChange}
                                     />
