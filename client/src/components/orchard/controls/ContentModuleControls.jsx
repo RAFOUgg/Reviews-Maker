@@ -12,135 +12,220 @@ import { useOrchardStore } from '../../../store/orchardStore';
 const MODULE_CATEGORIES = {
     essential: {
         name: '🎯 Essentiels',
-        description: 'Informations principales de la review',
+        description: 'Informations principales',
         color: 'purple',
-        modules: ['holderName', 'rating', 'image', 'description', 'type', 'category']
+        modules: ['holderName', 'title', 'rating', 'image', 'images', 'mainImage', 'imageUrl', 'description', 'type', 'category']
     },
     identity: {
-        name: '🏷️ Identité Produit',
-        description: 'Nom, auteur, date, tags',
+        name: '🏷️ Identité',
+        description: 'Auteur, date, tags',
         color: 'blue',
-        modules: ['title', 'author', 'ownerName', 'date', 'tags', 'images', 'mainImage']
+        modules: ['author', 'ownerName', 'date', 'createdAt', 'tags']
     },
     provenance: {
-        name: '🌱 Provenance & Cultivar',
-        description: 'Origine, génétique, producteur',
+        name: '🌱 Provenance',
+        description: 'Origine, génétique',
         color: 'green',
         modules: ['cultivar', 'cultivarsList', 'breeder', 'farm', 'hashmaker', 'origin', 'country', 'region']
     },
-    ratings: {
-        name: '⭐ Notes & Évaluations',
-        description: 'Notes globales et par catégorie',
+    ratingsGlobal: {
+        name: '⭐ Notes Globales',
+        description: 'Scores principaux',
         color: 'yellow',
-        modules: ['overallRating', 'categoryRatings', 'categoryRatings.visual', 'categoryRatings.smell', 'categoryRatings.taste', 'categoryRatings.effects', 'ratings', 'qualityScore']
+        modules: ['overallRating', 'note', 'qualityScore', 'ratings', 'categoryRatings', 'categoryRatings.visual', 'categoryRatings.smell', 'categoryRatings.texture', 'categoryRatings.taste', 'categoryRatings.effects']
     },
-    sensory: {
-        name: '🌸 Profil Sensoriel',
-        description: 'Arômes, goûts, effets, terpènes',
+    visualDetails: {
+        name: '👁️ Détails Visuels',
+        description: 'Apparence complète',
+        color: 'emerald',
+        modules: ['densite', 'trichome', 'pistil', 'pistils', 'manucure', 'moisissure', 'graines', 'couleur', 'couleurTransparence', 'pureteVisuelle', 'viscosite', 'melting', 'residus']
+    },
+    smellDetails: {
+        name: '👃 Détails Odeur',
+        description: 'Profil olfactif',
         color: 'pink',
-        modules: ['terpenes', 'aromas', 'tastes', 'effects', 'aromasIntensity', 'tastesIntensity', 'effectsIntensity', 'flavors', 'smell', 'taste']
+        modules: ['aromas', 'aromasIntensity', 'intensiteAromatique', 'fideliteCultivars']
+    },
+    textureDetails: {
+        name: '🤏 Détails Texture',
+        description: 'Toucher et consistance',
+        color: 'amber',
+        modules: ['durete', 'densiteTexture', 'elasticite', 'collant', 'friabiliteViscosite', 'meltingResidus', 'aspectCollantGras', 'viscositeTexture']
+    },
+    tasteDetails: {
+        name: '👅 Détails Goût',
+        description: 'Saveurs détaillées',
+        color: 'red',
+        modules: ['tastes', 'tastesIntensity', 'intensiteFumee', 'agressivite', 'cendre', 'intensiteGout', 'textureBouche', 'douceur', 'intensite', 'goutIntensity']
+    },
+    effectsDetails: {
+        name: '⚡ Détails Effets',
+        description: 'Effets ressentis',
+        color: 'violet',
+        modules: ['effects', 'effectsIntensity', 'montee', 'intensiteEffet', 'intensiteEffets', 'dureeEffet']
+    },
+    terpenes: {
+        name: '🍃 Terpènes',
+        description: 'Profil terpénique',
+        color: 'lime',
+        modules: ['terpenes']
     },
     technical: {
         name: '🔬 Données Techniques',
-        description: 'THC, CBD, ratios, mesures',
+        description: 'THC, CBD, ratios',
         color: 'cyan',
-        modules: ['thcLevel', 'cbdLevel', 'strainType', 'indicaRatio', 'sativaRatio', 'dureeEffet', 'purgevide', 'yield', 'floweringTime', 'harvestDate']
+        modules: ['thcLevel', 'cbdLevel', 'strainType', 'indicaRatio', 'sativaRatio', 'strainRatio']
     },
     pipelines: {
-        name: '⚗️ Process & Pipelines',
-        description: 'Extraction, fertilisation, substrat',
+        name: '⚗️ Pipelines',
+        description: 'Process de production',
         color: 'orange',
-        modules: ['pipelineExtraction', 'pipelineSeparation', 'pipelinePurification', 'fertilizationPipeline', 'substratMix', 'curing', 'drying', 'processing']
+        modules: ['pipelineExtraction', 'pipelineSeparation', 'pipelinePurification', 'fertilizationPipeline', 'substratMix', 'purgevide', 'curing', 'drying', 'processing', 'yield', 'floweringTime', 'harvestDate']
+    },
+    text: {
+        name: '📝 Contenu Texte',
+        description: 'Descriptions et notes',
+        color: 'slate',
+        modules: ['conclusion', 'notes', 'comments', 'recommendations', 'warnings']
     },
     extra: {
-        name: '📎 Données Supplémentaires',
-        description: 'Toutes les données additionnelles',
+        name: '📎 Extra',
+        description: 'Données additionnelles',
         color: 'gray',
-        modules: ['extraData', 'notes', 'comments', 'recommendations', 'warnings', 'certifications', 'awards', 'labResults']
+        modules: ['extraData', 'certifications', 'awards', 'labResults']
     }
 };
 
 const MODULE_LABELS = {
     // === ESSENTIELS ===
-    holderName: { name: 'Nom du produit', icon: '🏷️', desc: 'Nom principal affiché' },
+    holderName: { name: 'Nom du produit', icon: '🏷️', desc: 'Nom principal' },
+    title: { name: 'Titre', icon: '📝', desc: 'Titre alternatif' },
     rating: { name: 'Note globale', icon: '⭐', desc: 'Score de 0 à 10' },
-    image: { name: 'Image principale', icon: '🖼️', desc: 'Photo du produit' },
+    image: { name: 'Image', icon: '🖼️', desc: 'Photo principale' },
+    images: { name: 'Galerie', icon: '📷', desc: 'Photos additionnelles' },
+    mainImage: { name: 'Couverture', icon: '🖼️', desc: 'Image mise en avant' },
+    imageUrl: { name: 'URL Image', icon: '🔗', desc: 'Lien de l\'image' },
     description: { name: 'Description', icon: '📄', desc: 'Texte descriptif' },
-    type: { name: 'Type de produit', icon: '📦', desc: 'Fleur, Concentré, Hash...' },
-    category: { name: 'Catégorie', icon: '📂', desc: 'Classification du produit' },
+    type: { name: 'Type', icon: '📦', desc: 'Fleur, Concentré, Hash...' },
+    category: { name: 'Catégorie', icon: '📂', desc: 'Classification' },
 
     // === IDENTITÉ ===
-    title: { name: 'Titre / Nom commercial', icon: '📝', desc: 'Titre alternatif' },
     author: { name: 'Auteur', icon: '👤', desc: 'Auteur de la review' },
-    ownerName: { name: 'Publié par', icon: '🧾', desc: 'Propriétaire du contenu' },
-    date: { name: 'Date de publication', icon: '📅', desc: 'Date de création' },
-    tags: { name: 'Tags', icon: '🏷️', desc: 'Mots-clés associés' },
-    images: { name: 'Galerie d\'images', icon: '📷', desc: 'Photos additionnelles' },
-    mainImage: { name: 'Couverture', icon: '🖼️', desc: 'Image mise en avant' },
+    ownerName: { name: 'Publié par', icon: '🧾', desc: 'Propriétaire' },
+    date: { name: 'Date', icon: '📅', desc: 'Date de création' },
+    createdAt: { name: 'Créé le', icon: '📅', desc: 'Timestamp création' },
+    tags: { name: 'Tags', icon: '🏷️', desc: 'Mots-clés' },
 
     // === PROVENANCE ===
     cultivar: { name: 'Cultivar', icon: '🌱', desc: 'Variété cultivée' },
-    cultivarsList: { name: 'Liste des cultivars', icon: '🌿', desc: 'Toutes les variétés' },
-    breeder: { name: 'Breeder / Génétique', icon: '🧬', desc: 'Créateur de la génétique' },
-    farm: { name: 'Farm / Producteur', icon: '🏡', desc: 'Lieu de production' },
-    hashmaker: { name: 'Hash Maker', icon: '👨‍🔬', desc: 'Artisan extracteur' },
-    origin: { name: 'Origine', icon: '🌍', desc: 'Provenance géographique' },
+    cultivarsList: { name: 'Cultivars (liste)', icon: '🌿', desc: 'Toutes variétés' },
+    breeder: { name: 'Breeder', icon: '🧬', desc: 'Créateur génétique' },
+    farm: { name: 'Farm', icon: '🏡', desc: 'Producteur' },
+    hashmaker: { name: 'Hash Maker', icon: '👨‍🔬', desc: 'Extracteur' },
+    origin: { name: 'Origine', icon: '🌍', desc: 'Provenance' },
     country: { name: 'Pays', icon: '🗺️', desc: 'Pays d\'origine' },
-    region: { name: 'Région', icon: '📍', desc: 'Région de production' },
+    region: { name: 'Région', icon: '📍', desc: 'Région' },
 
-    // === NOTES ===
-    overallRating: { name: 'Note globale (alt)', icon: '⭐', desc: 'Score global alternatif' },
-    categoryRatings: { name: 'Notes détaillées', icon: '📊', desc: 'Toutes les notes par critère' },
-    'categoryRatings.visual': { name: 'Note Visuel', icon: '👁️', desc: 'Apparence, couleur, texture' },
-    'categoryRatings.smell': { name: 'Note Odeur', icon: '👃', desc: 'Intensité et qualité aromatique' },
-    'categoryRatings.taste': { name: 'Note Goût', icon: '👅', desc: 'Saveurs et persistance' },
-    'categoryRatings.effects': { name: 'Note Effets', icon: '⚡', desc: 'Puissance et qualité' },
-    ratings: { name: 'Toutes les notes', icon: '📋', desc: 'Vue complète des scores' },
+    // === NOTES GLOBALES ===
+    overallRating: { name: 'Note globale (alt)', icon: '⭐', desc: 'Score alternatif' },
+    note: { name: 'Note', icon: '⭐', desc: 'Score simple' },
     qualityScore: { name: 'Score qualité', icon: '🏆', desc: 'Indicateur global' },
+    ratings: { name: 'Toutes notes', icon: '📋', desc: 'Vue complète' },
+    categoryRatings: { name: 'Notes par catégorie', icon: '📊', desc: 'Toutes les notes' },
+    'categoryRatings.visual': { name: '👁️ Note Visuel', icon: '👁️', desc: 'Apparence' },
+    'categoryRatings.smell': { name: '👃 Note Odeur', icon: '👃', desc: 'Arômes' },
+    'categoryRatings.texture': { name: '🤏 Note Texture', icon: '🤏', desc: 'Toucher' },
+    'categoryRatings.taste': { name: '👅 Note Goût', icon: '👅', desc: 'Saveurs' },
+    'categoryRatings.effects': { name: '⚡ Note Effets', icon: '⚡', desc: 'Puissance' },
 
-    // === SENSORIEL ===
-    terpenes: { name: 'Terpènes', icon: '🍃', desc: 'Profil terpénique' },
+    // === DÉTAILS VISUELS ===
+    densite: { name: 'Densité', icon: '🧱', desc: 'Compacité' },
+    trichome: { name: 'Trichomes', icon: '✨', desc: 'Couverture' },
+    pistil: { name: 'Pistils', icon: '🔶', desc: 'Couleur pistils' },
+    pistils: { name: 'Pistils (alt)', icon: '🔶', desc: 'Présence pistils' },
+    manucure: { name: 'Manucure', icon: '✂️', desc: 'Qualité trim' },
+    moisissure: { name: 'Moisissure', icon: '🦠', desc: 'Absence moisissure' },
+    graines: { name: 'Graines', icon: '🌰', desc: 'Absence graines' },
+    couleur: { name: 'Couleur', icon: '🎨', desc: 'Teinte générale' },
+    couleurTransparence: { name: 'Transparence', icon: '💎', desc: 'Clarté' },
+    pureteVisuelle: { name: 'Pureté visuelle', icon: '🔍', desc: 'Propreté' },
+    viscosite: { name: 'Viscosité', icon: '🫠', desc: 'Fluidité' },
+    melting: { name: 'Melting', icon: '🔥', desc: 'Fonte' },
+    residus: { name: 'Résidus', icon: '⚫', desc: 'Propreté résiduelle' },
+
+    // === DÉTAILS ODEUR ===
     aromas: { name: 'Arômes', icon: '🌸', desc: 'Notes olfactives' },
+    aromasIntensity: { name: 'Intensité arômes', icon: '💨', desc: 'Force arômes (1-5)' },
+    intensiteAromatique: { name: 'Intensité aromat.', icon: '💨', desc: 'Puissance' },
+    fideliteCultivars: { name: 'Fidélité cultivar', icon: '🎯', desc: 'Représentation' },
+
+    // === DÉTAILS TEXTURE ===
+    durete: { name: 'Dureté', icon: '💪', desc: 'Résistance' },
+    densiteTexture: { name: 'Densité texture', icon: '🧱', desc: 'Compacité' },
+    elasticite: { name: 'Élasticité', icon: '🔄', desc: 'Souplesse' },
+    collant: { name: 'Collant', icon: '🍯', desc: 'Adhérence' },
+    friabiliteViscosite: { name: 'Friabilité', icon: '🥧', desc: 'Émiettement' },
+    meltingResidus: { name: 'Melting résidus', icon: '🔥', desc: 'Qualité fonte' },
+    aspectCollantGras: { name: 'Aspect gras', icon: '💧', desc: 'Huileux' },
+    viscositeTexture: { name: 'Viscosité tex.', icon: '🫠', desc: 'Fluidité' },
+
+    // === DÉTAILS GOÛT ===
     tastes: { name: 'Goûts', icon: '👅', desc: 'Notes gustatives' },
+    tastesIntensity: { name: 'Intensité goûts', icon: '🔥', desc: 'Force goûts' },
+    intensiteFumee: { name: 'Intensité fumée', icon: '💨', desc: 'Épaisseur fumée' },
+    agressivite: { name: 'Agressivité', icon: '⚡', desc: 'Douceur gorge' },
+    cendre: { name: 'Cendre', icon: '⚫', desc: 'Couleur cendre' },
+    intensiteGout: { name: 'Intensité goût', icon: '🔥', desc: 'Force saveur' },
+    textureBouche: { name: 'Texture bouche', icon: '👄', desc: 'Sensation' },
+    douceur: { name: 'Douceur', icon: '🍬', desc: 'Suavité' },
+    intensite: { name: 'Intensité', icon: '📊', desc: 'Force générale' },
+    goutIntensity: { name: 'Goût intensité', icon: '🔥', desc: 'Puissance' },
+
+    // === DÉTAILS EFFETS ===
     effects: { name: 'Effets', icon: '✨', desc: 'Effets ressentis' },
-    aromasIntensity: { name: 'Intensité arômes', icon: '💨', desc: 'Force des arômes (1-5)' },
-    tastesIntensity: { name: 'Intensité goûts', icon: '🔥', desc: 'Force des goûts (1-5)' },
-    effectsIntensity: { name: 'Intensité effets', icon: '💪', desc: 'Force des effets (1-5)' },
-    flavors: { name: 'Saveurs', icon: '🍇', desc: 'Notes de dégustation' },
-    smell: { name: 'Odeur', icon: '👃', desc: 'Description olfactive' },
-    taste: { name: 'Goût (simple)', icon: '👅', desc: 'Description gustative' },
+    effectsIntensity: { name: 'Intensité effets', icon: '💪', desc: 'Force effets' },
+    montee: { name: 'Montée', icon: '📈', desc: 'Vitesse montée' },
+    intensiteEffet: { name: 'Intensité effet', icon: '⚡', desc: 'Puissance' },
+    intensiteEffets: { name: 'Intensité effets', icon: '⚡', desc: 'Force' },
+    dureeEffet: { name: 'Durée effet', icon: '⏱️', desc: 'Longévité' },
+
+    // === TERPÈNES ===
+    terpenes: { name: 'Terpènes', icon: '🍃', desc: 'Profil terpénique' },
 
     // === TECHNIQUE ===
-    thcLevel: { name: 'Niveau THC', icon: '🔬', desc: 'Taux de THC (%)' },
-    cbdLevel: { name: 'Niveau CBD', icon: '💊', desc: 'Taux de CBD (%)' },
-    strainType: { name: 'Type (Indica/Sativa)', icon: '🧪', desc: 'Classification génétique' },
-    indicaRatio: { name: 'Ratio Indica', icon: '⚖️', desc: 'Pourcentage Indica' },
-    sativaRatio: { name: 'Ratio Sativa', icon: '⚖️', desc: 'Pourcentage Sativa' },
-    dureeEffet: { name: 'Durée des effets', icon: '⏱️', desc: 'Temps d\'action' },
-    purgevide: { name: 'Purge à vide', icon: '🫧', desc: 'Méthode de purge' },
-    yield: { name: 'Rendement', icon: '📈', desc: 'Production par plante' },
-    floweringTime: { name: 'Temps de floraison', icon: '🌺', desc: 'Durée en semaines' },
-    harvestDate: { name: 'Date de récolte', icon: '🌾', desc: 'Période de récolte' },
+    thcLevel: { name: 'THC', icon: '🔬', desc: 'Taux THC (%)' },
+    cbdLevel: { name: 'CBD', icon: '💊', desc: 'Taux CBD (%)' },
+    strainType: { name: 'Type strain', icon: '🧪', desc: 'Indica/Sativa' },
+    indicaRatio: { name: 'Ratio Indica', icon: '⚖️', desc: '% Indica' },
+    sativaRatio: { name: 'Ratio Sativa', icon: '⚖️', desc: '% Sativa' },
+    strainRatio: { name: 'Ratio strain', icon: '⚖️', desc: 'Balance' },
 
     // === PIPELINES ===
-    pipelineExtraction: { name: 'Pipeline Extraction', icon: '⚗️', desc: 'Méthode d\'extraction' },
-    pipelineSeparation: { name: 'Pipeline Séparation', icon: '🧪', desc: 'Processus de séparation' },
-    pipelinePurification: { name: 'Pipeline Purification', icon: '✨', desc: 'Étapes de purification' },
-    fertilizationPipeline: { name: 'Fertilisation', icon: '🌾', desc: 'Protocole nutritif' },
-    substratMix: { name: 'Substrat', icon: '🪴', desc: 'Composition du sol' },
-    curing: { name: 'Curing', icon: '🫙', desc: 'Affinage / Séchage lent' },
-    drying: { name: 'Séchage', icon: '💨', desc: 'Méthode de séchage' },
-    processing: { name: 'Transformation', icon: '⚙️', desc: 'Traitement appliqué' },
+    pipelineExtraction: { name: 'Extraction', icon: '⚗️', desc: 'Méthode' },
+    pipelineSeparation: { name: 'Séparation', icon: '🧪', desc: 'Process' },
+    pipelinePurification: { name: 'Purification', icon: '✨', desc: 'Étapes' },
+    fertilizationPipeline: { name: 'Fertilisation', icon: '🌾', desc: 'Protocole' },
+    substratMix: { name: 'Substrat', icon: '🪴', desc: 'Composition sol' },
+    purgevide: { name: 'Purge vide', icon: '🫧', desc: 'Méthode purge' },
+    curing: { name: 'Curing', icon: '🫙', desc: 'Affinage' },
+    drying: { name: 'Séchage', icon: '💨', desc: 'Méthode' },
+    processing: { name: 'Transformation', icon: '⚙️', desc: 'Traitement' },
+    yield: { name: 'Rendement', icon: '📈', desc: 'Production' },
+    floweringTime: { name: 'Floraison', icon: '🌺', desc: 'Durée' },
+    harvestDate: { name: 'Récolte', icon: '🌾', desc: 'Date' },
+
+    // === TEXTE ===
+    conclusion: { name: 'Conclusion', icon: '✅', desc: 'Résumé final' },
+    notes: { name: 'Notes', icon: '📝', desc: 'Remarques' },
+    comments: { name: 'Commentaires', icon: '💬', desc: 'Avis' },
+    recommendations: { name: 'Recommandations', icon: '✅', desc: 'Conseils' },
+    warnings: { name: 'Avertissements', icon: '⚠️', desc: 'Mises en garde' },
 
     // === EXTRA ===
-    extraData: { name: 'Données supplémentaires', icon: '📎', desc: 'Informations diverses' },
-    notes: { name: 'Notes personnelles', icon: '📝', desc: 'Remarques du reviewer' },
-    comments: { name: 'Commentaires', icon: '💬', desc: 'Avis utilisateurs' },
-    recommendations: { name: 'Recommandations', icon: '✅', desc: 'Conseils d\'utilisation' },
-    warnings: { name: 'Avertissements', icon: '⚠️', desc: 'Mises en garde' },
-    certifications: { name: 'Certifications', icon: '📜', desc: 'Labels et certifs' },
-    awards: { name: 'Récompenses', icon: '🏆', desc: 'Prix obtenus' },
-    labResults: { name: 'Analyses labo', icon: '🔬', desc: 'Résultats de tests' }
+    extraData: { name: 'Données extra', icon: '📎', desc: 'Informations diverses' },
+    certifications: { name: 'Certifications', icon: '📜', desc: 'Labels' },
+    awards: { name: 'Récompenses', icon: '🏆', desc: 'Prix' },
+    labResults: { name: 'Analyses labo', icon: '🔬', desc: 'Tests' }
 };
 
 // Présets rapides par type de review
@@ -186,7 +271,13 @@ const CATEGORY_COLORS = {
     pink: 'bg-pink-100 dark:bg-pink-900/30 border-pink-300 dark:border-pink-700 text-pink-700 dark:text-pink-300',
     cyan: 'bg-cyan-100 dark:bg-cyan-900/30 border-cyan-300 dark:border-cyan-700 text-cyan-700 dark:text-cyan-300',
     orange: 'bg-orange-100 dark:bg-orange-900/30 border-orange-300 dark:border-orange-700 text-orange-700 dark:text-orange-300',
-    gray: 'bg-gray-100 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300'
+    gray: 'bg-gray-100 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300',
+    emerald: 'bg-emerald-100 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300',
+    amber: 'bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300',
+    red: 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300',
+    violet: 'bg-violet-100 dark:bg-violet-900/30 border-violet-300 dark:border-violet-700 text-violet-700 dark:text-violet-300',
+    lime: 'bg-lime-100 dark:bg-lime-900/30 border-lime-300 dark:border-lime-700 text-lime-700 dark:text-lime-300',
+    slate: 'bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════

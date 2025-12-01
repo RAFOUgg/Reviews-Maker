@@ -4,7 +4,7 @@
  * Utilise @dnd-kit pour une meilleure compatibilité
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
@@ -47,13 +47,22 @@ const getFieldValueFromData = (id, reviewData) => {
 // Composant pour un champ placé (avec bouton supprimer)
 function PlacedField({ field, value, onRemove, position, width = 25, height = 20, rotation = 0, onUpdate, reviewData }) {
     const isZone = field.type === 'zone' || field.zone === true;
+    const fieldRef = React.useRef(null);
 
-    // Zone droppable pour accepter des champs à l'intérieur
+    // Toujours appeler useDroppable (pas conditionnellement)
     const { setNodeRef: setZoneRef, isOver } = useDroppable({
         id: `zone-drop-${field.id}`,
         data: { type: 'zone', zoneId: field.id },
         disabled: !isZone
     });
+
+    // Combiner les refs
+    const combinedRef = React.useCallback((node) => {
+        fieldRef.current = node;
+        if (isZone) {
+            setZoneRef(node);
+        }
+    }, [isZone, setZoneRef]);
 
     return (
         <motion.div
@@ -70,7 +79,7 @@ function PlacedField({ field, value, onRemove, position, width = 25, height = 20
             }}
         >
             <div
-                ref={isZone ? setZoneRef : undefined}
+                ref={combinedRef}
                 className={`
                     relative bg-gray-800/90 backdrop-blur-sm p-3 rounded-lg border shadow-xl
                     ${isZone ? 'border-dashed border-2 border-blue-500/50' : 'border-purple-500/50'}
