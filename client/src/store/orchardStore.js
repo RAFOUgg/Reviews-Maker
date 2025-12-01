@@ -420,6 +420,26 @@ export const useOrchardStore = create(
                 presets: state.presets,
                 config: state.config
             }),
+            // Version du storage - incrementer pour forcer une migration
+            version: 2,
+            // Migration pour les changements de version
+            migrate: (persistedState, version) => {
+                console.log('🔄 Orchard Storage Migration:', { from: version, to: 2, hasState: !!persistedState });
+
+                // Si version < 2, reset les contentModules aux valeurs par défaut
+                if (version < 2) {
+                    console.log('📦 Resetting contentModules to default (80+ modules)');
+                    return {
+                        ...persistedState,
+                        config: {
+                            ...(persistedState?.config || {}),
+                            contentModules: DEFAULT_CONFIG.contentModules,
+                            moduleOrder: DEFAULT_CONFIG.moduleOrder
+                        }
+                    };
+                }
+                return persistedState;
+            },
             // Fusionner la config par défaut avec celle sauvegardée
             // pour s'assurer que les nouveaux champs sont toujours présents
             merge: (persistedState, currentState) => {
@@ -437,6 +457,12 @@ export const useOrchardStore = create(
                 const mergedModuleOrder = defaultModuleOrder.length > savedModuleOrder.length
                     ? defaultModuleOrder
                     : savedModuleOrder;
+
+                console.log('🔄 Orchard Storage Merge:', {
+                    savedModulesCount: Object.keys(persistedState.config?.contentModules || {}).length,
+                    defaultModulesCount: Object.keys(DEFAULT_CONFIG.contentModules).length,
+                    mergedModulesCount: Object.keys(mergedContentModules).length
+                });
 
                 return {
                     ...currentState,
