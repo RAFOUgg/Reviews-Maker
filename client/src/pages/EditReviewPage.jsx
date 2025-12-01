@@ -375,11 +375,8 @@ export default function EditReviewPage() {
             return;
         }
 
-        // ✅ Vérification du preset Orchard défini
-        if (!formData.orchardPreset) {
-            toast.error('Vous devez définir un aperçu/rendu pour votre review avant de la publier. Cliquez sur le bouton "🎨 Aperçu"');
-            return;
-        }
+        // ℹ️ Note: orchardPreset n'est plus obligatoire pour permettre la sauvegarde
+        // L'utilisateur peut définir l'aperçu plus tard s'il le souhaite
 
         setIsSubmitting(true);
         const loadingToast = toast.loading('Mise à jour en cours...');

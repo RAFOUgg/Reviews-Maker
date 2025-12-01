@@ -5,19 +5,63 @@ import { motion } from 'framer-motion';
 import { useOrchardStore } from '../../../store/orchardStore';
 
 const MODULE_LABELS = {
-    title: { name: 'Titre', icon: '📝' },
-    rating: { name: 'Note', icon: '⭐' },
+    // Informations de base
+    title: { name: 'Titre / Nom commercial', icon: '📝' },
+    holderName: { name: 'Nom du produit', icon: '🏷️' },
+    rating: { name: 'Note globale', icon: '⭐' },
+    overallRating: { name: 'Note globale (alt)', icon: '⭐' },
     author: { name: 'Auteur', icon: '👤' },
-    image: { name: 'Image', icon: '🖼️' },
-    tags: { name: 'Tags', icon: '🏷️' },
+    ownerName: { name: 'Publié par', icon: '🧾' },
+    image: { name: 'Image principale', icon: '🖼️' },
+    images: { name: 'Galerie d\'images', icon: '📷' },
+    mainImage: { name: 'Couverture', icon: '🖼️' },
     description: { name: 'Description', icon: '📄' },
-    date: { name: 'Date', icon: '📅' },
+    date: { name: 'Date de publication', icon: '📅' },
     category: { name: 'Catégorie', icon: '📂' },
-    thcLevel: { name: 'Niveau THC', icon: '🌿' },
-    cbdLevel: { name: 'Niveau CBD', icon: '💊' },
+    type: { name: 'Type de produit', icon: '📦' },
+    tags: { name: 'Tags', icon: '🏷️' },
+    
+    // Provenance & Cultivar
+    cultivar: { name: 'Cultivar', icon: '🌱' },
+    cultivarsList: { name: 'Liste des cultivars', icon: '🌿' },
+    breeder: { name: 'Breeder / Génétique', icon: '🧬' },
+    farm: { name: 'Farm / Producteur', icon: '🏡' },
+    hashmaker: { name: 'Hash Maker', icon: '👨‍🔬' },
+    
+    // Notes par catégorie
+    categoryRatings: { name: 'Notes détaillées', icon: '📊' },
+    'categoryRatings.visual': { name: 'Note Visuel', icon: '👁️' },
+    'categoryRatings.smell': { name: 'Note Odeur', icon: '👃' },
+    'categoryRatings.taste': { name: 'Note Goût', icon: '👅' },
+    'categoryRatings.effects': { name: 'Note Effets', icon: '⚡' },
+    ratings: { name: 'Toutes les notes', icon: '📋' },
+    
+    // Détails sensoriels
+    terpenes: { name: 'Terpènes', icon: '🍃' },
+    aromas: { name: 'Arômes', icon: '🌸' },
+    tastes: { name: 'Goûts', icon: '👅' },
     effects: { name: 'Effets', icon: '✨' },
-    aromas: { name: 'Arômes', icon: '👃' },
-    cultivar: { name: 'Cultivar', icon: '🌱' }
+    aromasIntensity: { name: 'Intensité arômes', icon: '💨' },
+    tastesIntensity: { name: 'Intensité goûts', icon: '🔥' },
+    effectsIntensity: { name: 'Intensité effets', icon: '💪' },
+    
+    // Informations techniques
+    thcLevel: { name: 'Niveau THC', icon: '🔬' },
+    cbdLevel: { name: 'Niveau CBD', icon: '💊' },
+    strainType: { name: 'Type (Indica/Sativa)', icon: '🧪' },
+    indicaRatio: { name: 'Ratio Indica', icon: '⚖️' },
+    dureeEffet: { name: 'Durée des effets', icon: '⏱️' },
+    purgevide: { name: 'Purge à vide', icon: '🫧' },
+    
+    // Pipelines & process
+    pipelineExtraction: { name: 'Pipeline Extraction', icon: '⚗️' },
+    pipelineSeparation: { name: 'Pipeline Séparation', icon: '🧪' },
+    pipelinePurification: { name: 'Pipeline Purification', icon: '✨' },
+    fertilizationPipeline: { name: 'Fertilisation', icon: '🌾' },
+    substratMix: { name: 'Substrat', icon: '🪴' },
+    
+    // Extra
+    extraData: { name: 'Données supplémentaires', icon: '📎' }
 };
 
 function SortableModule({ id, module, isVisible, onToggle }) {

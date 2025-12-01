@@ -1,12 +1,13 @@
 /**
  * HomeReviewCard Component
  * Card d'affichage d'une review dans la galerie HomePage
- * Différent de ReviewCard.jsx qui est utilisé ailleurs
+ * Utilise l'aperçu Orchard défini si disponible, sinon affiche les images
  */
 
 import PropTypes from 'prop-types'
 import { useNavigate } from 'react-router-dom'
 import { parseImages } from '../utils/imageUtils'
+import TemplateRenderer from './orchard/TemplateRenderer'
 
 export default function HomeReviewCard({
     review,
@@ -17,6 +18,22 @@ export default function HomeReviewCard({
     const navigate = useNavigate()
     const images = parseImages(review.images)
     const rating = review.overallRating || review.note || 0
+
+    // Parser orchardConfig si c'est une string JSON
+    const getOrchardConfig = () => {
+        if (!review.orchardConfig) return null
+        if (typeof review.orchardConfig === 'string') {
+            try {
+                return JSON.parse(review.orchardConfig)
+            } catch {
+                return null
+            }
+        }
+        return review.orchardConfig
+    }
+
+    const orchardConfig = getOrchardConfig()
+    const hasOrchardPreview = !!orchardConfig && (review.orchardPreset || review.orchardLayoutMode)
 
     const getTypeIcon = (type) => {
         switch (type) {
@@ -31,14 +48,66 @@ export default function HomeReviewCard({
         navigate(`/review/${review.id}`)
     }
 
+    // Préparer les données pour le template Orchard
+    const getOrchardReviewData = () => {
+        // Parser les champs JSON si nécessaire
+        const safeParseJSON = (value) => {
+            if (!value) return []
+            if (Array.isArray(value)) return value
+            if (typeof value === 'string') {
+                try { return JSON.parse(value) } catch { return [] }
+            }
+            return []
+        }
+
+        return {
+            ...review,
+            title: review.holderName,
+            rating: review.overallRating || review.note || 0,
+            imageUrl: review.mainImageUrl || (images && images.length > 0 ? images[0] : null),
+            images: images || [],
+            terpenes: safeParseJSON(review.terpenes),
+            aromas: safeParseJSON(review.aromas),
+            tastes: safeParseJSON(review.tastes),
+            effects: safeParseJSON(review.effects),
+            tags: [
+                ...safeParseJSON(review.terpenes),
+                ...safeParseJSON(review.aromas),
+                ...safeParseJSON(review.tastes),
+                ...safeParseJSON(review.effects)
+            ].slice(0, 10),
+            category: review.type,
+            ownerName: review.ownerName || review.author?.username || 'Anonyme',
+            date: review.createdAt,
+            cultivar: review.cultivars,
+            breeder: review.breeder || review.hashmaker,
+            farm: review.farm
+        }
+    }
+
     return (
         <div className="group relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl rounded-3xl overflow-hidden border border-gray-700 hover:border-green-500 transition-all duration-500 cursor-pointer hover:shadow-2xl hover:shadow-green-500/30 hover:scale-[1.02] transform">
-            {/* Image Grid adaptatif */}
+            {/* Aperçu Orchard si défini, sinon Image Grid adaptatif */}
             <div
-                className="relative bg-gray-900 aspect-square"
+                className="relative bg-gray-900 aspect-square overflow-hidden"
                 onClick={handleCardClick}
             >
-                {images && images.length > 0 ? (
+                {hasOrchardPreview ? (
+                    /* Rendu Orchard personnalisé */
+                    <div className="w-full h-full flex items-center justify-center p-2 bg-gray-900">
+                        <div className="w-full h-full relative overflow-hidden rounded-lg" style={{ transform: 'scale(0.35)', transformOrigin: 'center' }}>
+                            <TemplateRenderer
+                                config={orchardConfig}
+                                reviewData={getOrchardReviewData()}
+                            />
+                        </div>
+                        {/* Badge Orchard */}
+                        <div className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-purple-600/90 backdrop-blur-sm text-white text-xs font-bold flex items-center gap-1 shadow-lg">
+                            <span>🎨</span>
+                            <span>Aperçu</span>
+                        </div>
+                    </div>
+                ) : images && images.length > 0 ? (
                     <div className={`h-full w-full ${images.length === 1 ? '' :
                         images.length === 2 ? 'grid grid-cols-2 gap-1' :
                             images.length === 3 ? 'grid grid-rows-2 gap-1' :
@@ -114,15 +183,17 @@ export default function HomeReviewCard({
                     </div>
                 )}
 
-                {/* Rating badge flottant */}
-                <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-xl bg-gradient-to-r ${rating >= 9 ? 'from-green-500 to-emerald-600' :
-                    rating >= 7 ? 'from-yellow-500 to-amber-600' :
-                        rating >= 5 ? 'from-orange-500 to-red-600' :
-                            'from-red-500 to-pink-600'
-                    } backdrop-blur-xl shadow-xl flex items-center gap-1`}>
-                    <span className="text-white font-black text-lg">{rating}</span>
-                    <span className="text-white/90 text-xs font-bold">/10</span>
-                </div>
+                {/* Rating badge flottant - toujours visible sauf si aperçu Orchard */}
+                {!hasOrchardPreview && (
+                    <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-xl bg-gradient-to-r ${rating >= 9 ? 'from-green-500 to-emerald-600' :
+                        rating >= 7 ? 'from-yellow-500 to-amber-600' :
+                            rating >= 5 ? 'from-orange-500 to-red-600' :
+                                'from-red-500 to-pink-600'
+                        } backdrop-blur-xl shadow-xl flex items-center gap-1`}>
+                        <span className="text-white font-black text-lg">{rating}</span>
+                        <span className="text-white/90 text-xs font-bold">/10</span>
+                    </div>
+                )}
             </div>
 
             {/* Like/Dislike buttons */}
