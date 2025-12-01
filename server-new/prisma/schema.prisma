@@ -53,6 +53,7 @@ model Review {
   // Notation
   note        Float?
   ratings     String? // JSON: {apparence: 8, odeur: 9, gout: 7, effets: 8.5}
+  categoryRatings String? // JSON: {visual, smell, texture, taste, effects, overall}
   
   // Profil terpénique et tags
   terpenes    String? // JSON: ["Myrcène", "Limonène", "Pinène"]
