@@ -1,166 +1,247 @@
 import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
 import React from 'react';
-import PipelineRenderer from '../renderers/PipelineRenderer';
-import CultivarCard from '../renderers/CultivarCard';
-import SubstratViewer from '../renderers/SubstratViewer';
-import RatingsGrid from '../renderers/RatingsGrid';
+import {
+    asArray,
+    extractLabel,
+    formatRating,
+    formatDate,
+    extractCategoryRatings,
+    extractPipelines,
+    extractSubstrat,
+    extractExtraData,
+    colorWithOpacity,
+} from '../../../utils/orchardHelpers';
 
+/**
+ * DetailedCardTemplate - Template fiche technique complète et professionnelle
+ * Affiche TOUTES les informations de la review de manière structurée
+ * Optimisé pour l'impression et le partage professionnel
+ */
 export default function DetailedCardTemplate({ config, reviewData, dimensions }) {
-    // Validation des props
     if (!config || !reviewData) {
         return (
-            <div className="w-full h-full flex items-center justify-center bg-red-50 dark:bg-red-900/20 p-8">
-                <p className="text-red-600 dark:text-red-400">Données manquantes</p>
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 p-8">
+                <p className="text-gray-400 text-lg">📋 Données manquantes pour la fiche technique</p>
             </div>
         );
     }
 
     const { typography, colors, contentModules, image, branding } = config;
-    
-    // Helpers
-    const safeParse = (v, fallback = null) => {
-        if (v === undefined || v === null) return fallback
-        if (typeof v === 'string') {
-            try { return JSON.parse(v) } catch { return v }
-        }
-        return v
-    }
+    const isPortrait = dimensions.height > dimensions.width;
+    const isA4 = dimensions.width === 2480;
 
-    const asArray = (v) => {
-        const parsed = safeParse(v, [])
-        if (Array.isArray(parsed)) return parsed
-        if (parsed === null || parsed === undefined) return []
-        if (typeof parsed === 'string') return parsed.split(',').map(s => s.trim()).filter(Boolean)
-        if (typeof parsed === 'object') return Object.values(parsed)
-        return [parsed]
-    }
+    // Extraction des données
+    const categoryRatings = extractCategoryRatings(reviewData.categoryRatings);
+    const pipelines = extractPipelines(reviewData);
+    const aromas = asArray(reviewData.aromas);
+    const tastes = asArray(reviewData.tastes);
+    const effects = asArray(reviewData.effects);
+    const terpenes = asArray(reviewData.terpenes);
+    const cultivars = asArray(reviewData.cultivarsList);
+    const substrat = extractSubstrat(reviewData.substratMix);
+    const extraData = extractExtraData(reviewData.extraData);
 
-    const asObject = (v) => {
-        const parsed = safeParse(v, {})
-        if (typeof parsed === 'object' && !Array.isArray(parsed)) return parsed
-        return {}
-    }
+    const mainImage = reviewData.mainImageUrl || reviewData.imageUrl || 
+        (Array.isArray(reviewData.images) && reviewData.images[0]);
 
-    // Section helpers
-    const renderSection = (title, children, icon = '') => {
-        if (!children || (Array.isArray(children) && children.length === 0)) return null
+    // Styles
+    const fontSize = {
+        title: typography.titleSize,
+        subtitle: typography.titleSize - 8,
+        section: typography.titleSize - 12,
+        text: typography.textSize,
+        small: typography.textSize - 2,
+    };
+
+    // Composants réutilisables
+    const Section = ({ title, icon, children, className = '' }) => {
+        if (!children || (React.Children.count(children) === 0)) return null;
         return (
-            <div className="mb-6">
-                <h3 style={{ fontSize: `${typography.titleSize - 12}px`, fontWeight: '600', color: colors.title, marginBottom: '12px' }}>
-                    {icon && <span className="mr-2">{icon}</span>}{title}
+            <div className={`mb-6 ${className}`}>
+                <h3 
+                    style={{ 
+                        fontSize: `${fontSize.section}px`, 
+                        fontWeight: '600', 
+                        color: colors.title, 
+                        marginBottom: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        borderBottom: `2px solid ${colorWithOpacity(colors.accent, 30)}`,
+                        paddingBottom: '8px',
+                    }}
+                >
+                    {icon && <span>{icon}</span>}
+                    {title}
                 </h3>
                 {children}
             </div>
-        )
-    }
+        );
+    };
 
-    const renderInfoCard = (label, value, icon = '') => (
-        <div className="p-3 rounded-lg" style={{ backgroundColor: `${colors.accent}15` }}>
-            <div style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary, marginBottom: '4px' }}>
-                {icon && <span className="mr-1">{icon}</span>}{label}
-            </div>
-            <div style={{ fontSize: `${typography.textSize}px`, fontWeight: '600', color: colors.accent }}>
-                {value}
-            </div>
-        </div>
-    )
-
-    const renderTags = (items, colorIntensity = '20') => {
-        if (!items || items.length === 0) return null
+    const InfoCard = ({ label, value, icon, size = 'normal' }) => {
+        if (!value) return null;
+        const isSmall = size === 'small';
         return (
-            <div className="flex flex-wrap gap-2">
-                {items.map((item, i) => {
-                    const label = typeof item === 'object' ? (item.name || item.label || item.cultivar || item.method || JSON.stringify(item)) : item
-                    return (
+            <div 
+                className="p-3 rounded-xl"
+                style={{ 
+                    backgroundColor: colorWithOpacity(colors.accent, 10),
+                    border: `1px solid ${colorWithOpacity(colors.accent, 20)}`,
+                }}
+            >
+                <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: '4px' }}>
+                    {icon && <span className="mr-1">{icon}</span>}{label}
+                </div>
+                <div style={{ 
+                    fontSize: `${isSmall ? fontSize.text : fontSize.text + 2}px`, 
+                    fontWeight: '600', 
+                    color: colors.accent 
+                }}>
+                    {value}
+                </div>
+            </div>
+        );
+    };
+
+    const Tag = ({ children, variant = 'default' }) => {
+        const variants = {
+            default: { bg: 20, border: 30 },
+            accent: { bg: 25, border: 40 },
+            subtle: { bg: 10, border: 15 },
+        };
+        const v = variants[variant];
+        return (
+            <span
+                style={{
+                    display: 'inline-block',
+                    fontSize: `${fontSize.small}px`,
+                    padding: '6px 14px',
+                    borderRadius: '20px',
+                    backgroundColor: colorWithOpacity(colors.accent, v.bg),
+                    border: `1px solid ${colorWithOpacity(colors.accent, v.border)}`,
+                    color: colors.accent,
+                    fontWeight: '500',
+                }}
+            >
+                {children}
+            </span>
+        );
+    };
+
+    const RatingBar = ({ label, value, icon, maxValue = 10 }) => {
+        const percentage = (value / maxValue) * 100;
+        return (
+            <div className="flex items-center gap-3 mb-2">
+                <span style={{ width: '90px', fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
+                    {icon} {label}
+                </span>
+                <div 
+                    className="flex-1 h-3 rounded-full overflow-hidden"
+                    style={{ backgroundColor: colorWithOpacity(colors.accent, 15) }}
+                >
+                    <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${percentage}%` }}
+                        transition={{ duration: 0.8, ease: 'easeOut' }}
+                        className="h-full rounded-full"
+                        style={{ backgroundColor: colors.accent }}
+                    />
+                </div>
+                <span style={{ width: '45px', fontSize: `${fontSize.text}px`, fontWeight: '600', color: colors.textPrimary, textAlign: 'right' }}>
+                    {value.toFixed(1)}
+                </span>
+            </div>
+        );
+    };
+
+    const PipelineFlow = ({ pipeline }) => (
+        <div 
+            className="p-4 rounded-xl mb-3"
+            style={{ backgroundColor: colorWithOpacity(colors.accent, 8) }}
+        >
+            <div style={{ fontSize: `${fontSize.text}px`, fontWeight: '600', color: colors.textPrimary, marginBottom: '10px' }}>
+                {pipeline.icon} {pipeline.name}
+            </div>
+            <div className="flex flex-wrap gap-2 items-center">
+                {pipeline.steps.map((step, i) => (
+                    <React.Fragment key={i}>
                         <span
-                            key={i}
-                            style={{
-                                fontSize: `${typography.textSize - 2}px`,
-                                padding: '6px 12px',
-                                borderRadius: '8px',
-                                backgroundColor: `${colors.accent}${colorIntensity}`,
-                                color: colors.accent,
-                                fontWeight: '500'
+                            className="px-3 py-1.5 rounded-lg"
+                            style={{ 
+                                backgroundColor: colorWithOpacity(colors.accent, 20),
+                                color: colors.textPrimary,
+                                fontSize: `${fontSize.small}px`,
                             }}
                         >
-                            {label}
+                            {step}
                         </span>
-                    )
-                })}
-            </div>
-        )
-    }
-
-    // Get category ratings
-    const getCategoryRatings = () => {
-        const ratings = asObject(reviewData.categoryRatings)
-        const result = []
-        if (ratings.visual !== undefined) result.push({ label: 'Visuel', value: ratings.visual, icon: '👁️' })
-        if (ratings.smell !== undefined) result.push({ label: 'Odeur', value: ratings.smell, icon: '👃' })
-        if (ratings.texture !== undefined) result.push({ label: 'Texture', value: ratings.texture, icon: '✋' })
-        if (ratings.taste !== undefined) result.push({ label: 'Goût', value: ratings.taste, icon: '👅' })
-        if (ratings.effects !== undefined) result.push({ label: 'Effets', value: ratings.effects, icon: '⚡' })
-        return result
-    }
-
-    const renderRatingBars = (ratings) => {
-        if (!ratings || ratings.length === 0) return null
-        return (
-            <div className="space-y-2">
-                {ratings.map((r, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                        <span style={{ width: '80px', fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>
-                            {r.icon} {r.label}
-                        </span>
-                        <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ backgroundColor: `${colors.accent}20` }}>
-                            <div
-                                className="h-full rounded-full transition-all"
-                                style={{ width: `${(r.value / 10) * 100}%`, backgroundColor: colors.accent }}
-                            />
-                        </div>
-                        <span style={{ fontSize: `${typography.textSize}px`, fontWeight: '600', color: colors.textPrimary, width: '40px' }}>
-                            {parseFloat(r.value).toFixed(1)}
-                        </span>
-                    </div>
+                        {i < pipeline.steps.length - 1 && (
+                            <span style={{ color: colors.accent }}>→</span>
+                        )}
+                    </React.Fragment>
                 ))}
             </div>
-        )
-    }
+        </div>
+    );
 
-    // Get extra data fields
-    const getExtraInfo = () => {
-        const extra = asObject(reviewData.extraData)
-        const displayableKeys = [
-            { key: 'typeCulture', label: 'Culture', icon: '🌿' },
-            { key: 'spectre', label: 'Spectre', icon: '🌈' },
-            { key: 'techniquesPropagation', label: 'Propagation', icon: '🌱' },
-            { key: 'densite', label: 'Densité', icon: '📊' },
-            { key: 'trichome', label: 'Trichomes', icon: '✨' },
-            { key: 'pistil', label: 'Pistils', icon: '🌺' },
-            { key: 'manucure', label: 'Manucure', icon: '✂️' },
-            { key: 'moisissure', label: 'Moisissure', icon: '🔬' },
-            { key: 'graines', label: 'Graines', icon: '🫘' },
-            { key: 'durete', label: 'Dureté', icon: '💎' },
-            { key: 'elasticite', label: 'Élasticité', icon: '🔄' },
-            { key: 'collant', label: 'Collant', icon: '🍯' },
-            { key: 'intensiteFumee', label: 'Fumée', icon: '💨' },
-            { key: 'agressivite', label: 'Agressivité', icon: '🔥' },
-            { key: 'cendre', label: 'Cendre', icon: '⚪' },
-            { key: 'montee', label: 'Montée', icon: '📈' },
-            { key: 'intensiteEffet', label: 'Intensité effets', icon: '⚡' },
-            { key: 'aromasIntensity', label: 'Intensité arômes', icon: '🌸' },
-            { key: 'notesDominantesOdeur', label: 'Notes dominantes', icon: '🎵' },
-            { key: 'notesSecondairesOdeur', label: 'Notes secondaires', icon: '🎶' },
-            { key: 'purgevide', label: 'Purge vide', icon: '🫧' },
-        ]
-        return displayableKeys
-            .filter(({ key }) => extra[key] !== undefined && extra[key] !== null && extra[key] !== '')
-            .map(({ key, label, icon }) => ({ label, value: extra[key], icon }))
-    }
+    const SubstratChart = ({ data }) => (
+        <div className="space-y-2">
+            {data.map((s, i) => {
+                const pct = s.percentage || (100 / data.length);
+                return (
+                    <div key={i} className="flex items-center gap-3">
+                        <span style={{ width: '120px', fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
+                            {s.name}
+                        </span>
+                        <div 
+                            className="flex-1 h-4 rounded-full overflow-hidden"
+                            style={{ backgroundColor: colorWithOpacity(colors.accent, 10) }}
+                        >
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${pct}%` }}
+                                transition={{ duration: 0.6, delay: i * 0.1 }}
+                                className="h-full rounded-full"
+                                style={{ backgroundColor: colors.accent }}
+                            />
+                        </div>
+                        <span style={{ width: '50px', fontSize: `${fontSize.small}px`, color: colors.accent, fontWeight: '600' }}>
+                            {pct.toFixed(0)}%
+                        </span>
+                    </div>
+                );
+            })}
+        </div>
+    );
 
-    const categoryRatings = getCategoryRatings()
-    const extraInfo = getExtraInfo()
+    // Render branding
+    const renderBranding = () => {
+        if (!branding?.enabled || !branding?.logoUrl) return null;
+        const positionMap = {
+            'top-left': { top: '20px', left: '20px' },
+            'top-right': { top: '20px', right: '20px' },
+            'bottom-left': { bottom: '20px', left: '20px' },
+            'bottom-right': { bottom: '20px', right: '20px' },
+            'center': { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' },
+        };
+        const sizeMap = { small: '50px', medium: '70px', large: '90px' };
+        
+        return (
+            <div
+                className="absolute pointer-events-none"
+                style={{
+                    ...positionMap[branding.position || 'bottom-right'],
+                    opacity: branding.opacity || 0.8,
+                    width: sizeMap[branding.size || 'medium'],
+                    height: sizeMap[branding.size || 'medium'],
+                }}
+            >
+                <img src={branding.logoUrl} alt="Logo" className="w-full h-full object-contain" />
+            </div>
+        );
+    };
 
     return (
         <div
@@ -168,171 +249,232 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
             style={{
                 background: colors.background,
                 fontFamily: typography.fontFamily,
-                padding: '32px'
+                padding: isA4 ? '48px' : '32px',
             }}
         >
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="max-w-5xl mx-auto space-y-6"
+                transition={{ duration: 0.5 }}
+                className="max-w-5xl mx-auto"
             >
-                {/* En-tête avec image et infos principales */}
-                <div className="flex gap-6 flex-wrap md:flex-nowrap">
+                {/* Header avec image et infos principales */}
+                <div className={`flex gap-8 mb-8 ${isPortrait ? 'flex-col' : 'flex-row'}`}>
                     {/* Image */}
-                    {contentModules.image && (reviewData.mainImageUrl || reviewData.imageUrl || reviewData.images) && (
-                        <div
-                            className="flex-shrink-0 overflow-hidden"
-                            style={{
+                    {contentModules.image && mainImage && (
+                        <div 
+                            className="flex-shrink-0 overflow-hidden shadow-2xl"
+                            style={{ 
                                 borderRadius: `${image.borderRadius}px`,
-                                width: '280px',
-                                height: '280px'
+                                width: isPortrait ? '100%' : '300px',
+                                height: isPortrait ? '250px' : '300px',
                             }}
                         >
-                            <img
-                                src={reviewData.mainImageUrl || reviewData.imageUrl || (Array.isArray(reviewData.images) ? reviewData.images[0] : null)}
-                                alt={reviewData.title || reviewData.holderName}
-                                className="w-full h-full object-cover"
-                            />
+                            <img src={mainImage} alt="" className="w-full h-full object-cover" />
                         </div>
                     )}
 
-                    {/* Informations principales */}
+                    {/* Infos principales */}
                     <div className="flex-1 space-y-4">
+                        {/* Type badge */}
+                        {contentModules.type && reviewData.type && (
+                            <span 
+                                style={{ 
+                                    fontSize: `${fontSize.small}px`, 
+                                    color: colors.accent, 
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.15em',
+                                    fontWeight: '600',
+                                }}
+                            >
+                                📦 {reviewData.type}
+                            </span>
+                        )}
+
+                        {/* Title */}
                         {contentModules.title && (reviewData.title || reviewData.holderName) && (
-                            <h1 style={{ fontSize: `${typography.titleSize}px`, fontWeight: typography.titleWeight, color: colors.title, lineHeight: '1.2' }}>
+                            <h1 style={{ fontSize: `${fontSize.title}px`, fontWeight: typography.titleWeight, color: colors.title, lineHeight: '1.2' }}>
                                 {reviewData.title || reviewData.holderName}
                             </h1>
                         )}
 
+                        {/* Rating */}
                         {contentModules.rating && reviewData.rating !== undefined && (
-                            <div className="flex items-center gap-3">
-                                <div className="flex">
-                                    {[...Array(5)].map((_, i) => (
-                                        <svg key={i} width="28" height="28" viewBox="0 0 24 24" fill={i < Math.round(reviewData.rating / 2) ? colors.accent : 'none'} stroke={colors.accent} strokeWidth="2">
-                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                                        </svg>
-                                    ))}
+                            <div className="flex items-center gap-4">
+                                <div className="flex gap-1">
+                                    {[...Array(5)].map((_, i) => {
+                                        const { filled } = formatRating(reviewData.rating, 5);
+                                        return (
+                                            <svg key={i} width="28" height="28" viewBox="0 0 24 24" 
+                                                fill={i < filled ? colors.accent : 'none'} 
+                                                stroke={colors.accent} strokeWidth="1.5"
+                                            >
+                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                            </svg>
+                                        );
+                                    })}
                                 </div>
-                                <span style={{ fontSize: `${typography.titleSize - 8}px`, fontWeight: '700', color: colors.textPrimary }}>
+                                <span style={{ fontSize: `${fontSize.subtitle}px`, fontWeight: '700', color: colors.textPrimary }}>
                                     {parseFloat(reviewData.rating).toFixed(1)}/10
                                 </span>
                             </div>
                         )}
 
-                        {/* Notes par catégorie - inline */}
-                        {contentModules.categoryRatings && categoryRatings.length > 0 && renderRatingBars(categoryRatings)}
+                        {/* Category Ratings bars */}
+                        {contentModules.categoryRatings && categoryRatings.length > 0 && (
+                            <div className="space-y-1 mt-4">
+                                {categoryRatings.map((r, i) => (
+                                    <RatingBar key={i} label={r.label} value={r.value} icon={r.icon} />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 {/* Description */}
                 {contentModules.description && reviewData.description && (
-                    <div className="p-4 rounded-xl" style={{ backgroundColor: `${colors.accent}08` }}>
-                        <p style={{ fontSize: `${typography.textSize}px`, color: colors.textSecondary, lineHeight: '1.8' }}>
+                    <div 
+                        className="p-5 rounded-2xl mb-8"
+                        style={{ backgroundColor: colorWithOpacity(colors.accent, 5) }}
+                    >
+                        <p style={{ fontSize: `${fontSize.text}px`, color: colors.textSecondary, lineHeight: '1.8' }}>
                             {reviewData.description}
                         </p>
                     </div>
                 )}
 
-                {/* Grille d'infos de base */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {contentModules.type && reviewData.type && renderInfoCard('Type', reviewData.type, '📦')}
-                    {contentModules.category && reviewData.category && renderInfoCard('Catégorie', reviewData.category, '📂')}
-                    {contentModules.strainType && reviewData.strainType && renderInfoCard('Strain', reviewData.strainType, '🧬')}
-                    {contentModules.indicaRatio && reviewData.indicaRatio !== undefined && renderInfoCard('Indica', `${reviewData.indicaRatio}%`, '⚖️')}
-                    {contentModules.thcLevel && reviewData.thcLevel && renderInfoCard('THC', `${reviewData.thcLevel}%`, '🔬')}
-                    {contentModules.cbdLevel && reviewData.cbdLevel && renderInfoCard('CBD', `${reviewData.cbdLevel}%`, '💊')}
-                    {contentModules.dureeEffet && reviewData.dureeEffet && renderInfoCard('Durée effets', reviewData.dureeEffet, '⏱️')}
-                    {contentModules.cultivar && reviewData.cultivar && renderInfoCard('Cultivar', reviewData.cultivar, '🌱')}
-                    {contentModules.breeder && reviewData.breeder && renderInfoCard('Breeder', reviewData.breeder, '🧬')}
-                    {contentModules.farm && reviewData.farm && renderInfoCard('Farm', reviewData.farm, '🏡')}
-                    {contentModules.hashmaker && reviewData.hashmaker && renderInfoCard('Hash Maker', reviewData.hashmaker, '👨‍🔬')}
-                </div>
+                {/* Grid layout pour les sections */}
+                <div className={`grid gap-8 ${isPortrait ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                    {/* Colonne 1 */}
+                    <div>
+                        {/* Informations générales */}
+                        <Section title="Informations" icon="📋">
+                            <div className="grid grid-cols-2 gap-3">
+                                {contentModules.category && reviewData.category && <InfoCard label="Catégorie" value={reviewData.category} icon="📂" />}
+                                {contentModules.strainType && reviewData.strainType && <InfoCard label="Type de strain" value={reviewData.strainType} icon="🧬" />}
+                                {contentModules.indicaRatio && reviewData.indicaRatio !== undefined && <InfoCard label="Ratio Indica" value={`${reviewData.indicaRatio}%`} icon="⚖️" />}
+                                {contentModules.thcLevel && reviewData.thcLevel && <InfoCard label="THC" value={`${reviewData.thcLevel}%`} icon="🔬" />}
+                                {contentModules.cbdLevel && reviewData.cbdLevel && <InfoCard label="CBD" value={`${reviewData.cbdLevel}%`} icon="💊" />}
+                                {contentModules.dureeEffet && reviewData.dureeEffet && <InfoCard label="Durée effets" value={reviewData.dureeEffet} icon="⏱️" />}
+                            </div>
+                        </Section>
 
-                {/* Cultivars list */}
-                {contentModules.cultivarsList && asArray(reviewData.cultivarsList).length > 0 && 
-                    renderSection('Cultivars', <CultivarCard data={reviewData.cultivarsList} />, '🌿')}
+                        {/* Provenance */}
+                        <Section title="Provenance" icon="🌱">
+                            <div className="grid grid-cols-2 gap-3">
+                                {contentModules.cultivar && reviewData.cultivar && <InfoCard label="Cultivar" value={reviewData.cultivar} icon="🌿" />}
+                                {contentModules.breeder && reviewData.breeder && <InfoCard label="Breeder" value={reviewData.breeder} icon="🧬" />}
+                                {contentModules.farm && reviewData.farm && <InfoCard label="Farm" value={reviewData.farm} icon="🏡" />}
+                                {contentModules.hashmaker && reviewData.hashmaker && <InfoCard label="Hash Maker" value={reviewData.hashmaker} icon="👨‍🔬" />}
+                            </div>
+                        </Section>
 
-                {/* Sensory - Aromas, Tastes, Effects */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {contentModules.aromas && asArray(reviewData.aromas).length > 0 && (
-                        <div>{renderSection('Arômes', renderTags(asArray(reviewData.aromas)), '🌸')}</div>
-                    )}
-                    {contentModules.tastes && asArray(reviewData.tastes).length > 0 && (
-                        <div>{renderSection('Goûts', renderTags(asArray(reviewData.tastes)), '👅')}</div>
-                    )}
-                </div>
+                        {/* Cultivars */}
+                        {contentModules.cultivarsList && cultivars.length > 0 && (
+                            <Section title="Cultivars" icon="🌿">
+                                <div className="flex flex-wrap gap-2">
+                                    {cultivars.map((c, i) => (
+                                        <Tag key={i} variant="accent">{extractLabel(c)}</Tag>
+                                    ))}
+                                </div>
+                            </Section>
+                        )}
 
-                {contentModules.effects && asArray(reviewData.effects).length > 0 && 
-                    renderSection('Effets', renderTags(asArray(reviewData.effects), '25'), '⚡')}
-
-                {contentModules.terpenes && asArray(reviewData.terpenes).length > 0 && 
-                    renderSection('Terpènes', renderTags(asArray(reviewData.terpenes), '15'), '🧪')}
-
-                {/* Pipelines */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {contentModules.pipelineExtraction && reviewData.pipelineExtraction && (
-                        <div>{renderSection('Extraction', <PipelineRenderer data={reviewData.pipelineExtraction} />, '⚗️')}</div>
-                    )}
-                    {contentModules.pipelineSeparation && reviewData.pipelineSeparation && (
-                        <div>{renderSection('Séparation', <PipelineRenderer data={reviewData.pipelineSeparation} />, '🔬')}</div>
-                    )}
-                    {contentModules.pipelinePurification && reviewData.pipelinePurification && (
-                        <div>{renderSection('Purification', <PipelineRenderer data={reviewData.pipelinePurification} />, '✨')}</div>
-                    )}
-                    {contentModules.fertilizationPipeline && reviewData.fertilizationPipeline && (
-                        <div>{renderSection('Fertilisation', <PipelineRenderer data={reviewData.fertilizationPipeline} />, '🌱')}</div>
-                    )}
-                </div>
-
-                {/* Substrat */}
-                {contentModules.substratMix && reviewData.substratMix && 
-                    renderSection('Substrat', <SubstratViewer data={reviewData.substratMix} />, '🪴')}
-
-                {/* Category Ratings Grid (alternative display) */}
-                {contentModules.categoryRatings && reviewData.categoryRatings && (
-                    <div className="hidden">
-                        <RatingsGrid data={reviewData.categoryRatings} />
+                        {/* Effets */}
+                        {contentModules.effects && effects.length > 0 && (
+                            <Section title="Effets" icon="⚡">
+                                <div className="flex flex-wrap gap-2">
+                                    {effects.map((e, i) => <Tag key={i} variant="accent">{extractLabel(e)}</Tag>)}
+                                </div>
+                            </Section>
+                        )}
                     </div>
+
+                    {/* Colonne 2 */}
+                    <div>
+                        {/* Profil sensoriel */}
+                        {((contentModules.aromas && aromas.length > 0) || (contentModules.tastes && tastes.length > 0)) && (
+                            <Section title="Profil Sensoriel" icon="🌸">
+                                {contentModules.aromas && aromas.length > 0 && (
+                                    <div className="mb-4">
+                                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: '8px' }}>Arômes</div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {aromas.map((a, i) => <Tag key={i}>{extractLabel(a)}</Tag>)}
+                                        </div>
+                                    </div>
+                                )}
+                                {contentModules.tastes && tastes.length > 0 && (
+                                    <div>
+                                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: '8px' }}>Goûts</div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {tastes.map((t, i) => <Tag key={i}>{extractLabel(t)}</Tag>)}
+                                        </div>
+                                    </div>
+                                )}
+                            </Section>
+                        )}
+
+                        {/* Terpènes */}
+                        {contentModules.terpenes && terpenes.length > 0 && (
+                            <Section title="Terpènes" icon="🧪">
+                                <div className="flex flex-wrap gap-2">
+                                    {terpenes.map((t, i) => <Tag key={i} variant="subtle">{extractLabel(t)}</Tag>)}
+                                </div>
+                            </Section>
+                        )}
+
+                        {/* Substrat */}
+                        {contentModules.substratMix && substrat.length > 0 && (
+                            <Section title="Substrat" icon="🪴">
+                                <SubstratChart data={substrat} />
+                            </Section>
+                        )}
+                    </div>
+                </div>
+
+                {/* Pipelines (full width) */}
+                {pipelines.length > 0 && (contentModules.pipelineExtraction || contentModules.pipelineSeparation || contentModules.pipelinePurification || contentModules.fertilizationPipeline) && (
+                    <Section title="Processus de Production" icon="⚗️">
+                        <div className="space-y-3">
+                            {pipelines.map((p, i) => <PipelineFlow key={i} pipeline={p} />)}
+                        </div>
+                    </Section>
                 )}
 
-                {/* Extra data fields */}
-                {contentModules.extraData && extraInfo.length > 0 && (
-                    <div>
-                        <h3 style={{ fontSize: `${typography.titleSize - 12}px`, fontWeight: '600', color: colors.title, marginBottom: '12px' }}>
-                            📊 Détails supplémentaires
-                        </h3>
+                {/* Extra Data */}
+                {contentModules.extraData && extraData.length > 0 && (
+                    <Section title="Caractéristiques Détaillées" icon="📊">
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                            {extraInfo.map((info, i) => renderInfoCard(info.label, info.value, info.icon))}
+                            {extraData.map((d, i) => (
+                                <InfoCard key={i} label={d.label} value={d.value} icon={d.icon} size="small" />
+                            ))}
                         </div>
-                    </div>
+                    </Section>
                 )}
 
                 {/* Footer */}
-                <div className="flex justify-between items-center pt-4" style={{ borderTop: `2px solid ${colors.accent}30` }}>
-                    {contentModules.author && (function() {
-                        const authorName = reviewData.ownerName || (reviewData.author ? (typeof reviewData.author === 'string' ? reviewData.author : (reviewData.author.username || reviewData.author.id)) : null) || 'Anonyme'
-                        return (
-                            <div style={{ fontSize: `${typography.textSize}px`, color: colors.textSecondary }}>
-                                Par <span style={{ fontWeight: '600', color: colors.textPrimary }}>{authorName}</span>
-                            </div>
-                        )
-                    })()}
+                <div 
+                    className="flex justify-between items-center pt-6 mt-8"
+                    style={{ borderTop: `2px solid ${colorWithOpacity(colors.accent, 20)}` }}
+                >
+                    {contentModules.author && (
+                        <div style={{ fontSize: `${fontSize.text}px`, color: colors.textSecondary }}>
+                            Rédigé par{' '}
+                            <span style={{ fontWeight: '600', color: colors.textPrimary }}>
+                                {reviewData.ownerName || (typeof reviewData.author === 'string' ? reviewData.author : reviewData.author?.username) || 'Anonyme'}
+                            </span>
+                        </div>
+                    )}
                     
                     {contentModules.date && reviewData.date && (
-                        <div style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>
-                            {new Date(reviewData.date).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
+                            {formatDate(reviewData.date)}
                         </div>
                     )}
                 </div>
             </motion.div>
 
-            {/* Branding */}
-            {branding.enabled && branding.logoUrl && (
-                <div className="absolute" style={{ bottom: '24px', right: '24px', opacity: branding.opacity, width: '80px', height: '80px' }}>
-                    <img src={branding.logoUrl} alt="Logo" className="w-full h-full object-contain" />
-                </div>
-            )}
+            {renderBranding()}
         </div>
     );
 }
@@ -340,5 +482,5 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 DetailedCardTemplate.propTypes = {
     config: PropTypes.object.isRequired,
     reviewData: PropTypes.object.isRequired,
-    dimensions: PropTypes.object.isRequired
+    dimensions: PropTypes.object.isRequired,
 };

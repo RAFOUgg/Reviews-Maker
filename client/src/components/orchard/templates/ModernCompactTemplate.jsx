@@ -1,376 +1,331 @@
 import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
+import {
+    asArray,
+    asObject,
+    extractLabel,
+    formatRating,
+    formatDate,
+    extractCategoryRatings,
+    extractPipelines,
+    extractSubstrat,
+    extractExtraData,
+} from '../../../utils/orchardHelpers';
 
+/**
+ * ModernCompactTemplate - Template moderne et compact
+ * Affiche les informations essentielles dans un design épuré et professionnel
+ * Adaptatif à tous les formats (1:1, 16:9, 9:16, 4:3, A4)
+ */
 export default function ModernCompactTemplate({ config, reviewData, dimensions }) {
-    // Validation des props
     if (!config || !reviewData) {
         return (
-            <div className="w-full h-full flex items-center justify-center bg-red-50 dark:bg-red-900/20 p-8">
-                <p className="text-red-600 dark:text-red-400">Données manquantes</p>
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 p-8">
+                <p className="text-gray-400 text-lg">📋 Données manquantes</p>
             </div>
         );
     }
 
-    const { typography, colors, contentModules, moduleOrder, image, branding } = config;
+    const { typography, colors, contentModules, image, branding } = config;
+    const isPortrait = dimensions.height > dimensions.width;
+    const isLandscape = dimensions.width > dimensions.height * 1.2;
 
-    // Helper pour obtenir les modules visibles dans l'ordre
-    const getVisibleModules = () => {
-        return moduleOrder.filter(moduleName => contentModules[moduleName]);
+    // Données extraites
+    const categoryRatings = extractCategoryRatings(reviewData.categoryRatings);
+    const pipelines = extractPipelines(reviewData);
+    const aromas = asArray(reviewData.aromas);
+    const tastes = asArray(reviewData.tastes);
+    const effects = asArray(reviewData.effects);
+    const terpenes = asArray(reviewData.terpenes);
+    const cultivars = asArray(reviewData.cultivarsList);
+    const substrat = extractSubstrat(reviewData.substratMix);
+    const extraData = extractExtraData(reviewData.extraData);
+
+    // Image principale
+    const mainImage = reviewData.mainImageUrl || reviewData.imageUrl || 
+        (Array.isArray(reviewData.images) && reviewData.images[0]);
+
+    // Styles dynamiques
+    const styles = {
+        container: {
+            background: colors.background,
+            fontFamily: typography.fontFamily,
+            padding: isLandscape ? '24px' : '32px',
+        },
+        title: {
+            fontSize: `${typography.titleSize}px`,
+            fontWeight: typography.titleWeight,
+            color: colors.title,
+            lineHeight: '1.2',
+        },
+        text: {
+            fontSize: `${typography.textSize}px`,
+            fontWeight: typography.textWeight,
+            color: colors.textSecondary,
+        },
+        accent: {
+            color: colors.accent,
+        },
+        tag: {
+            fontSize: `${typography.textSize - 2}px`,
+            padding: '6px 12px',
+            borderRadius: '20px',
+            backgroundColor: `${colors.accent}20`,
+            color: colors.accent,
+            fontWeight: '500',
+        },
+        infoCard: {
+            backgroundColor: `${colors.accent}15`,
+            borderRadius: '12px',
+            padding: '12px 16px',
+        },
     };
 
-    // Rendu du rating avec étoiles
-    const renderRating = () => {
-        if (!contentModules.rating || !reviewData.rating) return null;
-        
-        const rating = parseFloat(reviewData.rating);
-        const stars = [];
-        
-        for (let i = 1; i <= 5; i++) {
-            const filled = i <= rating;
-            const partial = i === Math.ceil(rating) && rating % 1 !== 0;
-            
-            stars.push(
-                <svg
-                    key={i}
-                    className="inline-block"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill={filled ? colors.accent : 'none'}
-                    stroke={colors.accent}
-                    strokeWidth="2"
-                >
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                    {partial && (
-                        <path
-                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77V2z"
-                            fill={colors.accent}
-                        />
-                    )}
-                </svg>
-            );
-        }
+    // Render étoiles
+    const renderStars = () => {
+        if (!contentModules.rating || reviewData.rating === undefined) return null;
+        const { filled, empty, value } = formatRating(reviewData.rating, 5);
         
         return (
-            <div className="flex items-center gap-2 justify-center">
-                <div className="flex gap-1">{stars}</div>
-                <span
-                    style={{
-                        fontFamily: typography.fontFamily,
-                        fontSize: `${typography.textSize}px`,
-                        fontWeight: typography.textWeight,
-                        color: colors.textPrimary
-                    }}
-                >
-                    {rating.toFixed(1)}
+            <div className="flex items-center gap-3">
+                <div className="flex gap-0.5">
+                    {[...Array(filled)].map((_, i) => (
+                        <svg key={`f${i}`} width="24" height="24" viewBox="0 0 24 24" fill={colors.accent} stroke={colors.accent} strokeWidth="1">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                        </svg>
+                    ))}
+                    {[...Array(empty)].map((_, i) => (
+                        <svg key={`e${i}`} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={colors.accent} strokeWidth="1.5" opacity="0.4">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                        </svg>
+                    ))}
+                </div>
+                <span style={{ fontSize: `${typography.titleSize - 6}px`, fontWeight: '700', color: colors.textPrimary }}>
+                    {value.toFixed(1)}/10
                 </span>
             </div>
         );
     };
 
-    // Rendu de l'image avec filtres
-    const renderImage = () => {
-        if (!contentModules.image || !reviewData.imageUrl) return null;
-        
-        let filterStyle = '';
-        switch (image.filter) {
-            case 'sepia':
-                filterStyle = 'sepia(100%)';
-                break;
-            case 'grayscale':
-                filterStyle = 'grayscale(100%)';
-                break;
-            case 'blur':
-                filterStyle = 'blur(4px)';
-                break;
-            default:
-                filterStyle = 'none';
-        }
+    // Render tags génériques
+    const renderTags = (items, maxItems = 4) => {
+        if (!items || items.length === 0) return null;
+        const displayItems = items.slice(0, maxItems);
+        const remaining = items.length - maxItems;
         
         return (
-            <div
-                className="w-full overflow-hidden"
-                style={{
-                    borderRadius: `${image.borderRadius}px`,
-                    aspectRatio: image.aspectRatio.replace(':', '/')
-                }}
-            >
-                <img
-                    src={reviewData.imageUrl}
-                    alt={reviewData.title || 'Review'}
-                    className="w-full h-full object-cover"
-                    style={{
-                        filter: filterStyle,
-                        opacity: image.opacity
-                    }}
-                />
-            </div>
-        );
-    };
-
-    // Rendu des tags
-    const renderTags = () => {
-        if (!contentModules.tags || !reviewData.tags || reviewData.tags.length === 0) return null;
-        
-        return (
-            <div className="flex flex-wrap gap-2 justify-center">
-                {reviewData.tags.slice(0, 5).map((tag, index) => (
-                    <span
-                        key={index}
-                        style={{
-                            fontFamily: typography.fontFamily,
-                            fontSize: `${typography.textSize - 2}px`,
-                            fontWeight: '500',
-                            backgroundColor: `${colors.accent}30`,
-                            color: colors.accent,
-                            padding: '4px 12px',
-                            borderRadius: '999px'
-                        }}
-                    >
-                        #{tag}
-                    </span>
+            <div className="flex flex-wrap gap-2">
+                {displayItems.map((item, i) => (
+                    <span key={i} style={styles.tag}>{extractLabel(item)}</span>
                 ))}
+                {remaining > 0 && (
+                    <span style={{ ...styles.tag, backgroundColor: `${colors.accent}10` }}>+{remaining}</span>
+                )}
             </div>
         );
     };
 
-    // Rendu du logo/filigrane
+    // Render info card
+    const renderInfoCard = (label, value, icon = '') => (
+        <div style={styles.infoCard} className="text-center">
+            <div style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary, marginBottom: '4px' }}>
+                {icon && <span className="mr-1">{icon}</span>}{label}
+            </div>
+            <div style={{ fontSize: `${typography.textSize + 2}px`, fontWeight: '700', color: colors.accent }}>
+                {value}
+            </div>
+        </div>
+    );
+
+    // Render branding
     const renderBranding = () => {
-        if (!branding.enabled || !branding.logoUrl) return null;
-        
-        const positionStyles = {
+        if (!branding?.enabled || !branding?.logoUrl) return null;
+        const positionMap = {
             'top-left': { top: '16px', left: '16px' },
             'top-right': { top: '16px', right: '16px' },
             'bottom-left': { bottom: '16px', left: '16px' },
             'bottom-right': { bottom: '16px', right: '16px' },
-            'center': { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
+            'center': { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' },
         };
-        
-        const sizeMap = {
-            small: '40px',
-            medium: '60px',
-            large: '80px'
-        };
+        const sizeMap = { small: '40px', medium: '60px', large: '80px' };
         
         return (
             <div
-                className="absolute"
+                className="absolute pointer-events-none"
                 style={{
-                    pointerEvents: 'none',
-                    ...positionStyles[branding.position],
-                    opacity: branding.opacity,
-                    width: sizeMap[branding.size],
-                    height: sizeMap[branding.size]
+                    ...positionMap[branding.position || 'bottom-right'],
+                    opacity: branding.opacity || 0.8,
+                    width: sizeMap[branding.size || 'medium'],
+                    height: sizeMap[branding.size || 'medium'],
                 }}
             >
-                <img
-                    src={branding.logoUrl}
-                    alt="Logo"
-                        className="w-full h-full object-contain orchard-branding"
-                />
+                <img src={branding.logoUrl} alt="Logo" className="w-full h-full object-contain" />
             </div>
         );
     };
 
-    return (
-        <div
-            className="relative w-full h-full flex items-center justify-center p-8"
-            style={{
-                background: colors.background,
-                fontFamily: typography.fontFamily
-            }}
-        >
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-                className="w-full max-w-md space-y-6"
-            >
+    // Layout adaptatif selon le format
+    const renderLayout = () => {
+        if (isLandscape) {
+            // Layout paysage : image à gauche, contenu à droite
+            return (
+                <div className="flex gap-6 h-full">
+                    {/* Image */}
+                    {contentModules.image && mainImage && (
+                        <div className="flex-shrink-0 w-2/5 h-full">
+                            <div
+                                className="w-full h-full overflow-hidden"
+                                style={{ borderRadius: `${image.borderRadius}px` }}
+                            >
+                                <img src={mainImage} alt="" className="w-full h-full object-cover" />
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* Contenu */}
+                    <div className="flex-1 flex flex-col justify-center space-y-4 overflow-hidden">
+                        {renderContent()}
+                    </div>
+                </div>
+            );
+        }
+        
+        // Layout portrait/carré : vertical
+        return (
+            <div className="flex flex-col h-full space-y-4 overflow-hidden">
                 {/* Image */}
-                {renderImage()}
-
-                {/* Title */}
-                {contentModules.title && reviewData.title && (
-                    <h1
-                        className="text-center line-clamp-2"
-                        style={{
-                            fontFamily: typography.fontFamily,
-                            fontSize: `${typography.titleSize}px`,
-                            fontWeight: typography.titleWeight,
-                            color: colors.title,
-                            lineHeight: '1.2'
+                {contentModules.image && mainImage && (
+                    <div
+                        className="w-full flex-shrink-0 overflow-hidden"
+                        style={{ 
+                            borderRadius: `${image.borderRadius}px`,
+                            maxHeight: isPortrait ? '35%' : '45%',
                         }}
                     >
-                        {reviewData.title}
+                        <img src={mainImage} alt="" className="w-full h-full object-cover" />
+                    </div>
+                )}
+                
+                {/* Contenu */}
+                <div className="flex-1 flex flex-col justify-center space-y-4 overflow-auto">
+                    {renderContent()}
+                </div>
+            </div>
+        );
+    };
+
+    const renderContent = () => (
+        <>
+            {/* Titre + Type */}
+            <div className="text-center space-y-2">
+                {contentModules.type && reviewData.type && (
+                    <span style={{ fontSize: `${typography.textSize - 2}px`, color: colors.accent, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>
+                        {reviewData.type}
+                    </span>
+                )}
+                {contentModules.title && (reviewData.title || reviewData.holderName) && (
+                    <h1 style={styles.title} className="line-clamp-2">
+                        {reviewData.title || reviewData.holderName}
                     </h1>
                 )}
+            </div>
 
-                {/* Rating */}
-                {renderRating()}
+            {/* Rating */}
+            {contentModules.rating && (
+                <div className="flex justify-center">{renderStars()}</div>
+            )}
 
-                {/* Category */}
-                {contentModules.category && reviewData.category && (
-                    <div className="text-center">
-                        <span
-                            style={{
-                                fontFamily: typography.fontFamily,
-                                fontSize: `${typography.textSize}px`,
-                                fontWeight: '600',
-                                color: colors.accent,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em'
-                            }}
-                        >
-                            {reviewData.category}
-                        </span>
-                    </div>
-                )}
-
-                {/* THC/CBD */}
-                {(contentModules.thcLevel || contentModules.cbdLevel) && (
-                    <div className="flex gap-4 justify-center">
-                        {contentModules.thcLevel && reviewData.thcLevel && (
-                            <div
-                                className="text-center px-4 py-2 rounded-lg"
-                                style={{
-                                    backgroundColor: `${colors.accent}20`,
-                                    border: `2px solid ${colors.accent}`
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        fontFamily: typography.fontFamily,
-                                        fontSize: `${typography.textSize - 2}px`,
-                                        fontWeight: '500',
-                                        color: colors.textSecondary
-                                    }}
-                                >
-                                    THC
-                                </div>
-                                <div
-                                    style={{
-                                        fontFamily: typography.fontFamily,
-                                        fontSize: `${typography.textSize + 4}px`,
-                                        fontWeight: '700',
-                                        color: colors.accent
-                                    }}
-                                >
-                                    {reviewData.thcLevel}%
-                                </div>
-                            </div>
-                        )}
-                        
-                        {contentModules.cbdLevel && reviewData.cbdLevel && (
-                            <div
-                                className="text-center px-4 py-2 rounded-lg"
-                                style={{
-                                    backgroundColor: `${colors.accent}20`,
-                                    border: `2px solid ${colors.accent}`
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        fontFamily: typography.fontFamily,
-                                        fontSize: `${typography.textSize - 2}px`,
-                                        fontWeight: '500',
-                                        color: colors.textSecondary
-                                    }}
-                                >
-                                    CBD
-                                </div>
-                                <div
-                                    style={{
-                                        fontFamily: typography.fontFamily,
-                                        fontSize: `${typography.textSize + 4}px`,
-                                        fontWeight: '700',
-                                        color: colors.accent
-                                    }}
-                                >
-                                    {reviewData.cbdLevel}%
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* Description */}
-                {contentModules.description && reviewData.description && (
-                    <p
-                        className="text-center line-clamp-3"
-                        style={{
-                            fontFamily: typography.fontFamily,
-                            fontSize: `${typography.textSize}px`,
-                            fontWeight: typography.textWeight,
-                            color: colors.textSecondary,
-                            lineHeight: '1.6'
-                        }}
-                    >
-                        {reviewData.description}
-                    </p>
-                )}
-
-                {/* Tags */}
-                {renderTags()}
-
-                {/* Category Ratings */}
-                {reviewData.categoryRatings && (
-                    <div className="w-full text-center mt-2">
-                        <div className="flex items-center justify-center gap-4">
-                            {reviewData.categoryRatings.visual !== undefined && <div className="text-sm text-gray-300">👁️ Visuel: <strong style={{color: colors.accent}}>{reviewData.categoryRatings.visual}</strong></div>}
-                            {reviewData.categoryRatings.smell !== undefined && <div className="text-sm text-gray-300">👃 Odeur: <strong style={{color: colors.accent}}>{reviewData.categoryRatings.smell}</strong></div>}
-                            {reviewData.categoryRatings.taste !== undefined && <div className="text-sm text-gray-300">👅 Goût: <strong style={{color: colors.accent}}>{reviewData.categoryRatings.taste}</strong></div>}
-                            {reviewData.categoryRatings.effects !== undefined && <div className="text-sm text-gray-300">⚡ Effets: <strong style={{color: colors.accent}}>{reviewData.categoryRatings.effects}</strong></div>}
-                        </div>
-                    </div>
-                )}
-
-                {/* Substrat Mix summary */}
-                {contentModules.substratMix && reviewData.substratMix && reviewData.substratMix.length > 0 && (
-                    <div className="w-full text-center mt-4">
-                        <h4 style={{fontFamily: typography.fontFamily, color: colors.textSecondary}}>Substrat</h4>
-                        <div className="flex flex-wrap justify-center gap-2 mt-2">
-                            {reviewData.substratMix.slice(0,5).map((s, i) => (
-                                <span key={i} style={{backgroundColor: `${colors.accent}20`, color: colors.accent, padding: '4px 8px', borderRadius: '999px'}}>{s.component || s.name || JSON.stringify(s)}</span>
-                            ))}
-                            {reviewData.substratMix.length > 5 && <span className="text-sm text-gray-400">+{reviewData.substratMix.length - 5}</span>}
-                        </div>
-                    </div>
-                )}
-
-                {/* Author & Date */}
-                <div className="flex items-center justify-center gap-4 text-center">
-                    {contentModules.author && (function() {
-                        const authorName = reviewData.ownerName || (reviewData.author ? (typeof reviewData.author === 'string' ? reviewData.author : (reviewData.author.username || reviewData.author.id)) : null) || 'Anonyme'
-                        return (
-                            <span
-                                style={{
-                                    fontFamily: typography.fontFamily,
-                                    fontSize: `${typography.textSize - 2}px`,
-                                    fontWeight: '500',
-                                    color: colors.textSecondary
-                                }}
-                            >
-                                Par {authorName}
-                            </span>
-                        )
-                    })()}
-                    
-                    {contentModules.date && reviewData.date && (
-                        <span
-                            style={{
-                                fontFamily: typography.fontFamily,
-                                fontSize: `${typography.textSize - 2}px`,
-                                fontWeight: '400',
-                                color: colors.textSecondary
-                            }}
-                        >
-                            {new Date(reviewData.date).toLocaleDateString('fr-FR')}
-                        </span>
-                    )}
+            {/* Infos principales (THC, CBD, Category) */}
+            {(contentModules.thcLevel || contentModules.cbdLevel || contentModules.category) && (
+                <div className="flex flex-wrap gap-3 justify-center">
+                    {contentModules.thcLevel && reviewData.thcLevel && renderInfoCard('THC', `${reviewData.thcLevel}%`, '🔬')}
+                    {contentModules.cbdLevel && reviewData.cbdLevel && renderInfoCard('CBD', `${reviewData.cbdLevel}%`, '💊')}
+                    {contentModules.category && reviewData.category && renderInfoCard('Catégorie', reviewData.category, '📂')}
                 </div>
-            </motion.div>
+            )}
 
-            {/* Branding */}
+            {/* Provenance */}
+            {(contentModules.cultivar || contentModules.breeder || contentModules.farm || contentModules.hashmaker) && (
+                <div className="flex flex-wrap gap-3 justify-center">
+                    {contentModules.cultivar && reviewData.cultivar && renderInfoCard('Cultivar', reviewData.cultivar, '🌱')}
+                    {contentModules.breeder && reviewData.breeder && renderInfoCard('Breeder', reviewData.breeder, '🧬')}
+                    {contentModules.farm && reviewData.farm && renderInfoCard('Farm', reviewData.farm, '🏡')}
+                    {contentModules.hashmaker && reviewData.hashmaker && renderInfoCard('Hash Maker', reviewData.hashmaker, '👨‍🔬')}
+                </div>
+            )}
+
+            {/* Category Ratings */}
+            {contentModules.categoryRatings && categoryRatings.length > 0 && (
+                <div className="flex flex-wrap gap-4 justify-center">
+                    {categoryRatings.map((r, i) => (
+                        <div key={i} className="text-center">
+                            <span style={{ fontSize: '20px' }}>{r.icon}</span>
+                            <div style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>{r.label}</div>
+                            <div style={{ fontSize: `${typography.textSize}px`, fontWeight: '700', color: colors.accent }}>{r.value.toFixed(1)}</div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Effects */}
+            {contentModules.effects && effects.length > 0 && (
+                <div className="text-center space-y-2">
+                    <div style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>⚡ Effets</div>
+                    {renderTags(effects, 4)}
+                </div>
+            )}
+
+            {/* Aromas */}
+            {contentModules.aromas && aromas.length > 0 && (
+                <div className="text-center space-y-2">
+                    <div style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>🌸 Arômes</div>
+                    {renderTags(aromas, 4)}
+                </div>
+            )}
+
+            {/* Terpenes */}
+            {contentModules.terpenes && terpenes.length > 0 && (
+                <div className="text-center space-y-2">
+                    <div style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>🧪 Terpènes</div>
+                    {renderTags(terpenes, 3)}
+                </div>
+            )}
+
+            {/* Description */}
+            {contentModules.description && reviewData.description && (
+                <p style={styles.text} className="text-center line-clamp-3 px-4">
+                    {reviewData.description}
+                </p>
+            )}
+
+            {/* Footer: Author & Date */}
+            <div className="flex items-center justify-center gap-4 pt-2">
+                {contentModules.author && (
+                    <span style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>
+                        Par <span style={{ fontWeight: '600', color: colors.textPrimary }}>
+                            {reviewData.ownerName || (typeof reviewData.author === 'string' ? reviewData.author : reviewData.author?.username) || 'Anonyme'}
+                        </span>
+                    </span>
+                )}
+                {contentModules.date && reviewData.date && (
+                    <span style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>
+                        {formatDate(reviewData.date)}
+                    </span>
+                )}
+            </div>
+        </>
+    );
+
+    return (
+        <div className="relative w-full h-full overflow-hidden" style={styles.container}>
+            <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4 }}
+                className="w-full h-full"
+            >
+                {renderLayout()}
+            </motion.div>
             {renderBranding()}
         </div>
     );
@@ -379,5 +334,5 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 ModernCompactTemplate.propTypes = {
     config: PropTypes.object.isRequired,
     reviewData: PropTypes.object.isRequired,
-    dimensions: PropTypes.object.isRequired
+    dimensions: PropTypes.object.isRequired,
 };
