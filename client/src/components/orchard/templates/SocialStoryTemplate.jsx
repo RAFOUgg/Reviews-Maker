@@ -44,8 +44,8 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
 
     const { typography, colors, contentModules, image, branding } = config;
 
-    // Extraction des données
-    const categoryRatings = extractCategoryRatings(reviewData.categoryRatings);
+    // Extraction des données - passer reviewData pour fallbacks
+    const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData);
     const aromas = asArray(reviewData.aromas).slice(0, 3);
     const effects = asArray(reviewData.effects).slice(0, 3);
     const { filled, value } = formatRating(reviewData.rating || 0, 5);

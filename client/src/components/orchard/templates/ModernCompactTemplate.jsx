@@ -30,8 +30,8 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     const isPortrait = dimensions.height > dimensions.width;
     const isLandscape = dimensions.width > dimensions.height * 1.2;
 
-    // Données extraites
-    const categoryRatings = extractCategoryRatings(reviewData.categoryRatings);
+    // Données extraites - passer reviewData pour fallbacks
+    const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData);
     const pipelines = extractPipelines(reviewData);
     const aromas = asArray(reviewData.aromas);
     const tastes = asArray(reviewData.tastes);
@@ -39,7 +39,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     const terpenes = asArray(reviewData.terpenes);
     const cultivars = asArray(reviewData.cultivarsList);
     const substrat = extractSubstrat(reviewData.substratMix);
-    const extraData = extractExtraData(reviewData.extraData);
+    const extraData = extractExtraData(reviewData.extraData, reviewData);
 
     // Image principale
     const mainImage = reviewData.mainImageUrl || reviewData.imageUrl || 

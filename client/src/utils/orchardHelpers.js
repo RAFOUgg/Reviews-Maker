@@ -128,15 +128,29 @@ export function isLightColor(hexColor) {
 
 /**
  * Extrait les données de categoryRatings
- * Gère deux formats possibles:
+ * Gère plusieurs formats possibles:
  * 1. Valeurs directes: { visual: 7.5, smell: 8 }
  * 2. Sous-objets: { visual: { densite: 6.5, trichome: 5.5 }, smell: { aromasIntensity: 8 } }
+ * 3. Données imbriquées dans extraData
  * @param {*} categoryRatings - Données des notes par catégorie
+ * @param {Object} reviewData - Données complètes de la review (optionnel)
  * @returns {Array} Liste des notes formatées
  */
-export function extractCategoryRatings(categoryRatings) {
-    const ratings = asObject(categoryRatings);
+export function extractCategoryRatings(categoryRatings, reviewData = null) {
+    let ratings = asObject(categoryRatings);
     const result = [];
+
+    // Si ratings est vide, essayer de reconstruire depuis reviewData
+    if (Object.keys(ratings).length === 0 && reviewData) {
+        const extra = asObject(reviewData.extraData);
+        ratings = {
+            visual: extra.visual || reviewData.visualRating,
+            smell: extra.smell || reviewData.smellRating,
+            texture: extra.texture || reviewData.textureRating,
+            taste: extra.taste || reviewData.tasteRating,
+            effects: extra.effects || reviewData.effectsRating,
+        };
+    }
 
     const categories = [
         { key: 'visual', label: 'Visuel', icon: '👁️' },
@@ -144,7 +158,6 @@ export function extractCategoryRatings(categoryRatings) {
         { key: 'texture', label: 'Texture', icon: '✋' },
         { key: 'taste', label: 'Goût', icon: '👅' },
         { key: 'effects', label: 'Effets', icon: '⚡' },
-        { key: 'overall', label: 'Global', icon: '⭐' },
     ];
 
     for (const cat of categories) {
@@ -153,6 +166,7 @@ export function extractCategoryRatings(categoryRatings) {
         if (catValue === undefined || catValue === null) continue;
 
         let value;
+        let subDetails = null;
 
         // Si c'est un nombre directement
         if (typeof catValue === 'number') {
@@ -164,73 +178,116 @@ export function extractCategoryRatings(categoryRatings) {
         }
         // Si c'est un objet avec des sous-champs (calcul de la moyenne)
         else if (typeof catValue === 'object' && catValue !== null) {
-            const subValues = Object.values(catValue)
-                .filter(v => typeof v === 'number' || (typeof v === 'string' && !isNaN(parseFloat(v))))
-                .map(v => parseFloat(v));
+            const subEntries = Object.entries(catValue)
+                .filter(([k, v]) => typeof v === 'number' || (typeof v === 'string' && !isNaN(parseFloat(v))))
+                .map(([k, v]) => ({ key: k, value: parseFloat(v) }));
 
-            if (subValues.length > 0) {
-                value = subValues.reduce((sum, v) => sum + v, 0) / subValues.length;
+            if (subEntries.length > 0) {
+                value = subEntries.reduce((sum, e) => sum + e.value, 0) / subEntries.length;
+                subDetails = subEntries;
             } else {
-                continue; // Pas de valeurs numériques dans le sous-objet
+                continue;
             }
         }
         else {
-            continue; // Format non reconnu
+            continue;
         }
 
-        // Ne pas inclure 'overall' dans les affichages de catégories individuelles
-        if (cat.key !== 'overall' || value > 0) {
-            result.push({
-                ...cat,
-                value: Math.round(value * 10) / 10 // Arrondi à 1 décimale
-            });
-        }
+        result.push({
+            ...cat,
+            value: Math.round(value * 10) / 10,
+            subDetails,
+            count: subDetails ? subDetails.length : 0
+        });
     }
 
     return result;
 }
 
 /**
- * Extrait les données extraData avec labels français
+ * Extrait les données extraData avec labels français - Liste COMPLÈTE
  * @param {*} extraData - Données extra
+ * @param {Object} reviewData - Données complètes de la review (optionnel)
  * @returns {Array} Liste des données formatées
  */
-export function extractExtraData(extraData) {
+export function extractExtraData(extraData, reviewData = null) {
     const extra = asObject(extraData);
+    // Fusionner avec les champs de reviewData directement
+    const merged = { ...extra };
+    if (reviewData) {
+        // Copier les champs directs de reviewData qui ne sont pas dans extra
+        const directFields = ['densite', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines',
+            'durete', 'elasticite', 'collant', 'friabilite', 'granularite',
+            'intensiteFumee', 'agressivite', 'cendre', 'montee', 'intensiteEffet', 'dureeEffet',
+            'aromasIntensity', 'tastesIntensity', 'effectsIntensity', 'fideliteCultivars',
+            'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus',
+            'textureBouche', 'douceur', 'persistanceGout', 'retroGout'];
+        directFields.forEach(f => {
+            if (merged[f] === undefined && reviewData[f] !== undefined) {
+                merged[f] = reviewData[f];
+            }
+        });
+    }
 
     const fieldDefs = [
+        // Culture
         { key: 'typeCulture', label: 'Type de culture', icon: '🌿', category: 'culture' },
         { key: 'spectre', label: 'Spectre lumineux', icon: '🌈', category: 'culture' },
         { key: 'techniquesPropagation', label: 'Propagation', icon: '🌱', category: 'culture' },
+        // Visuel
         { key: 'densite', label: 'Densité', icon: '📊', category: 'visual' },
         { key: 'trichome', label: 'Trichomes', icon: '✨', category: 'visual' },
         { key: 'pistil', label: 'Pistils', icon: '🌺', category: 'visual' },
         { key: 'manucure', label: 'Manucure', icon: '✂️', category: 'visual' },
+        { key: 'couleur', label: 'Couleur', icon: '🎨', category: 'visual' },
+        { key: 'pureteVisuelle', label: 'Pureté visuelle', icon: '🔍', category: 'visual' },
+        { key: 'viscosite', label: 'Viscosité', icon: '🫠', category: 'visual' },
+        { key: 'melting', label: 'Melting', icon: '🔥', category: 'visual' },
+        { key: 'residus', label: 'Résidus', icon: '⚫', category: 'visual' },
+        // Qualité
         { key: 'moisissure', label: 'Moisissure', icon: '🔬', category: 'quality' },
         { key: 'graines', label: 'Graines', icon: '🫘', category: 'quality' },
+        // Texture
         { key: 'durete', label: 'Dureté', icon: '💎', category: 'texture' },
         { key: 'elasticite', label: 'Élasticité', icon: '🔄', category: 'texture' },
         { key: 'collant', label: 'Collant', icon: '🍯', category: 'texture' },
+        { key: 'friabilite', label: 'Friabilité', icon: '🥧', category: 'texture' },
+        { key: 'granularite', label: 'Granularité', icon: '🔘', category: 'texture' },
+        { key: 'textureBouche', label: 'Texture bouche', icon: '👄', category: 'texture' },
+        // Fumée/Combustion
         { key: 'intensiteFumee', label: 'Intensité fumée', icon: '💨', category: 'smoke' },
         { key: 'agressivite', label: 'Agressivité', icon: '🔥', category: 'smoke' },
         { key: 'cendre', label: 'Cendre', icon: '⚪', category: 'smoke' },
+        { key: 'douceur', label: 'Douceur', icon: '🍬', category: 'smoke' },
+        // Effets
         { key: 'montee', label: 'Montée', icon: '📈', category: 'effects' },
         { key: 'intensiteEffet', label: 'Intensité effets', icon: '⚡', category: 'effects' },
+        { key: 'dureeEffet', label: 'Durée effets', icon: '⏱️', category: 'effects' },
+        // Sensoriel
         { key: 'aromasIntensity', label: 'Intensité arômes', icon: '🌸', category: 'sensory' },
+        { key: 'tastesIntensity', label: 'Intensité goûts', icon: '👅', category: 'sensory' },
+        { key: 'effectsIntensity', label: 'Intensité effets', icon: '💪', category: 'sensory' },
+        { key: 'fideliteCultivars', label: 'Fidélité cultivar', icon: '🎯', category: 'sensory' },
+        { key: 'persistanceGout', label: 'Persistance goût', icon: '⏳', category: 'sensory' },
+        { key: 'retroGout', label: 'Rétro-goût', icon: '🔙', category: 'sensory' },
         { key: 'notesDominantesOdeur', label: 'Notes dominantes', icon: '🎵', category: 'sensory' },
         { key: 'notesSecondairesOdeur', label: 'Notes secondaires', icon: '🎶', category: 'sensory' },
+        // Process
         { key: 'purgevide', label: 'Purge vide', icon: '🫧', category: 'process' },
+        { key: 'sechage', label: 'Séchage', icon: '☀️', category: 'process' },
+        { key: 'curing', label: 'Curing', icon: '🫙', category: 'process' },
     ];
 
     return fieldDefs
-        .filter(({ key }) => extra[key] !== undefined && extra[key] !== null && extra[key] !== '')
-        .map(({ key, label, icon, category }) => ({
-            key,
-            label,
-            icon,
-            category,
-            value: extra[key]
-        }));
+        .filter(({ key }) => merged[key] !== undefined && merged[key] !== null && merged[key] !== '')
+        .map(({ key, label, icon, category }) => {
+            let displayValue = merged[key];
+            // Si c'est un nombre, formater
+            if (typeof displayValue === 'number') {
+                displayValue = displayValue % 1 === 0 ? displayValue : displayValue.toFixed(1);
+            }
+            return { key, label, icon, category, value: displayValue };
+        });
 }
 
 /**

@@ -46,8 +46,8 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     const isPortrait = dimensions.height > dimensions.width;
     const isA4 = dimensions.width === 2480;
 
-    // Extraction des données
-    const categoryRatings = extractCategoryRatings(reviewData.categoryRatings);
+    // Extraction des données - passer reviewData pour les fallbacks
+    const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData);
     const pipelines = extractPipelines(reviewData);
     const aromas = asArray(reviewData.aromas);
     const tastes = asArray(reviewData.tastes);
@@ -55,7 +55,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     const terpenes = asArray(reviewData.terpenes);
     const cultivars = asArray(reviewData.cultivarsList);
     const substrat = extractSubstrat(reviewData.substratMix);
-    const extraData = extractExtraData(reviewData.extraData);
+    const extraData = extractExtraData(reviewData.extraData, reviewData);
 
     const mainImage = reviewData.mainImageUrl || reviewData.imageUrl || 
         (Array.isArray(reviewData.images) && reviewData.images[0]);
