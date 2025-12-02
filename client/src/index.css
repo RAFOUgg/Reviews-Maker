@@ -1231,8 +1231,8 @@ button.bg-indigo-600 {
 
 /* Scrollbar thin utility class for compact components */
 .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
@@ -1240,20 +1240,65 @@ button.bg-indigo-600 {
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: rgba(156, 163, 175, 0.4);
-    border-radius: 3px;
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 4px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: rgba(156, 163, 175, 0.6);
+    background: rgba(156, 163, 175, 0.8);
 }
 
 .dark .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: rgba(75, 85, 99, 0.4);
+    background: rgba(107, 114, 128, 0.5);
 }
 
 .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: rgba(75, 85, 99, 0.6);
+    background: rgba(107, 114, 128, 0.8);
+}
+
+/* Scrollbar thumb colors */
+.scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+    background: rgba(209, 213, 219, 0.7) !important;
+}
+
+.scrollbar-thumb-gray-300::-webkit-scrollbar-thumb:hover,
+.hover\:scrollbar-thumb-gray-400:hover::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.9) !important;
+}
+
+.dark .scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+    background: rgba(75, 85, 99, 0.7) !important;
+}
+
+.dark .scrollbar-thumb-gray-600::-webkit-scrollbar-thumb:hover,
+.dark .hover\:scrollbar-thumb-gray-500:hover::-webkit-scrollbar-thumb {
+    background: rgba(107, 114, 128, 0.9) !important;
+}
+
+.scrollbar-thumb-purple-300::-webkit-scrollbar-thumb {
+    background: rgba(216, 180, 254, 0.7) !important;
+}
+
+.scrollbar-thumb-purple-300::-webkit-scrollbar-thumb:hover,
+.hover\:scrollbar-thumb-purple-400:hover::-webkit-scrollbar-thumb {
+    background: rgba(192, 132, 252, 0.9) !important;
+}
+
+.dark .scrollbar-thumb-purple-700::-webkit-scrollbar-thumb {
+    background: rgba(126, 34, 206, 0.7) !important;
+}
+
+.dark .scrollbar-thumb-purple-700::-webkit-scrollbar-thumb:hover,
+.dark .hover\:scrollbar-thumb-purple-600:hover::-webkit-scrollbar-thumb {
+    background: rgba(147, 51, 234, 0.9) !important;
+}
+
+.scrollbar-thumb-rounded::-webkit-scrollbar-thumb {
+    border-radius: 6px;
+}
+
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+    background: transparent !important;
 }
 
 /* scrollbar rules above already set for base; keep consistent */

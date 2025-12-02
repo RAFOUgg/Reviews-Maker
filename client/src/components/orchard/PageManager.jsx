@@ -23,9 +23,9 @@ function SortablePage({ page, isActive, onClick, onRemove }) {
             <motion.div
                 whileHover={{ scale: 1.02 }}
                 onClick={onClick}
-                className={`p-3 rounded-lg border-2 transition-all cursor-pointer ${isActive
-                        ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-                        : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-purple-300'
+                className={`p-3 rounded-lg border-2 transition-all cursor-pointer shadow-sm hover:shadow-md ${isActive
+                    ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 ring-2 ring-purple-300 dark:ring-purple-700 shadow-lg shadow-purple-500/20'
+                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-purple-300 dark:hover:border-purple-600'
                     }`}
             >
                 <div className="flex items-center gap-3">
@@ -131,40 +131,66 @@ export default function PageManager() {
     return (
         <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
                 <div className="flex items-center justify-between mb-3">
-                    <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Pages</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {pages.length} page{pages.length > 1 ? 's' : ''}
-                        </p>
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 className="text-base font-bold text-gray-900 dark:text-white">Pages</h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {pages.length} page{pages.length > 1 ? 's' : ''}
+                            </p>
+                        </div>
                     </div>
 
                     {/* Toggle mode pages */}
                     <button
                         onClick={togglePagesMode}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${pagesEnabled
-                                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/30'
-                                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${pagesEnabled
+                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/30 ring-2 ring-purple-300 dark:ring-purple-700'
+                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                             }`}
                     >
-                        {pagesEnabled ? '✓ Activé' : 'Désactivé'}
+                        {pagesEnabled ? (
+                            <>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>ON</span>
+                            </>
+                        ) : (
+                            <>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                <span>OFF</span>
+                            </>
+                        )}
                     </button>
                 </div>
 
                 {/* Info tooltip */}
                 {!pagesEnabled && (
-                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                        <p className="text-xs text-blue-700 dark:text-blue-300">
-                            💡 Activez le mode pages pour répartir les informations sur plusieurs pages
-                        </p>
+                    <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border-2 border-blue-200 dark:border-blue-800">
+                        <div className="flex gap-2">
+                            <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <p className="text-xs text-blue-800 dark:text-blue-200 leading-relaxed">
+                                <strong>Mode Multi-Pages :</strong> Répartissez vos informations sur plusieurs pages pour une meilleure lisibilité
+                            </p>
+                        </div>
                     </div>
                 )}
             </div>
 
             {/* Pages list */}
             {pagesEnabled && (
-                <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-purple-300 dark:scrollbar-thumb-purple-700 scrollbar-track-transparent hover:scrollbar-thumb-purple-400 dark:hover:scrollbar-thumb-purple-600">
                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                         <SortableContext items={pages.map((p) => p.id)} strategy={verticalListSortingStrategy}>
                             {pages.map((page, index) => (

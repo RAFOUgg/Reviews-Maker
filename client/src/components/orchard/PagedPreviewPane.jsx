@@ -111,15 +111,15 @@ export default function PagedPreviewPane() {
                             height: 'fit-content'
                         }}
                     >
-                        {/* Page info badge */}
-                        <div className="absolute -top-10 left-0 flex items-center gap-2">
-                            <div className="px-3 py-1.5 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                                <span className="text-xl mr-2">{currentPage.icon}</span>
-                                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        {/* Page info badge - Enhanced */}
+                        <div className="absolute -top-12 left-0 flex items-center gap-2">
+                            <div className="px-4 py-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border-2 border-purple-200 dark:border-purple-700 flex items-center gap-2">
+                                <span className="text-2xl">{currentPage.icon}</span>
+                                <span className="text-sm font-bold text-gray-900 dark:text-white">
                                     {currentPage.label}
                                 </span>
                             </div>
-                            <div className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 rounded-lg text-sm font-bold text-purple-700 dark:text-purple-300">
+                            <div className="px-3 py-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-sm font-black text-white shadow-lg shadow-purple-500/50">
                                 {currentPageIndex + 1} / {pages.length}
                             </div>
                         </div>
@@ -166,20 +166,25 @@ export default function PagedPreviewPane() {
 
             {/* Page indicators (dots) */}
             {pages.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md px-5 py-3 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700">
                     {pages.map((page, index) => (
-                        <button
-                            key={page.id}
-                            onClick={() => {
-                                setDirection(index > currentPageIndex ? 1 : -1);
-                                setCurrentPage(index);
-                            }}
-                            className={`transition-all ${index === currentPageIndex
-                                    ? 'w-8 h-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full'
-                                    : 'w-3 h-3 bg-gray-300 dark:bg-gray-600 rounded-full hover:bg-gray-400 dark:hover:bg-gray-500'
-                                }`}
-                            title={`${page.icon} ${page.label}`}
-                        />
+                        <div key={page.id} className="relative group">
+                            <button
+                                onClick={() => {
+                                    setDirection(index > currentPageIndex ? 1 : -1);
+                                    setCurrentPage(index);
+                                }}
+                                className={`transition-all ${index === currentPageIndex
+                                    ? 'w-10 h-3.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg shadow-purple-500/50 ring-2 ring-purple-300'
+                                    : 'w-3 h-3 bg-gray-300 dark:bg-gray-600 rounded-full hover:bg-purple-400 dark:hover:bg-purple-500 hover:scale-125'
+                                    }`}
+                                title={`${page.icon} ${page.label}`}
+                            />
+                            {/* Tooltip on hover */}
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                {page.icon} {page.label}
+                            </div>
+                        </div>
                     ))}
                 </div>
             )}

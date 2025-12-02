@@ -628,20 +628,21 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                                 exit={{ opacity: 0 }}
                                 className="flex h-full"
                             >
-                                {/* Configuration Pane - Left */}
-                                <div className="w-2/5 border-r border-gray-200 dark:border-gray-800 overflow-y-auto">
+                                {/* Configuration Pane - Left - Responsive width */}
+                                <div className={`border-r border-gray-200 dark:border-gray-800 overflow-y-auto flex-shrink-0 ${pagesEnabled ? 'w-72 xl:w-80' : 'w-96 xl:w-[28rem]'
+                                    }`}>
                                     <ConfigPane />
                                 </div>
 
                                 {/* Page Manager - Middle (shown when pages enabled) */}
                                 {pagesEnabled && (
-                                    <div className="w-80 border-r border-gray-200 dark:border-gray-800 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+                                    <div className="w-72 xl:w-80 border-r border-gray-200 dark:border-gray-800 overflow-y-auto bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 flex-shrink-0">
                                         <PageManager />
                                     </div>
                                 )}
 
                                 {/* Preview Pane - Right */}
-                                <div className="flex-1 overflow-hidden">
+                                <div className="flex-1 overflow-hidden min-w-0">
                                     {pagesEnabled ? <PagedPreviewPane /> : <PreviewPane />}
                                 </div>
                             </motion.div>
