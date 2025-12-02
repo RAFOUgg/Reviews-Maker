@@ -94,7 +94,9 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
                     width: '100%',
                     height: '100%',
                     overflow: 'hidden',
-                    position: 'relative'
+                    position: 'relative',
+                    display: 'flex',
+                    flexDirection: 'column'
                 }}
             >
                 <TemplateComponent

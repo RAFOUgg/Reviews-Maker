@@ -344,7 +344,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 
     return (
         <div className="relative w-full h-full overflow-hidden" style={styles.container}>
-            <div className="w-full h-full">
+            <div className={`w-full h-full ${isSquare || isPortrait ? 'overflow-y-auto' : 'overflow-hidden'}`}>
                 {renderLayout()}
             </div>
             {renderBranding()}

@@ -22,10 +22,15 @@ export default function PagedPreviewPane() {
     const nextPage = useOrchardPagesStore((state) => state.nextPage);
     const previousPage = useOrchardPagesStore((state) => state.previousPage);
 
+    // Détecter si la pagination est recommandée
+    const paginationRecommended = pages.length > 1 && !pagesEnabled && (
+        config.ratio === '1:1' || config.ratio === '9:16' || config.ratio === '4:3'
+    );
+
     // Si le mode pages n'est pas activé, afficher comme avant
     if (!pagesEnabled || pages.length === 0) {
         return (
-            <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-auto">
+            <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-auto relative">
                 <div className="w-full h-full flex items-center justify-center p-8">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
@@ -44,6 +49,24 @@ export default function PagedPreviewPane() {
                         <TemplateRenderer config={config} reviewData={reviewData} />
                     </motion.div>
                 </div>
+                
+                {/* Suggestion de pagination si recommandé */}
+                {paginationRecommended && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="absolute bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl shadow-2xl flex items-center gap-3 cursor-pointer hover:scale-105 transition-transform"
+                        onClick={() => useOrchardPagesStore.getState().togglePagesMode()}
+                    >
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <div>
+                            <div className="font-bold">⚠️ Contenu dense détecté</div>
+                            <div className="text-xs opacity-90">Cliquez pour activer la pagination ({pages.length} pages)</div>
+                        </div>
+                    </motion.div>
+                )}
             </div>
         );
     }

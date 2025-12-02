@@ -291,18 +291,40 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
 
     // Effet séparé pour auto-activer le mode pages après chargement
     useEffect(() => {
-        if (reviewData && config.ratio) {
-            // Auto-activer le mode pages pour les formats carrés (1:1) et portrait (9:16) qui ont beaucoup de contenu
-            if ((config.ratio === '1:1' || config.ratio === '9:16') && !pagesEnabled) {
-                console.log('🔄 Auto-activation du mode pages pour format', config.ratio);
-                // Petit délai pour s'assurer que les pages sont chargées
+        if (reviewData && config.ratio && pages.length > 0) {
+            // Analyser si le contenu nécessite la pagination
+            const needsPagination = (
+                // Formats compacts avec beaucoup de contenu
+                (config.ratio === '1:1' || config.ratio === '9:16' || config.ratio === '4:3') &&
+                (
+                    // Vérifier la quantité de données
+                    (reviewData.categoryRatings && Object.keys(reviewData.categoryRatings).length > 0) ||
+                    (reviewData.aromas?.length > 3) ||
+                    (reviewData.effects?.length > 3) ||
+                    (reviewData.tastes?.length > 3) ||
+                    (reviewData.description?.length > 200) ||
+                    (reviewData.cultivarsList?.length > 1)
+                )
+            );
+
+            console.log('📄 Analyse pagination:', {
+                ratio: config.ratio,
+                pagesEnabled,
+                pagesCount: pages.length,
+                needsPagination,
+                hasData: !!(reviewData.categoryRatings || reviewData.aromas?.length)
+            });
+
+            // Auto-activer si nécessaire et pas encore activé
+            if (needsPagination && !pagesEnabled) {
+                console.log('🔄 Auto-activation du mode pages - Contenu dense détecté');
                 const timer = setTimeout(() => {
                     togglePagesMode();
-                }, 100);
+                }, 150);
                 return () => clearTimeout(timer);
             }
         }
-    }, [config.ratio, togglePagesMode, reviewData?.type]); // Dépendance sur type au lieu de reviewData complet
+    }, [config.ratio, togglePagesMode, pagesEnabled, pages.length, reviewData?.type, reviewData?.categoryRatings, reviewData?.aromas, reviewData?.effects]);
 
     const handleExport = () => {
         setShowExportModal(true);
