@@ -108,12 +108,8 @@ export default function HomeReviewCard({
                         </div>
                     </div>
                 ) : images && images.length > 0 ? (
-                    <div className={`h-full w-full ${images.length === 1 ? '' :
-                        images.length === 2 ? 'grid grid-cols-2 gap-1' :
-                            images.length === 3 ? 'grid grid-rows-2 gap-1' :
-                                'grid grid-cols-2 grid-rows-2 gap-1'
-                        }`}>
-                        {/* 1 image */}
+                    <>
+                        {/* 1 image - Pleine largeur */}
                         {images.length === 1 && (
                             <div className="relative w-full h-full overflow-hidden">
                                 <img
@@ -125,21 +121,25 @@ export default function HomeReviewCard({
                             </div>
                         )}
 
-                        {/* 2 images */}
-                        {images.length === 2 && images.slice(0, 2).map((img, idx) => (
-                            <div key={idx} className="relative overflow-hidden">
-                                <img
-                                    src={img}
-                                    alt={`${review.holderName} ${idx + 1}`}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        {/* 2 images - Gauche / Droite */}
+                        {images.length === 2 && (
+                            <div className="grid grid-cols-2 gap-1 h-full">
+                                {images.slice(0, 2).map((img, idx) => (
+                                    <div key={idx} className="relative overflow-hidden">
+                                        <img
+                                            src={img}
+                                            alt={`${review.holderName} ${idx + 1}`}
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
+                        )}
 
-                        {/* 3 images */}
+                        {/* 3 images - 2 en haut (gauche/droite), 1 en dessous (horizontal pleine largeur) */}
                         {images.length === 3 && (
-                            <>
+                            <div className="grid grid-rows-[1fr,1fr] gap-1 h-full">
                                 <div className="grid grid-cols-2 gap-1">
                                     {images.slice(0, 2).map((img, idx) => (
                                         <div key={idx} className="relative overflow-hidden">
@@ -160,21 +160,25 @@ export default function HomeReviewCard({
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 </div>
-                            </>
+                            </div>
                         )}
 
-                        {/* 4+ images */}
-                        {images.length >= 4 && images.slice(0, 4).map((img, idx) => (
-                            <div key={idx} className="relative overflow-hidden">
-                                <img
-                                    src={img}
-                                    alt={`${review.holderName} ${idx + 1}`}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        {/* 4+ images - Une dans chaque coin (2x2) */}
+                        {images.length >= 4 && (
+                            <div className="grid grid-cols-2 grid-rows-2 gap-1 h-full">
+                                {images.slice(0, 4).map((img, idx) => (
+                                    <div key={idx} className="relative overflow-hidden">
+                                        <img
+                                            src={img}
+                                            alt={`${review.holderName} ${idx + 1}`}
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
+                        )}
+                    </>
                 ) : (
                     <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-800 via-gray-900 to-black">
                         <span className="text-8xl opacity-20">
