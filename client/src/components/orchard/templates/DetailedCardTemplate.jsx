@@ -258,7 +258,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
     return (
         <div
-            className="relative w-full h-full overflow-hidden"
+            className={`relative w-full h-full ${isSquare ? 'overflow-auto' : 'overflow-hidden'}`}
             style={{
                 background: colors.background,
                 fontFamily: typography.fontFamily,

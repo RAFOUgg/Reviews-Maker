@@ -245,6 +245,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
     // Pages store
     const pagesEnabled = useOrchardPagesStore((state) => state.pagesEnabled);
     const loadDefaultPages = useOrchardPagesStore((state) => state.loadDefaultPages);
+    const togglePagesMode = useOrchardPagesStore((state) => state.togglePagesMode);
 
     // Configurer les sensors pour @dnd-kit
     const sensors = useSensors(
@@ -281,12 +282,27 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                 setIsCustomMode(true);
             }
 
-            // Charger les pages par défaut si on est en mode pages
+            // Charger les pages par défaut
             if (reviewData.type && config.ratio) {
                 loadDefaultPages(reviewData.type, config.ratio);
             }
         }
     }, [reviewData, setReviewData, loadDefaultPages, config.ratio]);
+
+    // Effet séparé pour auto-activer le mode pages après chargement
+    useEffect(() => {
+        if (reviewData && config.ratio) {
+            // Auto-activer le mode pages pour les formats carrés (1:1) et portrait (9:16) qui ont beaucoup de contenu
+            if ((config.ratio === '1:1' || config.ratio === '9:16') && !pagesEnabled) {
+                console.log('🔄 Auto-activation du mode pages pour format', config.ratio);
+                // Petit délai pour s'assurer que les pages sont chargées
+                const timer = setTimeout(() => {
+                    togglePagesMode();
+                }, 100);
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [config.ratio, togglePagesMode, reviewData?.type]); // Dépendance sur type au lieu de reviewData complet
 
     const handleExport = () => {
         setShowExportModal(true);

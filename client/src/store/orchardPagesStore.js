@@ -182,15 +182,7 @@ export const useOrchardPagesStore = create(
              */
             togglePagesMode: () => set((state) => {
                 const enabled = !state.pagesEnabled;
-
-                // Si on active le mode pages, initialiser avec un template par défaut
-                if (enabled && state.pages.length === 0) {
-                    const reviewData = get().reviewData;
-                    const config = get().config;
-                    const defaultPages = getDefaultPages(reviewData?.type, config?.ratio);
-                    return { pagesEnabled: enabled, pages: defaultPages, currentPageIndex: 0 };
-                }
-
+                console.log('📄 togglePagesMode:', { enabled, currentPagesCount: state.pages.length });
                 return { pagesEnabled: enabled };
             }),
 
