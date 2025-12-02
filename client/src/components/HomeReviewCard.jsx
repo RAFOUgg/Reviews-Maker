@@ -87,25 +87,12 @@ export default function HomeReviewCard({
 
     return (
         <div className="group relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl rounded-3xl overflow-hidden border border-gray-700 hover:border-green-500 transition-all duration-500 cursor-pointer hover:shadow-2xl hover:shadow-green-500/30 hover:scale-[1.02] transform">
-            {/* Aperçu Orchard si défini, sinon Image Grid adaptatif */}
+            {/* Image Grid adaptatif - Toujours afficher les vraies images */}
             <div
                 className="relative bg-gray-900 aspect-square overflow-hidden"
                 onClick={handleCardClick}
             >
-                {hasOrchardPreview ? (
-                    /* Rendu Orchard personnalisé */
-                    <div className="w-full h-full relative overflow-hidden bg-gray-900">
-                        <TemplateRenderer
-                            config={orchardConfig}
-                            reviewData={getOrchardReviewData()}
-                        />
-                        {/* Badge Orchard */}
-                        <div className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-purple-600/90 backdrop-blur-sm text-white text-xs font-bold flex items-center gap-1 shadow-lg">
-                            <span>🎨</span>
-                            <span>Aperçu</span>
-                        </div>
-                    </div>
-                ) : images && images.length > 0 ? (
+                {images && images.length > 0 ? (
                     <>
                         {/* 1 image - Pleine largeur */}
                         {images.length === 1 && (
@@ -185,17 +172,15 @@ export default function HomeReviewCard({
                     </div>
                 )}
 
-                {/* Rating badge flottant - toujours visible sauf si aperçu Orchard */}
-                {!hasOrchardPreview && (
-                    <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-xl bg-gradient-to-r ${rating >= 9 ? 'from-green-500 to-emerald-600' :
-                        rating >= 7 ? 'from-yellow-500 to-amber-600' :
-                            rating >= 5 ? 'from-orange-500 to-red-600' :
-                                'from-red-500 to-pink-600'
-                        } backdrop-blur-xl shadow-xl flex items-center gap-1`}>
-                        <span className="text-white font-black text-lg">{rating}</span>
-                        <span className="text-white/90 text-xs font-bold">/10</span>
-                    </div>
-                )}
+                {/* Rating badge flottant - toujours visible */}
+                <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-xl bg-gradient-to-r ${rating >= 9 ? 'from-green-500 to-emerald-600' :
+                    rating >= 7 ? 'from-yellow-500 to-amber-600' :
+                        rating >= 5 ? 'from-orange-500 to-red-600' :
+                            'from-red-500 to-pink-600'
+                    } backdrop-blur-xl shadow-xl flex items-center gap-1`}>
+                    <span className="text-white font-black text-lg">{rating}</span>
+                    <span className="text-white/90 text-xs font-bold">/10</span>
+                </div>
             </div>
 
             {/* Like/Dislike buttons */}
