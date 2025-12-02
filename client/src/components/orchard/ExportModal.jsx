@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { toPng, toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { useOrchardStore } from '../../store/orchardStore';
-import { preloadFonts, preloadSpecificFont } from '../../../utils/fontPreloader.js';
+import { preloadFonts, preloadSpecificFont } from '../../utils/fontPreloader.js';
 
 const EXPORT_FORMATS = [
     {
