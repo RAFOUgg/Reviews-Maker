@@ -118,8 +118,18 @@ export default function ExportModal({ onClose }) {
         wrapper.style.left = '-99999px';
         wrapper.style.top = '0';
         wrapper.style.opacity = '0';
+        wrapper.style.pointerEvents = 'none';
         wrapper.appendChild(target);
         document.body.appendChild(wrapper);
+
+        // Force exact dimensions and ensure all content is visible
+        target.style.width = 'auto';
+        target.style.height = 'auto';
+        target.style.maxWidth = 'none';
+        target.style.maxHeight = 'none';
+        target.style.display = 'inline-block';
+        target.style.transform = 'none';
+        target.style.overflow = 'visible';
 
         // If exporting for Open Graph, set recommended OG dimensions
         if (selectedScope === 'openGraph') {
@@ -127,10 +137,16 @@ export default function ExportModal({ onClose }) {
             target.style.height = '630px';
         }
 
+        // Wait for fonts and images to load
+        await document.fonts.ready;
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         const dataUrl = await toPng(target, {
             cacheBust: true,
             pixelRatio: (selectedScope === 'openGraph' ? 3 : exportOptions.pngScale),
-            backgroundColor: exportOptions.pngTransparent ? null : '#ffffff'
+            backgroundColor: exportOptions.pngTransparent ? null : '#ffffff',
+            width: target.scrollWidth,
+            height: target.scrollHeight
         });
 
         const link = document.createElement('a');
@@ -152,18 +168,34 @@ export default function ExportModal({ onClose }) {
         wrapper.style.left = '-99999px';
         wrapper.style.top = '0';
         wrapper.style.opacity = '0';
+        wrapper.style.pointerEvents = 'none';
         wrapper.appendChild(target);
         document.body.appendChild(wrapper);
+
+        // Force exact dimensions and ensure all content is visible
+        target.style.width = 'auto';
+        target.style.height = 'auto';
+        target.style.maxWidth = 'none';
+        target.style.maxHeight = 'none';
+        target.style.display = 'inline-block';
+        target.style.transform = 'none';
+        target.style.overflow = 'visible';
 
         if (selectedScope === 'openGraph') {
             target.style.width = '1200px';
             target.style.height = '630px';
         }
 
+        // Wait for fonts and images to load
+        await document.fonts.ready;
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         const dataUrl = await toJpeg(target, {
             cacheBust: true,
             quality: exportOptions.jpegQuality,
-            backgroundColor: '#ffffff'
+            backgroundColor: '#ffffff',
+            width: target.scrollWidth,
+            height: target.scrollHeight
         });
 
         // Cleanup
