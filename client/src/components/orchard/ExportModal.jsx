@@ -63,14 +63,12 @@ export default function ExportModal({ onClose }) {
         setExportStatus('Génération en cours...');
 
         try {
-            // Determine container based on selected scope
-            let container = document.getElementById('orchard-preview-container');
-            if (selectedScope === 'canvas') {
-                container = document.getElementById('orchard-template-canvas') || container;
-            }
-            if (selectedScope === 'openGraph') {
-                // Open graph target: prefer canvas for exact composition
-                container = document.getElementById('orchard-template-canvas') || container;
+            // Always use the template canvas for exact dimensions
+            let container = document.getElementById('orchard-template-canvas');
+
+            if (!container) {
+                // Fallback to preview container if canvas not found
+                container = document.getElementById('orchard-preview-container');
             }
 
             if (!container) {
@@ -106,12 +104,17 @@ export default function ExportModal({ onClose }) {
     };
 
     const exportPNG = async (container) => {
+        // Get original dimensions from data attribute or computed style
+        const originalWidth = parseInt(container.style.width) || container.offsetWidth;
+        const originalHeight = parseInt(container.style.height) || container.offsetHeight;
+
         // clone node to allow temporary modifications for export
         const target = container.cloneNode(true);
         if (!exportOptions.includeBranding) {
             const brands = target.querySelectorAll('.orchard-branding');
             brands.forEach(b => b.style.display = 'none');
         }
+
         // Append to DOM to ensure external CSS/fonts/images are applied then remove
         const wrapper = document.createElement('div');
         wrapper.style.position = 'fixed';
@@ -119,34 +122,47 @@ export default function ExportModal({ onClose }) {
         wrapper.style.top = '0';
         wrapper.style.opacity = '0';
         wrapper.style.pointerEvents = 'none';
+        wrapper.style.overflow = 'visible';
         wrapper.appendChild(target);
         document.body.appendChild(wrapper);
 
-        // Force exact dimensions and ensure all content is visible
-        target.style.width = 'auto';
-        target.style.height = 'auto';
+        // Force FULL dimensions - remove all constraints
         target.style.maxWidth = 'none';
         target.style.maxHeight = 'none';
-        target.style.display = 'inline-block';
-        target.style.transform = 'none';
+        target.style.minWidth = 'none';
+        target.style.minHeight = 'none';
         target.style.overflow = 'visible';
+        target.style.transform = 'none';
+        target.style.position = 'relative';
 
         // If exporting for Open Graph, set recommended OG dimensions
         if (selectedScope === 'openGraph') {
             target.style.width = '1200px';
             target.style.height = '630px';
+        } else {
+            // Use original dimensions from template
+            target.style.width = `${originalWidth}px`;
+            target.style.height = `${originalHeight}px`;
         }
 
         // Wait for fonts and images to load
         await document.fonts.ready;
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        // Get final dimensions to ensure everything is captured
+        const finalWidth = target.offsetWidth || originalWidth;
+        const finalHeight = target.offsetHeight || originalHeight;
 
         const dataUrl = await toPng(target, {
             cacheBust: true,
             pixelRatio: (selectedScope === 'openGraph' ? 3 : exportOptions.pngScale),
             backgroundColor: exportOptions.pngTransparent ? null : '#ffffff',
-            width: target.scrollWidth,
-            height: target.scrollHeight
+            width: finalWidth,
+            height: finalHeight,
+            style: {
+                width: `${finalWidth}px`,
+                height: `${finalHeight}px`
+            }
         });
 
         const link = document.createElement('a');
@@ -158,44 +174,62 @@ export default function ExportModal({ onClose }) {
     };
 
     const exportJPEG = async (container) => {
+        // Get original dimensions from data attribute or computed style
+        const originalWidth = parseInt(container.style.width) || container.offsetWidth;
+        const originalHeight = parseInt(container.style.height) || container.offsetHeight;
+
         const target = container.cloneNode(true);
         if (!exportOptions.includeBranding) {
             const brands = target.querySelectorAll('.orchard-branding');
             brands.forEach(b => b.style.display = 'none');
         }
+
         const wrapper = document.createElement('div');
         wrapper.style.position = 'fixed';
         wrapper.style.left = '-99999px';
         wrapper.style.top = '0';
         wrapper.style.opacity = '0';
         wrapper.style.pointerEvents = 'none';
+        wrapper.style.overflow = 'visible';
         wrapper.appendChild(target);
         document.body.appendChild(wrapper);
 
-        // Force exact dimensions and ensure all content is visible
-        target.style.width = 'auto';
-        target.style.height = 'auto';
+        // Force FULL dimensions - remove all constraints
         target.style.maxWidth = 'none';
         target.style.maxHeight = 'none';
-        target.style.display = 'inline-block';
-        target.style.transform = 'none';
+        target.style.minWidth = 'none';
+        target.style.minHeight = 'none';
         target.style.overflow = 'visible';
+        target.style.transform = 'none';
+        target.style.position = 'relative';
 
         if (selectedScope === 'openGraph') {
             target.style.width = '1200px';
             target.style.height = '630px';
+        } else {
+            // Use original dimensions from template
+            target.style.width = `${originalWidth}px`;
+            target.style.height = `${originalHeight}px`;
         }
 
         // Wait for fonts and images to load
         await document.fonts.ready;
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        // Get final dimensions to ensure everything is captured
+        const finalWidth = target.offsetWidth || originalWidth;
+        const finalHeight = target.offsetHeight || originalHeight;
 
         const dataUrl = await toJpeg(target, {
             cacheBust: true,
             quality: exportOptions.jpegQuality,
             backgroundColor: '#ffffff',
-            width: target.scrollWidth,
-            height: target.scrollHeight
+            width: finalWidth,
+            height: finalHeight,
+            style: {
+                width: `${finalWidth}px`,
+                height: `${finalHeight}px`
+            }
         });
 
         // Cleanup
