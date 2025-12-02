@@ -705,7 +705,6 @@ export const productStructures = {
                     { key: "montee", label: "Montée (rapidité)", type: "slider", max: 10 },
                     { key: "intensiteEffet", label: "Intensité", type: "slider", max: 10 },
                     { key: "effects", label: "Effets", type: "effects" },
-                    { key: "typeEffet", label: "Type d'effet", type: "textarea", rows: 3 },
                     { key: "dureeEffet", label: "Durée des effets", type: "select", choices: choiceCatalog.dureeEffet }
                 ]
             }
@@ -784,7 +783,6 @@ export const productStructures = {
                     { key: "effects", label: "Effets", type: "effects" },
                     { key: "montee", label: "Montée (rapidité)", type: "slider", max: 10 },
                     { key: "intensiteEffet", label: "Intensité", type: "slider", max: 10 },
-                    { key: "typeEffet", label: "Type d'effet", type: "textarea", rows: 3 },
                     { key: "dureeEffet", label: "Durée des effets", type: "select", choices: choiceCatalog.dureeEffet }
                 ]
             }
@@ -868,7 +866,6 @@ export const productStructures = {
                     { key: "montee", label: "Montée", type: "slider", max: 10 },
                     { key: "intensiteEffets", label: "Intensité des effets", type: "slider", max: 10 },
                     { key: "effects", label: "Effets", type: "effects" },
-                    { key: "typeEffet", label: "Type d'effet", type: "textarea", rows: 3 },
                     { key: "dureeEffet", label: "Durée", type: "select", choices: choiceCatalog.dureeEffet }
                 ]
             }
