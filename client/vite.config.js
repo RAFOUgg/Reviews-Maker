@@ -4,8 +4,8 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
     plugins: [react()],
-    // Base path pour le déploiement sous /reviews/client/
-    base: '/reviews/client/',
+    // Base path - empty for root deployment via Nginx
+    base: '/',
     server: {
         host: '0.0.0.0',
         port: 5173,
