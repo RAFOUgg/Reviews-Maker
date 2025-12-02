@@ -65,19 +65,28 @@ export default function PagedPreviewPane() {
         if (e.key === 'ArrowLeft') handlePrevious();
     };
 
-    // Variants pour l'animation de transition
+    // Variants pour l'animation de transition - PROFESSIONAL SMOOTH
     const variants = {
         enter: (direction) => ({
-            x: direction > 0 ? '100%' : '-100%',
+            x: direction > 0 ? '50%' : '-50%',
             opacity: 0,
+            scale: 0.95,
+            rotateY: direction > 0 ? 20 : -20,
+            filter: 'blur(4px)'
         }),
         center: {
             x: 0,
             opacity: 1,
+            scale: 1,
+            rotateY: 0,
+            filter: 'blur(0px)'
         },
         exit: (direction) => ({
-            x: direction > 0 ? '-100%' : '100%',
+            x: direction > 0 ? '-50%' : '50%',
             opacity: 0,
+            scale: 0.95,
+            rotateY: direction > 0 ? -20 : 20,
+            filter: 'blur(4px)'
         }),
     };
 
@@ -98,8 +107,11 @@ export default function PagedPreviewPane() {
                         animate="center"
                         exit="exit"
                         transition={{
-                            x: { type: 'spring', stiffness: 300, damping: 30 },
-                            opacity: { duration: 0.2 },
+                            type: 'spring',
+                            stiffness: 260,
+                            damping: 26,
+                            mass: 1,
+                            duration: 0.5
                         }}
                         ref={previewRef}
                         id="orchard-preview-container"
@@ -111,18 +123,34 @@ export default function PagedPreviewPane() {
                             height: 'fit-content'
                         }}
                     >
-                        {/* Page info badge - Enhanced */}
-                        <div className="absolute -top-12 left-0 flex items-center gap-2">
-                            <div className="px-4 py-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border-2 border-purple-200 dark:border-purple-700 flex items-center gap-2">
-                                <span className="text-2xl">{currentPage.icon}</span>
-                                <span className="text-sm font-bold text-gray-900 dark:text-white">
-                                    {currentPage.label}
-                                </span>
+                        {/* Page info badge - PROFESSIONAL REDESIGN */}
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="absolute -top-14 left-1/2 -translate-x-1/2 flex items-center gap-3"
+                        >
+                            <div className="px-5 py-3 bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 rounded-2xl shadow-2xl border-2 border-purple-300 dark:border-purple-700 flex items-center gap-3 backdrop-blur-xl">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                                        <span className="text-2xl filter drop-shadow-lg">{currentPage.icon}</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wide">
+                                            {currentPage.label}
+                                        </span>
+                                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                                            {currentPage.modules.length} modules actifs
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="h-8 w-px bg-gradient-to-b from-transparent via-purple-300 to-transparent" />
+                                <div className="flex items-center gap-2">
+                                    <div className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-sm font-black text-white shadow-lg shadow-purple-500/50 min-w-[60px] text-center">
+                                        {currentPageIndex + 1} / {pages.length}
+                                    </div>
+                                </div>
                             </div>
-                            <div className="px-3 py-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-sm font-black text-white shadow-lg shadow-purple-500/50">
-                                {currentPageIndex + 1} / {pages.length}
-                            </div>
-                        </div>
+                        </motion.div>
 
                         {/* Template renderer avec modules filtrés selon la page */}
                         <TemplateRenderer
@@ -134,58 +162,179 @@ export default function PagedPreviewPane() {
                     </motion.div>
                 </AnimatePresence>
 
-                {/* Navigation arrows */}
+                {/* Navigation arrows - PROFESSIONAL REDESIGN */}
                 {pages.length > 1 && (
                     <>
                         {/* Previous button */}
                         {currentPageIndex > 0 && (
-                            <button
+                            <motion.button
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                whileHover={{ scale: 1.1, x: -5 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={handlePrevious}
-                                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform border-2 border-gray-200 dark:border-gray-700"
+                                className="absolute left-6 top-1/2 -translate-y-1/2 group"
                             >
-                                <svg className="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                </svg>
-                            </button>
+                                <div className="relative">
+                                    {/* Glow effect */}
+                                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
+
+                                    {/* Button */}
+                                    <div className="relative w-14 h-14 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-full shadow-2xl flex items-center justify-center border-2 border-purple-300 dark:border-purple-700 group-hover:border-purple-500 dark:group-hover:border-purple-500 transition-all">
+                                        <svg className="w-7 h-7 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                    </div>
+
+                                    {/* Label */}
+                                    <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-black/80 backdrop-blur-sm text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                        Page précédente
+                                    </div>
+                                </div>
+                            </motion.button>
                         )}
 
                         {/* Next button */}
                         {currentPageIndex < pages.length - 1 && (
-                            <button
+                            <motion.button
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                whileHover={{ scale: 1.1, x: 5 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={handleNext}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform border-2 border-gray-200 dark:border-gray-700"
+                                className="absolute right-6 top-1/2 -translate-y-1/2 group"
                             >
-                                <svg className="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </button>
+                                <div className="relative">
+                                    {/* Glow effect */}
+                                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
+
+                                    {/* Button */}
+                                    <div className="relative w-14 h-14 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-full shadow-2xl flex items-center justify-center border-2 border-purple-300 dark:border-purple-700 group-hover:border-purple-500 dark:group-hover:border-purple-500 transition-all">
+                                        <svg className="w-7 h-7 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </div>
+
+                                    {/* Label */}
+                                    <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-black/80 backdrop-blur-sm text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                        Page suivante
+                                    </div>
+                                </div>
+                            </motion.button>
                         )}
                     </>
                 )}
             </div>
 
-            {/* Page indicators (dots) */}
+            {/* Page indicators - ENHANCED PROFESSIONAL DESIGN */}
             {pages.length > 1 && (
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md px-5 py-3 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700">
-                    {pages.map((page, index) => (
-                        <div key={page.id} className="relative group">
-                            <button
-                                onClick={() => {
-                                    setDirection(index > currentPageIndex ? 1 : -1);
-                                    setCurrentPage(index);
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-2xl border-2 border-purple-200 dark:border-purple-800">
+                    {/* Page cards instead of dots */}
+                    {pages.map((page, index) => {
+                        const isActive = index === currentPageIndex;
+                        const isPrev = index === currentPageIndex - 1;
+                        const isNext = index === currentPageIndex + 1;
+                        const isVisible = isActive || isPrev || isNext;
+
+                        if (!isVisible && pages.length > 5) {
+                            // Show ellipsis for hidden pages
+                            if (index === 1 && currentPageIndex > 2) {
+                                return (
+                                    <span key={`ellipsis-start-${page.id}`} className="text-gray-400 dark:text-gray-600 font-bold">
+                                        •••
+                                    </span>
+                                );
+                            }
+                            if (index === pages.length - 2 && currentPageIndex < pages.length - 3) {
+                                return (
+                                    <span key={`ellipsis-end-${page.id}`} className="text-gray-400 dark:text-gray-600 font-bold">
+                                        •••
+                                    </span>
+                                );
+                            }
+                            if (index !== 0 && index !== pages.length - 1) return null;
+                        }
+
+                        return (
+                            <motion.div
+                                key={page.id}
+                                initial={false}
+                                animate={{
+                                    scale: isActive ? 1.1 : 1,
+                                    opacity: isActive ? 1 : 0.6
                                 }}
-                                className={`transition-all ${index === currentPageIndex
-                                    ? 'w-10 h-3.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg shadow-purple-500/50 ring-2 ring-purple-300'
-                                    : 'w-3 h-3 bg-gray-300 dark:bg-gray-600 rounded-full hover:bg-purple-400 dark:hover:bg-purple-500 hover:scale-125'
-                                    }`}
-                                title={`${page.icon} ${page.label}`}
-                            />
-                            {/* Tooltip on hover */}
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                {page.icon} {page.label}
-                            </div>
-                        </div>
-                    ))}
+                                className="relative group"
+                            >
+                                <button
+                                    onClick={() => {
+                                        setDirection(index > currentPageIndex ? 1 : -1);
+                                        setCurrentPage(index);
+                                    }}
+                                    className={`
+                                        relative overflow-hidden transition-all duration-300 rounded-xl
+                                        ${isActive
+                                            ? 'w-20 h-16 bg-gradient-to-br from-purple-600 to-pink-600 shadow-lg shadow-purple-500/50 ring-4 ring-purple-300 dark:ring-purple-700'
+                                            : 'w-14 h-12 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 hover:scale-110 shadow-md'
+                                        }
+                                    `}
+                                >
+                                    {/* Page content */}
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
+                                        <span className={`text-2xl mb-0.5 transition-transform ${isActive ? 'scale-110' : ''}`}>
+                                            {page.icon}
+                                        </span>
+                                        {isActive && (
+                                            <span className="text-[10px] font-bold text-white uppercase tracking-wide">
+                                                {index + 1}/{pages.length}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Active indicator */}
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="activePageIndicator"
+                                            className="absolute inset-0 border-2 border-white/50 rounded-xl"
+                                            transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                                        />
+                                    )}
+                                </button>
+
+                                {/* Enhanced tooltip */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    whileHover={{ opacity: 1, y: 0 }}
+                                    className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-4 py-2 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-700 dark:to-gray-600 text-white text-xs font-medium rounded-xl whitespace-nowrap shadow-xl border border-gray-700 dark:border-gray-500 pointer-events-none"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-lg">{page.icon}</span>
+                                        <div className="text-left">
+                                            <div className="font-bold">{page.label}</div>
+                                            <div className="text-gray-300 text-[10px]">
+                                                {page.modules.length} modules • Page {index + 1}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* Arrow */}
+                                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
+                                        <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800 dark:border-t-gray-600" />
+                                    </div>
+                                </motion.div>
+                            </motion.div>
+                        );
+                    })}
+
+                    {/* Progress bar */}
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200 dark:bg-gray-700 rounded-b-2xl overflow-hidden">
+                        <motion.div
+                            className="h-full bg-gradient-to-r from-purple-600 to-pink-600"
+                            initial={false}
+                            animate={{
+                                width: `${((currentPageIndex + 1) / pages.length) * 100}%`
+                            }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                        />
+                    </div>
                 </div>
             )}
 

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { toPng, toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { useOrchardStore } from '../../store/orchardStore';
+import { preloadFonts, preloadSpecificFont } from '../../../utils/fontPreloader';
 
 const EXPORT_FORMATS = [
     {
@@ -104,142 +105,176 @@ export default function ExportModal({ onClose }) {
     };
 
     const exportPNG = async (container) => {
-        // Get original dimensions from data attribute or computed style
-        const originalWidth = parseInt(container.style.width) || container.offsetWidth;
-        const originalHeight = parseInt(container.style.height) || container.offsetHeight;
+        // Get original dimensions from the template canvas
+        const originalWidth = parseInt(container.dataset.width || container.style.width) || container.offsetWidth;
+        const originalHeight = parseInt(container.dataset.height || container.style.height) || container.offsetHeight;
 
-        // clone node to allow temporary modifications for export
+        console.log('📸 Export PNG - Original dimensions:', { originalWidth, originalHeight });
+
+        // Create a dedicated export container that won't be scaled
+        const exportContainer = document.createElement('div');
+        exportContainer.style.position = 'fixed';
+        exportContainer.style.left = '-99999px';
+        exportContainer.style.top = '0';
+        exportContainer.style.zIndex = '-1';
+        exportContainer.style.opacity = '0';
+        exportContainer.style.pointerEvents = 'none';
+        document.body.appendChild(exportContainer);
+
+        // Clone the template with all styles
         const target = container.cloneNode(true);
+
+        // Remove branding if needed
         if (!exportOptions.includeBranding) {
             const brands = target.querySelectorAll('.orchard-branding');
-            brands.forEach(b => b.style.display = 'none');
+            brands.forEach(b => b.remove());
         }
 
-        // Append to DOM to ensure external CSS/fonts/images are applied then remove
-        const wrapper = document.createElement('div');
-        wrapper.style.position = 'fixed';
-        wrapper.style.left = '-99999px';
-        wrapper.style.top = '0';
-        wrapper.style.opacity = '0';
-        wrapper.style.pointerEvents = 'none';
-        wrapper.style.overflow = 'visible';
-        wrapper.appendChild(target);
-        document.body.appendChild(wrapper);
-
-        // Force FULL dimensions - remove all constraints
+        // Force EXACT dimensions without any scaling or constraints
+        target.style.width = selectedScope === 'openGraph' ? '1200px' : `${originalWidth}px`;
+        target.style.height = selectedScope === 'openGraph' ? '630px' : `${originalHeight}px`;
         target.style.maxWidth = 'none';
         target.style.maxHeight = 'none';
         target.style.minWidth = 'none';
         target.style.minHeight = 'none';
-        target.style.overflow = 'visible';
         target.style.transform = 'none';
         target.style.position = 'relative';
+        target.style.overflow = 'hidden'; // Prevent any overflow
+        target.style.boxSizing = 'border-box';
 
-        // If exporting for Open Graph, set recommended OG dimensions
-        if (selectedScope === 'openGraph') {
-            target.style.width = '1200px';
-            target.style.height = '630px';
-        } else {
-            // Use original dimensions from template
-            target.style.width = `${originalWidth}px`;
-            target.style.height = `${originalHeight}px`;
+        exportContainer.appendChild(target);
+
+        // Preload fonts - CRITICAL for professional export
+        await preloadFonts();
+        if (config?.typography?.fontFamily) {
+            await preloadSpecificFont(config.typography.fontFamily);
         }
 
-        // Wait for fonts and images to load
+        // Wait for all fonts, images and resources
         await document.fonts.ready;
-        await new Promise(resolve => setTimeout(resolve, 200));
 
-        // Get final dimensions to ensure everything is captured
-        const finalWidth = target.offsetWidth || originalWidth;
-        const finalHeight = target.offsetHeight || originalHeight;
+        // Force multiple reflows to ensure everything is rendered
+        target.offsetHeight;
+        target.scrollHeight;
 
-        const dataUrl = await toPng(target, {
-            cacheBust: true,
-            pixelRatio: (selectedScope === 'openGraph' ? 3 : exportOptions.pngScale),
-            backgroundColor: exportOptions.pngTransparent ? null : '#ffffff',
-            width: finalWidth,
-            height: finalHeight,
-            style: {
-                width: `${finalWidth}px`,
-                height: `${finalHeight}px`
-            }
-        });
+        // Extra time for images and heavy content to render
+        await new Promise(resolve => setTimeout(resolve, 800)); const finalWidth = selectedScope === 'openGraph' ? 1200 : originalWidth;
+        const finalHeight = selectedScope === 'openGraph' ? 630 : originalHeight;
+        const pixelRatio = selectedScope === 'openGraph' ? 3 : exportOptions.pngScale;
 
-        const link = document.createElement('a');
-        link.download = `review-${reviewData.title || 'export'}-${Date.now()}.png`;
-        link.href = dataUrl;
-        link.click();
-        // cleanup
-        setTimeout(() => wrapper.remove(), 1000);
+        console.log('📸 Capturing with:', { finalWidth, finalHeight, pixelRatio, transparent: exportOptions.pngTransparent });
+
+        try {
+            const dataUrl = await toPng(target, {
+                cacheBust: true,
+                pixelRatio: pixelRatio,
+                backgroundColor: exportOptions.pngTransparent ? 'transparent' : '#ffffff',
+                width: finalWidth,
+                height: finalHeight,
+                style: {
+                    width: `${finalWidth}px`,
+                    height: `${finalHeight}px`,
+                    transform: 'none'
+                },
+                // Include all fonts and styles
+                fontEmbedCSS: true,
+                skipAutoScale: true
+            });
+
+            const link = document.createElement('a');
+            link.download = `review-${reviewData.title || 'export'}-${selectedScope === 'openGraph' ? 'og-' : ''}${Date.now()}.png`;
+            link.href = dataUrl;
+            link.click();
+
+            console.log('✅ Export PNG success');
+        } catch (error) {
+            console.error('❌ Export PNG failed:', error);
+            throw error;
+        } finally {
+            // Cleanup
+            setTimeout(() => exportContainer.remove(), 1000);
+        }
     };
 
     const exportJPEG = async (container) => {
-        // Get original dimensions from data attribute or computed style
-        const originalWidth = parseInt(container.style.width) || container.offsetWidth;
-        const originalHeight = parseInt(container.style.height) || container.offsetHeight;
+        const originalWidth = parseInt(container.dataset.width || container.style.width) || container.offsetWidth;
+        const originalHeight = parseInt(container.dataset.height || container.style.height) || container.offsetHeight;
+
+        console.log('📸 Export JPEG - Original dimensions:', { originalWidth, originalHeight });
+
+        const exportContainer = document.createElement('div');
+        exportContainer.style.position = 'fixed';
+        exportContainer.style.left = '-99999px';
+        exportContainer.style.top = '0';
+        exportContainer.style.zIndex = '-1';
+        exportContainer.style.opacity = '0';
+        exportContainer.style.pointerEvents = 'none';
+        document.body.appendChild(exportContainer);
 
         const target = container.cloneNode(true);
+
         if (!exportOptions.includeBranding) {
             const brands = target.querySelectorAll('.orchard-branding');
-            brands.forEach(b => b.style.display = 'none');
+            brands.forEach(b => b.remove());
         }
 
-        const wrapper = document.createElement('div');
-        wrapper.style.position = 'fixed';
-        wrapper.style.left = '-99999px';
-        wrapper.style.top = '0';
-        wrapper.style.opacity = '0';
-        wrapper.style.pointerEvents = 'none';
-        wrapper.style.overflow = 'visible';
-        wrapper.appendChild(target);
-        document.body.appendChild(wrapper);
-
-        // Force FULL dimensions - remove all constraints
+        target.style.width = selectedScope === 'openGraph' ? '1200px' : `${originalWidth}px`;
+        target.style.height = selectedScope === 'openGraph' ? '630px' : `${originalHeight}px`;
         target.style.maxWidth = 'none';
         target.style.maxHeight = 'none';
         target.style.minWidth = 'none';
         target.style.minHeight = 'none';
-        target.style.overflow = 'visible';
         target.style.transform = 'none';
         target.style.position = 'relative';
+        target.style.overflow = 'hidden';
+        target.style.boxSizing = 'border-box';
 
-        if (selectedScope === 'openGraph') {
-            target.style.width = '1200px';
-            target.style.height = '630px';
-        } else {
-            // Use original dimensions from template
-            target.style.width = `${originalWidth}px`;
-            target.style.height = `${originalHeight}px`;
+        exportContainer.appendChild(target);
+
+        // Preload fonts for JPEG too
+        await preloadFonts();
+        if (config?.typography?.fontFamily) {
+            await preloadSpecificFont(config.typography.fontFamily);
         }
 
-        // Wait for fonts and images to load
         await document.fonts.ready;
-        await new Promise(resolve => setTimeout(resolve, 200));
+        target.offsetHeight;
+        target.scrollHeight;
+        await new Promise(resolve => setTimeout(resolve, 800));
 
-        // Get final dimensions to ensure everything is captured
-        const finalWidth = target.offsetWidth || originalWidth;
-        const finalHeight = target.offsetHeight || originalHeight;
+        const finalWidth = selectedScope === 'openGraph' ? 1200 : originalWidth;
+        const finalHeight = selectedScope === 'openGraph' ? 630 : originalHeight;
 
-        const dataUrl = await toJpeg(target, {
-            cacheBust: true,
-            quality: exportOptions.jpegQuality,
-            backgroundColor: '#ffffff',
-            width: finalWidth,
-            height: finalHeight,
-            style: {
-                width: `${finalWidth}px`,
-                height: `${finalHeight}px`
-            }
-        });
+        console.log('📸 Capturing JPEG with:', { finalWidth, finalHeight, quality: exportOptions.jpegQuality });
 
-        // Cleanup
-        setTimeout(() => wrapper.remove(), 1000);
+        try {
+            const dataUrl = await toJpeg(target, {
+                cacheBust: true,
+                quality: exportOptions.jpegQuality,
+                backgroundColor: '#ffffff',
+                width: finalWidth,
+                height: finalHeight,
+                style: {
+                    width: `${finalWidth}px`,
+                    height: `${finalHeight}px`,
+                    transform: 'none'
+                },
+                fontEmbedCSS: true,
+                skipAutoScale: true
+            });
 
-        const link = document.createElement('a');
-        link.download = `review-${reviewData.title || 'export'}-${Date.now()}.jpg`;
-        link.href = dataUrl;
-        link.click();
-        setTimeout(() => wrapper.remove(), 1000);
+            const link = document.createElement('a');
+            link.download = `review-${reviewData.title || 'export'}-${selectedScope === 'openGraph' ? 'og-' : ''}${Date.now()}.jpg`;
+            link.href = dataUrl;
+            link.click();
+
+            console.log('✅ Export JPEG success');
+        } catch (error) {
+            console.error('❌ Export JPEG failed:', error);
+            throw error;
+        } finally {
+            setTimeout(() => exportContainer.remove(), 1000);
+        }
     };
 
     const exportPDF = async (container) => {

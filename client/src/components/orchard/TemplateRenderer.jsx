@@ -69,23 +69,41 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
 
     return (
         <div
-            className="orchard-template-container shadow-2xl rounded-xl overflow-hidden"
+            className="orchard-template-container shadow-2xl rounded-xl"
             id="orchard-template-canvas"
+            data-width={dimensions.width}
+            data-height={dimensions.height}
+            data-ratio={config.ratio}
             style={{
                 width: `${dimensions.width}px`,
                 height: `${dimensions.height}px`,
                 maxWidth: '100%',
                 maxHeight: '100%',
                 transform: 'scale(1)',
-                transformOrigin: 'center'
+                transformOrigin: 'center',
+                contain: 'layout style paint',
+                overflow: 'hidden',
+                position: 'relative',
+                isolation: 'isolate' // Crée un nouveau contexte de stacking
             }}
         >
-            <TemplateComponent
-                config={filteredConfig}
-                reviewData={reviewData}
-                dimensions={dimensions}
-                pageMode={pageMode}
-            />
+            {/* Inner wrapper pour garantir le respect des dimensions */}
+            <div
+                className="orchard-template-inner"
+                style={{
+                    width: '100%',
+                    height: '100%',
+                    overflow: 'hidden',
+                    position: 'relative'
+                }}
+            >
+                <TemplateComponent
+                    config={filteredConfig}
+                    reviewData={reviewData}
+                    dimensions={dimensions}
+                    pageMode={pageMode}
+                />
+            </div>
         </div>
     );
 }
