@@ -94,13 +94,11 @@ export default function HomeReviewCard({
             >
                 {hasOrchardPreview ? (
                     /* Rendu Orchard personnalisé */
-                    <div className="w-full h-full flex items-center justify-center p-2 bg-gray-900">
-                        <div className="w-full h-full relative overflow-hidden rounded-lg" style={{ transform: 'scale(0.35)', transformOrigin: 'center' }}>
-                            <TemplateRenderer
-                                config={orchardConfig}
-                                reviewData={getOrchardReviewData()}
-                            />
-                        </div>
+                    <div className="w-full h-full relative overflow-hidden bg-gray-900">
+                        <TemplateRenderer
+                            config={orchardConfig}
+                            reviewData={getOrchardReviewData()}
+                        />
                         {/* Badge Orchard */}
                         <div className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-purple-600/90 backdrop-blur-sm text-white text-xs font-bold flex items-center gap-1 shadow-lg">
                             <span>🎨</span>
