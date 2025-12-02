@@ -7,6 +7,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reviews Maker - Cannabis Reviews</title>
     <meta name="description" content="Application de gestion de reviews cannabis avec roue des terpènes interactive" />
+    
+    <!-- FORCE RESET ORCHARD STORAGE - EXECUTES BEFORE REACT -->
+    <script>
+        (function() {
+            const STORAGE_KEY = 'orchard-storage';
+            const REQUIRED_VERSION = 7;
+            const MIN_MODULES = 70;
+            
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    const version = parsed?.version ?? 0;
+                    const modulesCount = Object.keys(parsed?.state?.config?.contentModules || parsed?.config?.contentModules || {}).length;
+                    
+                    console.warn('🔍 PRE-LOAD Storage Check:', { version, modulesCount, needsReset: version < REQUIRED_VERSION || modulesCount < MIN_MODULES });
+                    
+                    if (version < REQUIRED_VERSION || modulesCount < MIN_MODULES) {
+                        console.warn('🗑️ FORCING IMMEDIATE RESET');
+                        localStorage.removeItem(STORAGE_KEY);
+                        console.warn('✅ Storage cleared - will recreate with v7 and 80+ modules');
+                    }
+                }
+            } catch (e) {
+                console.error('Pre-load storage check failed:', e);
+                localStorage.removeItem(STORAGE_KEY);
+            }
+        })();
+    </script>
 </head>
 
 <body>
