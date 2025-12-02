@@ -450,8 +450,8 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                         : { left: '50%', top: '50%', width: '600px', maxHeight: '85vh', marginLeft: '-300px', marginTop: '-42.5vh' }
                 }
             >
-                {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
+                {/* Header - STICKY POUR TOUJOURS VISIBLE */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 sticky top-0 z-10 flex-shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
                             <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
