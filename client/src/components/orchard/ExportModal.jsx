@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { toPng, toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { useOrchardStore } from '../../store/orchardStore';
-import { preloadFonts, preloadSpecificFont } from '../../../utils/fontPreloader';
+import { preloadFonts, preloadSpecificFont } from '../../../utils/fontPreloader.js';
 
 const EXPORT_FORMATS = [
     {
@@ -195,7 +195,7 @@ export default function ExportModal({ onClose }) {
 
             setExportProgress(95);
             setExportStatus('💾 Téléchargement...');
-            
+
             const link = document.createElement('a');
             link.download = `review-${reviewData.title || 'export'}-${selectedScope === 'openGraph' ? 'og-' : ''}${Date.now()}.png`;
             link.href = dataUrl;
@@ -642,7 +642,7 @@ export default function ExportModal({ onClose }) {
                                 >
                                     {exportStatus}
                                 </div>
-                                
+
                                 {/* Progress Bar */}
                                 {isExporting && exportProgress < 100 && (
                                     <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -653,15 +653,15 @@ export default function ExportModal({ onClose }) {
                                             transition={{ duration: 0.3, ease: 'easeOut' }}
                                         />
                                         {/* Shimmer effect */}
-                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" 
-                                             style={{ 
-                                                 backgroundSize: '200% 100%',
-                                                 animation: 'shimmer 2s infinite'
-                                             }}
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"
+                                            style={{
+                                                backgroundSize: '200% 100%',
+                                                animation: 'shimmer 2s infinite'
+                                            }}
                                         />
                                     </div>
                                 )}
-                                
+
                                 {/* Percentage */}
                                 {isExporting && (
                                     <div className="text-center">
