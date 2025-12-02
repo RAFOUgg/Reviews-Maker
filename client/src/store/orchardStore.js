@@ -11,8 +11,11 @@ export { COLOR_PALETTES, DEFAULT_TEMPLATES };
 // ═══════════════════════════════════════════════════════════════════════════════
 // FORCE RESET: Supprimer localStorage obsolète AVANT que zustand ne charge
 // ═══════════════════════════════════════════════════════════════════════════════
-const CURRENT_STORAGE_VERSION = 6; // Incrémenté pour forcer reset
+const CURRENT_STORAGE_VERSION = 7; // Incrémenté pour forcer reset - BUILD DEC 2 2025
 const STORAGE_KEY = 'orchard-storage';
+
+// FORCE IMMEDIATE RESET - Dec 2 2025
+console.log('🚀 Orchard Store Loading - Version 7 - Forcing localStorage check...');
 
 try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -31,10 +34,13 @@ try {
             needsReset: storedVersion < CURRENT_STORAGE_VERSION || modulesCount < 50
         });
 
-        // TOUJOURS reset si version < 6 OU moins de 50 modules
-        if (storedVersion < CURRENT_STORAGE_VERSION || modulesCount < 50) {
-            console.log('🗑️ FORCING localStorage reset - old version or incomplete modules');
+        // TOUJOURS reset si version < 7 OU moins de 70 modules
+        if (storedVersion < CURRENT_STORAGE_VERSION || modulesCount < 70) {
+            console.warn('🗑️ FORCING localStorage reset - old version or incomplete modules');
+            console.warn('   Stored version:', storedVersion, '| Current:', CURRENT_STORAGE_VERSION);
+            console.warn('   Modules count:', modulesCount, '(need 70+)');
             localStorage.removeItem(STORAGE_KEY);
+            console.warn('✅ localStorage DELETED - will recreate with 80+ modules');
         }
     }
 } catch (e) {
@@ -455,15 +461,17 @@ export const useOrchardStore = create(
                 config: state.config
             }),
             // Version du storage - doit correspondre à CURRENT_STORAGE_VERSION
-            // v5: Force reset automatique au chargement si version < 5 ou < 50 modules
+            // v7: Force reset automatique au chargement si version < 7 ou < 70 modules - Dec 2 2025
             version: CURRENT_STORAGE_VERSION,
             // Migration pour les changements de version
             migrate: (persistedState, version) => {
-                console.log('🔄 Orchard Storage Migration:', { from: version, to: CURRENT_STORAGE_VERSION, hasState: !!persistedState });
+                console.warn('🔄 Orchard Storage Migration:', { from: version, to: CURRENT_STORAGE_VERSION, hasState: !!persistedState });
 
-                // Si version < CURRENT, reset COMPLET des contentModules et moduleOrder
+                // Si version < 7, reset COMPLET des contentModules et moduleOrder
                 if (version < CURRENT_STORAGE_VERSION) {
-                    console.log('📦 Migration: Forcing COMPLETE contentModules reset to 80+ modules');
+                    console.warn('📦 v7 Migration: Forcing COMPLETE contentModules reset to 80+ modules');
+                    const modulesCount = Object.keys(DEFAULT_CONFIG.contentModules).length;
+                    console.warn('   Will create', modulesCount, 'modules');
                     return {
                         ...persistedState,
                         config: {
@@ -491,15 +499,18 @@ export const useOrchardStore = create(
                     forceDefault: savedModulesCount < 50 // Moins de 50 = vieux format
                 });
 
-                // TOUJOURS utiliser les modules par défaut si moins de 50 modules
-                // Car l'ancien format avait ~13 modules seulement
-                const contentModules = savedModulesCount < 50
+                // TOUJOURS utiliser les modules par défaut si moins de 70 modules
+                // Car l'ancien format avait seulement 13 modules
+                const contentModules = savedModulesCount < 70
                     ? { ...DEFAULT_CONFIG.contentModules }
                     : { ...DEFAULT_CONFIG.contentModules, ...persistedState.config.contentModules };
 
-                const moduleOrder = (persistedState.config?.moduleOrder?.length || 0) < 30
+                const moduleOrder = (persistedState.config?.moduleOrder?.length || 0) < 70
                     ? [...DEFAULT_CONFIG.moduleOrder]
                     : persistedState.config.moduleOrder;
+
+                console.warn('   Using contentModules:', Object.keys(contentModules).length, 'modules');
+                console.warn('   Using moduleOrder:', moduleOrder.length, 'items');
 
                 return {
                     ...currentState,
