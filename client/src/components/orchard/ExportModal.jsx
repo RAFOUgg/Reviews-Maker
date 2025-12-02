@@ -58,12 +58,15 @@ export default function ExportModal({ onClose }) {
     });
     const [isExporting, setIsExporting] = useState(false);
     const [exportStatus, setExportStatus] = useState(null);
+    const [exportProgress, setExportProgress] = useState(0);
 
     const handleExport = async () => {
         setIsExporting(true);
-        setExportStatus('Génération en cours...');
+        setExportProgress(0);
+        setExportStatus('🎨 Préparation de l\'export...');
 
         try {
+            setExportProgress(10);
             // Always use the template canvas for exact dimensions
             let container = document.getElementById('orchard-template-canvas');
 
@@ -110,6 +113,8 @@ export default function ExportModal({ onClose }) {
         const originalHeight = parseInt(container.dataset.height || container.style.height) || container.offsetHeight;
 
         console.log('📸 Export PNG - Original dimensions:', { originalWidth, originalHeight });
+        setExportProgress(20);
+        setExportStatus('📦 Préparation du contenu...');
 
         // Create a dedicated export container that won't be scaled
         const exportContainer = document.createElement('div');
@@ -144,16 +149,20 @@ export default function ExportModal({ onClose }) {
 
         exportContainer.appendChild(target);
 
+        setExportProgress(40);
+        setExportStatus('🔤 Chargement des polices...');
+
         // Preload fonts - CRITICAL for professional export
         await preloadFonts();
         if (config?.typography?.fontFamily) {
             await preloadSpecificFont(config.typography.fontFamily);
         }
 
-        // Wait for all fonts, images and resources
-        await document.fonts.ready;
+        setExportProgress(60);
+        setExportStatus('🖼️ Chargement des images...');
 
-        // Force multiple reflows to ensure everything is rendered
+        // Wait for all fonts, images and resources
+        await document.fonts.ready;        // Force multiple reflows to ensure everything is rendered
         target.offsetHeight;
         target.scrollHeight;
 
@@ -163,6 +172,9 @@ export default function ExportModal({ onClose }) {
         const pixelRatio = selectedScope === 'openGraph' ? 3 : exportOptions.pngScale;
 
         console.log('📸 Capturing with:', { finalWidth, finalHeight, pixelRatio, transparent: exportOptions.pngTransparent });
+
+        setExportProgress(80);
+        setExportStatus('📸 Capture en cours...');
 
         try {
             const dataUrl = await toPng(target, {
@@ -181,11 +193,15 @@ export default function ExportModal({ onClose }) {
                 skipAutoScale: true
             });
 
+            setExportProgress(95);
+            setExportStatus('💾 Téléchargement...');
+            
             const link = document.createElement('a');
             link.download = `review-${reviewData.title || 'export'}-${selectedScope === 'openGraph' ? 'og-' : ''}${Date.now()}.png`;
             link.href = dataUrl;
             link.click();
 
+            setExportProgress(100);
             console.log('✅ Export PNG success');
         } catch (error) {
             console.error('❌ Export PNG failed:', error);
@@ -606,22 +622,54 @@ export default function ExportModal({ onClose }) {
                             </div>
                         </div>
 
-                        {/* Status */}
+                        {/* Status with Progress Bar */}
                         {exportStatus && (
                             <motion.div
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className={`
-                                p-3 rounded-lg text-sm font-medium text-center
-                                ${exportStatus.startsWith('✅')
-                                        ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
-                                        : exportStatus.startsWith('❌')
-                                            ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
-                                            : 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    }
-                            `}
+                                className="space-y-3"
                             >
-                                {exportStatus}
+                                <div
+                                    className={`
+                                    p-3 rounded-lg text-sm font-medium text-center
+                                    ${exportStatus.startsWith('✅')
+                                            ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
+                                            : exportStatus.startsWith('❌')
+                                                ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
+                                                : 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                                        }
+                                `}
+                                >
+                                    {exportStatus}
+                                </div>
+                                
+                                {/* Progress Bar */}
+                                {isExporting && exportProgress < 100 && (
+                                    <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                        <motion.div
+                                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full"
+                                            initial={{ width: '0%' }}
+                                            animate={{ width: `${exportProgress}%` }}
+                                            transition={{ duration: 0.3, ease: 'easeOut' }}
+                                        />
+                                        {/* Shimmer effect */}
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" 
+                                             style={{ 
+                                                 backgroundSize: '200% 100%',
+                                                 animation: 'shimmer 2s infinite'
+                                             }}
+                                        />
+                                    </div>
+                                )}
+                                
+                                {/* Percentage */}
+                                {isExporting && (
+                                    <div className="text-center">
+                                        <span className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                                            {exportProgress}%
+                                        </span>
+                                    </div>
+                                )}
                             </motion.div>
                         )}
                     </div>
