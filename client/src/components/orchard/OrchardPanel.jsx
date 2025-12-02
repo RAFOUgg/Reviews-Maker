@@ -469,6 +469,32 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                     </div>
 
                     <div className="flex items-center gap-1.5">
+                        {/* Bouton Toggle Mode Pages */}
+                        {!isCustomMode && showPreview && (
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => {
+                                    console.log('📄 Toggle pages mode:', !pagesEnabled, 'Current ratio:', config.ratio);
+                                    togglePagesMode();
+                                }}
+                                className={`px-3 py-2 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition-all ${pagesEnabled
+                                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30 ring-2 ring-indigo-300 dark:ring-indigo-700'
+                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                    }`}
+                                title={pagesEnabled ? 'Désactiver le mode pages' : 'Activer le mode pages'}
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    {pagesEnabled ? (
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    ) : (
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    )}
+                                </svg>
+                                <span>{pagesEnabled ? '📄 Pages' : '📄'}</span>
+                            </motion.button>
+                        )}
+
                         {/* Bouton Toggle Mode Template/Custom */}
                         <motion.button
                             whileHover={{ scale: 1.02 }}
@@ -578,7 +604,13 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                 {/* Content */}
                 <div className="flex-1 overflow-hidden">
                     {/* Debug Info */}
-                    {console.log('🎯 OrchardPanel Render:', { showPreview, isCustomMode })}
+                    {console.log('🎯 OrchardPanel Render:', {
+                        showPreview,
+                        isCustomMode,
+                        pagesEnabled,
+                        ratio: config?.ratio,
+                        reviewType: reviewData?.type
+                    })}
 
                     <AnimatePresence mode="wait">
                         {!showPreview ? (
