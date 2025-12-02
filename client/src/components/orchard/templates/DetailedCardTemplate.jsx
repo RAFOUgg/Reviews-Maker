@@ -11,6 +11,7 @@ import {
     extractSubstrat,
     extractExtraData,
     colorWithOpacity,
+    getResponsiveAdjustments,
 } from '../../../utils/orchardHelpers';
 
 /**
@@ -43,48 +44,41 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     }
 
     const { typography, colors, contentModules, image, branding } = config;
-    const isPortrait = dimensions.height > dimensions.width;
-    const isA4 = dimensions.width === 2480;
+    
+    // 🎯 Calcul des ajustements responsifs selon le ratio
+    const responsive = getResponsiveAdjustments(config.ratio, typography);
+    const { isSquare, isPortrait, isA4, fontSize, padding, spacing, limits, grid } = responsive;
 
     // Extraction des données - passer reviewData pour les fallbacks
-    const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData);
+    const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData).slice(0, limits.maxCategoryRatings);
     const pipelines = extractPipelines(reviewData);
-    const aromas = asArray(reviewData.aromas);
-    const tastes = asArray(reviewData.tastes);
-    const effects = asArray(reviewData.effects);
-    const terpenes = asArray(reviewData.terpenes);
-    const cultivars = asArray(reviewData.cultivarsList);
+    const aromas = asArray(reviewData.aromas).slice(0, limits.maxTags);
+    const tastes = asArray(reviewData.tastes).slice(0, limits.maxTags);
+    const effects = asArray(reviewData.effects).slice(0, limits.maxTags);
+    const terpenes = asArray(reviewData.terpenes).slice(0, limits.maxTags);
+    const cultivars = asArray(reviewData.cultivarsList).slice(0, limits.maxTags);
     const substrat = extractSubstrat(reviewData.substratMix);
-    const extraData = extractExtraData(reviewData.extraData, reviewData);
+    const extraData = extractExtraData(reviewData.extraData, reviewData).slice(0, limits.maxInfoCards);
 
     const mainImage = reviewData.mainImageUrl || reviewData.imageUrl || 
         (Array.isArray(reviewData.images) && reviewData.images[0]);
-
-    // Styles
-    const fontSize = {
-        title: typography.titleSize,
-        subtitle: typography.titleSize - 8,
-        section: typography.titleSize - 12,
-        text: typography.textSize,
-        small: typography.textSize - 2,
-    };
 
     // Composants réutilisables
     const Section = ({ title, icon, children, className = '' }) => {
         if (!children || (React.Children.count(children) === 0)) return null;
         return (
-            <div className={`mb-6 ${className}`}>
+            <div style={{ marginBottom: `${spacing.section}px` }} className={className}>
                 <h3 
                     style={{ 
                         fontSize: `${fontSize.section}px`, 
                         fontWeight: '600', 
                         color: colors.title, 
-                        marginBottom: '12px',
+                        marginBottom: `${spacing.element}px`,
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '8px',
-                        borderBottom: `2px solid ${colorWithOpacity(colors.accent, 30)}`,
-                        paddingBottom: '8px',
+                        gap: `${spacing.gap}px`,
+                        borderBottom: `${isSquare ? 1 : 2}px solid ${colorWithOpacity(colors.accent, 30)}`,
+                        paddingBottom: `${spacing.gap}px`,
                     }}
                 >
                     {icon && <span>{icon}</span>}
@@ -100,17 +94,18 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         const isSmall = size === 'small';
         return (
             <div 
-                className="p-3 rounded-xl"
                 style={{ 
+                    padding: `${padding.card}px`,
+                    borderRadius: `${isSquare ? 8 : 12}px`,
                     backgroundColor: colorWithOpacity(colors.accent, 10),
                     border: `1px solid ${colorWithOpacity(colors.accent, 20)}`,
                 }}
             >
-                <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: '4px' }}>
+                <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>
                     {icon && <span className="mr-1">{icon}</span>}{label}
                 </div>
                 <div style={{ 
-                    fontSize: `${isSmall ? fontSize.text : fontSize.text + 2}px`, 
+                    fontSize: `${isSmall ? fontSize.text : fontSize.text}px`, 
                     fontWeight: '600', 
                     color: colors.accent 
                 }}>
@@ -132,8 +127,8 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 style={{
                     display: 'inline-block',
                     fontSize: `${fontSize.small}px`,
-                    padding: '6px 14px',
-                    borderRadius: '20px',
+                    padding: `${spacing.gap}px ${spacing.element}px`,
+                    borderRadius: `${isSquare ? 12 : 20}px`,
                     backgroundColor: colorWithOpacity(colors.accent, v.bg),
                     border: `1px solid ${colorWithOpacity(colors.accent, v.border)}`,
                     color: colors.accent,
@@ -148,13 +143,16 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     const RatingBar = ({ label, value, icon, maxValue = 10 }) => {
         const percentage = (value / maxValue) * 100;
         return (
-            <div className="flex items-center gap-3 mb-2">
-                <span style={{ width: '90px', fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
+            <div className="flex items-center gap-2" style={{ marginBottom: `${spacing.gap}px` }}>
+                <span style={{ width: isSquare ? '70px' : '90px', fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
                     {icon} {label}
                 </span>
                 <div 
-                    className="flex-1 h-3 rounded-full overflow-hidden"
-                    style={{ backgroundColor: colorWithOpacity(colors.accent, 15) }}
+                    className="flex-1 rounded-full overflow-hidden"
+                    style={{ 
+                        height: isSquare ? '8px' : '12px',
+                        backgroundColor: colorWithOpacity(colors.accent, 15) 
+                    }}
                 >
                     <motion.div
                         initial={{ width: 0 }}
@@ -164,7 +162,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         style={{ backgroundColor: colors.accent }}
                     />
                 </div>
-                <span style={{ width: '45px', fontSize: `${fontSize.text}px`, fontWeight: '600', color: colors.textPrimary, textAlign: 'right' }}>
+                <span style={{ width: '40px', fontSize: `${fontSize.small}px`, fontWeight: '600', color: colors.textPrimary, textAlign: 'right' }}>
                     {value.toFixed(1)}
                 </span>
             </div>
@@ -260,29 +258,32 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
     return (
         <div
-            className="relative w-full h-full overflow-auto"
+            className="relative w-full h-full overflow-hidden"
             style={{
                 background: colors.background,
                 fontFamily: typography.fontFamily,
-                padding: isA4 ? '48px' : '32px',
+                padding: `${padding.container}px`,
             }}
         >
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="max-w-5xl mx-auto"
+                className="w-full h-full flex flex-col"
             >
                 {/* Header avec image et infos principales */}
-                <div className={`flex gap-8 mb-8 ${isPortrait ? 'flex-col' : 'flex-row'}`}>
+                <div 
+                    className={`flex ${isSquare ? 'gap-3' : 'gap-6'} ${isSquare ? 'mb-3' : 'mb-6'} ${isPortrait || isSquare ? 'flex-col' : 'flex-row'}`}
+                    style={{ flexShrink: 0 }}
+                >
                     {/* Image */}
                     {contentModules.image && mainImage && (
                         <div 
-                            className="flex-shrink-0 overflow-hidden shadow-2xl"
+                            className="flex-shrink-0 overflow-hidden shadow-lg"
                             style={{ 
-                                borderRadius: `${image.borderRadius}px`,
-                                width: isPortrait ? '100%' : '300px',
-                                height: isPortrait ? '250px' : '300px',
+                                borderRadius: `${responsive.image.borderRadius}px`,
+                                width: isPortrait || isSquare ? '100%' : responsive.image.maxWidth,
+                                height: responsive.image.maxHeight,
                             }}
                         >
                             <img src={mainImage} alt="" className="w-full h-full object-cover" />
@@ -290,7 +291,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     )}
 
                     {/* Infos principales */}
-                    <div className="flex-1 space-y-4">
+                    <div className="flex-1" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.element}px` }}>
                         {/* Type badge */}
                         {contentModules.type && reviewData.type && (
                             <span 
@@ -349,22 +350,44 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 {/* Description */}
                 {contentModules.description && reviewData.description && (
                     <div 
-                        className="p-5 rounded-2xl mb-8"
-                        style={{ backgroundColor: colorWithOpacity(colors.accent, 5) }}
+                        style={{ 
+                            padding: `${padding.card}px`,
+                            borderRadius: `${isSquare ? 12 : 16}px`,
+                            marginBottom: `${spacing.section}px`,
+                            backgroundColor: colorWithOpacity(colors.accent, 5),
+                            flexShrink: 0
+                        }}
                     >
-                        <p style={{ fontSize: `${fontSize.text}px`, color: colors.textSecondary, lineHeight: '1.8' }}>
+                        <p 
+                            style={{ 
+                                fontSize: `${fontSize.small}px`, 
+                                color: colors.textSecondary, 
+                                lineHeight: isSquare ? '1.4' : '1.6',
+                                display: '-webkit-box',
+                                WebkitLineClamp: limits.descriptionLines,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                            }}
+                        >
                             {reviewData.description}
                         </p>
                     </div>
                 )}
 
                 {/* Grid layout pour les sections */}
-                <div className={`grid gap-8 ${isPortrait ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                <div 
+                    className={`grid ${isPortrait || isSquare ? 'grid-cols-1' : 'grid-cols-2'}`}
+                    style={{ 
+                        gap: `${spacing.section}px`,
+                        flex: 1,
+                        overflow: 'hidden'
+                    }}
+                >
                     {/* Colonne 1 */}
                     <div>
                         {/* Informations générales */}
                         <Section title="Informations" icon="📋">
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className={`grid grid-cols-2`} style={{ gap: `${spacing.gap}px` }}>
                                 {contentModules.category && reviewData.category && <InfoCard label="Catégorie" value={reviewData.category} icon="📂" />}
                                 {contentModules.strainType && reviewData.strainType && <InfoCard label="Type de strain" value={reviewData.strainType} icon="🧬" />}
                                 {contentModules.indicaRatio && reviewData.indicaRatio !== undefined && <InfoCard label="Ratio Indica" value={`${reviewData.indicaRatio}%`} icon="⚖️" />}
@@ -376,7 +399,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
                         {/* Provenance */}
                         <Section title="Provenance" icon="🌱">
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className={`grid grid-cols-2`} style={{ gap: `${spacing.gap}px` }}>
                                 {contentModules.cultivar && reviewData.cultivar && <InfoCard label="Cultivar" value={reviewData.cultivar} icon="🌿" />}
                                 {contentModules.breeder && reviewData.breeder && <InfoCard label="Breeder" value={reviewData.breeder} icon="🧬" />}
                                 {contentModules.farm && reviewData.farm && <InfoCard label="Farm" value={reviewData.farm} icon="🏡" />}
@@ -387,7 +410,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         {/* Cultivars */}
                         {contentModules.cultivarsList && cultivars.length > 0 && (
                             <Section title="Cultivars" icon="🌿">
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
                                     {cultivars.map((c, i) => (
                                         <Tag key={i} variant="accent">{extractLabel(c)}</Tag>
                                     ))}
@@ -398,7 +421,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         {/* Effets */}
                         {contentModules.effects && effects.length > 0 && (
                             <Section title="Effets" icon="⚡">
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
                                     {effects.map((e, i) => <Tag key={i} variant="accent">{extractLabel(e)}</Tag>)}
                                 </div>
                             </Section>
@@ -411,17 +434,17 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         {((contentModules.aromas && aromas.length > 0) || (contentModules.tastes && tastes.length > 0)) && (
                             <Section title="Profil Sensoriel" icon="🌸">
                                 {contentModules.aromas && aromas.length > 0 && (
-                                    <div className="mb-4">
-                                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: '8px' }}>Arômes</div>
-                                        <div className="flex flex-wrap gap-2">
+                                    <div style={{ marginBottom: `${spacing.element}px` }}>
+                                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>Arômes</div>
+                                        <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
                                             {aromas.map((a, i) => <Tag key={i}>{extractLabel(a)}</Tag>)}
                                         </div>
                                     </div>
                                 )}
                                 {contentModules.tastes && tastes.length > 0 && (
                                     <div>
-                                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: '8px' }}>Goûts</div>
-                                        <div className="flex flex-wrap gap-2">
+                                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>Goûts</div>
+                                        <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
                                             {tastes.map((t, i) => <Tag key={i}>{extractLabel(t)}</Tag>)}
                                         </div>
                                     </div>
@@ -432,7 +455,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         {/* Terpènes */}
                         {contentModules.terpenes && terpenes.length > 0 && (
                             <Section title="Terpènes" icon="🧪">
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
                                     {terpenes.map((t, i) => <Tag key={i} variant="subtle">{extractLabel(t)}</Tag>)}
                                 </div>
                             </Section>
@@ -459,7 +482,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 {/* Extra Data */}
                 {contentModules.extraData && extraData.length > 0 && (
                     <Section title="Caractéristiques Détaillées" icon="📊">
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        <div className={`grid grid-cols-${grid.cols}`} style={{ gap: `${spacing.gap}px` }}>
                             {extraData.map((d, i) => (
                                 <InfoCard key={i} label={d.label} value={d.value} icon={d.icon} size="small" />
                             ))}
@@ -469,8 +492,13 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
                 {/* Footer */}
                 <div 
-                    className="flex justify-between items-center pt-6 mt-8"
-                    style={{ borderTop: `2px solid ${colorWithOpacity(colors.accent, 20)}` }}
+                    className="flex justify-between items-center"
+                    style={{ 
+                        borderTop: `${isSquare ? 1 : 2}px solid ${colorWithOpacity(colors.accent, 20)}`,
+                        paddingTop: `${spacing.element}px`,
+                        marginTop: `${spacing.section}px`,
+                        flexShrink: 0
+                    }}
                 >
                     {contentModules.author && (
                         <div style={{ fontSize: `${fontSize.text}px`, color: colors.textSecondary }}>

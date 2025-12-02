@@ -10,6 +10,8 @@ import {
     extractPipelines,
     extractSubstrat,
     extractExtraData,
+    getResponsiveAdjustments,
+    colorWithOpacity,
 } from '../../../utils/orchardHelpers';
 
 /**
@@ -27,19 +29,21 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     }
 
     const { typography, colors, contentModules, image, branding } = config;
-    const isPortrait = dimensions.height > dimensions.width;
-    const isLandscape = dimensions.width > dimensions.height * 1.2;
+    
+    // 🎯 Calcul des ajustements responsifs selon le ratio
+    const responsive = getResponsiveAdjustments(config.ratio, typography);
+    const { isSquare, isPortrait, isLandscape, fontSize, padding, spacing, limits } = responsive;
 
     // Données extraites - passer reviewData pour fallbacks
-    const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData);
+    const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData).slice(0, limits.maxCategoryRatings);
     const pipelines = extractPipelines(reviewData);
-    const aromas = asArray(reviewData.aromas);
-    const tastes = asArray(reviewData.tastes);
-    const effects = asArray(reviewData.effects);
-    const terpenes = asArray(reviewData.terpenes);
-    const cultivars = asArray(reviewData.cultivarsList);
+    const aromas = asArray(reviewData.aromas).slice(0, limits.maxTags);
+    const tastes = asArray(reviewData.tastes).slice(0, limits.maxTags);
+    const effects = asArray(reviewData.effects).slice(0, limits.maxTags);
+    const terpenes = asArray(reviewData.terpenes).slice(0, limits.maxTags);
+    const cultivars = asArray(reviewData.cultivarsList).slice(0, limits.maxTags);
     const substrat = extractSubstrat(reviewData.substratMix);
-    const extraData = extractExtraData(reviewData.extraData, reviewData);
+    const extraData = extractExtraData(reviewData.extraData, reviewData).slice(0, limits.maxInfoCards);
 
     // Debug log pour voir les données
     console.log('🎨 ModernCompactTemplate render:', {
@@ -61,16 +65,16 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
         container: {
             background: colors.background,
             fontFamily: typography.fontFamily,
-            padding: isLandscape ? '24px' : '32px',
+            padding: `${padding.container}px`,
         },
         title: {
-            fontSize: `${typography.titleSize}px`,
+            fontSize: `${fontSize.title}px`,
             fontWeight: typography.titleWeight,
             color: colors.title,
             lineHeight: '1.2',
         },
         text: {
-            fontSize: `${typography.textSize}px`,
+            fontSize: `${fontSize.text}px`,
             fontWeight: typography.textWeight,
             color: colors.textSecondary,
         },
@@ -78,17 +82,17 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
             color: colors.accent,
         },
         tag: {
-            fontSize: `${typography.textSize - 2}px`,
-            padding: '6px 12px',
-            borderRadius: '20px',
-            backgroundColor: `${colors.accent}20`,
+            fontSize: `${fontSize.small}px`,
+            padding: `${spacing.gap}px ${spacing.element}px`,
+            borderRadius: `${isSquare ? 12 : 20}px`,
+            backgroundColor: colorWithOpacity(colors.accent, 20),
             color: colors.accent,
             fontWeight: '500',
         },
         infoCard: {
-            backgroundColor: `${colors.accent}15`,
-            borderRadius: '12px',
-            padding: '12px 16px',
+            backgroundColor: colorWithOpacity(colors.accent, 15),
+            borderRadius: `${isSquare ? 8 : 12}px`,
+            padding: `${padding.card}px`,
         },
     };
 
@@ -122,20 +126,15 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
         );
     };
 
-    // Render tags génériques
-    const renderTags = (items, maxItems = 4) => {
+    // Render tags génériques - pas de maxItems car déjà limité dans les données
+    const renderTags = (items) => {
         if (!items || items.length === 0) return null;
-        const displayItems = items.slice(0, maxItems);
-        const remaining = items.length - maxItems;
         
         return (
-            <div className="flex flex-wrap gap-2">
-                {displayItems.map((item, i) => (
+            <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
+                {items.map((item, i) => (
                     <span key={i} style={styles.tag}>{extractLabel(item)}</span>
                 ))}
-                {remaining > 0 && (
-                    <span style={{ ...styles.tag, backgroundColor: `${colors.accent}10` }}>+{remaining}</span>
-                )}
             </div>
         );
     };
@@ -143,10 +142,10 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     // Render info card
     const renderInfoCard = (label, value, icon = '') => (
         <div style={styles.infoCard} className="text-center">
-            <div style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary, marginBottom: '4px' }}>
+            <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>
                 {icon && <span className="mr-1">{icon}</span>}{label}
             </div>
-            <div style={{ fontSize: `${typography.textSize + 2}px`, fontWeight: '700', color: colors.accent }}>
+            <div style={{ fontSize: `${fontSize.text}px`, fontWeight: '700', color: colors.accent }}>
                 {value}
             </div>
         </div>
@@ -184,13 +183,13 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
         if (isLandscape) {
             // Layout paysage : image à gauche, contenu à droite
             return (
-                <div className="flex gap-6 h-full">
+                <div className="flex h-full" style={{ gap: `${spacing.section}px` }}>
                     {/* Image */}
                     {contentModules.image && mainImage && (
                         <div className="flex-shrink-0 w-2/5 h-full">
                             <div
                                 className="w-full h-full overflow-hidden"
-                                style={{ borderRadius: `${image.borderRadius}px` }}
+                                style={{ borderRadius: `${responsive.image.borderRadius}px` }}
                             >
                                 <img src={mainImage} alt="" className="w-full h-full object-cover" />
                             </div>
@@ -198,7 +197,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                     )}
                     
                     {/* Contenu */}
-                    <div className="flex-1 flex flex-col justify-center space-y-4 overflow-hidden">
+                    <div className="flex-1 flex flex-col justify-center overflow-hidden" style={{ gap: `${spacing.element}px` }}>
                         {renderContent()}
                     </div>
                 </div>
@@ -207,14 +206,14 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
         
         // Layout portrait/carré : vertical
         return (
-            <div className="flex flex-col h-full space-y-4 overflow-hidden">
+            <div className="flex flex-col h-full overflow-hidden" style={{ gap: `${spacing.element}px` }}>
                 {/* Image */}
                 {contentModules.image && mainImage && (
                     <div
                         className="w-full flex-shrink-0 overflow-hidden"
                         style={{ 
-                            borderRadius: `${image.borderRadius}px`,
-                            maxHeight: isPortrait ? '35%' : '45%',
+                            borderRadius: `${responsive.image.borderRadius}px`,
+                            maxHeight: responsive.image.maxHeight,
                         }}
                     >
                         <img src={mainImage} alt="" className="w-full h-full object-cover" />
@@ -222,7 +221,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                 )}
                 
                 {/* Contenu */}
-                <div className="flex-1 flex flex-col justify-center space-y-4 overflow-auto">
+                <div className="flex-1 flex flex-col justify-center overflow-hidden" style={{ gap: `${spacing.element}px` }}>
                     {renderContent()}
                 </div>
             </div>
@@ -232,9 +231,9 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     const renderContent = () => (
         <>
             {/* Titre + Type */}
-            <div className="text-center space-y-2">
+            <div className="text-center" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
                 {contentModules.type && reviewData.type && (
-                    <span style={{ fontSize: `${typography.textSize - 2}px`, color: colors.accent, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>
+                    <span style={{ fontSize: `${fontSize.small}px`, color: colors.accent, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: '600' }}>
                         {reviewData.type}
                     </span>
                 )}
@@ -252,7 +251,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 
             {/* Infos principales (THC, CBD, Category) */}
             {(contentModules.thcLevel || contentModules.cbdLevel || contentModules.category) && (
-                <div className="flex flex-wrap gap-3 justify-center">
+                <div className="flex flex-wrap justify-center" style={{ gap: `${spacing.gap}px`, flexShrink: 0 }}>
                     {contentModules.thcLevel && reviewData.thcLevel && renderInfoCard('THC', `${reviewData.thcLevel}%`, '🔬')}
                     {contentModules.cbdLevel && reviewData.cbdLevel && renderInfoCard('CBD', `${reviewData.cbdLevel}%`, '💊')}
                     {contentModules.category && reviewData.category && renderInfoCard('Catégorie', reviewData.category, '📂')}
@@ -261,7 +260,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 
             {/* Provenance */}
             {(contentModules.cultivar || contentModules.breeder || contentModules.farm || contentModules.hashmaker) && (
-                <div className="flex flex-wrap gap-3 justify-center">
+                <div className="flex flex-wrap justify-center" style={{ gap: `${spacing.gap}px`, flexShrink: 0 }}>
                     {contentModules.cultivar && reviewData.cultivar && renderInfoCard('Cultivar', reviewData.cultivar, '🌱')}
                     {contentModules.breeder && reviewData.breeder && renderInfoCard('Breeder', reviewData.breeder, '🧬')}
                     {contentModules.farm && reviewData.farm && renderInfoCard('Farm', reviewData.farm, '🏡')}
@@ -271,12 +270,12 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 
             {/* Category Ratings */}
             {contentModules.categoryRatings && categoryRatings.length > 0 && (
-                <div className="flex flex-wrap gap-4 justify-center">
+                <div className="flex flex-wrap justify-center" style={{ gap: `${spacing.element}px`, flexShrink: 0 }}>
                     {categoryRatings.map((r, i) => (
                         <div key={i} className="text-center">
-                            <span style={{ fontSize: '20px' }}>{r.icon}</span>
-                            <div style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>{r.label}</div>
-                            <div style={{ fontSize: `${typography.textSize}px`, fontWeight: '700', color: colors.accent }}>{r.value.toFixed(1)}</div>
+                            <span style={{ fontSize: isSquare ? '16px' : '20px' }}>{r.icon}</span>
+                            <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>{r.label}</div>
+                            <div style={{ fontSize: `${fontSize.text}px`, fontWeight: '700', color: colors.accent }}>{r.value.toFixed(1)}</div>
                         </div>
                     ))}
                 </div>
@@ -284,46 +283,58 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 
             {/* Effects */}
             {contentModules.effects && effects.length > 0 && (
-                <div className="text-center space-y-2">
-                    <div style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>⚡ Effets</div>
-                    {renderTags(effects, 4)}
+                <div className="text-center" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
+                    <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>⚡ Effets</div>
+                    {renderTags(effects)}
                 </div>
             )}
 
             {/* Aromas */}
             {contentModules.aromas && aromas.length > 0 && (
-                <div className="text-center space-y-2">
-                    <div style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>🌸 Arômes</div>
-                    {renderTags(aromas, 4)}
+                <div className="text-center" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
+                    <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>🌸 Arômes</div>
+                    {renderTags(aromas)}
                 </div>
             )}
 
             {/* Terpenes */}
             {contentModules.terpenes && terpenes.length > 0 && (
-                <div className="text-center space-y-2">
-                    <div style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>🧪 Terpènes</div>
-                    {renderTags(terpenes, 3)}
+                <div className="text-center" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
+                    <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>🧪 Terpènes</div>
+                    {renderTags(terpenes)}
                 </div>
             )}
 
             {/* Description */}
             {contentModules.description && reviewData.description && (
-                <p style={styles.text} className="text-center line-clamp-3 px-4">
+                <p 
+                    style={{
+                        ...styles.text,
+                        textAlign: 'center',
+                        paddingLeft: `${padding.card}px`,
+                        paddingRight: `${padding.card}px`,
+                        display: '-webkit-box',
+                        WebkitLineClamp: limits.descriptionLines,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        flexShrink: 0
+                    }}
+                >
                     {reviewData.description}
                 </p>
             )}
 
             {/* Footer: Author & Date */}
-            <div className="flex items-center justify-center gap-4 pt-2">
+            <div className="flex items-center justify-center" style={{ gap: `${spacing.element}px`, paddingTop: `${spacing.gap}px`, flexShrink: 0 }}>
                 {contentModules.author && (
-                    <span style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>
+                    <span style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
                         Par <span style={{ fontWeight: '600', color: colors.textPrimary }}>
                             {reviewData.ownerName || (typeof reviewData.author === 'string' ? reviewData.author : reviewData.author?.username) || 'Anonyme'}
                         </span>
                     </span>
                 )}
                 {contentModules.date && reviewData.date && (
-                    <span style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>
+                    <span style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
                         {formatDate(reviewData.date)}
                     </span>
                 )}
@@ -333,14 +344,9 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 
     return (
         <div className="relative w-full h-full overflow-hidden" style={styles.container}>
-            <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4 }}
-                className="w-full h-full"
-            >
+            <div className="w-full h-full">
                 {renderLayout()}
-            </motion.div>
+            </div>
             {renderBranding()}
         </div>
     );

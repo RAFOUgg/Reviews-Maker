@@ -10,6 +10,7 @@ import {
     extractSubstrat,
     extractExtraData,
     colorWithOpacity,
+    getResponsiveAdjustments,
 } from '../../../utils/orchardHelpers';
 
 /**
@@ -27,17 +28,21 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
     }
 
     const { typography, colors, contentModules, image, branding } = config;
+    
+    // 🎯 Calcul des ajustements responsifs selon le ratio
+    const responsive = getResponsiveAdjustments(config.ratio, typography);
+    const { isSquare, isA4, fontSize, padding, spacing, limits } = responsive;
 
     // Extraction des données - passer reviewData pour fallbacks
-    const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData);
+    const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData).slice(0, limits.maxCategoryRatings);
     const pipelines = extractPipelines(reviewData);
-    const aromas = asArray(reviewData.aromas);
-    const tastes = asArray(reviewData.tastes);
-    const effects = asArray(reviewData.effects);
-    const terpenes = asArray(reviewData.terpenes);
-    const cultivars = asArray(reviewData.cultivarsList);
+    const aromas = asArray(reviewData.aromas).slice(0, limits.maxTags + 2); // Un peu plus pour articles
+    const tastes = asArray(reviewData.tastes).slice(0, limits.maxTags + 2);
+    const effects = asArray(reviewData.effects).slice(0, limits.maxTags + 2);
+    const terpenes = asArray(reviewData.terpenes).slice(0, limits.maxTags);
+    const cultivars = asArray(reviewData.cultivarsList).slice(0, limits.maxTags);
     const substrat = extractSubstrat(reviewData.substratMix);
-    const extraData = extractExtraData(reviewData.extraData, reviewData);
+    const extraData = extractExtraData(reviewData.extraData, reviewData).slice(0, limits.maxInfoCards);
 
     const mainImage = reviewData.mainImageUrl || reviewData.imageUrl || 
         (Array.isArray(reviewData.images) && reviewData.images[0]);
@@ -130,11 +135,11 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
 
     return (
         <div
-            className="w-full h-full overflow-auto"
+            className={`w-full h-full ${isA4 ? 'overflow-auto' : 'overflow-hidden'}`}
             style={{
                 background: colors.background,
                 fontFamily: typography.fontFamily,
-                padding: '48px',
+                padding: `${padding.container}px`,
             }}
         >
             <motion.article

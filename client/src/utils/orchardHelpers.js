@@ -544,6 +544,84 @@ export function isFieldRelevant(type, field) {
     return productType.fields.includes(field);
 }
 
+/**
+ * Calcule les ajustements de style selon le ratio pour adapter le contenu sans scroll
+ * @param {string} ratio - Ratio du canvas ('1:1', '16:9', '9:16', '4:3', 'A4')
+ * @param {Object} baseTypography - Tailles de base de la typographie
+ * @returns {Object} Ajustements pour padding, fontSize, spacing, etc.
+ */
+export function getResponsiveAdjustments(ratio, baseTypography = {}) {
+    const dimensions = RATIO_DIMENSIONS[ratio] || RATIO_DIMENSIONS['1:1'];
+    const area = dimensions.width * dimensions.height;
+    const isSquare = ratio === '1:1';
+    const isPortrait = dimensions.height > dimensions.width * 1.2;
+    const isLandscape = dimensions.width > dimensions.height * 1.2;
+    const isA4 = ratio === 'A4';
+
+    // Facteur de réduction basé sur la surface disponible
+    // 1:1 (1080x1080) est le format le plus contraint, donc facteur le plus bas
+    const scaleFactor = isSquare ? 0.7 : isPortrait ? 0.8 : isLandscape ? 0.9 : isA4 ? 1.0 : 0.85;
+
+    return {
+        // Facteurs d'échelle
+        scaleFactor,
+        isSquare,
+        isPortrait,
+        isLandscape,
+        isA4,
+
+        // Padding adaptatif
+        padding: {
+            container: isSquare ? 16 : isPortrait ? 20 : isA4 ? 48 : 24,
+            section: isSquare ? 8 : 12,
+            card: isSquare ? 8 : 12,
+        },
+
+        // Marges et espacements
+        spacing: {
+            section: isSquare ? 12 : isPortrait ? 16 : 20,
+            element: isSquare ? 6 : 8,
+            gap: isSquare ? 4 : 6,
+        },
+
+        // Tailles de police ajustées
+        fontSize: {
+            title: Math.round((baseTypography.titleSize || 32) * scaleFactor),
+            subtitle: Math.round((baseTypography.titleSize || 32) * scaleFactor * 0.7),
+            section: Math.round((baseTypography.titleSize || 32) * scaleFactor * 0.55),
+            text: Math.round((baseTypography.textSize || 14) * scaleFactor),
+            small: Math.round((baseTypography.textSize || 14) * scaleFactor * 0.85),
+        },
+
+        // Layout
+        layout: {
+            columns: isSquare ? 1 : isPortrait ? 1 : 2,
+            imageHeight: isSquare ? '25%' : isPortrait ? '30%' : '40%',
+            contentHeight: isSquare ? '70%' : '60%',
+        },
+
+        // Tailles d'images
+        image: {
+            maxWidth: isSquare ? '100%' : '300px',
+            maxHeight: isSquare ? '180px' : isPortrait ? '220px' : '300px',
+            borderRadius: isSquare ? 8 : 12,
+        },
+
+        // Limites d'affichage
+        limits: {
+            maxTags: isSquare ? 3 : isPortrait ? 4 : 6,
+            maxCategoryRatings: isSquare ? 4 : 5,
+            maxInfoCards: isSquare ? 4 : 6,
+            descriptionLines: isSquare ? 2 : isPortrait ? 3 : 4,
+        },
+
+        // Grid
+        grid: {
+            cols: isSquare ? 2 : isPortrait ? 2 : isA4 ? 4 : 3,
+        },
+    };
+}
+
 export default {
     safeParse,
     asArray,
@@ -561,4 +639,5 @@ export default {
     calculateDimensions,
     PRODUCT_TYPES,
     isFieldRelevant,
+    getResponsiveAdjustments,
 };
