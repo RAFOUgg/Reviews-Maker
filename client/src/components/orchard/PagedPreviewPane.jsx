@@ -49,7 +49,7 @@ export default function PagedPreviewPane() {
                         <TemplateRenderer config={config} reviewData={reviewData} />
                     </motion.div>
                 </div>
-                
+
                 {/* Suggestion de pagination si recommandé */}
                 {paginationRecommended && (
                     <motion.div
