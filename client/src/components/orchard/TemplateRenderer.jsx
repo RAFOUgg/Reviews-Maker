@@ -25,7 +25,7 @@ const RATIO_DIMENSIONS = {
     'A4': { width: 1754, height: 2480 } // 210mm x 297mm at 210 DPI
 };
 
-export default function TemplateRenderer({ config, reviewData }) {
+export default function TemplateRenderer({ config, reviewData, activeModules = null, pageMode = false }) {
     let TemplateComponent = TEMPLATES[config.template];
     const templatesMeta = useOrchardStore((state) => state.templates);
     // If the configured template is a registered custom template (layout=custom) use CustomTemplate
@@ -38,6 +38,17 @@ export default function TemplateRenderer({ config, reviewData }) {
     if (reviewData?.orchardLayoutMode === 'custom') {
         TemplateComponent = CustomTemplate;
     }
+
+    // Filtrer les modules si on est en mode page
+    const filteredConfig = activeModules && pageMode ? {
+        ...config,
+        contentModules: Object.fromEntries(
+            Object.entries(config.contentModules).map(([key, value]) => [
+                key,
+                activeModules.includes(key) ? value : false
+            ])
+        )
+    } : config;
 
     if (!TemplateComponent) {
         return (
@@ -70,9 +81,10 @@ export default function TemplateRenderer({ config, reviewData }) {
             }}
         >
             <TemplateComponent
-                config={config}
+                config={filteredConfig}
                 reviewData={reviewData}
                 dimensions={dimensions}
+                pageMode={pageMode}
             />
         </div>
     );
@@ -89,5 +101,7 @@ TemplateRenderer.propTypes = {
         image: PropTypes.object,
         branding: PropTypes.object
     }).isRequired,
-    reviewData: PropTypes.object.isRequired
+    reviewData: PropTypes.object.isRequired,
+    activeModules: PropTypes.arrayOf(PropTypes.string),
+    pageMode: PropTypes.bool
 };

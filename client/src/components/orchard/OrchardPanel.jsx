@@ -5,9 +5,12 @@ import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, closestC
 import { useOrchardStore } from '../../store/orchardStore';
 import ConfigPane from './ConfigPane';
 import PreviewPane from './PreviewPane';
+import PagedPreviewPane from './PagedPreviewPane';
 import CustomLayoutPane from './CustomLayoutPane';
 import ContentPanel from './ContentPanel';
+import PageManager from './PageManager';
 import ExportModal from './ExportModal';
+import { useOrchardPagesStore } from '../../store/orchardPagesStore';
 
 /**
  * Normalise les données d'une review pour s'assurer que tous les champs
@@ -239,6 +242,10 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
     const config = useOrchardStore((state) => state.config);
     const activePreset = useOrchardStore((state) => state.activePreset);
 
+    // Pages store
+    const pagesEnabled = useOrchardPagesStore((state) => state.pagesEnabled);
+    const loadDefaultPages = useOrchardPagesStore((state) => state.loadDefaultPages);
+
     // Configurer les sensors pour @dnd-kit
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -273,8 +280,13 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
             if (reviewData.orchardLayoutMode === 'custom') {
                 setIsCustomMode(true);
             }
+
+            // Charger les pages par défaut si on est en mode pages
+            if (reviewData.type && config.ratio) {
+                loadDefaultPages(reviewData.type, config.ratio);
+            }
         }
-    }, [reviewData, setReviewData]);
+    }, [reviewData, setReviewData, loadDefaultPages, config.ratio]);
 
     const handleExport = () => {
         setShowExportModal(true);
@@ -605,7 +617,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                                 exit={{ opacity: 0 }}
                                 className="w-full h-full"
                             >
-                                <PreviewPane />
+                                {pagesEnabled ? <PagedPreviewPane /> : <PreviewPane />}
                             </motion.div>
                         ) : (
                             // MODE TEMPLATE SPLIT
@@ -621,9 +633,16 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                                     <ConfigPane />
                                 </div>
 
+                                {/* Page Manager - Middle (shown when pages enabled) */}
+                                {pagesEnabled && (
+                                    <div className="w-80 border-r border-gray-200 dark:border-gray-800 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+                                        <PageManager />
+                                    </div>
+                                )}
+
                                 {/* Preview Pane - Right */}
                                 <div className="flex-1 overflow-hidden">
-                                    <PreviewPane />
+                                    {pagesEnabled ? <PagedPreviewPane /> : <PreviewPane />}
                                 </div>
                             </motion.div>
                         )}
