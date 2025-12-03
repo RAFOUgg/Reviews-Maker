@@ -56,12 +56,12 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(var(--color-primary),0.4)] backdrop-blur-md">
-            <div className="bg-[rgba(var(--color-primary),0.15)] backdrop-blur-xl border border-[rgba(var(--color-primary),0.3)] rounded-2xl shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+            <div className="bg-gray-900/98 dark:bg-gray-800/98 backdrop-blur-xl border-2 border-purple-500/50 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
                 {/* Header */}
-                <div className="p-6 border-b border-[rgba(var(--color-primary),0.3)]">
+                <div className="p-6 border-b-2 border-purple-500/50">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-2xl font-bold text-[rgb(var(--text-primary))] flex items-center gap-3">
+                        <h2 className="text-2xl font-bold text-white flex items-center gap-3">
                             <span className="text-3xl">🌿</span>
                             Bibliothèque de Cultivars
                         </h2>
@@ -79,7 +79,7 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
                         placeholder="Rechercher un cultivar, breeder, farm..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full px-4 py-3 bg-[rgba(var(--color-primary),0.1)] border border-[rgba(var(--color-primary),0.3)] rounded-xl text-[rgb(var(--text-primary))] placeholder-[rgba(var(--text-secondary),0.7)] focus:outline-none focus:border-[rgb(var(--color-accent))]"
+                        className="w-full px-4 py-3 bg-gray-800/90 border-2 border-purple-400/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 shadow-inner"
                     />
                 </div>
 
@@ -116,7 +116,7 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
                                 <button
                                     key={review.id}
                                     onClick={() => handleSelect(review)}
-                                    className="w-full text-left bg-[rgba(var(--color-primary),0.1)] hover:bg-[rgba(var(--color-primary),0.2)] border border-[rgba(var(--color-primary),0.3)] hover:border-[rgb(var(--color-accent))] rounded-xl p-4 transition-all group"
+                                    className="w-full text-left bg-gray-800/80 hover:bg-gray-700/80 border-2 border-purple-500/30 hover:border-purple-400 rounded-xl p-4 transition-all group shadow-lg"
                                 >
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1">
@@ -154,10 +154,10 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-[rgba(var(--color-primary),0.3)] bg-[rgba(var(--color-primary),0.1)]">
-                    <div className="flex items-center justify-between text-sm text-[rgb(var(--text-secondary))]">
+                <div className="p-6 border-t-2 border-purple-500/50 bg-gray-800/50">
+                    <div className="flex items-center justify-between text-sm text-gray-300">
                         <span>💡 Sélectionnez un cultivar pour l'ajouter comme ingrédient</span>
-                        <span>{filteredReviews.length} cultivar(s) disponible(s)</span>
+                        <span className="font-bold">{filteredReviews.length} cultivar(s) disponible(s)</span>
                     </div>
                 </div>
             </div>
