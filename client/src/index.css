@@ -845,6 +845,43 @@ select {
     background-color: var(--bg-input) !important;
 }
 
+/* OPTIONS dans les SELECT - Style cohérent avec le thème */
+select option {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    padding: 8px 12px;
+    font-weight: 500;
+}
+
+/* Option sélectionnée/hover dans le dropdown */
+select option:checked,
+select option:hover,
+select option:focus {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%) !important;
+    color: #FFFFFF !important;
+    font-weight: 600;
+}
+
+/* Amélioration pour les navigateurs Webkit (Chrome, Edge, Safari) */
+select::-webkit-scrollbar {
+    width: 12px;
+}
+
+select::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 6px;
+}
+
+select::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 6px;
+    border: 2px solid var(--bg-secondary);
+}
+
+select::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
+
 /* Exception: inputs dans des zones sombres gardent le texte blanc */
 [class*="bg-gray-8"] input,
 [class*="bg-gray-9"] input,
