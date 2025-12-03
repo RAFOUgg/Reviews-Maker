@@ -209,19 +209,25 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                 max="10"
                                 value={frequencyNumber}
                                 onChange={(e) => setFrequencyNumber(e.target.value)}
-                                className="w-20 px-3 py-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:border-green-500 focus:outline-none text-center"
+                                className="w-20 px-3 py-2 rounded-lg border focus:outline-none text-center"
+                                style={{
+                                    backgroundColor: 'var(--bg-input)',
+                                    color: 'var(--text-primary)',
+                                    borderColor: 'var(--border)'
+                                }}
                             />
-                            <span className="flex items-center text-gray-400 text-sm">fois par</span>
+                            <span className="flex items-center text-sm" style={{ color: 'var(--text-secondary)' }}>fois par</span>
                             <div className="flex gap-1 flex-1">
                                 {['sec', 'jours', 'sem', 'mois'].map((unit) => (
                                     <button
                                         key={unit}
                                         type="button"
                                         onClick={() => setFrequencyUnit(unit)}
-                                        className={`flex-1 px-2 py-2 rounded-lg text-sm font-medium transition ${frequencyUnit === unit
-                                            ? 'bg-green-500 text-white'
-                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                            }`}
+                                        className="flex-1 px-2 py-2 rounded-lg text-sm font-medium transition"
+                                        style={{
+                                            backgroundColor: frequencyUnit === unit ? 'var(--primary)' : 'var(--bg-tertiary)',
+                                            color: frequencyUnit === unit ? '#FFFFFF' : 'var(--text-secondary)'
+                                        }}
                                     >
                                         {unit}
                                     </button>
@@ -234,7 +240,12 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                 <button
                     onClick={addStep}
                     disabled={!canAddStep()}
-                    className="mt-4 w-full px-4 py-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg font-medium transition"
+                    className="mt-4 w-full px-4 py-2 rounded-lg font-medium transition disabled:cursor-not-allowed"
+                    style={{
+                        backgroundColor: !canAddStep() ? 'var(--bg-tertiary)' : 'var(--primary)',
+                        color: '#FFFFFF',
+                        opacity: !canAddStep() ? 0.5 : 1
+                    }}
                 >
                     ➕ Ajouter à la routine
                 </button>
