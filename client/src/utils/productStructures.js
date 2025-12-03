@@ -663,7 +663,7 @@ export const productStructures = {
             {
                 title: "👁️ Visuel et Technique",
                 fields: [
-                    { key: "densite", label: "Densité", type: "slider", max: 10 },
+                    { key: "densiteVisuelle", label: "Densité visuelle", type: "slider", max: 10 },
                     { key: "trichome", label: "Trichomes", type: "slider", max: 10 },
                     { key: "pistil", label: "Pistils", type: "slider", max: 10 },
                     { key: "manucure", label: "Manucure", type: "slider", max: 10 },
@@ -683,7 +683,7 @@ export const productStructures = {
                 title: "🤚 Texture",
                 fields: [
                     { key: "durete", label: "Dureté", type: "slider", max: 10 },
-                    { key: "densiteTexture", label: "Densité", type: "slider", max: 10 },
+                    { key: "densiteTactile", label: "Densité tactile", type: "slider", max: 10 },
                     { key: "elasticite", label: "Élasticité", type: "slider", max: 10 },
                     { key: "collant", label: "Collant", type: "slider", max: 10 }
                 ]
@@ -741,7 +741,7 @@ export const productStructures = {
                 fields: [
                     { key: "couleurTransparence", label: "Couleur/transparence", type: "slider", max: 10 },
                     { key: "pureteVisuelle", label: "Pureté visuelle", type: "slider", max: 10 },
-                    { key: "densite", label: "Densité", type: "slider", max: 10 },
+                    { key: "densiteVisuelle", label: "Densité visuelle", type: "slider", max: 10 },
                     { key: "pistils", label: "Pistils", type: "slider", max: 10 },
                     { key: "moisissure", label: "Moisissure (10=aucune)", type: "slider", max: 10 },
                     { key: "graines", label: "Graines (10=aucune)", type: "slider", max: 10 }
@@ -760,7 +760,7 @@ export const productStructures = {
                 title: "🤚 Texture",
                 fields: [
                     { key: "durete", label: "Dureté", type: "slider", max: 10 },
-                    { key: "densite", label: "Densité", type: "slider", max: 10 },
+                    { key: "densiteTactile", label: "Densité tactile", type: "slider", max: 10 },
                     { key: "friabiliteViscosite", label: "Friabilité/Viscosité", type: "slider", max: 10 },
                     { key: "meltingResidus", label: "Melting/Résidus", type: "slider", max: 10 },
                     { key: "aspectCollantGras", label: "Aspect collant/gras", type: "slider", max: 10 }
@@ -840,7 +840,7 @@ export const productStructures = {
                 fields: [
                     { key: "durete", label: "Dureté", type: "slider", max: 10 },
                     { key: "friabiliteViscosite", label: "Friabilité/Viscosité", type: "slider", max: 10 },
-                    { key: "densiteTexture", label: "Densité", type: "slider", max: 10 },
+                    { key: "densiteTactile", label: "Densité tactile", type: "slider", max: 10 },
                     { key: "viscositeTexture", label: "Viscosité", type: "slider", max: 10 },
                     { key: "collant", label: "Collant", type: "slider", max: 10 }
                 ]

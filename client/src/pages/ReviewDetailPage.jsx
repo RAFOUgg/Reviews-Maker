@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { parseImages } from '../utils/imageUtils'
 import TemplateRenderer from '../components/orchard/TemplateRenderer'
+import ReviewFullDisplay from '../components/ReviewFullDisplay'
 import { useStore } from '../store/useStore'
 import { useToast } from '../components/ToastContainer'
 
@@ -13,6 +14,7 @@ export default function ReviewDetailPage() {
     const [review, setReview] = useState(null)
     const [loading, setLoading] = useState(true)
     const [selectedImage, setSelectedImage] = useState(null)
+    const [viewMode, setViewMode] = useState('full') // 'full' or 'orchard'
 
     useEffect(() => {
         fetchReview()
@@ -124,8 +126,32 @@ export default function ReviewDetailPage() {
                     )}
                 </div>
 
-                {/* Orchard Template Preview - Only visible content */}
-                {review.orchardConfig ? (
+                {/* View Mode Switcher - Only show if Orchard config exists */}
+                {review.orchardConfig && (
+                    <div className="mb-4 flex gap-2">
+                        <button
+                            onClick={() => setViewMode('full')}
+                            className={`px-4 py-2 rounded-xl font-medium transition-all ${viewMode === 'full'
+                                    ? 'bg-primary-500 text-white'
+                                    : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+                                }`}
+                        >
+                            📋 Vue Détaillée
+                        </button>
+                        <button
+                            onClick={() => setViewMode('orchard')}
+                            className={`px-4 py-2 rounded-xl font-medium transition-all ${viewMode === 'orchard'
+                                    ? 'bg-primary-500 text-white'
+                                    : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+                                }`}
+                        >
+                            🎨 Aperçu Orchard
+                        </button>
+                    </div>
+                )}
+
+                {/* Orchard Template Preview */}
+                {viewMode === 'orchard' && review.orchardConfig ? (
                     <div className="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-6 border border-gray-700">
                         <TemplateRenderer
                             config={typeof review.orchardConfig === 'string' ? (() => {
@@ -157,9 +183,8 @@ export default function ReviewDetailPage() {
                         />
                     </div>
                 ) : (
-                    <div className="text-center py-12">
-                        <p className="text-gray-400 text-lg">Aucun aperçu disponible pour cette review.</p>
-                    </div>
+                    /* Full Review Display - Always show by default or if no Orchard config */
+                    <ReviewFullDisplay review={review} />
                 )}
             </div>
         </div>

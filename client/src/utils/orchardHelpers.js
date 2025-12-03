@@ -144,11 +144,11 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
     // Définition des champs par catégorie pour reconstruction
     const categoryFields = {
         visual: {
-            fields: ['densite', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines', 'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus'],
+            fields: ['densiteVisuelle', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines', 'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus', 'couleurTransparence'],
             labels: {
-                densite: 'Densité', trichome: 'Trichomes', pistil: 'Pistils', manucure: 'Manucure',
+                densiteVisuelle: 'Densité visuelle', trichome: 'Trichomes', pistil: 'Pistils', manucure: 'Manucure',
                 moisissure: 'Moisissure', graines: 'Graines', couleur: 'Couleur', pureteVisuelle: 'Pureté',
-                viscosite: 'Viscosité', melting: 'Melting', residus: 'Résidus'
+                viscosite: 'Viscosité', melting: 'Melting', residus: 'Résidus', couleurTransparence: 'Couleur/transparence'
             }
         },
         smell: {
@@ -159,10 +159,12 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
             }
         },
         texture: {
-            fields: ['durete', 'densiteTexture', 'elasticite', 'collant', 'friabilite', 'granularite', 'homogeneite'],
+            fields: ['durete', 'densiteTactile', 'elasticite', 'collant', 'friabilite', 'friabiliteViscosite', 'viscositeTexture', 'granularite', 'homogeneite', 'meltingResidus', 'aspectCollantGras'],
             labels: {
-                durete: 'Dureté', densiteTexture: 'Densité', elasticite: 'Élasticité',
-                collant: 'Collant', friabilite: 'Friabilité', granularite: 'Granularité', homogeneite: 'Homogénéité'
+                durete: 'Dureté', densiteTactile: 'Densité tactile', elasticite: 'Élasticité',
+                collant: 'Collant', friabilite: 'Friabilité', friabiliteViscosite: 'Friabilité/Viscosité',
+                viscositeTexture: 'Viscosité', granularite: 'Granularité', homogeneite: 'Homogénéité',
+                meltingResidus: 'Melting/Résidus', aspectCollantGras: 'Aspect collant/gras'
             }
         },
         taste: {
@@ -332,16 +334,18 @@ export function extractExtraData(extraData, reviewData = null) {
         // Copier les champs directs de reviewData qui ne sont pas dans extra
         const directFields = [
             // Visuel
-            'densite', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines',
-            'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus', 'pistils',
+            'densiteVisuelle', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines',
+            'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus', 'pistils', 'couleurTransparence',
             // Texture
-            'durete', 'elasticite', 'collant', 'friabilite', 'granularite', 'densiteTexture', 'homogeneite',
+            'durete', 'elasticite', 'collant', 'friabilite', 'granularite', 'densiteTactile', 'homogeneite',
+            'friabiliteViscosite', 'viscositeTexture', 'meltingResidus', 'aspectCollantGras',
             // Fumée/Goût
             'intensiteFumee', 'agressivite', 'cendre', 'douceur', 'persistanceGout', 'retroGout', 'textureBouche',
             // Effets
             'montee', 'intensiteEffet', 'dureeEffet',
             // Sensoriel
             'aromasIntensity', 'tastesIntensity', 'effectsIntensity', 'fideliteCultivars', 'complexiteAromas',
+            'intensiteAromatique',
             // Process
             'purgevide', 'sechage', 'curing',
             // Culture
@@ -360,7 +364,8 @@ export function extractExtraData(extraData, reviewData = null) {
         { key: 'spectre', label: 'Spectre lumineux', icon: '🌈', category: 'culture' },
         { key: 'techniquesPropagation', label: 'Propagation', icon: '🌱', category: 'culture' },
         // Visuel
-        { key: 'densite', label: 'Densité', icon: '📊', category: 'visual' },
+        { key: 'densiteVisuelle', label: 'Densité visuelle', icon: '📊', category: 'visual' },
+        { key: 'couleurTransparence', label: 'Couleur/transparence', icon: '🎨', category: 'visual' },
         { key: 'trichome', label: 'Trichomes', icon: '✨', category: 'visual' },
         { key: 'pistil', label: 'Pistils', icon: '🌺', category: 'visual' },
         { key: 'manucure', label: 'Manucure', icon: '✂️', category: 'visual' },
@@ -374,10 +379,14 @@ export function extractExtraData(extraData, reviewData = null) {
         { key: 'graines', label: 'Graines', icon: '🫘', category: 'quality' },
         // Texture
         { key: 'durete', label: 'Dureté', icon: '💎', category: 'texture' },
-        { key: 'densiteTexture', label: 'Densité texture', icon: '🧱', category: 'texture' },
+        { key: 'densiteTactile', label: 'Densité tactile', icon: '🧱', category: 'texture' },
         { key: 'elasticite', label: 'Élasticité', icon: '🔄', category: 'texture' },
         { key: 'collant', label: 'Collant', icon: '🍯', category: 'texture' },
         { key: 'friabilite', label: 'Friabilité', icon: '🥧', category: 'texture' },
+        { key: 'friabiliteViscosite', label: 'Friabilité/Viscosité', icon: '🫠', category: 'texture' },
+        { key: 'viscositeTexture', label: 'Viscosité', icon: '💧', category: 'texture' },
+        { key: 'meltingResidus', label: 'Melting/Résidus', icon: '🔥', category: 'texture' },
+        { key: 'aspectCollantGras', label: 'Aspect collant/gras', icon: '🍯', category: 'texture' },
         { key: 'granularite', label: 'Granularité', icon: '🔘', category: 'texture' },
         { key: 'homogeneite', label: 'Homogénéité', icon: '⚖️', category: 'texture' },
         { key: 'textureBouche', label: 'Texture bouche', icon: '👄', category: 'texture' },
