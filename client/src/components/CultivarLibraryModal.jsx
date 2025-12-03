@@ -56,10 +56,10 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-            <div className="bg-gray-900/98 dark:bg-gray-800/98 backdrop-blur-xl border-2 border-purple-500/50 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md" style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}>
+            <div className="backdrop-blur-xl rounded-2xl shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-hidden flex flex-col" style={{ backgroundColor: 'var(--bg-primary)', border: '2px solid', borderColor: 'var(--primary)', opacity: 0.98 }}>
                 {/* Header */}
-                <div className="p-6 border-b-2 border-purple-500/50">
+                <div className="p-6" style={{ borderBottom: '2px solid', borderColor: 'var(--primary)' }}>
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-2xl font-bold text-white flex items-center gap-3">
                             <span className="text-3xl">🌿</span>
@@ -79,7 +79,8 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
                         placeholder="Rechercher un cultivar, breeder, farm..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-800/90 border-2 border-purple-400/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 shadow-inner"
+                        className="w-full px-4 py-3 rounded-xl focus:outline-none shadow-inner"
+                        style={{ backgroundColor: 'var(--bg-input)', border: '2px solid', borderColor: 'var(--primary)', color: 'var(--text-primary)' }}
                     />
                 </div>
 
@@ -116,7 +117,8 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
                                 <button
                                     key={review.id}
                                     onClick={() => handleSelect(review)}
-                                    className="w-full text-left bg-gray-800/80 hover:bg-gray-700/80 border-2 border-purple-500/30 hover:border-purple-400 rounded-xl p-4 transition-all group shadow-lg"
+                                    className="w-full text-left rounded-xl p-4 transition-all group shadow-lg hover:opacity-90"
+                                    style={{ backgroundColor: 'var(--bg-secondary)', border: '2px solid', borderColor: 'var(--primary)' }}
                                 >
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1">
