@@ -57,17 +57,18 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md" style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}>
-            <div className="backdrop-blur-xl rounded-2xl shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-hidden flex flex-col" style={{ backgroundColor: 'var(--bg-primary)', border: '2px solid', borderColor: 'var(--primary)', opacity: 0.98 }}>
+            <div className="backdrop-blur-xl rounded-2xl shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-hidden flex flex-col" style={{ backgroundColor: 'var(--bg-primary)', border: '2px solid', borderColor: 'var(--primary)' }}>
                 {/* Header */}
                 <div className="p-6" style={{ borderBottom: '2px solid', borderColor: 'var(--primary)' }}>
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                        <h2 className="text-2xl font-bold flex items-center gap-3" style={{ color: 'var(--text-primary)' }}>
                             <span className="text-3xl">🌿</span>
                             Bibliothèque de Cultivars
                         </h2>
                         <button
                             onClick={onClose}
-                            className="text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--text-primary))] transition-colors text-2xl"
+                            className="text-2xl transition-colors"
+                            style={{ color: 'var(--text-secondary)' }}
                         >
                             ✕
                         </button>
@@ -156,8 +157,8 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t-2 border-purple-500/50 bg-gray-800/50">
-                    <div className="flex items-center justify-between text-sm text-gray-300">
+                <div className="p-6 border-t-2" style={{ borderColor: 'var(--primary)', backgroundColor: 'var(--bg-secondary)' }}>
+                    <div className="flex items-center justify-between text-sm" style={{ color: 'var(--text-primary)' }}>
                         <span>💡 Sélectionnez un cultivar pour l'ajouter comme ingrédient</span>
                         <span className="font-bold">{filteredReviews.length} cultivar(s) disponible(s)</span>
                     </div>
