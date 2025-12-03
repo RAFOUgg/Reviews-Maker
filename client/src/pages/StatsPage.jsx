@@ -164,7 +164,7 @@ export default function StatsPage() {
                 </div>
 
                 {/* Category Ratings */}
-                <div className="bg-[rgba(var(--color-primary),0.05)] backdrop-blur-sm rounded-xl p-6 shadow-sm border border-[rgba(var(--color-primary),0.2)] mb-8">
+                <div className="bg-theme-surface backdrop-blur-sm rounded-xl p-6 shadow-sm border border-theme mb-8">
                     <h2 className="text-xl font-bold text-[rgb(var(--text-primary))] mb-6">Notes moyennes par catégorie</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {[
@@ -176,7 +176,7 @@ export default function StatsPage() {
                             <div key={cat.key} className="text-center">
                                 <div className={`text-4xl mb-2`}>{cat.icon}</div>
                                 <p className="text-sm text-[rgb(var(--text-secondary))] opacity-80 mb-2">{cat.label}</p>
-                                <div className="relative w-full h-2 bg-[rgba(var(--color-primary),0.1)] rounded-full overflow-hidden mb-2">
+                                <div className="relative w-full h-2 bg-theme-input rounded-full overflow-hidden mb-2">
                                     <div
                                         className="absolute left-0 top-0 h-full bg-gradient-to-r from-[rgb(var(--color-primary))] to-[rgb(var(--color-accent))] transition-all duration-500"
                                         style={{ width: `${(cat.value / 10) * 100}%` }}
@@ -190,7 +190,7 @@ export default function StatsPage() {
 
                 {/* Type Breakdown */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <div className="bg-[rgba(var(--color-primary),0.05)] backdrop-blur-sm rounded-xl p-6 shadow-sm border border-[rgba(var(--color-primary),0.2)]">
+                    <div className="bg-theme-surface backdrop-blur-sm rounded-xl p-6 shadow-sm border border-theme">
                         <h2 className="text-xl font-bold text-[rgb(var(--text-primary))] mb-6">Répartition par type</h2>
                         <div className="space-y-4">
                             {Object.entries(stats.typeBreakdown || {}).map(([type, count]) => (
@@ -199,7 +199,7 @@ export default function StatsPage() {
                                         <span className="text-[rgb(var(--text-secondary))] font-medium">{type}</span>
                                         <span className="text-[rgb(var(--text-primary))] font-bold">{count}</span>
                                     </div>
-                                    <div className="relative w-full h-3 bg-[rgba(var(--color-primary),0.1)] rounded-full overflow-hidden">
+                                    <div className="relative w-full h-3 bg-theme-input rounded-full overflow-hidden">
                                         <div
                                             className="absolute left-0 top-0 h-full bg-gradient-to-r from-[rgb(var(--color-primary))] to-[rgb(var(--color-accent))] transition-all duration-500"
                                             style={{ width: `${(count / stats.totalReviews) * 100}%` }}
@@ -211,7 +211,7 @@ export default function StatsPage() {
                     </div>
 
                     {/* Top Cultivars */}
-                    <div className="bg-[rgba(var(--color-primary),0.05)] backdrop-blur-sm rounded-xl p-6 shadow-sm border border-[rgba(var(--color-primary),0.2)]">
+                    <div className="bg-theme-surface backdrop-blur-sm rounded-xl p-6 shadow-sm border border-theme">
                         <h2 className="text-xl font-bold text-[rgb(var(--text-primary))] mb-6">🌿 Top Cultivars</h2>
                         {topCultivars.length > 0 ? (
                             <div className="space-y-4">
@@ -234,13 +234,13 @@ export default function StatsPage() {
                 </div>
 
                 {/* Recent Activity */}
-                <div className="bg-[rgba(var(--color-primary),0.05)] backdrop-blur-sm rounded-xl p-6 shadow-sm border border-[rgba(var(--color-primary),0.2)]">
+                <div className="bg-theme-surface backdrop-blur-sm rounded-xl p-6 shadow-sm border border-theme">
                     <h2 className="text-xl font-bold text-[rgb(var(--text-primary))] mb-6">📈 Activité récente</h2>
                     <div className="space-y-3">
                         {reviews.slice(0, 5).map((review) => (
                             <div
                                 key={review.id}
-                                className="flex items-center justify-between p-3 bg-[rgba(var(--color-primary),0.08)] rounded-lg hover:bg-[rgba(var(--color-primary),0.15)] hover:shadow-[0_0_15px_rgba(var(--color-primary),0.2)] transition-all cursor-pointer border border-[rgba(var(--color-primary),0.1)]"
+                                className="flex items-center justify-between p-3 bg-theme-input rounded-lg hover:bg-theme-secondary hover:shadow-lg transition-all cursor-pointer border border-theme"
                                 onClick={() => navigate(`/review/${review.id}`)}
                             >
                                 <div className="flex items-center gap-3">

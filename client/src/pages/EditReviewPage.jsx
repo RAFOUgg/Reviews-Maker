@@ -590,7 +590,7 @@ export default function EditReviewPage() {
                         placeholder={`Ex: ${field.label}`}
                         value={value}
                         onChange={(e) => handleInputChange(field.key, e.target.value)}
-                        className="w-full px-4 py-3 bg-[rgba(var(--color-primary),0.1)] border border-[rgba(var(--color-primary),0.3)] rounded-xl text-[rgb(var(--text-primary))] placeholder-[rgb(var(--text-secondary))] placeholder:opacity-60 focus:outline-none focus:border-[rgb(var(--color-accent))] focus:shadow-[0_0_15px_rgba(var(--color-accent),0.3)]"
+                        className="w-full px-4 py-3 bg-theme-input border border-theme rounded-xl text-[rgb(var(--text-primary))] placeholder-[rgb(var(--text-secondary))] placeholder:opacity-60 focus:outline-none focus:border-[rgb(var(--color-accent))] focus:shadow-[0_0_15px_rgba(var(--color-accent),0.3)]"
                         required={field.required}
                     />
                 );
@@ -602,7 +602,7 @@ export default function EditReviewPage() {
                         onChange={(e) => handleInputChange(field.key, e.target.value)}
                         rows={field.rows || 3}
                         placeholder={field.label}
-                        className="w-full px-4 py-3 bg-[rgba(var(--color-primary),0.1)] border border-[rgba(var(--color-primary),0.3)] rounded-xl text-[rgb(var(--text-primary))] placeholder-[rgb(var(--text-secondary))] placeholder:opacity-60 focus:outline-none focus:border-[rgb(var(--color-accent))] focus:shadow-[0_0_15px_rgba(var(--color-accent),0.3)] resize-none"
+                        className="w-full px-4 py-3 bg-theme-input border border-theme rounded-xl text-[rgb(var(--text-primary))] placeholder-[rgb(var(--text-secondary))] placeholder:opacity-60 focus:outline-none focus:border-[rgb(var(--color-accent))] focus:shadow-[0_0_15px_rgba(var(--color-accent),0.3)] resize-none"
                     />
                 );
 
@@ -614,7 +614,7 @@ export default function EditReviewPage() {
                         max={field.max || 100}
                         value={value}
                         onChange={(e) => handleInputChange(field.key, parseFloat(e.target.value))}
-                        className="w-full px-4 py-3 bg-[rgba(var(--color-primary),0.1)] border border-[rgba(var(--color-primary),0.3)] rounded-xl text-[rgb(var(--text-primary))] focus:outline-none focus:border-[rgb(var(--color-accent))] focus:shadow-[0_0_15px_rgba(var(--color-accent),0.3)]"
+                        className="w-full px-4 py-3 bg-theme-input border border-theme rounded-xl text-[rgb(var(--text-primary))] focus:outline-none focus:border-[rgb(var(--color-accent))] focus:shadow-[0_0_15px_rgba(var(--color-accent),0.3)]"
                     />
                 );
 
@@ -628,7 +628,7 @@ export default function EditReviewPage() {
                             step="0.5"
                             value={value}
                             onChange={(e) => handleInputChange(field.key, parseFloat(e.target.value))}
-                            className="w-full h-2 bg-[rgba(var(--color-primary),0.2)] rounded-lg appearance-none cursor-pointer accent-[rgb(var(--color-accent))]"
+                            className="w-full h-2 bg-theme-secondary rounded-lg appearance-none cursor-pointer accent-[rgb(var(--color-accent))]"
                         />
                         <div className="flex justify-between items-center mt-2">
                             <span className="text-xs text-[rgb(var(--text-secondary))] opacity-70">0</span>
@@ -643,7 +643,7 @@ export default function EditReviewPage() {
                     <select
                         value={value}
                         onChange={(e) => handleInputChange(field.key, e.target.value)}
-                        className="w-full px-4 py-3 bg-[rgba(var(--color-primary),0.1)] border border-[rgba(var(--color-primary),0.3)] rounded-xl text-[rgb(var(--text-primary))] focus:outline-none focus:border-[rgb(var(--color-accent))] focus:shadow-[0_0_15px_rgba(var(--color-accent),0.3)]"
+                        className="w-full px-4 py-3 bg-theme-input border border-theme rounded-xl text-[rgb(var(--text-primary))] focus:outline-none focus:border-[rgb(var(--color-accent))] focus:shadow-[0_0_15px_rgba(var(--color-accent),0.3)]"
                     >
                         <option value="">-- Sélectionner --</option>
                         {field.choices?.map((choice, i) => (
@@ -668,7 +668,7 @@ export default function EditReviewPage() {
                                 }}
                                 className={`px-3 py-1.5 rounded-lg text-sm transition-all ${selected.includes(choice)
                                     ? 'bg-[rgb(var(--color-accent))] text-white shadow-[0_0_15px_rgba(var(--color-accent),0.4)]'
-                                    : 'bg-[rgba(var(--color-primary),0.2)] text-[rgb(var(--text-primary))] hover:bg-[rgba(var(--color-primary),0.3)]'
+                                    : 'bg-theme-secondary text-[rgb(var(--text-primary))] hover:bg-theme-tertiary'
                                     }`}
                             >
                                 {choice}
@@ -685,7 +685,7 @@ export default function EditReviewPage() {
                             type="checkbox"
                             checked={!!value}
                             onChange={(e) => handleInputChange(field.key, e.target.checked)}
-                            className="w-5 h-5 rounded border-[rgba(var(--color-primary),0.3)] bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--color-accent))] focus:ring-[rgb(var(--color-accent))]"
+                            className="w-5 h-5 rounded border-theme bg-theme-input text-[rgb(var(--color-accent))] focus:ring-[rgb(var(--color-accent))]"
                         />
                         <span className="text-[rgb(var(--text-primary))]">{field.label}</span>
                     </label>
@@ -782,13 +782,13 @@ export default function EditReviewPage() {
                                             <img
                                                 src={imgUrl}
                                                 alt={`Image ${idx + 1}`}
-                                                className="w-full h-full object-cover rounded-xl border-2 border-[rgba(var(--color-primary),0.5)]"
+                                                className="w-full h-full object-cover rounded-xl border-2 border-theme"
                                             />
                                             <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
                                                 <button
                                                     type="button"
                                                     onClick={() => setExistingAsMain(idx)}
-                                                    className="bg-[rgba(var(--color-accent),0.9)] text-white rounded-full w-8 h-8 flex items-center justify-center hover:scale-105 shadow-lg"
+                                                    className="bg-theme-accent text-white rounded-full w-8 h-8 flex items-center justify-center hover:scale-105 shadow-lg"
                                                     title="Définir comme image principale"
                                                 >
                                                     ★
@@ -796,7 +796,7 @@ export default function EditReviewPage() {
                                                 <button
                                                     type="button"
                                                     onClick={() => removeExistingImage(idx)}
-                                                    className="bg-[rgba(var(--color-danger),0.9)] hover:bg-[rgb(var(--color-danger))] text-white rounded-full w-8 h-8 flex items-center justify-center transition-all shadow-lg"
+                                                    className="bg-theme-danger hover:bg-theme-danger opacity-90 hover:opacity-100 text-white rounded-full w-8 h-8 flex items-center justify-center transition-all shadow-lg"
                                                 >
                                                     ×
                                                 </button>
@@ -817,13 +817,13 @@ export default function EditReviewPage() {
                                             <img
                                                 src={img.preview || (img.file instanceof Blob ? URL.createObjectURL(img.file) : undefined)}
                                                 alt={`Nouvelle ${idx + 1}`}
-                                                className="w-full h-full object-cover rounded-xl border-2 border-[rgba(var(--color-accent),0.5)]"
+                                                className="w-full h-full object-cover rounded-xl border-2 border-theme-accent"
                                             />
                                             <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
                                                 <button
                                                     type="button"
                                                     onClick={() => setNewAsMain(idx)}
-                                                    className="bg-[rgba(var(--color-accent),0.9)] text-white rounded-full w-8 h-8 flex items-center justify-center hover:scale-105 shadow-lg"
+                                                    className="bg-theme-accent text-white rounded-full w-8 h-8 flex items-center justify-center hover:scale-105 shadow-lg"
                                                     title="Définir comme image principale"
                                                 >
                                                     ★
@@ -831,12 +831,12 @@ export default function EditReviewPage() {
                                                 <button
                                                     type="button"
                                                     onClick={() => removeImage(idx)}
-                                                    className="bg-[rgba(var(--color-danger),0.9)] hover:bg-[rgb(var(--color-danger))] text-white rounded-full w-8 h-8 flex items-center justify-center transition-all shadow-lg"
+                                                    className="bg-theme-danger hover:bg-theme-danger opacity-90 hover:opacity-100 text-white rounded-full w-8 h-8 flex items-center justify-center transition-all shadow-lg"
                                                 >
                                                     ×
                                                 </button>
                                             </div>
-                                            <span className="absolute bottom-2 left-2 px-2 py-1 bg-[rgba(var(--color-accent),0.9)] text-white text-xs rounded-full">
+                                            <span className="absolute bottom-2 left-2 px-2 py-1 bg-theme-accent text-white text-xs rounded-full">
                                                 Nouveau
                                             </span>
                                         </div>
@@ -858,7 +858,7 @@ export default function EditReviewPage() {
                                 />
                                 <label
                                     htmlFor="imageUpload"
-                                    className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-[rgba(var(--color-primary),0.3)] rounded-xl cursor-pointer hover:border-[rgb(var(--color-accent))] transition-colors text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--text-primary))]"
+                                    className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-theme rounded-xl cursor-pointer hover:border-[rgb(var(--color-accent))] transition-colors text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--text-primary))]"
                                 >
                                     <span className="text-2xl">+</span>
                                     <span>Ajouter des images ({existingImages.length + images.length}/10)</span>
@@ -883,7 +883,7 @@ export default function EditReviewPage() {
     return (
         <div className="min-h-screen">
             {/* Header */}
-            <div className="sticky top-0 z-50 bg-[rgba(var(--color-primary),0.95)] backdrop-blur-xl border-b border-[rgba(var(--color-primary),0.3)]">
+            <div className="sticky top-0 z-50 bg-theme-primary backdrop-blur-xl border-b border-theme">
                 <div className="max-w-4xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between mb-3">
                         <button
@@ -942,7 +942,7 @@ export default function EditReviewPage() {
             </div>
 
             {/* Section Navigation */}
-            <div className="sticky top-[88px] z-40 bg-[rgba(var(--color-primary),0.9)] backdrop-blur-xl border-b border-[rgba(var(--color-primary),0.3)] overflow-x-auto">
+            <div className="sticky top-[88px] z-40 bg-theme-primary backdrop-blur-xl border-b border-theme overflow-x-auto">
                 <div className="max-w-4xl mx-auto px-4">
                     <div className="flex gap-2 py-3">
                         {sections.map((section, idx) => (
@@ -951,7 +951,7 @@ export default function EditReviewPage() {
                                 onClick={() => goToSection(idx)}
                                 className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${idx === currentSectionIndex
                                     ? 'bg-[rgb(var(--color-accent))] text-white shadow-[0_0_20px_rgba(var(--color-accent),0.5)]'
-                                    : 'bg-[rgba(var(--color-primary),0.2)] text-[rgb(var(--text-secondary))] hover:bg-[rgba(var(--color-primary),0.3)] hover:text-[rgb(var(--text-primary))]'
+                                    : 'bg-theme-secondary text-[rgb(var(--text-secondary))] hover:bg-theme-tertiary hover:text-[rgb(var(--text-primary))]'
                                     }`}
                             >
                                 {section.title}
@@ -964,7 +964,7 @@ export default function EditReviewPage() {
             {/* Error Display */}
             {error && (
                 <div className="max-w-4xl mx-auto px-4 mt-4">
-                    <div className="p-4 bg-[rgba(var(--color-danger),0.1)] border border-[rgba(var(--color-danger),0.3)] rounded-xl text-[rgb(var(--color-danger))]">
+                    <div className="p-4 bg-theme-danger-light border border-theme-danger rounded-xl text-theme-danger">
                         {error}
                     </div>
                 </div>
@@ -972,7 +972,7 @@ export default function EditReviewPage() {
 
             {/* Form Content */}
             <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-                <div className="bg-[rgba(var(--color-primary),0.1)] backdrop-blur-xl rounded-2xl p-8 border border-[rgba(var(--color-primary),0.3)]">
+                <div className="bg-theme-input backdrop-blur-xl rounded-2xl p-8 border border-theme">
                     <h2 className="text-2xl font-bold text-[rgb(var(--text-primary))] mb-6">
                         {currentSection?.title}
                     </h2>
@@ -996,13 +996,13 @@ export default function EditReviewPage() {
             </div>
 
             {/* Navigation Buttons */}
-            <div className="fixed bottom-0 left-0 right-0 bg-[rgba(var(--color-primary),0.95)] backdrop-blur-xl border-t border-[rgba(var(--color-primary),0.3)] py-4 z-50">
+            <div className="fixed bottom-0 left-0 right-0 bg-theme-primary backdrop-blur-xl border-t border-theme py-4 z-50">
                 <div className="max-w-4xl mx-auto px-4 flex gap-4">
                     <button
                         type="button"
                         onClick={prevSection}
                         disabled={currentSectionIndex === 0}
-                        className="px-6 py-3 bg-[rgba(var(--color-primary),0.3)] hover:bg-[rgba(var(--color-primary),0.5)] text-[rgb(var(--text-primary))] rounded-xl font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="px-6 py-3 bg-theme-tertiary hover:bg-theme-primary text-[rgb(var(--text-primary))] rounded-xl font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                         ← Précédent
                     </button>

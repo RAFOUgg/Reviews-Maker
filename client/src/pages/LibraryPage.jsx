@@ -118,13 +118,13 @@ export default function LibraryPage() {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                    <div className="bg-[rgba(var(--color-primary),0.1)] backdrop-blur-sm rounded-xl p-6 shadow-sm border border-[rgba(var(--color-primary),0.2)]">
+                    <div className="bg-theme-input backdrop-blur-sm rounded-xl p-6 shadow-sm border border-theme">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-[rgb(var(--text-secondary))] opacity-80">Total</p>
                                 <p className="text-2xl font-bold text-[rgb(var(--text-primary))]">{reviews.length}</p>
                             </div>
-                            <div className="p-3 bg-[rgba(var(--color-primary),0.2)] rounded-lg">
+                            <div className="p-3 bg-theme-secondary rounded-lg">
                                 <svg className="w-6 h-6 text-[rgb(var(--color-primary))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
@@ -132,7 +132,7 @@ export default function LibraryPage() {
                         </div>
                     </div>
 
-                    <div className="bg-[rgba(var(--color-accent),0.1)] backdrop-blur-sm rounded-xl p-6 shadow-sm border border-[rgba(var(--color-accent),0.2)]">
+                    <div className="bg-theme-accent backdrop-blur-sm rounded-xl p-6 shadow-sm border border-theme-accent">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-[rgb(var(--text-secondary))] opacity-80">Publiques</p>
@@ -140,7 +140,7 @@ export default function LibraryPage() {
                                     {reviews.filter(r => r.isPublic).length}
                                 </p>
                             </div>
-                            <div className="p-3 bg-[rgba(var(--color-accent),0.2)] rounded-lg">
+                            <div className="p-3 bg-theme-accent rounded-lg">
                                 <svg className="w-6 h-6 text-[rgb(var(--color-accent))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -149,7 +149,7 @@ export default function LibraryPage() {
                         </div>
                     </div>
 
-                    <div className="bg-[rgba(var(--color-primary),0.15)] backdrop-blur-sm rounded-xl p-6 shadow-sm border border-[rgba(var(--color-primary),0.3)]">
+                    <div className="bg-theme-secondary backdrop-blur-sm rounded-xl p-6 shadow-sm border border-theme">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-[rgb(var(--text-secondary))] opacity-80">Privées</p>
@@ -157,7 +157,7 @@ export default function LibraryPage() {
                                     {reviews.filter(r => !r.isPublic).length}
                                 </p>
                             </div>
-                            <div className="p-3 bg-[rgba(var(--color-primary),0.25)] rounded-lg">
+                            <div className="p-3 bg-theme-tertiary rounded-lg">
                                 <svg className="w-6 h-6 text-[rgb(var(--color-primary))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                 </svg>
@@ -165,7 +165,7 @@ export default function LibraryPage() {
                         </div>
                     </div>
 
-                    <div className="bg-[rgba(var(--color-accent),0.15)] backdrop-blur-sm rounded-xl p-6 shadow-sm border border-[rgba(var(--color-accent),0.3)]">
+                    <div className="bg-theme-accent backdrop-blur-sm rounded-xl p-6 shadow-sm border border-theme-accent">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-[rgb(var(--text-secondary))] opacity-80">Vues totales</p>
@@ -173,7 +173,7 @@ export default function LibraryPage() {
                                     {reviews.reduce((acc, r) => acc + (r.views || 0), 0)}
                                 </p>
                             </div>
-                            <div className="p-3 bg-[rgba(var(--color-accent),0.25)] rounded-lg">
+                            <div className="p-3 bg-theme-accent rounded-lg">
                                 <svg className="w-6 h-6 text-[rgb(var(--color-accent))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                 </svg>
@@ -195,8 +195,8 @@ export default function LibraryPage() {
                                     key={f}
                                     onClick={() => setFilter(f)}
                                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === f
-                                        ? 'bg-[rgb(var(--color-primary))] text-white shadow-[0_0_20px_rgba(var(--color-primary),0.5)]'
-                                        : 'bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--text-primary))] hover:bg-[rgba(var(--color-primary),0.2)] border border-[rgba(var(--color-primary),0.2)]'
+                                        ? 'bg-[rgb(var(--color-primary))] text-white shadow-xl'
+                                        : 'bg-theme-input text-[rgb(var(--text-primary))] hover:bg-theme-secondary border border-theme'
                                         }`}
                                 >
                                     {f === 'all' ? 'Toutes' : f === 'public' ? 'Publiques' : 'Privées'}
@@ -211,7 +211,7 @@ export default function LibraryPage() {
 
                 {/* Reviews list */}
                 {filteredReviews.length === 0 ? (
-                    <div className="text-center py-16 bg-[rgba(var(--color-primary),0.05)] backdrop-blur-sm rounded-xl border border-[rgba(var(--color-primary),0.2)]">
+                    <div className="text-center py-16 bg-theme-surface backdrop-blur-sm rounded-xl border border-theme">
                         <div className="max-w-sm mx-auto px-6">
                             <svg className="w-20 h-20 mx-auto text-[rgb(var(--color-accent))] mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -238,7 +238,7 @@ export default function LibraryPage() {
                         {filteredReviews.map(review => (
                             <div
                                 key={review.id}
-                                className="bg-[rgba(var(--color-primary),0.05)] backdrop-blur-sm rounded-xl p-6 shadow-sm border border-[rgba(var(--color-primary),0.2)] hover:shadow-[0_0_20px_rgba(var(--color-primary),0.3)] hover:border-[rgba(var(--color-primary),0.4)] transition-all"
+                                className="bg-theme-surface backdrop-blur-sm rounded-xl p-6 shadow-sm border border-theme hover:shadow-xl hover:border-theme transition-all"
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
@@ -247,12 +247,12 @@ export default function LibraryPage() {
                                                 {review.holderName}
                                             </h3>
                                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${review.isPublic
-                                                ? 'bg-[rgba(var(--color-accent),0.15)] text-[rgb(var(--color-accent))] border border-[rgba(var(--color-accent),0.3)]'
-                                                : 'bg-[rgba(var(--color-primary),0.15)] text-[rgb(var(--color-primary))] border border-[rgba(var(--color-primary),0.3)]'
+                                                ? 'bg-theme-accent text-[rgb(var(--color-accent))] border border-theme-accent'
+                                                : 'bg-theme-secondary text-[rgb(var(--color-primary))] border border-theme'
                                                 }`}>
                                                 {review.isPublic ? 'Publique' : 'Privée'}
                                             </span>
-                                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-[rgba(var(--color-primary),0.2)] text-[rgb(var(--color-primary))] border border-[rgba(var(--color-primary),0.3)]">
+                                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-theme-secondary text-[rgb(var(--color-primary))] border border-theme">
                                                 {review.type}
                                             </span>
                                         </div>
@@ -278,7 +278,7 @@ export default function LibraryPage() {
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => toggleVisibility(review.id, review.isPublic)}
-                                            className="p-2 rounded-lg hover:bg-[rgba(var(--color-primary),0.2)] transition-colors"
+                                            className="p-2 rounded-lg hover:bg-theme-secondary transition-colors"
                                             title={review.isPublic ? 'Rendre privée' : 'Rendre publique'}
                                         >
                                             <svg className="w-5 h-5 text-[rgb(var(--text-secondary))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -292,7 +292,7 @@ export default function LibraryPage() {
 
                                         <button
                                             onClick={() => navigate(`/review/${review.id}`)}
-                                            className="p-2 rounded-lg hover:bg-[rgba(var(--color-primary),0.2)] transition-colors"
+                                            className="p-2 rounded-lg hover:bg-theme-secondary transition-colors"
                                             title="Voir"
                                         >
                                             <svg className="w-5 h-5 text-[rgb(var(--text-secondary))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -303,7 +303,7 @@ export default function LibraryPage() {
 
                                         <button
                                             onClick={() => navigate(`/edit/${review.id}`)}
-                                            className="p-2 rounded-lg hover:bg-[rgba(var(--color-primary),0.2)] transition-colors"
+                                            className="p-2 rounded-lg hover:bg-theme-secondary transition-colors"
                                             title="Modifier"
                                         >
                                             <svg className="w-5 h-5 text-[rgb(var(--text-secondary))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">

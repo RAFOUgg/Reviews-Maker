@@ -11,7 +11,7 @@ export default function SectionNavigator({
     onSectionClick
 }) {
     return (
-        <div className="bg-[rgba(var(--color-primary),0.85)] backdrop-blur-xl border-t border-[rgba(var(--color-primary),0.3)] overflow-x-auto">
+        <div className="bg-theme-primary backdrop-blur-xl border-t border-theme overflow-x-auto">
             <div className="max-w-4xl mx-auto px-4">
                 <div className="flex gap-1.5 py-2 justify-center flex-wrap">
                     {sections.map((section, idx) => (
@@ -19,8 +19,8 @@ export default function SectionNavigator({
                             key={idx}
                             onClick={() => onSectionClick(idx)}
                             className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${idx === currentIndex
-                                ? 'bg-[rgba(var(--color-accent),0.3)] text-[rgb(var(--text-primary))] border border-[rgba(var(--color-accent),0.5)] shadow-[0_0_10px_rgba(var(--color-accent),0.3)]'
-                                : 'bg-transparent text-[rgba(var(--text-primary),0.7)] hover:text-[rgb(var(--text-primary))] border border-[rgba(var(--color-primary),0.3)] hover:border-[rgba(var(--color-accent),0.4)]'
+                                ? 'bg-theme-accent text-[rgb(var(--text-primary))] border border-theme-accent shadow-[0_0_10px_rgba(var(--color-accent),0.3)]'
+                                : 'bg-transparent text-[rgba(var(--text-primary),0.7)] hover:text-[rgb(var(--text-primary))] border border-theme hover:border-theme-accent'
                                 }`}
                         >
                             {section.title}

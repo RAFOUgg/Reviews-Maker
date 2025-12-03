@@ -46,7 +46,7 @@ export default function CultivarList({ value, onChange, matiereChoices = [], sho
     return (
         <div className="space-y-4">
             {cultivars.map((cultivar, idx) => (
-                <div key={cultivar.id} className="bg-[rgba(var(--color-primary),0.1)] border border-[rgba(var(--color-primary),0.3)] rounded-xl p-4 space-y-3">
+                <div key={cultivar.id} className="bg-theme-input border border-theme rounded-xl p-4 space-y-3">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-bold text-[rgb(var(--color-accent))]">Cultivar #{idx + 1}</span>
                         <button
@@ -68,13 +68,13 @@ export default function CultivarList({ value, onChange, matiereChoices = [], sho
                                     value={cultivar.name || ''}
                                     onChange={(e) => updateCultivar(cultivar.id, 'name', e.target.value)}
                                     disabled={!!cultivar.reviewId}
-                                    className={`flex-1 px-3 py-2 bg-[rgba(var(--color-primary),0.15)] border border-[rgba(var(--color-primary),0.3)] rounded-lg text-[rgb(var(--text-primary))] text-sm focus:outline-none focus:border-[rgb(var(--color-accent))] ${cultivar.reviewId ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                    className={`flex-1 px-3 py-2 bg-theme-secondary border border-theme rounded-lg text-[rgb(var(--text-primary))] text-sm focus:outline-none focus:border-[rgb(var(--color-accent))] ${cultivar.reviewId ? 'opacity-60 cursor-not-allowed' : ''}`}
                                 />
                                 {cultivar.reviewId && (
                                     <button
                                         type="button"
                                         onClick={() => navigate(`/review/${cultivar.reviewId}`)}
-                                        className="px-3 py-2 bg-transparent border border-[rgba(var(--color-primary),0.4)] hover:border-[rgb(var(--color-accent))] text-[rgb(var(--color-primary))] hover:text-[rgb(var(--color-accent))] rounded-lg text-sm font-medium transition-colors flex items-center gap-1 hover:shadow-[0_0_15px_rgba(var(--color-accent),0.3)]"
+                                        className="px-3 py-2 bg-transparent border border-theme hover:border-[rgb(var(--color-accent))] text-[rgb(var(--color-primary))] hover:text-[rgb(var(--color-accent))] rounded-lg text-sm font-medium transition-colors flex items-center gap-1 hover:shadow-[0_0_15px_rgba(var(--color-accent),0.3)]"
                                         title="Voir la review d'origine"
                                     >
                                         <span>🔗</span>
@@ -91,7 +91,7 @@ export default function CultivarList({ value, onChange, matiereChoices = [], sho
                                 value={cultivar.farm || ''}
                                 onChange={(e) => updateCultivar(cultivar.id, 'farm', e.target.value)}
                                 disabled={!!cultivar.reviewId}
-                                className={`w-full px-3 py-2 bg-[rgba(var(--color-primary),0.15)] border border-[rgba(var(--color-primary),0.3)] rounded-lg text-[rgb(var(--text-primary))] text-sm focus:outline-none focus:border-[rgb(var(--color-accent))] ${cultivar.reviewId ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                className={`w-full px-3 py-2 bg-theme-secondary border border-theme rounded-lg text-[rgb(var(--text-primary))] text-sm focus:outline-none focus:border-[rgb(var(--color-accent))] ${cultivar.reviewId ? 'opacity-60 cursor-not-allowed' : ''}`}
                             />
                         </div>
 
@@ -104,7 +104,7 @@ export default function CultivarList({ value, onChange, matiereChoices = [], sho
                                     value={cultivar.breeder || ''}
                                     onChange={(e) => updateCultivar(cultivar.id, 'breeder', e.target.value)}
                                     disabled={!!cultivar.reviewId}
-                                    className={`w-full px-3 py-2 bg-[rgba(var(--color-primary),0.15)] border border-[rgba(var(--color-primary),0.3)] rounded-lg text-[rgb(var(--text-primary))] text-sm focus:outline-none focus:border-[rgb(var(--color-accent))] ${cultivar.reviewId ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                    className={`w-full px-3 py-2 bg-theme-secondary border border-theme rounded-lg text-[rgb(var(--text-primary))] text-sm focus:outline-none focus:border-[rgb(var(--color-accent))] ${cultivar.reviewId ? 'opacity-60 cursor-not-allowed' : ''}`}
                                 />
                             </div>
                         )}
@@ -114,7 +114,7 @@ export default function CultivarList({ value, onChange, matiereChoices = [], sho
                             <select
                                 value={cultivar.matiere || ''}
                                 onChange={(e) => updateCultivar(cultivar.id, 'matiere', e.target.value)}
-                                className="w-full px-3 py-2 bg-[rgba(var(--color-primary),0.15)] border border-[rgba(var(--color-primary),0.3)] rounded-lg text-[rgb(var(--text-primary))] text-sm focus:outline-none focus:border-[rgb(var(--color-accent))]"
+                                className="w-full px-3 py-2 bg-theme-secondary border border-theme rounded-lg text-[rgb(var(--text-primary))] text-sm focus:outline-none focus:border-[rgb(var(--color-accent))]"
                             >
                                 {matiereChoices.map((choice, i) => (
                                     <option key={i} value={choice}>{choice}</option>
@@ -129,7 +129,7 @@ export default function CultivarList({ value, onChange, matiereChoices = [], sho
                                 placeholder="Ex: 40%"
                                 value={cultivar.percentage || ''}
                                 onChange={(e) => updateCultivar(cultivar.id, 'percentage', e.target.value)}
-                                className="w-full px-3 py-2 bg-[rgba(var(--color-primary),0.15)] border border-[rgba(var(--color-primary),0.3)] rounded-lg text-[rgb(var(--text-primary))] text-sm focus:outline-none focus:border-[rgb(var(--color-accent))]"
+                                className="w-full px-3 py-2 bg-theme-secondary border border-theme rounded-lg text-[rgb(var(--text-primary))] text-sm focus:outline-none focus:border-[rgb(var(--color-accent))]"
                             />
                         </div>
                     </div>
@@ -140,7 +140,7 @@ export default function CultivarList({ value, onChange, matiereChoices = [], sho
                 <button
                     type="button"
                     onClick={addCultivar}
-                    className="py-3 border-2 border-dashed border-[rgba(var(--color-primary),0.3)] hover:border-[rgb(var(--color-accent))] rounded-xl text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--color-accent))] transition-colors flex items-center justify-center gap-2"
+                    className="py-3 border-2 border-dashed border-theme hover:border-[rgb(var(--color-accent))] rounded-xl text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--color-accent))] transition-colors flex items-center justify-center gap-2"
                 >
                     <span className="text-2xl">✏️</span>
                     <span>Nouveau cultivar</span>
@@ -149,7 +149,7 @@ export default function CultivarList({ value, onChange, matiereChoices = [], sho
                 <button
                     type="button"
                     onClick={() => setShowLibraryModal(true)}
-                    className="py-3 border-2 border-dashed border-[rgba(var(--color-primary),0.5)] hover:border-[rgb(var(--color-primary))] rounded-xl text-[rgb(var(--color-primary))] hover:text-[rgb(var(--color-accent))] transition-colors flex items-center justify-center gap-2 bg-[rgba(var(--color-primary),0.05)]"
+                    className="py-3 border-2 border-dashed border-theme hover:border-[rgb(var(--color-primary))] rounded-xl text-[rgb(var(--color-primary))] hover:text-[rgb(var(--color-accent))] transition-colors flex items-center justify-center gap-2 bg-theme-surface"
                 >
                     <span className="text-2xl">🌿</span>
                     <span>Depuis bibliothèque</span>

@@ -882,46 +882,88 @@ select::-webkit-scrollbar-thumb:hover {
     background: var(--primary-dark);
 }
 
-/* === FORCE 100% OPAQUE - SUPPRESSION AUTO DES TRANSPARENCES === */
-/* Override TOUTES les classes Tailwind avec rgba() pour forcer opacité 100% */
+/* === CLASSES UTILITAIRES PERSONNALISÉES - REMPLACEMENT RGBA() === */
+/* Classes opaques pour remplacer les bg-[rgba(...)] dans tout le code */
 
-/* Backgrounds primary avec transparence → Variables opaques */
-[class*="bg-[rgba(var(--color-primary)"] {
-    background-color: var(--bg-secondary) !important;
+/* Backgrounds - Niveaux de luminosité */
+.bg-theme-surface {
+    background-color: var(--bg-surface) !important;
 }
 
-/* Spécifique 0.05-0.15 → bg-input (plus clair) */
-[class*="bg-[rgba(var(--color-primary),0.05)"],
-[class*="bg-[rgba(var(--color-primary),0.1)"],
-[class*="bg-[rgba(var(--color-primary),0.15)"] {
+.bg-theme-input {
     background-color: var(--bg-input) !important;
 }
 
-/* Spécifique 0.85-0.9 → bg-primary (opaque complet) */
-[class*="bg-[rgba(var(--color-primary),0.85)"],
-[class*="bg-[rgba(var(--color-primary),0.9)"] {
+.bg-theme-secondary {
+    background-color: var(--bg-secondary) !important;
+}
+
+.bg-theme-tertiary {
+    background-color: var(--bg-tertiary) !important;
+}
+
+.bg-theme-primary {
     background-color: var(--bg-primary) !important;
 }
 
-/* Backgrounds accent avec transparence → var(--accent-light) opaque */
-[class*="bg-[rgba(var(--color-accent)"] {
+.bg-theme-accent {
     background-color: var(--accent-light) !important;
 }
 
-/* Borders primary avec transparence → var(--border) opaque */
-[class*="border-[rgba(var(--color-primary)"] {
+/* Borders */
+.border-theme {
     border-color: var(--border) !important;
 }
 
-/* Borders accent avec transparence → var(--accent) opaque */
-[class*="border-[rgba(var(--color-accent)"] {
+.border-theme-accent {
     border-color: var(--accent) !important;
 }
 
-/* Shadows avec rgba → var(--shadow) opaque */
-[class*="shadow-[rgba(var(--color-accent)"],
-[class*="shadow-[rgba(var(--color-primary)"] {
-    box-shadow: 0 0 15px var(--shadow) !important;
+/* Text colors */
+.text-theme-primary {
+    color: rgb(var(--text-primary)) !important;
+}
+
+.text-theme-secondary {
+    color: rgb(var(--text-secondary)) !important;
+}
+
+.text-theme-accent {
+    color: rgb(var(--color-accent)) !important;
+}
+
+/* Hover states */
+.hover\:bg-theme-secondary:hover {
+    background-color: var(--bg-secondary) !important;
+}
+
+.hover\:bg-theme-tertiary:hover {
+    background-color: var(--bg-tertiary) !important;
+}
+
+.hover\:bg-theme-primary:hover {
+    background-color: var(--bg-primary) !important;
+}
+
+/* Danger/Error states */
+.bg-theme-danger {
+    background-color: rgb(239, 68, 68) !important; /* red-500 */
+}
+
+.bg-theme-danger-light {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+.border-theme-danger {
+    border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+.text-theme-danger {
+    color: rgb(239, 68, 68) !important;
+}
+
+.hover\:bg-theme-danger:hover {
+    background-color: rgb(220, 38, 38) !important; /* red-600 */
 }
 
 /* Exception: inputs dans des zones sombres gardent le texte blanc */

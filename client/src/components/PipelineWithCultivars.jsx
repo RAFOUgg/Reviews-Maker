@@ -105,7 +105,7 @@ export default function PipelineWithCultivars({ value, onChange, choices = [], c
             )}
 
             {!hasValidCultivars && (
-                <div className="bg-[rgba(var(--color-warning),0.1)] border border-[rgba(var(--color-warning),0.3)] rounded-xl p-4 text-center">
+                <div className="bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-xl p-4 text-center">
                     <div className="text-3xl mb-2">⚠️</div>
                     <p className="text-[rgb(var(--color-warning))] font-medium">Veuillez d'abord ajouter au moins un cultivar</p>
                     <p className="text-[rgb(var(--text-secondary))] opacity-90 text-sm mt-1">Vous devez spécifier les cultivars avant de définir les étapes du pipeline</p>
@@ -118,8 +118,8 @@ export default function PipelineWithCultivars({ value, onChange, choices = [], c
                     onClick={() => hasValidCultivars && setShowMenu(!showMenu)}
                     disabled={!hasValidCultivars}
                     className={`w-full py-3 border-2 border-dashed rounded-xl transition-colors flex items-center justify-center gap-2 ${hasValidCultivars
-                        ? 'border-[rgba(var(--color-primary),0.3)] hover:border-[rgb(var(--color-accent))] text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--color-accent))] cursor-pointer'
-                        : 'border-[rgba(var(--color-primary),0.2)] text-[rgb(var(--text-secondary))] opacity-30 cursor-not-allowed'
+                        ? 'border-theme hover:border-[rgb(var(--color-accent))] text-[rgb(var(--text-secondary))] hover:text-[rgb(var(--color-accent))] cursor-pointer'
+                        : 'border-theme text-[rgb(var(--text-secondary))] opacity-30 cursor-not-allowed'
                         }`}
                 >
                     <span className="text-2xl">+</span>

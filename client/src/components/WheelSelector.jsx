@@ -138,7 +138,7 @@ export default function WheelSelector({
                     return (
                         <div
                             key={categoryKey}
-                            className={`flex items-center gap-3 p-3 rounded-xl bg-[rgba(var(--color-primary),0.05)] border transition-all ${categoryHasSelection ? 'border-[rgba(var(--color-accent),0.4)] shadow-[0_0_15px_rgba(var(--color-accent),0.2)]' : 'border-[rgba(var(--color-primary),0.2)]'
+                            className={`flex items-center gap-3 p-3 rounded-xl bg-theme-surface border transition-all ${categoryHasSelection ? 'border-theme-accent shadow-[0_0_15px_rgba(var(--color-accent),0.2)]' : 'border-theme'
                                 }`}
                         >
                             {/* Label fixe - TEXTE SOLIDE SANS GRADIENT pour lisibilité */}
@@ -161,7 +161,7 @@ export default function WheelSelector({
                                                 onClick={() => toggleItem(item)}
                                                 className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
                                                     ? 'bg-[rgb(var(--color-accent))] text-white shadow-lg shadow-[rgba(var(--color-accent),0.4)]'
-                                                    : 'bg-[rgba(var(--color-primary),0.2)] text-[rgb(var(--text-primary))] hover:bg-[rgba(var(--color-primary),0.3)] border border-[rgba(var(--color-primary),0.3)]'
+                                                    : 'bg-theme-secondary text-[rgb(var(--text-primary))] hover:bg-theme-tertiary border border-theme'
                                                     }`}
                                             >
                                                 {item}

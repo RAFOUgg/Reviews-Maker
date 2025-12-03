@@ -83,7 +83,7 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
     return (
         <div className="space-y-4">
             {/* Formulaire d'ajout */}
-            <div className="p-4 bg-[rgba(var(--color-primary),0.1)] rounded-xl border border-[rgba(var(--color-primary),0.3)]">
+            <div className="p-4 bg-theme-input rounded-xl border border-theme">
                 <h4 className="text-sm font-medium text-[rgb(var(--color-accent))] mb-3">🌱 Ajouter un engrais</h4>
 
                 <div className="space-y-3">
@@ -94,7 +94,7 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                             <select
                                 value={phase}
                                 onChange={(e) => setPhase(e.target.value)}
-                                className="w-full px-3 py-2 bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--text-primary))] rounded-lg border border-[rgba(var(--color-primary),0.3)] focus:border-[rgb(var(--color-accent))] focus:outline-none"
+                                className="w-full px-3 py-2 bg-theme-input text-[rgb(var(--text-primary))] rounded-lg border border-theme focus:border-[rgb(var(--color-accent))] focus:outline-none"
                             >
                                 <option value="croissance">🌿 Croissance</option>
                                 <option value="floraison">🌸 Floraison</option>
@@ -112,7 +112,7 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                     setCommercialName('');
                                     setNpk({ n: '', p: '', k: '' });
                                 }}
-                                className="w-full px-3 py-2 bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--text-primary))] rounded-lg border border-[rgba(var(--color-primary),0.3)] focus:border-[rgb(var(--color-accent))] focus:outline-none"
+                                className="w-full px-3 py-2 bg-theme-input text-[rgb(var(--text-primary))] rounded-lg border border-theme focus:border-[rgb(var(--color-accent))] focus:outline-none"
                             >
                                 <option value="">-- Sélectionner --</option>
                                 {availableFertilizers.map((fert, idx) => (
@@ -131,7 +131,7 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                 value={commercialName}
                                 onChange={(e) => setCommercialName(e.target.value)}
                                 placeholder="Ex: BioBizz Grow, Advanced Nutrients..."
-                                className="w-full px-3 py-2 bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--text-primary))] rounded-lg border border-[rgba(var(--color-primary),0.3)] focus:border-[rgb(var(--color-accent))] focus:outline-none placeholder-[rgb(var(--text-secondary))] placeholder:opacity-50"
+                                className="w-full px-3 py-2 bg-theme-input text-[rgb(var(--text-primary))] rounded-lg border border-theme focus:border-[rgb(var(--color-accent))] focus:outline-none placeholder-[rgb(var(--text-secondary))] placeholder:opacity-50"
                             />
                         </div>
                     )}
@@ -148,7 +148,7 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                     value={npk.n}
                                     onChange={(e) => setNpk({ ...npk, n: e.target.value })}
                                     placeholder="N"
-                                    className="w-full px-3 py-2 bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--text-primary))] rounded-lg border border-[rgba(var(--color-primary),0.3)] focus:border-[rgb(var(--color-accent))] focus:outline-none placeholder-[rgb(var(--text-secondary))] placeholder:opacity-50 text-center"
+                                    className="w-full px-3 py-2 bg-theme-input text-[rgb(var(--text-primary))] rounded-lg border border-theme focus:border-[rgb(var(--color-accent))] focus:outline-none placeholder-[rgb(var(--text-secondary))] placeholder:opacity-50 text-center"
                                 />
                                 <input
                                     type="number"
@@ -157,7 +157,7 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                     value={npk.p}
                                     onChange={(e) => setNpk({ ...npk, p: e.target.value })}
                                     placeholder="P"
-                                    className="w-full px-3 py-2 bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--text-primary))] rounded-lg border border-[rgba(var(--color-primary),0.3)] focus:border-[rgb(var(--color-accent))] focus:outline-none placeholder-[rgb(var(--text-secondary))] placeholder:opacity-50 text-center"
+                                    className="w-full px-3 py-2 bg-theme-input text-[rgb(var(--text-primary))] rounded-lg border border-theme focus:border-[rgb(var(--color-accent))] focus:outline-none placeholder-[rgb(var(--text-secondary))] placeholder:opacity-50 text-center"
                                 />
                                 <input
                                     type="number"
@@ -166,7 +166,7 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                     value={npk.k}
                                     onChange={(e) => setNpk({ ...npk, k: e.target.value })}
                                     placeholder="K"
-                                    className="w-full px-3 py-2 bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--text-primary))] rounded-lg border border-[rgba(var(--color-primary),0.3)] focus:border-[rgb(var(--color-accent))] focus:outline-none placeholder-[rgb(var(--text-secondary))] placeholder:opacity-50 text-center"
+                                    className="w-full px-3 py-2 bg-theme-input text-[rgb(var(--text-primary))] rounded-lg border border-theme focus:border-[rgb(var(--color-accent))] focus:outline-none placeholder-[rgb(var(--text-secondary))] placeholder:opacity-50 text-center"
                                 />
                             </div>
                             <p className="text-xs text-[rgb(var(--text-secondary))] opacity-70 mt-1">Format: Azote (N) - Phosphore (P) - Potassium (K)</p>
@@ -184,12 +184,12 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                 value={doseAmount}
                                 onChange={(e) => setDoseAmount(e.target.value)}
                                 placeholder="Quantité"
-                                className="flex-1 px-3 py-2 bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--text-primary))] rounded-lg border border-[rgba(var(--color-primary),0.3)] focus:border-[rgb(var(--color-accent))] focus:outline-none placeholder-[rgb(var(--text-secondary))] placeholder:opacity-50"
+                                className="flex-1 px-3 py-2 bg-theme-input text-[rgb(var(--text-primary))] rounded-lg border border-theme focus:border-[rgb(var(--color-accent))] focus:outline-none placeholder-[rgb(var(--text-secondary))] placeholder:opacity-50"
                             />
                             <select
                                 value={doseUnit}
                                 onChange={(e) => setDoseUnit(e.target.value)}
-                                className="px-3 py-2 bg-[rgba(var(--color-primary),0.1)] text-[rgb(var(--text-primary))] rounded-lg border border-[rgba(var(--color-primary),0.3)] focus:border-[rgb(var(--color-accent))] focus:outline-none"
+                                className="px-3 py-2 bg-theme-input text-[rgb(var(--text-primary))] rounded-lg border border-theme focus:border-[rgb(var(--color-accent))] focus:outline-none"
                             >
                                 <option value="ml/L">ml/L</option>
                                 <option value="g/L">g/L</option>
@@ -261,7 +261,7 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                     {steps.map((step, index) => (
                         <div
                             key={step.id}
-                            className="flex items-start gap-3 p-4 bg-[rgba(var(--color-primary),0.05)] hover:bg-[rgba(var(--color-primary),0.1)] rounded-xl border border-[rgba(var(--color-primary),0.2)] transition group"
+                            className="flex items-start gap-3 p-4 bg-theme-surface hover:bg-theme-input rounded-xl border border-theme transition group"
                         >
                             {/* Numéro + Phase icon */}
                             <div className="flex flex-col items-center gap-1 min-w-[50px]">
@@ -281,16 +281,16 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                 <div>
                                     <h5 className="font-medium text-[rgb(var(--text-primary))]">{step.name}</h5>
                                     <div className="flex flex-wrap gap-2 mt-1">
-                                        <span className="text-xs px-2 py-0.5 bg-[rgba(var(--color-primary),0.2)] rounded text-[rgb(var(--text-secondary))] capitalize">
+                                        <span className="text-xs px-2 py-0.5 bg-theme-secondary rounded text-[rgb(var(--text-secondary))] capitalize">
                                             {step.phase === 'tout' ? 'Tout au long' : step.phase}
                                         </span>
                                         {step.commercialName && (
-                                            <span className="text-xs px-2 py-0.5 bg-[rgba(var(--color-accent),0.2)] rounded text-[rgb(var(--color-accent))]">
+                                            <span className="text-xs px-2 py-0.5 bg-theme-accent rounded text-[rgb(var(--color-accent))]">
                                                 {step.commercialName}
                                             </span>
                                         )}
                                         {step.npk && (
-                                            <span className="text-xs px-2 py-0.5 bg-[rgba(var(--color-primary),0.3)] rounded text-[rgb(var(--text-primary))] font-mono">
+                                            <span className="text-xs px-2 py-0.5 bg-theme-tertiary rounded text-[rgb(var(--text-primary))] font-mono">
                                                 NPK {step.npk}
                                             </span>
                                         )}
@@ -301,13 +301,13 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                 <div className="flex flex-wrap gap-3 items-center">
                                     <div className="flex items-center gap-2">
                                         <span className="text-xs text-[rgb(var(--text-secondary))] opacity-70">💧 Dose:</span>
-                                        <span className="text-sm font-medium text-[rgb(var(--text-primary))] px-2 py-1 bg-[rgba(var(--color-primary),0.2)] rounded">
+                                        <span className="text-sm font-medium text-[rgb(var(--text-primary))] px-2 py-1 bg-theme-secondary rounded">
                                             {step.dose}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="text-xs text-[rgb(var(--text-secondary))] opacity-70">📅 Fréquence:</span>
-                                        <span className="text-sm font-medium text-[rgb(var(--text-primary))] px-2 py-1 bg-[rgba(var(--color-primary),0.2)] rounded">
+                                        <span className="text-sm font-medium text-[rgb(var(--text-primary))] px-2 py-1 bg-theme-secondary rounded">
                                             {step.frequency}
                                         </span>
                                     </div>
@@ -319,7 +319,7 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                 <button
                                     onClick={() => moveStep(index, 'up')}
                                     disabled={index === 0}
-                                    className="p-1 bg-[rgba(var(--color-primary),0.3)] hover:bg-[rgba(var(--color-primary),0.4)] disabled:opacity-30 disabled:cursor-not-allowed text-[rgb(var(--text-primary))] rounded text-sm transition"
+                                    className="p-1 bg-theme-tertiary hover:bg-theme-tertiary disabled:opacity-30 disabled:cursor-not-allowed text-[rgb(var(--text-primary))] rounded text-sm transition"
                                     title="Déplacer vers le haut"
                                 >
                                     ↑
@@ -327,14 +327,14 @@ const FertilizationPipeline = ({ value = [], onChange, availableFertilizers = []
                                 <button
                                     onClick={() => moveStep(index, 'down')}
                                     disabled={index === steps.length - 1}
-                                    className="p-1 bg-[rgba(var(--color-primary),0.3)] hover:bg-[rgba(var(--color-primary),0.4)] disabled:opacity-30 disabled:cursor-not-allowed text-[rgb(var(--text-primary))] rounded text-sm transition"
+                                    className="p-1 bg-theme-tertiary hover:bg-theme-tertiary disabled:opacity-30 disabled:cursor-not-allowed text-[rgb(var(--text-primary))] rounded text-sm transition"
                                     title="Déplacer vers le bas"
                                 >
                                     ↓
                                 </button>
                                 <button
                                     onClick={() => removeStep(step.id)}
-                                    className="p-1 bg-[rgba(var(--color-danger),0.2)] hover:bg-[rgba(var(--color-danger),0.3)] text-[rgb(var(--color-danger))] rounded text-sm transition"
+                                    className="p-1 bg-red-100 dark:bg-red-900/20 hover:bg-red-200 dark:bg-red-900/30 text-[rgb(var(--color-danger))] rounded text-sm transition"
                                     title="Supprimer"
                                 >
                                     ✕

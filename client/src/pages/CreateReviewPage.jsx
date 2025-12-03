@@ -427,7 +427,7 @@ export default function CreateReviewPage() {
 
     return (
         <div className="min-h-screen">
-            <div className="sticky top-[73px] z-40 bg-[rgba(var(--color-primary),0.95)] backdrop-blur-xl border-b border-[rgba(var(--color-primary),0.3)]">
+            <div className="sticky top-[73px] z-40 bg-theme-primary backdrop-blur-xl border-b border-theme">
                 <div className="max-w-4xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between mb-3">
                         <button onClick={() => navigate('/')} className="transition-colors" style={{ color: 'var(--text-secondary)' }}>← Retour</button>

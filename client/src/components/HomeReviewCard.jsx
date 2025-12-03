@@ -241,7 +241,7 @@ export default function HomeReviewCard({
                         e.stopPropagation()
                         onAuthorClick(review.authorId || review.ownerId || review.author?.id)
                     }}
-                    className="w-full mt-3 p-3 rounded-2xl bg-[rgba(var(--color-accent),0.1)] border-2 border-[rgba(var(--color-accent),0.3)] hover:border-[rgb(var(--color-accent))] backdrop-blur-xl transition-all duration-300 group/author hover:shadow-lg hover:shadow-[rgba(var(--color-accent),0.3)] hover:scale-[1.02]"
+                    className="w-full mt-3 p-3 rounded-2xl bg-theme-accent border-2 border-theme-accent hover:border-[rgb(var(--color-accent))] backdrop-blur-xl transition-all duration-300 group/author hover:shadow-lg hover:shadow-[rgba(var(--color-accent),0.3)] hover:scale-[1.02]"
                 >
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[rgb(var(--color-primary))] to-[rgb(var(--color-accent))] flex items-center justify-center text-white text-base font-black shadow-lg shadow-[rgba(var(--color-accent),0.5)] group-hover/author:scale-110 transition-transform">

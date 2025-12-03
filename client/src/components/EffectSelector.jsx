@@ -149,7 +149,7 @@ export default function EffectSelector({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Mental */}
                 <div className="space-y-3">
-                    <div className="flex items-center gap-2 pb-2 border-b border-[rgba(var(--color-primary),0.3)]">
+                    <div className="flex items-center gap-2 pb-2 border-b border-theme">
                         <span className="text-2xl">{categoryThemes.mental.icon}</span>
                         <h3 className="font-bold text-[rgb(var(--color-primary))]">
                             {effectsData.mental.label}
@@ -170,7 +170,7 @@ export default function EffectSelector({
                                             onClick={() => toggleItem(effect)}
                                             className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
                                                 ? 'bg-[rgb(var(--color-accent))] text-white shadow-lg shadow-[rgba(var(--color-accent),0.4)]'
-                                                : 'bg-[rgba(var(--color-primary),0.2)] text-[rgb(var(--text-primary))] hover:bg-[rgba(var(--color-primary),0.3)] border border-[rgba(var(--color-primary),0.3)]'
+                                                : 'bg-theme-secondary text-[rgb(var(--text-primary))] hover:bg-theme-tertiary border border-theme'
                                                 }`}
                                         >
                                             {effect}
@@ -212,7 +212,7 @@ export default function EffectSelector({
 
                 {/* Physical */}
                 <div className="space-y-3">
-                    <div className="flex items-center gap-2 pb-2 border-b border-[rgba(var(--color-primary),0.3)]">
+                    <div className="flex items-center gap-2 pb-2 border-b border-theme">
                         <span className="text-2xl">{categoryThemes.physical.icon}</span>
                         <h3 className="font-bold text-[rgb(var(--color-primary))]">
                             {effectsData.physical.label}
@@ -276,7 +276,7 @@ export default function EffectSelector({
 
                 {/* Therapeutic */}
                 <div className="space-y-3">
-                    <div className="flex items-center gap-2 pb-2 border-b border-[rgba(var(--color-primary),0.3)]">
+                    <div className="flex items-center gap-2 pb-2 border-b border-theme">
                         <span className="text-2xl">{categoryThemes.therapeutic.icon}</span>
                         <h3 className="font-bold text-[rgb(var(--color-primary))]">
                             {effectsData.therapeutic.label}

@@ -95,7 +95,7 @@ export default function PurificationPipeline({ value, onChange, availableMethods
 
             {/* Message de blocage si pas d'extraction */}
             {!hasExtractionSteps && (
-                <div className="bg-[rgba(var(--color-warning),0.1)] border border-[rgba(var(--color-warning),0.3)] rounded-xl p-4 mb-4">
+                <div className="bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-xl p-4 mb-4">
                     <div className="flex items-start gap-3">
                         <span className="text-2xl">⚠️</span>
                         <div>

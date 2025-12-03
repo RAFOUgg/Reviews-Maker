@@ -89,7 +89,7 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
                 <div className="flex-1 overflow-y-auto p-6">
                     {loading && (
                         <div className="text-center py-12">
-                            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[rgba(var(--color-primary),0.3)] border-t-[rgb(var(--color-accent))]"></div>
+                            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-theme border-t-[rgb(var(--color-accent))]"></div>
                             <p className="text-[rgb(var(--text-secondary))] mt-4">Chargement de vos cultivars...</p>
                         </div>
                     )}
@@ -128,17 +128,17 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
                                             </h3>
                                             <div className="flex flex-wrap gap-2 mt-2 text-sm">
                                                 {review.breeder && (
-                                                    <span className="px-2 py-1 bg-[rgba(var(--color-primary),0.2)] text-[rgb(var(--color-primary))] rounded-lg">
+                                                    <span className="px-2 py-1 bg-theme-secondary text-[rgb(var(--color-primary))] rounded-lg">
                                                         🧬 {review.breeder}
                                                     </span>
                                                 )}
                                                 {review.farm && (
-                                                    <span className="px-2 py-1 bg-[rgba(var(--color-accent),0.2)] text-[rgb(var(--color-accent))] rounded-lg">
+                                                    <span className="px-2 py-1 bg-theme-accent text-[rgb(var(--color-accent))] rounded-lg">
                                                         🏡 {review.farm}
                                                     </span>
                                                 )}
                                                 {review.overallRating && (
-                                                    <span className="px-2 py-1 bg-[rgba(var(--color-accent),0.15)] text-[rgb(var(--color-accent))] rounded-lg">
+                                                    <span className="px-2 py-1 bg-theme-accent text-[rgb(var(--color-accent))] rounded-lg">
                                                         ⭐ {review.overallRating}/10
                                                     </span>
                                                 )}
