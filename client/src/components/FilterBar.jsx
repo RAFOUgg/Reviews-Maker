@@ -219,7 +219,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                 {/* Recherche avancée avec autocomplétion */}
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                         🔍 Recherche intelligente
                     </label>
                     <AdvancedSearchBar
@@ -231,13 +231,14 @@ export default function FilterBar({ reviews, onFilteredChange }) {
 
                 {/* Type de produit */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                         📦 Type
                     </label>
                     <select
                         value={filters.type}
                         onChange={(e) => handleFilterChange('type', e.target.value)}
-                        className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-green-500"
+                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
+                        style={{ backgroundColor: 'var(--bg-input)', border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                     >
                         <option value="all">Tous les types</option>
                         {productTypes.map(type => (
@@ -248,13 +249,14 @@ export default function FilterBar({ reviews, onFilteredChange }) {
 
                 {/* Tri */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                         ↕️ Trier par
                     </label>
                     <select
                         value={filters.sortBy}
                         onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                        className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-green-500"
+                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
+                        style={{ backgroundColor: 'var(--bg-input)', border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                     >
                         <option value="date-desc">Plus récent</option>
                         <option value="date-asc">Plus ancien</option>
@@ -266,15 +268,16 @@ export default function FilterBar({ reviews, onFilteredChange }) {
             </div>
 
             {/* Toggle filtres avancés */}
-            <div className="flex items-center justify-between border-t border-gray-700 pt-4">
+            <div className="flex items-center justify-between pt-4" style={{ borderTop: '1px solid', borderColor: 'var(--border)' }}>
                 <button
                     onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="text-sm text-gray-400 hover:text-white flex items-center gap-2"
+                    className="text-sm flex items-center gap-2 transition-colors"
+                    style={{ color: 'var(--text-secondary)' }}
                 >
                     <span>{showAdvanced ? '▼' : '▶'}</span>
                     <span>Filtres avancés</span>
                     {activeFiltersCount > 0 && (
-                        <span className="px-2 py-1 bg-transparent border border-white/40 text-white text-xs rounded-full glow-text-subtle">
+                        <span className="px-2 py-1 bg-transparent text-xs rounded-full glow-text-subtle" style={{ border: '1px solid', borderColor: 'var(--primary)', color: 'var(--text-primary)' }}>
                             {activeFiltersCount}
                         </span>
                     )}
@@ -283,7 +286,8 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                 {activeFiltersCount > 0 && (
                     <button
                         onClick={resetFilters}
-                        className="text-sm text-red-400 hover:text-red-300"
+                        className="text-sm hover:opacity-80"
+                        style={{ color: 'var(--accent)' }}
                     >
                         ✕ Réinitialiser
                     </button>
@@ -297,7 +301,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Note minimale */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                                 ⭐ Note minimale: {filters.minRating}/10
                             </label>
                             <input
@@ -308,8 +312,9 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                                 value={filters.minRating}
                                 onChange={(e) => handleFilterChange('minRating', parseFloat(e.target.value))}
                                 className="w-full"
+                                style={{ accentColor: 'var(--primary)' }}
                             />
-                            <div className="flex justify-between text-xs text-gray-500 mt-1">
+                            <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
                                 <span>0</span>
                                 <span>5</span>
                                 <span>10</span>
@@ -318,13 +323,14 @@ export default function FilterBar({ reviews, onFilteredChange }) {
 
                         {/* Durée des effets */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                                 ⏱️ Durée des effets
                             </label>
                             <select
                                 value={filters.dureeEffet}
                                 onChange={(e) => handleFilterChange('dureeEffet', e.target.value)}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-green-500"
+                                className="w-full px-4 py-2 rounded-lg focus:outline-none"
+                                style={{ backgroundColor: 'var(--bg-input)', border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                             >
                                 <option value="all">Toutes durées</option>
                                 {dureeOptions.map(duree => (
@@ -336,20 +342,21 @@ export default function FilterBar({ reviews, onFilteredChange }) {
 
                     {/* Section 2: Filtres spécifiques à la culture (Fleur principalement) */}
                     {(filters.type === 'Fleur' || filters.type === 'all') && (
-                        <div className="border-t border-gray-700/50 pt-4">
-                            <h3 className="text-sm font-semibold text-green-400 mb-3 flex items-center gap-2">
+                        <div className="pt-4" style={{ borderTop: '1px solid', borderColor: 'var(--border)' }}>
+                            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--accent)' }}>
                                 🌱 Filtres Culture & Génétique
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {/* Type de culture */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                                         🏠 Type de culture
                                     </label>
                                     <select
                                         value={filters.typeCulture}
                                         onChange={(e) => handleFilterChange('typeCulture', e.target.value)}
-                                        className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-green-500"
+                                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
+                                        style={{ backgroundColor: 'var(--bg-input)', border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                                     >
                                         <option value="all">Tous types</option>
                                         {advancedOptions.typeCulture.map(type => (
@@ -360,13 +367,14 @@ export default function FilterBar({ reviews, onFilteredChange }) {
 
                                 {/* Substrat */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                                         🌾 Substrat
                                     </label>
                                     <select
                                         value={filters.substrat}
                                         onChange={(e) => handleFilterChange('substrat', e.target.value)}
-                                        className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-green-500"
+                                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
+                                        style={{ backgroundColor: 'var(--bg-input)', border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                                     >
                                         <option value="all">Tous substrats</option>
                                         {advancedOptions.substrat.map(sub => (
@@ -377,13 +385,14 @@ export default function FilterBar({ reviews, onFilteredChange }) {
 
                                 {/* Landrace */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                                         🧬 Lignée (Landrace)
                                     </label>
                                     <select
                                         value={filters.landrace}
                                         onChange={(e) => handleFilterChange('landrace', e.target.value)}
-                                        className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-green-500"
+                                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
+                                        style={{ backgroundColor: 'var(--bg-input)', border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                                     >
                                         <option value="all">Toutes lignées</option>
                                         {advancedOptions.landrace.map(land => (
@@ -397,20 +406,21 @@ export default function FilterBar({ reviews, onFilteredChange }) {
 
                     {/* Section 3: Filtres extraction (Hash et Concentré) */}
                     {(filters.type === 'Hash' || filters.type === 'Concentré' || filters.type === 'all') && advancedOptions.extraction.length > 0 && (
-                        <div className="border-t border-gray-700/50 pt-4">
-                            <h3 className="text-sm font-semibold text-purple-400 mb-3 flex items-center gap-2">
+                        <div className="pt-4" style={{ borderTop: '1px solid', borderColor: 'var(--border)' }}>
+                            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--accent)' }}>
                                 ⚗️ Filtres Extraction & Texture
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* Méthode d'extraction */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                                         🧪 Méthode d'extraction
                                     </label>
                                     <select
                                         value={filters.extraction}
                                         onChange={(e) => handleFilterChange('extraction', e.target.value)}
-                                        className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-green-500"
+                                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
+                                        style={{ backgroundColor: 'var(--bg-input)', border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                                     >
                                         <option value="all">Toutes méthodes</option>
                                         {advancedOptions.extraction.map(ext => (
@@ -422,13 +432,14 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                                 {/* Texture */}
                                 {advancedOptions.texture.length > 0 && (
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                                             ✨ Texture
                                         </label>
                                         <select
                                             value={filters.texture}
                                             onChange={(e) => handleFilterChange('texture', e.target.value)}
-                                            className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-green-500"
+                                            className="w-full px-4 py-2 rounded-lg focus:outline-none"
+                                            style={{ backgroundColor: 'var(--bg-input)', border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                                         >
                                             <option value="all">Toutes textures</option>
                                             {advancedOptions.texture.map(tex => (
@@ -443,20 +454,21 @@ export default function FilterBar({ reviews, onFilteredChange }) {
 
                     {/* Section 4: Filtres comestibles */}
                     {(filters.type === 'Comestible' || filters.type === 'all') && (
-                        <div className="border-t border-gray-700/50 pt-4">
-                            <h3 className="text-sm font-semibold text-orange-400 mb-3 flex items-center gap-2">
+                        <div className="pt-4" style={{ borderTop: '1px solid', borderColor: 'var(--border)' }}>
+                            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--accent)' }}>
                                 🍰 Filtres Comestibles
                             </h3>
                             <div className="grid grid-cols-1 gap-4">
                                 {/* Ingrédient principal */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                                         🥄 Ingrédient
                                     </label>
                                     <select
                                         value={filters.ingredient}
                                         onChange={(e) => handleFilterChange('ingredient', e.target.value)}
-                                        className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-green-500"
+                                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
+                                        style={{ backgroundColor: 'var(--bg-input)', border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                                     >
                                         <option value="all">Tous ingrédients</option>
                                         {advancedOptions.ingredient.map(ing => (
@@ -471,10 +483,10 @@ export default function FilterBar({ reviews, onFilteredChange }) {
             )}
 
             {/* Stats */}
-            <div className="mt-4 pt-4 border-t border-gray-700 flex items-center gap-6 text-sm text-gray-400">
+            <div className="mt-4 pt-4 flex items-center gap-6 text-sm" style={{ borderTop: '1px solid', borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>
                 <span>📊 {reviews.length} reviews au total</span>
                 {activeFiltersCount > 0 && (
-                    <span className="text-green-400">
+                    <span style={{ color: 'var(--accent)' }}>
                         ✓ Filtres actifs
                     </span>
                 )}
