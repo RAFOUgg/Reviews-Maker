@@ -882,6 +882,48 @@ select::-webkit-scrollbar-thumb:hover {
     background: var(--primary-dark);
 }
 
+/* === FORCE 100% OPAQUE - SUPPRESSION AUTO DES TRANSPARENCES === */
+/* Override TOUTES les classes Tailwind avec rgba() pour forcer opacité 100% */
+
+/* Backgrounds primary avec transparence → Variables opaques */
+[class*="bg-[rgba(var(--color-primary)"] {
+    background-color: var(--bg-secondary) !important;
+}
+
+/* Spécifique 0.05-0.15 → bg-input (plus clair) */
+[class*="bg-[rgba(var(--color-primary),0.05)"],
+[class*="bg-[rgba(var(--color-primary),0.1)"],
+[class*="bg-[rgba(var(--color-primary),0.15)"] {
+    background-color: var(--bg-input) !important;
+}
+
+/* Spécifique 0.85-0.9 → bg-primary (opaque complet) */
+[class*="bg-[rgba(var(--color-primary),0.85)"],
+[class*="bg-[rgba(var(--color-primary),0.9)"] {
+    background-color: var(--bg-primary) !important;
+}
+
+/* Backgrounds accent avec transparence → var(--accent-light) opaque */
+[class*="bg-[rgba(var(--color-accent)"] {
+    background-color: var(--accent-light) !important;
+}
+
+/* Borders primary avec transparence → var(--border) opaque */
+[class*="border-[rgba(var(--color-primary)"] {
+    border-color: var(--border) !important;
+}
+
+/* Borders accent avec transparence → var(--accent) opaque */
+[class*="border-[rgba(var(--color-accent)"] {
+    border-color: var(--accent) !important;
+}
+
+/* Shadows avec rgba → var(--shadow) opaque */
+[class*="shadow-[rgba(var(--color-accent)"],
+[class*="shadow-[rgba(var(--color-primary)"] {
+    box-shadow: 0 0 15px var(--shadow) !important;
+}
+
 /* Exception: inputs dans des zones sombres gardent le texte blanc */
 [class*="bg-gray-8"] input,
 [class*="bg-gray-9"] input,
