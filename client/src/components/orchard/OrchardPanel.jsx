@@ -465,26 +465,26 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="fixed z-50 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                className="fixed z-50 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col border-2 border-purple-300 dark:border-purple-700"
                 style={
                     showPreview
-                        ? { left: '5%', right: '5%', top: '5%', bottom: '5%' }
-                        : { left: '50%', top: '50%', width: '600px', maxHeight: '85vh', marginLeft: '-300px', marginTop: '-42.5vh' }
+                        ? { left: '3%', right: '3%', top: '3%', bottom: '3%' }
+                        : { left: '50%', top: '50%', width: '600px', maxHeight: '80vh', marginLeft: '-300px', marginTop: '-40vh' }
                 }
             >
                 {/* Header - STICKY POUR TOUJOURS VISIBLE */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 sticky top-0 z-10 flex-shrink-0">
+                <div className="flex items-center justify-between px-4 py-3 border-b-2 border-purple-200 dark:border-purple-700 bg-white dark:bg-gray-800 sticky top-0 z-10 flex-shrink-0 shadow-md">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg">
                             <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                         </div>
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                Orchard Studio
+                            <h2 className="text-lg font-bold text-gray-900 dark:text-white drop-shadow-sm">
+                                🌸 Orchard Studio
                             </h2>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                            <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
                                 Système de rendu et d'exportation
                             </p>
                         </div>
@@ -499,9 +499,9 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                                 console.log('📄 Toggle pages mode:', !pagesEnabled, 'Current ratio:', config.ratio);
                                 togglePagesMode();
                             }}
-                            className={`px-3 py-2 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition-all ${pagesEnabled
-                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30 ring-2 ring-indigo-300 dark:ring-indigo-700'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            className={`px-3 py-2 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition-all border-2 ${pagesEnabled
+                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg border-indigo-400 dark:border-indigo-500'
+                                : 'bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-300 dark:border-gray-600'
                                 }`}
                             title={pagesEnabled ? 'Désactiver le mode pages' : 'Activer le mode pages'}
                         >
@@ -523,9 +523,9 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                                 console.log('🔄 Toggle mode:', !isCustomMode ? 'CUSTOM' : 'TEMPLATE');
                                 setIsCustomMode(!isCustomMode);
                             }}
-                            className={`px-3 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all ${isCustomMode
-                                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/30'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                            className={`px-3 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all border-2 ${isCustomMode
+                                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg border-purple-400 dark:border-purple-500'
+                                : 'bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-600'
                                 }`}
                             title={isCustomMode ? 'Mode Template' : 'Mode Personnalisé (Drag & Drop)'}
                         >

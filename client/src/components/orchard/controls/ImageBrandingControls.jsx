@@ -71,10 +71,7 @@ export default function ImageBrandingControls() {
                         max="40"
                         value={config.image.borderRadius}
                         onChange={(e) => updateImage({ borderRadius: parseInt(e.target.value) })}
-                        className="w-full h-2 rounded-lg appearance-none cursor-pointer"
-                        style={{
-                            background: `linear-gradient(to right, rgb(168, 85, 247) 0%, rgb(168, 85, 247) ${(config.image.borderRadius / 40) * 100}%, rgb(229, 231, 235) ${(config.image.borderRadius / 40) * 100}%, rgb(229, 231, 235) 100%)`
-                        }}
+                        className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-purple-500 to-purple-300 dark:from-purple-600 dark:to-purple-400 shadow-inner"
                     />
                 </div>
 
@@ -90,10 +87,7 @@ export default function ImageBrandingControls() {
                         step="0.1"
                         value={config.image.opacity}
                         onChange={(e) => updateImage({ opacity: parseFloat(e.target.value) })}
-                        className="w-full h-2 rounded-lg appearance-none cursor-pointer"
-                        style={{
-                            background: `linear-gradient(to right, rgb(168, 85, 247) 0%, rgb(168, 85, 247) ${config.image.opacity * 100}%, rgb(229, 231, 235) ${config.image.opacity * 100}%, rgb(229, 231, 235) 100%)`
-                        }}
+                        className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-purple-500 to-purple-300 dark:from-purple-600 dark:to-purple-400 shadow-inner"
                     />
                 </div>
 
@@ -270,10 +264,7 @@ export default function ImageBrandingControls() {
                                 step="0.1"
                                 value={config.branding.opacity}
                                 onChange={(e) => updateBranding({ opacity: parseFloat(e.target.value) })}
-                                className="w-full h-2 rounded-lg appearance-none cursor-pointer"
-                                style={{
-                                    background: `linear-gradient(to right, rgb(168, 85, 247) 0%, rgb(168, 85, 247) ${config.branding.opacity * 100}%, rgb(229, 231, 235) ${config.branding.opacity * 100}%, rgb(229, 231, 235) 100%)`
-                                }}
+                                className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-purple-500 to-purple-300 dark:from-purple-600 dark:to-purple-400 shadow-inner"
                             />
                         </div>
                     </motion.div>

@@ -848,13 +848,13 @@ export const productStructures = {
             {
                 title: "😋 Goûts",
                 fields: [
-                    { key: "intensiteAromatique", label: "Intensité aromatique", type: "slider", max: 10 },
-                    { key: "cendre", label: "Cendre", type: "slider", max: 10 },
+                    { key: "intensiteGustative", label: "Intensité gustative", type: "slider", max: 10 },
+                    { key: "cendreFumee", label: "Cendre fumée", type: "slider", max: 10 },
                     { key: "textureBouche", label: "Texture en bouche", type: "slider", max: 10 },
                     { key: "douceur", label: "Douceur / Agressivité", type: "slider", max: 10 },
-                    { key: "intensite", label: "Intensité", type: "slider", max: 10 },
-                    { key: "intensiteFumee", label: "Intensité fumée", type: "slider", max: 10 },
-                    { key: "agressivite", label: "Agressivité/piquant", type: "slider", max: 10 },
+                    { key: "intensiteGout", label: "Intensité goût", type: "slider", max: 10 },
+                    { key: "intensiteFumeeDab", label: "Intensité fumée/dab", type: "slider", max: 10 },
+                    { key: "agressivitePiquant", label: "Agressivité/piquant", type: "slider", max: 10 },
                     { key: "dryPuff", label: "Dry puff/tirage à sec (max 7)", type: "wheel", maxSelections: 7 },
                     { key: "inhalation", label: "Inhalation (max 7)", type: "wheel", maxSelections: 7 },
                     { key: "expiration", label: "Expiration/arrière-goût (max 7)", type: "wheel", maxSelections: 7 }

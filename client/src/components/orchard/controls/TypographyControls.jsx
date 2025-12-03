@@ -68,10 +68,7 @@ export default function TypographyControls() {
                     max="72"
                     value={config.typography.titleSize}
                     onChange={(e) => updateTypography({ titleSize: parseInt(e.target.value) })}
-                    className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-200 dark:bg-gray-700"
-                    style={{
-                        background: `linear-gradient(to right, rgb(168, 85, 247) 0%, rgb(168, 85, 247) ${((config.typography.titleSize - 20) / (72 - 20)) * 100}%, rgb(229, 231, 235) ${((config.typography.titleSize - 20) / (72 - 20)) * 100}%, rgb(229, 231, 235) 100%)`
-                    }}
+                    className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-purple-500 to-purple-300 dark:from-purple-600 dark:to-purple-400 shadow-inner"
                 />
             </div>
 
@@ -111,10 +108,7 @@ export default function TypographyControls() {
                     max="32"
                     value={config.typography.textSize}
                     onChange={(e) => updateTypography({ textSize: parseInt(e.target.value) })}
-                    className="w-full h-2 rounded-lg appearance-none cursor-pointer"
-                    style={{
-                        background: `linear-gradient(to right, rgb(168, 85, 247) 0%, rgb(168, 85, 247) ${((config.typography.textSize - 12) / (32 - 12)) * 100}%, rgb(229, 231, 235) ${((config.typography.textSize - 12) / (32 - 12)) * 100}%, rgb(229, 231, 235) 100%)`
-                    }}
+                    className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-purple-500 to-purple-300 dark:from-purple-600 dark:to-purple-400 shadow-inner"
                 />
             </div>
 

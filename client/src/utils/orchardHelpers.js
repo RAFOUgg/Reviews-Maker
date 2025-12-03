@@ -168,10 +168,15 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
             }
         },
         taste: {
-            fields: ['intensiteFumee', 'agressivite', 'cendre', 'douceur', 'persistanceGout', 'tastesIntensity', 'goutIntensity'],
+            fields: ['intensiteFumee', 'intensiteFumeeDab', 'agressivite', 'agressivitePiquant', 'cendre', 'cendreFumee', 'douceur', 'persistanceGout', 'tastesIntensity', 'goutIntensity', 'intensiteGout', 'intensiteGustative', 'textureBouche'],
             labels: {
-                intensiteFumee: 'Intensité fumée', agressivite: 'Agressivité', cendre: 'Cendre',
-                douceur: 'Douceur', persistanceGout: 'Persistance', tastesIntensity: 'Intensité goût', goutIntensity: 'Intensité'
+                intensiteFumee: 'Intensité fumée', intensiteFumeeDab: 'Intensité fumée/dab',
+                agressivite: 'Agressivité', agressivitePiquant: 'Agressivité/piquant',
+                cendre: 'Cendre', cendreFumee: 'Cendre fumée',
+                douceur: 'Douceur', persistanceGout: 'Persistance',
+                tastesIntensity: 'Intensité goût', goutIntensity: 'Intensité',
+                intensiteGout: 'Intensité goût', intensiteGustative: 'Intensité gustative',
+                textureBouche: 'Texture bouche'
             }
         },
         effects: {
@@ -340,9 +345,11 @@ export function extractExtraData(extraData, reviewData = null) {
             'durete', 'elasticite', 'collant', 'friabilite', 'granularite', 'densiteTactile', 'homogeneite',
             'friabiliteViscosite', 'viscositeTexture', 'meltingResidus', 'aspectCollantGras',
             // Fumée/Goût
-            'intensiteFumee', 'agressivite', 'cendre', 'douceur', 'persistanceGout', 'retroGout', 'textureBouche',
+            'intensiteFumee', 'intensiteFumeeDab', 'agressivite', 'agressivitePiquant',
+            'cendre', 'cendreFumee', 'douceur', 'persistanceGout', 'retroGout', 'textureBouche',
+            'intensiteGout', 'intensiteGustative', 'goutIntensity',
             // Effets
-            'montee', 'intensiteEffet', 'dureeEffet',
+            'montee', 'intensiteEffet', 'intensiteEffets', 'dureeEffet',
             // Sensoriel
             'aromasIntensity', 'tastesIntensity', 'effectsIntensity', 'fideliteCultivars', 'complexiteAromas',
             'intensiteAromatique',
@@ -392,8 +399,11 @@ export function extractExtraData(extraData, reviewData = null) {
         { key: 'textureBouche', label: 'Texture bouche', icon: '👄', category: 'texture' },
         // Fumée/Combustion
         { key: 'intensiteFumee', label: 'Intensité fumée', icon: '💨', category: 'smoke' },
-        { key: 'agressivite', label: 'Agressivité', icon: '🔥', category: 'smoke' },
+        { key: 'intensiteFumeeDab', label: 'Intensité fumée/dab', icon: '🔥', category: 'smoke' },
+        { key: 'agressivite', label: 'Agressivité', icon: '🌶️', category: 'smoke' },
+        { key: 'agressivitePiquant', label: 'Agressivité/piquant', icon: '🌶️', category: 'smoke' },
         { key: 'cendre', label: 'Cendre', icon: '⚪', category: 'smoke' },
+        { key: 'cendreFumee', label: 'Cendre fumée', icon: '⚫', category: 'smoke' },
         { key: 'douceur', label: 'Douceur', icon: '🍬', category: 'smoke' },
         // Effets
         { key: 'montee', label: 'Montée', icon: '📈', category: 'effects' },
@@ -401,8 +411,13 @@ export function extractExtraData(extraData, reviewData = null) {
         { key: 'dureeEffet', label: 'Durée effets', icon: '⏱️', category: 'effects' },
         // Sensoriel
         { key: 'aromasIntensity', label: 'Intensité arômes', icon: '🌸', category: 'sensory' },
+        { key: 'intensiteAromatique', label: 'Intensité aromatique', icon: '🌺', category: 'sensory' },
         { key: 'tastesIntensity', label: 'Intensité goûts', icon: '👅', category: 'sensory' },
-        { key: 'effectsIntensity', label: 'Intensité effets', icon: '💪', category: 'sensory' },
+        { key: 'intensiteGustative', label: 'Intensité gustative', icon: '👄', category: 'sensory' },
+        { key: 'intensiteGout', label: 'Intensité goût', icon: '👅', category: 'sensory' },
+        { key: 'goutIntensity', label: 'Intensité', icon: '💪', category: 'sensory' },
+        { key: 'effectsIntensity', label: 'Intensité effets', icon: '⚡', category: 'sensory' },
+        { key: 'intensiteEffets', label: 'Intensité des effets', icon: '⚡', category: 'sensory' },
         { key: 'fideliteCultivars', label: 'Fidélité cultivar', icon: '🎯', category: 'sensory' },
         { key: 'complexiteAromas', label: 'Complexité arômes', icon: '🧩', category: 'sensory' },
         { key: 'persistanceGout', label: 'Persistance goût', icon: '⏳', category: 'sensory' },

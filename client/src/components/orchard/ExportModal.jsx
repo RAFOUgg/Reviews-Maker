@@ -544,10 +544,7 @@ export default function ExportModal({ onClose }) {
                                         step="0.1"
                                         value={exportOptions.jpegQuality}
                                         onChange={(e) => setExportOptions({ ...exportOptions, jpegQuality: parseFloat(e.target.value) })}
-                                        className="w-full h-2 rounded-lg appearance-none cursor-pointer"
-                                        style={{
-                                            background: `linear-gradient(to right, rgb(168, 85, 247) 0%, rgb(168, 85, 247) ${exportOptions.jpegQuality * 100}%, rgb(229, 231, 235) ${exportOptions.jpegQuality * 100}%, rgb(229, 231, 235) 100%)`
-                                        }}
+                                        className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-purple-500 to-purple-300 dark:from-purple-600 dark:to-purple-400 shadow-inner"
                                     />
                                 </div>
                             )}
@@ -645,15 +642,15 @@ export default function ExportModal({ onClose }) {
 
                                 {/* Progress Bar */}
                                 {isExporting && exportProgress < 100 && (
-                                    <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                    <div className="relative h-3 bg-gray-300 dark:bg-gray-600 rounded-full overflow-hidden border border-gray-400 dark:border-gray-500 shadow-inner">
                                         <motion.div
-                                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full"
+                                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-600 via-pink-500 to-purple-600 rounded-full shadow-lg"
                                             initial={{ width: '0%' }}
                                             animate={{ width: `${exportProgress}%` }}
                                             transition={{ duration: 0.3, ease: 'easeOut' }}
                                         />
                                         {/* Shimmer effect */}
-                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"
                                             style={{
                                                 backgroundSize: '200% 100%',
                                                 animation: 'shimmer 2s infinite'
