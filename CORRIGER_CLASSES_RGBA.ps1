@@ -2,7 +2,7 @@
 # Remplace toutes les classes Tailwind avec rgba() par des classes utilitaires opaques
 
 $sourcePath = "client\src"
-$files = Get-ChildItem -Path $sourcePath -Include "*.jsx","*.tsx" -Recurse
+$files = Get-ChildItem -Path $sourcePath -Include "*.jsx", "*.tsx" -Recurse
 
 Write-Host "🔍 Recherche des fichiers à corriger dans $sourcePath..." -ForegroundColor Cyan
 Write-Host ""

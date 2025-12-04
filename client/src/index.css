@@ -947,7 +947,8 @@ select::-webkit-scrollbar-thumb:hover {
 
 /* Danger/Error states */
 .bg-theme-danger {
-    background-color: rgb(239, 68, 68) !important; /* red-500 */
+    background-color: rgb(239, 68, 68) !important;
+    /* red-500 */
 }
 
 .bg-theme-danger-light {
@@ -963,7 +964,8 @@ select::-webkit-scrollbar-thumb:hover {
 }
 
 .hover\:bg-theme-danger:hover {
-    background-color: rgb(220, 38, 38) !important; /* red-600 */
+    background-color: rgb(220, 38, 38) !important;
+    /* red-600 */
 }
 
 /* Exception: inputs dans des zones sombres gardent le texte blanc */
