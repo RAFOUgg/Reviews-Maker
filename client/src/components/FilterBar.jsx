@@ -237,8 +237,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                     <select
                         value={filters.type}
                         onChange={(e) => handleFilterChange('type', e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
-                        style={{ backgroundColor: 'var(--bg-input)', border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                        className="w-full px-4 py-2 rounded-lg focus:outline-none select-themed"
                     >
                         <option value="all">Tous les types</option>
                         {productTypes.map(type => (
@@ -255,8 +254,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                     <select
                         value={filters.sortBy}
                         onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
-                        style={{ backgroundColor: 'var(--bg-input)', border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                        className="w-full px-4 py-2 rounded-lg focus:outline-none select-themed"
                     >
                         <option value="date-desc">Plus récent</option>
                         <option value="date-asc">Plus ancien</option>
@@ -329,8 +327,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                             <select
                                 value={filters.dureeEffet}
                                 onChange={(e) => handleFilterChange('dureeEffet', e.target.value)}
-                                className="w-full px-4 py-2 rounded-lg focus:outline-none"
-                                style={{ backgroundColor: 'var(--bg-input)', border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                                className="w-full px-4 py-2 rounded-lg focus:outline-none select-themed"
                             >
                                 <option value="all">Toutes durées</option>
                                 {dureeOptions.map(duree => (
@@ -355,8 +352,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                                     <select
                                         value={filters.typeCulture}
                                         onChange={(e) => handleFilterChange('typeCulture', e.target.value)}
-                                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
-                                        style={{ backgroundColor: 'var(--bg-input)', border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                                        className="w-full px-4 py-2 rounded-lg focus:outline-none select-themed"
                                     >
                                         <option value="all">Tous types</option>
                                         {advancedOptions.typeCulture.map(type => (
@@ -373,8 +369,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                                     <select
                                         value={filters.substrat}
                                         onChange={(e) => handleFilterChange('substrat', e.target.value)}
-                                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
-                                        style={{ backgroundColor: 'var(--bg-input)', border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                                        className="w-full px-4 py-2 rounded-lg focus:outline-none select-themed"
                                     >
                                         <option value="all">Tous substrats</option>
                                         {advancedOptions.substrat.map(sub => (
@@ -391,8 +386,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                                     <select
                                         value={filters.landrace}
                                         onChange={(e) => handleFilterChange('landrace', e.target.value)}
-                                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
-                                        style={{ backgroundColor: 'var(--bg-input)', border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                                        className="w-full px-4 py-2 rounded-lg focus:outline-none select-themed"
                                     >
                                         <option value="all">Toutes lignées</option>
                                         {advancedOptions.landrace.map(land => (
@@ -419,8 +413,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                                     <select
                                         value={filters.extraction}
                                         onChange={(e) => handleFilterChange('extraction', e.target.value)}
-                                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
-                                        style={{ backgroundColor: 'var(--bg-input)', border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                                        className="w-full px-4 py-2 rounded-lg focus:outline-none select-themed"
                                     >
                                         <option value="all">Toutes méthodes</option>
                                         {advancedOptions.extraction.map(ext => (
@@ -438,8 +431,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                                         <select
                                             value={filters.texture}
                                             onChange={(e) => handleFilterChange('texture', e.target.value)}
-                                            className="w-full px-4 py-2 rounded-lg focus:outline-none"
-                                            style={{ backgroundColor: 'var(--bg-input)', border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                                            className="w-full px-4 py-2 rounded-lg focus:outline-none select-themed"
                                         >
                                             <option value="all">Toutes textures</option>
                                             {advancedOptions.texture.map(tex => (
@@ -467,8 +459,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                                     <select
                                         value={filters.ingredient}
                                         onChange={(e) => handleFilterChange('ingredient', e.target.value)}
-                                        className="w-full px-4 py-2 rounded-lg focus:outline-none"
-                                        style={{ backgroundColor: 'var(--bg-input)', border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                                        className="w-full px-4 py-2 rounded-lg focus:outline-none select-themed"
                                     >
                                         <option value="all">Tous ingrédients</option>
                                         {advancedOptions.ingredient.map(ing => (
