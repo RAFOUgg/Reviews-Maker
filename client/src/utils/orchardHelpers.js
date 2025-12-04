@@ -100,15 +100,32 @@ export function formatDate(date, options = { year: 'numeric', month: 'long', day
 }
 
 /**
- * Génère une couleur avec opacité
- * @param {string} color - Couleur hex
- * @param {number} opacity - Opacité (0-100)
- * @returns {string} Couleur avec opacité
+ * ⚠️ FONCTION DÉPRÉCIÉE - Retourne des couleurs SOLIDES au lieu de transparentes
+ * Les transparences rgba() sont ILLISIBLES sur fonds clairs
+ * 
+ * Mapping: opacity -> couleur solide CSS variable
+ * @param {string} color - Couleur hex (ignorée, utilise CSS variables)
+ * @param {number} opacity - Opacité (0-100) → mappée sur des couleurs solides
+ * @returns {string} Couleur CSS variable SANS transparence
+ * 
+ * @deprecated Utilisez directement les CSS variables (colors.bgSurface, colors.bgSecondary, etc.)
  */
 export function colorWithOpacity(color, opacity) {
-    if (!color) return 'transparent';
-    const hex = Math.round((opacity / 100) * 255).toString(16).padStart(2, '0');
-    return `${color}${hex}`;
+    // Transparences légères (5-10%) → bg-surface (très clair)
+    if (opacity <= 10) return 'var(--bg-surface)';
+
+    // Transparences moyennes (15-20%) → bg-secondary (clair)
+    if (opacity <= 20) return 'var(--bg-secondary)';
+
+    // Transparences fortes (30%+) → bg-tertiary (moyen)
+    if (opacity <= 40) return 'var(--bg-tertiary)';
+
+    // Très fortes (50%+) → accent ou primary
+    return 'var(--bg-tertiary)';
+
+    // ⛔ ANCIEN CODE (créait des transparences invisibles):
+    // const hex = Math.round((opacity / 100) * 255).toString(16).padStart(2, '0');
+    // return `${color}${hex}`;
 }
 
 /**

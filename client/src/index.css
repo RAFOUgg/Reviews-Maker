@@ -69,6 +69,16 @@
     /* Rose au lieu de jaune */
     --color-danger: #BE185D;
     /* Rose foncé au lieu de rouge */
+
+    /* ORCHARD - Couleurs pour templates (SANS TRANSPARENCE) */
+    --color-primary: 147, 51, 234;
+    /* Violet RGB pour rgb() */
+    --color-accent: 219, 39, 119;
+    /* Rose RGB pour rgb() */
+    --bg-overlay: rgba(0, 0, 0, 0.85);
+    /* Overlay sombre pour modals */
+    --text-on-overlay: #FFFFFF;
+    /* Texte blanc sur overlay sombre */
 }
 
 /* === STYLES GLOBAUX - Applique le thème PARTOUT === */
