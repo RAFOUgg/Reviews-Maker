@@ -24,12 +24,9 @@ export default function Layout() {
                             {!isAuthenticated ? (
                                 <Link
                                     to="/choose-account"
-                                    className="btn btn-secondary flex items-center gap-2"
+                                    className="btn btn-secondary px-4 py-2 font-semibold"
                                 >
-                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm0 2c-3.31 0-6 2.02-6 4.5 0 .28.22.5.5.5h11c.28 0 .5-.22.5-.5C18 16.02 15.31 14 12 14Z" />
-                                    </svg>
-                                    Se connecter
+                                    Connexion
                                 </Link>
                             ) : (
                                 <UserProfileDropdown />
