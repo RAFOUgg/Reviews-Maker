@@ -49,34 +49,49 @@ Livrer une plateforme fonctionnelle permettant de :
 
 ## 🏗️ Architecture Technique
 
-### État Actuel (Analysé)
+### État Actuel (Phase 2 Complétée - Décembre 2025)
 ```
 client/                     ← React 18 + Vite + TailwindCSS ✅
 ├── src/
-│   ├── components/         ← Composants UI (Layout, Toast, ErrorBoundary)
+│   ├── components/
+│   │   ├── auth/           ← 🆕 OAuthButtons (Discord ✅, Google ⚠️)
+│   │   ├── legal/          ← 🆕 RDRBanner, AgeVerification, ConsentModal
+│   │   ├── account/        ← 🆕 AccountTypeSelector (5 types)
+│   │   └── ...             ← Layout, Toast, ErrorBoundary
 │   ├── pages/              ← HomePage, CreateReview, Library, Stats, Settings
-│   ├── hooks/              ← useAuth (Discord OAuth)
+│   ├── hooks/
+│   │   └── useAuth.js      ← 🔄 Étendu: legal status + account info + callbacks
 │   ├── store/              ← Zustand (user, theme)
 │   ├── services/           ← API calls
-│   └── App.jsx             ← Router React
+│   ├── i18n/               ← 🆕 i18next FR/EN (Phase 1)
+│   └── App.jsx             ← 🔄 Flux onboarding conditionnel (Age→Consent→AccountType)
 
 server-new/                 ← Express + Prisma + SQLite ✅
 ├── routes/
-│   ├── auth.js             ← Discord OAuth (Passport.js)
+│   ├── auth.js             ← Discord + Google OAuth (Passport.js)
+│   ├── legal.js            ← 🆕 Age verification + RDR consent
+│   ├── account.js          ← 🆕 Account types + profiles + verification
 │   ├── reviews.js          ← CRUD reviews + likes
 │   ├── users.js            ← Profils + stats
 │   └── templates.js        ← Templates export
+├── services/
+│   ├── account.js          ← 🆕 Account type management logic (290 lignes)
+│   └── legal.js            ← 🆕 Legal compliance checks
 ├── middleware/
 │   └── auth.js             ← requireAuth, optionalAuth
 ├── config/
-│   └── passport.js         ← Discord strategy
+│   └── passport.js         ← Discord + Google strategies
 ├── prisma/
-│   └── schema.prisma       ← Models: User, Review, Session, ReviewLike, Template
-└── server.js               ← Point d'entrée Express
+│   └── schema.prisma       ← Models: User (+ legalAge, consentRDR), Review, Session,
+│                              ReviewLike, Template, AuditLog, InfluencerProfile,
+│                              ProducerProfile, Subscription
+└── server.js               ← Point d'entrée Express + account routes mounted
 
 db/
 ├── reviews.sqlite          ← Base SQLite
 └── review_images/          ← Upload images
+
+test-phase2.html            ← 🆕 Suite de test API interactive (8 endpoints)
 ```
 
 ### Architecture Cible MVP

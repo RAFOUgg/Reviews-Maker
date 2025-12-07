@@ -11,16 +11,16 @@ const QRCode = require('qrcode');
  * @returns {Object} { secret, otpauthUrl }
  */
 function generateTOTPSecret(username) {
-  const secret = speakeasy.generateSecret({
-    name: `Reviews-Maker (${username})`,
-    issuer: 'Reviews-Maker',
-    length: 32,
-  });
+    const secret = speakeasy.generateSecret({
+        name: `Reviews-Maker (${username})`,
+        issuer: 'Reviews-Maker',
+        length: 32,
+    });
 
-  return {
-    secret: secret.base32,
-    otpauthUrl: secret.otpauth_url,
-  };
+    return {
+        secret: secret.base32,
+        otpauthUrl: secret.otpauth_url,
+    };
 }
 
 /**
@@ -29,12 +29,12 @@ function generateTOTPSecret(username) {
  * @returns {Promise<string>} Data URL du QR code
  */
 async function generateQRCode(otpauthUrl) {
-  try {
-    const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
-    return qrCodeDataUrl;
-  } catch (error) {
-    throw new Error(`Échec génération QR code: ${error.message}`);
-  }
+    try {
+        const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
+        return qrCodeDataUrl;
+    } catch (error) {
+        throw new Error(`Échec génération QR code: ${error.message}`);
+    }
 }
 
 /**
@@ -45,12 +45,12 @@ async function generateQRCode(otpauthUrl) {
  * @returns {boolean} true si le code est valide
  */
 function verifyTOTPToken(secret, token, window = 1) {
-  return speakeasy.totp.verify({
-    secret,
-    encoding: 'base32',
-    token,
-    window, // Tolérance de ±30s par défaut
-  });
+    return speakeasy.totp.verify({
+        secret,
+        encoding: 'base32',
+        token,
+        window, // Tolérance de ±30s par défaut
+    });
 }
 
 /**
@@ -59,10 +59,10 @@ function verifyTOTPToken(secret, token, window = 1) {
  * @returns {string} Code TOTP actuel
  */
 function generateCurrentTOTP(secret) {
-  return speakeasy.totp({
-    secret,
-    encoding: 'base32',
-  });
+    return speakeasy.totp({
+        secret,
+        encoding: 'base32',
+    });
 }
 
 /**
@@ -74,14 +74,14 @@ function generateCurrentTOTP(secret) {
  * 5. Si valid, sauvegarder totpSecret + totpEnabled=true dans User
  */
 async function setupTOTP(username) {
-  const { secret, otpauthUrl } = generateTOTPSecret(username);
-  const qrCodeDataUrl = await generateQRCode(otpauthUrl);
+    const { secret, otpauthUrl } = generateTOTPSecret(username);
+    const qrCodeDataUrl = await generateQRCode(otpauthUrl);
 
-  return {
-    secret, // À sauvegarder chiffré dans User.totpSecret
-    qrCodeDataUrl, // À afficher dans un <img src="..." />
-    manualEntryKey: secret, // Si l'utilisateur préfère entrer manuellement
-  };
+    return {
+        secret, // À sauvegarder chiffré dans User.totpSecret
+        qrCodeDataUrl, // À afficher dans un <img src="..." />
+        manualEntryKey: secret, // Si l'utilisateur préfère entrer manuellement
+    };
 }
 
 /**
@@ -91,18 +91,18 @@ async function setupTOTP(username) {
  * @returns {boolean} true si valide
  */
 function verifyUserTOTP(user, token) {
-  if (!user.totpEnabled || !user.totpSecret) {
-    throw new Error('TOTP non activé pour cet utilisateur');
-  }
+    if (!user.totpEnabled || !user.totpSecret) {
+        throw new Error('TOTP non activé pour cet utilisateur');
+    }
 
-  return verifyTOTPToken(user.totpSecret, token);
+    return verifyTOTPToken(user.totpSecret, token);
 }
 
 module.exports = {
-  generateTOTPSecret,
-  generateQRCode,
-  verifyTOTPToken,
-  generateCurrentTOTP,
-  setupTOTP,
-  verifyUserTOTP,
+    generateTOTPSecret,
+    generateQRCode,
+    verifyTOTPToken,
+    generateCurrentTOTP,
+    setupTOTP,
+    verifyUserTOTP,
 };

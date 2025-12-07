@@ -12,9 +12,27 @@ import AuthCallback from './components/AuthCallback'
 import ToastContainer from './components/ToastContainer'
 import ErrorBoundary from './components/ErrorBoundary'
 import { useStore } from './store/useStore'
+import { useAuth } from './hooks/useAuth'
+import '../i18n/i18n'
+import { RDRBanner } from './components/legal/RDRBanner'
+import { AgeVerification } from './components/legal/AgeVerification'
+import { ConsentModal } from './components/legal/ConsentModal'
+import { AccountTypeSelector } from './components/account/AccountTypeSelector'
 
 function App() {
     const checkAuth = useStore((state) => state.checkAuth)
+    const {
+        isAuthenticated,
+        loading,
+        needsAgeVerification,
+        needsConsent,
+        needsAccountTypeSelection,
+        handleAgeVerified,
+        handleConsentAccepted,
+        handleAccountTypeSelected,
+        handleConsentDeclined,
+        handleAgeRejected,
+    } = useAuth()
 
     // ✅ Appliquer le thème au démarrage
     useEffect(() => {
@@ -89,7 +107,42 @@ function App() {
     return (
         <ErrorBoundary>
             <div className="min-h-screen bg-dark-bg text-dark-text">
+                {/* Bannière RDR - Toujours visible */}
+                <RDRBanner />
+
                 <ToastContainer />
+
+                {/* Modales d'onboarding - Affichage conditionnel pour utilisateurs authentifiés */}
+                {isAuthenticated && !loading && (
+                    <>
+                        {/* 1. Vérification d'âge - Première étape obligatoire */}
+                        {needsAgeVerification && (
+                            <AgeVerification
+                                isOpen={true}
+                                onAccepted={handleAgeVerified}
+                                onRejected={handleAgeRejected}
+                            />
+                        )}
+
+                        {/* 2. Consentement RDR - Après vérification d'âge */}
+                        {needsConsent && (
+                            <ConsentModal
+                                isOpen={true}
+                                onAccept={handleConsentAccepted}
+                                onDecline={handleConsentDeclined}
+                            />
+                        )}
+
+                        {/* 3. Sélection type de compte - Après consentement */}
+                        {needsAccountTypeSelection && (
+                            <AccountTypeSelector
+                                isOpen={true}
+                                onClose={handleAccountTypeSelected}
+                            />
+                        )}
+                    </>
+                )}
+
                 <Routes>
                     <Route path="/" element={<Layout />}>
                         <Route index element={<HomePage />} />

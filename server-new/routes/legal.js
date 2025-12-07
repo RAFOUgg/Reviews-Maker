@@ -14,73 +14,73 @@ const prisma = new PrismaClient();
  * Vérifie et enregistre la date de naissance + pays
  */
 router.post('/verify-age', async (req, res) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({
-        error: 'unauthorized',
-        message: 'Authentification requise',
-      });
+    try {
+        if (!req.user) {
+            return res.status(401).json({
+                error: 'unauthorized',
+                message: 'Authentification requise',
+            });
+        }
+
+        const { birthdate, country, region } = req.body;
+
+        if (!birthdate || !country) {
+            return res.status(400).json({
+                error: 'missing_fields',
+                message: 'Date de naissance et pays requis',
+            });
+        }
+
+        // Vérifier que le pays est autorisé
+        if (!isCountryAllowed(country)) {
+            return res.status(403).json({
+                error: 'country_not_allowed',
+                message: 'Ce pays ne permet pas l\'accès à la plateforme',
+            });
+        }
+
+        // Calculer si l'utilisateur a l'âge légal
+        const hasLegalAge = calculateLegalAge(new Date(birthdate), country, region);
+        const minimumAge = getMinimumAge(country, region);
+
+        if (!hasLegalAge) {
+            return res.status(403).json({
+                error: 'underage',
+                message: `Vous devez avoir au moins ${minimumAge} ans pour accéder à cette plateforme`,
+                minimumAge,
+            });
+        }
+
+        // Mettre à jour l'utilisateur
+        const updatedUser = await prisma.user.update({
+            where: { id: req.user.id },
+            data: {
+                birthdate: new Date(birthdate),
+                country,
+                region: region || null,
+                legalAge: true,
+            },
+        });
+
+        res.json({
+            success: true,
+            legalAge: true,
+            minimumAge,
+            user: {
+                id: updatedUser.id,
+                birthdate: updatedUser.birthdate,
+                country: updatedUser.country,
+                region: updatedUser.region,
+                legalAge: updatedUser.legalAge,
+            },
+        });
+    } catch (error) {
+        console.error('Erreur vérification âge:', error);
+        res.status(500).json({
+            error: 'internal_error',
+            message: 'Erreur lors de la vérification de l\'âge',
+        });
     }
-
-    const { birthdate, country, region } = req.body;
-
-    if (!birthdate || !country) {
-      return res.status(400).json({
-        error: 'missing_fields',
-        message: 'Date de naissance et pays requis',
-      });
-    }
-
-    // Vérifier que le pays est autorisé
-    if (!isCountryAllowed(country)) {
-      return res.status(403).json({
-        error: 'country_not_allowed',
-        message: 'Ce pays ne permet pas l\'accès à la plateforme',
-      });
-    }
-
-    // Calculer si l'utilisateur a l'âge légal
-    const hasLegalAge = calculateLegalAge(new Date(birthdate), country, region);
-    const minimumAge = getMinimumAge(country, region);
-
-    if (!hasLegalAge) {
-      return res.status(403).json({
-        error: 'underage',
-        message: `Vous devez avoir au moins ${minimumAge} ans pour accéder à cette plateforme`,
-        minimumAge,
-      });
-    }
-
-    // Mettre à jour l'utilisateur
-    const updatedUser = await prisma.user.update({
-      where: { id: req.user.id },
-      data: {
-        birthdate: new Date(birthdate),
-        country,
-        region: region || null,
-        legalAge: true,
-      },
-    });
-
-    res.json({
-      success: true,
-      legalAge: true,
-      minimumAge,
-      user: {
-        id: updatedUser.id,
-        birthdate: updatedUser.birthdate,
-        country: updatedUser.country,
-        region: updatedUser.region,
-        legalAge: updatedUser.legalAge,
-      },
-    });
-  } catch (error) {
-    console.error('Erreur vérification âge:', error);
-    res.status(500).json({
-      error: 'internal_error',
-      message: 'Erreur lors de la vérification de l\'âge',
-    });
-  }
 });
 
 /**
@@ -88,52 +88,52 @@ router.post('/verify-age', async (req, res) => {
  * Enregistre le consentement RDR
  */
 router.post('/accept-consent', async (req, res) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({
-        error: 'unauthorized',
-        message: 'Authentification requise',
-      });
+    try {
+        if (!req.user) {
+            return res.status(401).json({
+                error: 'unauthorized',
+                message: 'Authentification requise',
+            });
+        }
+
+        const { consent } = req.body;
+
+        if (!consent) {
+            return res.status(400).json({
+                error: 'consent_required',
+                message: 'Vous devez accepter les conditions de réduction des risques',
+            });
+        }
+
+        // Vérifier que l'utilisateur a l'âge légal avant d'accepter le consentement
+        if (!req.user.legalAge) {
+            return res.status(403).json({
+                error: 'age_verification_required',
+                message: 'Veuillez d\'abord vérifier votre âge',
+            });
+        }
+
+        // Mettre à jour le consentement
+        const updatedUser = await prisma.user.update({
+            where: { id: req.user.id },
+            data: {
+                consentRDR: true,
+                consentDate: new Date(),
+            },
+        });
+
+        res.json({
+            success: true,
+            consentRDR: true,
+            consentDate: updatedUser.consentDate,
+        });
+    } catch (error) {
+        console.error('Erreur enregistrement consentement:', error);
+        res.status(500).json({
+            error: 'internal_error',
+            message: 'Erreur lors de l\'enregistrement du consentement',
+        });
     }
-
-    const { consent } = req.body;
-
-    if (!consent) {
-      return res.status(400).json({
-        error: 'consent_required',
-        message: 'Vous devez accepter les conditions de réduction des risques',
-      });
-    }
-
-    // Vérifier que l'utilisateur a l'âge légal avant d'accepter le consentement
-    if (!req.user.legalAge) {
-      return res.status(403).json({
-        error: 'age_verification_required',
-        message: 'Veuillez d\'abord vérifier votre âge',
-      });
-    }
-
-    // Mettre à jour le consentement
-    const updatedUser = await prisma.user.update({
-      where: { id: req.user.id },
-      data: {
-        consentRDR: true,
-        consentDate: new Date(),
-      },
-    });
-
-    res.json({
-      success: true,
-      consentRDR: true,
-      consentDate: updatedUser.consentDate,
-    });
-  } catch (error) {
-    console.error('Erreur enregistrement consentement:', error);
-    res.status(500).json({
-      error: 'internal_error',
-      message: 'Erreur lors de l\'enregistrement du consentement',
-    });
-  }
 });
 
 /**
@@ -141,56 +141,56 @@ router.post('/accept-consent', async (req, res) => {
  * Récupère le statut légal de l'utilisateur connecté
  */
 router.get('/status', async (req, res) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({
-        error: 'unauthorized',
-        message: 'Authentification requise',
-      });
+    try {
+        if (!req.user) {
+            return res.status(401).json({
+                error: 'unauthorized',
+                message: 'Authentification requise',
+            });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id },
+            select: {
+                birthdate: true,
+                country: true,
+                region: true,
+                legalAge: true,
+                consentRDR: true,
+                consentDate: true,
+            },
+        });
+
+        if (!user) {
+            return res.status(404).json({
+                error: 'user_not_found',
+                message: 'Utilisateur non trouvé',
+            });
+        }
+
+        // Calculer l'âge minimum requis si pays défini
+        let minimumAge = null;
+        if (user.country) {
+            minimumAge = getMinimumAge(user.country, user.region);
+        }
+
+        res.json({
+            birthdate: user.birthdate,
+            country: user.country,
+            region: user.region,
+            legalAge: user.legalAge,
+            consentRDR: user.consentRDR,
+            consentDate: user.consentDate,
+            minimumAge,
+            isCompliant: user.legalAge && user.consentRDR,
+        });
+    } catch (error) {
+        console.error('Erreur récupération statut légal:', error);
+        res.status(500).json({
+            error: 'internal_error',
+            message: 'Erreur lors de la récupération du statut',
+        });
     }
-
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.id },
-      select: {
-        birthdate: true,
-        country: true,
-        region: true,
-        legalAge: true,
-        consentRDR: true,
-        consentDate: true,
-      },
-    });
-
-    if (!user) {
-      return res.status(404).json({
-        error: 'user_not_found',
-        message: 'Utilisateur non trouvé',
-      });
-    }
-
-    // Calculer l'âge minimum requis si pays défini
-    let minimumAge = null;
-    if (user.country) {
-      minimumAge = getMinimumAge(user.country, user.region);
-    }
-
-    res.json({
-      birthdate: user.birthdate,
-      country: user.country,
-      region: user.region,
-      legalAge: user.legalAge,
-      consentRDR: user.consentRDR,
-      consentDate: user.consentDate,
-      minimumAge,
-      isCompliant: user.legalAge && user.consentRDR,
-    });
-  } catch (error) {
-    console.error('Erreur récupération statut légal:', error);
-    res.status(500).json({
-      error: 'internal_error',
-      message: 'Erreur lors de la récupération du statut',
-    });
-  }
 });
 
 /**
@@ -198,15 +198,15 @@ router.get('/status', async (req, res) => {
  * Liste des pays autorisés avec âge minimum
  */
 router.get('/countries', (req, res) => {
-  const countries = LEGAL_COUNTRIES.map(code => ({
-    code,
-    minimumAge: getMinimumAge(code),
-  }));
+    const countries = LEGAL_COUNTRIES.map(code => ({
+        code,
+        minimumAge: getMinimumAge(code),
+    }));
 
-  res.json({
-    countries,
-    total: countries.length,
-  });
+    res.json({
+        countries,
+        total: countries.length,
+    });
 });
 
 export default router;

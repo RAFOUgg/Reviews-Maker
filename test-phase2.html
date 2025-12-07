@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API - Reviews Maker Phase 2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .card p {
+            color: #666;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .badge.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.875rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background: #6c757d;
+        }
+
+        button.secondary:hover {
+            background: #5a6268;
+        }
+
+        .result {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .status {
+            text-align: center;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .status h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .status-item {
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .status-item strong {
+            display: block;
+            color: #667eea;
+            margin-bottom: 0.25rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🚀 Reviews Maker - Phase 2 Test Suite</h1>
+
+        <div class="status">
+            <h3>État du Système</h3>
+            <div class="status-grid">
+                <div class="status-item">
+                    <strong>Serveur</strong>
+                    <span id="serverStatus">Vérification...</span>
+                </div>
+                <div class="status-item">
+                    <strong>Discord OAuth</strong>
+                    <span class="badge success">✅ Configuré</span>
+                </div>
+                <div class="status-item">
+                    <strong>Google OAuth</strong>
+                    <span class="badge warning">⚠️ Non configuré</span>
+                </div>
+                <div class="status-item">
+                    <strong>Routes Account</strong>
+                    <span id="accountRouteStatus">Test en cours...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Test 1: Account Types -->
+            <div class="card">
+                <span class="badge info">Public</span>
+                <h2>📋 Liste des Types de Compte</h2>
+                <p>Récupère tous les types de comptes disponibles avec leurs caractéristiques et prix.</p>
+                <button onclick="testAccountTypes()">GET /api/account/types</button>
+                <div id="result-types" class="result" style="display:none"></div>
+            </div>
+
+            <!-- Test 2: Account Info -->
+            <div class="card">
+                <span class="badge warning">Auth Required</span>
+                <h2>👤 Informations du Compte</h2>
+                <p>Récupère les informations complètes du compte utilisateur connecté (profils, abonnement).</p>
+                <button onclick="testAccountInfo()">GET /api/account/info</button>
+                <div id="result-info" class="result" style="display:none"></div>
+            </div>
+
+            <!-- Test 3: Legal Status -->
+            <div class="card">
+                <span class="badge warning">Auth Required</span>
+                <h2>⚖️ Statut Légal</h2>
+                <p>Vérifie l'état de vérification d'âge et de consentement RDR de l'utilisateur.</p>
+                <button onclick="testLegalStatus()">GET /api/legal/status</button>
+                <div id="result-legal" class="result" style="display:none"></div>
+            </div>
+
+            <!-- Test 4: Change Account Type -->
+            <div class="card">
+                <span class="badge warning">Auth Required</span>
+                <h2>🔄 Changer Type de Compte</h2>
+                <p>Simule le changement vers compte Influencer Basic (nécessite vérification légale complète).</p>
+                <button onclick="testChangeAccountType()">POST /api/account/change-type</button>
+                <button class="secondary" onclick="testChangeToProducer()">Test → Producer</button>
+                <div id="result-change" class="result" style="display:none"></div>
+            </div>
+
+            <!-- Test 5: Discord Login -->
+            <div class="card">
+                <span class="badge success">OAuth</span>
+                <h2>🎮 Connexion Discord</h2>
+                <p>Démarre le flux d'authentification Discord OAuth. Vous serez redirigé vers Discord.</p>
+                <button onclick="loginDiscord()">Se connecter avec Discord</button>
+                <div id="result-discord" class="result" style="display:none"></div>
+            </div>
+
+            <!-- Test 6: Current User -->
+            <div class="card">
+                <span class="badge warning">Auth Required</span>
+                <h2>🔐 Utilisateur Actuel</h2>
+                <p>Affiche les informations de l'utilisateur actuellement connecté via la session.</p>
+                <button onclick="testCurrentUser()">GET /api/auth/me</button>
+                <button class="secondary" onclick="logout()">Déconnexion</button>
+                <div id="result-user" class="result" style="display:none"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+
+        // Vérifier l'état du serveur au chargement
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/ping`);
+                const data = await response.json();
+                document.getElementById('serverStatus').innerHTML = '<span class="badge success">✅ En ligne</span>';
+            } catch (error) {
+                document.getElementById('serverStatus').innerHTML = '<span class="badge error">❌ Hors ligne</span>';
+            }
+
+            // Test rapide des routes account
+            try {
+                const response = await fetch(`${API_BASE}/api/account/types`);
+                if (response.ok) {
+                    document.getElementById('accountRouteStatus').innerHTML = '<span class="badge success">✅ Opérationnelles</span>';
+                }
+            } catch (error) {
+                document.getElementById('accountRouteStatus').innerHTML = '<span class="badge error">❌ Erreur</span>';
+            }
+        });
+
+        async function testAccountTypes() {
+            const resultDiv = document.getElementById('result-types');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Chargement...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/account/types`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                resultDiv.textContent = `✅ Status ${response.status}\n\n` + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = `❌ Erreur: ${error.message}`;
+            }
+        }
+
+        async function testAccountInfo() {
+            const resultDiv = document.getElementById('result-info');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Chargement...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/account/info`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                resultDiv.textContent = `${response.ok ? '✅' : '❌'} Status ${response.status}\n\n` + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = `❌ Erreur: ${error.message}`;
+            }
+        }
+
+        async function testLegalStatus() {
+            const resultDiv = document.getElementById('result-legal');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Chargement...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/legal/status`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                resultDiv.textContent = `${response.ok ? '✅' : '❌'} Status ${response.status}\n\n` + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = `❌ Erreur: ${error.message}`;
+            }
+        }
+
+        async function testChangeAccountType() {
+            const resultDiv = document.getElementById('result-change');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Tentative de changement vers Influencer Basic...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/account/change-type`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ newType: 'influencer_basic' })
+                });
+                const data = await response.json();
+                resultDiv.textContent = `${response.ok ? '✅' : '❌'} Status ${response.status}\n\n` + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = `❌ Erreur: ${error.message}`;
+            }
+        }
+
+        async function testChangeToProducer() {
+            const resultDiv = document.getElementById('result-change');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Tentative de changement vers Producer...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/account/change-type`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ newType: 'producer' })
+                });
+                const data = await response.json();
+                resultDiv.textContent = `${response.ok ? '✅' : '❌'} Status ${response.status}\n\n` + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = `❌ Erreur: ${error.message}`;
+            }
+        }
+
+        function loginDiscord() {
+            const resultDiv = document.getElementById('result-discord');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Redirection vers Discord...';
+            setTimeout(() => {
+                window.location.href = `${API_BASE}/api/auth/discord`;
+            }, 1000);
+        }
+
+        async function testCurrentUser() {
+            const resultDiv = document.getElementById('result-user');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Chargement...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/me`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                resultDiv.textContent = `${response.ok ? '✅' : '❌'} Status ${response.status}\n\n` + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = `❌ Erreur: ${error.message}`;
+            }
+        }
+
+        async function logout() {
+            const resultDiv = document.getElementById('result-user');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Déconnexion...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                resultDiv.textContent = `✅ Déconnecté\n\n` + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = `❌ Erreur: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+
+</html>

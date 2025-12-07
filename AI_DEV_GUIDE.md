@@ -43,14 +43,18 @@ Cette base de code est **propre, fonctionnelle et documentée** pour faciliter v
 - **Routing** : React Router DOM v7
 - **State** : Zustand (store global)
 - **Styling** : TailwindCSS
-- **Auth** : Custom hook `useAuth()`
+- **Auth** : Custom hook `useAuth()` (étendu Phase 2: legal + account)
+- **i18n** : react-i18next (FR/EN) ✅
+- **OAuth** : Discord (opérationnel), Google (préparé)
 
 ### Backend (server-new/)
 - **Framework** : Express.js
-- **ORM** : Prisma (SQLite)
-- **Auth** : Passport.js + Discord Strategy
+- **ORM** : Prisma (SQLite dev, PostgreSQL prod)
+- **Auth** : Passport.js (Discord ✅, Google ⚠️ credentials manquants)
 - **Session** : express-session (cookie httpOnly, 7 jours)
 - **Upload** : Multer (images)
+- **Legal** : Age verification + RDR consent + country validation
+- **Accounts** : 5 types (consumer, influencer_basic/pro, producer, merchant)
 
 ### Base de données
 - **Type** : SQLite (`db/reviews.sqlite`)
@@ -80,15 +84,22 @@ client/src/pages/CreateReview.jsx     # Formulaire création
 client/src/hooks/useAuth.js           # Hook d'authentification
 ```
 
-### 3. Comprendre le flow d'authentification
+### 3. Comprendre le flow d'authentification (Phase 2)
 ```
-1. User → "Se connecter" → /api/auth/discord
-2. Backend → Redirect Discord OAuth2
-3. Discord → User autorise → Callback /api/auth/discord/callback
+1. User → "Se connecter" → /api/auth/discord (ou /google)
+2. Backend → Redirect Discord/Google OAuth2
+3. Provider → User autorise → Callback /api/auth/discord/callback
 4. Backend → Prisma upsert User → Create session
 5. Backend → Redirect frontend /auth/callback
 6. Frontend → GET /api/auth/me → Récupère user
 7. Frontend → Update Zustand store → User connecté
+
+8. 🆕 Frontend → useAuth checks legal status (legalAge, consentRDR)
+9. 🆕 Si needsAgeVerification → Affiche AgeVerification modal
+10. 🆕 Si needsConsent → Affiche ConsentModal
+11. 🆕 Si needsAccountTypeSelection → Affiche AccountTypeSelector
+12. 🆕 POST /api/account/change-type → Update account type
+13. 🆕 User accède à l'app (onboarding complet)
 ```
 
 ---

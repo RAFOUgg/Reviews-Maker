@@ -85,9 +85,9 @@ passport.deserializeUser(async (id, done) => {
 // Google OAuth Strategy
 // =============================================================================
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-    const googleCallback = process.env.GOOGLE_REDIRECT_URI || 
+    const googleCallback = process.env.GOOGLE_REDIRECT_URI ||
         `${process.env.FRONTEND_URL}${process.env.BASE_PATH || ''}/api/auth/google/callback`;
-    
+
     console.log('[passport] Google ClientId set:', process.env.GOOGLE_CLIENT_ID ? 'YES' : 'NO');
     console.log('[passport] Google CallbackURL:', googleCallback);
 
@@ -158,9 +158,9 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 // =============================================================================
 /*
 if (process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPLE_KEY_ID) {
-    const appleCallback = process.env.APPLE_REDIRECT_URI || 
+    const appleCallback = process.env.APPLE_REDIRECT_URI ||
         `${process.env.FRONTEND_URL}${process.env.BASE_PATH || ''}/api/auth/apple/callback`;
-    
+
     console.log('[passport] Apple ClientId set:', process.env.APPLE_CLIENT_ID ? 'YES' : 'NO');
     console.log('[passport] Apple CallbackURL:', appleCallback);
 
@@ -216,9 +216,9 @@ if (process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPL
 // =============================================================================
 /*
 if (process.env.AMAZON_CLIENT_ID && process.env.AMAZON_CLIENT_SECRET) {
-    const amazonCallback = process.env.AMAZON_REDIRECT_URI || 
+    const amazonCallback = process.env.AMAZON_REDIRECT_URI ||
         `${process.env.FRONTEND_URL}${process.env.BASE_PATH || ''}/api/auth/amazon/callback`;
-    
+
     console.log('[passport] Amazon ClientId set:', process.env.AMAZON_CLIENT_ID ? 'YES' : 'NO');
     console.log('[passport] Amazon CallbackURL:', amazonCallback);
 

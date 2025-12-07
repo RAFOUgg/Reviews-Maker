@@ -16,6 +16,7 @@ import reviewRoutes from './routes/reviews.js'
 import userRoutes from './routes/users.js'
 import templatesRoutes from './routes/templates.js'
 import legalRoutes from './routes/legal.js'
+import accountRoutes from './routes/account.js'
 import { requireAuth, optionalAuth, logAuthRequest } from './middleware/auth.js'
 
 // Import config
@@ -65,10 +66,12 @@ app.use(cors({
     // Allow the explicit FRONTEND_URL if provided. If running in development, allow any origin
     // to make it easier to test via network IPs. In production, validate origin strictly.
     origin: (origin, callback) => {
-        // If no Origin header (eg. server-to-server/cli), allow
+        // If no Origin header (eg. server-to-server/cli/file://), allow
         if (!origin) return callback(null, true)
         // In development, allow any origin (dev convenience)
         if (process.env.NODE_ENV !== 'production') return callback(null, true)
+        // Allow file:// protocol for local HTML testing
+        if (origin === 'null') return callback(null, true)
         // Otherwise, only allow the configured front-end URL
         const allowed = process.env.FRONTEND_URL || 'http://localhost:5173'
         if (origin === allowed) return callback(null, true)
@@ -187,6 +190,7 @@ app.use('/api/reviews', reviewRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/templates', templatesRoutes)
 app.use('/api/legal', legalRoutes)
+app.use('/api/account', accountRoutes)
 
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
