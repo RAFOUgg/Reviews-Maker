@@ -51,6 +51,7 @@ router.get('/types', (req, res) => {
                 'Stats personnelles',
             ],
             requiresSubscription: false,
+            disabled: false,
         },
         {
             type: ACCOUNT_TYPES.INFLUENCER_BASIC,
@@ -65,6 +66,7 @@ router.get('/types', (req, res) => {
                 'Stats avancées',
             ],
             requiresSubscription: true,
+            disabled: false,
         },
         {
             type: ACCOUNT_TYPES.INFLUENCER_PRO,
@@ -80,12 +82,13 @@ router.get('/types', (req, res) => {
                 'Support prioritaire',
             ],
             requiresSubscription: true,
+            disabled: false,
         },
         {
             type: ACCOUNT_TYPES.PRODUCER,
             name: 'Producteur',
-            description: 'Pour les producteurs de cannabis',
-            price: 29.99,
+            description: 'Pour les producteurs de cannabis (bientôt disponible)',
+            price: null,
             features: [
                 'Profil entreprise vérifié',
                 'Dashboard analytics avancé',
@@ -93,8 +96,9 @@ router.get('/types', (req, res) => {
                 'White-label exports',
                 'Support dédié',
             ],
-            requiresSubscription: true,
+            requiresSubscription: false,
             requiresVerification: true,
+            disabled: true,
         },
     ];
 
@@ -127,6 +131,14 @@ router.post('/change-type', asyncHandler(async (req, res) => {
             error: 'invalid_type',
             message: 'Type de compte invalide',
             validTypes: Object.values(ACCOUNT_TYPES),
+        });
+    }
+
+    // Producteur désactivé en MVP (paiement/verification non disponibles)
+    if (newType === ACCOUNT_TYPES.PRODUCER) {
+        return res.status(403).json({
+            error: 'type_not_available',
+            message: 'Le compte producteur sera disponible plus tard. Choisissez un autre type.',
         });
     }
 

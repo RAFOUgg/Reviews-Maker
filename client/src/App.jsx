@@ -13,6 +13,7 @@ import ToastContainer from './components/ToastContainer'
 import ErrorBoundary from './components/ErrorBoundary'
 import { useStore } from './store/useStore'
 import { useAuth } from './hooks/useAuth'
+import LoginPage from './pages/LoginPage'
 import './i18n/i18n'
 import RDRBanner from './components/legal/RDRBanner'
 import AgeVerification from './components/legal/AgeVerification'
@@ -27,6 +28,7 @@ function App() {
         needsAgeVerification,
         needsConsent,
         needsAccountTypeSelection,
+        accountInfo,
         handleAgeVerified,
         handleConsentAccepted,
         handleAccountTypeSelected,
@@ -119,8 +121,8 @@ function App() {
                         {needsAgeVerification && (
                             <AgeVerification
                                 isOpen={true}
-                                onAccepted={handleAgeVerified}
-                                onRejected={handleAgeRejected}
+                                onVerified={handleAgeVerified}
+                                onReject={handleAgeRejected}
                             />
                         )}
 
@@ -137,7 +139,9 @@ function App() {
                         {needsAccountTypeSelection && (
                             <AccountTypeSelector
                                 isOpen={true}
-                                onClose={handleAccountTypeSelected}
+                                onComplete={handleAccountTypeSelected}
+                                currentType={accountInfo?.accountType || 'consumer'}
+                                initialTypePreference={localStorage.getItem('preferredAccountType') || undefined}
                             />
                         )}
                     </>
@@ -153,6 +157,7 @@ function App() {
                         <Route path="/stats" element={<StatsPage />} />
                         <Route path="/settings" element={<SettingsPage />} />
                     </Route>
+                    <Route path="/login" element={<LoginPage />} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
                 </Routes>
             </div>

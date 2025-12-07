@@ -6,10 +6,10 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const AccountTypeSelector = ({ isOpen, onComplete, currentType = 'consumer' }) => {
+const AccountTypeSelector = ({ isOpen, onComplete, currentType = 'consumer', initialTypePreference }) => {
     const { t } = useTranslation();
     const [accountTypes, setAccountTypes] = useState([]);
-    const [selectedType, setSelectedType] = useState(currentType);
+    const [selectedType, setSelectedType] = useState(initialTypePreference || currentType);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -99,14 +99,14 @@ const AccountTypeSelector = ({ isOpen, onComplete, currentType = 'consumer' }) =
                                 <button
                                     key={type.type}
                                     onClick={() => setSelectedType(type.type)}
-                                    disabled={type.requiresSubscription && type.type !== 'consumer'}
+                                    disabled={type.disabled || (type.requiresSubscription && type.type !== 'consumer')}
                                     className={`
                     relative p-6 rounded-lg border-2 text-left transition-all
                     ${isSelected
                                             ? 'border-violet-600 bg-violet-50 dark:bg-violet-900/20'
                                             : 'border-gray-300 dark:border-gray-600 hover:border-violet-400'
                                         }
-                    ${type.requiresSubscription && type.type !== 'consumer'
+                    ${type.disabled || (type.requiresSubscription && type.type !== 'consumer')
                                             ? 'opacity-60 cursor-not-allowed'
                                             : 'cursor-pointer'
                                         }
@@ -154,6 +154,15 @@ const AccountTypeSelector = ({ isOpen, onComplete, currentType = 'consumer' }) =
                                                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                                             </svg>
                                             {t('accountType.requiresPayment', 'Nécessite un abonnement Stripe (Phase 2)')}
+                                        </p>
+                                    )}
+
+                                    {type.disabled && (
+                                        <p className="text-xs text-dark-muted flex items-center gap-1 mt-2">
+                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v4a1 1 0 102 0V7zm-1 8a1 1 0 110-2 1 1 0 010 2z" clipRule="evenodd" />
+                                            </svg>
+                                            {t('accountType.disabled', 'Bientôt disponible (achat désactivé)')}
                                         </p>
                                     )}
 
