@@ -14,6 +14,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import { useStore } from './store/useStore'
 import { useAuth } from './hooks/useAuth'
 import LoginPage from './pages/LoginPage'
+import AccountChoicePage from './pages/AccountChoicePage'
 import './i18n/i18n'
 import RDRBanner from './components/legal/RDRBanner'
 import AgeVerification from './components/legal/AgeVerification'
@@ -157,6 +158,7 @@ function App() {
                         <Route path="/stats" element={<StatsPage />} />
                         <Route path="/settings" element={<SettingsPage />} />
                     </Route>
+                    <Route path="/choose-account" element={<AccountChoicePage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
                 </Routes>
