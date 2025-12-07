@@ -15,6 +15,7 @@ import authRoutes from './routes/auth.js'
 import reviewRoutes from './routes/reviews.js'
 import userRoutes from './routes/users.js'
 import templatesRoutes from './routes/templates.js'
+import legalRoutes from './routes/legal.js'
 import { requireAuth, optionalAuth, logAuthRequest } from './middleware/auth.js'
 
 // Import config
@@ -185,6 +186,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/reviews', reviewRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/templates', templatesRoutes)
+app.use('/api/legal', legalRoutes)
 
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {

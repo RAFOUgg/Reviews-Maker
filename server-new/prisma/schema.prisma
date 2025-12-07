@@ -10,22 +10,69 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Modèle User (utilisateurs Discord)
+// Modèle User (utilisateurs multi-OAuth)
 model User {
   id            String   @id @default(uuid())
-  discordId     String   @unique
+  
+  // OAuth Providers (au moins un requis)
+  discordId     String?  @unique
+  googleId      String?  @unique
+  appleId       String?  @unique
+  amazonId      String?  @unique
+  facebookId    String?  @unique
+  
+  // Infos de base
   username      String
-  discriminator String?
+  discriminator String?  // Discord uniquement
   avatar        String?
   email         String?
+  
+  // Email backup authentication
+  emailBackup   String?  @unique
+  emailVerified Boolean  @default(false)
+  
+  // TOTP 2FA (optionnel)
+  totpSecret    String?
+  totpEnabled   Boolean  @default(false)
+  
+  // Conformité légale
+  birthdate     DateTime?
+  country       String?  // Code ISO (FR, US, CA, etc.)
+  region        String?  // État/Province (pour US, CA)
+  legalAge      Boolean  @default(false)
+  consentRDR    Boolean  @default(false)
+  consentDate   DateTime?
+  
+  // Rôles & permissions (JSON array: ["consumer", "influencer", "producer", "admin"])
+  roles         String   @default("{\"roles\":[\"consumer\"]}")
+  isBanned      Boolean  @default(false)
+  bannedAt      DateTime?
+  banReason     String?
+  
+  // Préférences utilisateur
+  locale        String   @default("fr")  // "fr", "en", "es", "de"
+  theme         String   @default("violet-lean")
+  defaultExportTemplate String?  // ID du template préféré
+  
+  // Timestamps
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   // Relations
-  reviews  Review[]
-  sessions Session[]
-  likes    ReviewLike[]
+  reviews             Review[]
+  sessions            Session[]
+  likes               ReviewLike[]
+  subscription        Subscription?
+  influencerProfile   InfluencerProfile?
+  producerProfile     ProducerProfile?
+  reportsSubmitted    Report[] @relation("Reporter")
+  reportsReceived     Report[] @relation("ReportedUser")
 
+  @@index([email])
+  @@index([discordId])
+  @@index([googleId])
+  @@index([appleId])
+  @@index([emailBackup])
   @@map("users")
 }
 
@@ -180,12 +227,14 @@ model Review {
   authorId    String
   author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   
-  // Likes
+  // Relations
   likes       ReviewLike[]
+  reports     Report[]
 
   @@index([authorId])
   @@index([type])
   @@index([createdAt])
+  @@index([isPublic])
   @@map("reviews")
 }
 
@@ -222,4 +271,154 @@ model Template {
 
   @@index([ownerId])
   @@map("templates")
+}
+
+// ====================
+// NOUVEAUX MODÈLES MVP
+// ====================
+
+// Abonnements Stripe
+model Subscription {
+  id                   String    @id @default(uuid())
+  userId               String    @unique
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Stripe IDs
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  stripePriceId        String?
+  
+  // Plan & Status
+  plan                 String    // "free", "influencer_basic", "influencer_pro", "producer", "merchant"
+  status               String    // "active", "canceled", "past_due", "trialing"
+  
+  // Billing
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+  canceledAt           DateTime?
+  
+  // Timestamps
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  
+  @@index([userId])
+  @@index([stripeCustomerId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+// Profils Influenceur (mode Orchard)
+model InfluencerProfile {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Branding
+  brandName     String?  // Nom de marque pour exports
+  brandLogo     String?  // URL logo
+  brandColors   String?  // JSON: {"primary": "#hex", "secondary": "#hex"}
+  
+  // Vérification
+  isVerified    Boolean  @default(false)
+  verifiedAt    DateTime?
+  
+  // Stats publiques
+  followerCount Int?     // Compteur followers (externe)
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@map("influencer_profiles")
+}
+
+// Profils Producteur (phase 2, structure préparée)
+model ProducerProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Informations légales
+  companyName     String
+  siret           String?  // France
+  ein             String?  // USA
+  country         String
+  
+  // Vérification
+  isVerified      Boolean  @default(false)
+  verifiedAt      DateTime?
+  verificationDoc String?  // URL document justificatif
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("producer_profiles")
+}
+
+// Signalements (modération)
+model Report {
+  id             String   @id @default(uuid())
+  
+  // Cible du signalement
+  reviewId       String?
+  userId         String?  // User signalé (si report de profil)
+  
+  // Auteur du signalement
+  reporterId     String
+  
+  // Relations
+  review         Review?  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reportedUser   User?    @relation("ReportedUser", fields: [userId], references: [id], onDelete: Cascade)
+  reporter       User     @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  
+  // Détails
+  reason         String   // "spam", "inappropriate", "copyright", "illegal", "other"
+  details        String?  // Description optionnelle
+  status         String   @default("pending")  // "pending", "reviewed", "resolved", "dismissed"
+  
+  // Modération
+  moderatedBy    String?  // ID admin qui a traité
+  moderatedAt    DateTime?
+  moderationNote String?  // Note interne
+  
+  // Timestamps
+  createdAt      DateTime @default(now())
+  
+  @@index([reviewId])
+  @@index([userId])
+  @@index([reporterId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("reports")
+}
+
+// Journal d'audit (traçabilité actions critiques)
+model AuditLog {
+  id          String   @id @default(uuid())
+  
+  // Acteur (null si action système)
+  userId      String?
+  
+  // Action
+  action      String   // "review.delete", "user.ban", "report.resolve", "subscription.created"
+  entityType  String?  // "review", "user", "report", "subscription"
+  entityId    String?  // ID de l'entité concernée
+  
+  // Détails (JSON)
+  metadata    String?  // JSON: détails action (ex: {"reason": "spam", "oldValue": "...", "newValue": "..."})
+  
+  // Contexte technique
+  ipAddress   String?
+  userAgent   String?
+  
+  // Timestamp
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([entityType])
+  @@index([createdAt])
+  @@map("audit_logs")
 }

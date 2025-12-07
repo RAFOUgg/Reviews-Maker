@@ -112,4 +112,98 @@ router.post('/logout', asyncHandler(async (req, res) => {
     res.json({ message: 'Logged out successfully' })
 }))
 
+// =============================================================================
+// Google OAuth Routes
+// =============================================================================
+
+// GET /api/auth/google - Initier l'authentification Google
+router.get('/google', (req, res, next) => {
+    console.log(`[AUTH-DBG] Start google route - method: ${req.method} originalUrl: ${req.originalUrl}`)
+    return passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next)
+})
+
+// GET /api/auth/google/callback - Callback après autorisation Google
+router.get('/google/callback', (req, res, next) => {
+    console.log(`[AUTH-DBG] Google callback received - method: ${req.method} originalUrl: ${req.originalUrl}`)
+    return passport.authenticate('google', {
+        failureRedirect: process.env.FRONTEND_URL
+    })(req, res, (err) => {
+        if (err) {
+            console.error('[AUTH] Error during Google callback:', err)
+            return next(err)
+        }
+        // Succès : rediriger vers le frontend
+        res.redirect(`${process.env.FRONTEND_URL}/auth/callback`)
+    })
+})
+
+// =============================================================================
+// Apple OAuth Routes (commented until Apple strategy configured)
+// =============================================================================
+/*
+router.get('/apple', (req, res, next) => {
+    console.log(`[AUTH-DBG] Start apple route - method: ${req.method} originalUrl: ${req.originalUrl}`)
+    return passport.authenticate('apple')(req, res, next)
+})
+
+router.post('/apple/callback', (req, res, next) => {
+    console.log(`[AUTH-DBG] Apple callback received - method: ${req.method} originalUrl: ${req.originalUrl}`)
+    return passport.authenticate('apple', {
+        failureRedirect: process.env.FRONTEND_URL
+    })(req, res, (err) => {
+        if (err) {
+            console.error('[AUTH] Error during Apple callback:', err)
+            return next(err)
+        }
+        res.redirect(`${process.env.FRONTEND_URL}/auth/callback`)
+    })
+})
+*/
+
+// =============================================================================
+// Amazon OAuth Routes (commented until Amazon strategy configured)
+// =============================================================================
+/*
+router.get('/amazon', (req, res, next) => {
+    console.log(`[AUTH-DBG] Start amazon route - method: ${req.method} originalUrl: ${req.originalUrl}`)
+    return passport.authenticate('amazon')(req, res, next)
+})
+
+router.get('/amazon/callback', (req, res, next) => {
+    console.log(`[AUTH-DBG] Amazon callback received - method: ${req.method} originalUrl: ${req.originalUrl}`)
+    return passport.authenticate('amazon', {
+        failureRedirect: process.env.FRONTEND_URL
+    })(req, res, (err) => {
+        if (err) {
+            console.error('[AUTH] Error during Amazon callback:', err)
+            return next(err)
+        }
+        res.redirect(`${process.env.FRONTEND_URL}/auth/callback`)
+    })
+})
+*/
+
+// =============================================================================
+// Facebook OAuth Routes (commented until Facebook strategy configured)
+// =============================================================================
+/*
+router.get('/facebook', (req, res, next) => {
+    console.log(`[AUTH-DBG] Start facebook route - method: ${req.method} originalUrl: ${req.originalUrl}`)
+    return passport.authenticate('facebook', { scope: ['email'] })(req, res, next)
+})
+
+router.get('/facebook/callback', (req, res, next) => {
+    console.log(`[AUTH-DBG] Facebook callback received - method: ${req.method} originalUrl: ${req.originalUrl}`)
+    return passport.authenticate('facebook', {
+        failureRedirect: process.env.FRONTEND_URL
+    })(req, res, (err) => {
+        if (err) {
+            console.error('[AUTH] Error during Facebook callback:', err)
+            return next(err)
+        }
+        res.redirect(`${process.env.FRONTEND_URL}/auth/callback`)
+    })
+})
+*/
+
 export default router
