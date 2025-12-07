@@ -39,8 +39,23 @@ router.post('/verify-age', async (req, res) => {
             });
         }
 
+        // Normaliser la date de naissance (accepte ISO ou timestamp) et éviter les dates invalides
+        const parsedBirthdate = (() => {
+            const candidate = typeof birthdate === 'number' ? new Date(birthdate) : new Date(birthdate);
+            if (Number.isNaN(candidate.getTime())) return null;
+            // Forcer à minuit UTC pour éviter les décalages de fuseau lors du stockage
+            return new Date(Date.UTC(candidate.getUTCFullYear(), candidate.getUTCMonth(), candidate.getUTCDate()));
+        })();
+
+        if (!parsedBirthdate) {
+            return res.status(400).json({
+                error: 'invalid_birthdate',
+                message: 'Date de naissance invalide',
+            });
+        }
+
         // Calculer si l'utilisateur a l'âge légal
-        const hasLegalAge = calculateLegalAge(new Date(birthdate), country, region);
+        const hasLegalAge = calculateLegalAge(parsedBirthdate, country, region);
         const minimumAge = getMinimumAge(country, region);
 
         if (!hasLegalAge) {
@@ -55,7 +70,7 @@ router.post('/verify-age', async (req, res) => {
         const updatedUser = await prisma.user.update({
             where: { id: req.user.id },
             data: {
-                birthdate: new Date(birthdate),
+                birthdate: parsedBirthdate,
                 country,
                 region: region || null,
                 legalAge: true,
