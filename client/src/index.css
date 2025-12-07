@@ -1,9 +1,9 @@
+/* === ORCHARD STUDIO STYLES === */
+@import './assets/orchard.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* === ORCHARD STUDIO STYLES === */
-@import './assets/orchard.css';
 
 /* === THÈMES CSS VARIABLES === */
 

@@ -13,11 +13,11 @@ import ToastContainer from './components/ToastContainer'
 import ErrorBoundary from './components/ErrorBoundary'
 import { useStore } from './store/useStore'
 import { useAuth } from './hooks/useAuth'
-import '../i18n/i18n'
-import { RDRBanner } from './components/legal/RDRBanner'
-import { AgeVerification } from './components/legal/AgeVerification'
-import { ConsentModal } from './components/legal/ConsentModal'
-import { AccountTypeSelector } from './components/account/AccountTypeSelector'
+import './i18n/i18n'
+import RDRBanner from './components/legal/RDRBanner'
+import AgeVerification from './components/legal/AgeVerification'
+import ConsentModal from './components/legal/ConsentModal'
+import AccountTypeSelector from './components/account/AccountTypeSelector'
 
 function App() {
     const checkAuth = useStore((state) => state.checkAuth)
