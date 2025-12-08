@@ -157,6 +157,26 @@ export const authService = {
     },
 
     /**
+     * Créer un compte email/mot de passe
+     */
+    async signupWithEmail(payload) {
+        return fetchAPI(`${API_BASE}/auth/email/signup`, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+    },
+
+    /**
+     * Connexion email/mot de passe
+     */
+    async loginWithEmail(payload) {
+        return fetchAPI(`${API_BASE}/auth/email/login`, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+    },
+
+    /**
      * Se déconnecter
      */
     async logout() {

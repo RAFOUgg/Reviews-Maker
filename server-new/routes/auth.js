@@ -1,8 +1,41 @@
 import express from 'express'
 import passport from 'passport'
 import { asyncHandler, Errors } from '../utils/errorHandler.js'
+import { prisma } from '../server.js'
+import { ACCOUNT_TYPES, getUserAccountType } from '../services/account.js'
+import { hashPassword, verifyPassword } from '../services/password.js'
 
 const router = express.Router()
+
+function buildAvatar(user) {
+    if (user.avatar && user.discordId) {
+        return `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png`
+    }
+    if (user.discriminator) {
+        return `https://cdn.discordapp.com/embed/avatars/${parseInt(user.discriminator || '0') % 5}.png`
+    }
+    return null
+}
+
+function sanitizeUser(user) {
+    if (!user) return null
+    const accountType = getUserAccountType(user)
+    return {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        avatar: buildAvatar(user),
+        accountType,
+        roles: (() => {
+            try {
+                const parsed = JSON.parse(user.roles || '{"roles":["consumer"]}')
+                return parsed.roles || ['consumer']
+            } catch (err) {
+                return ['consumer']
+            }
+        })()
+    }
+}
 
 // GET /api/auth/discord - Initier l'authentification Discord
 router.get('/discord', (req, res, next) => {
@@ -11,6 +44,89 @@ router.get('/discord', (req, res, next) => {
     console.log(`[AUTH-DBG] Headers: Host=${req.headers.host} X-Forwarded-For=${req.headers['x-forwarded-for']} X-Forwarded-Proto=${req.headers['x-forwarded-proto']}`)
     return passport.authenticate('discord')(req, res, next)
 })
+
+// POST /api/auth/email/signup - Création de compte email/password
+router.post('/email/signup', asyncHandler(async (req, res) => {
+    const { email, password, username, accountType } = req.body || {}
+
+    if (!email || !password) {
+        return res.status(400).json({ error: 'missing_fields', message: 'Email et mot de passe requis' })
+    }
+
+    if (typeof password !== 'string' || password.length < 8) {
+        return res.status(400).json({ error: 'weak_password', message: 'Mot de passe trop court (8 caractères min.)' })
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase()
+    const chosenType = Object.values(ACCOUNT_TYPES).includes(accountType) ? accountType : ACCOUNT_TYPES.CONSUMER
+
+    const existing = await prisma.user.findFirst({ where: { email: normalizedEmail } })
+    if (existing && existing.passwordHash) {
+        return res.status(409).json({ error: 'email_taken', message: 'Un compte existe déjà avec cet email' })
+    }
+
+    const passwordHash = await hashPassword(password)
+
+    let user
+    if (existing) {
+        user = await prisma.user.update({
+            where: { id: existing.id },
+            data: {
+                passwordHash,
+                username: existing.username || username || normalizedEmail.split('@')[0],
+                roles: existing.roles || JSON.stringify({ roles: [chosenType] })
+            }
+        })
+    } else {
+        user = await prisma.user.create({
+            data: {
+                email: normalizedEmail,
+                username: username || normalizedEmail.split('@')[0],
+                passwordHash,
+                roles: JSON.stringify({ roles: [chosenType] })
+            }
+        })
+    }
+
+    await new Promise((resolve, reject) => {
+        req.login(user, (err) => {
+            if (err) return reject(err)
+            resolve()
+        })
+    })
+
+    res.json(sanitizeUser(user))
+}))
+
+// POST /api/auth/email/login - Connexion email/password
+router.post('/email/login', asyncHandler(async (req, res) => {
+    const { email, password } = req.body || {}
+
+    if (!email || !password) {
+        return res.status(400).json({ error: 'missing_fields', message: 'Email et mot de passe requis' })
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase()
+    const user = await prisma.user.findFirst({ where: { email: normalizedEmail } })
+
+    if (!user || !user.passwordHash) {
+        return res.status(401).json({ error: 'invalid_credentials', message: 'Identifiants invalides' })
+    }
+
+    const valid = await verifyPassword(password, user.passwordHash)
+    if (!valid) {
+        return res.status(401).json({ error: 'invalid_credentials', message: 'Identifiants invalides' })
+    }
+
+    await new Promise((resolve, reject) => {
+        req.login(user, (err) => {
+            if (err) return reject(err)
+            resolve()
+        })
+    })
+
+    res.json(sanitizeUser(user))
+}))
 
 // GET /api/auth/ping - Debug route to validate proxy path and headers
 router.get('/ping', (req, res) => {
@@ -72,19 +188,7 @@ router.get('/me', asyncHandler(async (req, res) => {
         throw Errors.UNAUTHORIZED()
     }
 
-    // Formater les données utilisateur
-    const user = {
-        id: req.user.id,
-        discordId: req.user.discordId,
-        username: req.user.username,
-        discriminator: req.user.discriminator,
-        avatar: req.user.avatar
-            ? `https://cdn.discordapp.com/avatars/${req.user.discordId}/${req.user.avatar}.png`
-            : `https://cdn.discordapp.com/embed/avatars/${parseInt(req.user.discriminator || '0') % 5}.png`,
-        email: req.user.email
-    }
-
-    res.json(user)
+    res.json(sanitizeUser(req.user))
 }))
 
 // POST /api/auth/logout - Déconnexion

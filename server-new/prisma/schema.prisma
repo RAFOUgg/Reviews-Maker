@@ -26,6 +26,9 @@ model User {
   discriminator String?  // Discord uniquement
   avatar        String?
   email         String?
+
+  // Auth locale (email/mot de passe)
+  passwordHash  String?
   
   // Email backup authentication
   emailBackup   String?  @unique
