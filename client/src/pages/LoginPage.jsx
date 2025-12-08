@@ -40,10 +40,16 @@ export default function LoginPage() {
             localStorage.removeItem('accountTypeSelected')
         }
 
-        if (provider === 'discord') {
-            window.location.href = '/api/auth/discord'
-        } else if (provider === 'google') {
-            window.location.href = '/api/auth/google'
+        const targets = {
+            discord: '/api/auth/discord',
+            google: '/api/auth/google',
+            apple: '/api/auth/apple',
+            facebook: '/api/auth/facebook',
+            amazon: '/api/auth/amazon',
+        }
+
+        if (targets[provider]) {
+            window.location.href = targets[provider]
         }
     }
 

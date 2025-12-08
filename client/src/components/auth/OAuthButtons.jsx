@@ -10,27 +10,15 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
     const { t } = useTranslation()
     const [loadingProvider, setLoadingProvider] = useState(null)
 
-    const handleDiscordLogin = () => {
+    const handleLogin = (provider, url) => {
         try {
-            setLoadingProvider('discord')
-            if (onLoginStart) onLoginStart('discord')
-            window.location.href = '/api/auth/discord'
+            setLoadingProvider(provider)
+            if (onLoginStart) onLoginStart(provider)
+            window.location.href = url
         } catch (error) {
-            console.error('Erreur connexion Discord:', error)
+            console.error(`Erreur connexion ${provider}:`, error)
             setLoadingProvider(null)
-            if (onLoginError) onLoginError('discord', error)
-        }
-    }
-
-    const handleGoogleLogin = () => {
-        try {
-            setLoadingProvider('google')
-            if (onLoginStart) onLoginStart('google')
-            window.location.href = '/api/auth/google'
-        } catch (error) {
-            console.error('Erreur connexion Google:', error)
-            setLoadingProvider(null)
-            if (onLoginError) onLoginError('google', error)
+            if (onLoginError) onLoginError(provider, error)
         }
     }
 
@@ -39,7 +27,7 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
             {/* Bouton Discord - Opérationnel */}
             <button
                 type="button"
-                onClick={handleDiscordLogin}
+                onClick={() => handleLogin('discord', '/api/auth/discord')}
                 disabled={loadingProvider !== null}
                 className="oauth-button oauth-button--discord"
                 aria-label={t('auth.loginWithDiscord', 'Se connecter avec Discord')}
@@ -68,7 +56,7 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
             {/* Bouton Google - Préparé (Phase 2) */}
             <button
                 type="button"
-                onClick={handleGoogleLogin}
+                onClick={() => handleLogin('google', '/api/auth/google')}
                 disabled={loadingProvider !== null}
                 className="oauth-button oauth-button--google"
                 aria-label={t('auth.loginWithGoogle', 'Se connecter avec Google')}
@@ -94,6 +82,72 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                     {loadingProvider === 'google'
                         ? t('auth.connecting', 'Connexion...')
                         : t('auth.loginWithGoogle', 'Se connecter avec Google')}
+                </span>
+            </button>
+
+            {/* Bouton Apple */}
+            <button
+                type="button"
+                onClick={() => handleLogin('apple', '/api/auth/apple')}
+                disabled={loadingProvider !== null}
+                className="oauth-button oauth-button--apple"
+                aria-label={t('auth.loginWithApple', 'Se connecter avec Apple')}
+            >
+                {loadingProvider === 'apple' ? (
+                    <span className="oauth-button__spinner" aria-hidden="true">⏳</span>
+                ) : (
+                    <svg className="oauth-button__icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M16.365 1.43c0 1.14-.41 2.08-1.23 2.85-.99.95-2.18 1.07-2.64 1.07-.08-1.14.43-2.21 1.2-2.95.86-.85 1.99-1.41 2.67-1.41.01.15.03.3.03.44zM19.93 17.18c-.54 1.24-.8 1.79-1.49 2.88-.97 1.53-2.34 3.44-4.05 3.46-1.51.01-1.9-.99-3.95-.98-2.05.01-2.47.99-3.99.98-1.71-.01-3.01-1.73-3.98-3.25-1.55-2.38-2.75-6.73-1.15-9.67 1.07-2.02 2.99-3.28 4.73-3.28 1.86 0 3.03 1.1 4.56 1.1 1.48 0 2.38-1.1 4.56-1.1 1.66 0 3.42.9 4.49 2.46-3.92 2.14-3.29 7.75.26 9.4z" />
+                    </svg>
+                )}
+                <span className="oauth-button__text">
+                    {loadingProvider === 'apple'
+                        ? t('auth.connecting', 'Connexion...')
+                        : t('auth.loginWithApple', 'Se connecter avec Apple')}
+                </span>
+            </button>
+
+            {/* Bouton Facebook */}
+            <button
+                type="button"
+                onClick={() => handleLogin('facebook', '/api/auth/facebook')}
+                disabled={loadingProvider !== null}
+                className="oauth-button oauth-button--facebook"
+                aria-label={t('auth.loginWithFacebook', 'Se connecter avec Facebook')}
+            >
+                {loadingProvider === 'facebook' ? (
+                    <span className="oauth-button__spinner" aria-hidden="true">⏳</span>
+                ) : (
+                    <svg className="oauth-button__icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M22 12a10 10 0 1 0-11.6 9.87v-6.99H7.9V12h2.5V9.8c0-2.46 1.46-3.82 3.7-3.82 1.07 0 2.2.19 2.2.19v2.4h-1.24c-1.22 0-1.6.76-1.6 1.54V12h2.73l-.44 2.88h-2.29v6.99A10 10 0 0 0 22 12" />
+                    </svg>
+                )}
+                <span className="oauth-button__text">
+                    {loadingProvider === 'facebook'
+                        ? t('auth.connecting', 'Connexion...')
+                        : t('auth.loginWithFacebook', 'Se connecter avec Facebook')}
+                </span>
+            </button>
+
+            {/* Bouton Amazon */}
+            <button
+                type="button"
+                onClick={() => handleLogin('amazon', '/api/auth/amazon')}
+                disabled={loadingProvider !== null}
+                className="oauth-button oauth-button--amazon"
+                aria-label={t('auth.loginWithAmazon', 'Se connecter avec Amazon')}
+            >
+                {loadingProvider === 'amazon' ? (
+                    <span className="oauth-button__spinner" aria-hidden="true">⏳</span>
+                ) : (
+                    <svg className="oauth-button__icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M18.91 14.86c.1-1.34-.23-2.63-.99-3.87-.95-1.58-2.36-2.37-4.23-2.37-.34 0-.73.04-1.15.12V5.05H8.53v13.75h3.78v-5.8c0-.36.02-.61.08-.77.17-.48.55-.72 1.13-.72.5 0 .87.23 1.1.7.15.3.23.74.23 1.31v5.28h3.78l-.04-3.94zM9.82 4.16c0 .64.21 1.14.64 1.49.39.3.85.46 1.37.46.55 0 1-.15 1.37-.46.42-.35.63-.85.63-1.49 0-.62-.21-1.12-.63-1.47C12.84 2.34 12.38 2.16 12 2.16c-.52 0-.98.18-1.37.53-.43.35-.64.85-.64 1.47z" />
+                    </svg>
+                )}
+                <span className="oauth-button__text">
+                    {loadingProvider === 'amazon'
+                        ? t('auth.connecting', 'Connexion...')
+                        : t('auth.loginWithAmazon', 'Se connecter avec Amazon')}
                 </span>
             </button>
 
@@ -183,6 +237,60 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                 }
 
                 .oauth-button--google:active:not(:disabled) {
+                    transform: translateY(0);
+                }
+
+                /* Apple */
+                .oauth-button--apple {
+                    background-color: #000;
+                    color: #fff;
+                    border-color: #000;
+                }
+
+                .oauth-button--apple:hover:not(:disabled) {
+                    background-color: #111;
+                    border-color: #111;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+                }
+
+                .oauth-button--apple:active:not(:disabled) {
+                    transform: translateY(0);
+                }
+
+                /* Facebook */
+                .oauth-button--facebook {
+                    background-color: #1877f2;
+                    color: #fff;
+                    border-color: #1877f2;
+                }
+
+                .oauth-button--facebook:hover:not(:disabled) {
+                    background-color: #0f5ec4;
+                    border-color: #0f5ec4;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(24, 119, 242, 0.35);
+                }
+
+                .oauth-button--facebook:active:not(:disabled) {
+                    transform: translateY(0);
+                }
+
+                /* Amazon */
+                .oauth-button--amazon {
+                    background-color: #232f3e;
+                    color: #fefefe;
+                    border-color: #232f3e;
+                }
+
+                .oauth-button--amazon:hover:not(:disabled) {
+                    background-color: #1c2430;
+                    border-color: #1c2430;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(35, 47, 62, 0.35);
+                }
+
+                .oauth-button--amazon:active:not(:disabled) {
                     transform: translateY(0);
                 }
 

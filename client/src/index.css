@@ -75,6 +75,10 @@
     /* Violet RGB pour rgb() */
     --color-accent: 219, 39, 119;
     /* Rose RGB pour rgb() */
+    --bg-card: 255, 255, 255;
+    /* Fond cartes/forms clair pour lisibilité */
+    --text: 31, 41, 55;
+    /* Texte sombre pour surfaces claires */
     --bg-overlay: rgba(0, 0, 0, 0.85);
     /* Overlay sombre pour modals */
     --text-on-overlay: #FFFFFF;
@@ -209,6 +213,8 @@ h2 {
 
     --shadow: rgba(139, 92, 246, 0.2);
     --shadow-lg: rgba(139, 92, 246, 0.3);
+    --bg-card: 30, 41, 59;
+    --text: 243, 232, 255;
 }
 
 /* === THÈME: ÉMERAUDE === */
@@ -532,9 +538,10 @@ h2 {
 
     /* Glass morphism effect */
     .glass {
-        background-color: rgba(var(--bg-card), 0.6);
-        backdrop-filter: blur(44px);
-        border: 1px solid rgba(var(--border), 0.5);
+        background-color: rgba(var(--bg-card), 0.92);
+        backdrop-filter: blur(28px);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        color: var(--text-primary);
     }
 
     .glass-hover {
@@ -587,9 +594,9 @@ h2 {
 
     /* Card styles */
     .card {
-        background-color: rgba(var(--bg-card), 0.6);
-        backdrop-filter: blur(44px);
-        border: 1px solid rgba(var(--border), 0.5);
+        background-color: rgba(var(--bg-card), 0.9);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(0, 0, 0, 0.08);
         border-radius: 1rem;
         padding: 1.5rem;
         transition: all 300ms;
