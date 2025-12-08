@@ -325,6 +325,3 @@ if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
 } else {
     console.log('[passport] Facebook OAuth not configured')
 }
-console.log('[passport] Facebook OAuth not configured');
-}
-*/
