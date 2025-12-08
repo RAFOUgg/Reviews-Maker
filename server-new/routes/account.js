@@ -40,6 +40,20 @@ router.get('/info', asyncHandler(async (req, res) => {
 router.get('/types', (req, res) => {
     const types = [
         {
+            type: ACCOUNT_TYPES.BETA_TESTER,
+            name: 'Beta testeur',
+            description: 'Accès complet à toutes les fonctionnalités pendant la bêta',
+            price: 0,
+            features: [
+                'Toutes les fonctionnalités activées',
+                'Exports HD et 4K',
+                'Galeries publiques et privées',
+                'Support prioritaire pendant la bêta',
+            ],
+            requiresSubscription: false,
+            disabled: false,
+        },
+        {
             type: ACCOUNT_TYPES.CONSUMER,
             name: 'Consommateur',
             description: 'Créez et gérez vos reviews personnelles',

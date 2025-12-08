@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 const ACCOUNT_CHOICES = [
+    { id: 'beta_tester', label: 'Beta testeur', desc: 'Accès complet pendant la bêta', disabled: false },
     { id: 'consumer', label: 'Consommateur', desc: 'Accès complet, création et export', disabled: false },
     { id: 'influencer_basic', label: 'Influenceur Basic', desc: 'Branding personnel Orchard (bientôt)', disabled: false },
     { id: 'influencer_pro', label: 'Influenceur Pro', desc: 'Fonctions pro avancées (bientôt)', disabled: false },
@@ -15,7 +16,7 @@ export default function AccountChoicePage() {
 
     const handleContinue = () => {
         localStorage.setItem('preferredAccountType', selectedType)
-        if (selectedType === 'consumer') {
+        if (selectedType === 'consumer' || selectedType === 'beta_tester') {
             localStorage.setItem('accountTypeSelected', 'true')
         } else {
             localStorage.removeItem('accountTypeSelected')

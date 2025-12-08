@@ -11,6 +11,7 @@ const prisma = new PrismaClient();
  * Types de comptes disponibles
  */
 export const ACCOUNT_TYPES = {
+    BETA_TESTER: 'beta_tester',
     CONSUMER: 'consumer',
     INFLUENCER_BASIC: 'influencer_basic',
     INFLUENCER_PRO: 'influencer_pro',
@@ -50,6 +51,7 @@ export function getUserAccountType(user) {
     const roles = parseRoles(user.roles);
 
     // Ordre de priorité décroissant
+    if (roles.includes('beta_tester')) return ACCOUNT_TYPES.BETA_TESTER;
     if (roles.includes('merchant')) return ACCOUNT_TYPES.MERCHANT;
     if (roles.includes('producer')) return ACCOUNT_TYPES.PRODUCER;
     if (roles.includes('influencer_pro')) return ACCOUNT_TYPES.INFLUENCER_PRO;
@@ -67,6 +69,11 @@ export function getUserAccountType(user) {
 export function canUpgradeAccountType(user, targetType) {
     const currentType = getUserAccountType(user);
     const roles = parseRoles(user.roles);
+
+    // Profil bêta : accès complet pendant la bêta, transitions toujours autorisées
+    if (targetType === ACCOUNT_TYPES.BETA_TESTER || currentType === ACCOUNT_TYPES.BETA_TESTER) {
+        return { allowed: true };
+    }
 
     // Consumer peut tout devenir
     if (currentType === ACCOUNT_TYPES.CONSUMER) {

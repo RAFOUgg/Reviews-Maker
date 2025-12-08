@@ -1,10 +1,11 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import OAuthButtons from '../components/auth/OAuthButtons'
 import { authService } from '../services/apiService'
 import { useStore } from '../store/useStore'
 
 const ACCOUNT_CHOICES = [
+    { id: 'beta_tester', label: 'Beta testeur', desc: 'Accès complet pendant la bêta', disabled: false },
     { id: 'consumer', label: 'Consommateur', desc: 'Accès complet, création et export', disabled: false },
     { id: 'influencer_basic', label: 'Influenceur Basic', desc: 'Branding personnel Orchard (bientôt)', disabled: false },
     { id: 'influencer_pro', label: 'Influenceur Pro', desc: 'Fonctions pro avancées (bientôt)', disabled: false },
@@ -23,10 +24,17 @@ export default function LoginPage() {
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
+    useEffect(() => {
+        const preferred = localStorage.getItem('preferredAccountType')
+        if (!preferred) {
+            navigate('/choose-account', { replace: true })
+        }
+    }, [navigate])
+
     const handleProviderClick = (provider) => {
         const type = selectedType || 'consumer'
         localStorage.setItem('preferredAccountType', type)
-        if (type === 'consumer') {
+        if (type === 'consumer' || type === 'beta_tester') {
             localStorage.setItem('accountTypeSelected', 'true')
         } else {
             localStorage.removeItem('accountTypeSelected')
@@ -54,7 +62,7 @@ export default function LoginPage() {
                 payload.username = username || email.split('@')[0]
                 payload.accountType = selectedType
                 localStorage.setItem('preferredAccountType', selectedType)
-                if (selectedType === 'consumer') {
+                if (selectedType === 'consumer' || selectedType === 'beta_tester') {
                     localStorage.setItem('accountTypeSelected', 'true')
                 } else {
                     localStorage.removeItem('accountTypeSelected')

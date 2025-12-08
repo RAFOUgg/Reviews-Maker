@@ -26,13 +26,13 @@ export default function HeroSection({ user, isAuthenticated }) {
                 </div>
             ) : (
                 <Link
-                    to="/login"
+                    to="/choose-account"
                     className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white text-gray-900 font-semibold shadow-lg hover:shadow-xl transition-shadow"
                 >
                     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm0 2c-3.31 0-6 2.02-6 4.5 0 .28.22.5.5.5h11c.28 0 .5-.22.5-.5C18 16.02 15.31 14 12 14Z" />
                     </svg>
-                    Connexion
+                    Choisir mon compte
                 </Link>
             )}
         </div>
