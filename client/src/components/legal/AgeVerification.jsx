@@ -3,10 +3,73 @@
  * Affichée au premier accès pour vérifier date de naissance + pays
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+
+const DEFAULT_COUNTRIES = [
+    { code: 'CA', minAge: 18 },
+    { code: 'US', minAge: 21 },
+    { code: 'FR', minAge: 18 },
+    { code: 'ES', minAge: 18 },
+    { code: 'NL', minAge: 18 },
+    { code: 'DE', minAge: 18 },
+    { code: 'PT', minAge: 18 },
+    { code: 'UY', minAge: 18 },
+    { code: 'MX', minAge: 18 },
+];
+
+const DEFAULT_US_STATES = [
+    { code: 'AK', name: 'Alaska' },
+    { code: 'AZ', name: 'Arizona' },
+    { code: 'CA', name: 'Californie' },
+    { code: 'CO', name: 'Colorado' },
+    { code: 'CT', name: 'Connecticut' },
+    { code: 'DE', name: 'Delaware' },
+    { code: 'IL', name: 'Illinois' },
+    { code: 'ME', name: 'Maine' },
+    { code: 'MD', name: 'Maryland' },
+    { code: 'MA', name: 'Massachusetts' },
+    { code: 'MI', name: 'Michigan' },
+    { code: 'MN', name: 'Minnesota' },
+    { code: 'MO', name: 'Missouri' },
+    { code: 'MT', name: 'Montana' },
+    { code: 'NJ', name: 'New Jersey' },
+    { code: 'NM', name: 'Nouveau-Mexique' },
+    { code: 'NV', name: 'Nevada' },
+    { code: 'NY', name: 'New York' },
+    { code: 'OH', name: 'Ohio' },
+    { code: 'OR', name: 'Oregon' },
+    { code: 'RI', name: 'Rhode Island' },
+    { code: 'VT', name: 'Vermont' },
+    { code: 'VA', name: 'Virginie' },
+    { code: 'WA', name: 'Washington' },
+];
+
+const COUNTRY_LABELS = {
+    CA: 'Canada',
+    US: 'États-Unis',
+    FR: 'France',
+    ES: 'Espagne',
+    NL: 'Pays-Bas',
+    DE: 'Allemagne',
+    PT: 'Portugal',
+    UY: 'Uruguay',
+    MX: 'Mexique',
+    CH: 'Suisse',
+    LU: 'Luxembourg',
+    MT: 'Malte',
+    IL: 'Israël',
+    TH: 'Thaïlande',
+    AU: 'Australie',
+    NZ: 'Nouvelle-Zélande',
+    ZA: 'Afrique du Sud',
+};
+
+const REGION_LABELS = {
+    US: DEFAULT_US_STATES.reduce((acc, state) => ({ ...acc, [state.code]: state.name }), {}),
+};
 
 const AgeVerification = ({ isOpen, onVerified, onReject }) => {
     const { t } = useTranslation();
@@ -15,38 +78,48 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
     const [region, setRegion] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [allowedCountries, setAllowedCountries] = useState(DEFAULT_COUNTRIES);
+    const [allowedRegions, setAllowedRegions] = useState({ US: DEFAULT_US_STATES });
+
+    useEffect(() => {
+        const fetchAllowedCountries = async () => {
+            try {
+                const response = await fetch('/api/legal/countries', { credentials: 'include' });
+                if (!response.ok) return;
+                const data = await response.json();
+
+                const normalizedCountries = data.countries.map((c) => ({
+                    code: c.code,
+                    minAge: c.minimumAge || 18,
+                    name: COUNTRY_LABELS[c.code] || c.code,
+                }));
+
+                const regions = {};
+                data.countries.forEach((c) => {
+                    if (Array.isArray(c.regions) && c.regions.length > 0) {
+                        regions[c.code] = c.regions.map((r) => ({
+                            code: r.code,
+                            name: (REGION_LABELS[c.code] && REGION_LABELS[c.code][r.code]) || r.code,
+                        }));
+                    }
+                });
+
+                setAllowedCountries(normalizedCountries);
+                setAllowedRegions((prev) => ({ ...prev, ...regions }));
+            } catch (err) {
+                console.warn('Impossible de charger les pays autorisés, fallback local utilisé:', err);
+            }
+        };
+
+        if (isOpen) {
+            fetchAllowedCountries();
+        }
+    }, [isOpen]);
 
     // UI helpers to enforce readable contrast on dark backgrounds
     const labelClasses = 'block text-sm font-semibold text-white mb-2';
     const inputClasses = 'w-full px-4 py-3 border border-gray-700 rounded-lg bg-gray-900 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-violet-500';
     const selectClasses = 'w-full px-4 py-3 border border-gray-700 rounded-lg bg-gray-900 text-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500';
-
-    // Liste des pays légaux (à synchroniser avec backend)
-    const LEGAL_COUNTRIES = [
-        { code: 'CA', name: t('countries.CA', 'Canada'), minAge: 18 },
-        { code: 'US', name: t('countries.US', 'États-Unis'), minAge: 21 },
-        { code: 'FR', name: t('countries.FR', 'France'), minAge: 18 },
-        { code: 'ES', name: t('countries.ES', 'Espagne'), minAge: 18 },
-        { code: 'NL', name: t('countries.NL', 'Pays-Bas'), minAge: 18 },
-        { code: 'DE', name: t('countries.DE', 'Allemagne'), minAge: 18 },
-        { code: 'PT', name: t('countries.PT', 'Portugal'), minAge: 18 },
-        { code: 'UY', name: t('countries.UY', 'Uruguay'), minAge: 18 },
-        { code: 'MX', name: t('countries.MX', 'Mexique'), minAge: 18 },
-    ];
-
-    // États US légaux
-    const US_STATES = [
-        { code: 'CA', name: 'Californie' },
-        { code: 'CO', name: 'Colorado' },
-        { code: 'WA', name: 'Washington' },
-        { code: 'OR', name: 'Oregon' },
-        { code: 'NV', name: 'Nevada' },
-        { code: 'AZ', name: 'Arizona' },
-        { code: 'NY', name: 'New York' },
-        { code: 'IL', name: 'Illinois' },
-        { code: 'MA', name: 'Massachusetts' },
-        { code: 'MI', name: 'Michigan' },
-    ];
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -150,9 +223,9 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
                             required
                         >
                             <option value="">{t('ageVerification.selectCountry', 'Sélectionnez un pays')}</option>
-                            {LEGAL_COUNTRIES.map(c => (
+                            {allowedCountries.map((c) => (
                                 <option key={c.code} value={c.code}>
-                                    {c.name} (min. {c.minAge} ans)
+                                    {t(`countries.${c.code}`, c.name || c.code)} (min. {c.minAge} ans)
                                 </option>
                             ))}
                         </select>
@@ -171,8 +244,8 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
                                 required
                             >
                                 <option value="">{t('ageVerification.selectState', 'Sélectionnez un état')}</option>
-                                {US_STATES.map(s => (
-                                    <option key={s.code} value={s.code}>{s.name}</option>
+                                {(allowedRegions.US || DEFAULT_US_STATES).map((s) => (
+                                    <option key={s.code} value={s.code}>{s.name || s.code}</option>
                                 ))}
                             </select>
                         </div>

@@ -4,7 +4,14 @@
 
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import { calculateLegalAge, getMinimumAge, isCountryAllowed, LEGAL_COUNTRIES } from '../config/legal.js';
+import {
+    calculateLegalAge,
+    getMinimumAge,
+    isCountryAllowed,
+    LEGAL_COUNTRIES,
+    US_LEGAL_STATES_21,
+    CA_PROVINCES_19,
+} from '../config/legal.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -213,10 +220,28 @@ router.get('/status', async (req, res) => {
  * Liste des pays autorisés avec âge minimum
  */
 router.get('/countries', (req, res) => {
-    const countries = LEGAL_COUNTRIES.map(code => ({
-        code,
-        minimumAge: getMinimumAge(code),
-    }));
+    const countries = LEGAL_COUNTRIES.map((code) => {
+        const base = {
+            code,
+            minimumAge: getMinimumAge(code),
+        };
+
+        if (code === 'US') {
+            base.regions = US_LEGAL_STATES_21.map((stateCode) => ({
+                code: stateCode,
+                minimumAge: getMinimumAge('US', stateCode),
+            }));
+        }
+
+        if (code === 'CA') {
+            base.regions = CA_PROVINCES_19.map((provinceCode) => ({
+                code: provinceCode,
+                minimumAge: getMinimumAge('CA', provinceCode),
+            }));
+        }
+
+        return base;
+    });
 
     res.json({
         countries,

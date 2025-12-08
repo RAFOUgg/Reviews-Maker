@@ -6,12 +6,13 @@
 const LEGAL_COUNTRIES = [
     'CA', // Canada - 18+ (19+ selon provinces)
     'US', // États-Unis - 21+ (États légaux uniquement)
-    'UY', // Uruguay - 18+
-    'MX', // Mexique - 18+
-    'NL', // Pays-Bas - 18+
+    'FR', // France - 18+
     'ES', // Espagne - 18+
-    'PT', // Portugal - 18+
     'DE', // Allemagne - 18+ (usage médical)
+    'PT', // Portugal - 18+
+    'NL', // Pays-Bas - 18+
+    'MX', // Mexique - 18+
+    'UY', // Uruguay - 18+
     'CH', // Suisse - 18+
     'LU', // Luxembourg - 18+
     'MT', // Malte - 18+
