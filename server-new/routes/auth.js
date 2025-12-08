@@ -242,9 +242,8 @@ router.get('/google/callback', (req, res, next) => {
 })
 
 // =============================================================================
-// Apple OAuth Routes (commented until Apple strategy configured)
+// Apple OAuth Routes
 // =============================================================================
-/*
 router.get('/apple', (req, res, next) => {
     console.log(`[AUTH-DBG] Start apple route - method: ${req.method} originalUrl: ${req.originalUrl}`)
     return passport.authenticate('apple')(req, res, next)
@@ -262,12 +261,10 @@ router.post('/apple/callback', (req, res, next) => {
         res.redirect(`${process.env.FRONTEND_URL}/auth/callback`)
     })
 })
-*/
 
 // =============================================================================
-// Amazon OAuth Routes (commented until Amazon strategy configured)
+// Amazon OAuth Routes
 // =============================================================================
-/*
 router.get('/amazon', (req, res, next) => {
     console.log(`[AUTH-DBG] Start amazon route - method: ${req.method} originalUrl: ${req.originalUrl}`)
     return passport.authenticate('amazon')(req, res, next)
@@ -285,12 +282,10 @@ router.get('/amazon/callback', (req, res, next) => {
         res.redirect(`${process.env.FRONTEND_URL}/auth/callback`)
     })
 })
-*/
 
 // =============================================================================
-// Facebook OAuth Routes (commented until Facebook strategy configured)
+// Facebook OAuth Routes
 // =============================================================================
-/*
 router.get('/facebook', (req, res, next) => {
     console.log(`[AUTH-DBG] Start facebook route - method: ${req.method} originalUrl: ${req.originalUrl}`)
     return passport.authenticate('facebook', { scope: ['email'] })(req, res, next)
@@ -308,6 +303,5 @@ router.get('/facebook/callback', (req, res, next) => {
         res.redirect(`${process.env.FRONTEND_URL}/auth/callback`)
     })
 })
-*/
 
 export default router

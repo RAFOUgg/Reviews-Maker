@@ -1,9 +1,9 @@
 import passport from 'passport'
 import { Strategy as DiscordStrategy } from 'passport-discord'
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
-// import { Strategy as AppleStrategy } from 'passport-apple'
-// import { Strategy as AmazonStrategy } from 'passport-amazon'
-// import { Strategy as FacebookStrategy } from 'passport-facebook'
+import { Strategy as AppleStrategy } from 'passport-apple'
+import { Strategy as AmazonStrategy } from 'passport-amazon'
+import { Strategy as FacebookStrategy } from 'passport-facebook'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
@@ -154,15 +154,14 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 }
 
 // =============================================================================
-// Apple OAuth Strategy (commented until passport-apple installed properly)
+// Apple OAuth Strategy
 // =============================================================================
-/*
-if (process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPLE_KEY_ID) {
+if (process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPLE_KEY_ID && process.env.APPLE_PRIVATE_KEY) {
     const appleCallback = process.env.APPLE_REDIRECT_URI ||
-        `${process.env.FRONTEND_URL}${process.env.BASE_PATH || ''}/api/auth/apple/callback`;
+        `${process.env.FRONTEND_URL}${process.env.BASE_PATH || ''}/api/auth/apple/callback`
 
-    console.log('[passport] Apple ClientId set:', process.env.APPLE_CLIENT_ID ? 'YES' : 'NO');
-    console.log('[passport] Apple CallbackURL:', appleCallback);
+    console.log('[passport] Apple ClientId set:', process.env.APPLE_CLIENT_ID ? 'YES' : 'NO')
+    console.log('[passport] Apple CallbackURL:', appleCallback)
 
     passport.use(new AppleStrategy({
         clientID: process.env.APPLE_CLIENT_ID,
@@ -175,52 +174,53 @@ if (process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPL
         try {
             let user = await prisma.user.findUnique({
                 where: { appleId: profile.id }
-            });
+            })
+
+            const primaryEmail = profile.email || (profile.emails && profile.emails[0] && profile.emails[0].value) || null
+            const displayName = profile.name ? `${profile.name.firstName || ''} ${profile.name.lastName || ''}`.trim() : null
 
             if (!user) {
-                const existingUser = await prisma.user.findUnique({
-                    where: { email: profile.email }
-                });
+                const existingUser = primaryEmail ? await prisma.user.findUnique({
+                    where: { email: primaryEmail }
+                }) : null
 
                 if (existingUser) {
                     user = await prisma.user.update({
                         where: { id: existingUser.id },
                         data: { appleId: profile.id }
-                    });
-                    console.log('✅ Apple account linked to existing user:', user.username);
+                    })
+                    console.log('✅ Apple account linked to existing user:', user.username)
                 } else {
                     user = await prisma.user.create({
                         data: {
                             appleId: profile.id,
-                            username: profile.name ? `${profile.name.firstName} ${profile.name.lastName}` : profile.email.split('@')[0],
-                            email: profile.email
+                            username: displayName || (primaryEmail ? primaryEmail.split('@')[0] : `apple-${profile.id}`),
+                            email: primaryEmail
                         }
-                    });
-                    console.log('✅ New user created via Apple:', user.username);
+                    })
+                    console.log('✅ New user created via Apple:', user.username)
                 }
             }
 
-            return done(null, user);
+            return done(null, user)
         } catch (error) {
-            console.error('Error in Apple strategy:', error);
-            return done(error, null);
+            console.error('Error in Apple strategy:', error)
+            return done(error, null)
         }
-    }));
+    }))
 } else {
-    console.log('[passport] Apple OAuth not configured');
+    console.log('[passport] Apple OAuth not configured')
 }
-*/
 
 // =============================================================================
-// Amazon OAuth Strategy (commented until passport-amazon tested)
+// Amazon OAuth Strategy
 // =============================================================================
-/*
 if (process.env.AMAZON_CLIENT_ID && process.env.AMAZON_CLIENT_SECRET) {
     const amazonCallback = process.env.AMAZON_REDIRECT_URI ||
-        `${process.env.FRONTEND_URL}${process.env.BASE_PATH || ''}/api/auth/amazon/callback`;
+        `${process.env.FRONTEND_URL}${process.env.BASE_PATH || ''}/api/auth/amazon/callback`
 
-    console.log('[passport] Amazon ClientId set:', process.env.AMAZON_CLIENT_ID ? 'YES' : 'NO');
-    console.log('[passport] Amazon CallbackURL:', amazonCallback);
+    console.log('[passport] Amazon ClientId set:', process.env.AMAZON_CLIENT_ID ? 'YES' : 'NO')
+    console.log('[passport] Amazon CallbackURL:', amazonCallback)
 
     passport.use(new AmazonStrategy({
         clientID: process.env.AMAZON_CLIENT_ID,
@@ -231,98 +231,100 @@ if (process.env.AMAZON_CLIENT_ID && process.env.AMAZON_CLIENT_SECRET) {
         try {
             let user = await prisma.user.findUnique({
                 where: { amazonId: profile.id }
-            });
+            })
+
+            const primaryEmail = profile.emails && profile.emails[0] ? profile.emails[0].value : null
+            const displayName = profile.displayName || (primaryEmail ? primaryEmail.split('@')[0] : null)
 
             if (!user) {
-                const existingUser = await prisma.user.findUnique({
-                    where: { email: profile.emails[0].value }
-                });
+                const existingUser = primaryEmail ? await prisma.user.findUnique({
+                    where: { email: primaryEmail }
+                }) : null
 
                 if (existingUser) {
                     user = await prisma.user.update({
                         where: { id: existingUser.id },
                         data: { amazonId: profile.id }
-                    });
-                    console.log('✅ Amazon account linked to existing user:', user.username);
+                    })
+                    console.log('✅ Amazon account linked to existing user:', user.username)
                 } else {
                     user = await prisma.user.create({
                         data: {
                             amazonId: profile.id,
-                            username: profile.displayName || profile.emails[0].value.split('@')[0],
-                            email: profile.emails[0].value
+                            username: displayName || `amazon-${profile.id}`,
+                            email: primaryEmail
                         }
-                    });
-                    console.log('✅ New user created via Amazon:', user.username);
+                    })
+                    console.log('✅ New user created via Amazon:', user.username)
                 }
             }
 
-            return done(null, user);
+            return done(null, user)
         } catch (error) {
-            console.error('Error in Amazon strategy:', error);
-            return done(error, null);
+            console.error('Error in Amazon strategy:', error)
+            return done(error, null)
         }
-    }));
+    }))
 } else {
-    console.log('[passport] Amazon OAuth not configured');
+    console.log('[passport] Amazon OAuth not configured')
 }
-*/
 
 // =============================================================================
-// Facebook OAuth Strategy (commented until passport-facebook tested)
+// Facebook OAuth Strategy
 // =============================================================================
-/*
-if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
-    const facebookCallback = process.env.FACEBOOK_REDIRECT_URI || 
-        `${process.env.FRONTEND_URL}${process.env.BASE_PATH || ''}/api/auth/facebook/callback`;
-    
-    console.log('[passport] Facebook AppId set:', process.env.FACEBOOK_APP_ID ? 'YES' : 'NO');
-    console.log('[passport] Facebook CallbackURL:', facebookCallback);
+if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
+    const facebookCallback = process.env.FACEBOOK_REDIRECT_URI ||
+        `${process.env.FRONTEND_URL}${process.env.BASE_PATH || ''}/api/auth/facebook/callback`
+
+    console.log('[passport] Facebook ClientId set:', process.env.FACEBOOK_CLIENT_ID ? 'YES' : 'NO')
+    console.log('[passport] Facebook CallbackURL:', facebookCallback)
 
     passport.use(new FacebookStrategy({
-        clientID: process.env.FACEBOOK_APP_ID,
-        clientSecret: process.env.FACEBOOK_APP_SECRET,
+        clientID: process.env.FACEBOOK_CLIENT_ID,
+        clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
         callbackURL: facebookCallback,
-        profileFields: ['id', 'displayName', 'email', 'picture']
+        profileFields: ['id', 'emails', 'name', 'picture.type(large)']
     }, async (accessToken, refreshToken, profile, done) => {
         try {
             let user = await prisma.user.findUnique({
                 where: { facebookId: profile.id }
-            });
+            })
+
+            const email = profile.emails && profile.emails[0] ? profile.emails[0].value : null
+            const displayName = profile.displayName || (email ? email.split('@')[0] : `fb-${profile.id}`)
 
             if (!user) {
-                const existingUser = await prisma.user.findUnique({
-                    where: { email: profile.emails[0].value }
-                });
+                const existingUser = email ? await prisma.user.findUnique({
+                    where: { email }
+                }) : null
 
                 if (existingUser) {
                     user = await prisma.user.update({
                         where: { id: existingUser.id },
-                        data: {
-                            facebookId: profile.id,
-                            avatar: profile.photos && profile.photos[0] ? profile.photos[0].value : existingUser.avatar
-                        }
-                    });
-                    console.log('✅ Facebook account linked to existing user:', user.username);
+                        data: { facebookId: profile.id }
+                    })
+                    console.log('✅ Facebook account linked to existing user:', user.username)
                 } else {
                     user = await prisma.user.create({
                         data: {
                             facebookId: profile.id,
-                            username: profile.displayName || profile.emails[0].value.split('@')[0],
-                            email: profile.emails[0].value,
-                            avatar: profile.photos && profile.photos[0] ? profile.photos[0].value : null
+                            username: displayName,
+                            email
                         }
-                    });
-                    console.log('✅ New user created via Facebook:', user.username);
+                    })
+                    console.log('✅ New user created via Facebook:', user.username)
                 }
             }
 
-            return done(null, user);
+            return done(null, user)
         } catch (error) {
-            console.error('Error in Facebook strategy:', error);
-            return done(error, null);
+            console.error('Error in Facebook strategy:', error)
+            return done(error, null)
         }
-    }));
+    }))
 } else {
-    console.log('[passport] Facebook OAuth not configured');
+    console.log('[passport] Facebook OAuth not configured')
+}
+console.log('[passport] Facebook OAuth not configured');
 }
 */
