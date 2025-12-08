@@ -26,7 +26,7 @@ export default function HeroSection({ user, isAuthenticated }) {
                 </div>
             ) : (
                 <Link
-                    to="/choose-account"
+                    to="/login"
                     className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white text-gray-900 font-semibold shadow-lg hover:shadow-xl transition-shadow"
                 >
                     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

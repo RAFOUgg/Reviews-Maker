@@ -23,7 +23,7 @@ export default function Layout() {
                         <div className="flex items-center space-x-6">
                             {!isAuthenticated ? (
                                 <Link
-                                    to="/choose-account"
+                                    to="/login"
                                     className="btn btn-secondary px-4 py-2 font-semibold"
                                 >
                                     Connexion
