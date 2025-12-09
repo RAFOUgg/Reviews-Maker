@@ -1,14 +1,32 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import PropTypes from 'prop-types'
 
 /**
  * Composant de boutons OAuth pour connexion multi-providers
- * Phase 2 - Supporte Discord (opérationnel) et Google (préparé)
+ * Affiche uniquement les providers configurés côté serveur
  */
 export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
     const { t } = useTranslation()
     const [loadingProvider, setLoadingProvider] = useState(null)
+    const [enabledProviders, setEnabledProviders] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    // Récupérer la liste des providers configurés
+    useEffect(() => {
+        fetch('/api/auth/providers')
+            .then(res => res.json())
+            .then(data => {
+                setEnabledProviders(data.providers || [])
+                setLoading(false)
+            })
+            .catch(err => {
+                console.error('Erreur lors de la récupération des providers OAuth:', err)
+                // Par défaut, afficher Discord si l'appel échoue
+                setEnabledProviders(['discord'])
+                setLoading(false)
+            })
+    }, [])
 
     const handleLogin = (provider, url) => {
         try {
@@ -22,10 +40,28 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
         }
     }
 
+    // Afficher un loader pendant le chargement
+    if (loading) {
+        return (
+            <div className={`oauth-buttons ${className}`}>
+                <div className="text-center text-dark-muted">Chargement des options de connexion...</div>
+            </div>
+        )
+    }
+
+    // Ne rien afficher si aucun provider n'est configuré
+    if (enabledProviders.length === 0) {
+        return (
+            <div className={`oauth-buttons ${className}`}>
+                <div className="text-center text-dark-muted text-sm">Aucun fournisseur OAuth configuré. Utilisez la connexion email.</div>
+            </div>
+        )
+    }
+
     return (
         <div className={`oauth-buttons ${className}`}>
-            {/* Bouton Discord - Opérationnel */}
-            <button
+            {/* Bouton Discord */}
+            {enabledProviders.includes('discord') && <button
                 type="button"
                 onClick={() => handleLogin('discord', '/api/auth/discord')}
                 disabled={loadingProvider !== null}
@@ -51,10 +87,10 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                         ? t('auth.connecting', 'Connexion...')
                         : t('auth.loginWithDiscord', 'Se connecter avec Discord')}
                 </span>
-            </button>
+            </button>}
 
-            {/* Bouton Google - Préparé (Phase 2) */}
-            <button
+            {/* Bouton Google */}
+            {enabledProviders.includes('google') && <button
                 type="button"
                 onClick={() => handleLogin('google', '/api/auth/google')}
                 disabled={loadingProvider !== null}
@@ -83,10 +119,10 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                         ? t('auth.connecting', 'Connexion...')
                         : t('auth.loginWithGoogle', 'Se connecter avec Google')}
                 </span>
-            </button>
+            </button>}
 
             {/* Bouton Apple */}
-            <button
+            {enabledProviders.includes('apple') && <button
                 type="button"
                 onClick={() => handleLogin('apple', '/api/auth/apple')}
                 disabled={loadingProvider !== null}
@@ -105,10 +141,10 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                         ? t('auth.connecting', 'Connexion...')
                         : t('auth.loginWithApple', 'Se connecter avec Apple')}
                 </span>
-            </button>
+            </button>}
 
             {/* Bouton Facebook */}
-            <button
+            {enabledProviders.includes('facebook') && <button
                 type="button"
                 onClick={() => handleLogin('facebook', '/api/auth/facebook')}
                 disabled={loadingProvider !== null}
@@ -127,10 +163,10 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                         ? t('auth.connecting', 'Connexion...')
                         : t('auth.loginWithFacebook', 'Se connecter avec Facebook')}
                 </span>
-            </button>
+            </button>}
 
             {/* Bouton Amazon */}
-            <button
+            {enabledProviders.includes('amazon') && <button
                 type="button"
                 onClick={() => handleLogin('amazon', '/api/auth/amazon')}
                 disabled={loadingProvider !== null}
@@ -149,7 +185,7 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                         ? t('auth.connecting', 'Connexion...')
                         : t('auth.loginWithAmazon', 'Se connecter avec Amazon')}
                 </span>
-            </button>
+            </button>}
 
             <style jsx>{`
                 .oauth-buttons {

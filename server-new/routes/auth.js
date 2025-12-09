@@ -7,6 +7,33 @@ import { hashPassword, verifyPassword } from '../services/password.js'
 
 const router = express.Router()
 
+// =============================================================================
+// OAuth Providers Configuration Endpoint
+// =============================================================================
+// GET /api/auth/providers - Returns list of configured OAuth providers
+router.get('/providers', (req, res) => {
+    const providers = []
+
+    // Check which providers are configured
+    if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
+        providers.push('discord')
+    }
+    if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+        providers.push('google')
+    }
+    if (process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPLE_KEY_ID && process.env.APPLE_PRIVATE_KEY) {
+        providers.push('apple')
+    }
+    if (process.env.AMAZON_CLIENT_ID && process.env.AMAZON_CLIENT_SECRET) {
+        providers.push('amazon')
+    }
+    if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
+        providers.push('facebook')
+    }
+
+    res.json({ providers })
+})
+
 function buildAvatar(user) {
     if (user.avatar && user.discordId) {
         return `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png`
