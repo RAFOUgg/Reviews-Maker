@@ -14,20 +14,29 @@ const router = express.Router()
 router.get('/providers', (req, res) => {
     const providers = []
 
+    // Helper to check if env var is properly set (not empty, not placeholder)
+    const isConfigured = (value) => {
+        if (!value) return false
+        // Reject common placeholder patterns
+        if (value.includes('(') || value.includes('your_') || value.includes('xxxxx') || value === '...') return false
+        return value.trim().length > 0
+    }
+
     // Check which providers are configured
-    if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
+    if (isConfigured(process.env.DISCORD_CLIENT_ID) && isConfigured(process.env.DISCORD_CLIENT_SECRET)) {
         providers.push('discord')
     }
-    if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    if (isConfigured(process.env.GOOGLE_CLIENT_ID) && isConfigured(process.env.GOOGLE_CLIENT_SECRET)) {
         providers.push('google')
     }
-    if (process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPLE_KEY_ID && process.env.APPLE_PRIVATE_KEY) {
+    if (isConfigured(process.env.APPLE_CLIENT_ID) && isConfigured(process.env.APPLE_TEAM_ID) && 
+        isConfigured(process.env.APPLE_KEY_ID) && isConfigured(process.env.APPLE_PRIVATE_KEY)) {
         providers.push('apple')
     }
-    if (process.env.AMAZON_CLIENT_ID && process.env.AMAZON_CLIENT_SECRET) {
+    if (isConfigured(process.env.AMAZON_CLIENT_ID) && isConfigured(process.env.AMAZON_CLIENT_SECRET)) {
         providers.push('amazon')
     }
-    if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
+    if (isConfigured(process.env.FACEBOOK_CLIENT_ID) && isConfigured(process.env.FACEBOOK_CLIENT_SECRET)) {
         providers.push('facebook')
     }
 
