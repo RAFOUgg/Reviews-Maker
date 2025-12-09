@@ -6,16 +6,16 @@ import { useStore } from '../store/useStore'
 
 const ACCOUNT_CHOICES = [
     { id: 'beta_tester', label: 'Beta testeur', desc: 'Accès complet pendant la bêta', disabled: false },
-    { id: 'consumer', label: 'Consommateur', desc: 'Accès complet, création et export', disabled: false },
-    { id: 'influencer_basic', label: 'Influenceur Basic', desc: 'Branding personnel Orchard (bientôt)', disabled: false },
-    { id: 'influencer_pro', label: 'Influenceur Pro', desc: 'Fonctions pro avancées (bientôt)', disabled: false },
+    { id: 'consumer', label: 'Consommateur', desc: 'Accès complet, création et export (bientôt)', disabled: true },
+    { id: 'influencer_basic', label: 'Influenceur Basic', desc: 'Branding personnel Orchard (bientôt)', disabled: true },
+    { id: 'influencer_pro', label: 'Influenceur Pro', desc: 'Fonctions pro avancées (bientôt)', disabled: true },
     { id: 'producer', label: 'Producteur', desc: 'Compte pro bientôt disponible (achat désactivé)', disabled: true },
 ]
 
 export default function LoginPage() {
     const navigate = useNavigate()
     const setUser = useStore((state) => state.setUser)
-    const initial = useMemo(() => localStorage.getItem('preferredAccountType') || 'consumer', [])
+    const initial = useMemo(() => localStorage.getItem('preferredAccountType') || 'beta_tester', [])
     const [selectedType, setSelectedType] = useState(initial)
     const [mode, setMode] = useState('login') // login | signup
     const [email, setEmail] = useState('')

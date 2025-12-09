@@ -49,23 +49,17 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
         )
     }
 
-    // Ne rien afficher si aucun provider n'est configuré
-    if (enabledProviders.length === 0) {
-        return (
-            <div className={`oauth-buttons ${className}`}>
-                <div className="text-center text-dark-muted text-sm">Aucun fournisseur OAuth configuré. Utilisez la connexion email.</div>
-            </div>
-        )
-    }
+    // Tous les providers à afficher (priorité: Discord, Google, puis autres désactivés)
+    const allProviders = ['discord', 'google', 'apple', 'amazon', 'facebook']
 
     return (
         <div className={`oauth-buttons ${className}`}>
             {/* Bouton Discord */}
-            {enabledProviders.includes('discord') && <button
+            <button
                 type="button"
-                onClick={() => handleLogin('discord', '/api/auth/discord')}
-                disabled={loadingProvider !== null}
-                className="oauth-button oauth-button--discord"
+                onClick={() => enabledProviders.includes('discord') && handleLogin('discord', '/api/auth/discord')}
+                disabled={!enabledProviders.includes('discord') || loadingProvider !== null}
+                className={`oauth-button oauth-button--discord ${!enabledProviders.includes('discord') ? 'oauth-button--disabled' : ''}`}
                 aria-label={t('auth.loginWithDiscord', 'Se connecter avec Discord')}
             >
                 {loadingProvider === 'discord' ? (
@@ -90,11 +84,11 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
             </button>}
 
             {/* Bouton Google */}
-            {enabledProviders.includes('google') && <button
+            <button
                 type="button"
-                onClick={() => handleLogin('google', '/api/auth/google')}
-                disabled={loadingProvider !== null}
-                className="oauth-button oauth-button--google"
+                onClick={() => enabledProviders.includes('google') && handleLogin('google', '/api/auth/google')}
+                disabled={!enabledProviders.includes('google') || loadingProvider !== null}
+                className={`oauth-button oauth-button--google ${!enabledProviders.includes('google') ? 'oauth-button--disabled' : ''}`}
                 aria-label={t('auth.loginWithGoogle', 'Se connecter avec Google')}
             >
                 {loadingProvider === 'google' ? (
@@ -122,11 +116,11 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
             </button>}
 
             {/* Bouton Apple */}
-            {enabledProviders.includes('apple') && <button
+            <button
                 type="button"
-                onClick={() => handleLogin('apple', '/api/auth/apple')}
-                disabled={loadingProvider !== null}
-                className="oauth-button oauth-button--apple"
+                onClick={() => enabledProviders.includes('apple') && handleLogin('apple', '/api/auth/apple')}
+                disabled={!enabledProviders.includes('apple') || loadingProvider !== null}
+                className={`oauth-button oauth-button--apple ${!enabledProviders.includes('apple') ? 'oauth-button--disabled' : ''}`}
                 aria-label={t('auth.loginWithApple', 'Se connecter avec Apple')}
             >
                 {loadingProvider === 'apple' ? (
@@ -144,11 +138,11 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
             </button>}
 
             {/* Bouton Facebook */}
-            {enabledProviders.includes('facebook') && <button
+            <button
                 type="button"
-                onClick={() => handleLogin('facebook', '/api/auth/facebook')}
-                disabled={loadingProvider !== null}
-                className="oauth-button oauth-button--facebook"
+                onClick={() => enabledProviders.includes('facebook') && handleLogin('facebook', '/api/auth/facebook')}
+                disabled={!enabledProviders.includes('facebook') || loadingProvider !== null}
+                className={`oauth-button oauth-button--facebook ${!enabledProviders.includes('facebook') ? 'oauth-button--disabled' : ''}`}
                 aria-label={t('auth.loginWithFacebook', 'Se connecter avec Facebook')}
             >
                 {loadingProvider === 'facebook' ? (
@@ -166,11 +160,11 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
             </button>}
 
             {/* Bouton Amazon */}
-            {enabledProviders.includes('amazon') && <button
+            <button
                 type="button"
-                onClick={() => handleLogin('amazon', '/api/auth/amazon')}
-                disabled={loadingProvider !== null}
-                className="oauth-button oauth-button--amazon"
+                onClick={() => enabledProviders.includes('amazon') && handleLogin('amazon', '/api/auth/amazon')}
+                disabled={!enabledProviders.includes('amazon') || loadingProvider !== null}
+                className={`oauth-button oauth-button--amazon ${!enabledProviders.includes('amazon') ? 'oauth-button--disabled' : ''}`}
                 aria-label={t('auth.loginWithAmazon', 'Se connecter avec Amazon')}
             >
                 {loadingProvider === 'amazon' ? (
@@ -328,6 +322,30 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
 
                 .oauth-button--amazon:active:not(:disabled) {
                     transform: translateY(0);
+                }
+
+                /* Boutons désactivés - Style grisé avec tooltip */
+                .oauth-button--disabled {
+                    opacity: 0.4;
+                    cursor: not-allowed;
+                    position: relative;
+                }
+
+                .oauth-button--disabled::after {
+                    content: '(Bientôt disponible)';
+                    position: absolute;
+                    bottom: -24px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    font-size: 0.75rem;
+                    color: #9ca3af;
+                    white-space: nowrap;
+                    pointer-events: none;
+                }
+
+                .oauth-button--disabled:hover {
+                    transform: none !important;
+                    box-shadow: none !important;
                 }
 
                 /* Responsive */
