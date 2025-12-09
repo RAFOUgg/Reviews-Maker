@@ -90,11 +90,11 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen bg-dark-bg text-dark-text flex items-center justify-center px-4 py-10">
-            <div className="w-full max-w-4xl glass border border-dark-border/50 rounded-2xl shadow-xl overflow-hidden">
+        <div className="min-h-screen bg-gradient-to-br from-purple-600 via-violet-700 to-purple-800 text-gray-900 flex items-center justify-center px-4 py-10">
+            <div className="w-full max-w-4xl glass rounded-2xl shadow-2xl overflow-hidden">
                 <div className="p-8 space-y-6">
-                    <h1 className="text-2xl font-bold">Connexion</h1>
-                    <p className="text-dark-muted text-sm">
+                    <h1 className="text-2xl font-bold text-gray-900">Connexion</h1>
+                    <p className="text-gray-700 text-sm">
                         Choisissez votre type de compte puis connectez-vous avec email ou via OAuth.
                     </p>
 
@@ -110,12 +110,12 @@ export default function LoginPage() {
                                             setSelectedType(choice.id)
                                         }
                                     }}
-                                    className={`text-left p-4 rounded-xl border transition-all ${choice.disabled ? 'opacity-60 cursor-not-allowed' : 'hover:border-violet-500'} ${isSelected ? 'border-violet-600 bg-violet-600/10' : 'border-dark-border/60'}`}
+                                    className={`text-left p-4 rounded-xl border transition-all ${choice.disabled ? 'opacity-60 cursor-not-allowed' : 'hover:border-violet-500 hover:shadow-md'} ${isSelected ? 'border-violet-600 bg-violet-50' : 'border-gray-300 bg-white'}`}
                                 >
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <div className="font-semibold">{choice.label}</div>
-                                            <div className="text-sm text-dark-muted">{choice.desc}</div>
+                                            <div className="font-semibold text-gray-900">{choice.label}</div>
+                                            <div className="text-sm text-gray-600">{choice.desc}</div>
                                         </div>
                                         {isSelected ? <span className="text-sm text-violet-600 font-semibold">Sélectionné</span> : null}
                                     </div>
@@ -124,18 +124,18 @@ export default function LoginPage() {
                         })}
                     </div>
 
-                    <div className="bg-dark-bg/40 border border-dark-border/60 rounded-xl p-4 space-y-4">
+                    <div className="bg-violet-50 border border-violet-200 rounded-xl p-4 space-y-4">
                         <div className="flex gap-2 text-sm font-semibold">
                             <button
                                 type="button"
-                                className={`px-3 py-2 rounded-lg ${mode === 'login' ? 'bg-violet-600 text-white' : 'bg-dark-bg border border-dark-border text-dark-text'}`}
+                                className={`px-3 py-2 rounded-lg transition-all ${mode === 'login' ? 'bg-violet-600 text-white shadow-md' : 'bg-white border border-violet-300 text-gray-900 hover:bg-violet-50'}`}
                                 onClick={() => setMode('login')}
                             >
                                 Connexion email
                             </button>
                             <button
                                 type="button"
-                                className={`px-3 py-2 rounded-lg ${mode === 'signup' ? 'bg-violet-600 text-white' : 'bg-dark-bg border border-dark-border text-dark-text'}`}
+                                className={`px-3 py-2 rounded-lg transition-all ${mode === 'signup' ? 'bg-violet-600 text-white shadow-md' : 'bg-white border border-violet-300 text-gray-900 hover:bg-violet-50'}`}
                                 onClick={() => setMode('signup')}
                             >
                                 Créer un compte
@@ -145,29 +145,29 @@ export default function LoginPage() {
                         <form className="space-y-3" onSubmit={handleSubmitEmail}>
                             {mode === 'signup' && (
                                 <div className="space-y-1">
-                                    <label className="text-sm font-semibold">Pseudo</label>
+                                    <label className="text-sm font-semibold text-gray-900">Pseudo</label>
                                     <input
                                         type="text"
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
                                         placeholder="Votre pseudo"
-                                        className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2"
+                                        className="input-light w-full rounded-lg px-3 py-2.5 text-gray-900"
                                     />
                                 </div>
                             )}
                             <div className="space-y-1">
-                                <label className="text-sm font-semibold">Email</label>
+                                <label className="text-sm font-semibold text-gray-900">Email</label>
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
                                     placeholder="vous@example.com"
-                                    className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2"
+                                    className="input-light w-full rounded-lg px-3 py-2.5 text-gray-900"
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-sm font-semibold">Mot de passe</label>
+                                <label className="text-sm font-semibold text-gray-900">Mot de passe</label>
                                 <input
                                     type="password"
                                     value={password}
@@ -175,12 +175,12 @@ export default function LoginPage() {
                                     required
                                     minLength={8}
                                     placeholder="••••••••"
-                                    className="w-full rounded-lg border border-dark-border bg-dark-bg px-3 py-2"
+                                    className="input-light w-full rounded-lg px-3 py-2.5 text-gray-900"
                                 />
                             </div>
 
                             {error && (
-                                <div className="text-sm text-red-400 bg-red-900/30 border border-red-700 rounded-lg px-3 py-2">
+                                <div className="text-sm text-red-800 bg-red-50 border border-red-300 rounded-lg px-3 py-2">
                                     {error}
                                 </div>
                             )}
@@ -188,7 +188,7 @@ export default function LoginPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full btn btn-primary"
+                                className="w-full bg-violet-600 hover:bg-violet-700 disabled:bg-gray-400 text-white font-semibold px-4 py-2.5 rounded-lg transition-colors shadow-md"
                             >
                                 {loading ? 'Patientez...' : mode === 'signup' ? 'Créer mon compte' : 'Se connecter'}
                             </button>
@@ -196,16 +196,16 @@ export default function LoginPage() {
                     </div>
 
                     <div className="space-y-4">
-                        <h2 className="text-lg font-semibold">Ou utilisez un fournisseur social</h2>
+                        <h2 className="text-lg font-semibold text-gray-900">Ou utilisez un fournisseur social</h2>
                         <OAuthButtons
                             className="space-y-3"
                             onLoginStart={(provider) => handleProviderClick(provider)}
                         />
                     </div>
 
-                    <div className="text-sm text-dark-muted border-t border-dark-border/40 pt-4">
+                    <div className="text-sm text-gray-600 border-t border-gray-300 pt-4">
                         <p>En continuant, vous confirmez avoir l'âge légal et accepter la vérification RDR après connexion.</p>
-                        <p className="mt-2 text-xs">Besoin d'aide ? <button className="text-violet-600 hover:underline" onClick={() => navigate('/')}>Retour accueil</button></p>
+                        <p className="mt-2 text-xs">Besoin d'aide ? <button className="text-violet-600 hover:underline font-semibold" onClick={() => navigate('/')}>Retour accueil</button></p>
                     </div>
                 </div>
             </div>

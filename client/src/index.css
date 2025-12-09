@@ -87,6 +87,27 @@
     /* Texte blanc sur overlay sombre */
 }
 
+/* === UTILITAIRES TAILWIND PERSONNALISÉS === */
+@layer utilities {
+    .input-light {
+        @apply bg-white text-gray-900 border-violet-900 placeholder-gray-500;
+    }
+    
+    .input-light:focus {
+        @apply ring-2 ring-violet-600 border-violet-600 outline-none;
+    }
+    
+    .modal-light {
+        @apply bg-white text-gray-900 border-violet-900;
+    }
+    
+    .glass {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(76, 29, 149, 0.2);
+    }
+}
+
 /* === STYLES GLOBAUX - Applique le thème PARTOUT === */
 html {
     background: var(--gradient-bg) !important;

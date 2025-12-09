@@ -34,14 +34,14 @@ export default {
                     800: '#166534',
                     900: '#14532d',
                 },
-                // Dark mode colors
+                // Dark mode colors - Fonds très clairs pour lisibilité maximale
                 dark: {
-                    bg: '#0f0f0f',
-                    surface: '#1a1a1a',
-                    card: '#262626',
-                    border: '#404040',
-                    text: '#e5e5e5',
-                    muted: '#a3a3a3',
+                    bg: '#FFFFFF',        // Blanc pur pour inputs
+                    surface: '#FDFCFF',   // Blanc cassé violet pour modales
+                    card: '#F9F5FF',      // Violet très pâle pour cards
+                    border: '#4C1D95',    // Violet 900 très sombre
+                    text: '#0F172A',      // Texte très sombre
+                    muted: '#334155',     // Texte secondaire gris foncé
                 }
             },
             fontFamily: {
