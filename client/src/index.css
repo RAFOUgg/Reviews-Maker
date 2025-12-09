@@ -42,11 +42,13 @@
     /* Texte très sombre pour inputs clairs */
     --text-on-dark: #FFFFFF;
     /* Blanc pour boutons et éléments foncés */
-    --border: #9333EA;
-    /* Violet INTENSE */
-    --shadow: rgba(147, 51, 234, 0.4);
-    --shadow-lg: rgba(147, 51, 234, 0.7);
-    --glow: rgba(219, 39, 119, 0.8);
+    --border: #4C1D95;
+    /* Violet 900 - très sombre pour contraste maximal */
+    --shadow: rgba(15, 23, 42, 0.15);
+    /* Gris foncé au lieu de violet pour meilleure lisibilité */
+    --shadow-lg: rgba(15, 23, 42, 0.25);
+    --glow: rgba(76, 29, 149, 0.3);
+    /* Violet 900 atténué pour glow subtil */
 
     --gradient-primary: linear-gradient(135deg, #A855F7 0%, #EC4899 100%);
     --gradient-accent: linear-gradient(135deg, #DB2777 0%, #F472B6 100%);
