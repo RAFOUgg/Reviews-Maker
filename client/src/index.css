@@ -26,10 +26,10 @@
     /* Violet 400 - containers PLUS CLAIR */
     --bg-tertiary: #8B5CF6;
     /* Violet 500 - cards avec bon contraste */
-    --bg-surface: #E9D5FF;
-    /* Violet 200 - modals très clair */
-    --bg-input: #F3E8FF;
-    /* Violet 100 - inputs avec contraste optimal */
+    --bg-surface: #FDFCFF;
+    /* Blanc cassé violet - modals avec contraste maximal */
+    --bg-input: #FFFFFF;
+    /* Blanc pur - inputs avec contraste optimal */
 
     /* TEXTES - Contraste optimal sur tous les fonds */
     --text-primary: #0F172A;
