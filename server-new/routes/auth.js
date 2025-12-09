@@ -29,7 +29,7 @@ router.get('/providers', (req, res) => {
     if (isConfigured(process.env.GOOGLE_CLIENT_ID) && isConfigured(process.env.GOOGLE_CLIENT_SECRET)) {
         providers.push('google')
     }
-    if (isConfigured(process.env.APPLE_CLIENT_ID) && isConfigured(process.env.APPLE_TEAM_ID) && 
+    if (isConfigured(process.env.APPLE_CLIENT_ID) && isConfigured(process.env.APPLE_TEAM_ID) &&
         isConfigured(process.env.APPLE_KEY_ID) && isConfigured(process.env.APPLE_PRIVATE_KEY)) {
         providers.push('apple')
     }
