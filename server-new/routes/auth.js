@@ -51,17 +51,17 @@ function buildAvatar(user) {
             return user.avatar
         }
     }
-    
+
     // Discord avatar (stored as hash, needs CDN construction)
     if (user.avatar && user.discordId) {
         return `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png`
     }
-    
+
     // Discord default avatar (based on discriminator)
     if (user.discriminator) {
         return `https://cdn.discordapp.com/embed/avatars/${parseInt(user.discriminator || '0') % 5}.png`
     }
-    
+
     return null
 }
 
