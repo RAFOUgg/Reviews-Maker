@@ -15,9 +15,29 @@ function safeJSONParse(value, defaultValue = null) {
     }
 
     try {
-        return typeof value === 'string' ? JSON.parse(value) : value
+        // If already parsed, return as-is
+        if (typeof value !== 'string') {
+            return value
+        }
+
+        // Clean up common malformed patterns
+        let cleaned = value.trim()
+
+        // Fix trailing commas: "item1, " -> "item1"
+        if (cleaned.endsWith(', ') || cleaned.endsWith(',')) {
+            cleaned = cleaned.replace(/,\s*$/, '')
+        }
+
+        // If it looks like it should be an array but isn't wrapped
+        if (cleaned && !cleaned.startsWith('[') && !cleaned.startsWith('{')) {
+            // Split by comma and create array
+            const items = cleaned.split(',').map(s => s.trim()).filter(Boolean)
+            return items.length > 0 ? items : defaultValue
+        }
+
+        return JSON.parse(cleaned)
     } catch (error) {
-        console.error('JSON parse error:', error)
+        console.error('JSON parse error:', error.message, '- Value:', value?.substring(0, 100))
         return defaultValue
     }
 }

@@ -229,14 +229,24 @@ export async function changeAccountType(userId, newType, options = {}) {
  * @returns {Promise<Object>}
  */
 export async function getAccountInfo(userId) {
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        include: {
-            subscription: true,
-            producerProfile: true,
-            influencerProfile: true,
-        },
-    });
+    // Fetch user with try/catch for relations that might not exist
+    let user;
+    try {
+        user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: {
+                subscription: true,
+                producerProfile: true,
+                influencerProfile: true,
+            },
+        });
+    } catch (error) {
+        console.error('[getAccountInfo] Error with includes, falling back to basic query:', error.message);
+        // Fallback to basic query without includes if relations fail
+        user = await prisma.user.findUnique({
+            where: { id: userId },
+        });
+    }
 
     if (!user) {
         throw new Error('Utilisateur non trouvé');

@@ -244,7 +244,22 @@ export default function HomeReviewCard({
                     className="w-full mt-3 p-3 rounded-2xl bg-theme-accent border-2 border-theme-accent hover:border-[rgb(var(--color-accent))] backdrop-blur-xl transition-all duration-300 group/author hover:shadow-lg hover:shadow-[rgba(var(--color-accent),0.3)] hover:scale-[1.02]"
                 >
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[rgb(var(--color-primary))] to-[rgb(var(--color-accent))] flex items-center justify-center text-white text-base font-black shadow-lg shadow-[rgba(var(--color-accent),0.5)] group-hover/author:scale-110 transition-transform">
+                        {review.author?.avatar ? (
+                            <img
+                                src={review.author.avatar}
+                                alt={review.author.username}
+                                className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-[rgba(var(--color-accent),0.5)] group-hover/author:scale-110 transition-transform"
+                                onError={(e) => {
+                                    // Fallback to initial if image fails to load
+                                    e.target.style.display = 'none'
+                                    e.target.nextElementSibling.style.display = 'flex'
+                                }}
+                            />
+                        ) : null}
+                        <div
+                            className="w-10 h-10 rounded-xl bg-gradient-to-br from-[rgb(var(--color-primary))] to-[rgb(var(--color-accent))] flex items-center justify-center text-white text-base font-black shadow-lg shadow-[rgba(var(--color-accent),0.5)] group-hover/author:scale-110 transition-transform"
+                            style={{ display: review.author?.avatar ? 'none' : 'flex' }}
+                        >
                             {(review.ownerName || review.author?.username || 'A')[0].toUpperCase()}
                         </div>
                         <div className="flex-1 text-left">
