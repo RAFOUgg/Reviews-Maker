@@ -203,9 +203,11 @@ router.get('/debug-session', (req, res) => {
 
 // GET /api/auth/discord/callback - Callback après autorisation Discord
 router.get('/discord/callback', (req, res, next) => {
-    console.log(`[AUTH-DBG] Discord callback received - method: ${req.method} originalUrl: ${req.originalUrl} path: ${req.path} ip: ${req.ip} X-Original-Uri: ${req.headers['x-original-uri']}`)
+    console.log(`[AUTH-DBG] Discord callback received - method: ${req.method} originalUrl: ${req.originalUrl} path: ${req.path} ip: ${req.ip}`)
+    console.log(`[AUTH-DBG] Query params:`, req.query)
+    console.log(`[AUTH-DBG] Session ID:`, req.sessionID)
     console.log(`[AUTH-DBG] Headers: Host=${req.headers.host} X-Forwarded-For=${req.headers['x-forwarded-for']} X-Forwarded-Proto=${req.headers['x-forwarded-proto']}`)
-    console.log(`[AUTH-DBG] Headers: Host=${req.headers.host} X-Forwarded-For=${req.headers['x-forwarded-for']} X-Forwarded-Proto=${req.headers['x-forwarded-proto']}`)
+    
     return passport.authenticate('discord', {
         failureRedirect: process.env.FRONTEND_URL
     })(req, res, (err) => {
@@ -214,6 +216,8 @@ router.get('/discord/callback', (req, res, next) => {
             return next(err)
         }
         // Succès : rediriger vers le frontend
+        console.log('[AUTH-DBG] Discord auth success! User:', req.user?.username, 'ID:', req.user?.id)
+        console.log('[AUTH-DBG] Session after auth:', req.sessionID, 'isAuthenticated:', req.isAuthenticated?.())
         res.redirect(`${process.env.FRONTEND_URL}/auth/callback`)
     })
 })
@@ -265,6 +269,9 @@ router.get('/google', (req, res, next) => {
 // GET /api/auth/google/callback - Callback après autorisation Google
 router.get('/google/callback', (req, res, next) => {
     console.log(`[AUTH-DBG] Google callback received - method: ${req.method} originalUrl: ${req.originalUrl}`)
+    console.log(`[AUTH-DBG] Query params:`, req.query)
+    console.log(`[AUTH-DBG] Session ID:`, req.sessionID)
+    
     return passport.authenticate('google', {
         failureRedirect: process.env.FRONTEND_URL
     })(req, res, (err) => {
@@ -273,6 +280,8 @@ router.get('/google/callback', (req, res, next) => {
             return next(err)
         }
         // Succès : rediriger vers le frontend
+        console.log('[AUTH-DBG] Google auth success! User:', req.user?.username, 'ID:', req.user?.id)
+        console.log('[AUTH-DBG] Session after auth:', req.sessionID, 'isAuthenticated:', req.isAuthenticated?.())
         res.redirect(`${process.env.FRONTEND_URL}/auth/callback`)
     })
 })
