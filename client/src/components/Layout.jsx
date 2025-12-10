@@ -14,9 +14,9 @@ export default function Layout() {
                         {/* Logo - Toujours visible avec les couleurs du thème */}
                         <Link to="/" className="flex items-center space-x-3 group">
                             <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg group-hover:shadow-[0_0_20px_rgba(var(--color-accent),0.5)] transition-all">
-                                <img 
-                                    src="/branding_logo.png" 
-                                    alt="Terpologie Reviews Maker" 
+                                <img
+                                    src="/branding_logo.png"
+                                    alt="Terpologie Reviews Maker"
                                     className="w-full h-full object-cover"
                                 />
                             </div>
