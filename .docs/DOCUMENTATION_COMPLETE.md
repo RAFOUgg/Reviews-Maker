@@ -4,7 +4,7 @@
 **Date** : Décembre 2025  
 **Auteur** : RAFOUgg  
 
----
+----
 
 ## 🎯 Vue d'ensemble + Description graphique.
 
@@ -30,9 +30,9 @@ En haut à droite dans le bandeau : "Connexion" et "Inscription"
     - [9,99€/mois] Influenceur
       - DESCRIPTION DANS "FONCTIONNALITE_COMPTE.md"
 
-- **Connexion OAuth2 complète** : Flux sécurisé avec Discord (scopes: identify, email)
+- **Connexion OAuth2 complète** : Flux sécurisé avec Google, Apple, Amazon, FaceBook, Discord ou directement en (scopes: identify, email) Obliger l'A2F à chaque connexion (par email).
 - **Sessions persistantes** : Gestion via express-session avec SQLite
-- **Profils utilisateurs enrichis** : Avatar Discord, username, email, discriminator
+- **Profils utilisateurs enrichis** : Avatar du compte google, discord etc..., username, email (non visible par les autres uilisateurs), discriminator
 - **Hook personnalisé useAuth** : Gestion centralisée de l'état d'authentification
 - **Callback automatique** : Composant AuthCallback pour traitement post-connexion
 - **Vérification de session** : Check automatique au démarrage de l'app
@@ -42,7 +42,7 @@ En haut à droite dans le bandeau : "Connexion" et "Inscription"
 - **Persistence cross-session** : État utilisateur maintenu entre rechargements
 
 ### 2. Gestion des Reviews
-- **Création complète** : Formulaire détaillé avec tous les champs nécessaires
+- **Création complète** : Formulaire et orchad simple ou détaillé selon la formule.
 - **Types de produits** : Fleur, Hash, Concentré, Comestible
 - **Notation détaillée** : Apparence, arôme, goût, effets (échelle /10)
 - **Sélection terpénique** : Interface visuelle avec roue des terpènes
