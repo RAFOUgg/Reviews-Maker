@@ -30,14 +30,14 @@ function parseRoles(rolesJson) {
         if (!rolesJson || rolesJson === '') {
             return ['consumer'];
         }
-        
+
         const parsed = JSON.parse(rolesJson);
-        
+
         // Ensure parsed.roles is an array
         if (parsed && Array.isArray(parsed.roles) && parsed.roles.length > 0) {
             return parsed.roles;
         }
-        
+
         return ['consumer'];
     } catch (error) {
         console.error('[parseRoles] Error parsing roles:', rolesJson, error);
@@ -63,7 +63,7 @@ export function getUserAccountType(user) {
     if (!user) {
         return ACCOUNT_TYPES.CONSUMER;
     }
-    
+
     const roles = parseRoles(user.roles);
 
     // Ensure roles is an array before using includes
@@ -91,7 +91,7 @@ export function canUpgradeAccountType(user, targetType) {
     if (!user) {
         return { allowed: false, reason: 'Utilisateur non défini' };
     }
-    
+
     const currentType = getUserAccountType(user);
     const roles = parseRoles(user.roles);
 
