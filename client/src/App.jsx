@@ -8,6 +8,7 @@ import EditReviewPage from './pages/EditReviewPage'
 import LibraryPage from './pages/LibraryPage'
 import StatsPage from './pages/StatsPage'
 import SettingsPage from './pages/SettingsPage'
+import ProfilePage from './pages/ProfilePage'
 import AuthCallback from './components/AuthCallback'
 import ToastContainer from './components/ToastContainer'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -19,7 +20,7 @@ import './i18n/i18n'
 import RDRBanner from './components/legal/RDRBanner'
 import AgeVerification from './components/legal/AgeVerification'
 import ConsentModal from './components/legal/ConsentModal'
-import AccountTypeSelector from './components/account/AccountTypeSelector'
+import AccountSelector from './components/account/AccountSelector'
 
 function App() {
     const checkAuth = useStore((state) => state.checkAuth)
@@ -138,11 +139,9 @@ function App() {
 
                         {/* 3. Sélection type de compte - Après consentement */}
                         {needsAccountTypeSelection && (
-                            <AccountTypeSelector
+                            <AccountSelector
                                 isOpen={true}
-                                onComplete={handleAccountTypeSelected}
-                                currentType={accountInfo?.accountType || 'consumer'}
-                                initialTypePreference={localStorage.getItem('preferredAccountType') || undefined}
+                                onAccountSelected={handleAccountTypeSelected}
                             />
                         )}
                     </>
@@ -157,6 +156,7 @@ function App() {
                         <Route path="/library" element={<LibraryPage />} />
                         <Route path="/stats" element={<StatsPage />} />
                         <Route path="/settings" element={<SettingsPage />} />
+                        <Route path="/profile" element={<ProfilePage />} />
                     </Route>
                     <Route path="/choose-account" element={<AccountChoicePage />} />
                     <Route path="/login" element={<LoginPage />} />

@@ -249,4 +249,177 @@ router.get('/countries', (req, res) => {
     });
 });
 
+/**
+ * GET /api/legal/terms
+ * Récupère les Conditions Générales d'Utilisation
+ */
+router.get('/terms', (req, res) => {
+    const terms = {
+        title: 'Conditions Générales d\'Utilisation',
+        language: req.query.lang || 'fr',
+        lastUpdated: new Date('2025-12-01'),
+        sections: [
+            {
+                id: 'introduction',
+                title: 'Introduction',
+                content: 'Bienvenue sur Orchard Studio. Ces Conditions Générales d\'Utilisation (« CGU ») régissent votre accès et votre utilisation de notre plateforme en ligne.'
+            },
+            {
+                id: 'age_restrictions',
+                title: 'Exigences d\'Âge et Restrictions Légales',
+                content: 'Vous confirmez que vous avez au moins l\'âge légal minimum requis pour consommer du cannabis dans votre juridiction.'
+            },
+            {
+                id: 'authorized_use',
+                title: 'Utilisation Autorisée',
+                content: 'Vous acceptez d\'utiliser cette plateforme uniquement à des fins légales et de manière responsable.'
+            },
+            {
+                id: 'user_content',
+                title: 'Contenu Utilisateur',
+                content: 'Tout contenu que vous créez reste votre propriété. En le publiant sur notre plateforme, vous nous accordez une licence pour l\'afficher.'
+            },
+            {
+                id: 'liability',
+                title: 'Responsabilité et Exonération',
+                content: 'Orchard Studio est fourni « tel quel » sans garantie.'
+            }
+        ]
+    };
+
+    res.json(terms);
+});
+
+/**
+ * GET /api/legal/privacy
+ * Récupère la Politique de Confidentialité
+ */
+router.get('/privacy', (req, res) => {
+    const privacy = {
+        title: 'Politique de Confidentialité',
+        language: req.query.lang || 'fr',
+        lastUpdated: new Date('2025-12-01'),
+        sections: [
+            {
+                id: 'intro',
+                title: 'Introduction',
+                content: 'Orchard Studio respecte votre vie privée et s\'engage à protéger vos données personnelles.'
+            },
+            {
+                id: 'data_collection',
+                title: 'Collecte de Données',
+                content: 'Nous collectons uniquement les données nécessaires pour fournir nos services.'
+            },
+            {
+                id: 'data_usage',
+                title: 'Utilisation des Données',
+                content: 'Vos données ne sont jamais vendues à des tiers et sont utilisées uniquement pour améliorer nos services.'
+            },
+            {
+                id: 'age_verification',
+                title: 'Vérification d\'Âge',
+                content: 'Les données de vérification d\'âge sont stockées de manière sécurisée et conforme aux réglementations.'
+            },
+            {
+                id: 'rights',
+                title: 'Vos Droits',
+                content: 'Vous avez le droit d\'accès, de modification et de suppression de vos données personnelles.'
+            }
+        ]
+    };
+
+    res.json(privacy);
+});
+
+/**
+ * GET /api/legal/notice
+ * Récupère les Mentions Légales
+ */
+router.get('/notice', (req, res) => {
+    const notice = {
+        title: 'Mentions Légales',
+        language: req.query.lang || 'fr',
+        lastUpdated: new Date('2025-12-01'),
+        company: {
+            name: 'Orchard Studio',
+            type: 'SARL',
+            status: 'En développement',
+            email: 'legal@orchardstudio.app'
+        },
+        sections: [
+            {
+                id: 'legal_info',
+                title: 'Informations Légales',
+                content: 'Orchard Studio opère dans le respect des lois applicables.'
+            },
+            {
+                id: 'compliance',
+                title: 'Conformité et Responsabilité',
+                content: 'Cette plateforme ne facilite pas la vente, l\'achat ou la distribution de cannabis.'
+            },
+            {
+                id: 'data_protection',
+                title: 'Protection des Données',
+                content: 'En conformité avec le RGPD et les lois sur la protection des données.'
+            },
+            {
+                id: 'user_content_rights',
+                title: 'Droits sur le Contenu Utilisateur',
+                content: 'Les reviews et contenus générés par les utilisateurs restent leur propriété.'
+            }
+        ]
+    };
+
+    res.json(notice);
+});
+
+/**
+ * POST /api/legal/consent
+ * Enregistre le consentement de l\'utilisateur
+ */
+router.post('/consent', async (req, res) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({
+                error: 'unauthorized',
+                message: 'Authentification requise',
+            });
+        }
+
+        const { terms, privacy, rdr } = req.body;
+
+        // Tous les consentements sont requis
+        if (!terms || !privacy || !rdr) {
+            return res.status(400).json({
+                error: 'incomplete_consent',
+                message: 'Vous devez accepter tous les documents légaux',
+            });
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: req.user.id },
+            data: {
+                consentRDR: true,
+                consentDate: new Date(),
+            },
+        });
+
+        res.json({
+            success: true,
+            message: 'Consentement enregistré',
+            user: {
+                id: updatedUser.id,
+                consentRDR: updatedUser.consentRDR,
+                consentDate: updatedUser.consentDate,
+            },
+        });
+    } catch (error) {
+        console.error('Erreur enregistrement consentement:', error);
+        res.status(500).json({
+            error: 'internal_error',
+            message: 'Erreur lors de l\'enregistrement du consentement',
+        });
+    }
+});
+
 export default router;

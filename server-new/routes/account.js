@@ -353,4 +353,139 @@ router.patch('/influencer-profile', asyncHandler(async (req, res) => {
     });
 }));
 
+/**
+ * PUT /api/account/update
+ * Met à jour les informations de profil de l'utilisateur
+ */
+router.put('/update', asyncHandler(async (req, res) => {
+    if (!req.user) {
+        return res.status(401).json({
+            error: 'unauthorized',
+            message: 'Authentification requise',
+        });
+    }
+
+    const { username, email, theme, locale } = req.body;
+
+    // Validation basique
+    const updates = {};
+
+    if (username && username.trim().length > 0) {
+        // Vérifier que le username n'existe pas déjà (sauf l'utilisateur actuel)
+        const existing = await prisma.user.findFirst({
+            where: {
+                username: username.trim(),
+                id: { not: req.user.id }
+            }
+        });
+
+        if (existing) {
+            return res.status(400).json({
+                error: 'username_taken',
+                message: 'Ce nom d\'utilisateur est déjà utilisé',
+            });
+        }
+        updates.username = username.trim();
+    }
+
+    if (email && email.trim().length > 0) {
+        // Vérifier que l'email n'existe pas déjà
+        const existing = await prisma.user.findFirst({
+            where: {
+                email: email.trim(),
+                id: { not: req.user.id }
+            }
+        });
+
+        if (existing) {
+            return res.status(400).json({
+                error: 'email_taken',
+                message: 'Cet email est déjà utilisé',
+            });
+        }
+        updates.email = email.trim();
+        updates.emailVerified = false; // Nécessite re-vérification
+    }
+
+    if (theme) {
+        const validThemes = ['violet-lean', 'emerald', 'tahiti', 'sakura', 'dark'];
+        if (validThemes.includes(theme)) {
+            updates.theme = theme;
+        }
+    }
+
+    if (locale) {
+        const validLocales = ['fr', 'en', 'es', 'de'];
+        if (validLocales.includes(locale)) {
+            updates.locale = locale;
+        }
+    }
+
+    const updatedUser = await prisma.user.update({
+        where: { id: req.user.id },
+        data: updates,
+    });
+
+    res.json({
+        id: updatedUser.id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        avatar: updatedUser.avatar,
+        theme: updatedUser.theme,
+        locale: updatedUser.locale,
+        accountType: getUserAccountType(updatedUser),
+        legalAge: updatedUser.legalAge,
+        consentRDR: updatedUser.consentRDR,
+        createdAt: updatedUser.createdAt,
+    });
+}));
+
+/**
+ * GET /api/account/profile
+ * Récupère le profil complet de l'utilisateur (alias pour /info)
+ */
+router.get('/profile', asyncHandler(async (req, res) => {
+    if (!req.user) {
+        return res.status(401).json({
+            error: 'unauthorized',
+            message: 'Authentification requise',
+        });
+    }
+
+    const accountInfo = await getAccountInfo(req.user.id);
+    res.json(accountInfo);
+}));
+
+/**
+ * GET /api/account/multiple
+ * Récupère la liste des comptes multicompte de l'utilisateur (future feature)
+ */
+router.get('/multiple', asyncHandler(async (req, res) => {
+    if (!req.user) {
+        return res.status(401).json({
+            error: 'unauthorized',
+            message: 'Authentification requise',
+        });
+    }
+
+    // Pour maintenant, retourner le compte actuel
+    // À l'avenir, on pourra supporter plusieurs comptes
+    const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: {
+            id: true,
+            username: true,
+            email: true,
+            avatar: true,
+            roles: true,
+            createdAt: true,
+        }
+    });
+
+    res.json({
+        accounts: [user],
+        current: user.id,
+    });
+}));
+
 export default router;
