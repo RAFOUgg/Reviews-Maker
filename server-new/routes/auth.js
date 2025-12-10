@@ -207,7 +207,7 @@ router.get('/discord/callback', (req, res, next) => {
     console.log(`[AUTH-DBG] Query params:`, req.query)
     console.log(`[AUTH-DBG] Session ID:`, req.sessionID)
     console.log(`[AUTH-DBG] Headers: Host=${req.headers.host} X-Forwarded-For=${req.headers['x-forwarded-for']} X-Forwarded-Proto=${req.headers['x-forwarded-proto']}`)
-    
+
     return passport.authenticate('discord', {
         failureRedirect: process.env.FRONTEND_URL
     })(req, res, (err) => {
@@ -271,7 +271,7 @@ router.get('/google/callback', (req, res, next) => {
     console.log(`[AUTH-DBG] Google callback received - method: ${req.method} originalUrl: ${req.originalUrl}`)
     console.log(`[AUTH-DBG] Query params:`, req.query)
     console.log(`[AUTH-DBG] Session ID:`, req.sessionID)
-    
+
     return passport.authenticate('google', {
         failureRedirect: process.env.FRONTEND_URL
     })(req, res, (err) => {
