@@ -37,6 +37,3 @@ export const useLegalConsent = () => {
         revokeConsent
     }
 }
-updateConsentCountry
-    }
-}
