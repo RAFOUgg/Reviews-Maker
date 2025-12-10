@@ -239,7 +239,9 @@ router.get('/me', asyncHandler(async (req, res) => {
         throw Errors.UNAUTHORIZED()
     }
 
-    res.json(sanitizeUser(req.user))
+    const sanitized = sanitizeUser(req.user)
+    console.log('[AUTH-ME-DEBUG] User:', req.user.username, 'Avatar hash:', req.user.avatar, 'DiscordId:', req.user.discordId, 'Built avatar:', sanitized.avatar)
+    res.json(sanitized)
 }))
 
 // POST /api/auth/logout - Déconnexion
