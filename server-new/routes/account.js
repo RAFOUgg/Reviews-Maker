@@ -56,7 +56,7 @@ router.get('/types', (req, res) => {
         {
             type: ACCOUNT_TYPES.CONSUMER,
             name: 'Consommateur',
-            description: 'Créez et gérez vos reviews personnelles',
+            description: 'Créez et gérez vos reviews personnelles (bientôt disponible)',
             price: 0,
             features: [
                 'Création de reviews illimitées',
@@ -65,7 +65,7 @@ router.get('/types', (req, res) => {
                 'Stats personnelles',
             ],
             requiresSubscription: false,
-            disabled: false,
+            disabled: true,
         },
         {
             type: ACCOUNT_TYPES.INFLUENCER_BASIC,

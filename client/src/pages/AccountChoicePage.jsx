@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 export default function AccountChoicePage() {
     const navigate = useNavigate()
-    const initial = useMemo(() => localStorage.getItem('preferredAccountType') || 'consumer', [])
+    const initial = useMemo(() => localStorage.getItem('preferredAccountType') || 'beta_tester', [])
     const [selectedType, setSelectedType] = useState(initial)
     const [accountTypes, setAccountTypes] = useState([])
     const [loading, setLoading] = useState(true)
@@ -56,13 +56,14 @@ export default function AccountChoicePage() {
                 <div className="p-6 space-y-4">
                     <div className="text-center">
                         <h1 className="text-2xl font-bold text-gray-900">Choisissez votre type de compte</h1>
-                        <p className="text-gray-700 text-sm mt-1">Le plan consommateur offre déjà l'accès complet au site. Les plans pros seront activés plus tard.</p>
+                        <p className="text-gray-700 text-sm mt-1">Seul le plan Beta testeur est actuellement disponible. Les autres plans seront activés progressivement.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         {accountTypes.map((type) => {
                             const isSelected = selectedType === type.type
-                            const isDisabled = type.disabled || (type.requiresSubscription && type.type !== 'consumer')
+                            // Désactiver tous les types sauf beta_tester
+                            const isDisabled = type.type !== 'beta_tester'
 
                             return (
                                 <button

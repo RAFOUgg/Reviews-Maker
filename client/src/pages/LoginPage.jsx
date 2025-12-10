@@ -6,10 +6,6 @@ import { useStore } from '../store/useStore'
 
 const ACCOUNT_CHOICES = [
     { id: 'beta_tester', label: 'Beta testeur', desc: 'Accès complet pendant la bêta', disabled: false },
-    { id: 'consumer', label: 'Consommateur', desc: 'Accès complet, création et export (bientôt)', disabled: true },
-    { id: 'influencer_basic', label: 'Influenceur Basic', desc: 'Branding personnel Orchard (bientôt)', disabled: true },
-    { id: 'influencer_pro', label: 'Influenceur Pro', desc: 'Fonctions pro avancées (bientôt)', disabled: true },
-    { id: 'producer', label: 'Producteur', desc: 'Compte pro bientôt disponible (achat désactivé)', disabled: true },
 ]
 
 export default function LoginPage() {
@@ -32,13 +28,9 @@ export default function LoginPage() {
     }, [navigate])
 
     const handleProviderClick = (provider) => {
-        const type = selectedType || 'consumer'
+        const type = 'beta_tester'
         localStorage.setItem('preferredAccountType', type)
-        if (type === 'consumer' || type === 'beta_tester') {
-            localStorage.setItem('accountTypeSelected', 'true')
-        } else {
-            localStorage.removeItem('accountTypeSelected')
-        }
+        localStorage.setItem('accountTypeSelected', 'true')
 
         const targets = {
             discord: '/api/auth/discord',
@@ -66,13 +58,9 @@ export default function LoginPage() {
 
             if (mode === 'signup') {
                 payload.username = username || email.split('@')[0]
-                payload.accountType = selectedType
-                localStorage.setItem('preferredAccountType', selectedType)
-                if (selectedType === 'consumer' || selectedType === 'beta_tester') {
-                    localStorage.setItem('accountTypeSelected', 'true')
-                } else {
-                    localStorage.removeItem('accountTypeSelected')
-                }
+                payload.accountType = 'beta_tester'
+                localStorage.setItem('preferredAccountType', 'beta_tester')
+                localStorage.setItem('accountTypeSelected', 'true')
                 const user = await authService.signupWithEmail(payload)
                 setUser(user)
                 navigate('/')
@@ -94,38 +82,10 @@ export default function LoginPage() {
             <div className="w-full max-w-4xl glass rounded-3xl shadow-2xl overflow-hidden animate-fade-in">
                 <div className="p-8 md:p-10 space-y-7">
                     <div className="text-center space-y-2">
-                        <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight drop-shadow-lg">Connexion</h1>
+                        <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight drop-shadow-lg">Connexion Beta Testeur</h1>
                         <p className="text-white/90 text-sm md:text-base drop-shadow">
-                            Choisissez votre type de compte puis connectez-vous
+                            Accès complet à toutes les fonctionnalités pendant la bêta
                         </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {ACCOUNT_CHOICES.map((choice) => {
-                            const isSelected = selectedType === choice.id
-                            return (
-                                <button
-                                    key={choice.id}
-                                    type="button"
-                                    onClick={() => {
-                                        if (!choice.disabled) {
-                                            setSelectedType(choice.id)
-                                        }
-                                    }}
-                                    className={`text-left p-4 rounded-xl border-2 transition-all duration-300 ${choice.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-violet-400 hover:shadow-lg hover:scale-[1.02]'} ${isSelected ? 'border-violet-400 bg-gradient-to-br from-violet-900/80 to-purple-900/80 shadow-lg shadow-violet-500/30' : 'border-white/20 bg-white/10 backdrop-blur-sm'}`}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <div className="font-bold text-white flex items-center gap-2">
-                                                {choice.label}
-                                                {isSelected && <span className="text-emerald-400">✓</span>}
-                                            </div>
-                                            <div className="text-xs text-white/80 mt-1">{choice.desc}</div>
-                                        </div>
-                                    </div>
-                                </button>
-                            )
-                        })}
                     </div>
 
                     <div className="bg-white/95 backdrop-blur-lg border-2 border-white/50 rounded-2xl p-5 space-y-4 shadow-xl">
