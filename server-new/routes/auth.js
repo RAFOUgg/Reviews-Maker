@@ -44,12 +44,24 @@ router.get('/providers', (req, res) => {
 })
 
 function buildAvatar(user) {
+    // Google/Apple/Facebook/Amazon avatars (stored as full URL)
+    if (user.avatar && (user.googleId || user.appleId || user.facebookId || user.amazonId)) {
+        // If avatar is already a full URL, return it as-is
+        if (user.avatar.startsWith('http://') || user.avatar.startsWith('https://')) {
+            return user.avatar
+        }
+    }
+    
+    // Discord avatar (stored as hash, needs CDN construction)
     if (user.avatar && user.discordId) {
         return `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png`
     }
+    
+    // Discord default avatar (based on discriminator)
     if (user.discriminator) {
         return `https://cdn.discordapp.com/embed/avatars/${parseInt(user.discriminator || '0') % 5}.png`
     }
+    
     return null
 }
 
