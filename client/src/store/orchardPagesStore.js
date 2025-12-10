@@ -273,7 +273,33 @@ export const useOrchardPagesStore = create(
             partialize: (state) => ({
                 pagesEnabled: state.pagesEnabled,
                 pages: state.pages
-            })
+            }),
+            // Validation et correction des données lors de la restauration
+            onRehydrateStorage: () => (state, error) => {
+                if (error) {
+                    console.error('[OrchardPages] Error rehydrating storage:', error)
+                    return
+                }
+
+                // Valider et corriger les données restaurées
+                if (state) {
+                    // S'assurer que pages est toujours un tableau
+                    if (!Array.isArray(state.pages)) {
+                        console.warn('[OrchardPages] Invalid pages data, resetting to empty array')
+                        state.pages = []
+                    }
+
+                    // S'assurer que currentPageIndex est valide
+                    if (typeof state.currentPageIndex !== 'number' || state.currentPageIndex < 0) {
+                        state.currentPageIndex = 0
+                    }
+
+                    // S'assurer que currentPageIndex ne dépasse pas la longueur du tableau
+                    if (state.currentPageIndex >= state.pages.length && state.pages.length > 0) {
+                        state.currentPageIndex = 0
+                    }
+                }
+            }
         }
     )
 );
