@@ -51,15 +51,15 @@ export default function AccountChoicePage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-600 via-violet-700 to-purple-800 text-gray-900 flex items-center justify-center px-4 py-10">
-            <div className="w-full max-w-6xl glass rounded-2xl shadow-2xl overflow-hidden">
-                <div className="p-8 space-y-6">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Choisissez votre type de compte</h1>
-                        <p className="text-gray-700 text-sm mt-2">Le plan consommateur offre déjà l'accès complet au site. Les plans pros seront activés plus tard.</p>
+        <div className="min-h-screen bg-gradient-to-br from-purple-600 via-violet-700 to-purple-800 text-gray-900 flex items-center justify-center px-4 py-6 overflow-y-auto">
+            <div className="w-full max-w-7xl glass rounded-2xl shadow-2xl my-6">
+                <div className="p-6 space-y-4">
+                    <div className="text-center">
+                        <h1 className="text-2xl font-bold text-gray-900">Choisissez votre type de compte</h1>
+                        <p className="text-gray-700 text-sm mt-1">Le plan consommateur offre déjà l'accès complet au site. Les plans pros seront activés plus tard.</p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         {accountTypes.map((type) => {
                             const isSelected = selectedType === type.type
                             const isDisabled = type.disabled || (type.requiresSubscription && type.type !== 'consumer')
@@ -70,44 +70,44 @@ export default function AccountChoicePage() {
                                     type="button"
                                     onClick={() => !isDisabled && setSelectedType(type.type)}
                                     disabled={isDisabled}
-                                    className={`relative text-left p-6 rounded-xl border-2 transition-all ${isSelected
-                                            ? 'border-violet-600 bg-violet-50 shadow-lg'
-                                            : 'border-gray-300 bg-white hover:border-violet-400 hover:shadow-md'
+                                    className={`relative text-left p-4 rounded-xl border-2 transition-all ${isSelected
+                                        ? 'border-violet-600 bg-violet-50 shadow-lg'
+                                        : 'border-gray-300 bg-white hover:border-violet-400 hover:shadow-md'
                                         } ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
                                         }`}
                                 >
                                     {/* Badge prix */}
-                                    <div className="absolute top-4 right-4">
+                                    <div className="absolute top-3 right-3">
                                         {type.price > 0 ? (
-                                            <span className="text-xl font-bold text-violet-600">
+                                            <span className="text-base font-bold text-violet-600">
                                                 €{type.price}/mois
                                             </span>
                                         ) : (
-                                            <span className="text-lg font-bold text-green-600">
+                                            <span className="text-sm font-bold text-green-600">
                                                 GRATUIT
                                             </span>
                                         )}
                                     </div>
 
                                     {/* Nom */}
-                                    <h3 className="text-xl font-semibold text-gray-900 mb-2 pr-24">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-1 pr-20">
                                         {type.name}
                                     </h3>
 
                                     {/* Description */}
-                                    <p className="text-sm text-gray-600 mb-4">
+                                    <p className="text-xs text-gray-600 mb-3">
                                         {type.description}
                                     </p>
 
                                     {/* Fonctionnalités */}
                                     {type.features && type.features.length > 0 && (
-                                        <ul className="space-y-2">
+                                        <ul className="space-y-1.5 list-none">
                                             {type.features.map((feature, idx) => (
-                                                <li key={idx} className="flex items-start text-sm text-gray-700">
-                                                    <svg className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                <li key={idx} className="flex items-start text-xs text-gray-700">
+                                                    <svg className="w-3.5 h-3.5 text-green-500 mr-1.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                     </svg>
-                                                    <span>{feature}</span>
+                                                    <span className="leading-tight">{feature}</span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -115,8 +115,8 @@ export default function AccountChoicePage() {
 
                                     {/* Badge sélectionné */}
                                     {isSelected && (
-                                        <div className="absolute -top-2 -right-2 bg-violet-600 text-white rounded-full p-2">
-                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <div className="absolute -top-2 -right-2 bg-violet-600 text-white rounded-full p-1.5">
+                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                             </svg>
                                         </div>
@@ -124,8 +124,8 @@ export default function AccountChoicePage() {
 
                                     {/* Badge "Abonnement requis" */}
                                     {type.requiresSubscription && (
-                                        <p className="flex items-center text-xs text-amber-600 mt-3 font-medium">
-                                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <p className="flex items-center text-xs text-amber-600 mt-2 font-medium">
+                                            <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                             </svg>
                                             Nécessite un abonnement
@@ -136,14 +136,14 @@ export default function AccountChoicePage() {
                         })}
                     </div>
 
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-300">
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-300">
                         <p className="text-xs text-gray-600">
                             Vous pourrez changer de plan plus tard depuis vos paramètres
                         </p>
                         <button
                             type="button"
                             onClick={handleContinue}
-                            className="bg-violet-600 hover:bg-violet-700 text-white font-semibold px-8 py-3 rounded-lg transition-colors shadow-md"
+                            className="bg-violet-600 hover:bg-violet-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors shadow-md"
                         >
                             Continuer vers la connexion
                         </button>
