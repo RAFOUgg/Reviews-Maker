@@ -55,13 +55,24 @@ export function formatReview(review, currentUser = null) {
 
     // Formater l'avatar de l'auteur si présent
     if (review.author) {
+        let avatarUrl = null
+        
+        // If avatar is already a full URL (Google, Apple, etc.)
+        if (review.author.avatar && (review.author.avatar.startsWith('http://') || review.author.avatar.startsWith('https://'))) {
+            avatarUrl = review.author.avatar
+        }
+        // Discord avatar (hash needs CDN construction)
+        else if (review.author.avatar && review.author.discordId) {
+            avatarUrl = `https://cdn.discordapp.com/avatars/${review.author.discordId}/${review.author.avatar}.png`
+        }
+        // Discord default avatar (based on discriminator)
+        else if (review.author.discriminator) {
+            avatarUrl = `https://cdn.discordapp.com/embed/avatars/${parseInt(review.author.discriminator) % 5}.png`
+        }
+        
         formatted.author = {
             ...review.author,
-            avatar: review.author.avatar && review.author.discordId
-                ? `https://cdn.discordapp.com/avatars/${review.author.discordId}/${review.author.avatar}.png`
-                : review.author.discriminator
-                    ? `https://cdn.discordapp.com/embed/avatars/${parseInt(review.author.discriminator) % 5}.png`
-                    : null
+            avatar: avatarUrl
         }
     }
 

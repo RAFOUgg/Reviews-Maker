@@ -44,12 +44,11 @@ router.get('/providers', (req, res) => {
 })
 
 function buildAvatar(user) {
-    // Google/Apple/Facebook/Amazon avatars (stored as full URL)
-    if (user.avatar && (user.googleId || user.appleId || user.facebookId || user.amazonId)) {
-        // If avatar is already a full URL, return it as-is
-        if (user.avatar.startsWith('http://') || user.avatar.startsWith('https://')) {
-            return user.avatar
-        }
+    if (!user) return null
+
+    // If avatar is already a full URL, return as-is (Google, Apple, Facebook, Amazon, etc.)
+    if (user.avatar && (user.avatar.startsWith('http://') || user.avatar.startsWith('https://'))) {
+        return user.avatar
     }
 
     // Discord avatar (stored as hash, needs CDN construction)
