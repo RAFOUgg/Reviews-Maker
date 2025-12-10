@@ -198,7 +198,6 @@ export default function LoginPage() {
                     <div className="space-y-4">
                         <h2 className="text-lg font-semibold text-gray-900">Ou utilisez un fournisseur social</h2>
                         <OAuthButtons
-                            className="space-y-3"
                             onLoginStart={(provider) => handleProviderClick(provider)}
                         />
                     </div>

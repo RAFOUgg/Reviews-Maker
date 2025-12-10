@@ -183,10 +183,34 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
 
             <style jsx>{`
                 .oauth-buttons {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 1rem;
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 0.75rem;
                     width: 100%;
+                }
+
+                /* Tablette: 2 colonnes */
+                @media (min-width: 640px) {
+                    .oauth-buttons {
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 1rem;
+                    }
+                }
+
+                /* Desktop: grille responsive selon nombre de boutons */
+                @media (min-width: 1024px) {
+                    .oauth-buttons {
+                        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                        gap: 1rem;
+                    }
+                }
+
+                /* Large desktop: 3 colonnes max */
+                @media (min-width: 1280px) {
+                    .oauth-buttons {
+                        grid-template-columns: repeat(3, 1fr);
+                        gap: 1.25rem;
+                    }
                 }
 
                 .oauth-button {
@@ -196,7 +220,7 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                     gap: 0.75rem;
                     width: 100%;
                     padding: 0.875rem 1.5rem;
-                    font-size: 1rem;
+                    font-size: 0.95rem;
                     font-weight: 500;
                     border: 2px solid transparent;
                     border-radius: 0.5rem;
@@ -204,6 +228,7 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                     transition: all 0.2s ease;
                     background-color: #fff;
                     color: #1f2937;
+                    min-height: 48px;
                 }
 
                 .oauth-button:disabled {
@@ -233,6 +258,21 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
 
                 .oauth-button__text {
                     white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                /* Ajuster la taille du texte sur petits écrans */
+                @media (max-width: 380px) {
+                    .oauth-button {
+                        font-size: 0.875rem;
+                        padding: 0.75rem 1rem;
+                    }
+                    
+                    .oauth-button__icon {
+                        width: 1.25rem;
+                        height: 1.25rem;
+                    }
                 }
 
                 /* Discord - Blurple brand color */
@@ -346,13 +386,6 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                 .oauth-button--disabled:hover {
                     transform: none !important;
                     box-shadow: none !important;
-                }
-
-                /* Responsive */
-                @media (min-width: 640px) {
-                    .oauth-buttons {
-                        flex-direction: row;
-                    }
                 }
             `}</style>
         </div>
