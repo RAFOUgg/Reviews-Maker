@@ -862,50 +862,82 @@ h2 {
     color: var(--text-tertiary) !important;
 }
 
-/* LABELS et SPANS - Utilise text-primary pour contraste optimal */
-label,
-span:not([class*="bg-"]):not([class*="badge"]) {
-    color: var(--text-primary) !important;
+/* LABELS et SPANS - NOIR INTENSE */
+label {
+    color: #0F172A !important;
+    /* Noir presque pur */
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    margin-bottom: 0.5rem !important;
+    display: block !important;
 }
 
-/* PLACEHOLDERS - Suffisamment visible */
+span:not([class*="bg-"]):not([class*="badge"]) {
+    color: #1E293B !important;
+    /* Slate-800 */
+}
+
+/* PLACEHOLDERS - ULTRA VISIBLE */
 ::placeholder,
 ::-webkit-input-placeholder,
 ::-moz-placeholder,
 :-ms-input-placeholder {
-    color: var(--text-secondary) !important;
-    opacity: 0.8;
-}
-
-/* INPUTS et SELECT - Texte lisible */
-input,
-textarea {
-    color: rgb(var(--text-primary)) !important;
-    background-color: var(--bg-input) !important;
-}
-
-/* SELECT - Style de base avec thème (FORCE le style même sur les options) */
-select {
-    background-color: var(--bg-input) !important;
-    color: rgb(var(--text-primary)) !important;
-    border: 2px solid rgb(var(--color-primary)) !important;
+    color: #475569 !important;
+    /* Slate-600 - Gris moyen TRÈS visible */
+    opacity: 1 !important;
     font-weight: 500 !important;
+}
+
+/* INPUTS et TEXTAREA - CONTRASTE MAXIMUM */
+input:not([type="checkbox"]):not([type="radio"]),
+textarea {
+    background-color: #FFFFFF !important;
+    /* Blanc pur */
+    color: #0F172A !important;
+    /* Slate-900 - Noir presque pur */
+    border: 2px solid #9333EA !important;
+    /* Bordure violette visible */
+    font-weight: 500 !important;
+    font-size: 1rem !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):focus,
+textarea:focus {
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
+    border-color: #7C3AED !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.2) !important;
+}
+
+/* SELECT - ULTRA VISIBLE */
+select {
+    background-color: #FFFFFF !important;
+    /* Blanc pur */
+    color: #0F172A !important;
+    /* Noir presque pur */
+    border: 2px solid #9333EA !important;
+    /* Violet */
+    font-weight: 600 !important;
+    font-size: 1rem !important;
     appearance: none !important;
     -webkit-appearance: none !important;
     -moz-appearance: none !important;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239333EA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
     background-position: right 12px center !important;
-    background-size: 20px !important;
-    padding-right: 40px !important;
+    background-size: 22px !important;
+    padding: 0.75rem 2.5rem 0.75rem 1rem !important;
+    border-radius: 0.5rem !important;
 }
 
-/* OPTIONS - Force le style sur tous les navigateurs */
+/* OPTIONS - CONTRASTE MAXIMUM */
 select option {
-    background-color: var(--bg-primary) !important;
-    color: rgb(var(--text-primary)) !important;
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
     padding: 12px !important;
-    font-weight: 500 !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
 }
 
 /* Firefox - Style des options */
@@ -938,14 +970,14 @@ select:not([class*="unstyled"]) {
     /* Fond et texte avec contraste optimal */
     background-color: var(--bg-input) !important;
     color: var(--text-primary) !important;
-    
+
     /* Bordure colorée du thème */
     border: 2px solid var(--primary) !important;
     border-radius: 0.5rem !important;
-    
+
     /* Padding pour le texte et la flèche */
     padding: 0.75rem 2.5rem 0.75rem 1rem !important;
-    
+
     /* Flèche personnalisée */
     appearance: none !important;
     -webkit-appearance: none !important;
@@ -954,12 +986,12 @@ select:not([class*="unstyled"]) {
     background-repeat: no-repeat !important;
     background-position: right 0.75rem center !important;
     background-size: 20px !important;
-    
+
     /* Typographie */
     font-weight: 500 !important;
     font-size: 1rem !important;
     line-height: 1.5 !important;
-    
+
     /* Transition */
     transition: all 0.2s ease !important;
 }
@@ -1006,6 +1038,7 @@ select:not([class*="unstyled"]) option:hover {
 
 /* Firefox - Styles spécifiques */
 @-moz-document url-prefix() {
+
     .select-themed option,
     select:not([class*="unstyled"]) option {
         background-color: var(--bg-input) !important;
