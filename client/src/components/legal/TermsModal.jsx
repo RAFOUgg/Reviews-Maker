@@ -31,7 +31,7 @@ export default function TermsModal({ isOpen, onClose, onAccept }) {
                     <section>
                         <h3 className="font-bold text-lg text-gray-900 mb-2">1. Introduction</h3>
                         <p>
-                            Bienvenue sur Orchard Studio. Ces Conditions Générales d'Utilisation (« CGU ») régissent votre accès et votre utilisation de notre plateforme en ligne.
+                            Bienvenue sur Review Maker by Terpologie. Ces Conditions Générales d'Utilisation (« CGU ») régissent votre accès et votre utilisation de notre plateforme en ligne.
                             En accédant à notre site, vous acceptez pleinement ces conditions. Si vous n'acceptez pas ces conditions,
                             veuillez ne pas utiliser notre plateforme.
                         </p>

@@ -97,7 +97,7 @@ export default function AccountSelector({ onAccountSelected, isOpen = true }) {
                 {/* Header */}
                 <div className="text-center mb-10 space-y-3">
                     <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
-                        Bienvenue sur Orchard Studio
+                        Bienvenue sur Review Maker
                     </h1>
                     <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto">
                         Choisissez votre profil pour accéder à des fonctionnalités adaptées à vos besoins
@@ -128,10 +128,10 @@ export default function AccountSelector({ onAccountSelected, isOpen = true }) {
                                 onClick={() => handleSelectAccount(tier.id)}
                                 disabled={isDisabled}
                                 className={`relative p-6 rounded-2xl border-2 transition-all duration-300 transform hover:scale-105 ${isDisabled
-                                        ? 'opacity-50 cursor-not-allowed border-gray-600 bg-gray-900'
-                                        : isSelected
-                                            ? 'border-violet-500 bg-gradient-to-br from-violet-950 to-violet-900 shadow-lg shadow-violet-500/50'
-                                            : 'border-gray-600 bg-gray-900/50 hover:border-violet-400'
+                                    ? 'opacity-50 cursor-not-allowed border-gray-600 bg-gray-900'
+                                    : isSelected
+                                        ? 'border-violet-500 bg-gradient-to-br from-violet-950 to-violet-900 shadow-lg shadow-violet-500/50'
+                                        : 'border-gray-600 bg-gray-900/50 hover:border-violet-400'
                                     }`}
                             >
                                 {/* Badge */}

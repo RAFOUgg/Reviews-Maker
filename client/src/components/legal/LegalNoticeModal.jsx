@@ -29,21 +29,22 @@ export default function LegalNoticeModal({ isOpen, onClose }) {
                     <section>
                         <h3 className="font-bold text-lg text-gray-900 mb-2">Informations Légales</h3>
                         <div className="space-y-2">
-                            <p><strong>Dénomination:</strong> Orchard Studio</p>
+                            <p><strong>Dénomination:</strong> Terpologie</p>
+                            <p><strong>Plateforme:</strong> Review Maker</p>
                             <p><strong>Statut juridique:</strong> SARL</p>
-                            <p><strong>Siège social:</strong> À déterminer selon votre juridiction</p>
-                            <p><strong>Contact:</strong> legal@orchardstudio.app</p>
+                            <p><strong>Site Web:</strong> terpologie.eu</p>
+                            <p><strong>Contact:</strong> legal@terpologie.eu</p>
                         </div>
                     </section>
 
                     <section>
                         <h3 className="font-bold text-lg text-gray-900 mb-2">Conformité et Responsabilité</h3>
                         <p>
-                            Orchard Studio opère en conformité avec les lois et réglementations applicables dans les juridictions où le cannabis est légal.
+                            Terpologie opère en conformité avec les lois et réglementations applicables dans les juridictions où le cannabis est légal.
                         </p>
                         <p>
-                            <strong>Important:</strong> Cette plateforme ne facilite pas la vente, l'achat ou la distribution de cannabis.
-                            Elle est exclusivement dédiée au partage d'expériences et d'avis sur des produits légalement consommables.
+                            <strong>Important:</strong> Review Maker ne facilite pas la vente, l'achat ou la distribution de cannabis.
+                            C'est une plateforme exclusivement dédiée au partage d'expériences et d'avis sur des produits légalement consommables.
                         </p>
                         <p>
                             Nous ne sommes pas responsables de l'utilisation du contenu par nos utilisateurs.

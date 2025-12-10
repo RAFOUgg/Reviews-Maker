@@ -114,7 +114,7 @@ curl http://localhost:3000/api/legal/notice
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name orchardstudio.app;
+    server_name terpologie.eu www.terpologie.eu;
 
     ssl_certificate /path/to/cert.pem;
     ssl_certificate_key /path/to/key.pem;
@@ -160,7 +160,7 @@ GOOGLE_CLIENT_SECRET=xxx
 DATABASE_URL=file:/home/user/Reviews-Maker/db/reviews.sqlite
 
 # Frontend
-FRONTEND_URL=https://orchardstudio.app
+FRONTEND_URL=https://www.terpologie.eu
 BASE_PATH=/reviews  # Si derrière un path prefix
 
 # Serveur

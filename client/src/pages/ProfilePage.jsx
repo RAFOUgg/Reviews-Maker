@@ -6,6 +6,10 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 
+/**
+ * Page Profil Utilisateur - Review Maker by Terpologie
+ * Gestion des infos personnelles, avatar, paramètres et documents légaux
+ */
 export default function ProfilePage() {
     const navigate = useNavigate()
     const user = useStore((state) => state.user)
@@ -136,8 +140,8 @@ export default function ProfilePage() {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`pb-4 px-4 font-semibold transition-colors border-b-2 ${activeTab === tab.id
-                                    ? 'text-white border-violet-500'
-                                    : 'text-white/60 hover:text-white border-transparent'
+                                ? 'text-white border-violet-500'
+                                : 'text-white/60 hover:text-white border-transparent'
                                 }`}
                         >
                             {tab.label}

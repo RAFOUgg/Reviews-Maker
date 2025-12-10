@@ -1,7 +1,9 @@
-# Système de Gestion de Compte & Vérification d'Âge - Documentation Complète
+# Système de Gestion de Compte & Vérification d'Âge - Terpologie (Review Maker)
 
 **Date:** Décembre 2025  
-**Statut:** ✅ Implémenté et Prêt pour Tests
+**Statut:** ✅ Implémenté et Prêt pour Tests  
+**Application:** Review Maker by Terpologie  
+**Domain:** terpologie.eu
 
 ---
 
