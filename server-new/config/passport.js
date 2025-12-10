@@ -105,7 +105,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 
             if (!user) {
                 // Vérifier si un utilisateur existe avec cet email
-                const existingUser = await prisma.user.findUnique({
+                const existingUser = await prisma.user.findFirst({
                     where: { email: profile.emails[0].value }
                 });
 
@@ -237,7 +237,7 @@ if (process.env.AMAZON_CLIENT_ID && process.env.AMAZON_CLIENT_SECRET) {
             const displayName = profile.displayName || (primaryEmail ? primaryEmail.split('@')[0] : null)
 
             if (!user) {
-                const existingUser = primaryEmail ? await prisma.user.findUnique({
+                const existingUser = primaryEmail ? await prisma.user.findFirst({
                     where: { email: primaryEmail }
                 }) : null
 
@@ -294,7 +294,7 @@ if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
             const displayName = profile.displayName || (email ? email.split('@')[0] : `fb-${profile.id}`)
 
             if (!user) {
-                const existingUser = email ? await prisma.user.findUnique({
+                const existingUser = email ? await prisma.user.findFirst({
                     where: { email }
                 }) : null
 
