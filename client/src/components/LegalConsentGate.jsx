@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import LegalWelcomeModal from './LegalWelcomeModal'
-import { useLegalConsent } from '../hooks/useLegalConsent'
+import { useLegalConsent } from '../hooks/useLegalConsent.jsx'
 
 /**
  * Wrapper qui affiche la modal de consentement légal si nécessaire
