@@ -62,7 +62,11 @@ export const useLegalConsent = () => {
             setConsentData(null)
         }
         setIsLoading(false)
-    }
+    }, [])
+
+    useEffect(() => {
+        checkConsent()
+    }, [checkConsent])
 
     const giveConsent = (consentInfo) => {
         try {
