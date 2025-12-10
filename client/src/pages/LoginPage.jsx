@@ -91,12 +91,14 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-purple-600 via-violet-700 to-purple-800 text-gray-900 flex items-center justify-center px-4 py-10">
-            <div className="w-full max-w-4xl glass rounded-2xl shadow-2xl overflow-hidden">
-                <div className="p-8 space-y-6">
-                    <h1 className="text-2xl font-bold text-gray-900">Connexion</h1>
-                    <p className="text-gray-700 text-sm">
-                        Choisissez votre type de compte puis connectez-vous avec email ou via OAuth.
-                    </p>
+            <div className="w-full max-w-4xl glass rounded-3xl shadow-2xl overflow-hidden animate-fade-in">
+                <div className="p-8 md:p-10 space-y-7">
+                    <div className="text-center space-y-2">
+                        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Connexion</h1>
+                        <p className="text-gray-600 text-sm md:text-base">
+                            Choisissez votre type de compte puis connectez-vous
+                        </p>
+                    </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {ACCOUNT_CHOICES.map((choice) => {
@@ -110,32 +112,34 @@ export default function LoginPage() {
                                             setSelectedType(choice.id)
                                         }
                                     }}
-                                    className={`text-left p-4 rounded-xl border transition-all ${choice.disabled ? 'opacity-60 cursor-not-allowed' : 'hover:border-violet-500 hover:shadow-md'} ${isSelected ? 'border-violet-600 bg-violet-50' : 'border-gray-300 bg-white'}`}
+                                    className={`text-left p-4 rounded-xl border-2 transition-all duration-300 ${choice.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-violet-500 hover:shadow-lg hover:scale-[1.02]'} ${isSelected ? 'border-violet-600 bg-gradient-to-br from-violet-50 to-purple-50 shadow-md' : 'border-gray-300 bg-white'}`}
                                 >
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <div className="font-semibold text-gray-900">{choice.label}</div>
-                                            <div className="text-sm text-gray-600">{choice.desc}</div>
+                                            <div className="font-bold text-gray-900 flex items-center gap-2">
+                                                {choice.label}
+                                                {isSelected && <span className="text-violet-600">✓</span>}
+                                            </div>
+                                            <div className="text-xs text-gray-600 mt-1">{choice.desc}</div>
                                         </div>
-                                        {isSelected ? <span className="text-sm text-violet-600 font-semibold">Sélectionné</span> : null}
                                     </div>
                                 </button>
                             )
                         })}
                     </div>
 
-                    <div className="bg-violet-50 border border-violet-200 rounded-xl p-4 space-y-4">
-                        <div className="flex gap-2 text-sm font-semibold">
+                    <div className="bg-gradient-to-br from-violet-50 to-purple-50 border-2 border-violet-200 rounded-2xl p-5 space-y-4 shadow-sm">
+                        <div className="flex gap-2 text-sm font-semibold bg-white rounded-xl p-1.5 shadow-inner">
                             <button
                                 type="button"
-                                className={`px-3 py-2 rounded-lg transition-all ${mode === 'login' ? 'bg-violet-600 text-white shadow-md' : 'bg-white border border-violet-300 text-gray-900 hover:bg-violet-50'}`}
+                                className={`flex-1 px-4 py-2.5 rounded-lg transition-all duration-300 ${mode === 'login' ? 'bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-lg scale-105' : 'text-gray-700 hover:bg-gray-50'}`}
                                 onClick={() => setMode('login')}
                             >
-                                Connexion email
+                                Connexion
                             </button>
                             <button
                                 type="button"
-                                className={`px-3 py-2 rounded-lg transition-all ${mode === 'signup' ? 'bg-violet-600 text-white shadow-md' : 'bg-white border border-violet-300 text-gray-900 hover:bg-violet-50'}`}
+                                className={`flex-1 px-4 py-2.5 rounded-lg transition-all duration-300 ${mode === 'signup' ? 'bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-lg scale-105' : 'text-gray-700 hover:bg-gray-50'}`}
                                 onClick={() => setMode('signup')}
                             >
                                 Créer un compte
@@ -180,7 +184,8 @@ export default function LoginPage() {
                             </div>
 
                             {error && (
-                                <div className="text-sm text-red-800 bg-red-50 border border-red-300 rounded-lg px-3 py-2">
+                                <div className="text-sm text-red-800 bg-red-50 border-2 border-red-300 rounded-xl px-4 py-3 flex items-center gap-2 animate-slide-down">
+                                    <span className="text-lg">⚠️</span>
                                     {error}
                                 </div>
                             )}
@@ -188,23 +193,29 @@ export default function LoginPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-violet-600 hover:bg-violet-700 disabled:bg-gray-400 text-white font-semibold px-4 py-2.5 rounded-lg transition-colors shadow-md"
+                                className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold px-4 py-3.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
                             >
-                                {loading ? 'Patientez...' : mode === 'signup' ? 'Créer mon compte' : 'Se connecter'}
+                                {loading ? '⏳ Patientez...' : mode === 'signup' ? '🚀 Créer mon compte' : '🔐 Se connecter'}
                             </button>
                         </form>
                     </div>
 
-                    <div className="space-y-4">
-                        <h2 className="text-lg font-semibold text-gray-900">Ou utilisez un fournisseur social</h2>
-                        <OAuthButtons
-                            onLoginStart={(provider) => handleProviderClick(provider)}
-                        />
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t-2 border-gray-300"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="px-4 bg-white text-gray-600 font-semibold">Ou continuez avec</span>
+                        </div>
                     </div>
 
-                    <div className="text-sm text-gray-600 border-t border-gray-300 pt-4">
-                        <p>En continuant, vous confirmez avoir l'âge légal et accepter la vérification RDR après connexion.</p>
-                        <p className="mt-2 text-xs">Besoin d'aide ? <button className="text-violet-600 hover:underline font-semibold" onClick={() => navigate('/')}>Retour accueil</button></p>
+                    <OAuthButtons
+                        onLoginStart={(provider) => handleProviderClick(provider)}
+                    />
+
+                    <div className="text-sm text-gray-600 border-t-2 border-gray-200 pt-5 space-y-2">
+                        <p className="text-center text-xs">En continuant, vous confirmez avoir l'âge légal et accepter la vérification RDR après connexion.</p>
+                        <p className="text-center text-xs">Besoin d'aide ? <button className="text-violet-600 hover:text-purple-700 hover:underline font-bold transition-colors" onClick={() => navigate('/')}>Retour accueil</button></p>
                     </div>
                 </div>
             </div>

@@ -185,7 +185,7 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                 .oauth-buttons {
                     display: grid;
                     grid-template-columns: 1fr;
-                    gap: 0.75rem;
+                    gap: 0.875rem;
                     width: 100%;
                 }
 
@@ -200,7 +200,7 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                 /* Desktop: grille responsive selon nombre de boutons */
                 @media (min-width: 1024px) {
                     .oauth-buttons {
-                        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
                         gap: 1rem;
                     }
                 }
@@ -209,30 +209,49 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                 @media (min-width: 1280px) {
                     .oauth-buttons {
                         grid-template-columns: repeat(3, 1fr);
-                        gap: 1.25rem;
+                        gap: 1rem;
                     }
                 }
 
                 .oauth-button {
+                    position: relative;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    gap: 0.75rem;
+                    gap: 0.875rem;
                     width: 100%;
-                    padding: 0.875rem 1.5rem;
-                    font-size: 0.95rem;
-                    font-weight: 500;
+                    padding: 1rem 1.5rem;
+                    font-size: 0.9375rem;
+                    font-weight: 600;
                     border: 2px solid transparent;
-                    border-radius: 0.5rem;
+                    border-radius: 12px;
                     cursor: pointer;
-                    transition: all 0.2s ease;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                     background-color: #fff;
                     color: #1f2937;
-                    min-height: 48px;
+                    min-height: 56px;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                    overflow: hidden;
+                }
+
+                .oauth-button::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 50%);
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                }
+
+                .oauth-button:hover::before {
+                    opacity: 1;
                 }
 
                 .oauth-button:disabled {
-                    opacity: 0.6;
+                    opacity: 0.5;
                     cursor: not-allowed;
                 }
 
@@ -277,115 +296,126 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
 
                 /* Discord - Blurple brand color */
                 .oauth-button--discord {
-                    background-color: #5865f2;
+                    background: linear-gradient(135deg, #5865f2 0%, #4752c4 100%);
                     color: #fff;
                     border-color: #5865f2;
                 }
 
                 .oauth-button--discord:hover:not(:disabled) {
-                    background-color: #4752c4;
-                    border-color: #4752c4;
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 12px rgba(88, 101, 242, 0.4);
+                    transform: translateY(-3px) scale(1.02);
+                    box-shadow: 0 8px 24px rgba(88, 101, 242, 0.45), 0 0 0 4px rgba(88, 101, 242, 0.1);
                 }
 
                 .oauth-button--discord:active:not(:disabled) {
-                    transform: translateY(0);
+                    transform: translateY(-1px) scale(1);
                 }
 
                 /* Google - White background avec multi-color icon */
                 .oauth-button--google {
-                    background-color: #fff;
+                    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
                     color: #1f2937;
-                    border-color: #d1d5db;
+                    border: 2px solid #e0e0e0;
                 }
 
                 .oauth-button--google:hover:not(:disabled) {
-                    border-color: #9ca3af;
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                    border-color: #4285f4;
+                    transform: translateY(-3px) scale(1.02);
+                    box-shadow: 0 8px 24px rgba(66, 133, 244, 0.25), 0 0 0 4px rgba(66, 133, 244, 0.08);
                 }
 
                 .oauth-button--google:active:not(:disabled) {
-                    transform: translateY(0);
+                    transform: translateY(-1px) scale(1);
                 }
 
                 /* Apple */
                 .oauth-button--apple {
-                    background-color: #000;
+                    background: linear-gradient(135deg, #000000 0%, #1c1c1e 100%);
                     color: #fff;
                     border-color: #000;
                 }
 
                 .oauth-button--apple:hover:not(:disabled) {
-                    background-color: #111;
-                    border-color: #111;
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+                    transform: translateY(-3px) scale(1.02);
+                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 4px rgba(0, 0, 0, 0.1);
                 }
 
                 .oauth-button--apple:active:not(:disabled) {
-                    transform: translateY(0);
+                    transform: translateY(-1px) scale(1);
                 }
 
                 /* Facebook */
                 .oauth-button--facebook {
-                    background-color: #1877f2;
+                    background: linear-gradient(135deg, #1877f2 0%, #0f5ec4 100%);
                     color: #fff;
                     border-color: #1877f2;
                 }
 
                 .oauth-button--facebook:hover:not(:disabled) {
-                    background-color: #0f5ec4;
-                    border-color: #0f5ec4;
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 12px rgba(24, 119, 242, 0.35);
+                    transform: translateY(-3px) scale(1.02);
+                    box-shadow: 0 8px 24px rgba(24, 119, 242, 0.4), 0 0 0 4px rgba(24, 119, 242, 0.1);
                 }
 
                 .oauth-button--facebook:active:not(:disabled) {
-                    transform: translateY(0);
+                    transform: translateY(-1px) scale(1);
                 }
 
                 /* Amazon */
                 .oauth-button--amazon {
-                    background-color: #232f3e;
+                    background: linear-gradient(135deg, #232f3e 0%, #131a22 100%);
                     color: #fefefe;
                     border-color: #232f3e;
                 }
 
                 .oauth-button--amazon:hover:not(:disabled) {
-                    background-color: #1c2430;
-                    border-color: #1c2430;
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 12px rgba(35, 47, 62, 0.35);
+                    transform: translateY(-3px) scale(1.02);
+                    box-shadow: 0 8px 24px rgba(35, 47, 62, 0.4), 0 0 0 4px rgba(35, 47, 62, 0.1);
                 }
 
                 .oauth-button--amazon:active:not(:disabled) {
-                    transform: translateY(0);
+                    transform: translateY(-1px) scale(1);
                 }
 
-                /* Boutons désactivés - Style grisé avec tooltip */
+                /* Boutons désactivés - Style grisé avec tooltip élégant */
                 .oauth-button--disabled {
-                    opacity: 0.4;
+                    opacity: 0.45;
                     cursor: not-allowed;
                     position: relative;
+                    filter: grayscale(0.8);
                 }
 
                 .oauth-button--disabled::after {
                     content: '(Bientôt disponible)';
                     position: absolute;
-                    bottom: -24px;
+                    bottom: -28px;
                     left: 50%;
                     transform: translateX(-50%);
-                    font-size: 0.75rem;
-                    color: #9ca3af;
+                    font-size: 0.6875rem;
+                    font-weight: 500;
+                    color: #6b7280;
                     white-space: nowrap;
                     pointer-events: none;
+                    padding: 0.25rem 0.5rem;
+                    background: rgba(107, 114, 128, 0.08);
+                    border-radius: 6px;
                 }
 
                 .oauth-button--disabled:hover {
                     transform: none !important;
-                    box-shadow: none !important;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+                }
+
+                /* Animation de chargement améliorée */
+                @keyframes pulse-glow {
+                    0%, 100% {
+                        opacity: 1;
+                    }
+                    50% {
+                        opacity: 0.6;
+                    }
+                }
+
+                .oauth-button:disabled:not(.oauth-button--disabled) {
+                    animation: pulse-glow 1.5s ease-in-out infinite;
                 }
             `}</style>
         </div>
