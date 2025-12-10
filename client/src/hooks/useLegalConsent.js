@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 const CONSENT_KEY = 'terpologie_legal_consent'
 const CONSENT_VALIDITY_DAYS = 30 // Revalider tous les 30 jours
@@ -12,11 +12,7 @@ export const useLegalConsent = () => {
     const [consentData, setConsentData] = useState(null)
     const [isLoading, setIsLoading] = useState(true)
 
-    useEffect(() => {
-        checkConsent()
-    }, [])
-
-    const checkConsent = () => {
+    const checkConsent = useCallback(() => {
         setIsLoading(true)
         try {
             const stored = localStorage.getItem(CONSENT_KEY)

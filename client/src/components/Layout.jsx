@@ -13,8 +13,12 @@ export default function Layout() {
                     <div className="flex items-center justify-between">
                         {/* Logo - Toujours visible avec les couleurs du thème */}
                         <Link to="/" className="flex items-center space-x-3 group">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[rgb(var(--color-primary))] to-[rgb(var(--color-accent))] flex items-center justify-center shadow-lg group-hover:shadow-[0_0_20px_rgba(var(--color-accent),0.5)] transition-all">
-                                <span className="text-2xl">🌿</span>
+                            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg group-hover:shadow-[0_0_20px_rgba(var(--color-accent),0.5)] transition-all">
+                                <img 
+                                    src="/branding_logo.png" 
+                                    alt="Terpologie Reviews Maker" 
+                                    className="w-full h-full object-cover"
+                                />
                             </div>
                             <span className="text-xl font-bold text-[rgb(var(--text-primary))] group-hover:text-[rgb(var(--color-accent))] transition-colors">Reviews Maker</span>
                         </Link>
