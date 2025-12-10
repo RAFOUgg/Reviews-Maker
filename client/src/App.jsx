@@ -21,6 +21,7 @@ import RDRBanner from './components/legal/RDRBanner'
 import AgeVerification from './components/legal/AgeVerification'
 import ConsentModal from './components/legal/ConsentModal'
 import AccountSelector from './components/account/AccountSelector'
+import LegalConsentGate from './components/LegalConsentGate'
 
 function App() {
     const checkAuth = useStore((state) => state.checkAuth)
@@ -110,59 +111,62 @@ function App() {
 
     return (
         <ErrorBoundary>
-            <div className="min-h-screen bg-dark-bg text-dark-text">
-                {/* Bannière RDR - Toujours visible */}
-                <RDRBanner />
+            {/* Gate légal - Premier niveau de protection, s'affiche AVANT tout le reste */}
+            <LegalConsentGate>
+                <div className="min-h-screen bg-dark-bg text-dark-text">
+                    {/* Bannière RDR - Toujours visible */}
+                    <RDRBanner />
 
-                <ToastContainer />
+                    <ToastContainer />
 
-                {/* Modales d'onboarding - Affichage conditionnel pour utilisateurs authentifiés */}
-                {isAuthenticated && !loading && (
-                    <>
-                        {/* 1. Vérification d'âge - Première étape obligatoire */}
-                        {needsAgeVerification && (
-                            <AgeVerification
-                                isOpen={true}
-                                onVerified={handleAgeVerified}
-                                onReject={handleAgeRejected}
-                            />
-                        )}
+                    {/* Modales d'onboarding - Affichage conditionnel pour utilisateurs authentifiés */}
+                    {isAuthenticated && !loading && (
+                        <>
+                            {/* 1. Vérification d'âge - Première étape obligatoire */}
+                            {needsAgeVerification && (
+                                <AgeVerification
+                                    isOpen={true}
+                                    onVerified={handleAgeVerified}
+                                    onReject={handleAgeRejected}
+                                />
+                            )}
 
-                        {/* 2. Consentement RDR - Après vérification d'âge */}
-                        {needsConsent && (
-                            <ConsentModal
-                                isOpen={true}
-                                onAccept={handleConsentAccepted}
-                                onDecline={handleConsentDeclined}
-                            />
-                        )}
+                            {/* 2. Consentement RDR - Après vérification d'âge */}
+                            {needsConsent && (
+                                <ConsentModal
+                                    isOpen={true}
+                                    onAccept={handleConsentAccepted}
+                                    onDecline={handleConsentDeclined}
+                                />
+                            )}
 
-                        {/* 3. Sélection type de compte - Après consentement */}
-                        {needsAccountTypeSelection && (
-                            <AccountSelector
-                                isOpen={true}
-                                onAccountSelected={handleAccountTypeSelected}
-                            />
-                        )}
-                    </>
-                )}
+                            {/* 3. Sélection type de compte - Après consentement */}
+                            {needsAccountTypeSelection && (
+                                <AccountSelector
+                                    isOpen={true}
+                                    onAccountSelected={handleAccountTypeSelected}
+                                />
+                            )}
+                        </>
+                    )}
 
-                <Routes>
-                    <Route path="/" element={<Layout />}>
-                        <Route index element={<HomePage />} />
-                        <Route path="/review/:id" element={<ReviewDetailPage />} />
-                        <Route path="/create" element={<CreateReviewPage />} />
-                        <Route path="/edit/:id" element={<EditReviewPage />} />
-                        <Route path="/library" element={<LibraryPage />} />
-                        <Route path="/stats" element={<StatsPage />} />
-                        <Route path="/settings" element={<SettingsPage />} />
-                        <Route path="/profile" element={<ProfilePage />} />
-                    </Route>
-                    <Route path="/choose-account" element={<AccountChoicePage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/auth/callback" element={<AuthCallback />} />
-                </Routes>
-            </div>
+                    <Routes>
+                        <Route path="/" element={<Layout />}>
+                            <Route index element={<HomePage />} />
+                            <Route path="/review/:id" element={<ReviewDetailPage />} />
+                            <Route path="/create" element={<CreateReviewPage />} />
+                            <Route path="/edit/:id" element={<EditReviewPage />} />
+                            <Route path="/library" element={<LibraryPage />} />
+                            <Route path="/stats" element={<StatsPage />} />
+                            <Route path="/settings" element={<SettingsPage />} />
+                            <Route path="/profile" element={<ProfilePage />} />
+                        </Route>
+                        <Route path="/choose-account" element={<AccountChoicePage />} />
+                        <Route path="/login" element={<LoginPage />} />
+                        <Route path="/auth/callback" element={<AuthCallback />} />
+                    </Routes>
+                </div>
+            </LegalConsentGate>
         </ErrorBoundary>
     )
 }

@@ -23,32 +23,77 @@
     Système de saisie structuré pour producteurs avec PipeLine complète.
     Pipeline :
     - Configurations :
-        - Définition de la trame de la PipeLine (intervalles : jours,, champs custom)
+        - Définition de la trame de la PipeLine (intervalles : phase (0day=graine, germination, plantule, début croissance, fin croissance, début strech, etc...), jours, mois, (si saison" choisi)) : 
+            - Définition d'un début et d'une fin de culture.
         - Période de culture (dates début/fin/durée/saisons)
-          
-    - Mode : Indoor / Outdoor / Greenhouse / Hydro / Bio / Organique / No-till / Autre
-    
-    - Substrat : 
-        - Substrat (terre, coco, laine roche, etc.)
-    - Lumière : 
-    - Environnement : 
-    
-    - Palissage LST/HST : 
-        - PipeLine Méthodologies : SCROG, SOG, Main-Lining, etc. définits en jours
-    
-    - Engrais utilisés (marque, dosages, récap couches)
-    - Distance lampe/plante (pour indoor)
-    - Paramètres bouturage etc. (producteur avancé)
-    - Date de germination
-    - Date de mise en terre
-    - Date de récolte
-    - Durée curing/affinage (en jours)
-- **Données analytiques (optionnelles)**
+    - Fonctionnement de la PiepeLine :
+        - Saisie des données à chaque étape (J+X, semaine Y, saison, phase Z etc...)
+        - Possibilité d’ajouter/supprimer des étapes custom (données modifiables)
+        - Champs custom par étape (notes (commentaire 500 caractères), ajouts / modification d'une données de la review)
+    - Données modifiables :       
+        [GENERAL]
+        - Définition des phases (si pipeline par phase choisie)
+        - Début et fin de culture (date) 1 MAX
+        - Mode : Indoor / Outdoor / Greenhouse / No-till / Autre
+        - Espace de culture : 
+            - Type (armoire, tente, serre, extérieur, autre)
+            - Dimensions (LxlxH en cm/m)
+            - Surface au sol (m²)
+            - Volume total (m³)
+        [ENVIRONEMENT]
+        - Technique de propagation : (graine, clone, bouture, sopalin, coton, serviette etc... )
+        - Substrat : 
+            - Type : (Hydro / Bio / Organique)
+            - Volume (L) :
+            - Composition % : (terre, coco, laine roche, etc.)
+                - Préciser la marque des ingrédiants si possible
+        - Système d'irrigation : 
+            - Type (goutte à goutte, inondation, manuel, etc.)
+            - Fréquence (par jour/semaine)
+            - Volume d'eau par arrosage (L)
+        - Engrais utilisés (liaison possible entre un arrosage et un engraissage dans la pipeline) :
+            - Type (bio, chimique, mixte)
+            - Marque et gamme
+            - Dosage (g/L ou ml/L)
+            - Fréquence d'application (seconde, minute, heure, jour, semaine)
+        - Lumière : 
+            - Type de lampe (LED, HPS, CFL, Naturel, Mixte, etc.)
+            - Type de spectre (complet, bleu, rouge, etc.) si dispo
+            - Distance lampe/plante (cm/m/pieds etc...)
+            - Puissance totale (W)
+            - Durée d'éclairage par jour (heures)
+            - DLI (mol/m²/jour) si dispo
+            - PPFD moyen (µmol/m²/s) si dispo
+            - Kelvin (température de couleur) si dispo
+        - Environnement : 
+            - Température moyenne (°C)
+            - Humidité relative moyenne (%)
+            - CO2 (ppm) si dispo
+            - Ventilation (type, fréquence)
+        - Palissage LST/HST : 
+            - Méthodologies : SCROG, SOG, Main-Lining, etc.
+                - Commentaire pour décrire la manipulations
+        - Recolte :
+            - Couleur des trichomes au moment de la récolte (nuancier (laiteux, ambré, translucide))
+            - Date de récolte
+            - Poids brut (g)
+            - Poids net (après 1er defoliation) (g)
+            - Rendement (g/m² ou g/plante)
+
+- **Données analytiques, PDF**
     - Taux THC (%)
     - Taux CBD (%)
     - Taux CBG/CBC autres (%) ou mg/g
-
-    - Profil terpénique : sélection ou saisie libre (limonène, myrcène, pinène, etc.)
+    - Profil terpénique complet (par certificat d’analyse pdf/image uniquement)
+- **Expérience d’utilisation durant les tests**
+    - Méthode de consommation (Combustion/Vapeur/Infusion)
+    - Dosage utilisé (estimé en grammes/mg)
+    - Durée des effets (HH:MM)
+    - Profils d’effets (choix multiples ; anxiolytique, relaxant, énergisant, créatif, euphorique, etc.)
+    - Effets secondaires ressentis (yeux secs, faim, anxiété, etc.)
+    - Début des effets (immédiat, différé, etc.)
+    - Durée des effets (courte/moyenne/longue)
+    - Usage préféré (soir, journée, seul, social, médical)
 - **Apparence**
     - Photos (macro/globale)
     - Couleur dominante (nuancier à cocher)
@@ -61,30 +106,9 @@
     - Arômes à l’inhalation (primaire/secondaire)
     - Saveur en bouche, rétro-olfaction
     - Intensité de l’arôme (échelle 1 à 10)
-- **Expérience d’utilisation**
-    - Méthode de consommation (Combustion/Vapeur/Infusion)
-    - Dosage utilisé (estimé en grammes/mg)
-    - Durée des effets (HH:MM)
-    - Profils d’effets (choix multiples ; anxiolytique, relaxant, énergisant, créatif, euphorique, etc.)
-    - Effets secondaires ressentis (yeux secs, faim, anxiété, etc.)
-    - Début des effets (immédiat, différé, etc.)
-    - Durée des effets (courte/moyenne/longue)
-    - Usage préféré (soir, journée, seul, social, médical)
-- **Appréciation globale**
-    - Score global (note sur 10)
-    - Points forts/faibles (liste + texte libre)
-    - Recommanderiez-vous ? (oui/non)
-    - Conseils utilisateur
-    - Date de review
-    - Localisation (facultative, pays/région/langue)
-- **Journal de culture** (pour producteur)
-    - Événements (germination, rempotage, palissage…)
-    - Observations par J+X ou semaine (croissance, problèmes, solutions appliquées)
-    - Photos associées à chaque étape
-    - Ajustements/notes privées ou publiques
-    - Courbes/graphes d’évolution (hauteur, température, PH, EC, 
 
-humidité…)
+
+
 
 ---
 

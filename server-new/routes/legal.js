@@ -422,4 +422,84 @@ router.post('/consent', async (req, res) => {
     }
 });
 
+/**
+ * GET /api/legal/user-preferences
+ * Récupère les préférences pays/langue de l'utilisateur
+ */
+router.get('/user-preferences', async (req, res) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({
+                error: 'unauthorized',
+                message: 'Authentification requise',
+            });
+        }
+
+        res.json({
+            country: req.user.country || null,
+            language: req.user.preferredLanguage || 'fr',
+            legalAge: req.user.legalAge || false,
+            consentRDR: req.user.consentRDR || false
+        });
+    } catch (error) {
+        console.error('Erreur récupération préférences:', error);
+        res.status(500).json({
+            error: 'internal_error',
+            message: 'Erreur lors de la récupération des préférences',
+        });
+    }
+});
+
+/**
+ * POST /api/legal/update-preferences
+ * Met à jour les préférences pays/langue de l'utilisateur
+ */
+router.post('/update-preferences', async (req, res) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({
+                error: 'unauthorized',
+                message: 'Authentification requise',
+            });
+        }
+
+        const { country, language } = req.body;
+
+        if (!country || !language) {
+            return res.status(400).json({
+                error: 'missing_fields',
+                message: 'Pays et langue requis',
+            });
+        }
+
+        // Vérifier que le pays est autorisé
+        if (!isCountryAllowed(country)) {
+            return res.status(403).json({
+                error: 'country_not_allowed',
+                message: 'Ce pays ne permet pas l\'accès à la plateforme',
+            });
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: req.user.id },
+            data: {
+                country,
+                preferredLanguage: language
+            },
+        });
+
+        res.json({
+            success: true,
+            country: updatedUser.country,
+            language: updatedUser.preferredLanguage
+        });
+    } catch (error) {
+        console.error('Erreur mise à jour préférences:', error);
+        res.status(500).json({
+            error: 'internal_error',
+            message: 'Erreur lors de la mise à jour des préférences',
+        });
+    }
+});
+
 export default router;

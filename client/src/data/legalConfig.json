@@ -1,0 +1,221 @@
+{
+    "countries": {
+        "FR": {
+            "name": {
+                "fr": "France",
+                "en": "France",
+                "es": "Francia"
+            },
+            "legalAge": 18,
+            "allowed": true,
+            "regulations": {
+                "fr": "En France, l'usage récréatif est interdit. L'usage médical est strictement encadré.",
+                "en": "In France, recreational use is prohibited. Medical use is strictly regulated.",
+                "es": "En Francia, el uso recreativo está prohibido. El uso médico está estrictamente regulado."
+            }
+        },
+        "CA": {
+            "name": {
+                "fr": "Canada",
+                "en": "Canada",
+                "es": "Canadá"
+            },
+            "legalAge": 19,
+            "allowed": true,
+            "regulations": {
+                "fr": "Au Canada, l'usage récréatif est légal pour les adultes. L'âge peut varier par province (18-19 ans).",
+                "en": "In Canada, recreational use is legal for adults. Age may vary by province (18-19 years).",
+                "es": "En Canadá, el uso recreativo es legal para adultos. La edad puede variar según la provincia (18-19 años)."
+            }
+        },
+        "US": {
+            "name": {
+                "fr": "États-Unis",
+                "en": "United States",
+                "es": "Estados Unidos"
+            },
+            "legalAge": 21,
+            "allowed": true,
+            "regulations": {
+                "fr": "Aux États-Unis, la légalité varie selon l'État. Consultez les lois locales.",
+                "en": "In the United States, legality varies by state. Check local laws.",
+                "es": "En los Estados Unidos, la legalidad varía según el estado. Consulte las leyes locales."
+            }
+        },
+        "ES": {
+            "name": {
+                "fr": "Espagne",
+                "en": "Spain",
+                "es": "España"
+            },
+            "legalAge": 18,
+            "allowed": true,
+            "regulations": {
+                "fr": "En Espagne, la consommation privée est tolérée. Les clubs sociaux sont encadrés.",
+                "en": "In Spain, private consumption is tolerated. Social clubs are regulated.",
+                "es": "En España, el consumo privado es tolerado. Los clubes sociales están regulados."
+            }
+        },
+        "BE": {
+            "name": {
+                "fr": "Belgique",
+                "en": "Belgium",
+                "es": "Bélgica"
+            },
+            "legalAge": 18,
+            "allowed": true,
+            "regulations": {
+                "fr": "En Belgique, la détention de petites quantités est tolérée pour usage personnel.",
+                "en": "In Belgium, possession of small amounts is tolerated for personal use.",
+                "es": "En Bélgica, la posesión de pequeñas cantidades se tolera para uso personal."
+            }
+        },
+        "NL": {
+            "name": {
+                "fr": "Pays-Bas",
+                "en": "Netherlands",
+                "es": "Países Bajos"
+            },
+            "legalAge": 18,
+            "allowed": true,
+            "regulations": {
+                "fr": "Aux Pays-Bas, la vente est tolérée dans les coffeeshops agréés.",
+                "en": "In the Netherlands, sale is tolerated in licensed coffeeshops.",
+                "es": "En los Países Bajos, la venta se tolera en los coffeeshops autorizados."
+            }
+        },
+        "CH": {
+            "name": {
+                "fr": "Suisse",
+                "en": "Switzerland",
+                "es": "Suiza"
+            },
+            "legalAge": 18,
+            "allowed": true,
+            "regulations": {
+                "fr": "En Suisse, le CBD est légal. Le THC est strictement réglementé.",
+                "en": "In Switzerland, CBD is legal. THC is strictly regulated.",
+                "es": "En Suiza, el CBD es legal. El THC está estrictamente regulado."
+            }
+        },
+        "DE": {
+            "name": {
+                "fr": "Allemagne",
+                "en": "Germany",
+                "es": "Alemania"
+            },
+            "legalAge": 18,
+            "allowed": true,
+            "regulations": {
+                "fr": "En Allemagne, la législation évolue vers une libéralisation encadrée.",
+                "en": "In Germany, legislation is evolving towards regulated liberalization.",
+                "es": "En Alemania, la legislación está evolucionando hacia una liberalización regulada."
+            }
+        },
+        "IT": {
+            "name": {
+                "fr": "Italie",
+                "en": "Italy",
+                "es": "Italia"
+            },
+            "legalAge": 18,
+            "allowed": true,
+            "regulations": {
+                "fr": "En Italie, le cannabis médical est autorisé. L'usage récréatif est illégal mais la détention de petites quantités est dépénalisée.",
+                "en": "In Italy, medical cannabis is authorized. Recreational use is illegal but possession of small amounts is decriminalized.",
+                "es": "En Italia, el cannabis medicinal está autorizado. El uso recreativo es ilegal pero la posesión de pequeñas cantidades está despenalizada."
+            }
+        },
+        "PT": {
+            "name": {
+                "fr": "Portugal",
+                "en": "Portugal",
+                "es": "Portugal"
+            },
+            "legalAge": 18,
+            "allowed": true,
+            "regulations": {
+                "fr": "Au Portugal, toutes les drogues sont dépénalisées pour usage personnel.",
+                "en": "In Portugal, all drugs are decriminalized for personal use.",
+                "es": "En Portugal, todas las drogas están despenalizadas para uso personal."
+            }
+        },
+        "GB": {
+            "name": {
+                "fr": "Royaume-Uni",
+                "en": "United Kingdom",
+                "es": "Reino Unido"
+            },
+            "legalAge": 18,
+            "allowed": true,
+            "regulations": {
+                "fr": "Au Royaume-Uni, le cannabis médical est légal sur prescription. L'usage récréatif est illégal.",
+                "en": "In the United Kingdom, medical cannabis is legal with prescription. Recreational use is illegal.",
+                "es": "En el Reino Unido, el cannabis medicinal es legal con receta. El uso recreativo es ilegal."
+            }
+        },
+        "MX": {
+            "name": {
+                "fr": "Mexique",
+                "en": "Mexico",
+                "es": "México"
+            },
+            "legalAge": 18,
+            "allowed": true,
+            "regulations": {
+                "fr": "Au Mexique, l'usage récréatif est en cours de légalisation.",
+                "en": "In Mexico, recreational use is being legalized.",
+                "es": "En México, el uso recreativo está en proceso de legalización."
+            }
+        },
+        "UY": {
+            "name": {
+                "fr": "Uruguay",
+                "en": "Uruguay",
+                "es": "Uruguay"
+            },
+            "legalAge": 18,
+            "allowed": true,
+            "regulations": {
+                "fr": "L'Uruguay a été le premier pays à légaliser entièrement le cannabis.",
+                "en": "Uruguay was the first country to fully legalize cannabis.",
+                "es": "Uruguay fue el primer país en legalizar completamente el cannabis."
+            }
+        },
+        "AU": {
+            "name": {
+                "fr": "Australie",
+                "en": "Australia",
+                "es": "Australia"
+            },
+            "legalAge": 18,
+            "allowed": true,
+            "regulations": {
+                "fr": "En Australie, le cannabis médical est légal. Les lois varient selon les États.",
+                "en": "In Australia, medical cannabis is legal. Laws vary by state.",
+                "es": "En Australia, el cannabis medicinal es legal. Las leyes varían según el estado."
+            }
+        },
+        "NZ": {
+            "name": {
+                "fr": "Nouvelle-Zélande",
+                "en": "New Zealand",
+                "es": "Nueva Zelanda"
+            },
+            "legalAge": 18,
+            "allowed": true,
+            "regulations": {
+                "fr": "En Nouvelle-Zélande, le cannabis médical est légal. L'usage récréatif est illégal.",
+                "en": "In New Zealand, medical cannabis is legal. Recreational use is illegal.",
+                "es": "En Nueva Zelanda, el cannabis medicinal es legal. El uso recreativo es ilegal."
+            }
+        }
+    },
+    "defaultCountry": "FR",
+    "defaultLanguage": "fr",
+    "supportedLanguages": [
+        "fr",
+        "en",
+        "es"
+    ]
+}

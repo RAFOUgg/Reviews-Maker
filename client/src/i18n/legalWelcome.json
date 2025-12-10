@@ -1,0 +1,161 @@
+{
+    "fr": {
+        "welcome": {
+            "title": "Bienvenue sur Terpologie Reviews Maker",
+            "subtitle": "Avertissement légal et Réduction des Risques",
+            "selectCountryLanguage": "Choisissez votre pays et votre langue pour afficher les informations légales adaptées.",
+            "accountCountryLanguage": "Pays/langue de votre compte",
+            "modify": "Modifier",
+            "legalAgeForCountry": "L'âge légal d'accès pour {country} est de {age} ans.",
+            "confirmAge": "J'ai au moins {age} ans",
+            "country": "Pays",
+            "language": "Langue"
+        },
+        "rdr": {
+            "title": "Usage responsable",
+            "content": "Ne consommez pas si vous êtes mineur·e, enceinte, ou si la loi locale l'interdit. Ne conduisez pas après consommation. En cas de doute médical, consultez un professionnel."
+        },
+        "analysis": {
+            "title": "Dispositif d'analyse",
+            "content": "Les analyses et comparaisons de produits sont adaptées à votre langue et à votre pays sélectionnés. Certaines fonctionnalités peuvent être limitées selon la réglementation locale."
+        },
+        "laws": {
+            "title": "Lois applicables",
+            "responsibility": "Vous êtes responsable de respecter les lois en vigueur dans {country}. L'accès et la publication sont interdits là où l'usage est illégal.",
+            "legalAge": "Pour {country}, l'âge légal est {age} ans."
+        },
+        "rules": {
+            "title": "Règles essentielles et charte",
+            "localLaws": "Respect des lois locales et des conditions d'utilisation.",
+            "primaryUse": "Usage premier : traçabilité et revue technique des produits.",
+            "accuracy": "Exactitude des informations fournies ; interdiction d'inciter à un usage illégal.",
+            "minors": "Aucune publication de contenus de mineurs ; vérification d'âge requise.",
+            "ip": "Respect de la propriété intellectuelle ; publiez uniquement vos médias/données autorisés.",
+            "zeroTolerance": "Tolérance zéro pour les contenus dangereux, discriminatoires ou trompeurs."
+        },
+        "consent": {
+            "title": "Consentements et actions",
+            "confirmLegalAge": "Je confirme avoir l'âge légal requis pour {country}.",
+            "acceptRules": "J'ai lu et j'accepte la charte et les règles ci‑dessus.",
+            "acceptPrivacy": "J'accepte le traitement de mes données conformément à la Politique de confidentialité.",
+            "viewPrivacy": "Voir"
+        },
+        "actions": {
+            "continue": "Continuer",
+            "login": "Se connecter",
+            "quit": "Quitter"
+        },
+        "errors": {
+            "accessDenied": "Accès refusé : critères légaux non remplis pour {country}.",
+            "mustAcceptAll": "Vous devez accepter tous les consentements pour continuer.",
+            "selectCountry": "Veuillez sélectionner un pays.",
+            "selectLanguage": "Veuillez sélectionner une langue."
+        }
+    },
+    "en": {
+        "welcome": {
+            "title": "Welcome to Terpologie Reviews Maker",
+            "subtitle": "Legal Notice and Risk Reduction",
+            "selectCountryLanguage": "Choose your country and language to display adapted legal information.",
+            "accountCountryLanguage": "Your account's country/language",
+            "modify": "Modify",
+            "legalAgeForCountry": "The legal age to access for {country} is {age} years.",
+            "confirmAge": "I am at least {age} years old",
+            "country": "Country",
+            "language": "Language"
+        },
+        "rdr": {
+            "title": "Responsible use",
+            "content": "Do not consume if you are a minor, pregnant, or if local law prohibits it. Do not drive after consumption. In case of medical doubt, consult a professional."
+        },
+        "analysis": {
+            "title": "Analysis system",
+            "content": "Product analyses and comparisons are adapted to your selected language and country. Some features may be limited according to local regulations."
+        },
+        "laws": {
+            "title": "Applicable laws",
+            "responsibility": "You are responsible for complying with the laws in force in {country}. Access and publication are prohibited where use is illegal.",
+            "legalAge": "For {country}, the legal age is {age} years."
+        },
+        "rules": {
+            "title": "Essential rules and charter",
+            "localLaws": "Compliance with local laws and terms of use.",
+            "primaryUse": "Primary use: product traceability and technical review.",
+            "accuracy": "Accuracy of information provided; prohibition of inciting illegal use.",
+            "minors": "No publication of content involving minors; age verification required.",
+            "ip": "Respect for intellectual property; only publish your authorized media/data.",
+            "zeroTolerance": "Zero tolerance for dangerous, discriminatory or misleading content."
+        },
+        "consent": {
+            "title": "Consents and actions",
+            "confirmLegalAge": "I confirm that I meet the legal age requirement for {country}.",
+            "acceptRules": "I have read and accept the charter and rules above.",
+            "acceptPrivacy": "I accept the processing of my data in accordance with the Privacy Policy.",
+            "viewPrivacy": "View"
+        },
+        "actions": {
+            "continue": "Continue",
+            "login": "Login",
+            "quit": "Quit"
+        },
+        "errors": {
+            "accessDenied": "Access denied: legal criteria not met for {country}.",
+            "mustAcceptAll": "You must accept all consents to continue.",
+            "selectCountry": "Please select a country.",
+            "selectLanguage": "Please select a language."
+        }
+    },
+    "es": {
+        "welcome": {
+            "title": "Bienvenido a Terpologie Reviews Maker",
+            "subtitle": "Aviso legal y Reducción de Riesgos",
+            "selectCountryLanguage": "Elija su país e idioma para mostrar la información legal adaptada.",
+            "accountCountryLanguage": "País/idioma de su cuenta",
+            "modify": "Modificar",
+            "legalAgeForCountry": "La edad legal de acceso para {country} es de {age} años.",
+            "confirmAge": "Tengo al menos {age} años",
+            "country": "País",
+            "language": "Idioma"
+        },
+        "rdr": {
+            "title": "Uso responsable",
+            "content": "No consuma si es menor de edad, está embarazada o si la ley local lo prohíbe. No conduzca después del consumo. En caso de duda médica, consulte a un profesional."
+        },
+        "analysis": {
+            "title": "Sistema de análisis",
+            "content": "Los análisis y comparaciones de productos están adaptados a su idioma y país seleccionados. Algunas funciones pueden estar limitadas según la normativa local."
+        },
+        "laws": {
+            "title": "Leyes aplicables",
+            "responsibility": "Usted es responsable de respetar las leyes vigentes en {country}. El acceso y la publicación están prohibidos donde el uso es ilegal.",
+            "legalAge": "Para {country}, la edad legal es {age} años."
+        },
+        "rules": {
+            "title": "Reglas esenciales y carta",
+            "localLaws": "Respeto de las leyes locales y de las condiciones de uso.",
+            "primaryUse": "Uso principal: trazabilidad y revisión técnica de productos.",
+            "accuracy": "Exactitud de la información proporcionada; prohibición de incitar a un uso ilegal.",
+            "minors": "Ninguna publicación de contenidos de menores; verificación de edad requerida.",
+            "ip": "Respeto de la propiedad intelectual; publique únicamente sus medios/datos autorizados.",
+            "zeroTolerance": "Tolerancia cero para contenidos peligrosos, discriminatorios o engañosos."
+        },
+        "consent": {
+            "title": "Consentimientos y acciones",
+            "confirmLegalAge": "Confirmo que cumplo con el requisito de edad legal para {country}.",
+            "acceptRules": "He leído y acepto la carta y las reglas anteriores.",
+            "acceptPrivacy": "Acepto el tratamiento de mis datos de acuerdo con la Política de privacidad.",
+            "viewPrivacy": "Ver"
+        },
+        "actions": {
+            "continue": "Continuar",
+            "login": "Iniciar sesión",
+            "quit": "Salir"
+        },
+        "errors": {
+            "accessDenied": "Acceso denegado: criterios legales no cumplidos para {country}.",
+            "mustAcceptAll": "Debe aceptar todos los consentimientos para continuar.",
+            "selectCountry": "Por favor seleccione un país.",
+            "selectLanguage": "Por favor seleccione un idioma."
+        }
+    }
+}
