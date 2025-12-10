@@ -7,18 +7,21 @@
 
 ### **A. Fleurs (Herbes/Buds)**
 **Champs récupérés et configurables :**
-- **Identification**
-    - Nom commercial (auto/saisie)
-    - Bibliothèque interne/scan QR ou ajout manuel
-    - Numéro de lot ou identifiant batch
-    - Producteur/Marque
-    - Origine (pays, région, seedbank, breeder)
+- **📋 Informations générales**
+    - Nom commercial*
+    - Cultivar(s)
+    - Farm
+    - Type (indica, sativa, hybride indica-dominant, sativa-dominant, CBD-dominant)
+    - Photo (1-4)*
+ 
 - **Génétiques**
+    - Breeder de la graine
     - Variété (auto-complete)
     - Type : Indica / Sativa / Hybride
     - Pourcentage de chaque génétique (si dispo)
     - Généalogie (parents, lignée, phénotype/clone)
     - Code phénotype ou sélection (“Pheno” pour hunt)
+
 - **PipeLine GLOBAL : Données de culture**
     Système de saisie structuré pour producteurs avec PipeLine complète.
     Pipeline :
@@ -79,11 +82,13 @@
             - Poids brut (g)
             - Poids net (après 1er defoliation) (g)
             - Rendement (g/m² ou g/plante)
+
 - **Données analytiques, PDF**
     - Taux THC (%)
     - Taux CBD (%)
     - Taux CBG/CBC autres (%) ou mg/g
     - Profil terpénique complet (par certificat d’analyse pdf/image uniquement)
+
 - **Expérience d’utilisation durant les tests**
     - Méthode de consommation (Combustion/Vapeur/Infusion)
     - Dosage utilisé (estimé en grammes/mg)
@@ -93,12 +98,14 @@
     - Début des effets (immédiat, différé, etc.)
     - Durée des effets (courte/moyenne/longue)
     - Usage préféré (soir, journée, seul, social, médical)
+
 - **Apparence**
     - Photos (macro/globale)
     - Couleur dominante (nuancier à cocher)
     - Structure des têtes (compacte/aérée/foxy)
     - Trichomes (abondance, maturité : laiteux/ambré/translucide)
     - Présence de graines, débris, etc.
+    
 - **Goût et odeur**
     - Arômes à sec (choix multiples + champ libre)
     - Odeur lors du broyage
