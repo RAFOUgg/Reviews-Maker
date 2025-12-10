@@ -928,16 +928,104 @@ select option:checked {
     font-weight: 600 !important;
 }
 
-/* Classe utilitaire pour forcer le style sur les selects problématiques */
-.select-themed {
+/* ========================================
+   CLASSE UTILITAIRE SELECT THEMED - DROPDOWN STYLISÉ
+   Garantit que TOUS les selects sont lisibles et cohérents
+   ======================================== */
+
+.select-themed,
+select:not([class*="unstyled"]) {
+    /* Fond et texte avec contraste optimal */
     background-color: var(--bg-input) !important;
-    color: rgb(var(--text-primary)) !important;
-    border: 2px solid rgb(var(--color-primary)) !important;
+    color: var(--text-primary) !important;
+    
+    /* Bordure colorée du thème */
+    border: 2px solid var(--primary) !important;
+    border-radius: 0.5rem !important;
+    
+    /* Padding pour le texte et la flèche */
+    padding: 0.75rem 2.5rem 0.75rem 1rem !important;
+    
+    /* Flèche personnalisée */
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%239333EA' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.75rem center !important;
+    background-size: 20px !important;
+    
+    /* Typographie */
+    font-weight: 500 !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+    
+    /* Transition */
+    transition: all 0.2s ease !important;
 }
 
-.select-themed option {
-    background-color: var(--bg-primary) !important;
-    color: rgb(var(--text-primary)) !important;
+.select-themed:hover,
+select:not([class*="unstyled"]):hover {
+    border-color: var(--primary-light) !important;
+    background-color: var(--bg-surface) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.select-themed:focus,
+select:not([class*="unstyled"]):focus {
+    outline: none !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(var(--color-primary), 0.15) !important;
+    background-color: var(--bg-surface) !important;
+}
+
+/* Options - Style sur tous les navigateurs */
+.select-themed option,
+select:not([class*="unstyled"]) option {
+    background-color: var(--bg-input) !important;
+    color: var(--text-primary) !important;
+    padding: 0.75rem 1rem !important;
+    font-weight: 500 !important;
+    font-size: 1rem !important;
+}
+
+/* Option sélectionnée/checked - Chrome/Safari/Edge */
+.select-themed option:checked,
+select:not([class*="unstyled"]) option:checked {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%) !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+}
+
+/* Option hover - Chrome/Safari/Edge */
+.select-themed option:hover,
+select:not([class*="unstyled"]) option:hover {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Firefox - Styles spécifiques */
+@-moz-document url-prefix() {
+    .select-themed option,
+    select:not([class*="unstyled"]) option {
+        background-color: var(--bg-input) !important;
+        color: var(--text-primary) !important;
+    }
+
+    .select-themed option:checked,
+    select:not([class*="unstyled"]) option:checked {
+        background-color: var(--primary) !important;
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
+    }
+}
+
+/* Select désactivé */
+.select-themed:disabled,
+select:not([class*="unstyled"]):disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    background-color: var(--bg-secondary) !important;
 }
 
 /* === CLASSES UTILITAIRES PERSONNALISÉES - REMPLACEMENT RGBA() === */
@@ -979,15 +1067,61 @@ select option:checked {
 
 /* Text colors */
 .text-theme-primary {
-    color: rgb(var(--text-primary)) !important;
+    color: var(--text-primary) !important;
 }
 
 .text-theme-secondary {
-    color: rgb(var(--text-secondary)) !important;
+    color: var(--text-secondary) !important;
+}
+
+.text-theme-tertiary {
+    color: var(--text-tertiary) !important;
 }
 
 .text-theme-accent {
-    color: rgb(var(--color-accent)) !important;
+    color: var(--accent) !important;
+}
+
+/* ========================================
+   CLASSES UTILITAIRES - TEXTE SUR FONDS SPÉCIFIQUES
+   Force le texte adapté selon le fond
+   ======================================== */
+
+/* Texte pour fonds très clairs (inputs, modales) */
+.text-on-light,
+.text-on-surface {
+    color: var(--text-on-light) !important;
+}
+
+/* Texte pour fonds foncés (boutons, badges) */
+.text-on-dark,
+.text-on-primary {
+    color: var(--text-on-dark) !important;
+}
+
+/* Force blanc sur éléments colorés */
+[class*="bg-purple-"],
+[class*="bg-violet-"],
+[class*="bg-indigo-"],
+[class*="bg-pink-"],
+[class*="bg-rose-"],
+[class*="bg-green-"],
+[class*="bg-emerald-"],
+[class*="bg-cyan-"],
+[class*="bg-teal-"],
+[class*="bg-blue-"],
+.btn-primary,
+.badge {
+    color: #FFFFFF !important;
+}
+
+/* Force contraste sur gradients */
+[class*="gradient-primary"],
+[class*="gradient-accent"],
+.bg-gradient-to-r,
+.bg-gradient-to-br,
+.bg-gradient-to-l {
+    color: #FFFFFF !important;
 }
 
 /* Hover states */
@@ -1007,10 +1141,12 @@ select option:checked {
 .bg-theme-danger {
     background-color: rgb(239, 68, 68) !important;
     /* red-500 */
+    color: #FFFFFF !important;
 }
 
 .bg-theme-danger-light {
     background-color: rgba(239, 68, 68, 0.1) !important;
+    color: rgb(220, 38, 38) !important;
 }
 
 .border-theme-danger {
@@ -1024,6 +1160,7 @@ select option:checked {
 .hover\:bg-theme-danger:hover {
     background-color: rgb(220, 38, 38) !important;
     /* red-600 */
+    color: #FFFFFF !important;
 }
 
 /* Exception: inputs dans des zones sombres gardent le texte blanc */
