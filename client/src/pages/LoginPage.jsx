@@ -94,8 +94,8 @@ export default function LoginPage() {
             <div className="w-full max-w-4xl glass rounded-3xl shadow-2xl overflow-hidden animate-fade-in">
                 <div className="p-8 md:p-10 space-y-7">
                     <div className="text-center space-y-2">
-                        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Connexion</h1>
-                        <p className="text-gray-600 text-sm md:text-base">
+                        <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight drop-shadow-lg">Connexion</h1>
+                        <p className="text-white/90 text-sm md:text-base drop-shadow">
                             Choisissez votre type de compte puis connectez-vous
                         </p>
                     </div>
@@ -112,15 +112,15 @@ export default function LoginPage() {
                                             setSelectedType(choice.id)
                                         }
                                     }}
-                                    className={`text-left p-4 rounded-xl border-2 transition-all duration-300 ${choice.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-violet-500 hover:shadow-lg hover:scale-[1.02]'} ${isSelected ? 'border-violet-600 bg-gradient-to-br from-violet-50 to-purple-50 shadow-md' : 'border-gray-300 bg-white'}`}
+                                    className={`text-left p-4 rounded-xl border-2 transition-all duration-300 ${choice.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-violet-400 hover:shadow-lg hover:scale-[1.02]'} ${isSelected ? 'border-violet-400 bg-gradient-to-br from-violet-900/80 to-purple-900/80 shadow-lg shadow-violet-500/30' : 'border-white/20 bg-white/10 backdrop-blur-sm'}`}
                                 >
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <div className="font-bold text-gray-900 flex items-center gap-2">
+                                            <div className="font-bold text-white flex items-center gap-2">
                                                 {choice.label}
-                                                {isSelected && <span className="text-violet-600">✓</span>}
+                                                {isSelected && <span className="text-emerald-400">✓</span>}
                                             </div>
-                                            <div className="text-xs text-gray-600 mt-1">{choice.desc}</div>
+                                            <div className="text-xs text-white/80 mt-1">{choice.desc}</div>
                                         </div>
                                     </div>
                                 </button>
@@ -128,18 +128,18 @@ export default function LoginPage() {
                         })}
                     </div>
 
-                    <div className="bg-gradient-to-br from-violet-50 to-purple-50 border-2 border-violet-200 rounded-2xl p-5 space-y-4 shadow-sm">
-                        <div className="flex gap-2 text-sm font-semibold bg-white rounded-xl p-1.5 shadow-inner">
+                    <div className="bg-white/95 backdrop-blur-lg border-2 border-white/50 rounded-2xl p-5 space-y-4 shadow-xl">
+                        <div className="flex gap-2 text-sm font-semibold bg-gray-100 rounded-xl p-1.5 shadow-inner">
                             <button
                                 type="button"
-                                className={`flex-1 px-4 py-2.5 rounded-lg transition-all duration-300 ${mode === 'login' ? 'bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-lg scale-105' : 'text-gray-700 hover:bg-gray-50'}`}
+                                className={`flex-1 px-4 py-2.5 rounded-lg transition-all duration-300 ${mode === 'login' ? 'bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-lg scale-105' : 'text-gray-700 hover:bg-white'}`}
                                 onClick={() => setMode('login')}
                             >
                                 Connexion
                             </button>
                             <button
                                 type="button"
-                                className={`flex-1 px-4 py-2.5 rounded-lg transition-all duration-300 ${mode === 'signup' ? 'bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-lg scale-105' : 'text-gray-700 hover:bg-gray-50'}`}
+                                className={`flex-1 px-4 py-2.5 rounded-lg transition-all duration-300 ${mode === 'signup' ? 'bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-lg scale-105' : 'text-gray-700 hover:bg-white'}`}
                                 onClick={() => setMode('signup')}
                             >
                                 Créer un compte
@@ -202,10 +202,10 @@ export default function LoginPage() {
 
                     <div className="relative">
                         <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t-2 border-gray-300"></div>
+                            <div className="w-full border-t-2 border-white/30"></div>
                         </div>
                         <div className="relative flex justify-center text-sm">
-                            <span className="px-4 bg-white text-gray-600 font-semibold">Ou continuez avec</span>
+                            <span className="px-4 bg-gradient-to-br from-purple-600 via-violet-700 to-purple-800 text-white font-semibold">Ou continuez avec</span>
                         </div>
                     </div>
 
@@ -213,9 +213,9 @@ export default function LoginPage() {
                         onLoginStart={(provider) => handleProviderClick(provider)}
                     />
 
-                    <div className="text-sm text-gray-600 border-t-2 border-gray-200 pt-5 space-y-2">
+                    <div className="text-sm text-white/90 border-t-2 border-white/30 pt-5 space-y-2">
                         <p className="text-center text-xs">En continuant, vous confirmez avoir l'âge légal et accepter la vérification RDR après connexion.</p>
-                        <p className="text-center text-xs">Besoin d'aide ? <button className="text-violet-600 hover:text-purple-700 hover:underline font-bold transition-colors" onClick={() => navigate('/')}>Retour accueil</button></p>
+                        <p className="text-center text-xs">Besoin d'aide ? <button className="text-emerald-300 hover:text-emerald-200 hover:underline font-bold transition-colors" onClick={() => navigate('/')}>Retour accueil</button></p>
                     </div>
                 </div>
             </div>

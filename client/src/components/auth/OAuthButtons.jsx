@@ -55,11 +55,12 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
     return (
         <div className={`oauth-buttons ${className}`}>
             {/* Bouton Discord */}
+            {enabledProviders.includes('discord') && (
             <button
                 type="button"
-                onClick={() => enabledProviders.includes('discord') && handleLogin('discord', '/api/auth/discord')}
-                disabled={!enabledProviders.includes('discord') || loadingProvider !== null}
-                className={`oauth-button oauth-button--discord ${!enabledProviders.includes('discord') ? 'oauth-button--disabled' : ''}`}
+                onClick={() => handleLogin('discord', '/api/auth/discord')}
+                disabled={loadingProvider !== null}
+                className="oauth-button oauth-button--discord"
                 aria-label={t('auth.loginWithDiscord', 'Se connecter avec Discord')}
             >
                 {loadingProvider === 'discord' ? (
@@ -81,14 +82,16 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                         ? t('auth.connecting', 'Connexion...')
                         : t('auth.loginWithDiscord', 'Se connecter avec Discord')}
                 </span>
-            </button>}
+            </button>
+            )}
 
             {/* Bouton Google */}
+            {enabledProviders.includes('google') && (
             <button
                 type="button"
-                onClick={() => enabledProviders.includes('google') && handleLogin('google', '/api/auth/google')}
-                disabled={!enabledProviders.includes('google') || loadingProvider !== null}
-                className={`oauth-button oauth-button--google ${!enabledProviders.includes('google') ? 'oauth-button--disabled' : ''}`}
+                onClick={() => handleLogin('google', '/api/auth/google')}
+                disabled={loadingProvider !== null}
+                className="oauth-button oauth-button--google"
                 aria-label={t('auth.loginWithGoogle', 'Se connecter avec Google')}
             >
                 {loadingProvider === 'google' ? (
@@ -99,7 +102,6 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                     <svg
                         className="oauth-button__icon"
                         viewBox="0 0 24 24"
-                        fill="currentColor"
                         aria-hidden="true"
                     >
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -113,14 +115,16 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                         ? t('auth.connecting', 'Connexion...')
                         : t('auth.loginWithGoogle', 'Se connecter avec Google')}
                 </span>
-            </button>}
+            </button>
+            )}
 
             {/* Bouton Apple */}
+            {enabledProviders.includes('apple') && (
             <button
                 type="button"
-                onClick={() => enabledProviders.includes('apple') && handleLogin('apple', '/api/auth/apple')}
-                disabled={!enabledProviders.includes('apple') || loadingProvider !== null}
-                className={`oauth-button oauth-button--apple ${!enabledProviders.includes('apple') ? 'oauth-button--disabled' : ''}`}
+                onClick={() => handleLogin('apple', '/api/auth/apple')}
+                disabled={loadingProvider !== null}
+                className="oauth-button oauth-button--apple"
                 aria-label={t('auth.loginWithApple', 'Se connecter avec Apple')}
             >
                 {loadingProvider === 'apple' ? (
@@ -135,14 +139,16 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                         ? t('auth.connecting', 'Connexion...')
                         : t('auth.loginWithApple', 'Se connecter avec Apple')}
                 </span>
-            </button>}
+            </button>
+            )}
 
             {/* Bouton Facebook */}
+            {enabledProviders.includes('facebook') && (
             <button
                 type="button"
-                onClick={() => enabledProviders.includes('facebook') && handleLogin('facebook', '/api/auth/facebook')}
-                disabled={!enabledProviders.includes('facebook') || loadingProvider !== null}
-                className={`oauth-button oauth-button--facebook ${!enabledProviders.includes('facebook') ? 'oauth-button--disabled' : ''}`}
+                onClick={() => handleLogin('facebook', '/api/auth/facebook')}
+                disabled={loadingProvider !== null}
+                className="oauth-button oauth-button--facebook"
                 aria-label={t('auth.loginWithFacebook', 'Se connecter avec Facebook')}
             >
                 {loadingProvider === 'facebook' ? (
@@ -157,14 +163,16 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                         ? t('auth.connecting', 'Connexion...')
                         : t('auth.loginWithFacebook', 'Se connecter avec Facebook')}
                 </span>
-            </button>}
+            </button>
+            )}
 
             {/* Bouton Amazon */}
+            {enabledProviders.includes('amazon') && (
             <button
                 type="button"
-                onClick={() => enabledProviders.includes('amazon') && handleLogin('amazon', '/api/auth/amazon')}
-                disabled={!enabledProviders.includes('amazon') || loadingProvider !== null}
-                className={`oauth-button oauth-button--amazon ${!enabledProviders.includes('amazon') ? 'oauth-button--disabled' : ''}`}
+                onClick={() => handleLogin('amazon', '/api/auth/amazon')}
+                disabled={loadingProvider !== null}
+                className="oauth-button oauth-button--amazon"
                 aria-label={t('auth.loginWithAmazon', 'Se connecter avec Amazon')}
             >
                 {loadingProvider === 'amazon' ? (
@@ -179,7 +187,8 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                         ? t('auth.connecting', 'Connexion...')
                         : t('auth.loginWithAmazon', 'Se connecter avec Amazon')}
                 </span>
-            </button>}
+            </button>
+            )}
 
             <style jsx>{`
                 .oauth-buttons {
@@ -187,29 +196,40 @@ export function OAuthButtons({ className = '', onLoginStart, onLoginError }) {
                     grid-template-columns: 1fr;
                     gap: 0.875rem;
                     width: 100%;
+                    max-width: 100%;
                 }
 
-                /* Tablette: 2 colonnes */
-                @media (min-width: 640px) {
+                /* Mobile large: 1 colonne */
+                @media (min-width: 480px) {
+                    .oauth-buttons {
+                        gap: 1rem;
+                    }
+                }
+
+                /* Tablette: 2 colonnes équilibrées */
+                @media (min-width: 768px) {
                     .oauth-buttons {
                         grid-template-columns: repeat(2, 1fr);
                         gap: 1rem;
                     }
                 }
 
-                /* Desktop: grille responsive selon nombre de boutons */
+                /* Desktop: 2 colonnes avec meilleure largeur */
                 @media (min-width: 1024px) {
                     .oauth-buttons {
-                        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-                        gap: 1rem;
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 1.25rem;
+                        max-width: 800px;
+                        margin: 0 auto;
                     }
                 }
 
-                /* Large desktop: 3 colonnes max */
+                /* Large desktop: garde 2 colonnes centrées pour meilleure ergonomie */
                 @media (min-width: 1280px) {
                     .oauth-buttons {
-                        grid-template-columns: repeat(3, 1fr);
-                        gap: 1rem;
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 1.5rem;
+                        max-width: 700px;
                     }
                 }
 

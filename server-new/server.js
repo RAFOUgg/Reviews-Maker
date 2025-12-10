@@ -72,9 +72,21 @@ app.use(cors({
         if (process.env.NODE_ENV !== 'production') return callback(null, true)
         // Allow file:// protocol for local HTML testing
         if (origin === 'null') return callback(null, true)
-        // Otherwise, only allow the configured front-end URL
-        const allowed = process.env.FRONTEND_URL || 'http://localhost:5173'
-        if (origin === allowed) return callback(null, true)
+
+        // Liste des origines autorisées (frontend principal + localhost pour dev/tests)
+        const allowedOrigins = [
+            process.env.FRONTEND_URL || 'http://localhost:5173',
+            'http://localhost:5173',
+            'http://localhost:3000',
+            'http://127.0.0.1:5173',
+            'http://127.0.0.1:3000',
+            'https://terpologie.eu'
+        ].filter(Boolean)
+
+        if (allowedOrigins.includes(origin)) return callback(null, true)
+
+        // Log des tentatives non autorisées pour debug
+        console.warn(`[CORS] Origin non autorisée: ${origin}`)
         callback(new Error('Not allowed by CORS'))
     },
     credentials: true, // ✅ Essencial pour les cookies
