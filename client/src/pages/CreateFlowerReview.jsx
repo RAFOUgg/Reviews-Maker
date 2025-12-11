@@ -333,13 +333,12 @@ export default function CreateFlowerReview() {
                         <button
                             key={section.id}
                             onClick={() => setCurrentSection(index)}
-                            className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                index === currentSection
+                            className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${index === currentSection
                                     ? 'bg-primary-500 text-white'
                                     : index < currentSection
-                                    ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                            }`}
+                                        ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                }`}
                         >
                             <span className="mr-1">{section.icon}</span>
                             {section.title}
