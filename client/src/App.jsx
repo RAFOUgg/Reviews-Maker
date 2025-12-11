@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
+import { I18nextProvider } from 'react-i18next'
+import i18n from './i18n/i18n'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import ReviewDetailPage from './pages/ReviewDetailPage'
@@ -16,7 +18,6 @@ import { useStore } from './store/useStore'
 import { useAuth } from './hooks/useAuth'
 import LoginPage from './pages/LoginPage'
 import AccountChoicePage from './pages/AccountChoicePage'
-import './i18n/i18n'
 import RDRBanner from './components/legal/RDRBanner'
 import AgeVerification from './components/legal/AgeVerification'
 import ConsentModal from './components/legal/ConsentModal'
@@ -110,64 +111,66 @@ function App() {
     }, [])
 
     return (
-        <ErrorBoundary>
-            {/* Gate légal - Premier niveau de protection, s'affiche AVANT tout le reste */}
-            <LegalConsentGate>
-                <div className="min-h-screen bg-dark-bg text-dark-text">
-                    {/* Bannière RDR - Toujours visible */}
-                    <RDRBanner />
+        <I18nextProvider i18n={i18n}>
+            <ErrorBoundary>
+                {/* Gate légal - Premier niveau de protection, s'affiche AVANT tout le reste */}
+                <LegalConsentGate>
+                    <div className="min-h-screen bg-dark-bg text-dark-text">
+                        {/* Bannière RDR - Toujours visible */}
+                        <RDRBanner />
 
-                    <ToastContainer />
+                        <ToastContainer />
 
-                    {/* Modales d'onboarding - Affichage conditionnel pour utilisateurs authentifiés */}
-                    {isAuthenticated && !loading && (
-                        <>
-                            {/* 1. Vérification d'âge - Première étape obligatoire */}
-                            {needsAgeVerification && (
-                                <AgeVerification
-                                    isOpen={true}
-                                    onVerified={handleAgeVerified}
-                                    onReject={handleAgeRejected}
-                                />
-                            )}
+                        {/* Modales d'onboarding - Affichage conditionnel pour utilisateurs authentifiés */}
+                        {isAuthenticated && !loading && (
+                            <>
+                                {/* 1. Vérification d'âge - Première étape obligatoire */}
+                                {needsAgeVerification && (
+                                    <AgeVerification
+                                        isOpen={true}
+                                        onVerified={handleAgeVerified}
+                                        onReject={handleAgeRejected}
+                                    />
+                                )}
 
-                            {/* 2. Consentement RDR - Après vérification d'âge */}
-                            {needsConsent && (
-                                <ConsentModal
-                                    isOpen={true}
-                                    onAccept={handleConsentAccepted}
-                                    onDecline={handleConsentDeclined}
-                                />
-                            )}
+                                {/* 2. Consentement RDR - Après vérification d'âge */}
+                                {needsConsent && (
+                                    <ConsentModal
+                                        isOpen={true}
+                                        onAccept={handleConsentAccepted}
+                                        onDecline={handleConsentDeclined}
+                                    />
+                                )}
 
-                            {/* 3. Sélection type de compte - Après consentement */}
-                            {needsAccountTypeSelection && (
-                                <AccountSelector
-                                    isOpen={true}
-                                    onAccountSelected={handleAccountTypeSelected}
-                                />
-                            )}
-                        </>
-                    )}
+                                {/* 3. Sélection type de compte - Après consentement */}
+                                {needsAccountTypeSelection && (
+                                    <AccountSelector
+                                        isOpen={true}
+                                        onAccountSelected={handleAccountTypeSelected}
+                                    />
+                                )}
+                            </>
+                        )}
 
-                    <Routes>
-                        <Route path="/" element={<Layout />}>
-                            <Route index element={<HomePage />} />
-                            <Route path="/review/:id" element={<ReviewDetailPage />} />
-                            <Route path="/create" element={<CreateReviewPage />} />
-                            <Route path="/edit/:id" element={<EditReviewPage />} />
-                            <Route path="/library" element={<LibraryPage />} />
-                            <Route path="/stats" element={<StatsPage />} />
-                            <Route path="/settings" element={<SettingsPage />} />
-                            <Route path="/profile" element={<ProfilePage />} />
-                        </Route>
-                        <Route path="/choose-account" element={<AccountChoicePage />} />
-                        <Route path="/login" element={<LoginPage />} />
-                        <Route path="/auth/callback" element={<AuthCallback />} />
-                    </Routes>
-                </div>
-            </LegalConsentGate>
-        </ErrorBoundary>
+                        <Routes>
+                            <Route path="/" element={<Layout />}>
+                                <Route index element={<HomePage />} />
+                                <Route path="/review/:id" element={<ReviewDetailPage />} />
+                                <Route path="/create" element={<CreateReviewPage />} />
+                                <Route path="/edit/:id" element={<EditReviewPage />} />
+                                <Route path="/library" element={<LibraryPage />} />
+                                <Route path="/stats" element={<StatsPage />} />
+                                <Route path="/settings" element={<SettingsPage />} />
+                                <Route path="/profile" element={<ProfilePage />} />
+                            </Route>
+                            <Route path="/choose-account" element={<AccountChoicePage />} />
+                            <Route path="/login" element={<LoginPage />} />
+                            <Route path="/auth/callback" element={<AuthCallback />} />
+                        </Routes>
+                    </div>
+                </LegalConsentGate>
+            </ErrorBoundary>
+        </I18nextProvider>
     )
 }
 

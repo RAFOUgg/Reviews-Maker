@@ -1,9 +1,8 @@
-
 # Fonctionnalités de création et d’export de reviews — champs et options détaillés
 
 ---
 
-## 1. Saisie/Capture d’informations selon le type de produit
+## 1. Enumération des types de produits et de leurs champs spécifiques
 
 ### **A. Fleurs (Herbes/Buds)**
 **Champs récupérés et configurables :**
@@ -124,6 +123,17 @@
     - Intensité/10
     - Choix (max 8 parmis une liste pré-définie ultra complète classée par type (mentaux, physique, thérapeutiques) déjà codé)
         - Filtre par tous,  neutre, positif et négatif
+- **🔥 PipeLine CURING MATURATION :** 
+- Configurations :
+        - Définition de la trame de la PipeLine (intervalles : s, m, h)
+        - Durée de curing (jours/semaines/mois selon trame choisie)
+    - Type de maturation/curing (froid <5°C/ chaud >5°C)
+    - Température de curing (°C)
+    - Humidité relative dans recipient (%)
+    - Type de recipient (aire libre, verre, plastique, etc... et autre)
+    - Emballage/Ballotage primaire : (celophane, papier cuisson, aliminium, paper hash, sac à viade, congelation, sous vide(complète par machine, partiel manuellement), autre)
+    - Opacité du recipient de curing (opaque, semi-opaque, transparent, ambré, etc...)
+    - Volume ocupé par le produit dans le recipient (L/mL)
 
 ---
 
@@ -132,11 +142,14 @@
 - **📋 Informations générales**
     - Nom commercial*
     - Hashmaker
+    - Laboratoir de production
     - Cultivars utilisés : nouveau ou depuis la bibliothèque de l'utilistateur via pup-up
     - Photo (1-4)*
 - **🔬 Pipeline & Séparation**
 **Système de saisie structuré pour producteurs avec PipeLine complète.**
 Pipeline :
+- Configurations :
+        - Définition de la trame de la PipeLine (intervalles : s, m, h)
     - Méthode de séparation (manuelle, tamisage à sec, eau/glace, autre)
     - Nombre de passes (si eau/glace)
     - Température de l’eau (si eau/glace)
@@ -199,68 +212,221 @@ Filtration membranaire
     - Intensité/10
     - Choix (max 8 parmis une liste pré-définie ultra complète classée par type (mentaux, physique, thérapeutiques) déjà codé)
         - Filtre par tous,  neutre, positif et négatif
+- **🔥 PipeLine CURING MATURATION :** 
+- Configurations :
+        - Définition de la trame de la PipeLine (intervalles : s, m, h)
+        - Durée de curing (jours/semaines/mois selon trame choisie)
+    - Type de maturation/curing (froid <5°C/ chaud >5°C)
+    - Température de curing (°C)
+    - Humidité relative dans recipient (%)
+    - Type de recipient (aire libre, verre, plastique, etc... et autre)
+    - Emballage/Ballotage primaire : (celophane, papier cuisson, aliminium, paper hash, sac à viade, congelation, sous vide(complète par machine, partiel manuellement), autre)
+    - Opacité du recipient de curing (opaque, semi-opaque, transparent, ambré, etc...)
+    - Volume ocupé par le produit dans le recipient (L/mL)
+ 
+---
 
-
-Aspect collant/gras/10
-### **B. Concentrés (Rosin, BHO, etc.)**
+### **C. Concentrés (Rosin, BHO, etc.)**
 **Champs récupérés :**
-- **Identification**
-    - Nom/lot/ID unique
-    - Type extraction (hash, ice-o-lator, dry-sift, rosin, BHO, FECO, distillat…)
-    - Producteur/marque
-    - Matière première utilisée (variété, trim, buds)
-- **Procédé/Fabrication (pour producteur)**
-    - Solvant (si applicable : butane, ethanol…)
-    - Techniques (presse, filtration…)
-    - Température extraction/pressage
-    - Date extraction/pressage
-- **Caractéristiques physiques**
-    - Texture (sablé, crémeux, solide, huileux…)
-    - Couleur (nuancier)
-    - Odeur
-    - Apparence macro (cristaux, bulles…)
-    - Photos (multi)
-- **Données analytiques**
-    - THC, CBD, autres (si certificat d’analyse)
-    - Profil terpénique (si dispo)
-- **Expérience d’utilisation**
-    - Méthode consumption (dab, vapeur, ingestion…)
-    - Puissance ressentie (échelle)
-    - Premier effet ressenti / durée effet
-    - Saveur à la chauffe (primaire, secondaire)
-    - Consistance à température ambiante et chauffée
-- **Note & recommandations**
-    - Score global
-    - Avantages/inconvénients
-    - Comparaison produit équivalent
-    - Date essai/review
+- **📋 Informations générales**
+    - Nom commercial*
+    - Hashmaker
+    - Laboratoir de production
+    - Cultivars utilisés : nouveau ou depuis la bibliothèque de l'utilistateur via pup-up
+    - Photo (1-4)*
+- **🔬 Pipeline Extraction**
+- Configurations :
+        - Définition de la trame de la PipeLine (intervalles : s, m, h)
+    - Méthode d'extraction - Vous devez spécifier les cultivars avant de définir les étapes du pipeline
+"Extraction à l'éthanol (EHO)Extraction à l'alcool isopropylique (IPA)Extraction à l'acétone (AHO)Extraction au butane (BHO)Extraction a l'isobutane (IHO)Extraction au propane (PHO)Extraction à l'hexane (HHO)Extraction aux huiles végétales (coco, olive)Extraction au CO₂ supercritiqueAutrePressage à chaud (Rosin)Pressage à froidExtraction par ultrasons (UAE)Extraction assistée par micro-ondes (MAE)Extraction avec tensioactifs (Tween 20)Autre"
+Pipeline de purification : 
+Choisir des méthode + définir des paramètres associés :
+Chromatographie sur colonne
+Flash Chromatography
+HPLC
+GC
+TLC
+Autre
+Winterisation
+Décarboxylation
+Fractionnement par température
+Fractionnement par solubilité
+Autre
+Filtration
+Centrifugation
+Décantation
+Séchage sous vide
+Autre
+Recristallisation
+Sublimation
+Extraction liquide-liquide
+Adsorption sur charbon actif
+Filtration membranaire
+Autre
+- **👁️ Visuel & Technique**
+    - Couleur / Transparence/10
+    - Viscosité/10
+    - Pureté visuelle/10
+    - Melting (10=FullMelt)/10
+    - Résidus (10=aucune)/10
+    - Pistils (10=aucune)/10
+    - Moisissure (10=aucune)/10
+- **👃 Odeurs**
+    - Fidélité au cultivars/10
+    - Intensité aromatique/10
+    - Notes dominantes (max 7 parmis une liste pré-définie ultra complète)
+    - Notes secondaires (max 7 parmis une liste pré-définie ultra complète)
+- **🤚 Texture**
+    - Dureté/10
+    - Densité tactile/10
+    - Friabilité/Viscosité/10
+    - Melting/Résidus/10
+- **😋 Goûts**
+    - Intensité/10
+    - Agressivité/piquant/10
+    - Dry puff/tirage à sec (max 7)
+    - Inhalation (max 7)
+    - Expiration/arrière-goût (max 7)
+- **💥 Effets ressentis**
+    - Montée (rapidité)/10
+    - Intensité/10
+    - Choix (max 8 parmis une liste pré-définie ultra complète classée par type (mentaux, physique, thérapeutiques) déjà codé)
+        - Filtre par tous,  neutre, positif et négatif
+    - Durée des effets (5-15min, 15-30min, 30-60min, 1-2h, 2h+, 4h+, 8h+, 24h+)
+- **🔥 PipeLine CURING MATURATION :** 
+- Configurations :
+        - Définition de la trame de la PipeLine (intervalles : s, m, h)
+        - Durée de curing (jours/semaines/mois selon trame choisie)
+    - Type de maturation/curing (froid <5°C/ chaud >5°C)
+    - Température de curing (°C)
+    - Humidité relative dans recipient (%)
+    - Type de recipient (aire libre, verre, plastique, etc... et autre)
+    - Emballage/Ballotage primaire : (celophane, papier cuisson, aliminium, paper hash, sac à viade, congelation, sous vide(complète par machine, partiel manuellement), autre)
+    - Opacité du recipient de curing (opaque, semi-opaque, transparent, ambré, etc...)
+    - Volume ocupé par le produit dans le recipient (L/mL)
 
 ---
 
-### **C. Comestibles**
+### **D. Comestibles**
 **Champs récupérés :**
-- **Identification**
-    - Nom produit
-    - Type (brownie, bonbon, boisson…)
-    - Producteur/marque
-    - Lot/date péremption
-- **Dosages**
-    - Quantité THC/CBD/unité & totale (mg ou %)
-    - Déclaration du dosage sur l’emballage (oui/non)
-    - Ingrédients majeurs/allergènes
-- **Expérience de consommation**
-    - Goût général (échelle + texte)
-    - Texture (sec, moelleux, croquant…)
-    - Odeur à l’ouverture
-    - Packaging/étiquetage (photo)
-    - Temps d’apparition effet (min/max)
-    - Durée effet ressentie
-    - Effet(s) majeur(s) (choix)
-    - Variation selon dose/test
-    - Effet rebond/retour négatif (possible)
-- **Appréciation**
-    - Note sur 10
-    - Conseils usage (par produit, par tolérance)
-    - Recommande/ré-acheter (oui/non)
-    - Date de review
+- **📋 Informations générales**
+    - Nom du produit*
+    - Type de comestible
+    - Fabricant
+    - Type de genétiques
+    - Photo (1-4)*
+- **PipeLine Recette**
+    - 🥘 Ingrédients :
+        - Choix entre produit standard et produit cannabinique
+        - Ajout de l'ingrediant, d'une qtt et d'une unité (g, ml, pcs, etc...)
+        - Possibilité d'ajouter plusieurs ingrédients
+        - Étapes de préparation (actions prédéfinis,assignable à chaque ingrediant)
+- **😋 Goûts**
+    - Intensité/10
+    - Agressivité/piquant/10
+    - Dry puff/tirage à sec (max 7)
+    - Inhalation (max 7)
+    - Expiration/arrière-goût (max 7)
+- **💥 Effets ressentis**
+    - Montée (rapidité)/10
+    - Intensité/10
+    - Choix (max 8 parmis une liste pré-définie ultra complète classée par type (mentaux, physique, thérapeutiques) déjà codé)
+        - Filtre par tous,  neutre, positif et négatif
+    - Durée des effets (5-15min, 15-30min, 30-60min, 1-2h, 2h+, 4h+, 8h+, 24h+)
+
+---
+
+## 2. Export Maker, l'exporter des reviews, formats et options
+Nombre de contenus limité par template et format (ex: format 9:16 ne peut pas contenir autant d'éléments que le format 1:1)
+    - Pagination possible pour les formats 1:1 et 16:9 (max 9 pages par export) 
+    - Formats choisissable : 1:1, 16:9, A4, 9:16 etc...
+    - Templates prédéfinis :
+     - Contenus non choisissables depuis les templates prédéfinis, si ajout / suppression d'éléments souhaitée, passer en mode personnalisé (si compte producteur/influenceur).
+        - Compact Format : 1:1 uniquement
+            - Contenus : 
+                - Type de produit
+                - Nom commercial
+                - Cultivars
+                - Farm / Hashmaker
+                - Photo principale
+                - PipeLine CURING MATURATION
+                - Total de Visuel & Technique 
+                - Total de Odeurs
+                - Total de Goûts
+                - Total de Effets ressentis
+        - Détaillé Format : 1:1, 16:9, 9:16 A4
+            - Contenus : 
+                - Informations générales complètes
+                - 5 étapes de la Pipeline (si existant et available)
+                - PipeLine CURING MATURATION 
+                - Chaque note de Visuel & Technique
+                - Chaque note de Odeurs
+                - Chaque note de Texture
+                - Chaque note de Goûts
+                - Chaque note de Effets ressentis
+        - Complète
+            - Contenus : 
+                - Informations générales complètes
+                - Toutes les Pipeline complètes (si existant et available)
+                - Toutes les séction et notes détaillées avec données associés
+        - Personnalisé (drag and drop des données à inclure dans les zones prévues de la reviews (format 1:1 ou 9:16 choisi non modifiable dans ce mode))
+        - PipeLine configurable (Producteur):
+            - Choix des étapes à afficher (avec possibilité d'ajouter des étapes custom)
+            - Choix des données à afficher par étape (notes, images, données chiffrées, etc...)
+    Export : 
+    - Système d'export des reviews en PNG/JPEG/SVG, PDF, CSV, JSON et HTML avec options de qualité (dpi, compression, etc...)
+    - Partage direct sur les réseaux sociaux (Twitter, Instagram, Facebook, Reddit, etc...)
+    - Envoi par email (avec options de mise en page et de format)
+
+- **Apparence de Export Maker**
+    - Onglet Templates : 
+        - Templates prédéfinis et personnalisés par l'utilisateur (si available selon type de compte)
+    - Onglet Personnalisation gratuite :
+        - Thème clair/sombre
+        - Choix des couleurs : textes, bordure, fonds, etc... (palette prédéfinie ou personnalisée)
+        - Polices personnalisées (choix parmi une liste de polices web-safe et Google Fonts)
+        - Filigrane (option d'ajout d'un filigrane personnalisé sur les exports) (Choix de la position, taille, opacité)
+        - Apparences et choix des images affichées (bordure, effet colorimétrique, flou, etc...)
+[CANVA PRODUCTEUR/INFLUENCEUR MODE]
+    - Onglet Contenu (Personnalisation payante si avaialable) :  
+        - Choix du format (1:1, 16:9, A4, 9:16)
+        - Choix des sections à inclure/exclure
+        - Définition des zones personnalisées :
+            - Drag and drop des éléments dans les zones définits
+        - Options d'agencement des éléments (drag and drop pour réorganiser les emplacement des sections de la review avant export)
+
+- ## Répartition des fonctionnalités selon les types de comptes utilisateurs :
+
+- **Compte standard (Amateur) :**
+    - Accès aux section : 
+        - Information général
+        - Visuel & Technique
+        - PipeLine CURING MATURATION
+        - Odeurs
+        - Goûts
+        - Effets ressentis
+    - Accès aux templates prédéfinis (Compact, Détaillé, Complète)
+        - Format imposé par les templates obligatoire.
+    - Export en PNG/JPEG/PDF moyenne qualité
+    - Personnalisation limitée (thème clair/sombre, choix de couleurs complet, configuration image et typo)
+
+- **Compte Producteur (Payant 29.99€/mois) :**
+    - Accès à tous les templates (y compris Personnalisé)
+        - Mode contenus zone personnalisable avec drag and drop des contenus sur mesure 
+    - Export en haute qualité (PNG/JPEG/PDF 300dpi, SVG, CSV, JSON, HTML)
+    - Personnalisation avancée (polices personnalisées, filigrane, agencement complet)
+    - Accès au PipeLine configurable pour exports
+
+- **Influenceur (Payant 15.99€/mois) :**
+    - Accès aux aperçus et rendu détaillé et complet avec système drag and drop, configuration etc...
+    - Export en haute qualité (PNG/JPEG/SVG/PDF 300dpi)
+
+
+# UTILISATION DES APERÇUS D'EXPORTS : 
+
+L'aperçus est crée par l'utilisateur, il peux le sauvegarder dans sa bibliothèque pour réutilisation rapide dans d'autre review.
+Il est possible de partager une templates crée avec d'autre utilisateur via un système de code unique (lien de partage directe aussi).
+L'aperçus définit est celui qui sera utilisé par défaut lors de l'export de la review.
+L'aperus définit est celui qui sera visible par tous si la review est publique dans la galerie publique.
+Pas besoins d'aperçus pour des reviews privées.
 

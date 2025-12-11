@@ -261,19 +261,67 @@ model ReviewLike {
 
 // Template model for Orchard templates and custom layouts
 model Template {
-  id         String   @id @default(uuid())
-  name       String
+  id          String   @id @default(uuid())
+  name        String
   description String?
-  ownerId    String
-  isPublic   Boolean  @default(false)
+  ownerId     String
+  isPublic    Boolean  @default(false)
+  isPremium   Boolean  @default(false)  // Template réservé aux comptes premium (Influencer/Producer)
+  
+  // Catégorisation
+  category    String   @default("custom")  // "predefined", "custom", "shared"
+  templateType String  @default("standard") // "compact", "detailed", "complete", "custom"
+  
+  // Format et configuration
+  format      String   @default("1:1")     // "1:1", "16:9", "9:16", "A4"
+  maxPages    Int      @default(1)         // Nombre max de pages (pagination)
+  
   // Store template configuration as JSON string to remain compatible with sqlite
-  config     String
-  thumbnail  String?  // optional path to a generated thumbnail image
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  // Structure: { pages: [{ zones: [{ source, x, y, w, h, style }] }], theme, colors, fonts }
+  config      String
+  
+  // Preview
+  thumbnail   String?  // optional path to a generated thumbnail image
+  
+  // Permissions par type de compte
+  // Format JSON: { "consumer": true, "influencer_basic": true, "influencer_pro": true, "producer": true }
+  allowedAccountTypes String @default("{\"consumer\":true,\"influencer_basic\":true,\"influencer_pro\":true,\"producer\":true}")
+  
+  // Export capabilities
+  // Format JSON: { "png": true, "jpeg": true, "pdf": false, "svg": false, "maxQuality": 150 }
+  exportOptions String @default("{\"png\":true,\"jpeg\":true,\"pdf\":false,\"svg\":false,\"maxQuality\":150}")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([ownerId])
+  @@index([category])
+  @@index([isPublic])
+  @@index([isPremium])
   @@map("templates")
+}
+
+// Partage de templates via code unique
+model TemplateShare {
+  id          String   @id @default(uuid())
+  templateId  String
+  shareCode   String   @unique  // Code unique de partage (ex: "ABCD1234")
+  createdBy   String   // ID de l'utilisateur qui partage
+  
+  // Statistiques
+  usedCount   Int      @default(0)
+  maxUses     Int?     // Limite d'utilisations (null = illimité)
+  
+  // Validité
+  expiresAt   DateTime?
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+
+  @@index([shareCode])
+  @@index([templateId])
+  @@index([createdBy])
+  @@map("template_shares")
 }
 
 // ====================

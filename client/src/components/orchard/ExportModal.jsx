@@ -1,50 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toPng, toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { useOrchardStore } from '../../store/orchardStore';
+import { useStore } from '../../store/useStore';
 import { preloadFonts, preloadSpecificFont } from '../../utils/fontPreloader.js';
-
-const EXPORT_FORMATS = [
-    {
-        id: 'png',
-        name: 'PNG',
-        description: 'Image haute qualité pour le web',
-        icon: '🖼️',
-        color: 'from-blue-500 to-blue-600'
-    },
-    {
-        id: 'jpeg',
-        name: 'JPEG',
-        description: 'Image compressée pour les réseaux sociaux',
-        icon: '📸',
-        color: 'from-green-500 to-green-600'
-    },
-    {
-        id: 'pdf',
-        name: 'PDF',
-        description: 'Document imprimable et archivable',
-        icon: '📄',
-        color: 'from-red-500 to-red-600'
-    },
-    {
-        id: 'markdown',
-        name: 'Markdown',
-        description: 'Texte brut portable',
-        icon: '📝',
-        color: 'from-purple-500 to-purple-600'
-    }
-];
+import {
+    getExportFormatsForUI,
+    getMaxExportQuality,
+    canExportFormat,
+    getAccountFeatures,
+    ACCOUNT_TYPES
+} from '../../config/exportConfig';
 
 export default function ExportModal({ onClose }) {
     const reviewData = useOrchardStore((state) => state.reviewData);
     const config = useOrchardStore((state) => state.config);
+    const user = useStore((state) => state.user);
     const authorName = reviewData?.ownerName || (reviewData?.author ? (typeof reviewData.author === 'string' ? reviewData.author : (reviewData.author.username || reviewData.author.id)) : null) || 'Orchard Studio'
-    const [selectedFormat, setSelectedFormat] = useState('png');
+
+    // Déterminer le type de compte utilisateur
+    const accountType = user?.accountType?.type || ACCOUNT_TYPES.CONSUMER;
+    const accountFeatures = getAccountFeatures(accountType);
+    const availableFormats = getExportFormatsForUI(accountType);
+    const maxQuality = getMaxExportQuality(accountType);
+
+    const [selectedFormat, setSelectedFormat] = useState(availableFormats[0]?.id || 'png');
     const [selectedScope, setSelectedScope] = useState('full'); // full | canvas | openGraph
     const [exportOptions, setExportOptions] = useState({
         // PNG
-        pngScale: 2,
+        pngScale: Math.min(2, maxQuality / 72), // Limité par le type de compte
         pngTransparent: false,
 
         // JPEG
@@ -52,13 +37,20 @@ export default function ExportModal({ onClose }) {
 
         // PDF
         pdfOrientation: 'portrait',
-        pdfFormat: 'a4'
-        ,
-        includeBranding: true
+        pdfFormat: 'a4',
+
+        includeBranding: !accountFeatures.brandingRemoval // Obligatoire pour comptes gratuits
     });
     const [isExporting, setIsExporting] = useState(false);
     const [exportStatus, setExportStatus] = useState(null);
     const [exportProgress, setExportProgress] = useState(0);
+
+    // Vérifier les permissions au changement de format
+    useEffect(() => {
+        if (!canExportFormat(accountType, selectedFormat)) {
+            setSelectedFormat(availableFormats[0]?.id || 'png')
+        }
+    }, [selectedFormat, accountType, availableFormats])
 
     const handleExport = async () => {
         setIsExporting(true);
@@ -455,37 +447,61 @@ export default function ExportModal({ onClose }) {
                             <p className="text-xs text-gray-400 mt-2">Choisissez si vous voulez exporter l'aperçu complet, le rendu (canvas) seulement, ou optimiser l'export pour les réseaux sociaux.</p>
                         </div>
                         {/* Format selection */}
-                        <div className="grid grid-cols-2 gap-3">
-                            {EXPORT_FORMATS.map((format) => (
-                                <motion.button
-                                    key={format.id}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={() => setSelectedFormat(format.id)}
-                                    className={`
-                                    p-4 rounded-xl text-left transition-all border-2
-                                    ${selectedFormat === format.id
-                                            ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-                                            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-purple-300'
-                                        }
-                                `}
-                                >
-                                    <div className="flex items-start justify-between mb-2">
-                                        <span className="text-3xl">{format.icon}</span>
-                                        {selectedFormat === format.id && (
-                                            <svg className="w-6 h-6 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                            </svg>
-                                        )}
-                                    </div>
-                                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
-                                        {format.name}
-                                    </h4>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                                        {format.description}
+                        <div>
+                            <div className="flex items-center justify-between mb-3">
+                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Format d'export</h4>
+                                <span className="text-xs px-2 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+                                    {accountFeatures.name || 'Amateur'}
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                {availableFormats.map((format) => (
+                                    <motion.button
+                                        key={format.id}
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() => setSelectedFormat(format.id)}
+                                        className={`
+                                        p-4 rounded-xl text-left transition-all border-2
+                                        ${selectedFormat === format.id
+                                                ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                                                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-purple-300'
+                                            }
+                                    `}
+                                    >
+                                        <div className="flex items-start justify-between mb-2">
+                                            <span className="text-3xl">{format.icon}</span>
+                                            <div className="flex items-center gap-1">
+                                                {format.premium && (
+                                                    <span className="text-xs px-1.5 py-0.5 rounded bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-semibold">
+                                                        PRO
+                                                    </span>
+                                                )}
+                                                {selectedFormat === format.id && (
+                                                    <svg className="w-6 h-6 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                    </svg>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+                                            {format.name}
+                                        </h4>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            {format.description}
+                                        </p>
+                                    </motion.button>
+                                ))}
+                            </div>
+
+                            {/* Message d'upgrade si format premium */}
+                            {accountType === ACCOUNT_TYPES.CONSUMER && (
+                                <div className="mt-3 p-3 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800">
+                                    <p className="text-xs text-purple-700 dark:text-purple-300">
+                                        💎 <strong>Passez Premium</strong> pour débloquer SVG, CSV, JSON et HTML avec exports haute qualité (300 DPI)
                                     </p>
-                                </motion.button>
-                            ))}
+                                </div>
+                            )}
                         </div>
 
                         {/* Options spécifiques au format */}
@@ -498,25 +514,37 @@ export default function ExportModal({ onClose }) {
                                 <div className="space-y-3">
                                     <div>
                                         <label className="block text-sm text-gray-700 dark:text-gray-300 mb-2">
-                                            Résolution: {exportOptions.pngScale}x
+                                            Résolution: {exportOptions.pngScale}x (max {maxQuality} DPI)
                                         </label>
                                         <div className="flex gap-2">
-                                            {[1, 2, 3].map((scale) => (
-                                                <button
-                                                    key={scale}
-                                                    onClick={() => setExportOptions({ ...exportOptions, pngScale: scale })}
-                                                    className={`
-                                                    flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all
-                                                    ${exportOptions.pngScale === scale
-                                                            ? 'bg-purple-500 text-white'
-                                                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
-                                                        }
-                                                `}
-                                                >
-                                                    {scale}x
-                                                </button>
-                                            ))}
+                                            {[1, 2, 3].map((scale) => {
+                                                const dpi = scale * 72;
+                                                const isDisabled = dpi > maxQuality;
+                                                return (
+                                                    <button
+                                                        key={scale}
+                                                        onClick={() => !isDisabled && setExportOptions({ ...exportOptions, pngScale: scale })}
+                                                        disabled={isDisabled}
+                                                        className={`
+                                                        flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all
+                                                        ${exportOptions.pngScale === scale
+                                                                ? 'bg-purple-500 text-white'
+                                                                : isDisabled
+                                                                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'
+                                                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
+                                                            }
+                                                    `}
+                                                    >
+                                                        {scale}x {isDisabled && '🔒'}
+                                                    </button>
+                                                )
+                                            })}
                                         </div>
+                                        {maxQuality < 216 && (
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                                💡 Passez Premium pour débloquer les exports haute résolution (300 DPI)
+                                            </p>
+                                        )}
                                     </div>
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input
@@ -607,15 +635,28 @@ export default function ExportModal({ onClose }) {
 
                             {/* Option: include branding in export */}
                             <div className="mt-4 border-t pt-4">
-                                <label className="flex items-center gap-2 cursor-pointer">
+                                <label className={`flex items-center gap-2 ${accountFeatures.brandingRemoval ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
                                     <input
                                         type="checkbox"
                                         checked={exportOptions.includeBranding}
-                                        onChange={(e) => setExportOptions({ ...exportOptions, includeBranding: e.target.checked })}
-                                        className="w-4 h-4 rounded border-gray-300 text-purple-500 focus:ring-purple-500"
+                                        onChange={(e) => accountFeatures.brandingRemoval && setExportOptions({ ...exportOptions, includeBranding: e.target.checked })}
+                                        disabled={!accountFeatures.brandingRemoval}
+                                        className="w-4 h-4 rounded border-gray-300 text-purple-500 focus:ring-purple-500 disabled:opacity-50"
                                     />
-                                    <span className="text-sm text-gray-700 dark:text-gray-300">Inclure le logo/filigrane</span>
+                                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                                        Inclure le logo/filigrane
+                                    </span>
+                                    {!accountFeatures.brandingRemoval && (
+                                        <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300">
+                                            Obligatoire
+                                        </span>
+                                    )}
                                 </label>
+                                {!accountFeatures.brandingRemoval && (
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 ml-6">
+                                        💎 Le retrait du branding Reviews-Maker nécessite un compte Influenceur ou Producteur
+                                    </p>
+                                )}
                             </div>
                         </div>
 
