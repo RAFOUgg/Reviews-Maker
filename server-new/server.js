@@ -17,6 +17,9 @@ import userRoutes from './routes/users.js'
 import templatesRoutes from './routes/templates.js'
 import legalRoutes from './routes/legal.js'
 import accountRoutes from './routes/account.js'
+import cultivarsRoutes from './routes/cultivars.js'
+import pipelinesRoutes from './routes/pipelines.js'
+import flowerReviewsRoutes from './routes/flower-reviews.js'
 import { requireAuth, optionalAuth, logAuthRequest } from './middleware/auth.js'
 
 // Import config
@@ -199,11 +202,14 @@ app.use('/images', express.static(path.join(__dirname, '../db/review_images')))
 
 // Routes
 app.use('/api/auth', authRoutes)
+app.use('/api/reviews/flower', flowerReviewsRoutes) // IMPORTANT: Spécifique avant générique
 app.use('/api/reviews', reviewRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/templates', templatesRoutes)
 app.use('/api/legal', legalRoutes)
 app.use('/api/account', accountRoutes)
+app.use('/api/cultivars', cultivarsRoutes)
+app.use('/api/pipelines', pipelinesRoutes)
 
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {

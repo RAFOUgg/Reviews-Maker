@@ -233,6 +233,7 @@ model Review {
   // Relations
   likes       ReviewLike[]
   reports     Report[]
+  flowerData  FlowerReview? // Données spécifiques Fleurs (1-to-1)
 
   @@index([authorId])
   @@index([type])
@@ -472,4 +473,180 @@ model AuditLog {
   @@index([entityType])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// ============================================
+// SYSTÈME REVIEWS FLEURS - Architecture MVP
+// ============================================
+
+// Bibliothèque de cultivars de l'utilisateur
+model Cultivar {
+  id          String   @id @default(uuid())
+  userId      String   // Propriétaire du cultivar
+  
+  // Informations cultivar
+  name        String   // Nom du cultivar (ex: "Gorilla Glue #4")
+  breeder     String?  // Breeder de la graine
+  type        String?  // "Indica", "Sativa", "Hybride"
+  indicaRatio Int?     // 0-100 (0 = Sativa pur, 100 = Indica pur)
+  
+  // Génétique
+  parentage   String?  // JSON: ["Parent1", "Parent2"] ou texte libre
+  phenotype   String?  // Code phénotype (ex: "Pheno #3", "Clone A")
+  
+  // Notes personnelles
+  notes       String?  // Notes privées de l'utilisateur
+  
+  // Statistiques d'utilisation
+  useCount    Int      @default(0) // Nombre de reviews utilisant ce cultivar
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([userId, name]) // Un cultivar unique par nom et utilisateur
+  @@index([userId])
+  @@index([name])
+  @@map("cultivars")
+}
+
+// Étape d'un pipeline (culture, curing, etc.)
+model PipelineStep {
+  id              String   @id @default(uuid())
+  pipelineId      String   // ID du pipeline parent
+  pipelineType    String   // "culture", "curing", "separation", "extraction", "purification", "recipe"
+  
+  // Configuration de l'étape
+  stepIndex       Int      // Ordre de l'étape
+  stepName        String   // Nom de l'étape (ex: "Semaine 3", "Jour 14", "Phase Floraison")
+  
+  // Timing
+  intervalType    String   // "seconds", "minutes", "hours", "days", "weeks", "months", "phase"
+  intervalValue   Float?   // Valeur numérique (ex: 14 pour "Jour 14")
+  
+  // Données de l'étape (JSON flexible)
+  // Structure varie selon pipelineType:
+  // - culture: {mode, substrate, irrigation, fertilizers, light, environment, training, etc.}
+  // - curing: {temperature, humidity, container, packaging, opacity, volume}
+  // - extraction: {method, parameters}
+  // - etc.
+  data            String   // JSON
+  
+  // Notes custom
+  notes           String?  // Commentaire libre (max 500 car)
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([pipelineId, stepIndex])
+  @@map("pipeline_steps")
+}
+
+// Review complète avec données spécifiques Fleurs
+model FlowerReview {
+  id          String   @id @default(uuid())
+  
+  // Lien avec la review parente
+  reviewId    String   @unique
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  
+  // ===== INFORMATIONS GÉNÉRALES =====
+  nomCommercial   String   // Nom commercial* (requis)
+  farm            String?  // Farm productrice
+  
+  // Type de variété
+  varietyType     String?  // "indica", "sativa", "hybride indica-dominant", "sativa-dominant", "CBD-dominant"
+  
+  // Photos (1-4) - stockées dans Review.images
+  
+  // ===== GÉNÉTIQUES =====
+  breeder         String?  // Breeder de la graine
+  variety         String?  // Nom de la variété (auto-complete depuis cultivars)
+  geneticType     String?  // "Indica", "Sativa", "Hybride"
+  indicaPercent   Int?     // 0-100
+  sativaPercent   Int?     // 0-100
+  parentage       String?  // JSON: Généalogie (parents, lignée)
+  phenotypeCode   String?  // Code phénotype (ex: "Pheno #2")
+  
+  // ===== PIPELINE CULTURE (Producteurs) =====
+  // Stocké comme JSON dans une table séparée PipelineStep
+  // Référencé par: culturePipelineId
+  culturePipelineId String? // ID du premier step de la pipeline culture
+  
+  // Configuration globale culture
+  cultureStartDate  DateTime? // Début de culture
+  cultureEndDate    DateTime? // Fin de culture
+  cultureDuration   Int?      // Durée en jours
+  cultureSeason     String?   // JSON: ["Printemps", "Été"] ou null
+  
+  // ===== DONNÉES ANALYTIQUES =====
+  thcPercent      Float?   // Taux THC (%)
+  cbdPercent      Float?   // Taux CBD (%)
+  otherCannabinoids String? // JSON: {CBG: 1.2, CBC: 0.5} (mg/g ou %)
+  terpeneProfile  String?  // JSON: Profil terpénique complet (depuis PDF/image)
+  labReportUrl    String?  // URL du certificat d'analyse
+  
+  // ===== EXPÉRIENCE D'UTILISATION =====
+  consumptionMethod String? // "Combustion", "Vapeur", "Infusion"
+  dosage            Float?  // Dosage estimé (grammes/mg)
+  effectDuration    String? // HH:MM format
+  effectProfiles    String? // JSON: ["anxiolytique", "relaxant", "énergisant"]
+  sideEffects       String? // JSON: ["yeux secs", "faim"]
+  effectOnset       String? // "immédiat", "différé"
+  effectLength      String? // "courte", "moyenne", "longue"
+  preferredUse      String? // JSON: ["soir", "journée", "seul", "social", "médical"]
+  
+  // ===== VISUEL & TECHNIQUE =====
+  couleurScore        Float?  // Couleur/10 (avec nuancier)
+  couleurNuancier     String? // JSON: ["vert", "violet", "jaune"]
+  densiteVisuelle     Float?  // Densité visuelle/10
+  trichomesScore      Float?  // Trichomes/10
+  pistilsScore        Float?  // Pistils/10
+  manucureScore       Float?  // Manucure/10
+  moisissureScore     Float?  // Moisissure (10=aucune)/10
+  grainesScore        Float?  // Graines (10=aucune)/10
+  
+  // ===== ODEURS =====
+  notesOdeursDominantes   String? // JSON: max 7 parmi liste prédéfinie
+  notesOdeursSecondaires  String? // JSON: max 7
+  aromesInhalation        String? // JSON: primaire/secondaire
+  saveurBouche            String? // Rétro-olfaction
+  intensiteAromeScore     Float?  // Intensité arôme/10
+  
+  // ===== TEXTURE =====
+  dureteScore         Float?  // Dureté/10
+  densiteTactileScore Float?  // Densité tactile/10
+  elasticiteScore     Float?  // Élasticité/10
+  collantScore        Float?  // Collant/10
+  
+  // ===== GOÛTS =====
+  intensiteGoutScore  Float?  // Intensité/10
+  agressiviteScore    Float?  // Agressivité/piquant/10
+  dryPuffNotes        String? // JSON: max 7
+  inhalationNotes     String? // JSON: max 7
+  expirationNotes     String? // JSON: max 7 (arrière-goût)
+  
+  // ===== EFFETS RESSENTIS =====
+  monteeScore         Float?  // Montée (rapidité)/10
+  intensiteEffetScore Float?  // Intensité/10
+  effetsChoisis       String? // JSON: max 8 (mentaux, physiques, thérapeutiques)
+  effetsFiltre        String? // "tous", "neutre", "positif", "negatif"
+  
+  // ===== PIPELINE CURING / MATURATION =====
+  curingPipelineId    String? // ID du premier step de la pipeline curing
+  
+  // Configuration globale curing
+  curingDuration      Int?    // Durée (jours/semaines/mois selon trame)
+  curingType          String? // "froid" (<5°C) ou "chaud" (>5°C)
+  curingInterval      String? // "seconds", "minutes", "hours", "days", "weeks", "months"
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([reviewId])
+  @@index([nomCommercial])
+  @@index([variety])
+  @@map("flower_reviews")
 }
