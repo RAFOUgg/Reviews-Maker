@@ -543,13 +543,202 @@ function Genetiques({ data, onChange }) {
 }
 // Section 3: Culture & Pipeline
 function CulturePipeline({ data, onChange }) {
+    const phases = data.culturePhases || []
+    
+    const ajouterPhase = () => {
+        const newPhase = {
+            id: Date.now(),
+            nom: '',
+            dateDebut: '',
+            dateFin: '',
+            duree: 0,
+            notes: ''
+        }
+        onChange('culturePhases', [...phases, newPhase])
+    }
+    
+    const supprimerPhase = (id) => {
+        onChange('culturePhases', phases.filter(p => p.id !== id))
+    }
+    
+    const modifierPhase = (id, champ, valeur) => {
+        const newPhases = phases.map(p => {
+            if (p.id === id) {
+                const updated = { ...p, [champ]: valeur }
+                // Calculer la durée automatiquement
+                if (champ === 'dateDebut' || champ === 'dateFin') {
+                    if (updated.dateDebut && updated.dateFin) {
+                        const debut = new Date(updated.dateDebut)
+                        const fin = new Date(updated.dateFin)
+                        const diffJours = Math.ceil((fin - debut) / (1000 * 60 * 60 * 24))
+                        updated.duree = diffJours
+                    }
+                }
+                return updated
+            }
+            return p
+        })
+        onChange('culturePhases', newPhases)
+    }
+
     return (
-        <div className="space-y-6">
-            <p className="text-gray-600 text-center py-8">
-                🌱 Section Culture & Pipeline à implémenter
-                <br />
-                <span className="text-sm">Pipeline configurable avec phases, dates, mode culture</span>
-            </p>
+        <div className="space-y-8">
+            {/* Infos générales culture */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label className="text-lg font-semibold text-gray-800 mb-2 block">
+                        🌱 Mode de culture <span className="text-red-600 font-bold text-base">*</span>
+                    </label>
+                    <select
+                        value={data.modeCulture || ''}
+                        onChange={(e) => onChange('modeCulture', e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-green-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                    >
+                        <option value="">Sélectionner...</option>
+                        <option value="indoor">Indoor / Intérieur</option>
+                        <option value="outdoor">Outdoor / Extérieur</option>
+                        <option value="greenhouse">Serre / Greenhouse</option>
+                        <option value="hydro">Hydroponique</option>
+                        <option value="aero">Aéroponique</option>
+                        <option value="aqua">Aquaponique</option>
+                        <option value="bio">Biologique / Organique</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label className="text-lg font-semibold text-gray-800 mb-2 block">
+                        🏭 Espace de culture
+                    </label>
+                    <input
+                        type="text"
+                        value={data.espaceCulture || ''}
+                        onChange={(e) => onChange('espaceCulture', e.target.value)}
+                        placeholder="Ex: Box 120x120, Jardin, Chambre..."
+                        className="w-full px-4 py-3 border-2 border-green-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                    />
+                </div>
+            </div>
+
+            {/* Médium de culture */}
+            <div>
+                <label className="text-lg font-semibold text-gray-800 mb-2 block">
+                    🧪 Médium / Substrat
+                </label>
+                <input
+                    type="text"
+                    value={data.medium || ''}
+                    onChange={(e) => onChange('medium', e.target.value)}
+                    placeholder="Ex: Terre, Coco, Hydro, Laine de roche..."
+                    className="w-full px-4 py-3 border-2 border-amber-300 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+                />
+            </div>
+
+            {/* Nutriments */}
+            <div>
+                <label className="text-lg font-semibold text-gray-800 mb-2 block">
+                    🧪 Nutriments / Engrais
+                </label>
+                <textarea
+                    value={data.nutriments || ''}
+                    onChange={(e) => onChange('nutriments', e.target.value)}
+                    placeholder="Ex: BioBizz, Advanced Nutrients, fait maison..."
+                    className="w-full px-4 py-3 border-2 border-lime-300 rounded-xl focus:ring-2 focus:ring-lime-500 outline-none"
+                    rows="2"
+                />
+            </div>
+
+            {/* Pipeline des phases */}
+            <div className="border-t-2 border-gray-200 pt-6">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-800">
+                        📅 Pipeline de culture ({phases.length} phases)
+                    </h3>
+                    <button
+                        type="button"
+                        onClick={ajouterPhase}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors shadow-lg"
+                    >
+                        + Ajouter une phase
+                    </button>
+                </div>
+
+                <div className="space-y-4">
+                    {phases.map((phase, idx) => (
+                        <div key={phase.id} className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-2xl border-2 border-green-200 shadow-lg">
+                            <div className="flex items-center justify-between mb-4">
+                                <h4 className="text-lg font-bold text-green-800">Phase {idx + 1}</h4>
+                                <button
+                                    type="button"
+                                    onClick={() => supprimerPhase(phase.id)}
+                                    className="px-3 py-1 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600"
+                                >
+                                    ✕ Supprimer
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="md:col-span-2">
+                                    <label className="text-sm font-semibold text-gray-700 mb-1 block">Nom de la phase</label>
+                                    <input
+                                        type="text"
+                                        value={phase.nom}
+                                        onChange={(e) => modifierPhase(phase.id, 'nom', e.target.value)}
+                                        placeholder="Ex: Germination, Végétation, Floraison..."
+                                        className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-semibold text-gray-700 mb-1 block">Date début</label>
+                                    <input
+                                        type="date"
+                                        value={phase.dateDebut}
+                                        onChange={(e) => modifierPhase(phase.id, 'dateDebut', e.target.value)}
+                                        className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-semibold text-gray-700 mb-1 block">Date fin</label>
+                                    <input
+                                        type="date"
+                                        value={phase.dateFin}
+                                        onChange={(e) => modifierPhase(phase.id, 'dateFin', e.target.value)}
+                                        className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                                    />
+                                </div>
+
+                                {phase.duree > 0 && (
+                                    <div className="md:col-span-2">
+                                        <div className="bg-white px-4 py-2 rounded-lg border border-green-300">
+                                            <span className="text-sm text-gray-600">Durée: </span>
+                                            <span className="font-bold text-green-700">{phase.duree} jours</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="md:col-span-2">
+                                    <label className="text-sm font-semibold text-gray-700 mb-1 block">Notes</label>
+                                    <textarea
+                                        value={phase.notes}
+                                        onChange={(e) => modifierPhase(phase.id, 'notes', e.target.value)}
+                                        placeholder="Paramètres, observations, techniques utilisées..."
+                                        className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                                        rows="2"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+
+                    {phases.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                            <p>🌱 Aucune phase ajoutée</p>
+                            <p className="text-sm">Cliquez sur "Ajouter une phase" pour commencer</p>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     )
 }
@@ -744,13 +933,119 @@ function VisuelTechnique({ data, onChange }) {
 
 // Section 6: Odeurs
 function Odeurs({ data, onChange }) {
+    const [searchDominant, setSearchDominant] = useState('')
+    const [searchSecondaire, setSearchSecondaire] = useState('')
+    
+    const odeursListe = [
+        'Agrumes', 'Citron', 'Orange', 'Pamplemousse', 'Pin', 'Diesel', 'Skunk',
+        'Terreux', 'Boisé', 'Épicé', 'Poivre', 'Floral', 'Fruité', 'Baies',
+        'Mangue', 'Tropical', 'Menthe', 'Herbe', 'Cheese', 'Vanille', 'Chocolat',
+        'Café', 'Miel', 'Piquant', 'Chimique', 'Gaz', 'Pneu', 'Amnésique'
+    ]
+
+    const selectedDominant = data.odeursDominantes || []
+    const selectedSecondaire = data.odeursSecondaires || []
+
+    const toggleOdeur = (type, odeur) => {
+        const key = type === 'dominant' ? 'odeursDominantes' : 'odeursSecondaires'
+        const current = data[key] || []
+        const newValue = current.includes(odeur)
+            ? current.filter(o => o !== odeur)
+            : [...current, odeur]
+        if (newValue.length <= 7) {
+            onChange(key, newValue)
+        }
+    }
+
+    const filteredDominant = odeursListe.filter(o => 
+        o.toLowerCase().includes(searchDominant.toLowerCase())
+    )
+    const filteredSecondaire = odeursListe.filter(o => 
+        o.toLowerCase().includes(searchSecondaire.toLowerCase())
+    )
+
     return (
-        <div className="space-y-6">
-            <p className="text-gray-600 text-center py-8">
-                👃 Section Odeurs à implémenter
-                <br />
-                <span className="text-sm">Notes dominantes/secondaires max 7, intensité, recherche</span>
-            </p>
+        <div className="space-y-8">
+            {/* Intensité aromatique */}
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <label className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <span className="text-2xl">💨</span>
+                        Intensité aromatique
+                    </label>
+                    <span className="text-3xl font-bold text-purple-600">
+                        {data.odeursIntensite || 5}/10
+                    </span>
+                </div>
+                <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    value={data.odeursIntensite || 5}
+                    onChange={(e) => onChange('odeursIntensite', parseInt(e.target.value))}
+                    className="w-full h-3 bg-gradient-to-r from-yellow-400 to-orange-600 rounded-full appearance-none cursor-pointer shadow-lg"
+                />
+            </div>
+
+            {/* Notes dominantes */}
+            <div>
+                <label className="text-lg font-semibold text-gray-800 mb-3 block">
+                    👃 Notes dominantes (max 7) <span className="text-purple-600">{selectedDominant.length}/7</span>
+                </label>
+                <input
+                    type="text"
+                    placeholder="🔍 Rechercher..."
+                    value={searchDominant}
+                    onChange={(e) => setSearchDominant(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-purple-300 rounded-xl mb-4 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-60 overflow-y-auto p-2 bg-gray-50 rounded-xl">
+                    {filteredDominant.map(odeur => (
+                        <button
+                            key={odeur}
+                            type="button"
+                            onClick={() => toggleOdeur('dominant', odeur)}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                selectedDominant.includes(odeur)
+                                    ? 'bg-purple-600 text-white shadow-lg scale-105'
+                                    : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-purple-400'
+                            }`}
+                        >
+                            {odeur}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Notes secondaires */}
+            <div>
+                <label className="text-lg font-semibold text-gray-800 mb-3 block">
+                    🌸 Notes secondaires (max 7) <span className="text-purple-600">{selectedSecondaire.length}/7</span>
+                </label>
+                <input
+                    type="text"
+                    placeholder="🔍 Rechercher..."
+                    value={searchSecondaire}
+                    onChange={(e) => setSearchSecondaire(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-pink-300 rounded-xl mb-4 focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none"
+                />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-60 overflow-y-auto p-2 bg-gray-50 rounded-xl">
+                    {filteredSecondaire.map(odeur => (
+                        <button
+                            key={odeur}
+                            type="button"
+                            onClick={() => toggleOdeur('secondaire', odeur)}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                selectedSecondaire.includes(odeur)
+                                    ? 'bg-pink-600 text-white shadow-lg scale-105'
+                                    : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-pink-400'
+                            }`}
+                        >
+                            {odeur}
+                        </button>
+                    ))}
+                </div>
+            </div>
         </div>
     )
 }
@@ -801,39 +1096,548 @@ function Texture({ data, onChange }) {
 
 // Section 8: Goûts
 function Gouts({ data, onChange }) {
+    const [searchDry, setSearchDry] = useState('')
+    const [searchInhale, setSearchInhale] = useState('')
+    const [searchExhale, setSearchExhale] = useState('')
+    
+    const goutsListe = [
+        'Citron', 'Orange', 'Baies', 'Fraise', 'Mangue', 'Ananas', 'Raisin',
+        'Pomme', 'Cerise', 'Pin', 'Diesel', 'Terreux', 'Boisé', 'Épicé',
+        'Poivre', 'Menthe', 'Vanille', 'Chocolat', 'Café', 'Miel', 'Cheese',
+        'Skunk', 'Herbe', 'Floral', 'Chimique', 'Métallique', 'Sucré', 'Amer'
+    ]
+
+    const toggleGout = (type, gout) => {
+        const key = `gouts${type}`
+        const current = data[key] || []
+        const newValue = current.includes(gout)
+            ? current.filter(g => g !== gout)
+            : [...current, gout]
+        if (newValue.length <= 7) {
+            onChange(key, newValue)
+        }
+    }
+
     return (
-        <div className="space-y-6">
-            <p className="text-gray-600 text-center py-8">
-                😋 Section Goûts à implémenter
-                <br />
-                <span className="text-sm">Intensité, agressivité, dry puff/inhalation/expiration max 7 chacun</span>
-            </p>
+        <div className="space-y-8">
+            {/* Intensité */}
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <label className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <span className="text-2xl">🔥</span>
+                        Intensité
+                    </label>
+                    <span className="text-3xl font-bold text-purple-600">
+                        {data.goutsIntensite || 5}/10
+                    </span>
+                </div>
+                <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    value={data.goutsIntensite || 5}
+                    onChange={(e) => onChange('goutsIntensite', parseInt(e.target.value))}
+                    className="w-full h-3 bg-gradient-to-r from-orange-400 to-red-600 rounded-full appearance-none cursor-pointer shadow-lg"
+                />
+            </div>
+
+            {/* Agressivité */}
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <label className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <span className="text-2xl">⚡</span>
+                        Agressivité / Piquant
+                    </label>
+                    <span className="text-3xl font-bold text-purple-600">
+                        {data.goutsAgressivite || 5}/10
+                    </span>
+                </div>
+                <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    value={data.goutsAgressivite || 5}
+                    onChange={(e) => onChange('goutsAgressivite', parseInt(e.target.value))}
+                    className="w-full h-3 bg-gradient-to-r from-yellow-400 to-red-600 rounded-full appearance-none cursor-pointer shadow-lg"
+                />
+            </div>
+
+            {/* Dry puff */}
+            <div>
+                <label className="text-lg font-semibold text-gray-800 mb-3 block">
+                    🚬 Dry puff / Tirage à sec (max 7) <span className="text-purple-600">{(data.goutsDryPuff || []).length}/7</span>
+                </label>
+                <input
+                    type="text"
+                    placeholder="🔍 Rechercher..."
+                    value={searchDry}
+                    onChange={(e) => setSearchDry(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-amber-300 rounded-xl mb-4 focus:ring-2 focus:ring-amber-500 outline-none"
+                />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 bg-gray-50 rounded-xl">
+                    {goutsListe.filter(g => g.toLowerCase().includes(searchDry.toLowerCase())).map(gout => (
+                        <button
+                            key={gout}
+                            type="button"
+                            onClick={() => toggleGout('DryPuff', gout)}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                (data.goutsDryPuff || []).includes(gout)
+                                    ? 'bg-amber-600 text-white shadow-lg scale-105'
+                                    : 'bg-white border-2 border-gray-200 hover:border-amber-400'
+                            }`}
+                        >
+                            {gout}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Inhalation */}
+            <div>
+                <label className="text-lg font-semibold text-gray-800 mb-3 block">
+                    💨 Inhalation (max 7) <span className="text-purple-600">{(data.goutsInhalation || []).length}/7</span>
+                </label>
+                <input
+                    type="text"
+                    placeholder="🔍 Rechercher..."
+                    value={searchInhale}
+                    onChange={(e) => setSearchInhale(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-blue-300 rounded-xl mb-4 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 bg-gray-50 rounded-xl">
+                    {goutsListe.filter(g => g.toLowerCase().includes(searchInhale.toLowerCase())).map(gout => (
+                        <button
+                            key={gout}
+                            type="button"
+                            onClick={() => toggleGout('Inhalation', gout)}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                (data.goutsInhalation || []).includes(gout)
+                                    ? 'bg-blue-600 text-white shadow-lg scale-105'
+                                    : 'bg-white border-2 border-gray-200 hover:border-blue-400'
+                            }`}
+                        >
+                            {gout}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Expiration */}
+            <div>
+                <label className="text-lg font-semibold text-gray-800 mb-3 block">
+                    🌬️ Expiration / Arrière-goût (max 7) <span className="text-purple-600">{(data.goutsExpiration || []).length}/7</span>
+                </label>
+                <input
+                    type="text"
+                    placeholder="🔍 Rechercher..."
+                    value={searchExhale}
+                    onChange={(e) => setSearchExhale(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-green-300 rounded-xl mb-4 focus:ring-2 focus:ring-green-500 outline-none"
+                />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 bg-gray-50 rounded-xl">
+                    {goutsListe.filter(g => g.toLowerCase().includes(searchExhale.toLowerCase())).map(gout => (
+                        <button
+                            key={gout}
+                            type="button"
+                            onClick={() => toggleGout('Expiration', gout)}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                (data.goutsExpiration || []).includes(gout)
+                                    ? 'bg-green-600 text-white shadow-lg scale-105'
+                                    : 'bg-white border-2 border-gray-200 hover:border-green-400'
+                            }`}
+                        >
+                            {gout}
+                        </button>
+                    ))}
+                </div>
+            </div>
         </div>
     )
 }
 
 // Section 9: Effets
 function Effets({ data, onChange }) {
+    const [filter, setFilter] = useState('tous')
+    const [search, setSearch] = useState('')
+    
+    const effetsListe = [
+        // Positifs
+        { nom: 'Euphorique', type: 'positif', categorie: 'mental' },
+        { nom: 'Heureux', type: 'positif', categorie: 'mental' },
+        { nom: 'Créatif', type: 'positif', categorie: 'mental' },
+        { nom: 'Énergique', type: 'positif', categorie: 'physique' },
+        { nom: 'Concentré', type: 'positif', categorie: 'mental' },
+        { nom: 'Relaxé', type: 'positif', categorie: 'physique' },
+        { nom: 'Sociable', type: 'positif', categorie: 'mental' },
+        { nom: 'Motivé', type: 'positif', categorie: 'mental' },
+        // Neutres
+        { nom: 'Faim', type: 'neutre', categorie: 'physique' },
+        { nom: 'Somnolent', type: 'neutre', categorie: 'physique' },
+        { nom: 'Yeux secs', type: 'neutre', categorie: 'physique' },
+        { nom: 'Bouche sèche', type: 'neutre', categorie: 'physique' },
+        // Négatifs
+        { nom: 'Anxieux', type: 'negatif', categorie: 'mental' },
+        { nom: 'Paranoïa', type: 'negatif', categorie: 'mental' },
+        { nom: 'Étourdi', type: 'negatif', categorie: 'physique' },
+        { nom: 'Maux de tête', type: 'negatif', categorie: 'physique' },
+        // Thérapeutiques
+        { nom: 'Anti-douleur', type: 'positif', categorie: 'therapeutique' },
+        { nom: 'Anti-stress', type: 'positif', categorie: 'therapeutique' },
+        { nom: 'Anti-nausée', type: 'positif', categorie: 'therapeutique' },
+        { nom: 'Anti-inflammatoire', type: 'positif', categorie: 'therapeutique' },
+    ]
+
+    const selected = data.effets || []
+    
+    const filtered = effetsListe.filter(e => {
+        const matchFilter = filter === 'tous' || e.type === filter
+        const matchSearch = e.nom.toLowerCase().includes(search.toLowerCase())
+        return matchFilter && matchSearch
+    })
+
+    const toggleEffet = (effet) => {
+        const newValue = selected.includes(effet)
+            ? selected.filter(e => e !== effet)
+            : [...selected, effet]
+        if (newValue.length <= 8) {
+            onChange('effets', newValue)
+        }
+    }
+
+    const getTypeColor = (type) => {
+        switch(type) {
+            case 'positif': return 'bg-green-600'
+            case 'neutre': return 'bg-blue-600'
+            case 'negatif': return 'bg-red-600'
+            default: return 'bg-gray-600'
+        }
+    }
+
     return (
-        <div className="space-y-6">
-            <p className="text-gray-600 text-center py-8">
-                💥 Section Effets à implémenter
-                <br />
-                <span className="text-sm">Montée, intensité, sélection max 8 avec filtres positif/neutre/négatif</span>
-            </p>
+        <div className="space-y-8">
+            {/* Montée */}
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <label className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <span className="text-2xl">🚀</span>
+                        Montée (rapidité)
+                    </label>
+                    <span className="text-3xl font-bold text-purple-600">
+                        {data.effetsMontee || 5}/10
+                    </span>
+                </div>
+                <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    value={data.effetsMontee || 5}
+                    onChange={(e) => onChange('effetsMontee', parseInt(e.target.value))}
+                    className="w-full h-3 bg-gradient-to-r from-blue-400 to-purple-600 rounded-full appearance-none cursor-pointer shadow-lg"
+                />
+                <div className="flex justify-between text-xs text-gray-500 px-1">
+                    <span>Lente</span>
+                    <span>Moyenne</span>
+                    <span>Rapide</span>
+                </div>
+            </div>
+
+            {/* Intensité */}
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <label className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <span className="text-2xl">💥</span>
+                        Intensité
+                    </label>
+                    <span className="text-3xl font-bold text-purple-600">
+                        {data.effetsIntensite || 5}/10
+                    </span>
+                </div>
+                <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    value={data.effetsIntensite || 5}
+                    onChange={(e) => onChange('effetsIntensite', parseInt(e.target.value))}
+                    className="w-full h-3 bg-gradient-to-r from-orange-400 to-red-600 rounded-full appearance-none cursor-pointer shadow-lg"
+                />
+            </div>
+
+            {/* Sélection des effets */}
+            <div>
+                <label className="text-lg font-semibold text-gray-800 mb-4 block">
+                    🎯 Effets ressentis (max 8) <span className="text-purple-600">{selected.length}/8</span>
+                </label>
+                
+                {/* Filtres */}
+                <div className="flex gap-2 mb-4 flex-wrap">
+                    {['tous', 'positif', 'neutre', 'negatif'].map(f => (
+                        <button
+                            key={f}
+                            type="button"
+                            onClick={() => setFilter(f)}
+                            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                                filter === f
+                                    ? 'bg-purple-600 text-white shadow-lg'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                        >
+                            {f === 'tous' ? '🌐 Tous' : 
+                             f === 'positif' ? '✅ Positifs' :
+                             f === 'neutre' ? '➖ Neutres' : '❌ Négatifs'}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Recherche */}
+                <input
+                    type="text"
+                    placeholder="🔍 Rechercher un effet..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-purple-300 rounded-xl mb-4 focus:ring-2 focus:ring-purple-500 outline-none"
+                />
+
+                {/* Liste des effets */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto p-3 bg-gray-50 rounded-xl">
+                    {filtered.map(effet => (
+                        <button
+                            key={effet.nom}
+                            type="button"
+                            onClick={() => toggleEffet(effet.nom)}
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all relative ${
+                                selected.includes(effet.nom)
+                                    ? `${getTypeColor(effet.type)} text-white shadow-lg scale-105`
+                                    : 'bg-white border-2 border-gray-200 hover:border-purple-400'
+                            }`}
+                        >
+                            <div className="flex items-center justify-between gap-2">
+                                <span>{effet.nom}</span>
+                                {selected.includes(effet.nom) && <span>✓</span>}
+                            </div>
+                            <span className="text-xs opacity-75 block mt-1">{effet.categorie}</span>
+                        </button>
+                    ))}
+                </div>
+            </div>
         </div>
     )
 }
 
 // Section 10: Curing & Maturation
 function CuringMaturation({ data, onChange }) {
+    const phases = data.curingPhases || []
+    
+    const ajouterPhase = () => {
+        const newPhase = {
+            id: Date.now(),
+            dateDebut: '',
+            dateFin: '',
+            temperature: 20,
+            humidite: 62,
+            conteneur: '',
+            ballotage: false,
+            notes: ''
+        }
+        onChange('curingPhases', [...phases, newPhase])
+    }
+    
+    const supprimerPhase = (id) => {
+        onChange('curingPhases', phases.filter(p => p.id !== id))
+    }
+    
+    const modifierPhase = (id, champ, valeur) => {
+        const newPhases = phases.map(p => 
+            p.id === id ? { ...p, [champ]: valeur } : p
+        )
+        onChange('curingPhases', newPhases)
+    }
+
+    const calculerDuree = (phase) => {
+        if (phase.dateDebut && phase.dateFin) {
+            const debut = new Date(phase.dateDebut)
+            const fin = new Date(phase.dateFin)
+            return Math.ceil((fin - debut) / (1000 * 60 * 60 * 24))
+        }
+        return 0
+    }
+
     return (
-        <div className="space-y-6">
-            <p className="text-gray-600 text-center py-8">
-                🔥 Section Curing & Maturation à implémenter
-                <br />
-                <span className="text-sm">Pipeline curing avec température, humidité, type récipient</span>
-            </p>
+        <div className="space-y-8">
+            {/* Infos générales */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label className="text-lg font-semibold text-gray-800 mb-2 block">
+                        🔪 Méthode de séchage
+                    </label>
+                    <select
+                        value={data.methodeSechage || ''}
+                        onChange={(e) => onChange('methodeSechage', e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-amber-300 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+                    >
+                        <option value="">Sélectionner...</option>
+                        <option value="air">Séchage à l'air libre</option>
+                        <option value="dark">Séchage dans le noir</option>
+                        <option value="rack">Séchoir / Rack</option>
+                        <option value="hang">Suspendu (branches)</option>
+                        <option value="screen">Sur filet / Screen</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label className="text-lg font-semibold text-gray-800 mb-2 block">
+                        ⏱️ Durée totale de curing (jours)
+                    </label>
+                    <input
+                        type="number"
+                        value={data.dureeCuring || ''}
+                        onChange={(e) => onChange('dureeCuring', e.target.value)}
+                        placeholder="Ex: 14, 21, 30..."
+                        className="w-full px-4 py-3 border-2 border-amber-300 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+                    />
+                </div>
+            </div>
+
+            {/* Pipeline des phases de curing */}
+            <div className="border-t-2 border-gray-200 pt-6">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-800">
+                        📅 Phases de curing & maturation ({phases.length})
+                    </h3>
+                    <button
+                        type="button"
+                        onClick={ajouterPhase}
+                        className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors shadow-lg"
+                    >
+                        + Ajouter une phase
+                    </button>
+                </div>
+
+                <div className="space-y-4">
+                    {phases.map((phase, idx) => {
+                        const duree = calculerDuree(phase)
+                        return (
+                            <div key={phase.id} className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-2xl border-2 border-amber-200 shadow-lg">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h4 className="text-lg font-bold text-amber-800">Phase {idx + 1}</h4>
+                                    <button
+                                        type="button"
+                                        onClick={() => supprimerPhase(phase.id)}
+                                        className="px-3 py-1 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600"
+                                    >
+                                        ✕ Supprimer
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-sm font-semibold text-gray-700 mb-1 block">Date début</label>
+                                        <input
+                                            type="date"
+                                            value={phase.dateDebut}
+                                            onChange={(e) => modifierPhase(phase.id, 'dateDebut', e.target.value)}
+                                            className="w-full px-3 py-2 border border-amber-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-sm font-semibold text-gray-700 mb-1 block">Date fin</label>
+                                        <input
+                                            type="date"
+                                            value={phase.dateFin}
+                                            onChange={(e) => modifierPhase(phase.id, 'dateFin', e.target.value)}
+                                            className="w-full px-3 py-2 border border-amber-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
+                                        />
+                                    </div>
+
+                                    {duree > 0 && (
+                                        <div className="md:col-span-2">
+                                            <div className="bg-white px-4 py-2 rounded-lg border border-amber-300">
+                                                <span className="text-sm text-gray-600">Durée: </span>
+                                                <span className="font-bold text-amber-700">{duree} jours</span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                                            🌡️ Température (°C) <span className="font-bold text-amber-600">{phase.temperature}°</span>
+                                        </label>
+                                        <input
+                                            type="range"
+                                            min="10"
+                                            max="30"
+                                            value={phase.temperature}
+                                            onChange={(e) => modifierPhase(phase.id, 'temperature', parseInt(e.target.value))}
+                                            className="w-full h-2 bg-gradient-to-r from-blue-400 to-red-500 rounded-full appearance-none cursor-pointer"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                                            💧 Humidité (%) <span className="font-bold text-blue-600">{phase.humidite}%</span>
+                                        </label>
+                                        <input
+                                            type="range"
+                                            min="40"
+                                            max="80"
+                                            value={phase.humidite}
+                                            onChange={(e) => modifierPhase(phase.id, 'humidite', parseInt(e.target.value))}
+                                            className="w-full h-2 bg-gradient-to-r from-yellow-400 to-blue-500 rounded-full appearance-none cursor-pointer"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-sm font-semibold text-gray-700 mb-1 block">🏺 Type de conteneur</label>
+                                        <select
+                                            value={phase.conteneur}
+                                            onChange={(e) => modifierPhase(phase.id, 'conteneur', e.target.value)}
+                                            className="w-full px-3 py-2 border border-amber-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
+                                        >
+                                            <option value="">Sélectionner...</option>
+                                            <option value="bocal">Bocal en verre</option>
+                                            <option value="tupperware">Tupperware</option>
+                                            <option value="grove">Grove Bag</option>
+                                            <option value="paper">Sac papier</option>
+                                            <option value="cvault">CVault</option>
+                                            <option value="autre">Autre</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="flex items-center gap-3 bg-white px-4 py-3 rounded-lg border border-amber-300 cursor-pointer hover:bg-amber-50">
+                                            <input
+                                                type="checkbox"
+                                                checked={phase.ballotage}
+                                                onChange={(e) => modifierPhase(phase.id, 'ballotage', e.target.checked)}
+                                                className="w-5 h-5 text-amber-600"
+                                            />
+                                            <span className="text-sm font-semibold text-gray-700">🔄 Ballotage quotidien</span>
+                                        </label>
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <label className="text-sm font-semibold text-gray-700 mb-1 block">Notes</label>
+                                        <textarea
+                                            value={phase.notes}
+                                            onChange={(e) => modifierPhase(phase.id, 'notes', e.target.value)}
+                                            placeholder="Odeur, texture, observations..."
+                                            className="w-full px-3 py-2 border border-amber-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
+                                            rows="2"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    })}
+
+                    {phases.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                            <p>🔪 Aucune phase de curing ajoutée</p>
+                            <p className="text-sm">Cliquez sur "Ajouter une phase" pour documenter le curing</p>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     )
 }
