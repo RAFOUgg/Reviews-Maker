@@ -544,7 +544,8 @@ function Genetiques({ data, onChange }) {
 // Section 3: Culture & Pipeline
 function CulturePipeline({ data, onChange }) {
     const phases = data.culturePhases || []
-    
+    const [expandedPhase, setExpandedPhase] = useState(null)
+
     const ajouterPhase = () => {
         const newPhase = {
             id: Date.now(),
@@ -552,20 +553,52 @@ function CulturePipeline({ data, onChange }) {
             dateDebut: '',
             dateFin: '',
             duree: 0,
+            // Environnement
+            temperature: 22,
+            humidite: 60,
+            co2: '',
+            ventilation: '',
+            // Lumière
+            typeLampe: '',
+            spectreLumiere: '',
+            distanceLampe: '',
+            puissanceLumiere: '',
+            dureeEclairage: '',
+            dli: '',
+            ppfd: '',
+            kelvin: '',
+            // Irrigation
+            typeIrrigation: '',
+            frequenceIrrigation: '',
+            volumeEau: '',
+            // Engrais
+            typeEngrais: '',
+            marqueEngrais: '',
+            dosageEngrais: '',
+            frequenceEngrais: '',
+            // Substrat
+            typeSubstrat: '',
+            volumeSubstrat: '',
+            compositionSubstrat: '',
+            marqueSubstrat: '',
+            // Palissage
+            methodePalissage: '',
+            descriptionPalissage: '',
             notes: ''
         }
         onChange('culturePhases', [...phases, newPhase])
+        setExpandedPhase(newPhase.id)
     }
     
     const supprimerPhase = (id) => {
         onChange('culturePhases', phases.filter(p => p.id !== id))
+        if (expandedPhase === id) setExpandedPhase(null)
     }
     
     const modifierPhase = (id, champ, valeur) => {
         const newPhases = phases.map(p => {
             if (p.id === id) {
                 const updated = { ...p, [champ]: valeur }
-                // Calculer la durée automatiquement
                 if (champ === 'dateDebut' || champ === 'dateFin') {
                     if (updated.dateDebut && updated.dateFin) {
                         const debut = new Date(updated.dateDebut)
@@ -583,75 +616,219 @@ function CulturePipeline({ data, onChange }) {
 
     return (
         <div className="space-y-8">
-            {/* Infos générales culture */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label className="text-lg font-semibold text-gray-800 mb-2 block">
-                        🌱 Mode de culture <span className="text-red-600 font-bold text-base">*</span>
-                    </label>
-                    <select
-                        value={data.modeCulture || ''}
-                        onChange={(e) => onChange('modeCulture', e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-green-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
-                    >
-                        <option value="">Sélectionner...</option>
-                        <option value="indoor">Indoor / Intérieur</option>
-                        <option value="outdoor">Outdoor / Extérieur</option>
-                        <option value="greenhouse">Serre / Greenhouse</option>
-                        <option value="hydro">Hydroponique</option>
-                        <option value="aero">Aéroponique</option>
-                        <option value="aqua">Aquaponique</option>
-                        <option value="bio">Biologique / Organique</option>
-                    </select>
+            {/* ===== CONFIGURATION GÉNÉRALE ===== */}
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-2xl border-2 border-green-200">
+                <h3 className="text-xl font-bold text-green-800 mb-4 flex items-center gap-2">
+                    <span>🌱</span> Configuration générale
+                </h3>
+                
+                <div className="space-y-6">
+                    {/* Mode & Type espace */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                                🏕️ Mode de culture <span className="text-red-600">*</span>
+                            </label>
+                            <select
+                                value={data.modeCulture || ''}
+                                onChange={(e) => onChange('modeCulture', e.target.value)}
+                                className="w-full px-3 py-2 border-2 border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                            >
+                                <option value="">Sélectionner...</option>
+                                <option value="indoor">Indoor / Intérieur</option>
+                                <option value="outdoor">Outdoor / Extérieur</option>
+                                <option value="greenhouse">Serre / Greenhouse</option>
+                                <option value="no-till">No-till</option>
+                                <option value="autre">Autre</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-semibold text-gray-700 mb-2 block">📦 Type d'espace</label>
+                            <select
+                                value={data.typeEspace || ''}
+                                onChange={(e) => onChange('typeEspace', e.target.value)}
+                                className="w-full px-3 py-2 border-2 border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                            >
+                                <option value="">Sélectionner...</option>
+                                <option value="armoire">Armoire</option>
+                                <option value="tente">Tente de culture</option>
+                                <option value="serre">Serre</option>
+                                <option value="exterieur">Extérieur</option>
+                                <option value="autre">Autre</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Dimensions */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label className="text-sm font-semibold text-gray-700 mb-2 block">📏 Dimensions (LxlxH)</label>
+                            <input
+                                type="text"
+                                value={data.dimensions || ''}
+                                onChange={(e) => onChange('dimensions', e.target.value)}
+                                placeholder="120x120x200 cm"
+                                className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-semibold text-gray-700 mb-2 block">📐 Surface (m²)</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                value={data.surfaceSol || ''}
+                                onChange={(e) => onChange('surfaceSol', e.target.value)}
+                                placeholder="1.44"
+                                className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-semibold text-gray-700 mb-2 block">📦 Volume (m³)</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                value={data.volumeTotal || ''}
+                                onChange={(e) => onChange('volumeTotal', e.target.value)}
+                                placeholder="2.88"
+                                className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Technique propagation */}
+                    <div>
+                        <label className="text-sm font-semibold text-gray-700 mb-2 block">🌰 Technique de propagation</label>
+                        <input
+                            type="text"
+                            value={data.techniquePropagation || ''}
+                            onChange={(e) => onChange('techniquePropagation', e.target.value)}
+                            placeholder="Ex: Graine, Clone, Bouture, Sopalin..."
+                            className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                    </div>
+
+                    {/* Substrat global */}
+                    <div className="border-t border-green-200 pt-4 mt-4">
+                        <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+                            <span>🧪</span> Substrat principal
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Type</label>
+                                <select
+                                    value={data.typeSubstratGlobal || ''}
+                                    onChange={(e) => onChange('typeSubstratGlobal', e.target.value)}
+                                    className="w-full px-3 py-2 border border-amber-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
+                                >
+                                    <option value="">Sélectionner...</option>
+                                    <option value="hydro">Hydro</option>
+                                    <option value="bio">Bio</option>
+                                    <option value="organique">Organique</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Volume (L)</label>
+                                <input
+                                    type="number"
+                                    value={data.volumeSubstratGlobal || ''}
+                                    onChange={(e) => onChange('volumeSubstratGlobal', e.target.value)}
+                                    placeholder="20"
+                                    className="w-full px-3 py-2 border border-amber-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
+                                />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Composition</label>
+                                <textarea
+                                    value={data.compositionSubstratGlobal || ''}
+                                    onChange={(e) => onChange('compositionSubstratGlobal', e.target.value)}
+                                    placeholder="60% terre, 30% coco, 10% perlite..."
+                                    rows="2"
+                                    className="w-full px-3 py-2 border border-amber-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
+                                />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Marques des ingrédients</label>
+                                <input
+                                    type="text"
+                                    value={data.marquesSubstratGlobal || ''}
+                                    onChange={(e) => onChange('marquesSubstratGlobal', e.target.value)}
+                                    placeholder="BioBizz All-Mix, Plagron Coco..."
+                                    className="w-full px-3 py-2 border border-amber-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Récolte */}
+                    <div className="border-t border-green-200 pt-4 mt-4">
+                        <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+                            <span>✂️</span> Informations récolte
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Couleur trichomes</label>
+                                <select
+                                    value={data.couleurTrichomes || ''}
+                                    onChange={(e) => onChange('couleurTrichomes', e.target.value)}
+                                    className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                                >
+                                    <option value="">Sélectionner...</option>
+                                    <option value="translucide">Translucide</option>
+                                    <option value="laiteux">Laiteux</option>
+                                    <option value="ambre">Ambré</option>
+                                    <option value="mixte">Mixte</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Date de récolte</label>
+                                <input
+                                    type="date"
+                                    value={data.dateRecolte || ''}
+                                    onChange={(e) => onChange('dateRecolte', e.target.value)}
+                                    className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Poids brut (g)</label>
+                                <input
+                                    type="number"
+                                    value={data.poidsBrut || ''}
+                                    onChange={(e) => onChange('poidsBrut', e.target.value)}
+                                    placeholder="500"
+                                    className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Poids net (g)</label>
+                                <input
+                                    type="number"
+                                    value={data.poidsNet || ''}
+                                    onChange={(e) => onChange('poidsNet', e.target.value)}
+                                    placeholder="450"
+                                    className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                                />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Rendement (g/m² ou g/plante)</label>
+                                <input
+                                    type="text"
+                                    value={data.rendement || ''}
+                                    onChange={(e) => onChange('rendement', e.target.value)}
+                                    placeholder="450 g/m² ou 150 g/plante"
+                                    className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-                <div>
-                    <label className="text-lg font-semibold text-gray-800 mb-2 block">
-                        🏭 Espace de culture
-                    </label>
-                    <input
-                        type="text"
-                        value={data.espaceCulture || ''}
-                        onChange={(e) => onChange('espaceCulture', e.target.value)}
-                        placeholder="Ex: Box 120x120, Jardin, Chambre..."
-                        className="w-full px-4 py-3 border-2 border-green-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
-                    />
-                </div>
             </div>
 
-            {/* Médium de culture */}
-            <div>
-                <label className="text-lg font-semibold text-gray-800 mb-2 block">
-                    🧪 Médium / Substrat
-                </label>
-                <input
-                    type="text"
-                    value={data.medium || ''}
-                    onChange={(e) => onChange('medium', e.target.value)}
-                    placeholder="Ex: Terre, Coco, Hydro, Laine de roche..."
-                    className="w-full px-4 py-3 border-2 border-amber-300 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
-                />
-            </div>
-
-            {/* Nutriments */}
-            <div>
-                <label className="text-lg font-semibold text-gray-800 mb-2 block">
-                    🧪 Nutriments / Engrais
-                </label>
-                <textarea
-                    value={data.nutriments || ''}
-                    onChange={(e) => onChange('nutriments', e.target.value)}
-                    placeholder="Ex: BioBizz, Advanced Nutrients, fait maison..."
-                    className="w-full px-4 py-3 border-2 border-lime-300 rounded-xl focus:ring-2 focus:ring-lime-500 outline-none"
-                    rows="2"
-                />
-            </div>
-
-            {/* Pipeline des phases */}
-            <div className="border-t-2 border-gray-200 pt-6">
+            {/* ===== PIPELINE DES PHASES ===== */}
+            <div className="border-t-4 border-green-300 pt-6">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold text-gray-800">
-                        📅 Pipeline de culture ({phases.length} phases)
+                    <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <span>📅</span> Pipeline de culture ({phases.length} phases)
                     </h3>
                     <button
                         type="button"
@@ -664,77 +841,440 @@ function CulturePipeline({ data, onChange }) {
 
                 <div className="space-y-4">
                     {phases.map((phase, idx) => (
-                        <div key={phase.id} className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-2xl border-2 border-green-200 shadow-lg">
-                            <div className="flex items-center justify-between mb-4">
-                                <h4 className="text-lg font-bold text-green-800">Phase {idx + 1}</h4>
-                                <button
-                                    type="button"
-                                    onClick={() => supprimerPhase(phase.id)}
-                                    className="px-3 py-1 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600"
-                                >
-                                    ✕ Supprimer
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="md:col-span-2">
-                                    <label className="text-sm font-semibold text-gray-700 mb-1 block">Nom de la phase</label>
-                                    <input
-                                        type="text"
-                                        value={phase.nom}
-                                        onChange={(e) => modifierPhase(phase.id, 'nom', e.target.value)}
-                                        placeholder="Ex: Germination, Végétation, Floraison..."
-                                        className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="text-sm font-semibold text-gray-700 mb-1 block">Date début</label>
-                                    <input
-                                        type="date"
-                                        value={phase.dateDebut}
-                                        onChange={(e) => modifierPhase(phase.id, 'dateDebut', e.target.value)}
-                                        className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="text-sm font-semibold text-gray-700 mb-1 block">Date fin</label>
-                                    <input
-                                        type="date"
-                                        value={phase.dateFin}
-                                        onChange={(e) => modifierPhase(phase.id, 'dateFin', e.target.value)}
-                                        className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
-                                    />
-                                </div>
-
-                                {phase.duree > 0 && (
-                                    <div className="md:col-span-2">
-                                        <div className="bg-white px-4 py-2 rounded-lg border border-green-300">
-                                            <span className="text-sm text-gray-600">Durée: </span>
-                                            <span className="font-bold text-green-700">{phase.duree} jours</span>
+                        <div key={phase.id} className="bg-white rounded-2xl border-2 border-green-200 shadow-lg overflow-hidden">
+                            {/* Header de la phase */}
+                            <div 
+                                className="bg-gradient-to-r from-green-500 to-emerald-500 p-4 cursor-pointer hover:from-green-600 hover:to-emerald-600 transition-all"
+                                onClick={() => setExpandedPhase(expandedPhase === phase.id ? null : phase.id)}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3 text-white">
+                                        <span className="text-2xl">{expandedPhase === phase.id ? '▼' : '▶'}</span>
+                                        <div>
+                                            <h4 className="text-lg font-bold">
+                                                Phase {idx + 1}: {phase.nom || 'Sans nom'}
+                                            </h4>
+                                            {phase.duree > 0 && (
+                                                <p className="text-sm text-green-100">{phase.duree} jours</p>
+                                            )}
                                         </div>
                                     </div>
-                                )}
-
-                                <div className="md:col-span-2">
-                                    <label className="text-sm font-semibold text-gray-700 mb-1 block">Notes</label>
-                                    <textarea
-                                        value={phase.notes}
-                                        onChange={(e) => modifierPhase(phase.id, 'notes', e.target.value)}
-                                        placeholder="Paramètres, observations, techniques utilisées..."
-                                        className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
-                                        rows="2"
-                                    />
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            supprimerPhase(phase.id)
+                                        }}
+                                        className="px-3 py-1 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600"
+                                    >
+                                        ✕ Supprimer
+                                    </button>
                                 </div>
                             </div>
+
+                            {/* Contenu de la phase (collapsible) */}
+                            {expandedPhase === phase.id && (
+                                <div className="p-6 space-y-6">
+                                    {/* Nom & Dates */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="md:col-span-3">
+                                            <label className="text-sm font-semibold text-gray-700 mb-1 block">Nom de la phase</label>
+                                            <input
+                                                type="text"
+                                                value={phase.nom}
+                                                onChange={(e) => modifierPhase(phase.id, 'nom', e.target.value)}
+                                                placeholder="Germination, Végétation, Floraison..."
+                                                className="w-full px-3 py-2 border-2 border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500 font-medium"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-semibold text-gray-700 mb-1 block">Date début</label>
+                                            <input
+                                                type="date"
+                                                value={phase.dateDebut}
+                                                onChange={(e) => modifierPhase(phase.id, 'dateDebut', e.target.value)}
+                                                className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-semibold text-gray-700 mb-1 block">Date fin</label>
+                                            <input
+                                                type="date"
+                                                value={phase.dateFin}
+                                                onChange={(e) => modifierPhase(phase.id, 'dateFin', e.target.value)}
+                                                className="w-full px-3 py-2 border border-green-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                                            />
+                                        </div>
+                                        {phase.duree > 0 && (
+                                            <div>
+                                                <label className="text-sm font-semibold text-gray-700 mb-1 block">Durée</label>
+                                                <div className="px-3 py-2 bg-green-50 border border-green-300 rounded-lg">
+                                                    <span className="font-bold text-green-700">{phase.duree} jours</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Environnement */}
+                                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                                        <h5 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                                            <span>🌡️</span> Environnement
+                                        </h5>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Température (°C)</label>
+                                                <input
+                                                    type="number"
+                                                    value={phase.temperature || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'temperature', e.target.value)}
+                                                    placeholder="22"
+                                                    className="w-full px-3 py-2 border border-blue-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Humidité (%)</label>
+                                                <input
+                                                    type="number"
+                                                    value={phase.humidite || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'humidite', e.target.value)}
+                                                    placeholder="60"
+                                                    className="w-full px-3 py-2 border border-blue-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">CO2 (ppm)</label>
+                                                <input
+                                                    type="number"
+                                                    value={phase.co2 || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'co2', e.target.value)}
+                                                    placeholder="400"
+                                                    className="w-full px-3 py-2 border border-blue-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Ventilation</label>
+                                                <input
+                                                    type="text"
+                                                    value={phase.ventilation || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'ventilation', e.target.value)}
+                                                    placeholder="Continue, 24h/24"
+                                                    className="w-full px-3 py-2 border border-blue-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Lumière */}
+                                    <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+                                        <h5 className="font-semibold text-yellow-800 mb-3 flex items-center gap-2">
+                                            <span>💡</span> Éclairage
+                                        </h5>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Type de lampe</label>
+                                                <select
+                                                    value={phase.typeLampe || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'typeLampe', e.target.value)}
+                                                    className="w-full px-3 py-2 border border-yellow-300 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500"
+                                                >
+                                                    <option value="">Sélectionner...</option>
+                                                    <option value="led">LED</option>
+                                                    <option value="hps">HPS</option>
+                                                    <option value="cfl">CFL</option>
+                                                    <option value="naturel">Naturel / Soleil</option>
+                                                    <option value="mixte">Mixte</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Spectre</label>
+                                                <select
+                                                    value={phase.spectreLumiere || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'spectreLumiere', e.target.value)}
+                                                    className="w-full px-3 py-2 border border-yellow-300 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500"
+                                                >
+                                                    <option value="">Sélectionner...</option>
+                                                    <option value="complet">Complet</option>
+                                                    <option value="bleu">Bleu</option>
+                                                    <option value="rouge">Rouge</option>
+                                                    <option value="mixte">Mixte</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Distance lampe</label>
+                                                <input
+                                                    type="text"
+                                                    value={phase.distanceLampe || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'distanceLampe', e.target.value)}
+                                                    placeholder="30 cm"
+                                                    className="w-full px-3 py-2 border border-yellow-300 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Puissance (W)</label>
+                                                <input
+                                                    type="number"
+                                                    value={phase.puissanceLumiere || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'puissanceLumiere', e.target.value)}
+                                                    placeholder="600"
+                                                    className="w-full px-3 py-2 border border-yellow-300 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Durée (éclairage/jour)</label>
+                                                <input
+                                                    type="text"
+                                                    value={phase.dureeEclairage || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'dureeEclairage', e.target.value)}
+                                                    placeholder="18h, 12h..."
+                                                    className="w-full px-3 py-2 border border-yellow-300 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">DLI (mol/m²/j)</label>
+                                                <input
+                                                    type="number"
+                                                    step="0.1"
+                                                    value={phase.dli || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'dli', e.target.value)}
+                                                    placeholder="40"
+                                                    className="w-full px-3 py-2 border border-yellow-300 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">PPFD (µmol/m²/s)</label>
+                                                <input
+                                                    type="number"
+                                                    value={phase.ppfd || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'ppfd', e.target.value)}
+                                                    placeholder="800"
+                                                    className="w-full px-3 py-2 border border-yellow-300 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Kelvin (K)</label>
+                                                <input
+                                                    type="number"
+                                                    value={phase.kelvin || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'kelvin', e.target.value)}
+                                                    placeholder="6500"
+                                                    className="w-full px-3 py-2 border border-yellow-300 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Irrigation */}
+                                    <div className="bg-cyan-50 p-4 rounded-xl border border-cyan-200">
+                                        <h5 className="font-semibold text-cyan-800 mb-3 flex items-center gap-2">
+                                            <span>💧</span> Irrigation
+                                        </h5>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Type</label>
+                                                <select
+                                                    value={phase.typeIrrigation || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'typeIrrigation', e.target.value)}
+                                                    className="w-full px-3 py-2 border border-cyan-300 rounded-lg outline-none focus:ring-2 focus:ring-cyan-500"
+                                                >
+                                                    <option value="">Sélectionner...</option>
+                                                    <option value="goutte-a-goutte">Goutte à goutte</option>
+                                                    <option value="inondation">Inondation</option>
+                                                    <option value="manuel">Manuel</option>
+                                                    <option value="automatique">Automatique</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Fréquence</label>
+                                                <input
+                                                    type="text"
+                                                    value={phase.frequenceIrrigation || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'frequenceIrrigation', e.target.value)}
+                                                    placeholder="2x/jour"
+                                                    className="w-full px-3 py-2 border border-cyan-300 rounded-lg outline-none focus:ring-2 focus:ring-cyan-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Volume (L)</label>
+                                                <input
+                                                    type="number"
+                                                    step="0.1"
+                                                    value={phase.volumeEau || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'volumeEau', e.target.value)}
+                                                    placeholder="2.5"
+                                                    className="w-full px-3 py-2 border border-cyan-300 rounded-lg outline-none focus:ring-2 focus:ring-cyan-500"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Engrais */}
+                                    <div className="bg-lime-50 p-4 rounded-xl border border-lime-200">
+                                        <h5 className="font-semibold text-lime-800 mb-3 flex items-center gap-2">
+                                            <span>🧪</span> Engrais & Nutriments
+                                        </h5>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Type</label>
+                                                <select
+                                                    value={phase.typeEngrais || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'typeEngrais', e.target.value)}
+                                                    className="w-full px-3 py-2 border border-lime-300 rounded-lg outline-none focus:ring-2 focus:ring-lime-500"
+                                                >
+                                                    <option value="">Sélectionner...</option>
+                                                    <option value="bio">Bio</option>
+                                                    <option value="chimique">Chimique</option>
+                                                    <option value="mixte">Mixte</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Marque & Gamme</label>
+                                                <input
+                                                    type="text"
+                                                    value={phase.marqueEngrais || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'marqueEngrais', e.target.value)}
+                                                    placeholder="BioBizz, Advanced Nutrients..."
+                                                    className="w-full px-3 py-2 border border-lime-300 rounded-lg outline-none focus:ring-2 focus:ring-lime-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Dosage</label>
+                                                <input
+                                                    type="text"
+                                                    value={phase.dosageEngrais || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'dosageEngrais', e.target.value)}
+                                                    placeholder="2 ml/L"
+                                                    className="w-full px-3 py-2 border border-lime-300 rounded-lg outline-none focus:ring-2 focus:ring-lime-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Fréquence</label>
+                                                <input
+                                                    type="text"
+                                                    value={phase.frequenceEngrais || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'frequenceEngrais', e.target.value)}
+                                                    placeholder="2x/semaine"
+                                                    className="w-full px-3 py-2 border border-lime-300 rounded-lg outline-none focus:ring-2 focus:ring-lime-500"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Substrat (par phase) */}
+                                    <div className="bg-amber-50 p-4 rounded-xl border border-amber-200">
+                                        <h5 className="font-semibold text-amber-800 mb-3 flex items-center gap-2">
+                                            <span>🧪</span> Substrat (si différent)
+                                        </h5>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Type</label>
+                                                <input
+                                                    type="text"
+                                                    value={phase.typeSubstrat || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'typeSubstrat', e.target.value)}
+                                                    placeholder="Terre, Coco..."
+                                                    className="w-full px-3 py-2 border border-amber-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Volume (L)</label>
+                                                <input
+                                                    type="number"
+                                                    value={phase.volumeSubstrat || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'volumeSubstrat', e.target.value)}
+                                                    placeholder="20"
+                                                    className="w-full px-3 py-2 border border-amber-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
+                                                />
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Composition</label>
+                                                <input
+                                                    type="text"
+                                                    value={phase.compositionSubstrat || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'compositionSubstrat', e.target.value)}
+                                                    placeholder="60% terre, 30% coco..."
+                                                    className="w-full px-3 py-2 border border-amber-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
+                                                />
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Marques</label>
+                                                <input
+                                                    type="text"
+                                                    value={phase.marqueSubstrat || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'marqueSubstrat', e.target.value)}
+                                                    placeholder="BioBizz All-Mix..."
+                                                    className="w-full px-3 py-2 border border-amber-300 rounded-lg outline-none focus:ring-2 focus:ring-amber-500"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Palissage */}
+                                    <div className="bg-purple-50 p-4 rounded-xl border border-purple-200">
+                                        <h5 className="font-semibold text-purple-800 mb-3 flex items-center gap-2">
+                                            <span>✂️</span> Palissage LST/HST
+                                        </h5>
+                                        <div className="space-y-3">
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Méthodologie</label>
+                                                <select
+                                                    value={phase.methodePalissage || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'methodePalissage', e.target.value)}
+                                                    className="w-full px-3 py-2 border border-purple-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
+                                                >
+                                                    <option value="">Sélectionner...</option>
+                                                    <option value="scrog">SCROG</option>
+                                                    <option value="sog">SOG</option>
+                                                    <option value="mainlining">Main-Lining</option>
+                                                    <option value="lst">LST</option>
+                                                    <option value="hst">HST</option>
+                                                    <option value="topping">Topping</option>
+                                                    <option value="fimming">Fimming</option>
+                                                    <option value="lollipopping">Lollipopping</option>
+                                                    <option value="autre">Autre</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-600 mb-1 block">Description / Manipulation</label>
+                                                <textarea
+                                                    value={phase.descriptionPalissage || ''}
+                                                    onChange={(e) => modifierPhase(phase.id, 'descriptionPalissage', e.target.value)}
+                                                    placeholder="Décrire les manipulations effectuées..."
+                                                    rows="2"
+                                                    className="w-full px-3 py-2 border border-purple-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Notes */}
+                                    <div>
+                                        <label className="text-sm font-semibold text-gray-700 mb-2 block flex items-center gap-2">
+                                            <span>📝</span> Notes & Observations (500 caractères max)
+                                        </label>
+                                        <textarea
+                                            value={phase.notes}
+                                            onChange={(e) => {
+                                                if (e.target.value.length <= 500) {
+                                                    modifierPhase(phase.id, 'notes', e.target.value)
+                                                }
+                                            }}
+                                            placeholder="Paramètres, observations, techniques utilisées..."
+                                            rows="3"
+                                            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1 text-right">
+                                            {phase.notes?.length || 0}/500
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ))}
 
                     {phases.length === 0 && (
-                        <div className="text-center py-8 text-gray-500">
-                            <p>🌱 Aucune phase ajoutée</p>
-                            <p className="text-sm">Cliquez sur "Ajouter une phase" pour commencer</p>
+                        <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                            <p className="text-gray-500 text-lg">🌱 Aucune phase ajoutée</p>
+                            <p className="text-sm text-gray-400 mt-2">Cliquez sur "Ajouter une phase" pour commencer</p>
                         </div>
                     )}
                 </div>
@@ -889,11 +1429,10 @@ function VisuelTechnique({ data, onChange }) {
                             key={c.value}
                             type="button"
                             onClick={() => onChange('visuelCouleur', c.value)}
-                            className={`p-4 rounded-xl border-3 transition-all ${
-                                data.visuelCouleur === c.value
+                            className={`p-4 rounded-xl border-3 transition-all ${data.visuelCouleur === c.value
                                     ? 'border-purple-600 shadow-lg scale-105'
                                     : 'border-gray-200 hover:border-purple-300'
-                            }`}
+                                }`}
                         >
                             <div
                                 className="w-full h-12 rounded-lg mb-2 shadow-inner"
@@ -935,7 +1474,7 @@ function VisuelTechnique({ data, onChange }) {
 function Odeurs({ data, onChange }) {
     const [searchDominant, setSearchDominant] = useState('')
     const [searchSecondaire, setSearchSecondaire] = useState('')
-    
+
     const odeursListe = [
         'Agrumes', 'Citron', 'Orange', 'Pamplemousse', 'Pin', 'Diesel', 'Skunk',
         'Terreux', 'Boisé', 'Épicé', 'Poivre', 'Floral', 'Fruité', 'Baies',
@@ -957,10 +1496,10 @@ function Odeurs({ data, onChange }) {
         }
     }
 
-    const filteredDominant = odeursListe.filter(o => 
+    const filteredDominant = odeursListe.filter(o =>
         o.toLowerCase().includes(searchDominant.toLowerCase())
     )
-    const filteredSecondaire = odeursListe.filter(o => 
+    const filteredSecondaire = odeursListe.filter(o =>
         o.toLowerCase().includes(searchSecondaire.toLowerCase())
     )
 
@@ -1005,11 +1544,10 @@ function Odeurs({ data, onChange }) {
                             key={odeur}
                             type="button"
                             onClick={() => toggleOdeur('dominant', odeur)}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                                selectedDominant.includes(odeur)
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${selectedDominant.includes(odeur)
                                     ? 'bg-purple-600 text-white shadow-lg scale-105'
                                     : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-purple-400'
-                            }`}
+                                }`}
                         >
                             {odeur}
                         </button>
@@ -1035,11 +1573,10 @@ function Odeurs({ data, onChange }) {
                             key={odeur}
                             type="button"
                             onClick={() => toggleOdeur('secondaire', odeur)}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                                selectedSecondaire.includes(odeur)
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${selectedSecondaire.includes(odeur)
                                     ? 'bg-pink-600 text-white shadow-lg scale-105'
                                     : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-pink-400'
-                            }`}
+                                }`}
                         >
                             {odeur}
                         </button>
@@ -1096,7 +1633,7 @@ function Gouts({ data, onChange }) {
     const [searchDry, setSearchDry] = useState('')
     const [searchInhale, setSearchInhale] = useState('')
     const [searchExhale, setSearchExhale] = useState('')
-    
+
     const goutsListe = [
         'Citron', 'Orange', 'Baies', 'Fraise', 'Mangue', 'Ananas', 'Raisin',
         'Pomme', 'Cerise', 'Pin', 'Diesel', 'Terreux', 'Boisé', 'Épicé',
@@ -1177,11 +1714,10 @@ function Gouts({ data, onChange }) {
                             key={gout}
                             type="button"
                             onClick={() => toggleGout('DryPuff', gout)}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                                (data.goutsDryPuff || []).includes(gout)
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${(data.goutsDryPuff || []).includes(gout)
                                     ? 'bg-amber-600 text-white shadow-lg scale-105'
                                     : 'bg-white border-2 border-gray-200 hover:border-amber-400'
-                            }`}
+                                }`}
                         >
                             {gout}
                         </button>
@@ -1207,11 +1743,10 @@ function Gouts({ data, onChange }) {
                             key={gout}
                             type="button"
                             onClick={() => toggleGout('Inhalation', gout)}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                                (data.goutsInhalation || []).includes(gout)
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${(data.goutsInhalation || []).includes(gout)
                                     ? 'bg-blue-600 text-white shadow-lg scale-105'
                                     : 'bg-white border-2 border-gray-200 hover:border-blue-400'
-                            }`}
+                                }`}
                         >
                             {gout}
                         </button>
@@ -1237,11 +1772,10 @@ function Gouts({ data, onChange }) {
                             key={gout}
                             type="button"
                             onClick={() => toggleGout('Expiration', gout)}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                                (data.goutsExpiration || []).includes(gout)
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${(data.goutsExpiration || []).includes(gout)
                                     ? 'bg-green-600 text-white shadow-lg scale-105'
                                     : 'bg-white border-2 border-gray-200 hover:border-green-400'
-                            }`}
+                                }`}
                         >
                             {gout}
                         </button>
@@ -1256,7 +1790,7 @@ function Gouts({ data, onChange }) {
 function Effets({ data, onChange }) {
     const [filter, setFilter] = useState('tous')
     const [search, setSearch] = useState('')
-    
+
     const effetsListe = [
         // Positifs
         { nom: 'Euphorique', type: 'positif', categorie: 'mental' },
@@ -1285,7 +1819,7 @@ function Effets({ data, onChange }) {
     ]
 
     const selected = data.effets || []
-    
+
     const filtered = effetsListe.filter(e => {
         const matchFilter = filter === 'tous' || e.type === filter
         const matchSearch = e.nom.toLowerCase().includes(search.toLowerCase())
@@ -1302,7 +1836,7 @@ function Effets({ data, onChange }) {
     }
 
     const getTypeColor = (type) => {
-        switch(type) {
+        switch (type) {
             case 'positif': return 'bg-green-600'
             case 'neutre': return 'bg-blue-600'
             case 'negatif': return 'bg-red-600'
@@ -1364,7 +1898,7 @@ function Effets({ data, onChange }) {
                 <label className="text-lg font-semibold text-gray-800 mb-4 block">
                     🎯 Effets ressentis (max 8) <span className="text-purple-600">{selected.length}/8</span>
                 </label>
-                
+
                 {/* Filtres */}
                 <div className="flex gap-2 mb-4 flex-wrap">
                     {['tous', 'positif', 'neutre', 'negatif'].map(f => (
@@ -1372,15 +1906,14 @@ function Effets({ data, onChange }) {
                             key={f}
                             type="button"
                             onClick={() => setFilter(f)}
-                            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                                filter === f
+                            className={`px-4 py-2 rounded-lg font-medium transition-all ${filter === f
                                     ? 'bg-purple-600 text-white shadow-lg'
                                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
+                                }`}
                         >
-                            {f === 'tous' ? '🌐 Tous' : 
-                             f === 'positif' ? '✅ Positifs' :
-                             f === 'neutre' ? '➖ Neutres' : '❌ Négatifs'}
+                            {f === 'tous' ? '🌐 Tous' :
+                                f === 'positif' ? '✅ Positifs' :
+                                    f === 'neutre' ? '➖ Neutres' : '❌ Négatifs'}
                         </button>
                     ))}
                 </div>
@@ -1401,11 +1934,10 @@ function Effets({ data, onChange }) {
                             key={effet.nom}
                             type="button"
                             onClick={() => toggleEffet(effet.nom)}
-                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all relative ${
-                                selected.includes(effet.nom)
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all relative ${selected.includes(effet.nom)
                                     ? `${getTypeColor(effet.type)} text-white shadow-lg scale-105`
                                     : 'bg-white border-2 border-gray-200 hover:border-purple-400'
-                            }`}
+                                }`}
                         >
                             <div className="flex items-center justify-between gap-2">
                                 <span>{effet.nom}</span>
@@ -1423,7 +1955,7 @@ function Effets({ data, onChange }) {
 // Section 10: Curing & Maturation
 function CuringMaturation({ data, onChange }) {
     const phases = data.curingPhases || []
-    
+
     const ajouterPhase = () => {
         const newPhase = {
             id: Date.now(),
@@ -1437,13 +1969,13 @@ function CuringMaturation({ data, onChange }) {
         }
         onChange('curingPhases', [...phases, newPhase])
     }
-    
+
     const supprimerPhase = (id) => {
         onChange('curingPhases', phases.filter(p => p.id !== id))
     }
-    
+
     const modifierPhase = (id, champ, valeur) => {
-        const newPhases = phases.map(p => 
+        const newPhases = phases.map(p =>
             p.id === id ? { ...p, [champ]: valeur } : p
         )
         onChange('curingPhases', newPhases)
