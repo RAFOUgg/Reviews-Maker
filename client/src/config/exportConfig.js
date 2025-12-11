@@ -227,7 +227,7 @@ export const ACCOUNT_PERMISSIONS = {
 export function canExportFormat(accountType, format) {
     // Beta tester = accès complet
     if (accountType === ACCOUNT_TYPES.BETA_TESTER) return true
-    
+
     const permissions = ACCOUNT_PERMISSIONS[accountType]
     if (!permissions) return false
     return permissions.features.exportFormats.includes(format)
@@ -239,7 +239,7 @@ export function canExportFormat(accountType, format) {
 export function getMaxExportQuality(accountType) {
     // Beta tester = qualité maximale
     if (accountType === ACCOUNT_TYPES.BETA_TESTER) return 300
-    
+
     const permissions = ACCOUNT_PERMISSIONS[accountType]
     return permissions?.features.maxExportQuality || 150
 }
@@ -250,7 +250,7 @@ export function getMaxExportQuality(accountType) {
 export function hasDragAndDrop(accountType) {
     // Beta tester = accès complet
     if (accountType === ACCOUNT_TYPES.BETA_TESTER) return true
-    
+
     const permissions = ACCOUNT_PERMISSIONS[accountType]
     return permissions?.features.dragAndDrop || false
 }
@@ -261,7 +261,7 @@ export function hasDragAndDrop(accountType) {
 export function canCreateCustomTemplates(accountType) {
     // Beta tester = accès complet
     if (accountType === ACCOUNT_TYPES.BETA_TESTER) return true
-    
+
     const permissions = ACCOUNT_PERMISSIONS[accountType]
     return permissions?.features.customTemplates || false
 }
@@ -272,7 +272,7 @@ export function canCreateCustomTemplates(accountType) {
 export function getMaxPages(accountType) {
     // Beta tester = accès complet
     if (accountType === ACCOUNT_TYPES.BETA_TESTER) return 9
-    
+
     const permissions = ACCOUNT_PERMISSIONS[accountType]
     return permissions?.features.maxPages || 1
 }
@@ -285,7 +285,7 @@ export function getAccountFeatures(accountType) {
     if (accountType === ACCOUNT_TYPES.BETA_TESTER) {
         return ACCOUNT_PERMISSIONS[ACCOUNT_TYPES.BETA_TESTER].features
     }
-    
+
     return ACCOUNT_PERMISSIONS[accountType]?.features || ACCOUNT_PERMISSIONS[ACCOUNT_TYPES.CONSUMER].features
 }
 
