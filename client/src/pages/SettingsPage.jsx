@@ -1,14 +1,22 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore'
+import { useTranslation } from 'react-i18next'
+import { SUPPORTED_LANGUAGES, changeLanguage } from '../i18n/i18n'
 
 export default function SettingsPage() {
     const navigate = useNavigate()
     const { user } = useStore()
+    const { i18n } = useTranslation()
 
     // Theme settings
     const [theme, setTheme] = useState(() => {
         return localStorage.getItem('theme') || 'violet-lean'
+    })
+
+    // Language setting
+    const [language, setLanguage] = useState(() => {
+        return i18n.language || 'fr'
     })
 
     // Default preferences
@@ -101,6 +109,27 @@ export default function SettingsPage() {
         })
     }
 
+    const handleLanguageChange = async (newLang) => {
+        setLanguage(newLang)
+        await changeLanguage(newLang)
+
+        // Save to backend
+        try {
+            await fetch('/api/account/language', {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ locale: newLang }),
+            })
+            setSaved(true)
+            setTimeout(() => setSaved(false), 2000)
+        } catch (error) {
+            console.error('Error saving language:', error)
+        }
+    }
+
     if (!user) return null
 
     return (
@@ -163,6 +192,53 @@ export default function SettingsPage() {
                                 <div className="theme-gradient-bar mb-3" style={{ background: 'linear-gradient(90deg, rgb(var(--primary)), rgb(var(--accent)))' }}></div>
                                 <div className="font-bold text-gray-900 dark:text-white mb-1">{option.label}</div>
                                 <div className="text-xs text-gray-500 dark:text-gray-400">{option.desc}</div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Language Section */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                        </svg>
+                        Langue de l'application
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
+                        Choisissez votre langue préférée
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {SUPPORTED_LANGUAGES.map((lang) => (
+                            <button
+                                key={lang.code}
+                                onClick={() => handleLanguageChange(lang.i18nCode)}
+                                className={`relative p-4 rounded-lg border-2 transition-all text-left ${language === lang.i18nCode
+                                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                                    }`}
+                            >
+                                {language === lang.i18nCode && (
+                                    <div className="absolute top-2 right-2 w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center">
+                                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                )}
+                                <div className="flex items-center gap-3">
+                                    <span className="text-3xl">{lang.flag}</span>
+                                    <div>
+                                        <div className="font-semibold text-gray-900 dark:text-white">{lang.label}</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            {lang.code === 'en-US' && 'United States'}
+                                            {lang.code === 'en-GB' && 'United Kingdom'}
+                                            {lang.code === 'fr' && 'France'}
+                                            {lang.code === 'de' && 'Deutschland'}
+                                            {lang.code === 'es' && 'España'}
+                                        </div>
+                                    </div>
+                                </div>
                             </button>
                         ))}
                     </div>

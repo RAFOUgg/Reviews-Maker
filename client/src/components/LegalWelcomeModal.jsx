@@ -1,20 +1,28 @@
 import React, { useState, useEffect } from 'react'
 import legalTranslations from '../i18n/legalWelcome.json'
 import { useAuth } from '../hooks/useAuth'
+import { useTranslation } from 'react-i18next'
+import { SUPPORTED_LANGUAGES, changeLanguage } from '../i18n/i18n'
 
 const LegalWelcomeModal = ({ onAccept, onDeny }) => {
     const { user, isAuthenticated } = useAuth()
-    const [language, setLanguage] = useState('fr')
+    const { i18n } = useTranslation()
+    const [language, setLanguage] = useState(i18n.language || 'fr')
     const [ageConfirmed, setAgeConfirmed] = useState(false)
     const [consentGiven, setConsentGiven] = useState(false)
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(true)
     const [userIsLegal, setUserIsLegal] = useState(false)
+    const [isFirstVisit, setIsFirstVisit] = useState(false)
 
     // Check user age from profile
     useEffect(() => {
         const checkUserAge = async () => {
             setLoading(true)
+
+            // Check if this is user's first visit
+            const hasVisited = localStorage.getItem('hasVisitedBefore')
+            setIsFirstVisit(!hasVisited)
 
             if (isAuthenticated && user) {
                 try {
@@ -41,9 +49,11 @@ const LegalWelcomeModal = ({ onAccept, onDeny }) => {
                             }
                         }
 
-                        // Get language from profile
-                        if (data.language) {
-                            setLanguage(data.language)
+                        // Get language from profile (locale field)
+                        if (data.locale) {
+                            const userLang = data.locale
+                            setLanguage(userLang)
+                            await changeLanguage(userLang) // Update i18n
                         }
                     }
                 } catch (error) {
@@ -59,7 +69,7 @@ const LegalWelcomeModal = ({ onAccept, onDeny }) => {
 
     const t = legalTranslations[language] || legalTranslations.fr
 
-    const handleAccept = () => {
+    const handleAccept = async () => {
         if (!ageConfirmed) {
             setError(t.errors?.mustConfirmAge || 'Vous devez confirmer votre âge')
             return
@@ -70,10 +80,34 @@ const LegalWelcomeModal = ({ onAccept, onDeny }) => {
             return
         }
 
+        // Save language preference to backend if authenticated
+        if (isAuthenticated && user) {
+            try {
+                await fetch('/api/account/language', {
+                    method: 'PATCH',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ locale: language }),
+                })
+            } catch (error) {
+                console.error('Error saving language preference:', error)
+            }
+        }
+
+        // Mark that user has visited
+        localStorage.setItem('hasVisitedBefore', 'true')
+
         onAccept({
             language,
             timestamp: Date.now()
         })
+    }
+
+    const handleLanguageChange = async (newLang) => {
+        setLanguage(newLang)
+        await changeLanguage(newLang)
     }
 
     const handleDeny = () => {
@@ -112,17 +146,28 @@ const LegalWelcomeModal = ({ onAccept, onDeny }) => {
                     </p>
                 </div>
 
-                {/* Language selector (small, top-right style) */}
-                <div className="flex justify-end mb-4">
-                    <select
-                        value={language}
-                        onChange={(e) => setLanguage(e.target.value)}
-                        className="bg-gray-800 text-white text-sm px-3 py-1.5 rounded-lg border border-gray-700 focus:border-purple-500 focus:outline-none"
-                    >
-                        <option value="fr">🇫🇷 Français</option>
-                        <option value="en">🇬🇧 English</option>
-                        <option value="es">🇪🇸 Español</option>
-                    </select>
+                {/* Language selector - prominent on first visit */}
+                <div className={`mb-6 ${isFirstVisit ? 'bg-purple-900/20 border-2 border-purple-500/50 rounded-lg p-4' : ''}`}>
+                    {isFirstVisit && (
+                        <p className="text-purple-200 text-sm mb-3 font-medium">
+                            🌍 {t.welcome?.selectLanguage || 'Choisissez votre langue / Choose your language'}
+                        </p>
+                    )}
+                    <div className="grid grid-cols-2 gap-2">
+                        {SUPPORTED_LANGUAGES.map((lang) => (
+                            <button
+                                key={lang.code}
+                                onClick={() => handleLanguageChange(lang.i18nCode)}
+                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${language === lang.i18nCode
+                                        ? 'bg-purple-600 text-white border-2 border-purple-400'
+                                        : 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600'
+                                    }`}
+                            >
+                                <span className="mr-2">{lang.flag}</span>
+                                {lang.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {/* RDR Warning */}

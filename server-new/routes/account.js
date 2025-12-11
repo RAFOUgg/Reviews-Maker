@@ -488,4 +488,46 @@ router.get('/multiple', asyncHandler(async (req, res) => {
     });
 }));
 
+/**
+ * PATCH /api/account/language
+ * Met à jour la langue préférée de l'utilisateur
+ */
+router.patch('/language', asyncHandler(async (req, res) => {
+    if (!req.user) {
+        return res.status(401).json({
+            error: 'unauthorized',
+            message: 'Authentification requise',
+        });
+    }
+
+    const { locale } = req.body;
+
+    // Validate locale
+    const validLocales = ['fr', 'en', 'de', 'es'];
+    if (!locale || !validLocales.includes(locale)) {
+        return res.status(400).json({
+            error: 'invalid_locale',
+            message: 'Langue invalide. Langues supportées : fr, en, de, es',
+            validLocales,
+        });
+    }
+
+    // Update user locale
+    const updatedUser = await prisma.user.update({
+        where: { id: req.user.id },
+        data: { locale },
+        select: {
+            id: true,
+            username: true,
+            locale: true,
+        },
+    });
+
+    res.json({
+        success: true,
+        message: 'Langue mise à jour avec succès',
+        locale: updatedUser.locale,
+    });
+}));
+
 export default router;

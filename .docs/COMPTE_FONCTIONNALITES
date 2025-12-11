@@ -13,7 +13,6 @@
     - Farm
     - Type (indica, sativa, hybride indica-dominant, sativa-dominant, CBD-dominant)
     - Photo (1-4)*
- 
 - **Génétiques**
     - Breeder de la graine
     - Variété (auto-complete)
@@ -21,7 +20,6 @@
     - Pourcentage de chaque génétique (si dispo)
     - Généalogie (parents, lignée, phénotype/clone)
     - Code phénotype ou sélection (“Pheno” pour hunt)
-
 - **PipeLine GLOBAL : Données de culture**
     Système de saisie structuré pour producteurs avec PipeLine complète.
     Pipeline :
@@ -82,13 +80,11 @@
             - Poids brut (g)
             - Poids net (après 1er defoliation) (g)
             - Rendement (g/m² ou g/plante)
-
 - **Données analytiques, PDF**
     - Taux THC (%)
     - Taux CBD (%)
     - Taux CBG/CBC autres (%) ou mg/g
     - Profil terpénique complet (par certificat d’analyse pdf/image uniquement)
-
 - **Expérience d’utilisation durant les tests**
     - Méthode de consommation (Combustion/Vapeur/Infusion)
     - Dosage utilisé (estimé en grammes/mg)
@@ -98,27 +94,115 @@
     - Début des effets (immédiat, différé, etc.)
     - Durée des effets (courte/moyenne/longue)
     - Usage préféré (soir, journée, seul, social, médical)
-
-- **Apparence**
-    - Photos (macro/globale)
-    - Couleur dominante (nuancier à cocher)
-    - Structure des têtes (compacte/aérée/foxy)
-    - Trichomes (abondance, maturité : laiteux/ambré/translucide)
-    - Présence de graines, débris, etc.
-    
-- **Goût et odeur**
-    - Arômes à sec (choix multiples + champ libre)
-    - Odeur lors du broyage
+- **👁️ Visuel et Technique**
+    - Couleur/10 (echelle de couleur (nuancier des couleurs du cannabis)vert, violet, jaune, breun, gris etc dégradé.)
+    - Densité visuelle/10
+    - Trichomes/10
+    - Pistils/10
+    - Manucure/10
+    - Moisissure (10=aucune)/10
+    - Graines (10=aucune)/10
+- **👃 Odeurs**
+    - Notes dominantes (max 7 parmis une liste pré-définie ultra complète)
+    - Notes secondaires (max 7)
     - Arômes à l’inhalation (primaire/secondaire)
     - Saveur en bouche, rétro-olfaction
     - Intensité de l’arôme (échelle 1 à 10)
-
-
-
+- **🤚 Texture**
+    - Dureté/10
+    - Densité tactile/10
+    - Élasticité/10
+    - Collant/10
+- **Goûts**
+    - Intensité/10
+    - Agressivité/piquant (fidélité aux cultivars) /10
+    - Dry puff/tirage à sec (max 7 parmis une liste pré-définie ultra complète)
+    - Inhalation (max 7)
+    - Expiration/arrière-goût (max 7)
+- **Effets ressentis**
+    - Montée (rapidité)/10
+    - Intensité/10
+    - Choix (max 8 parmis une liste pré-définie ultra complète classée par type (mentaux, physique, thérapeutiques) déjà codé)
+        - Filtre par tous,  neutre, positif et négatif
 
 ---
 
-### **B. Extractions (Hash, Rosin, BHO, etc.)**
+### **B. Hash (Hash, Kief, Ice-O-Lator, Dry-Sift)**
+**Champs récupérés :**
+- **📋 Informations générales**
+    - Nom commercial*
+    - Hashmaker
+    - Cultivars utilisés : nouveau ou depuis la bibliothèque de l'utilistateur via pup-up
+    - Photo (1-4)*
+- **🔬 Pipeline & Séparation**
+**Système de saisie structuré pour producteurs avec PipeLine complète.**
+Pipeline :
+    - Méthode de séparation (manuelle, tamisage à sec, eau/glace, autre)
+    - Nombre de passes (si eau/glace)
+    - Température de l’eau (si eau/glace)
+    - Taille des mailles utilisées (si tamisage à sec)
+    - Type de matière première utilisée (trim, buds, sugar leaves, etc... et autres)
+    - Qualité de la matière première (échelle 1-10)
+    - Rendement (%) estimé
+    - Temps total de séparation (minutes)
+- Chaque étape de la PipeLine permet de saisir des données spécifiques (température, durée, matériel utilisé, etc...)
+Pipeline purification : 
+"
+Chromatographie sur colonne
+Flash Chromatography
+HPLC
+GC
+TLC
+Autre
+Winterisation
+Décarboxylation
+Fractionnement par température
+Fractionnement par solubilité
+Autre
+Filtration
+Centrifugation
+Décantation
+Séchage sous vide
+Autre
+Recristallisation
+Sublimation
+Extraction liquide-liquide
+Adsorption sur charbon actif
+Filtration membranaire
+" Avec pour chacun des valeurs et données associées (température, durée, solvant, etc...)
+- **👁️ Visuel & Technique**
+    - Couleur/transparence/10
+        - echelle de couleur (nuancier)noir, brun, ambre, doré, jaune clair, blanc dégradé.
+    - Pureté visuelle/10
+    - Densité visuelle/10
+    - Pistils/10
+    - Moisissure (10=aucune)/10
+    - Graines (10=aucune)/10
+- **👃 Odeurs**
+    - Fidélité au cultivars/10
+    - Intensité aromatique/10
+    - Notes dominantes (max 7 parmis une liste pré-définie ultra complète)
+    - Notes secondaires (max 7 parmis une liste pré-définie ultra complète)
+- **🤚 Texture**
+    - Dureté/10
+    - Densité tactile/10
+    - Friabilité/Viscosité/10
+    - Melting/Résidus/10
+- **😋 Goûts**
+    - Intensité/10
+    - Agressivité/piquant/10
+    - Dry puff/tirage à sec (max 7)
+    - Inhalation (max 7)
+    - Expiration/arrière-goût (max 7)
+- **💥 Effets ressentis**
+    - Montée (rapidité)/10
+    - Intensité/10
+    - Choix (max 8 parmis une liste pré-définie ultra complète classée par type (mentaux, physique, thérapeutiques) déjà codé)
+        - Filtre par tous,  neutre, positif et négatif
+
+
+Aspect collant/gras/10
+### **B. Concentrés (Rosin, BHO, etc.)**
 **Champs récupérés :**
 - **Identification**
     - Nom/lot/ID unique
@@ -180,102 +264,3 @@
     - Recommande/ré-acheter (oui/non)
     - Date de review
 
----
-
-### **D. Accessoires**
-**Champs récupérés :**
-- **Identification**
-    - Nom/marque/modèle
-    - Type : vape, pipe, grinder, plateau…
-    - Matériau(x) principal(aux)
-    - Couleur(s)
-
-- **Caractéristiques**
-    - Fonctionnalités spécifiques (temp. réglable, charge USB…)
-    - Robustesse/confort (texte + échelle)
-    - Simplicité de nettoyage
-    - Accessoires additionnels fournis
-    - Compatibilité usages (herbe, huile, wax…)
-- **Expérience utilisateur**
-    - Efficacité (qualité vapeur, filtrage…)
-    - Facilité d’usage (prise en main)
-    - Points forts/faibles
-    - Photos à l’utilisation
-    - Comparatif modèles équivalents
-- **Avis global**
-    - Note sur 10
-    - Rapport qualité/prix
-    - Recommandation finale
-
----
-
-## 2. Système de configuration avancée et journal (Orchard Maker)
-
-### Personnalisation :
-- **Création d’étapes custom par produit** (ex. germination, rempotage, topping, début flo, récolte…)
-- **Intervalle de suivi réglable** (J+1, par semaine, points-clé manuels)
-- **Champs custom à chaque étape** (mesure, notes libres, checklist)
-- **Ajout de photos, scans, documents à chaque étape ou batch**
-- **Système multi-plantes ou multi-produits / phénotypage avancé**
-- **Arborescence généalogique complète avec liaison automatique de reviews**
-- **Lien parent/enfant pour runs successifs (évolution génétique, acclimatation, mutations)**
-- **Export ciblé (période X ou étape Y, tous ou sélection de runs/phénos)**
-- **Ajout de certificats d’analyse, QR code de traçabilité aux reviews**
-
----
-
-## 3. Exportation des reviews — toutes options
-
-
-### **Exports "consommateur" :**
-- **PDF simplifié**
-    - Sélection du template (clair/sombre/logo option)
-    - Order/masquage de certaines sections (coche)
-    - Export photo principale + résumé notes/effects/arômes
-    - Ajout d’un QR code de partage
-    - Langue du document (FR/EN/DE/ES)
-- **Image/JPG**
-    - Vignettes préformatées pour diffusion réseaux sociaux
-    - Options watermark pseudo, logo ou non
-- **Texte brut**
-    - Format “forum”, BBcode, markdown, ou texte
-- **Lien public privé**
-    - Génération url de lecture seule (galerie publique/privée)
-
----
-
-### **Exports producteurs (Orchard Maker) :**
-- **PDF avancé** (modulaire)
-    - Thème 100% custom (code couleur, placement logos, signature numérique)
-    - Choix de sections/styles (single run, multi-run, comparatif, portfolio)
-    - Addition d’annexes : analyses labo, infographies, historiques météo, courbes paramétriques
-    - Export multi-lots, avec séparation ou agrégation
-    - Export “Pheno Hunt” (tableaux croisés résultats runs)
-- **CSV/Exel**
-    - Sélection des colonnes à exporter (paramétrique)
-    - Regroupement par lot, saison, matériel
-- **JSON/XML**
-    - Format API (pour injection automatique Terpologie RM, Shopify, autres partenaires)
-    - Ajout de méta (batch, traçabilité, datation, identifiant unique)
-- **Blockchain/horodatage (option)**
-    - Export scellé, horodaté, signature cryptographique
-- **Galerie web**
-
-    - Génération page dédiée, administrée en interne ou en marque blanche (partage pro)
-
----
-
-### **Personnalisation export Orchard Maker**
-- Choix précisément chaque champ affiché/masqué (cases à cocher)
-- Orchestration des sections (ordre, titres personnalisés)
-- Sélection des étapes du journal à inclure, ou exclusion de sections privées
-- Templates d’export sauvegardables et réutilisables (profil branding pro)
-- Ajout de filigrane, mentions légales, disclaimer localisé
-- Exportation multi-langue (auto-trad ou version manuelle par lot)
-
----
-
-## 4. Récapitulatif par type d’utilisateur
-- **Consommateur** : accès à tous les champs “lecture simple + photo”, exports PDF/images/texte basic, partage lien public/privé, personnalisation partielle du visuel, choix de langues.
-- **Producteur** : accès à tous les champs détaillés + custom, personnalisation totale du pipeline & journal, exports ultra-modulables (PDF, CSV, JSON, blockchain…), arborescence phénotypique, branding complet, annexes pro, multi-langues, multi-batch, traçabilité et API.
----
