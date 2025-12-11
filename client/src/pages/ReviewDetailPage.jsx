@@ -5,6 +5,8 @@ import TemplateRenderer from '../components/orchard/TemplateRenderer'
 import ReviewFullDisplay from '../components/ReviewFullDisplay'
 import { useStore } from '../store/useStore'
 import { useToast } from '../components/ToastContainer'
+import FlowerExportModal from '../components/export/FlowerExportModal'
+import { Download } from 'lucide-react'
 
 export default function ReviewDetailPage() {
     const { id } = useParams()
@@ -15,6 +17,7 @@ export default function ReviewDetailPage() {
     const [loading, setLoading] = useState(true)
     const [selectedImage, setSelectedImage] = useState(null)
     const [viewMode, setViewMode] = useState('full') // 'full' or 'orchard'
+    const [showExportModal, setShowExportModal] = useState(false)
 
     useEffect(() => {
         fetchReview()
@@ -113,17 +116,29 @@ export default function ReviewDetailPage() {
                         <span>Retour à la galerie</span>
                     </button>
 
-                    {isAuthenticated && user?.id === review.authorId && (
-                        <button
-                            onClick={() => navigate(`/edit/${id}`)}
-                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded-xl font-semibold shadow-lg transition-all"
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            <span>Éditer</span>
-                        </button>
-                    )}
+                    <div className="flex items-center gap-2">
+                        {review?.type === 'Fleur' && (
+                            <button
+                                onClick={() => setShowExportModal(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white rounded-xl font-semibold shadow-lg transition-all"
+                            >
+                                <Download className="w-5 h-5" />
+                                <span>Exporter</span>
+                            </button>
+                        )}
+
+                        {isAuthenticated && user?.id === review?.authorId && (
+                            <button
+                                onClick={() => navigate(`/edit/${id}`)}
+                                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded-xl font-semibold shadow-lg transition-all"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                <span>Éditer</span>
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* View Mode Switcher - Only show if Orchard config exists */}
@@ -132,8 +147,8 @@ export default function ReviewDetailPage() {
                         <button
                             onClick={() => setViewMode('full')}
                             className={`px-4 py-2 rounded-xl font-medium transition-all ${viewMode === 'full'
-                                    ? 'bg-primary-500 text-white'
-                                    : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+                                ? 'bg-primary-500 text-white'
+                                : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
                                 }`}
                         >
                             📋 Vue Détaillée
@@ -141,8 +156,8 @@ export default function ReviewDetailPage() {
                         <button
                             onClick={() => setViewMode('orchard')}
                             className={`px-4 py-2 rounded-xl font-medium transition-all ${viewMode === 'orchard'
-                                    ? 'bg-primary-500 text-white'
-                                    : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+                                ? 'bg-primary-500 text-white'
+                                : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
                                 }`}
                         >
                             🎨 Aperçu Orchard
@@ -187,6 +202,15 @@ export default function ReviewDetailPage() {
                     <ReviewFullDisplay review={review} />
                 )}
             </div>
+
+            {/* Export Modal - Flower only */}
+            {showExportModal && review?.type === 'Fleur' && (
+                <FlowerExportModal
+                    review={review}
+                    onClose={() => setShowExportModal(false)}
+                    isDark={true}
+                />
+            )}
         </div>
     )
 }
