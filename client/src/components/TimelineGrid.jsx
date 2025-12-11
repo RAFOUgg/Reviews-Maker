@@ -13,10 +13,10 @@ import { useState } from 'react'
  * @param {Function} props.onGeneralConfigChange - Callback pour modification config générale (field, value)
  * @param {Function} props.onConfigChange - Callback pour modification config timeline (field, value)
  */
-export default function TimelineGrid({ 
-    data = [], 
-    onChange, 
-    config, 
+export default function TimelineGrid({
+    data = [],
+    onChange,
+    config,
     editableFields = [],
     generalConfigFields = [],
     generalConfigData = {},
@@ -53,10 +53,10 @@ export default function TimelineGrid({
             case 'jour':
                 // JOURS : date début ET fin obligatoires
                 if (!config.start || !config.end) return []
-                
+
                 const start = new Date(config.start)
                 const end = new Date(config.end)
-                
+
                 for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
                     const daysSinceStart = Math.floor((d - start) / (1000 * 60 * 60 * 24))
                     cells.push({
@@ -71,9 +71,9 @@ export default function TimelineGrid({
             case 'semaine':
                 // SEMAINES : début obligatoire, fin facultative
                 if (!config.start) return []
-                
+
                 const weekStart = new Date(config.start)
-                const maxWeeks = config.end ? 
+                const maxWeeks = config.end ?
                     Math.ceil((new Date(config.end) - weekStart) / (1000 * 60 * 60 * 24 * 7)) :
                     52 // Max 52 semaines si pas de fin
 
@@ -318,7 +318,7 @@ export default function TimelineGrid({
                                     <p className="text-xs text-purple-700 italic mb-3">
                                         Ces informations représentent la configuration initiale de votre culture
                                     </p>
-                                    
+
                                     {generalConfigFields.map((field) => (
                                         <div key={field.key}>
                                             <label className="text-sm font-semibold text-gray-700 mb-2 block flex items-center gap-2">

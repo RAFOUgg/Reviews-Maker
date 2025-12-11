@@ -1,5 +1,11 @@
 # Fonctionnalités de création et d’export de reviews — champs et options détaillés
 
+# Interface générale et règles de saisie des données
+Presque aucune saisie ne doit être textuelles, tout doit se faire via des séléctions, des choix, des boutons, des menu déroulant etc...
+Interface ergonomique avec aide contextuelle (tooltips, modales d’aide, etc...) pour guider l’utilisateur dans la saisie des données.
+Apple-like design, épuré, moderne et intuitif. Assistance à la saisie (auto-complete, suggestions, etc...).
+    - Incorporation d'UI liquid au style d'apple.
+    - Modern et épuré. Stylysé
 # Règles générale : 
 
 Unités et formats standards pour les champs chiffrés :
@@ -78,6 +84,13 @@ Utiliser les unités du système international (SI) lorsque c’est possible (g,
         - Palissage LST/HST : 
             - Méthodologies : SCROG, SOG, Main-Lining, etc.
                 - Commentaire pour décrire la manipulations
+        - Morphologie de la plante :
+            - Taille
+            - Volume
+            - Poid
+            - Nombre de branches principales
+            - Nombre de feuilles
+            - Nombre de buds
         - Recolte :
             - Couleur des trichomes au moment de la récolte (nuancier (laiteux, ambré, translucide))
             - Date de récolte
@@ -131,8 +144,8 @@ Utiliser les unités du système international (SI) lorsque c’est possible (g,
     
 - **🔥 PipeLine CURING MATURATION :** 
 - Configurations :
-        - Définition de la trame de la PipeLine (intervalles : s, m, h)
-        - Durée de curing (jours/semaines/mois selon trame choisie)
+        - Définition de la trame de la PipeLine (intervalles : seconde, minute, heures, jour, semaine, mois)
+        - Durée de curing (trame choisie)
     - Type de maturation/curing (froid <5°C/ chaud >5°C)
     - Température de curing (°C)
     - Humidité relative dans recipient (%)
@@ -140,6 +153,11 @@ Utiliser les unités du système international (SI) lorsque c’est possible (g,
     - Emballage/Ballotage primaire : (celophane, papier cuisson, aliminium, paper hash, sac à viade, congelation, sous vide(complète par machine, partiel manuellement), autre)
     - Opacité du recipient de curing (opaque, semi-opaque, transparent, ambré, etc...)
     - Volume ocupé par le produit dans le recipient (L/mL)
+    - Modification des testes : 
+        - Visuel & Technique
+        - Odeurs
+        - Goûts
+        - Effets ressentis
 
 ---
 
@@ -166,29 +184,10 @@ Pipeline :
     - Temps total de séparation (minutes)
 - Chaque étape de la PipeLine permet de saisir des données spécifiques (température, durée, matériel utilisé, etc...)
 Pipeline purification : 
-"
-Chromatographie sur colonne
-Flash Chromatography
-HPLC
-GC
-TLC
-Autre
-Winterisation
-Décarboxylation
-Fractionnement par température
-Fractionnement par solubilité
-Autre
-Filtration
-Centrifugation
-Décantation
-Séchage sous vide
-Autre
-Recristallisation
-Sublimation
-Extraction liquide-liquide
-Adsorption sur charbon actif
-Filtration membranaire
-" Avec pour chacun des valeurs et données associées (température, durée, solvant, etc...)
+"Chromatographie sur colonne, Flash Chromatography, HPLC, GC, TLC, Winterisation, Décarboxylation, Fractionnement par température, Fractionnement par solubilité, Filtration, Centrifugation, Décantation, Séchage sous vide, Recristallisation, Sublimation, Extraction liquide-liquide, Adsorption sur charbon actif, Filtration membranaire " 
+
+Avec pour chacun des valeurs et données associées (température, durée, solvant, etc... VALEUR ET DONNEES A DEFINIR POUR CHAQUE METHODE)
+
 - **👁️ Visuel & Technique**
     - Couleur/transparence/10
         - echelle de couleur (nuancier)noir, brun, ambre, doré, jaune clair, blanc dégradé.

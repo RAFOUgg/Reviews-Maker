@@ -23,21 +23,21 @@ export default function CulturePipelineTimeline({ data, onChange }) {
         // Mode & Type espace
         { key: 'modeCulture', label: 'Mode de culture', icon: '🏕️', type: 'select', options: CULTURE_VALUES.mode, required: true },
         { key: 'typeEspace', label: "Type d'espace", icon: '📦', type: 'select', options: CULTURE_VALUES.typeEspace },
-        
+
         // Dimensions
         { key: 'dimensions', label: 'Dimensions (LxlxH)', icon: '📏', type: 'text', placeholder: '120x120x200 cm' },
         { key: 'surfaceSol', label: 'Surface (m²)', icon: '📐', type: 'number', step: '0.01', placeholder: '1.44' },
         { key: 'volumeTotal', label: 'Volume (m³)', icon: '📦', type: 'number', step: '0.01', placeholder: '2.88' },
-        
+
         // Technique propagation
         { key: 'techniquePropagation', label: 'Technique de propagation', icon: '🌰', type: 'select', options: CULTURE_VALUES.techniquePropagation },
-        
+
         // Substrat global
         { key: 'typeSubstratGlobal', label: 'Type substrat principal', icon: '🧪', type: 'select', options: CULTURE_VALUES.typeSubstrat },
         { key: 'volumeSubstratGlobal', label: 'Volume substrat (L)', icon: '📊', type: 'number', placeholder: '20' },
         { key: 'compositionSubstratGlobal', label: 'Composition substrat', icon: '📝', type: 'textarea', rows: 2, maxLength: 200, placeholder: '60% terre, 30% coco, 10% perlite...' },
         { key: 'marquesSubstratGlobal', label: 'Marques des ingrédients', icon: '🏷️', type: 'text', placeholder: 'BioBizz All-Mix, Plagron Coco...' },
-        
+
         // Récolte
         { key: 'couleurTrichomes', label: 'Couleur trichomes', icon: '💎', type: 'select', options: CULTURE_VALUES.couleurTrichomes },
         { key: 'dateRecolte', label: 'Date de récolte', icon: '📅', type: 'text', placeholder: 'YYYY-MM-DD' },

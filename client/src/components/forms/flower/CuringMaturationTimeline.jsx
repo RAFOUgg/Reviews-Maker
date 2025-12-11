@@ -21,33 +21,37 @@ export default function CuringMaturationTimeline({ data, onChange }) {
     const curingGeneralConfigFields = [
         // Type maturation
         { key: 'typeMaturation', label: 'Type de maturation', icon: '❄️', type: 'select', options: CURING_VALUES.typeMaturation },
-        
+
         // Méthode séchage
         { key: 'methodeSechage', label: 'Méthode de séchage', icon: '🔪', type: 'select', options: CURING_VALUES.methodeSechage },
-        
+
         // Type récipient
         { key: 'typeRecipient', label: 'Type de récipient principal', icon: '🏺', type: 'select', options: CURING_VALUES.typeRecipient },
-        
+
         // Emballage primaire
         { key: 'emballagePrimaire', label: 'Emballage/Ballotage primaire', icon: '📦', type: 'select', options: CURING_VALUES.emballagePrimaire },
-        
+
         // Opacité
         { key: 'opaciteRecipient', label: 'Opacité du récipient', icon: '🌑', type: 'select', options: CURING_VALUES.opaciteRecipient },
-        
+
         // Volume occupé
         { key: 'volumeOccupe', label: 'Volume occupé', icon: '📏', type: 'number', step: '0.01', placeholder: '500', min: 0 },
-        { key: 'volumeOccupeUnite', label: 'Unité volume', icon: '📐', type: 'select', options: [
-            { value: 'L', label: 'L (litres)' },
-            { value: 'mL', label: 'mL (millilitres)' }
-        ] },
-        
+        {
+            key: 'volumeOccupeUnite', label: 'Unité volume', icon: '📐', type: 'select', options: [
+                { value: 'L', label: 'L (litres)' },
+                { value: 'mL', label: 'mL (millilitres)' }
+            ]
+        },
+
         // Durée curing
         { key: 'dureeCuring', label: 'Durée totale de curing', icon: '⏱️', type: 'number', placeholder: '14', min: 0 },
-        { key: 'dureeCuringUnite', label: 'Unité durée', icon: '📅', type: 'select', options: [
-            { value: 'jours', label: 'Jours' },
-            { value: 'semaines', label: 'Semaines' },
-            { value: 'mois', label: 'Mois' }
-        ] }
+        {
+            key: 'dureeCuringUnite', label: 'Unité durée', icon: '📅', type: 'select', options: [
+                { value: 'jours', label: 'Jours' },
+                { value: 'semaines', label: 'Semaines' },
+                { value: 'mois', label: 'Mois' }
+            ]
+        }
     ]
 
     // Champs éditables dans la timeline curing
