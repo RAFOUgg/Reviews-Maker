@@ -23,6 +23,8 @@ function getUserAccountType(user) {
     }
 
     // Determine account type based on roles and subscription
+    // Beta tester = accès complet (équivalent producer)
+    if (roles.includes('beta_tester')) return 'producer'
     if (roles.includes('producer')) return 'producer'
     if (roles.includes('influencer_pro')) return 'influencer_pro'
     if (roles.includes('influencer_basic')) return 'influencer_basic'

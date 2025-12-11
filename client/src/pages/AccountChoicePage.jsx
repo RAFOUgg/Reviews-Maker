@@ -56,7 +56,7 @@ export default function AccountChoicePage() {
                 <div className="p-6 space-y-4">
                     <div className="text-center">
                         <h1 className="text-2xl font-bold text-gray-900">Choisissez votre type de compte</h1>
-                        <p className="text-gray-700 text-sm mt-1">Seul le plan Beta testeur est actuellement disponible. Les autres plans seront activés progressivement.</p>
+                        <p className="text-gray-700 text-sm mt-1">Pendant la bêta, le plan Beta testeur offre un accès complet équivalent au plan Producteur.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">

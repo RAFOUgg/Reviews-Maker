@@ -8,7 +8,8 @@ export const ACCOUNT_TYPES = {
     CONSUMER: 'consumer',
     INFLUENCER_BASIC: 'influencer_basic',
     INFLUENCER_PRO: 'influencer_pro',
-    PRODUCER: 'producer'
+    PRODUCER: 'producer',
+    BETA_TESTER: 'beta_tester' // Équivalent Producer pendant la bêta
 }
 
 // Formats d'export disponibles
@@ -146,6 +147,43 @@ export const ACCOUNT_PERMISSIONS = {
         }
     },
 
+    [ACCOUNT_TYPES.BETA_TESTER]: {
+        name: 'Beta Testeur',
+        price: 0,
+        features: {
+            // Accès complet = équivalent Producteur pendant la bêta
+            exportFormats: Object.values(EXPORT_FORMATS),
+            maxExportQuality: 300,
+
+            allowedTemplates: [
+                PREDEFINED_TEMPLATES.COMPACT,
+                PREDEFINED_TEMPLATES.DETAILED,
+                PREDEFINED_TEMPLATES.COMPLETE
+            ],
+            customTemplates: true,
+            dragAndDrop: true,
+
+            allowedFormats: Object.values(TEMPLATE_FORMATS),
+            formatCustomization: true,
+
+            themeCustomization: true,
+            colorCustomization: true,
+            imageCustomization: true,
+            typographyCustomization: true,
+            customFonts: true,
+            watermark: true,
+
+            maxPages: 9,
+            brandingRemoval: true,
+
+            // Fonctionnalités avancées
+            pipelineConfig: true,
+            advancedStats: true,
+            teamManagement: false,
+            apiAccess: true
+        }
+    },
+
     [ACCOUNT_TYPES.PRODUCER]: {
         name: 'Producteur',
         price: 29.99,
@@ -187,6 +225,9 @@ export const ACCOUNT_PERMISSIONS = {
  * Vérifie si un format d'export est autorisé pour un type de compte
  */
 export function canExportFormat(accountType, format) {
+    // Beta tester = accès complet
+    if (accountType === ACCOUNT_TYPES.BETA_TESTER) return true
+    
     const permissions = ACCOUNT_PERMISSIONS[accountType]
     if (!permissions) return false
     return permissions.features.exportFormats.includes(format)
@@ -196,6 +237,9 @@ export function canExportFormat(accountType, format) {
  * Obtient la qualité max d'export pour un type de compte
  */
 export function getMaxExportQuality(accountType) {
+    // Beta tester = qualité maximale
+    if (accountType === ACCOUNT_TYPES.BETA_TESTER) return 300
+    
     const permissions = ACCOUNT_PERMISSIONS[accountType]
     return permissions?.features.maxExportQuality || 150
 }
@@ -204,6 +248,9 @@ export function getMaxExportQuality(accountType) {
  * Vérifie si le drag & drop est disponible
  */
 export function hasDragAndDrop(accountType) {
+    // Beta tester = accès complet
+    if (accountType === ACCOUNT_TYPES.BETA_TESTER) return true
+    
     const permissions = ACCOUNT_PERMISSIONS[accountType]
     return permissions?.features.dragAndDrop || false
 }
@@ -212,6 +259,9 @@ export function hasDragAndDrop(accountType) {
  * Vérifie si les templates personnalisés sont autorisés
  */
 export function canCreateCustomTemplates(accountType) {
+    // Beta tester = accès complet
+    if (accountType === ACCOUNT_TYPES.BETA_TESTER) return true
+    
     const permissions = ACCOUNT_PERMISSIONS[accountType]
     return permissions?.features.customTemplates || false
 }
@@ -220,6 +270,9 @@ export function canCreateCustomTemplates(accountType) {
  * Obtient le nombre max de pages pour un type de compte
  */
 export function getMaxPages(accountType) {
+    // Beta tester = accès complet
+    if (accountType === ACCOUNT_TYPES.BETA_TESTER) return 9
+    
     const permissions = ACCOUNT_PERMISSIONS[accountType]
     return permissions?.features.maxPages || 1
 }
@@ -228,6 +281,11 @@ export function getMaxPages(accountType) {
  * Obtient toutes les permissions pour un type de compte
  */
 export function getAccountFeatures(accountType) {
+    // Beta tester = accès complet
+    if (accountType === ACCOUNT_TYPES.BETA_TESTER) {
+        return ACCOUNT_PERMISSIONS[ACCOUNT_TYPES.BETA_TESTER].features
+    }
+    
     return ACCOUNT_PERMISSIONS[accountType]?.features || ACCOUNT_PERMISSIONS[ACCOUNT_TYPES.CONSUMER].features
 }
 
