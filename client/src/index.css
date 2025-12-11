@@ -1724,3 +1724,36 @@ button.bg-indigo-600 {
 }
 
 /* scrollbar rules above already set for base; keep consistent */
+
+/* === EFFETS GLOW POUR CREATEFLOWERREVIEW === */
+.glow-effect {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5),
+        0 0 40px rgba(147, 51, 234, 0.3),
+        0 4px 20px rgba(0, 0, 0, 0.1);
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.5),
+            0 0 40px rgba(147, 51, 234, 0.3),
+            0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    50% {
+        box-shadow: 0 0 30px rgba(255, 255, 255, 0.7),
+            0 0 60px rgba(147, 51, 234, 0.5),
+            0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}

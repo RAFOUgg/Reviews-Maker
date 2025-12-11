@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ChevronDown, ChevronUp, Save, Eye, Upload, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Save, Eye, Upload, X } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { useToast } from '../components/ToastContainer'
 import OrchardPanel from '../components/orchard/OrchardPanel'
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 
 /**
  * CreateFlowerReview - Interface complète pour créer/éditer une review de Fleur
@@ -16,13 +16,14 @@ export default function CreateFlowerReview() {
     const { id } = useParams()
     const [searchParams] = useSearchParams()
     const { user, isAuthenticated } = useStore()
-    
+
     const [formData, setFormData] = useState({})
     const [photos, setPhotos] = useState([])
-    const [expandedSections, setExpandedSections] = useState(['infos']) // Première section ouverte par défaut
+    const [currentSection, setCurrentSection] = useState(0)
     const [showOrchard, setShowOrchard] = useState(false)
     const [saving, setSaving] = useState(false)
     const [loading, setLoading] = useState(!!id)
+    const scrollContainerRef = useRef(null)
 
     // Définition des 10 sections
     const sections = [
@@ -38,12 +39,27 @@ export default function CreateFlowerReview() {
         { id: 'curing', icon: '🔥', title: 'Curing & Maturation' }
     ]
 
-    const toggleSection = (sectionId) => {
-        setExpandedSections(prev =>
-            prev.includes(sectionId)
-                ? prev.filter(id => id !== sectionId)
-                : [...prev, sectionId]
-        )
+    const scrollToSection = (index) => {
+        setCurrentSection(index)
+        if (scrollContainerRef.current) {
+            const buttons = scrollContainerRef.current.children
+            const button = buttons[index]
+            if (button) {
+                button.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+            }
+        }
+    }
+
+    const handlePrevious = () => {
+        if (currentSection > 0) {
+            scrollToSection(currentSection - 1)
+        }
+    }
+
+    const handleNext = () => {
+        if (currentSection < sections.length - 1) {
+            scrollToSection(currentSection + 1)
+        }
     }
 
     const handleChange = (field, value) => {
@@ -111,116 +127,166 @@ export default function CreateFlowerReview() {
         )
     }
 
+    const currentSectionData = sections[currentSection]
+    const progress = ((currentSection + 1) / sections.length) * 100
+
     return (
         <div className="min-h-screen pb-20" style={{ background: 'linear-gradient(135deg, rgb(139, 92, 246) 0%, rgb(99, 102, 241) 100%)' }}>
             {/* Header fixe */}
             <div className="sticky top-0 z-50 bg-white/10 backdrop-blur-md border-b border-white/20">
                 <div className="max-w-5xl mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-3">
                         <h1 className="text-2xl font-bold text-white drop-shadow-lg">
                             {id ? 'Modifier la review' : 'Créer une review'}
                         </h1>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setShowOrchard(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-all backdrop-blur-sm border border-white/30 hover:shadow-lg hover:shadow-white/20"
+                            >
+                                <Eye className="w-4 h-4" />
+                                Aperçu
+                            </button>
+                            <div className="text-sm text-white/90 font-medium">
+                                {currentSection + 1} / {sections.length}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Barre de progression */}
+                    <div className="w-full bg-white/20 rounded-full h-2 backdrop-blur-sm">
+                        <div
+                            className="bg-white h-2 rounded-full transition-all duration-300 shadow-lg shadow-white/50"
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Navigation sections avec flèches */}
+            <div className="sticky top-[88px] z-40 bg-white/10 backdrop-blur-md border-b border-white/20">
+                <div className="max-w-5xl mx-auto px-4">
+                    <div className="flex items-center gap-2 py-3">
+                        {/* Flèche gauche */}
                         <button
-                            onClick={() => setShowOrchard(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors backdrop-blur-sm border border-white/30"
+                            onClick={handlePrevious}
+                            disabled={currentSection === 0}
+                            className="flex-shrink-0 p-2 rounded-lg text-white hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-white/20"
                         >
-                            <Eye className="w-4 h-4" />
-                            Aperçu
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+
+                        {/* Onglets scrollables */}
+                        <div className="flex-1 overflow-x-auto scrollbar-hide">
+                            <div ref={scrollContainerRef} className="flex gap-2 min-w-max">
+                                {sections.map((section, index) => (
+                                    <button
+                                        key={section.id}
+                                        onClick={() => scrollToSection(index)}
+                                        className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${index === currentSection
+                                                ? 'bg-white text-purple-600 shadow-lg shadow-white/50 scale-105 glow-effect'
+                                                : index < currentSection
+                                                    ? 'bg-white/60 text-purple-800 border border-white/30'
+                                                    : 'bg-white/30 text-white border border-white/20 hover:bg-white/40'
+                                            }`}
+                                    >
+                                        <span className="mr-2">{section.icon}</span>
+                                        {section.title}
+                                        {section.required && <span className="text-red-400 ml-1">*</span>}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Flèche droite */}
+                        <button
+                            onClick={handleNext}
+                            disabled={currentSection === sections.length - 1}
+                            className="flex-shrink-0 p-2 rounded-lg text-white hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-white/20"
+                        >
+                            <ChevronRight className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* Navigation sections - Scrollable horizontalement */}
-            <div className="sticky top-[72px] z-40 bg-white/10 backdrop-blur-md border-b border-white/20 overflow-x-auto scrollbar-hide">
-                <div className="max-w-5xl mx-auto px-4">
-                    <div className="flex gap-2 py-3 min-w-max">
-                        {sections.map((section) => (
+            {/* Contenu principal - Une section à la fois */}
+            <div className="max-w-5xl mx-auto px-4 py-6">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={currentSection}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20"
+                    >
+                        <h2 className="text-2xl font-semibold text-purple-900 mb-6 flex items-center gap-3">
+                            <span className="text-4xl">{currentSectionData.icon}</span>
+                            {currentSectionData.title}
+                            {currentSectionData.required && <span className="text-red-500">*</span>}
+                        </h2>
+
+                        {currentSection === 0 && (
+                            <InfosGenerales
+                                data={formData}
+                                photos={photos}
+                                onChange={handleChange}
+                                onPhotoUpload={handlePhotoUpload}
+                                onPhotoRemove={removePhoto}
+                            />
+                        )}
+                        {currentSection === 1 && (
+                            <Genetiques data={formData} onChange={handleChange} />
+                        )}
+                        {currentSection >= 2 && (
+                            <p className="text-gray-600">Section {currentSectionData.title} à implémenter</p>
+                        )}
+                    </motion.div>
+                </AnimatePresence>
+
+                {/* Boutons de navigation */}
+                {/* Boutons de navigation */}
+                <div className="flex items-center justify-between mt-6">
+                    <button
+                        onClick={handlePrevious}
+                        disabled={currentSection === 0}
+                        className="flex items-center gap-2 px-6 py-3 bg-white/80 text-purple-700 rounded-xl hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl font-medium"
+                    >
+                        <ChevronLeft className="w-5 h-5" />
+                        Précédent
+                    </button>
+
+                    <div className="flex gap-3">
+                        {currentSection === sections.length - 1 ? (
                             <button
-                                key={section.id}
-                                onClick={() => toggleSection(section.id)}
-                                className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
-                                    expandedSections.includes(section.id)
-                                        ? 'bg-white text-purple-600 shadow-lg scale-105'
-                                        : 'bg-white/40 text-white border border-white/20 hover:bg-white/50'
-                                }`}
+                                onClick={handleSubmit}
+                                disabled={saving}
+                                className="flex items-center gap-2 px-8 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl font-bold"
                             >
-                                <span className="mr-2">{section.icon}</span>
-                                {section.title}
-                                {section.required && <span className="text-red-400 ml-1">*</span>}
+                                {saving ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                        Enregistrement...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save className="w-5 h-5" />
+                                        {id ? 'Mettre à jour' : 'Publier'}
+                                    </>
+                                )}
                             </button>
-                        ))}
+                        ) : (
+                            <button
+                                onClick={handleNext}
+                                className="flex items-center gap-2 px-8 py-3 bg-white text-purple-700 rounded-xl hover:bg-white/90 transition-all shadow-lg hover:shadow-xl font-bold"
+                            >
+                                Suivant
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+                        )}
                     </div>
                 </div>
-            </div>
-
-            {/* Contenu principal */}
-            <div className="max-w-5xl mx-auto px-4 py-6 space-y-4">
-                {/* Section 1: Informations générales */}
-                <SectionCard
-                    section={sections[0]}
-                    expanded={expandedSections.includes('infos')}
-                    onToggle={() => toggleSection('infos')}
-                >
-                    <InfosGenerales
-                        data={formData}
-                        photos={photos}
-                        onChange={handleChange}
-                        onPhotoUpload={handlePhotoUpload}
-                        onPhotoRemove={removePhoto}
-                    />
-                </SectionCard>
-
-                {/* Section 2: Génétiques */}
-                <SectionCard
-                    section={sections[1]}
-                    expanded={expandedSections.includes('genetics')}
-                    onToggle={() => toggleSection('genetics')}
-                >
-                    <Genetiques data={formData} onChange={handleChange} />
-                </SectionCard>
-
-                {/* Section 3: Culture & Pipeline */}
-                <SectionCard
-                    section={sections[2]}
-                    expanded={expandedSections.includes('culture')}
-                    onToggle={() => toggleSection('culture')}
-                >
-                    <p className="text-gray-600">Section Culture à implémenter</p>
-                </SectionCard>
-
-                {/* Sections 4-10: À implémenter */}
-                {sections.slice(3).map((section) => (
-                    <SectionCard
-                        key={section.id}
-                        section={section}
-                        expanded={expandedSections.includes(section.id)}
-                        onToggle={() => toggleSection(section.id)}
-                    >
-                        <p className="text-gray-600">Section {section.title} à implémenter</p>
-                    </SectionCard>
-                ))}
-            </div>
-
-            {/* Bouton de sauvegarde flottant */}
-            <div className="fixed bottom-6 right-6 flex gap-3">
-                <button
-                    onClick={handleSubmit}
-                    disabled={saving}
-                    className="flex items-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 text-white rounded-2xl shadow-2xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {saving ? (
-                        <>
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                            Enregistrement...
-                        </>
-                    ) : (
-                        <>
-                            <Save className="w-5 h-5" />
-                            {id ? 'Mettre à jour' : 'Publier'}
-                        </>
-                    )}
-                </button>
             </div>
 
             {/* Modal Orchard */}
@@ -270,7 +336,7 @@ function SectionCard({ section, expanded, onToggle, children }) {
                     <ChevronDown className="w-6 h-6 text-purple-400" />
                 )}
             </button>
-            
+
             {expanded && (
                 <div className="p-6 pt-0 border-t border-purple-100">
                     {children}
