@@ -6,6 +6,7 @@ import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import ReviewDetailPage from './pages/ReviewDetailPage'
 import CreateReviewPage from './pages/CreateReviewPage'
+import CreateFlowerReview from './pages/CreateFlowerReview'
 import EditReviewPage from './pages/EditReviewPage'
 import LibraryPage from './pages/LibraryPage'
 import StatsPage from './pages/StatsPage'
@@ -157,7 +158,9 @@ function App() {
                                 <Route index element={<HomePage />} />
                                 <Route path="/review/:id" element={<ReviewDetailPage />} />
                                 <Route path="/create" element={<CreateReviewPage />} />
+                                <Route path="/create/flower" element={<CreateFlowerReview />} />
                                 <Route path="/edit/:id" element={<EditReviewPage />} />
+                                <Route path="/edit/flower/:id" element={<CreateFlowerReview />} />
                                 <Route path="/library" element={<LibraryPage />} />
                                 <Route path="/stats" element={<StatsPage />} />
                                 <Route path="/settings" element={<SettingsPage />} />
