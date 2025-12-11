@@ -13,6 +13,9 @@ import Gouts from '../components/forms/flower/Gouts'
 import Effets from '../components/forms/flower/Effets'
 import PipelineCuring from '../components/forms/flower/PipelineCuring'
 import LoadingSpinner from '../components/LoadingSpinner'
+import OrchardPanel from '../components/orchard/OrchardPanel'
+import { AnimatePresence } from 'framer-motion'
+import { useToast } from '../components/ToastContainer'
 
 /**
  * Page principale: CreateFlowerReview
@@ -21,12 +24,14 @@ import LoadingSpinner from '../components/LoadingSpinner'
 export default function CreateFlowerReview() {
     const { t } = useTranslation()
     const navigate = useNavigate()
+    const toast = useToast()
     const { id } = useParams() // Pour mode édition
     const [currentSection, setCurrentSection] = useState(0)
     const [formData, setFormData] = useState({})
     const [errors, setErrors] = useState({})
     const [loading, setLoading] = useState(false)
     const [saving, setSaving] = useState(false)
+    const [showOrchard, setShowOrchard] = useState(false)
 
     const sections = [
         {
@@ -303,23 +308,32 @@ export default function CreateFlowerReview() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
+        <div className="min-h-screen pb-20" style={{ background: 'linear-gradient(135deg, rgb(139, 92, 246) 0%, rgb(99, 102, 241) 100%)' }}>
             {/* Header */}
-            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+            <div className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-10">
                 <div className="max-w-4xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between mb-3">
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                        <h1 className="text-2xl font-bold text-white drop-shadow-lg">
                             {id ? t('flower.editReview') : t('flower.createReview')}
                         </h1>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                            {currentSection + 1} / {sections.length}
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setShowOrchard(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors backdrop-blur-sm border border-white/30"
+                            >
+                                <Eye className="w-4 h-4" />
+                                {t('common.preview', 'Aperçu')}
+                            </button>
+                            <div className="text-sm text-white/90 font-medium">
+                                {currentSection + 1} / {sections.length}
+                            </div>
                         </div>
                     </div>
 
                     {/* Progress bar */}
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div className="w-full bg-white/20 rounded-full h-2 backdrop-blur-sm">
                         <div
-                            className="bg-primary-500 h-2 rounded-full transition-all duration-300"
+                            className="bg-white h-2 rounded-full transition-all duration-300 shadow-lg"
                             style={{ width: `${progress}%` }}
                         />
                     </div>
@@ -333,11 +347,11 @@ export default function CreateFlowerReview() {
                         <button
                             key={section.id}
                             onClick={() => setCurrentSection(index)}
-                            className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${index === currentSection
-                                    ? 'bg-primary-500 text-white'
+                            className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all ${index === currentSection
+                                    ? 'bg-white text-purple-600 shadow-lg scale-105'
                                     : index < currentSection
-                                        ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                        ? 'bg-white/80 text-purple-800 border border-white/30'
+                                        : 'bg-white/40 text-white border border-white/20 hover:bg-white/50'
                                 }`}
                         >
                             <span className="mr-1">{section.icon}</span>
@@ -347,8 +361,8 @@ export default function CreateFlowerReview() {
                 </div>
 
                 {/* Current Section */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                <div className="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20">
+                    <h2 className="text-xl font-semibold text-purple-900 mb-6 flex items-center gap-2">
                         <span className="text-3xl">{sections[currentSection].icon}</span>
                         {sections[currentSection].title}
                     </h2>
@@ -365,7 +379,7 @@ export default function CreateFlowerReview() {
                     <button
                         onClick={handlePrevious}
                         disabled={currentSection === 0}
-                        className="flex items-center gap-2 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="flex items-center gap-2 px-6 py-3 bg-white/80 text-purple-700 rounded-xl hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl font-medium"
                     >
                         <ChevronLeft className="w-5 h-5" />
                         {t('common.previous')}
@@ -376,7 +390,7 @@ export default function CreateFlowerReview() {
                             <button
                                 onClick={handleSubmit}
                                 disabled={saving}
-                                className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="flex items-center gap-2 px-8 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl font-bold"
                             >
                                 {saving ? (
                                     <>
@@ -393,7 +407,7 @@ export default function CreateFlowerReview() {
                         ) : (
                             <button
                                 onClick={handleNext}
-                                className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
+                                className="flex items-center gap-2 px-8 py-3 bg-white text-purple-700 rounded-xl hover:bg-white/90 transition-all shadow-lg hover:shadow-xl font-bold"
                             >
                                 {t('common.next')}
                                 <ChevronRight className="w-5 h-5" />
@@ -402,6 +416,70 @@ export default function CreateFlowerReview() {
                     </div>
                 </div>
             </div>
+
+            {/* Orchard Studio Modal */}
+            <AnimatePresence>
+                {showOrchard && (() => {
+                    const normalizeArray = (val) => {
+                        if (Array.isArray(val)) return val;
+                        if (typeof val === 'string') return val.split(',').map(s => s.trim()).filter(Boolean);
+                        return [];
+                    };
+
+                    const getImageUrl = (img) => {
+                        if (!img) return undefined;
+                        if (typeof img === 'string') return img;
+                        if (img.url) return img.url;
+                        if (img.file && img.preview) return img.preview;
+                        return undefined;
+                    };
+
+                    const images = formData.photos || [];
+
+                    return (
+                        <OrchardPanel
+                            reviewData={{
+                                type: 'Fleur',
+                                holderName: formData.nomCommercial || '',
+                                rating: formData.globalRating || 0,
+                                imageUrl: images.length > 0 ? getImageUrl(images[0]) : undefined,
+                                images: images.length > 0 ? images.map(img => getImageUrl(img)) : [],
+                                effects: normalizeArray(formData.effetsChoisis),
+                                aromas: normalizeArray(formData.notesDominantesOdeur),
+                                tastes: normalizeArray(formData.inhalation),
+                                cultivar: formData.variety || '',
+                                breeder: formData.breeder || '',
+                                farm: formData.farm || '',
+                                // Sections visuelles
+                                couleurScore: formData.couleurScore,
+                                densiteVisuScore: formData.densiteVisuScore,
+                                trichomesScore: formData.trichomesScore,
+                                // Odeurs
+                                intensiteOdeur: formData.intensiteOdeur,
+                                // Texture
+                                dureteScore: formData.dureteScore,
+                                densiteTactileScore: formData.densiteTactileScore,
+                                // Goûts
+                                intensiteGout: formData.intensiteGout,
+                                // Effets
+                                monteeScore: formData.monteeScore,
+                                intensiteEffet: formData.intensiteEffet
+                            }}
+                            onClose={() => setShowOrchard(false)}
+                            onPresetApplied={(orchardData) => {
+                                setFormData(prev => ({
+                                    ...prev,
+                                    orchardConfig: JSON.stringify(orchardData.orchardConfig),
+                                    orchardPreset: orchardData.orchardPreset || 'custom',
+                                    orchardCustomLayout: orchardData.customLayout || null,
+                                    orchardLayoutMode: orchardData.layoutMode || (orchardData.customLayout ? 'custom' : 'template')
+                                }));
+                                toast.success('✅ Aperçu défini avec succès !');
+                            }}
+                        />
+                    );
+                })()}
+            </AnimatePresence>
         </div>
     )
 }
