@@ -133,11 +133,11 @@ export default function CreateFlowerReview() {
     return (
         <div className="min-h-screen pb-20" style={{ background: 'linear-gradient(135deg, rgb(139, 92, 246) 0%, rgb(99, 102, 241) 100%)' }}>
             {/* Header fixe */}
-            <div className="sticky top-0 z-50 bg-white/10 backdrop-blur-xl border-b border-white/30 shadow-xl shadow-purple-900/20">
-                <div className="max-w-6xl mx-auto px-6 py-5">
-                    <div className="flex items-center justify-between mb-4">
-                        <h1 className="text-3xl font-extrabold text-white drop-shadow-2xl tracking-tight">
-                            {id ? '✏️ Modifier la review' : '✨ Créer une review'}
+            <div className="sticky top-0 z-50 bg-white/10 backdrop-blur-md border-b border-white/20">
+                <div className="max-w-5xl mx-auto px-4 py-4">
+                    <div className="flex items-center justify-between mb-3">
+                        <h1 className="text-2xl font-bold text-white drop-shadow-lg">
+                            {id ? 'Modifier la review' : 'Créer une review'}
                         </h1>
                         <div className="flex items-center gap-3">
                             <button
@@ -154,21 +154,19 @@ export default function CreateFlowerReview() {
                     </div>
 
                     {/* Barre de progression */}
-                    <div className="w-full bg-white/10 rounded-full h-3 backdrop-blur-sm overflow-hidden shadow-inner">
+                    <div className="w-full bg-white/20 rounded-full h-2 backdrop-blur-sm">
                         <div
-                            className="bg-gradient-to-r from-white via-purple-200 to-white h-3 rounded-full transition-all duration-500 ease-out shadow-lg shadow-white/60 relative"
+                            className="bg-white h-2 rounded-full transition-all duration-300 shadow-lg shadow-white/50"
                             style={{ width: `${progress}%` }}
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"></div>
-                        </div>
+                        />
                     </div>
                 </div>
             </div>
 
             {/* Navigation sections avec flèches */}
-            <div className="sticky top-[100px] z-40 bg-white/5 backdrop-blur-xl border-b border-white/20 shadow-lg shadow-purple-900/10">
-                <div className="max-w-6xl mx-auto px-6">
-                    <div className="flex items-center gap-3 py-4">
+            <div className="sticky top-[88px] z-40 bg-white/10 backdrop-blur-md border-b border-white/20">
+                <div className="max-w-5xl mx-auto px-4">
+                    <div className="flex items-center gap-2 py-3">
                         {/* Flèche gauche */}
                         <button
                             onClick={handlePrevious}
@@ -213,15 +211,15 @@ export default function CreateFlowerReview() {
             </div>
 
             {/* Contenu principal - Une section à la fois */}
-            <div className="max-w-6xl mx-auto px-6 py-8">
+            <div className="max-w-5xl mx-auto px-4 py-6">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentSection}
-                        initial={{ opacity: 0, y: 20, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -20, scale: 0.98 }}
-                        transition={{ duration: 0.4, ease: "easeOut" }}
-                        className="bg-white/98 backdrop-blur-2xl rounded-3xl shadow-2xl p-10 border-2 border-white/40 hover:shadow-purple-500/20 transition-shadow"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20"
                     >
                         <h2 className="text-2xl font-semibold text-purple-900 mb-6 flex items-center gap-3">
                             <span className="text-4xl">{currentSectionData.icon}</span>
@@ -229,42 +227,16 @@ export default function CreateFlowerReview() {
                             {currentSectionData.required && <span className="text-red-500">*</span>}
                         </h2>
 
-                        {currentSection === 0 && (
-                            <InfosGenerales
-                                data={formData}
-                                photos={photos}
-                                onChange={handleChange}
-                                onPhotoUpload={handlePhotoUpload}
-                                onPhotoRemove={removePhoto}
-                            />
-                        )}
-                        {currentSection === 1 && (
-                            <Genetiques data={formData} onChange={handleChange} />
-                        )}
-                        {currentSection === 2 && (
-                            <CulturePipeline data={formData} onChange={handleChange} />
-                        )}
-                        {currentSection === 3 && (
-                            <AnalytiquesPDF data={formData} onChange={handleChange} />
-                        )}
-                        {currentSection === 4 && (
-                            <VisuelTechnique data={formData} onChange={handleChange} />
-                        )}
-                        {currentSection === 5 && (
-                            <Odeurs data={formData} onChange={handleChange} />
-                        )}
-                        {currentSection === 6 && (
-                            <Texture data={formData} onChange={handleChange} />
-                        )}
-                        {currentSection === 7 && (
-                            <Gouts data={formData} onChange={handleChange} />
-                        )}
-                        {currentSection === 8 && (
-                            <Effets data={formData} onChange={handleChange} />
-                        )}
-                        {currentSection === 9 && (
-                            <CuringMaturation data={formData} onChange={handleChange} />
-                        )}
+                        {currentSection === 0 && <InfosGenerales data={formData} photos={photos} onChange={handleChange} onPhotoUpload={handlePhotoUpload} onPhotoRemove={removePhoto} />}
+                        {currentSection === 1 && <Genetiques data={formData} onChange={handleChange} />}
+                        {currentSection === 2 && <CulturePipeline data={formData} onChange={handleChange} />}
+                        {currentSection === 3 && <AnalytiquesPDF data={formData} onChange={handleChange} />}
+                        {currentSection === 4 && <VisuelTechnique data={formData} onChange={handleChange} />}
+                        {currentSection === 5 && <Odeurs data={formData} onChange={handleChange} />}
+                        {currentSection === 6 && <Texture data={formData} onChange={handleChange} />}
+                        {currentSection === 7 && <Gouts data={formData} onChange={handleChange} />}
+                        {currentSection === 8 && <Effets data={formData} onChange={handleChange} />}
+                        {currentSection === 9 && <CuringMaturation data={formData} onChange={handleChange} />}
                     </motion.div>
                 </AnimatePresence>
 
@@ -531,109 +503,6 @@ function Genetiques({ data, onChange }) {
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
                 />
             </div>
-        </div>
-    )
-}
-// Section 3: Culture & Pipeline
-function CulturePipeline({ data, onChange }) {
-    return (
-        <div className="space-y-6">
-            <p className="text-gray-600 text-center py-8">
-                🌱 Section Culture & Pipeline à implémenter
-                <br />
-                <span className="text-sm">Pipeline configurable avec phases, dates, mode culture</span>
-            </p>
-        </div>
-    )
-}
-
-// Section 4: Analytiques PDF
-function AnalytiquesPDF({ data, onChange }) {
-    return (
-        <div className="space-y-6">
-            <p className="text-gray-600 text-center py-8">
-                🔬 Section Analytiques PDF à implémenter
-                <br />
-                <span className="text-sm">THC, CBD, CBG, profil terpénique, upload PDF/image</span>
-            </p>
-        </div>
-    )
-}
-
-// Section 5: Visuel & Technique
-function VisuelTechnique({ data, onChange }) {
-    return (
-        <div className="space-y-6">
-            <p className="text-gray-600 text-center py-8">
-                👁️ Section Visuel & Technique à implémenter
-                <br />
-                <span className="text-sm">Nuancier couleurs, densité, trichomes, pistils, sliders 0-10</span>
-            </p>
-        </div>
-    )
-}
-
-// Section 6: Odeurs
-function Odeurs({ data, onChange }) {
-    return (
-        <div className="space-y-6">
-            <p className="text-gray-600 text-center py-8">
-                👃 Section Odeurs à implémenter
-                <br />
-                <span className="text-sm">Notes dominantes/secondaires max 7, intensité, recherche</span>
-            </p>
-        </div>
-    )
-}
-
-// Section 7: Texture
-function Texture({ data, onChange }) {
-    return (
-        <div className="space-y-6">
-            <p className="text-gray-600 text-center py-8">
-                🤚 Section Texture à implémenter
-                <br />
-                <span className="text-sm">4 sliders: dureté, densité tactile, élasticité, collant (0-10)</span>
-            </p>
-        </div>
-    )
-}
-
-// Section 8: Goûts
-function Gouts({ data, onChange }) {
-    return (
-        <div className="space-y-6">
-            <p className="text-gray-600 text-center py-8">
-                😋 Section Goûts à implémenter
-                <br />
-                <span className="text-sm">Intensité, agressivité, dry puff/inhalation/expiration max 7 chacun</span>
-            </p>
-        </div>
-    )
-}
-
-// Section 9: Effets
-function Effets({ data, onChange }) {
-    return (
-        <div className="space-y-6">
-            <p className="text-gray-600 text-center py-8">
-                💥 Section Effets à implémenter
-                <br />
-                <span className="text-sm">Montée, intensité, sélection max 8 avec filtres positif/neutre/négatif</span>
-            </p>
-        </div>
-    )
-}
-
-// Section 10: Curing & Maturation
-function CuringMaturation({ data, onChange }) {
-    return (
-        <div className="space-y-6">
-            <p className="text-gray-600 text-center py-8">
-                🔥 Section Curing & Maturation à implémenter
-                <br />
-                <span className="text-sm">Pipeline curing avec température, humidité, type récipient</span>
-            </p>
         </div>
     )
 }
