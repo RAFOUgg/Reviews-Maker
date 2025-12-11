@@ -28,6 +28,14 @@ export default function CreateReviewPage() {
     const typeFromUrl = productType || searchParams.get('type') || 'Fleur';
     const editId = searchParams.get('id');
     const isEditing = !!editId;
+
+    // Redirection vers le nouveau système FlowerReview pour les fleurs
+    useEffect(() => {
+        if (typeFromUrl === 'Fleur') {
+            const redirectPath = isEditing ? `/edit/flower/${editId}` : '/create/flower';
+            navigate(redirectPath, { replace: true });
+        }
+    }, [typeFromUrl, isEditing, editId, navigate]);
     const [structure, setStructure] = useState(productStructures[typeFromUrl] || productStructures.Fleur);
     // Keep structure in sync if the type param in URL changes
     useEffect(() => {
