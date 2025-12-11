@@ -184,10 +184,10 @@ export default function CreateFlowerReview() {
                                         key={section.id}
                                         onClick={() => scrollToSection(index)}
                                         className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${index === currentSection
-                                                ? 'bg-white text-purple-600 shadow-lg shadow-white/50 scale-105 glow-effect'
-                                                : index < currentSection
-                                                    ? 'bg-white/60 text-purple-800 border border-white/30'
-                                                    : 'bg-white/30 text-white border border-white/20 hover:bg-white/40'
+                                            ? 'bg-white text-purple-600 shadow-lg shadow-white/50 scale-105 glow-effect'
+                                            : index < currentSection
+                                                ? 'bg-white/60 text-purple-800 border border-white/30'
+                                                : 'bg-white/30 text-white border border-white/20 hover:bg-white/40'
                                             }`}
                                     >
                                         <span className="mr-2">{section.icon}</span>
