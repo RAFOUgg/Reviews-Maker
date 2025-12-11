@@ -82,23 +82,34 @@
         "cancel": "Annuler",
         "confirm": "Confirmer",
         "save": "Enregistrer",
+        "saving": "Enregistrement...",
         "delete": "Supprimer",
         "edit": "Modifier",
-        "close": "Fermer"
+        "close": "Fermer",
+        "previous": "Précédent",
+        "next": "Suivant",
+        "publish": "Publier",
+        "update": "Mettre à jour",
+        "preview": "Aperçu"
     },
     "flower": {
         "title": "Création de Review - Fleur",
+        "createReview": "Créer une review",
+        "editReview": "Modifier la review",
         "sections": {
+            "infos": "📋 Informations générales",
             "infosGenerales": "Informations générales",
+            "genetics": "🧬 Génétiques",
             "genetiques": "Génétiques",
-            "culture": "Culture & Pipeline",
-            "analytics": "Analytiques PDF",
+            "culture": "🌱 Culture & Pipeline",
+            "analytics": "🔬 Analytiques PDF",
+            "visual": "👁️ Visuel & Technique",
             "visuelTechnique": "Visuel & Technique",
-            "odeurs": "Odeurs",
-            "texture": "Texture",
-            "gouts": "Goûts",
-            "effets": "Effets",
-            "curing": "Curing & Maturation"
+            "odeurs": "👃 Odeurs",
+            "texture": "🤚 Texture",
+            "gouts": "😋 Goûts",
+            "effets": "💥 Effets",
+            "curing": "🔥 Curing & Maturation"
         },
         "infosGenerales": {
             "nomCommercial": "Nom commercial *",
@@ -146,10 +157,13 @@
             "temperature": "Température moyenne (°C)",
             "humidity": "Humidité relative moyenne (%)",
             "training": "Palissage LST/HST",
-            "startDate": "Date de début",
-            "endDate": "Date de fin",
+            "startDate": "Date de début (optionnelle)",
+            "endDate": "Date de fin (optionnelle)",
             "pipeline": "Pipeline de culture",
-            "addStep": "+ Ajouter une étape"
+            "pipelineTitle": "Pipeline de culture",
+            "pipelineDescription": "Ajoutez les étapes de votre culture avec les données à chaque phase",
+            "addStep": "+ Ajouter une étape",
+            "mode": "Mode de culture"
         },
         "analytics": {
             "title": "Analytiques & PDF",
@@ -227,6 +241,8 @@
             "volume": "Volume occupé (L/mL)",
             "duration": "Durée de curing",
             "pipeline": "Pipeline de curing",
+            "pipelineTitle": "Pipeline de curing/maturation",
+            "pipelineDescription": "Ajoutez les étapes de votre curing avec les paramètres à chaque phase",
             "addStep": "+ Ajouter une étape"
         },
         "pipeline": {

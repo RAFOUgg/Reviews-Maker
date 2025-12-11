@@ -69,7 +69,13 @@ export default function PipelineCulture({ data, onChange }) {
 
     return (
         <div className="space-y-6">
-            {/* Dates de culture */}
+            {/* Dates de culture (optionnelles) */}
+            <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4 mb-4">
+                <p className="text-sm text-purple-900 dark:text-purple-200">
+                    💡 Les dates sont <strong>optionnelles</strong>. Vous pouvez définir la pipeline uniquement en nombre de jours/phases.
+                </p>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

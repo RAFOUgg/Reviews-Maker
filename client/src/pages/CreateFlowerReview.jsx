@@ -430,11 +430,15 @@ export default function CreateFlowerReview() {
                         if (!img) return undefined;
                         if (typeof img === 'string') return img;
                         if (img.url) return img.url;
-                        if (img.file && img.preview) return img.preview;
+                        if (img.preview) return img.preview;
+                        if (img.file && img.file instanceof Blob) {
+                            return URL.createObjectURL(img.file);
+                        }
                         return undefined;
                     };
 
                     const images = formData.photos || [];
+                    const imageUrls = images.map(img => getImageUrl(img)).filter(Boolean);
 
                     return (
                         <OrchardPanel
@@ -442,8 +446,8 @@ export default function CreateFlowerReview() {
                                 type: 'Fleur',
                                 holderName: formData.nomCommercial || '',
                                 rating: formData.globalRating || 0,
-                                imageUrl: images.length > 0 ? getImageUrl(images[0]) : undefined,
-                                images: images.length > 0 ? images.map(img => getImageUrl(img)) : [],
+                                imageUrl: imageUrls.length > 0 ? imageUrls[0] : undefined,
+                                images: imageUrls,
                                 effects: normalizeArray(formData.effetsChoisis),
                                 aromas: normalizeArray(formData.notesDominantesOdeur),
                                 tastes: normalizeArray(formData.inhalation),
