@@ -158,10 +158,11 @@ function App() {
                                 <Route index element={<HomePage />} />
                                 <Route path="/review/:id" element={<ReviewDetailPage />} />
                                 <Route path="/create" element={<CreateReviewPage />} />
-                                <Route path="/create/type/:productType" element={<CreateReviewPage />} />
+                                {/* Routes spécifiques AVANT les routes génériques */}
                                 <Route path="/create/flower" element={<CreateFlowerReview />} />
-                                <Route path="/edit/:id" element={<EditReviewPage />} />
                                 <Route path="/edit/flower/:id" element={<CreateFlowerReview />} />
+                                <Route path="/create/type/:productType" element={<CreateReviewPage />} />
+                                <Route path="/edit/:id" element={<EditReviewPage />} />
                                 <Route path="/library" element={<LibraryPage />} />
                                 <Route path="/stats" element={<StatsPage />} />
                                 <Route path="/settings" element={<SettingsPage />} />
