@@ -1,5 +1,10 @@
 # Fonctionnalités de création et d’export de reviews — champs et options détaillés
 
+# Règles générale : 
+
+Unités et formats standards pour les champs chiffrés :
+Utiliser les unités du système international (SI) lorsque c’est possible (g, ml, cm, m², °C, ppm, etc...) Préciser l’unité entre parenthèses si nécessaire.
+
 ---
 
 ## 1. Enumération des types de produits et de leurs champs spécifiques
@@ -84,15 +89,6 @@
     - Taux CBD (%)
     - Taux CBG/CBC autres (%) ou mg/g
     - Profil terpénique complet (par certificat d’analyse pdf/image uniquement)
-- **Expérience d’utilisation durant les tests**
-    - Méthode de consommation (Combustion/Vapeur/Infusion)
-    - Dosage utilisé (estimé en grammes/mg)
-    - Durée des effets (HH:MM)
-    - Profils d’effets (choix multiples ; anxiolytique, relaxant, énergisant, créatif, euphorique, etc.)
-    - Effets secondaires ressentis (yeux secs, faim, anxiété, etc.)
-    - Début des effets (immédiat, différé, etc.)
-    - Durée des effets (courte/moyenne/longue)
-    - Usage préféré (soir, journée, seul, social, médical)
 - **👁️ Visuel et Technique**
     - Couleur/10 (echelle de couleur (nuancier des couleurs du cannabis)vert, violet, jaune, breun, gris etc dégradé.)
     - Densité visuelle/10
@@ -118,11 +114,21 @@
     - Dry puff/tirage à sec (max 7 parmis une liste pré-définie ultra complète)
     - Inhalation (max 7)
     - Expiration/arrière-goût (max 7)
-- **Effets ressentis**
+- **💥 Effets ressentis**
     - Montée (rapidité)/10
     - Intensité/10
     - Choix (max 8 parmis une liste pré-définie ultra complète classée par type (mentaux, physique, thérapeutiques) déjà codé)
         - Filtre par tous,  neutre, positif et négatif
+    - **Expérience d’utilisation durant les tests**
+        - Méthode de consommation (Combustion/Vapeur/Infusion)
+        - Dosage utilisé (estimé en grammes/mg)
+        - Durée des effets (HH:MM)
+        - Profils d’effets (choix multiples ; anxiolytique, relaxant, énergisant, créatif, euphorique, etc.)
+        - Effets secondaires ressentis (yeux secs, faim, anxiété, etc.)
+        - Début des effets (immédiat, différé, etc.)
+        - Durée des effets (courte/moyenne/longue)
+        - Usage préféré (soir, journée, seul, social, médical)
+    
 - **🔥 PipeLine CURING MATURATION :** 
 - Configurations :
         - Définition de la trame de la PipeLine (intervalles : s, m, h)
@@ -212,6 +218,15 @@ Filtration membranaire
     - Intensité/10
     - Choix (max 8 parmis une liste pré-définie ultra complète classée par type (mentaux, physique, thérapeutiques) déjà codé)
         - Filtre par tous,  neutre, positif et négatif
+    - **Expérience d’utilisation durant les tests**
+        - Méthode de consommation (Combustion/Vapeur/Infusion)
+        - Dosage utilisé (estimé en grammes/mg)
+        - Durée des effets (HH:MM)
+        - Profils d’effets (choix multiples ; anxiolytique, relaxant, énergisant, créatif, euphorique, etc.)
+        - Effets secondaires ressentis (yeux secs, faim, anxiété, etc.)
+        - Début des effets (immédiat, différé, etc.)
+        - Durée des effets (courte/moyenne/longue)
+        - Usage préféré (soir, journée, seul, social, médical)
 - **🔥 PipeLine CURING MATURATION :** 
 - Configurations :
         - Définition de la trame de la PipeLine (intervalles : s, m, h)
@@ -292,7 +307,15 @@ Autre
     - Intensité/10
     - Choix (max 8 parmis une liste pré-définie ultra complète classée par type (mentaux, physique, thérapeutiques) déjà codé)
         - Filtre par tous,  neutre, positif et négatif
-    - Durée des effets (5-15min, 15-30min, 30-60min, 1-2h, 2h+, 4h+, 8h+, 24h+)
+    - **Expérience d’utilisation durant les tests**
+        - Méthode de consommation (Combustion/Vapeur/Infusion)
+        - Dosage utilisé (estimé en grammes/mg)
+        - Durée des effets (HH:MM)
+        - Profils d’effets (choix multiples ; anxiolytique, relaxant, énergisant, créatif, euphorique, etc.)
+        - Effets secondaires ressentis (yeux secs, faim, anxiété, etc.)
+        - Début des effets (immédiat, différé, etc.)
+        - Durée des effets (courte/moyenne/longue)
+        - Usage préféré (soir, journée, seul, social, médical)
 - **🔥 PipeLine CURING MATURATION :** 
 - Configurations :
         - Définition de la trame de la PipeLine (intervalles : s, m, h)
