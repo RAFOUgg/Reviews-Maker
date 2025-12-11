@@ -1053,10 +1053,10 @@ function Odeurs({ data, onChange }) {
 // Section 7: Texture
 function Texture({ data, onChange }) {
     const sliders = [
-        { key: 'textureDurete', label: 'Dureté', icon: '💎', color: 'from-gray-400 to-gray-600' },
-        { key: 'textureDensite', label: 'Densité tactile', icon: '⚖️', color: 'from-blue-400 to-blue-600' },
-        { key: 'textureElasticite', label: 'Élasticité', icon: '🎯', color: 'from-green-400 to-green-600' },
-        { key: 'textureCollant', label: 'Collant', icon: '🍯', color: 'from-amber-400 to-amber-600' }
+        { key: 'textureDurete', label: 'Dureté', icon: '💎', gradientClass: 'bg-gradient-to-r from-gray-400 to-gray-600' },
+        { key: 'textureDensite', label: 'Densité tactile', icon: '⚖️', gradientClass: 'bg-gradient-to-r from-blue-400 to-blue-600' },
+        { key: 'textureElasticite', label: 'Élasticité', icon: '🎯', gradientClass: 'bg-gradient-to-r from-green-400 to-green-600' },
+        { key: 'textureCollant', label: 'Collant', icon: '🍯', gradientClass: 'bg-gradient-to-r from-amber-400 to-amber-600' }
     ]
 
     return (
@@ -1078,10 +1078,7 @@ function Texture({ data, onChange }) {
                         max="10"
                         value={data[slider.key] || 5}
                         onChange={(e) => onChange(slider.key, parseInt(e.target.value))}
-                        className={`w-full h-3 bg-gradient-to-r ${slider.color} rounded-full appearance-none cursor-pointer shadow-lg hover:shadow-xl transition-all`}
-                        style={{
-                            background: `linear-gradient(to right, ${slider.color.split(' ')[1].replace('from-', '')} 0%, ${slider.color.split(' ')[2].replace('to-', '')} ${(data[slider.key] || 5) * 10}%, #e5e7eb ${(data[slider.key] || 5) * 10}%)`
-                        }}
+                        className={`w-full h-3 ${slider.gradientClass} rounded-full appearance-none cursor-pointer shadow-lg hover:shadow-xl transition-all`}
                     />
                     <div className="flex justify-between text-xs text-gray-500 px-1">
                         <span>Faible</span>
