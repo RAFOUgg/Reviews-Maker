@@ -22,11 +22,13 @@ export default function CuringMaturationTimeline({ data, onChange }) {
         { key: 'temperature', label: 'Température (°C)', icon: '🌡️', type: 'number', min: 0, max: 30, step: 0.1 },
         { key: 'humidite', label: 'Humidité (%)', icon: '💧', type: 'number', min: 0, max: 100 },
         { key: 'conteneur', label: 'Type de récipient', icon: '🏺', type: 'select', options: CURING_VALUES.typeRecipient },
-        { key: 'ballotage', label: 'Ballotage effectué', icon: '🔄', type: 'select', options: [
-            { value: 'oui', label: 'Oui (quotidien)' },
-            { value: 'occasionnel', label: 'Occasionnel' },
-            { value: 'non', label: 'Non' }
-        ]},
+        {
+            key: 'ballotage', label: 'Ballotage effectué', icon: '🔄', type: 'select', options: [
+                { value: 'oui', label: 'Oui (quotidien)' },
+                { value: 'occasionnel', label: 'Occasionnel' },
+                { value: 'non', label: 'Non' }
+            ]
+        },
         { key: 'observations', label: 'Observations odeur/texture', icon: '👃', type: 'textarea', rows: 2, maxLength: 300 }
     ]
 
