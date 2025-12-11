@@ -348,10 +348,10 @@ export default function CreateFlowerReview() {
                             key={section.id}
                             onClick={() => setCurrentSection(index)}
                             className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all ${index === currentSection
-                                    ? 'bg-white text-purple-600 shadow-lg scale-105'
-                                    : index < currentSection
-                                        ? 'bg-white/80 text-purple-800 border border-white/30'
-                                        : 'bg-white/40 text-white border border-white/20 hover:bg-white/50'
+                                ? 'bg-white text-purple-600 shadow-lg scale-105'
+                                : index < currentSection
+                                    ? 'bg-white/80 text-purple-800 border border-white/30'
+                                    : 'bg-white/40 text-white border border-white/20 hover:bg-white/50'
                                 }`}
                         >
                             <span className="mr-1">{section.icon}</span>
