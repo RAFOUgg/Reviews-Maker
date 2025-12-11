@@ -84,17 +84,10 @@
         "save": "Save",
         "delete": "Delete",
         "edit": "Edit",
-        "close": "Close",
-        "previous": "Previous",
-        "next": "Next",
-        "publish": "Publish",
-        "update": "Update",
-        "saving": "Saving..."
+        "close": "Close"
     },
     "flower": {
         "title": "Create Review - Flower",
-        "createReview": "Create Flower Review",
-        "editReview": "Edit Flower Review",
         "sections": {
             "infosGenerales": "General Information",
             "genetiques": "Genetics",
@@ -107,20 +100,6 @@
             "effets": "Effects",
             "curing": "Curing & Maturation"
         },
-        "nomCommercial": "Commercial Name",
-        "nomCommercialPlaceholder": "Ex: Blue Dream OG",
-        "farm": "Farm",
-        "farmPlaceholder": "Ex: Own Grow",
-        "varietyType": {
-            "souche": "Strain",
-            "hybride": "Hybrid"
-        },
-        "photos": "Photos",
-        "dragToReorder": "Drag to reorder",
-        "dropPhotosHere": "Drop photos here",
-        "clickOrDragPhotos": "Click or drag photos here",
-        "maxPhotos": "{{remaining}} slot(s) remaining out of {{max}}",
-        "photosHelper": "Accepted formats: JPG, PNG. Max size: 10MB per image",
         "infosGenerales": {
             "nomCommercial": "Commercial Name *",
             "nomCommercialPlaceholder": "Ex: Blue Dream OG",

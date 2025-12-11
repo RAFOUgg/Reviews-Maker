@@ -50,7 +50,7 @@ export default function HomePage() {
             alert('Vous devez être connecté pour créer une review')
             return
         }
-        navigate(`/create?type=${type}`)
+        navigate(`/create/type/${type}`)
     }
 
     const handleLike = async (reviewId, e) => {

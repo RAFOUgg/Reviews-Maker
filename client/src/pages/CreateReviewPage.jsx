@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { useToast } from '../components/ToastContainer';
 import WheelSelector from '../components/WheelSelector';
@@ -20,10 +20,12 @@ import { calculateCategoryRatings as calcCategoryRatings, CATEGORY_DISPLAY_ORDER
 export default function CreateReviewPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    const { productType } = useParams(); // Nouveau: path param
     const { isAuthenticated, createReview, updateReview, getReviewById, user } = useStore();
     const toast = useToast();
 
-    const typeFromUrl = searchParams.get('type') || 'Fleur';
+    // Support ancien système query param + nouveau path param
+    const typeFromUrl = productType || searchParams.get('type') || 'Fleur';
     const editId = searchParams.get('id');
     const isEditing = !!editId;
     const [structure, setStructure] = useState(productStructures[typeFromUrl] || productStructures.Fleur);
