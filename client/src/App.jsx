@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage'
 import ReviewDetailPage from './pages/ReviewDetailPage'
 import CreateReviewPage from './pages/CreateReviewPage'
 import CreateFlowerReview from './pages/CreateFlowerReview'
+import CreateTypeRedirect from './pages/CreateTypeRedirect'
 import EditReviewPage from './pages/EditReviewPage'
 import LibraryPage from './pages/LibraryPage'
 import StatsPage from './pages/StatsPage'
@@ -158,6 +159,7 @@ function App() {
                                 <Route index element={<HomePage />} />
                                 <Route path="/review/:id" element={<ReviewDetailPage />} />
                                 <Route path="/create" element={<CreateReviewPage />} />
+                                <Route path="/create/type/:type" element={<CreateTypeRedirect />} />
                                 <Route path="/create/flower" element={<CreateFlowerReview />} />
                                 <Route path="/edit/:id" element={<EditReviewPage />} />
                                 <Route path="/edit/flower/:id" element={<CreateFlowerReview />} />
