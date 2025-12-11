@@ -342,8 +342,8 @@ function InfosGenerales({ data, photos, onChange, onPhotoUpload, onPhotoRemove }
         <div className="space-y-6">
             {/* Nom commercial */}
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nom commercial <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-gray-800 mb-2">
+                    Nom commercial <span className="text-red-600 font-bold text-base">*</span>
                 </label>
                 <input
                     type="text"
@@ -370,8 +370,8 @@ function InfosGenerales({ data, photos, onChange, onPhotoUpload, onPhotoRemove }
 
             {/* Type de variété */}
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Type de variété <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-gray-800 mb-3">
+                    Type de variété <span className="text-red-600 font-bold text-base">*</span>
                 </label>
                 <div className="flex gap-3">
                     {['Indica', 'Sativa', 'Hybride', 'Indica-dominant', 'Sativa-dominant', 'CBD-dominant'].map((type) => (
@@ -392,29 +392,33 @@ function InfosGenerales({ data, photos, onChange, onPhotoUpload, onPhotoRemove }
 
             {/* Photos */}
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Photos (1-4) <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-gray-800 mb-3">
+                    Photos (1-4) <span className="text-red-600 font-bold text-base">*</span>
                 </label>
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {photos.map((photo, index) => (
-                        <div key={index} className="relative aspect-square">
+                        <div key={index} className="relative aspect-square group">
                             <img
                                 src={photo.preview || photo.url}
                                 alt={`Photo ${index + 1}`}
-                                className="w-full h-full object-cover rounded-xl"
+                                className="w-full h-full object-cover rounded-2xl shadow-lg ring-2 ring-purple-200 group-hover:ring-purple-400 transition-all"
                             />
                             <button
                                 onClick={() => onPhotoRemove(index)}
-                                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                                className="absolute -top-2 -right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all shadow-lg hover:scale-110 z-10"
                             >
                                 <X className="w-4 h-4" />
                             </button>
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-2xl transition-all"></div>
                         </div>
                     ))}
                     {photos.length < 4 && (
-                        <label className="aspect-square border-2 border-dashed border-purple-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-purple-500 hover:bg-purple-50 transition-colors">
-                            <Upload className="w-8 h-8 text-purple-400 mb-2" />
-                            <span className="text-sm text-purple-600 font-medium">Ajouter</span>
+                        <label className="aspect-square border-3 border-dashed border-purple-400 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-purple-600 hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 transition-all group shadow-md hover:shadow-xl">
+                            <div className="p-4 bg-purple-100 rounded-full group-hover:bg-purple-200 transition-all mb-3">
+                                <Upload className="w-8 h-8 text-purple-600" />
+                            </div>
+                            <span className="text-sm text-purple-700 font-bold">📸 Ajouter</span>
+                            <span className="text-xs text-purple-500 mt-1">Max 10MB</span>
                             <input
                                 type="file"
                                 accept="image/*"
@@ -425,7 +429,10 @@ function InfosGenerales({ data, photos, onChange, onPhotoUpload, onPhotoRemove }
                         </label>
                     )}
                 </div>
-                <p className="text-sm text-gray-500 mt-2">Taille max: 10MB par image</p>
+                <p className="text-sm text-gray-600 mt-3 flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 bg-purple-500 rounded-full"></span>
+                    Formats acceptés: JPG, PNG, WEBP • Max 10MB par image
+                </p>
             </div>
         </div>
     )
@@ -551,24 +558,186 @@ function CulturePipeline({ data, onChange }) {
 function AnalytiquesPDF({ data, onChange }) {
     return (
         <div className="space-y-6">
-            <p className="text-gray-600 text-center py-8">
-                🔬 Section Analytiques PDF à implémenter
-                <br />
-                <span className="text-sm">THC, CBD, CBG, profil terpénique, upload PDF/image</span>
-            </p>
+            {/* Taux cannabinoïdes */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-800 mb-2">
+                        <span className="text-2xl mr-2">🌿</span>THC (%)
+                    </label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        value={data.thc || ''}
+                        onChange={(e) => onChange('thc', e.target.value)}
+                        placeholder="Ex: 24.5"
+                        className="w-full px-4 py-3 border-2 border-green-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-800 mb-2">
+                        <span className="text-2xl mr-2">🧘</span>CBD (%)
+                    </label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        value={data.cbd || ''}
+                        onChange={(e) => onChange('cbd', e.target.value)}
+                        placeholder="Ex: 0.8"
+                        className="w-full px-4 py-3 border-2 border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-800 mb-2">
+                        <span className="text-2xl mr-2">🔬</span>CBG/CBC (%)
+                    </label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        value={data.cbg || ''}
+                        onChange={(e) => onChange('cbg', e.target.value)}
+                        placeholder="Ex: 1.2"
+                        className="w-full px-4 py-3 border-2 border-purple-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                    />
+                </div>
+            </div>
+
+            {/* Upload certificat d'analyse */}
+            <div>
+                <label className="block text-sm font-medium text-gray-800 mb-3">
+                    <span className="text-2xl mr-2">📊</span>Certificat d'analyse (PDF/Image)
+                </label>
+                <div className="border-3 border-dashed border-purple-300 rounded-2xl p-8 text-center hover:border-purple-500 hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 transition-all cursor-pointer">
+                    <div className="inline-block p-4 bg-purple-100 rounded-full mb-4">
+                        <Upload className="w-10 h-10 text-purple-600" />
+                    </div>
+                    <p className="text-lg font-semibold text-gray-700 mb-2">
+                        Glissez votre certificat ici
+                    </p>
+                    <p className="text-sm text-gray-500 mb-4">
+                        ou cliquez pour parcourir
+                    </p>
+                    <input
+                        type="file"
+                        accept=".pdf,image/*"
+                        onChange={(e) => {
+                            const file = e.target.files[0]
+                            if (file) onChange('analyticsCertificate', file)
+                        }}
+                        className="hidden"
+                        id="certificate-upload"
+                    />
+                    <label
+                        htmlFor="certificate-upload"
+                        className="inline-block px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all cursor-pointer font-medium shadow-lg hover:shadow-xl"
+                    >
+                        📂 Sélectionner un fichier
+                    </label>
+                    <p className="text-xs text-gray-400 mt-4">
+                        Formats: PDF, JPG, PNG • Max 20MB
+                    </p>
+                </div>
+                {data.analyticsCertificate && (
+                    <div className="mt-4 p-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-center gap-3">
+                        <span className="text-2xl">✅</span>
+                        <div className="flex-1">
+                            <p className="font-medium text-green-800">Fichier chargé</p>
+                            <p className="text-sm text-green-600">{data.analyticsCertificate.name || 'Certificat.pdf'}</p>
+                        </div>
+                        <button
+                            onClick={() => onChange('analyticsCertificate', null)}
+                            className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {/* Note */}
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-xl">
+                <p className="text-sm text-blue-800">
+                    <span className="font-semibold">ℹ️ Info:</span> Le certificat d'analyse permet de valider les taux de cannabinoïdes et le profil terpénique complet.
+                </p>
+            </div>
         </div>
     )
 }
 
 // Section 5: Visuel & Technique
 function VisuelTechnique({ data, onChange }) {
+    const couleurs = [
+        { value: 'vert-clair', label: 'Vert clair', color: '#90EE90' },
+        { value: 'vert-fonce', label: 'Vert foncé', color: '#228B22' },
+        { value: 'violet', label: 'Violet', color: '#9370DB' },
+        { value: 'orange', label: 'Orange', color: '#FF8C00' },
+        { value: 'brun', label: 'Brun', color: '#8B4513' },
+        { value: 'gris', label: 'Gris', color: '#808080' },
+    ]
+
+    const criteres = [
+        { key: 'visuelDensite', label: 'Densité visuelle', icon: '🔍' },
+        { key: 'visuelTrichomes', label: 'Trichomes', icon: '💎' },
+        { key: 'visuelPistils', label: 'Pistils', icon: '🧵' },
+        { key: 'visuelManucure', label: 'Manucure', icon: '✂️' },
+        { key: 'visuelMoisissure', label: 'Moisissure (10=aucune)', icon: '🍄' },
+        { key: 'visuelGraines', label: 'Graines (10=aucune)', icon: '🌰' },
+    ]
+
     return (
-        <div className="space-y-6">
-            <p className="text-gray-600 text-center py-8">
-                👁️ Section Visuel & Technique à implémenter
-                <br />
-                <span className="text-sm">Nuancier couleurs, densité, trichomes, pistils, sliders 0-10</span>
-            </p>
+        <div className="space-y-8">
+            {/* Nuancier de couleurs */}
+            <div>
+                <label className="block text-lg font-semibold text-gray-800 mb-4">🎨 Couleur dominante</label>
+                <div className="grid grid-cols-3 gap-3">
+                    {couleurs.map((c) => (
+                        <button
+                            key={c.value}
+                            type="button"
+                            onClick={() => onChange('visuelCouleur', c.value)}
+                            className={`p-4 rounded-xl border-3 transition-all ${
+                                data.visuelCouleur === c.value
+                                    ? 'border-purple-600 shadow-lg scale-105'
+                                    : 'border-gray-200 hover:border-purple-300'
+                            }`}
+                        >
+                            <div
+                                className="w-full h-12 rounded-lg mb-2 shadow-inner"
+                                style={{ backgroundColor: c.color }}
+                            ></div>
+                            <span className="text-sm font-medium text-gray-700">{c.label}</span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Critères visuels */}
+            {criteres.map((critere) => (
+                <div key={critere.key} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                        <label className="text-base font-semibold text-gray-800 flex items-center gap-2">
+                            <span className="text-xl">{critere.icon}</span>
+                            {critere.label}
+                        </label>
+                        <span className="text-2xl font-bold text-purple-600">
+                            {data[critere.key] || 5}/10
+                        </span>
+                    </div>
+                    <input
+                        type="range"
+                        min="0"
+                        max="10"
+                        value={data[critere.key] || 5}
+                        onChange={(e) => onChange(critere.key, parseInt(e.target.value))}
+                        className="w-full h-2 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full appearance-none cursor-pointer"
+                    />
+                </div>
+            ))}
         </div>
     )
 }
@@ -588,13 +757,44 @@ function Odeurs({ data, onChange }) {
 
 // Section 7: Texture
 function Texture({ data, onChange }) {
+    const sliders = [
+        { key: 'textureDurete', label: 'Dureté', icon: '💎', color: 'from-gray-400 to-gray-600' },
+        { key: 'textureDensite', label: 'Densité tactile', icon: '⚖️', color: 'from-blue-400 to-blue-600' },
+        { key: 'textureElasticite', label: 'Élasticité', icon: '🎯', color: 'from-green-400 to-green-600' },
+        { key: 'textureCollant', label: 'Collant', icon: '🍯', color: 'from-amber-400 to-amber-600' }
+    ]
+
     return (
-        <div className="space-y-6">
-            <p className="text-gray-600 text-center py-8">
-                🤚 Section Texture à implémenter
-                <br />
-                <span className="text-sm">4 sliders: dureté, densité tactile, élasticité, collant (0-10)</span>
-            </p>
+        <div className="space-y-8">
+            {sliders.map((slider) => (
+                <div key={slider.key} className="space-y-3">
+                    <div className="flex items-center justify-between">
+                        <label className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                            <span className="text-2xl">{slider.icon}</span>
+                            {slider.label}
+                        </label>
+                        <span className="text-3xl font-bold text-purple-600">
+                            {data[slider.key] || 5}/10
+                        </span>
+                    </div>
+                    <input
+                        type="range"
+                        min="0"
+                        max="10"
+                        value={data[slider.key] || 5}
+                        onChange={(e) => onChange(slider.key, parseInt(e.target.value))}
+                        className={`w-full h-3 bg-gradient-to-r ${slider.color} rounded-full appearance-none cursor-pointer shadow-lg hover:shadow-xl transition-all`}
+                        style={{
+                            background: `linear-gradient(to right, ${slider.color.split(' ')[1].replace('from-', '')} 0%, ${slider.color.split(' ')[2].replace('to-', '')} ${(data[slider.key] || 5) * 10}%, #e5e7eb ${(data[slider.key] || 5) * 10}%)`
+                        }}
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 px-1">
+                        <span>Faible</span>
+                        <span>Moyen</span>
+                        <span>Très élevé</span>
+                    </div>
+                </div>
+            ))}
         </div>
     )
 }
