@@ -5,6 +5,10 @@ import { useStore } from '../store/useStore'
 import { useToast } from '../components/ToastContainer'
 import OrchardPanel from '../components/orchard/OrchardPanel'
 import { AnimatePresence, motion } from 'framer-motion'
+// Nouveaux composants avec Timeline
+import CulturePipelineTimeline from '../components/forms/flower/CulturePipelineTimeline'
+import ExperienceUtilisation from '../components/forms/flower/ExperienceUtilisation'
+import CuringMaturationTimeline from '../components/forms/flower/CuringMaturationTimeline'
 
 /**
  * CreateFlowerReview - Interface complète pour créer/éditer une review de Fleur
@@ -25,7 +29,7 @@ export default function CreateFlowerReview() {
     const [loading, setLoading] = useState(!!id)
     const scrollContainerRef = useRef(null)
 
-    // Définition des 10 sections
+    // Définition des 11 sections (ajout Expérience d'utilisation)
     const sections = [
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
         { id: 'genetics', icon: '🧬', title: 'Génétiques' },
@@ -36,7 +40,8 @@ export default function CreateFlowerReview() {
         { id: 'texture', icon: '🤚', title: 'Texture' },
         { id: 'gouts', icon: '😋', title: 'Goûts' },
         { id: 'effets', icon: '💥', title: 'Effets' },
-        { id: 'curing', icon: '🔥', title: 'Curing & Maturation' }
+        { id: 'curing', icon: '🔥', title: 'Curing & Maturation' },
+        { id: 'experience', icon: '🧪', title: 'Expérience d\'utilisation' }
     ]
 
     const scrollToSection = (index) => {
@@ -242,7 +247,7 @@ export default function CreateFlowerReview() {
                             <Genetiques data={formData} onChange={handleChange} />
                         )}
                         {currentSection === 2 && (
-                            <CulturePipeline data={formData} onChange={handleChange} />
+                            <CulturePipelineTimeline data={formData} onChange={handleChange} />
                         )}
                         {currentSection === 3 && (
                             <AnalytiquesPDF data={formData} onChange={handleChange} />
@@ -263,7 +268,10 @@ export default function CreateFlowerReview() {
                             <Effets data={formData} onChange={handleChange} />
                         )}
                         {currentSection === 9 && (
-                            <CuringMaturation data={formData} onChange={handleChange} />
+                            <CuringMaturationTimeline data={formData} onChange={handleChange} />
+                        )}
+                        {currentSection === 10 && (
+                            <ExperienceUtilisation data={formData} onChange={handleChange} />
                         )}
                     </motion.div>
                 </AnimatePresence>
@@ -589,12 +597,12 @@ function CulturePipeline({ data, onChange }) {
         onChange('culturePhases', [...phases, newPhase])
         setExpandedPhase(newPhase.id)
     }
-    
+
     const supprimerPhase = (id) => {
         onChange('culturePhases', phases.filter(p => p.id !== id))
         if (expandedPhase === id) setExpandedPhase(null)
     }
-    
+
     const modifierPhase = (id, champ, valeur) => {
         const newPhases = phases.map(p => {
             if (p.id === id) {
@@ -621,7 +629,7 @@ function CulturePipeline({ data, onChange }) {
                 <h3 className="text-xl font-bold text-green-800 mb-4 flex items-center gap-2">
                     <span>🌱</span> Configuration générale
                 </h3>
-                
+
                 <div className="space-y-6">
                     {/* Mode & Type espace */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -843,7 +851,7 @@ function CulturePipeline({ data, onChange }) {
                     {phases.map((phase, idx) => (
                         <div key={phase.id} className="bg-white rounded-2xl border-2 border-green-200 shadow-lg overflow-hidden">
                             {/* Header de la phase */}
-                            <div 
+                            <div
                                 className="bg-gradient-to-r from-green-500 to-emerald-500 p-4 cursor-pointer hover:from-green-600 hover:to-emerald-600 transition-all"
                                 onClick={() => setExpandedPhase(expandedPhase === phase.id ? null : phase.id)}
                             >
@@ -1430,8 +1438,8 @@ function VisuelTechnique({ data, onChange }) {
                             type="button"
                             onClick={() => onChange('visuelCouleur', c.value)}
                             className={`p-4 rounded-xl border-3 transition-all ${data.visuelCouleur === c.value
-                                    ? 'border-purple-600 shadow-lg scale-105'
-                                    : 'border-gray-200 hover:border-purple-300'
+                                ? 'border-purple-600 shadow-lg scale-105'
+                                : 'border-gray-200 hover:border-purple-300'
                                 }`}
                         >
                             <div
@@ -1545,8 +1553,8 @@ function Odeurs({ data, onChange }) {
                             type="button"
                             onClick={() => toggleOdeur('dominant', odeur)}
                             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${selectedDominant.includes(odeur)
-                                    ? 'bg-purple-600 text-white shadow-lg scale-105'
-                                    : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-purple-400'
+                                ? 'bg-purple-600 text-white shadow-lg scale-105'
+                                : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-purple-400'
                                 }`}
                         >
                             {odeur}
@@ -1574,8 +1582,8 @@ function Odeurs({ data, onChange }) {
                             type="button"
                             onClick={() => toggleOdeur('secondaire', odeur)}
                             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${selectedSecondaire.includes(odeur)
-                                    ? 'bg-pink-600 text-white shadow-lg scale-105'
-                                    : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-pink-400'
+                                ? 'bg-pink-600 text-white shadow-lg scale-105'
+                                : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-pink-400'
                                 }`}
                         >
                             {odeur}
@@ -1715,8 +1723,8 @@ function Gouts({ data, onChange }) {
                             type="button"
                             onClick={() => toggleGout('DryPuff', gout)}
                             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${(data.goutsDryPuff || []).includes(gout)
-                                    ? 'bg-amber-600 text-white shadow-lg scale-105'
-                                    : 'bg-white border-2 border-gray-200 hover:border-amber-400'
+                                ? 'bg-amber-600 text-white shadow-lg scale-105'
+                                : 'bg-white border-2 border-gray-200 hover:border-amber-400'
                                 }`}
                         >
                             {gout}
@@ -1744,8 +1752,8 @@ function Gouts({ data, onChange }) {
                             type="button"
                             onClick={() => toggleGout('Inhalation', gout)}
                             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${(data.goutsInhalation || []).includes(gout)
-                                    ? 'bg-blue-600 text-white shadow-lg scale-105'
-                                    : 'bg-white border-2 border-gray-200 hover:border-blue-400'
+                                ? 'bg-blue-600 text-white shadow-lg scale-105'
+                                : 'bg-white border-2 border-gray-200 hover:border-blue-400'
                                 }`}
                         >
                             {gout}
@@ -1773,8 +1781,8 @@ function Gouts({ data, onChange }) {
                             type="button"
                             onClick={() => toggleGout('Expiration', gout)}
                             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${(data.goutsExpiration || []).includes(gout)
-                                    ? 'bg-green-600 text-white shadow-lg scale-105'
-                                    : 'bg-white border-2 border-gray-200 hover:border-green-400'
+                                ? 'bg-green-600 text-white shadow-lg scale-105'
+                                : 'bg-white border-2 border-gray-200 hover:border-green-400'
                                 }`}
                         >
                             {gout}
@@ -1907,8 +1915,8 @@ function Effets({ data, onChange }) {
                             type="button"
                             onClick={() => setFilter(f)}
                             className={`px-4 py-2 rounded-lg font-medium transition-all ${filter === f
-                                    ? 'bg-purple-600 text-white shadow-lg'
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                ? 'bg-purple-600 text-white shadow-lg'
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                 }`}
                         >
                             {f === 'tous' ? '🌐 Tous' :
@@ -1935,8 +1943,8 @@ function Effets({ data, onChange }) {
                             type="button"
                             onClick={() => toggleEffet(effet.nom)}
                             className={`px-4 py-3 rounded-lg text-sm font-medium transition-all relative ${selected.includes(effet.nom)
-                                    ? `${getTypeColor(effet.type)} text-white shadow-lg scale-105`
-                                    : 'bg-white border-2 border-gray-200 hover:border-purple-400'
+                                ? `${getTypeColor(effet.type)} text-white shadow-lg scale-105`
+                                : 'bg-white border-2 border-gray-200 hover:border-purple-400'
                                 }`}
                         >
                             <div className="flex items-center justify-between gap-2">
