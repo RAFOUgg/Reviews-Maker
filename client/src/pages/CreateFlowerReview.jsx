@@ -95,12 +95,12 @@ export default function CreateFlowerReview() {
         // Validation
         if (!formData.nomCommercial) {
             toast.error('Le nom commercial est requis')
-            setExpandedSections(['infos'])
+            scrollToSection(0)
             return
         }
         if (photos.length === 0) {
             toast.error('Au moins 1 photo est requise')
-            setExpandedSections(['infos'])
+            scrollToSection(0)
             return
         }
 
@@ -309,39 +309,6 @@ export default function CreateFlowerReview() {
                     />
                 )}
             </AnimatePresence>
-        </div>
-    )
-}
-
-// Composant SectionCard - Card pliable pour chaque section
-function SectionCard({ section, expanded, onToggle, children }) {
-    return (
-        <div className="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 overflow-hidden transition-all">
-            <button
-                onClick={onToggle}
-                className="w-full flex items-center justify-between p-6 hover:bg-white/50 transition-colors"
-            >
-                <div className="flex items-center gap-3">
-                    <span className="text-3xl">{section.icon}</span>
-                    <div className="text-left">
-                        <h3 className="text-xl font-semibold text-purple-900">
-                            {section.title}
-                            {section.required && <span className="text-red-500 ml-1">*</span>}
-                        </h3>
-                    </div>
-                </div>
-                {expanded ? (
-                    <ChevronUp className="w-6 h-6 text-purple-600" />
-                ) : (
-                    <ChevronDown className="w-6 h-6 text-purple-400" />
-                )}
-            </button>
-
-            {expanded && (
-                <div className="p-6 pt-0 border-t border-purple-100">
-                    {children}
-                </div>
-            )}
         </div>
     )
 }
