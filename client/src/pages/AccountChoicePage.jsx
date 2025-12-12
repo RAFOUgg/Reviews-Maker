@@ -87,7 +87,7 @@ export default function AccountChoicePage() {
                     <h1 className="text-5xl md:text-6xl font-black tracking-tight drop-shadow-2xl">
                         Choisissez votre Plan
                     </h1>
-                    <p className="text-xl md:text-2xl text-white/90 font-light drop-shadow-lg max-w-3xl mx-auto">
+                    <p className="text-xl md:text-2xl text-white font-light drop-shadow-lg max-w-3xl mx-auto">
                         Des outils de traçabilité adaptés à vos besoins, du simple amateur au producteur professionnel
                     </p>
                 </div>
@@ -102,7 +102,10 @@ export default function AccountChoicePage() {
                             <button
                                 key={accountType.type}
                                 type="button"
-                                onClick={() => setSelectedType(accountType.type)}
+                                onClick={() => {
+                                    console.log('Sélection type compte:', accountType.type)
+                                    setSelectedType(accountType.type)
+                                }}
                                 className={`relative group text-left transition-all duration-500 transform hover:scale-105 ${isSelected ? 'scale-105 z-10' : ''
                                     }`}
                                 style={{ animationDelay: `${index * 100}ms` }}
@@ -140,7 +143,7 @@ export default function AccountChoicePage() {
                                                         <div className="text-4xl font-black text-white drop-shadow-lg">
                                                             {accountType.price}€
                                                         </div>
-                                                        <div className="text-sm text-white/80 font-medium">/mois</div>
+                                                        <div className="text-sm text-white font-medium">/mois</div>
                                                     </>
                                                 ) : (
                                                     <div className="text-3xl font-black text-white drop-shadow-lg">
@@ -155,10 +158,10 @@ export default function AccountChoicePage() {
                                             <h3 className="text-3xl font-black text-white drop-shadow-lg">
                                                 {accountType.name}
                                             </h3>
-                                            <p className="text-sm text-white/90 font-medium">
+                                            <p className="text-sm text-white font-medium">
                                                 {accountType.subtitle}
                                             </p>
-                                            <p className="text-white/80 text-sm leading-relaxed">
+                                            <p className="text-white text-sm leading-relaxed">
                                                 {accountType.description}
                                             </p>
                                         </div>
@@ -168,12 +171,12 @@ export default function AccountChoicePage() {
 
                                         {/* Fonctionnalités incluses */}
                                         <div className="space-y-3">
-                                            <h4 className="text-sm font-bold text-white/90 uppercase tracking-wide">
+                                            <h4 className="text-sm font-bold text-white uppercase tracking-wide">
                                                 ✨ Fonctionnalités
                                             </h4>
                                             <ul className="space-y-2">
                                                 {accountType.features.slice(0, 5).map((feature, idx) => (
-                                                    <li key={idx} className="flex items-start gap-2 text-sm text-white/90">
+                                                    <li key={idx} className="flex items-start gap-2 text-sm text-white">
                                                         <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-white" strokeWidth={2.5} />
                                                         <span>{feature}</span>
                                                     </li>
@@ -181,7 +184,7 @@ export default function AccountChoicePage() {
                                             </ul>
 
                                             {accountType.features.length > 5 && (
-                                                <p className="text-xs text-white/70 italic pl-7">
+                                                <p className="text-xs text-white italic pl-7 opacity-90">
                                                     + {accountType.features.length - 5} autres fonctionnalités
                                                 </p>
                                             )}
@@ -210,9 +213,9 @@ export default function AccountChoicePage() {
                         Informations importantes
                     </h3>
 
-                    <div className="space-y-3 text-sm text-white/90 leading-relaxed">
+                    <div className="space-y-3 text-sm text-white leading-relaxed">
                         <p>
-                            <strong className="text-white">🔞 Âge légal requis :</strong> Vous devez avoir au moins 18 ans (ou 21 ans selon votre pays de résidence) pour créer un compte. Une vérification sera effectuée lors de l'inscription.
+                            <strong className="text-white font-bold">🔞 Âge légal requis :</strong> Vous devez avoir au moins 18 ans (ou 21 ans selon votre pays de résidence) pour créer un compte. Une vérification sera effectuée lors de l'inscription.
                         </p>
 
                         {selectedType === 'producer' && (
@@ -240,8 +243,8 @@ export default function AccountChoicePage() {
                         </p>
 
                         {(selectedType === 'influencer' || selectedType === 'producer') && (
-                            <p className="bg-yellow-500/20 border-2 border-yellow-400/50 p-4 rounded-xl backdrop-blur-sm">
-                                <strong className="text-yellow-200">💳 Abonnement :</strong> L'activation du plan {accountTypes.find(t => t.type === selectedType)?.name} nécessite un paiement mensuel de {accountTypes.find(t => t.type === selectedType)?.price}€. Vous pourrez gérer votre abonnement depuis vos paramètres après inscription.
+                            <p className="bg-yellow-500/30 border-2 border-yellow-300 p-4 rounded-xl backdrop-blur-sm">
+                                <strong className="text-yellow-100 font-bold">💳 Abonnement :</strong> <span className="text-white">Le plan {accountTypes.find(t => t.type === selectedType)?.name} coûte {accountTypes.find(t => t.type === selectedType)?.price}€/mois. Vous pourrez activer l'abonnement après avoir complété votre profil et la vérification d'identité.</span>
                             </p>
                         )}
                     </div>
@@ -259,7 +262,7 @@ export default function AccountChoicePage() {
                         </svg>
                     </button>
 
-                    <p className="mt-4 text-white/70 text-sm">
+                    <p className="mt-4 text-white text-sm opacity-90">
                         Vous pourrez changer de plan à tout moment depuis vos paramètres
                     </p>
                 </div>
