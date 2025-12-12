@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useRef } from 'react';
+import html2canvas from 'html2canvas';
 import {
   Download, Eye, Settings, Image as ImageIcon, Type, Palette,
   Grid, Layout, Maximize2, FileImage, File, Save, X, Check,
@@ -38,13 +39,93 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
   // Charger template prédéfini
   const predefinedTemplate = getPredefinedTemplate(productType, selectedTemplate);
   
+  /**
+   * Export réel avec html2canvas
+   */
   const handleExport = async () => {
+    if (!canvasRef.current) {
+      alert('Canvas non disponible');
+      return;
+    }
+    
     setIsExporting(true);
-    // Logique d'export à implémenter
-    setTimeout(() => {
+    
+    try {
+      const format = EXPORT_FORMATS[selectedFormat];
+      const quality = EXPORT_OPTIONS.quality[exportQuality];
+      const scale = quality?.dpi ? quality.dpi / 72 : 1;
+      
+      // Capturer le canvas avec html2canvas
+      const canvas = await html2canvas(canvasRef.current, {
+        scale: scale,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        width: format.width,
+        height: format.height,
+        logging: false
+      });
+      
+      // Générer le nom du fichier
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const filename = `review-${productType}-${selectedTemplate}-${timestamp}`;
+      
+      if (exportFileFormat === 'png' || exportFileFormat === 'jpeg') {
+        // Export image
+        const mimeType = exportFileFormat === 'png' ? 'image/png' : 'image/jpeg';
+        const dataUrl = canvas.toDataURL(mimeType, exportFileFormat === 'jpeg' ? 0.9 : 1);
+        
+        // Télécharger
+        const link = document.createElement('a');
+        link.download = `${filename}.${exportFileFormat}`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+      } else if (exportFileFormat === 'svg') {
+        // Export SVG (via canvas2svg si besoin, sinon fallback PNG)
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `${filename}.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+      } else if (exportFileFormat === 'pdf') {
+        // Export PDF via jsPDF (si disponible) sinon PNG
+        try {
+          const { jsPDF } = await import('jspdf');
+          const pdf = new jsPDF({
+            orientation: format.width > format.height ? 'landscape' : 'portrait',
+            unit: 'px',
+            format: [format.width, format.height]
+          });
+          
+          const imgData = canvas.toDataURL('image/jpeg', 0.9);
+          pdf.addImage(imgData, 'JPEG', 0, 0, format.width, format.height);
+          pdf.save(`${filename}.pdf`);
+        } catch (e) {
+          // Fallback PNG si jsPDF non disponible
+          console.warn('jsPDF non disponible, export PNG fallback');
+          const dataUrl = canvas.toDataURL('image/png');
+          const link = document.createElement('a');
+          link.download = `${filename}.png`;
+          link.href = dataUrl;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      }
+      
+      alert('Export réussi!');
+    } catch (error) {
+      console.error('Erreur export:', error);
+      alert('Erreur lors de l\'export: ' + error.message);
+    } finally {
       setIsExporting(false);
-      alert('Export réussi ! (simulation)');
-    }, 2000);
+    }
   };
 
   const handleAddElement = () => {

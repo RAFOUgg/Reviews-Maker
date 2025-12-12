@@ -8,14 +8,14 @@
 
 ## 📊 SYNTHÈSE EXÉCUTIVE
 
-### État Global : ✅ MVP Fonctionnel (75% CDC)
+### État Global : ✅ MVP Fonctionnel (85% CDC)
 
 | Catégorie | Progression | Statut |
 |-----------|-------------|--------|
-| **Système de Reviews** | 90% | ✅ Opérationnel |
+| **Système de Reviews** | 95% | ✅ Opérationnel + Backend |
 | **Sections Détaillées** | 100% | ✅ Complet |
 | **PipeLines** | 80% | ✅ MVP Opérationnel |
-| **Export Maker** | 70% | ⚠️ MVP en place |
+| **Export Maker** | 85% | ✅ Opérationnel |
 | **Comptes & Auth** | 85% | ✅ Fonctionnel |
 | **Bibliothèque** | 60% | ⚠️ Partiel |
 | **Canva Génétique** | 40% | 🔶 En cours |
@@ -61,20 +61,21 @@
 - `separationMethods.js` - Ice-O-Lator, Dry-Sift, etc.
 - `extractionMethods.js` - BHO, Rosin, CO₂, etc.
 
-### 3. Export Maker (70%)
+### 3. Export Maker (85%)
 
 | Fonctionnalité | Statut |
 |----------------|--------|
 | Templates prédéfinis | ✅ Minimal/Standard/Détaillé/Custom |
 | Formats export | ✅ 1:1, 16:9, 9:16, A4 |
 | Restrictions comptes | ✅ Amateur/Influenceur/Producteur |
-| Export fichiers | ⚠️ Simulation (pas html2canvas) |
-| Drag & Drop | ❌ À implémenter |
-| Sauvegarde templates | ❌ À connecter backend |
+| Export fichiers | ✅ PNG/JPEG avec html2canvas |
+| Export PDF | ✅ Via jsPDF (lazy load) |
+| Drag & Drop | ⚠️ Prévu Phase 4 |
+| Sauvegarde templates | ⚠️ À connecter backend |
 
 **Fichiers Export** :
 - `exportTemplates.js` - Définitions templates
-- `ExportMaker.jsx` - Interface complète
+- `ExportMaker.jsx` - Interface complète avec html2canvas
 
 ### 4. Comptes & Authentification (85%)
 
@@ -118,30 +119,26 @@
 
 ### Haute Priorité 🔴
 
-1. **Export réel** (html2canvas/jsPDF)
-   - Export PNG/JPEG/PDF fonctionnel requis
-   - Actuellement en simulation
+1. **Rendu visuel templates**
+   - Canvas avec données review réelles
+   - Mise en forme selon template sélectionné
 
-2. **Soumission Backend Reviews**
-   - Les pages Create*Review ont `// TODO: Backend submission`
-   - Connecter aux routes existantes
-
-3. **Bibliothèque Avancée**
+2. **Bibliothèque Avancée**
    - Sauvegarde templates utilisateur
    - Préférences saisie rapide
    - Filigranes personnalisés
 
 ### Moyenne Priorité 🟠
 
-4. **Pipeline Visualisation GitHub-style**
+3. **Pipeline Visualisation GitHub-style**
    - Grille type heatmap commits
    - Saisie données par case cliquable
 
-5. **2FA (Double Authentification)**
+4. **2FA (Double Authentification)**
    - TOTP via Google Authenticator
    - Gestion sessions actives
 
-6. **Paiements Abonnements**
+5. **Paiements Abonnements**
    - Intégration Stripe/PayPal
    - Gestion abonnements Producteur/Influenceur
 
