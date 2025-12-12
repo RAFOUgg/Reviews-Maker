@@ -7,6 +7,7 @@ import OrchardPanel from '../components/orchard/OrchardPanel'
 import { AnimatePresence, motion } from 'framer-motion'
 import CuringMaturationTimeline from '../components/forms/flower/CuringMaturationTimeline'
 import ExperienceUtilisation from '../components/forms/flower/ExperienceUtilisation'
+import VisualSection from '../components/reviews/sections/VisualSection'
 
 /**
  * CreateHashReview - Interface pour créer/éditer une review de Hash
@@ -240,7 +241,11 @@ export default function CreateHashReview() {
                             <PipelinePurification data={formData} onChange={handleChange} />
                         )}
                         {currentSection === 3 && (
-                            <VisuelTechnique data={formData} onChange={handleChange} />
+                            <VisualSection 
+                                productType="Hash" 
+                                data={formData.visual || {}} 
+                                onChange={(visualData) => handleChange('visual', visualData)} 
+                            />
                         )}
                         {currentSection === 4 && (
                             <Odeurs data={formData} onChange={handleChange} />
