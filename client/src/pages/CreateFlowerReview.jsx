@@ -178,7 +178,7 @@ export default function CreateFlowerReview() {
                         <button
                             onClick={handlePrevious}
                             disabled={currentSection === 0}
-                            className="flex-shrink-0 p-2 rounded-lg text-white hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-white/20"
+                            className="flex-shrink-0 p-2 rounded-lg bg-white/10 text-white hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-lg"
                         >
                             <ChevronLeft className="w-5 h-5" />
                         </button>
@@ -193,8 +193,8 @@ export default function CreateFlowerReview() {
                                         className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${index === currentSection
                                             ? 'bg-white text-purple-600 shadow-lg shadow-white/50 scale-105 glow-effect'
                                             : index < currentSection
-                                                ? 'bg-white/60 text-purple-800 border border-white/30'
-                                                : 'bg-white/30 text-white border border-white/20 hover:bg-white/40'
+                                                ? 'bg-white/60 text-purple-900 border border-white/30'
+                                                : 'bg-white/50 text-purple-900 border border-white/30 hover:bg-white/70'
                                             }`}
                                     >
                                         <span className="mr-2">{section.icon}</span>
@@ -209,7 +209,7 @@ export default function CreateFlowerReview() {
                         <button
                             onClick={handleNext}
                             disabled={currentSection === sections.length - 1}
-                            className="flex-shrink-0 p-2 rounded-lg text-white hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-white/20"
+                            className="flex-shrink-0 p-2 rounded-lg bg-white/10 text-white hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-lg"
                         >
                             <ChevronRight className="w-5 h-5" />
                         </button>

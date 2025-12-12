@@ -130,14 +130,14 @@ export default function LoginPage() {
                             <div className="flex gap-2 text-sm font-semibold bg-gray-100 rounded-xl p-1.5 shadow-inner">
                                 <button
                                     type="button"
-                                    className={`flex-1 px-4 py-2.5 rounded-lg transition-all duration-300 ${mode === 'login' ? 'bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-lg scale-105' : 'text-gray-700 hover:bg-white'}`}
+                                    className={`flex-1 px-4 py-2.5 rounded-lg transition-all duration-300 ${mode === 'login' ? 'bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-lg scale-105' : 'text-gray-900 hover:bg-white hover:shadow-md'}`}
                                     onClick={() => setMode('login')}
                                 >
                                     Connexion
                                 </button>
                                 <button
                                     type="button"
-                                    className={`flex-1 px-4 py-2.5 rounded-lg transition-all duration-300 ${mode === 'signup' ? 'bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-lg scale-105' : 'text-gray-700 hover:bg-white'}`}
+                                    className={`flex-1 px-4 py-2.5 rounded-lg transition-all duration-300 ${mode === 'signup' ? 'bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-lg scale-105' : 'text-gray-900 hover:bg-white hover:shadow-md'}`}
                                     onClick={() => setMode('signup')}
                                 >
                                     Créer un compte

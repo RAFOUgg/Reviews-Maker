@@ -12,6 +12,7 @@ import LibraryPage from './pages/LibraryPage'
 import StatsPage from './pages/StatsPage'
 import SettingsPage from './pages/SettingsPage'
 import ProfilePage from './pages/ProfilePage'
+import ProfileSettingsPage from './pages/ProfileSettingsPage'
 import AuthCallback from './components/AuthCallback'
 import ToastContainer from './components/ToastContainer'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -167,6 +168,7 @@ function App() {
                                 <Route path="/stats" element={<StatsPage />} />
                                 <Route path="/settings" element={<SettingsPage />} />
                                 <Route path="/profile" element={<ProfilePage />} />
+                                <Route path="/account" element={<ProfileSettingsPage />} />
                             </Route>
                             <Route path="/choose-account" element={<AccountChoicePage />} />
                             <Route path="/login" element={<LoginPage />} />
