@@ -234,6 +234,9 @@ model Review {
   likes       ReviewLike[]
   reports     Report[]
   flowerData  FlowerReview? // Données spécifiques Fleurs (1-to-1)
+  hashData    HashReview? // Données spécifiques Hash (1-to-1)
+  concentrateData ConcentrateReview? // Données spécifiques Concentré (1-to-1)
+  edibleData  EdibleReview? // Données spécifiques Comestible (1-to-1)
 
   @@index([authorId])
   @@index([type])
@@ -649,4 +652,199 @@ model FlowerReview {
   @@index([nomCommercial])
   @@index([variety])
   @@map("flower_reviews")
+}
+
+// Review Hash (Kief, Ice-O-Lator, Dry-Sift)
+model HashReview {
+  id          String   @id @default(uuid())
+  
+  // Lien avec la review parente
+  reviewId    String   @unique
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  
+  // ===== INFORMATIONS GÉNÉRALES =====
+  nomCommercial   String   // Nom commercial* (requis)
+  hashmaker       String?  // Hashmaker
+  laboratoire     String?  // Laboratoire de production
+  cultivarsUtilises String? // JSON ou texte: cultivars utilisés
+  photos          String?  // JSON: ["/images/hash-xxx.jpg"]
+  
+  // ===== PIPELINE SÉPARATION =====
+  separationPipelineId String? // ID pipeline séparation
+  methodeSeparation   String?  // "manuelle", "tamisage à sec", "eau/glace", "autre"
+  nombrePasses        Int?     // Nombre de passes (si eau/glace)
+  temperatureEau      Float?   // Température eau (°C, si eau/glace)
+  tailleMailles       String?  // Taille mailles (si tamisage à sec)
+  typeMatierePremiere String?  // "trim", "buds", "sugar leaves", etc.
+  qualiteMatierePremiere Float? // Qualité matière première /10
+  rendementEstime     Float?   // Rendement estimé (%)
+  tempsTotalSeparation Int?    // Temps total séparation (minutes)
+  
+  // ===== PIPELINE PURIFICATION =====
+  purificationPipelineId String? // ID pipeline purification
+  
+  // ===== VISUEL & TECHNIQUE =====
+  couleurTransparence Float?   // Couleur/transparence /10 (nuancier noir->blanc)
+  pureteVisuelle      Float?   // Pureté visuelle /10
+  densiteVisuelle     Float?   // Densité visuelle /10
+  pistils             Float?   // Pistils /10
+  moisissure          Float?   // Moisissure (10=aucune) /10
+  graines             Float?   // Graines (10=aucune) /10
+  
+  // ===== ODEURS =====
+  fideliteCultivars      Float?  // Fidélité cultivars /10
+  intensiteAromatique    Float?  // Intensité aromatique /10
+  notesDominantes        String? // JSON: max 7
+  notesSecondaires       String? // JSON: max 7
+  
+  // ===== TEXTURE =====
+  durete                 Float?  // Dureté /10
+  densiteTactile         Float?  // Densité tactile /10
+  friabiliteViscositeMelting Float? // Friabilité/Viscosité /10
+  meltingResidus         Float?  // Melting/Résidus /10
+  
+  // ===== GOÛTS =====
+  intensite          Float?  // Intensité /10
+  agressivitePiquant Float?  // Agressivité/piquant /10
+  dryPuff            String? // JSON: max 7
+  inhalation         String? // JSON: max 7
+  expiration         String? // JSON: max 7
+  
+  // ===== EFFETS =====
+  monteeRapidite     Float?  // Montée /10
+  intensiteEffets    Float?  // Intensité /10
+  effetsChoisis      String? // JSON: max 8
+  effetsFiltre       String? // "tous", "neutre", "positif", "negatif"
+  methodeConsommation String? // "Combustion", "Vapeur", "Infusion"
+  dosageUtilise       String? // Dosage estimé
+  dureeEffets         String? // Durée effets
+  
+  // ===== CURING =====
+  curingPipelineId   String? // ID pipeline curing
+  curingDuration     Int?    // Durée curing
+  curingType         String? // "froid", "chaud"
+  curingInterval     String? // Intervalle
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([reviewId])
+  @@index([nomCommercial])
+  @@map("hash_reviews")
+}
+
+// Review Concentré (Rosin, BHO, etc.)
+model ConcentrateReview {
+  id          String   @id @default(uuid())
+  
+  // Lien avec la review parente
+  reviewId    String   @unique
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  
+  // ===== INFORMATIONS GÉNÉRALES =====
+  nomCommercial      String   // Nom commercial* (requis)
+  hashmaker          String?  // Hashmaker
+  laboratoire        String?  // Laboratoire de production
+  cultivarsUtilises  String?  // JSON ou texte: cultivars utilisés
+  photos             String?  // JSON: ["/images/concentrate-xxx.jpg"]
+  
+  // ===== PIPELINE EXTRACTION =====
+  extractionPipelineId String? // ID pipeline extraction
+  methodeExtraction    String? // Méthode d'extraction
+  
+  // ===== PIPELINE PURIFICATION =====
+  purificationPipelineId String? // ID pipeline purification
+  
+  // ===== VISUEL & TECHNIQUE =====
+  couleurTransparence Float?   // Couleur/Transparence /10
+  viscosite           Float?   // Viscosité /10
+  pureteVisuelle      Float?   // Pureté visuelle /10
+  melting             Float?   // Melting (10=FullMelt) /10
+  residus             Float?   // Résidus (10=aucune) /10
+  pistils             Float?   // Pistils (10=aucune) /10
+  moisissure          Float?   // Moisissure (10=aucune) /10
+  
+  // ===== ODEURS =====
+  fideliteCultivars      Float?  // Fidélité cultivars /10
+  intensiteAromatique    Float?  // Intensité aromatique /10
+  notesDominantes        String? // JSON: max 7
+  notesSecondaires       String? // JSON: max 7
+  
+  // ===== TEXTURE =====
+  durete                 Float?  // Dureté /10
+  densiteTactile         Float?  // Densité tactile /10
+  friabiliteViscositeMelting Float? // Friabilité/Viscosité/Melting /10
+  meltingResidus         Float?  // Melting/Résidus /10
+  
+  // ===== GOÛTS =====
+  intensite          Float?  // Intensité /10
+  agressivitePiquant Float?  // Agressivité/piquant /10
+  dryPuff            String? // JSON: max 7
+  inhalation         String? // JSON: max 7
+  expiration         String? // JSON: max 7
+  
+  // ===== EFFETS =====
+  monteeRapidite     Float?  // Montée /10
+  intensiteEffets    Float?  // Intensité /10
+  effetsChoisis      String? // JSON: max 8
+  effetsFiltre       String? // "tous", "neutre", "positif", "negatif"
+  methodeConsommation String? // "Combustion", "Vapeur", "Infusion"
+  dosageUtilise       String? // Dosage estimé
+  dureeEffets         String? // Durée effets
+  
+  // ===== CURING =====
+  curingPipelineId   String? // ID pipeline curing
+  curingDuration     Int?    // Durée curing
+  curingType         String? // "froid", "chaud"
+  curingInterval     String? // Intervalle
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([reviewId])
+  @@index([nomCommercial])
+  @@map("concentrate_reviews")
+}
+
+// Review Comestible
+model EdibleReview {
+  id          String   @id @default(uuid())
+  
+  // Lien avec la review parente
+  reviewId    String   @unique
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  
+  // ===== INFORMATIONS GÉNÉRALES =====
+  nomProduit      String   // Nom du produit* (requis)
+  typeComestible  String?  // Type de comestible
+  fabricant       String?  // Fabricant
+  typeGenetiques  String?  // Type de génétiques
+  photos          String?  // JSON: ["/images/edible-xxx.jpg"]
+  
+  // ===== PIPELINE RECETTE =====
+  recipePipelineId    String? // ID pipeline recette
+  ingredients         String? // JSON: [{ type, nom, quantite, unite }]
+  etapesPreparation   String? // JSON: [{ action, ingredientIds, duree, temperature }]
+  
+  // ===== GOÛTS =====
+  intensite          Float?  // Intensité /10
+  agressivitePiquant Float?  // Agressivité/piquant /10
+  saveursDominantes  String? // JSON: max 7
+  
+  // ===== EFFETS =====
+  monteeRapidite     Float?  // Montée /10
+  intensiteEffets    Float?  // Intensité /10
+  effetsChoisis      String? // JSON: max 8
+  effetsFiltre       String? // "tous", "neutre", "positif", "negatif"
+  dureeEffets        String? // "5-15min", "15-30min", etc.
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([reviewId])
+  @@index([nomProduit])
+  @@map("edible_reviews")
 }

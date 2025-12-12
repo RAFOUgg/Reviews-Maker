@@ -20,6 +20,9 @@ import accountRoutes from './routes/account.js'
 import cultivarsRoutes from './routes/cultivars.js'
 import pipelinesRoutes from './routes/pipelines.js'
 import flowerReviewsRoutes from './routes/flower-reviews.js'
+import hashReviewsRoutes from './routes/hash-reviews.js'
+import concentrateReviewsRoutes from './routes/concentrate-reviews.js'
+import edibleReviewsRoutes from './routes/edible-reviews.js'
 import { requireAuth, optionalAuth, logAuthRequest } from './middleware/auth.js'
 
 // Import config
@@ -203,6 +206,9 @@ app.use('/images', express.static(path.join(__dirname, '../db/review_images')))
 // Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/reviews/flower', flowerReviewsRoutes) // IMPORTANT: Spécifique avant générique
+app.use('/api/reviews/hash', hashReviewsRoutes)
+app.use('/api/reviews/concentrate', concentrateReviewsRoutes)
+app.use('/api/reviews/edible', edibleReviewsRoutes)
 app.use('/api/reviews', reviewRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/templates', templatesRoutes)
