@@ -242,7 +242,7 @@ export default function CreateConcentrateReview() {
                             />
                         )}
                         {currentSection === 1 && (
-                            <ExtractionPipelineSection 
+                            <ExtractionPipelineSection
                                 data={formData.extraction || {}}
                                 onChange={(extractionData) => handleChange('extraction', extractionData)}
                             />

@@ -242,7 +242,7 @@ export default function CreateHashReview() {
                             />
                         )}
                         {currentSection === 1 && (
-                            <SeparationPipelineSection 
+                            <SeparationPipelineSection
                                 data={formData.separation || {}}
                                 onChange={(separationData) => handleChange('separation', separationData)}
                             />
