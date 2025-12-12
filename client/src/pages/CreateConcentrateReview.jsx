@@ -241,14 +241,18 @@ export default function CreateConcentrateReview() {
                             <PipelinePurification data={formData} onChange={handleChange} />
                         )}
                         {currentSection === 3 && (
-                            <VisualSection 
-                                productType="Concentré" 
-                                data={formData.visual || {}} 
-                                onChange={(visualData) => handleChange('visual', visualData)} 
+                            <VisualSection
+                                productType="Concentré"
+                                data={formData.visual || {}}
+                                onChange={(visualData) => handleChange('visual', visualData)}
                             />
                         )}
                         {currentSection === 4 && (
-                            <Odeurs data={formData} onChange={handleChange} />
+                            <OdorSection 
+                                productType="Concentré" 
+                                data={formData.odor || {}} 
+                                onChange={(odorData) => handleChange('odor', odorData)} 
+                            />
                         )}
                         {currentSection === 5 && (
                             <Texture data={formData} onChange={handleChange} />

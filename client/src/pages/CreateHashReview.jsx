@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import CuringMaturationTimeline from '../components/forms/flower/CuringMaturationTimeline'
 import ExperienceUtilisation from '../components/forms/flower/ExperienceUtilisation'
 import VisualSection from '../components/reviews/sections/VisualSection'
+import OdorSection from '../components/reviews/sections/OdorSection'
 
 /**
  * CreateHashReview - Interface pour créer/éditer une review de Hash
@@ -241,14 +242,18 @@ export default function CreateHashReview() {
                             <PipelinePurification data={formData} onChange={handleChange} />
                         )}
                         {currentSection === 3 && (
-                            <VisualSection 
-                                productType="Hash" 
-                                data={formData.visual || {}} 
-                                onChange={(visualData) => handleChange('visual', visualData)} 
+                            <VisualSection
+                                productType="Hash"
+                                data={formData.visual || {}}
+                                onChange={(visualData) => handleChange('visual', visualData)}
                             />
                         )}
                         {currentSection === 4 && (
-                            <Odeurs data={formData} onChange={handleChange} />
+                            <OdorSection 
+                                productType="Hash" 
+                                data={formData.odor || {}} 
+                                onChange={(odorData) => handleChange('odor', odorData)} 
+                            />
                         )}
                         {currentSection === 5 && (
                             <Texture data={formData} onChange={handleChange} />
