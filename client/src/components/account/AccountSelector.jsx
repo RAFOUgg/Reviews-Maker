@@ -30,14 +30,14 @@ const ACCOUNT_TIERS = [
         disabled: false
     },
     {
-        id: 'influencer_basic',
+        id: 'influencer_pro',
         label: 'Influenceur',
         icon: '⭐',
         description: 'Branding personnel et outils pour créateurs de contenu',
         features: ['Marque personnelle', 'Analytics avancés', 'Outils pro', 'Support prioritaire'],
-        badge: 'Bientôt',
+        badge: 'Disponible',
         badgeColor: 'bg-amber-500',
-        disabled: true
+        disabled: false
     },
     {
         id: 'producer',
@@ -45,7 +45,7 @@ const ACCOUNT_TIERS = [
         icon: '🏢',
         description: 'Compte professionnel pour producteurs et distributeurs',
         features: ['Gestion inventaire', 'Interactions B2B', 'Analytics avancés', 'Support dédié'],
-        badge: 'Premium',
+        badge: 'Bientôt',
         badgeColor: 'bg-rose-500',
         disabled: true
     }
@@ -71,6 +71,24 @@ export default function AccountSelector({ onAccountSelected, isOpen = true }) {
     const handleConfirm = async () => {
         setLoading(true)
         try {
+            // Envoyer au backend pour sauvegarder le type de compte
+            const response = await fetch('/api/account/change-type', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({ newType: selectedId })
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.message || 'Erreur lors du changement de type de compte')
+            }
+
+            const data = await response.json()
+            console.log('Type de compte changé:', data)
+
             localStorage.setItem('preferredAccountType', selectedId)
             localStorage.setItem('accountTypeSelected', 'true')
 
@@ -82,6 +100,7 @@ export default function AccountSelector({ onAccountSelected, isOpen = true }) {
             setTimeout(() => navigate('/'), 500)
         } catch (err) {
             console.error('Erreur sélection compte:', err)
+            alert(err.message || 'Une erreur est survenue. Veuillez réessayer.')
         } finally {
             setLoading(false)
         }
