@@ -10,7 +10,7 @@ import fs from 'fs/promises'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { authenticateUser } from '../middleware/auth.js'
-import prisma from '../lib/prisma.js'
+import { prisma } from '../server.js'
 
 const router = express.Router()
 const __filename = fileURLToPath(import.meta.url)
