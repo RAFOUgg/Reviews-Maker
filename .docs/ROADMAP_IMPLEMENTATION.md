@@ -23,7 +23,7 @@
 - ⚠️ **PipeLine** : Timeline visuelle existe mais manque:
   - Configuration trame (jours/semaines/phases)
   - Saisie données par case (style GitHub commits)
-  - Export GIF évolution culture
+  - Export GIF évolution culture : introduction dans export animé
 - ⚠️ **Export Maker** : Pas encore implémenté
 - ⚠️ **Généalogie** : OrchardPanel existe mais incomplet (drag&drop, relations parents/enfants)
 - ⚠️ **Bibliothèque** : Route `/api/library` existe mais interface incomplète

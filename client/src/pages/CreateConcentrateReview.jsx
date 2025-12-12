@@ -11,6 +11,8 @@ import VisualSection from '../components/reviews/sections/VisualSection'
 import OdorSection from '../components/reviews/sections/OdorSection'
 import TextureSection from '../components/reviews/sections/TextureSection'
 import TasteSection from '../components/reviews/sections/TasteSection'
+import EffectsSection from '../components/reviews/sections/EffectsSection'
+import AnalyticsSection from '../components/reviews/sections/AnalyticsSection'
 
 /**
  * CreateConcentrateReview - Interface pour créer/éditer une review de Concentré
@@ -37,6 +39,7 @@ export default function CreateConcentrateReview() {
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
         { id: 'extraction', icon: '🔬', title: 'Pipeline Extraction' },
         { id: 'purification', icon: '⚗️', title: 'Pipeline Purification' },
+        { id: 'analytics', icon: '🔬', title: 'Données Analytiques' },
         { id: 'visual', icon: '👁️', title: 'Visuel & Technique' },
         { id: 'odeurs', icon: '👃', title: 'Odeurs' },
         { id: 'texture', icon: '🤚', title: 'Texture' },
@@ -244,40 +247,51 @@ export default function CreateConcentrateReview() {
                             <PipelinePurification data={formData} onChange={handleChange} />
                         )}
                         {currentSection === 3 && (
+                            <AnalyticsSection 
+                                productType="Concentré" 
+                                data={formData.analytics || {}} 
+                                onChange={(analyticsData) => handleChange('analytics', analyticsData)} 
+                            />
+                        )}
+                        {currentSection === 4 && (
                             <VisualSection
                                 productType="Concentré"
                                 data={formData.visual || {}}
                                 onChange={(visualData) => handleChange('visual', visualData)}
                             />
                         )}
-                        {currentSection === 4 && (
+                        {currentSection === 5 && (
                             <OdorSection
                                 productType="Concentré"
                                 data={formData.odor || {}}
                                 onChange={(odorData) => handleChange('odor', odorData)}
                             />
                         )}
-                        {currentSection === 5 && (
-                            <TextureSection 
-                                productType="Concentré" 
-                                data={formData.texture || {}} 
-                                onChange={(textureData) => handleChange('texture', textureData)} 
-                            />
-                        )}
                         {currentSection === 6 && (
-                            <TasteSection 
-                                productType="Concentré" 
-                                data={formData.taste || {}} 
-                                onChange={(tasteData) => handleChange('taste', tasteData)} 
+                            <TextureSection
+                                productType="Concentré"
+                                data={formData.texture || {}}
+                                onChange={(textureData) => handleChange('texture', textureData)}
                             />
                         )}
                         {currentSection === 7 && (
-                            <Effets data={formData} onChange={handleChange} />
+                            <TasteSection
+                                productType="Concentré"
+                                data={formData.taste || {}}
+                                onChange={(tasteData) => handleChange('taste', tasteData)}
+                            />
                         )}
                         {currentSection === 8 && (
-                            <CuringMaturationTimeline data={formData} onChange={handleChange} />
+                            <EffectsSection
+                                productType="Concentré"
+                                data={formData.effects || {}}
+                                onChange={(effectsData) => handleChange('effects', effectsData)}
+                            />
                         )}
                         {currentSection === 9 && (
+                            <CuringMaturationTimeline data={formData} onChange={handleChange} />
+                        )}
+                        {currentSection === 10 && (
                             <ExperienceUtilisation data={formData} onChange={handleChange} />
                         )}
                     </motion.div>

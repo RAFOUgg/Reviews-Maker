@@ -11,6 +11,8 @@ import VisualSection from '../components/reviews/sections/VisualSection'
 import OdorSection from '../components/reviews/sections/OdorSection'
 import TextureSection from '../components/reviews/sections/TextureSection'
 import TasteSection from '../components/reviews/sections/TasteSection'
+import EffectsSection from '../components/reviews/sections/EffectsSection'
+import AnalyticsSection from '../components/reviews/sections/AnalyticsSection'
 
 /**
  * CreateHashReview - Interface pour créer/éditer une review de Hash
@@ -37,6 +39,7 @@ export default function CreateHashReview() {
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
         { id: 'separation', icon: '🔬', title: 'Pipeline Séparation' },
         { id: 'purification', icon: '⚗️', title: 'Pipeline Purification' },
+        { id: 'analytics', icon: '🔬', title: 'Données Analytiques' },
         { id: 'visual', icon: '👁️', title: 'Visuel & Technique' },
         { id: 'odeurs', icon: '👃', title: 'Odeurs' },
         { id: 'texture', icon: '🤚', title: 'Texture' },
@@ -244,40 +247,51 @@ export default function CreateHashReview() {
                             <PipelinePurification data={formData} onChange={handleChange} />
                         )}
                         {currentSection === 3 && (
+                            <AnalyticsSection 
+                                productType="Hash" 
+                                data={formData.analytics || {}} 
+                                onChange={(analyticsData) => handleChange('analytics', analyticsData)} 
+                            />
+                        )}
+                        {currentSection === 4 && (
                             <VisualSection
                                 productType="Hash"
                                 data={formData.visual || {}}
                                 onChange={(visualData) => handleChange('visual', visualData)}
                             />
                         )}
-                        {currentSection === 4 && (
+                        {currentSection === 5 && (
                             <OdorSection
                                 productType="Hash"
                                 data={formData.odor || {}}
                                 onChange={(odorData) => handleChange('odor', odorData)}
                             />
                         )}
-                        {currentSection === 5 && (
-                            <TextureSection 
-                                productType="Hash" 
-                                data={formData.texture || {}} 
-                                onChange={(textureData) => handleChange('texture', textureData)} 
-                            />
-                        )}
                         {currentSection === 6 && (
-                            <TasteSection 
-                                productType="Hash" 
-                                data={formData.taste || {}} 
-                                onChange={(tasteData) => handleChange('taste', tasteData)} 
+                            <TextureSection
+                                productType="Hash"
+                                data={formData.texture || {}}
+                                onChange={(textureData) => handleChange('texture', textureData)}
                             />
                         )}
                         {currentSection === 7 && (
-                            <Effets data={formData} onChange={handleChange} />
+                            <TasteSection
+                                productType="Hash"
+                                data={formData.taste || {}}
+                                onChange={(tasteData) => handleChange('taste', tasteData)}
+                            />
                         )}
                         {currentSection === 8 && (
-                            <CuringMaturationTimeline data={formData} onChange={handleChange} />
+                            <EffectsSection
+                                productType="Hash"
+                                data={formData.effects || {}}
+                                onChange={(effectsData) => handleChange('effects', effectsData)}
+                            />
                         )}
                         {currentSection === 9 && (
+                            <CuringMaturationTimeline data={formData} onChange={handleChange} />
+                        )}
+                        {currentSection === 10 && (
                             <ExperienceUtilisation data={formData} onChange={handleChange} />
                         )}
                     </motion.div>
