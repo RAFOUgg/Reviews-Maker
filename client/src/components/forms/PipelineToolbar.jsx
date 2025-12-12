@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Save, Download, Upload, CheckSquare, Square } from 'lucide-react'
-import { useToast } from '../../ToastContainer'
+import { useToast } from '../ToastContainer'
 
 /**
  * PipelineToolbar - Barre d'outils pour gérer les PipeLine
