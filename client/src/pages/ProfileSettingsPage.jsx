@@ -9,7 +9,7 @@ import { useStore } from '../store/useStore'
 import { useTranslation } from 'react-i18next'
 import { SUPPORTED_LANGUAGES, changeLanguage } from '../i18n/i18n'
 import KYCUploader from '../components/kyc/KYCUploader'
-import { 
+import {
     User, Shield, Settings, FileText, Bell, Palette, Globe,
     Camera, Mail, Lock, Smartphone, ArrowLeft, Save, X, Edit2,
     Building2, CreditCard, Award, TrendingUp
