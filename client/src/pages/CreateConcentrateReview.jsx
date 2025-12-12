@@ -13,6 +13,7 @@ import TextureSection from '../components/reviews/sections/TextureSection'
 import TasteSection from '../components/reviews/sections/TasteSection'
 import EffectsSection from '../components/reviews/sections/EffectsSection'
 import AnalyticsSection from '../components/reviews/sections/AnalyticsSection'
+import ExtractionPipelineSection from '../components/reviews/sections/ExtractionPipelineSection'
 
 /**
  * CreateConcentrateReview - Interface pour créer/éditer une review de Concentré
@@ -241,16 +242,19 @@ export default function CreateConcentrateReview() {
                             />
                         )}
                         {currentSection === 1 && (
-                            <PipelineExtraction data={formData} onChange={handleChange} />
+                            <ExtractionPipelineSection 
+                                data={formData.extraction || {}}
+                                onChange={(extractionData) => handleChange('extraction', extractionData)}
+                            />
                         )}
                         {currentSection === 2 && (
                             <PipelinePurification data={formData} onChange={handleChange} />
                         )}
                         {currentSection === 3 && (
-                            <AnalyticsSection 
-                                productType="Concentré" 
-                                data={formData.analytics || {}} 
-                                onChange={(analyticsData) => handleChange('analytics', analyticsData)} 
+                            <AnalyticsSection
+                                productType="Concentré"
+                                data={formData.analytics || {}}
+                                onChange={(analyticsData) => handleChange('analytics', analyticsData)}
                             />
                         )}
                         {currentSection === 4 && (
