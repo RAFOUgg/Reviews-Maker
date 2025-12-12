@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import TimelineGrid from '../../TimelineGrid'
+import PipelineToolbar from '../PipelineToolbar'
 import { CULTURE_VALUES } from '../../../data/formValues'
 
 /**
@@ -7,6 +8,12 @@ import { CULTURE_VALUES } from '../../../data/formValues'
  * Remplace l'ancien système de phases par une grille interactive type GitHub
  */
 export default function CulturePipelineTimeline({ data, onChange }) {
+    // État pour les presets
+    const [presets, setPresets] = useState(() => {
+        const saved = localStorage.getItem('culturePipelinePresets')
+        return saved ? JSON.parse(saved) : []
+    })
+
     // Configuration Timeline
     const timelineConfig = data.cultureTimelineConfig || {
         type: 'jour', // jour | semaine | phase
@@ -17,6 +24,11 @@ export default function CulturePipelineTimeline({ data, onChange }) {
 
     // Données de la timeline (array d'objets {timestamp, date, ...fields})
     const timelineData = data.cultureTimelineData || []
+
+    // Sauvegarder presets dans localStorage
+    useEffect(() => {
+        localStorage.setItem('culturePipelinePresets', JSON.stringify(presets))
+    }, [presets])
 
     // Champs de configuration générale (affichés dans la première cellule uniquement)
     const generalConfigFields = [
@@ -113,6 +125,41 @@ export default function CulturePipelineTimeline({ data, onChange }) {
         }
     }
 
+    // Handlers pour PipelineToolbar
+    const handleSavePreset = (preset) => {
+        setPresets([...presets, preset])
+    }
+
+    const handleLoadPreset = (preset) => {
+        // Appliquer les données du preset au data général
+        preset.fields.forEach(field => {
+            if (preset.data[field] !== undefined) {
+                onChange(field, preset.data[field])
+            }
+        })
+    }
+
+    const handleApplyToAll = (dataToApply) => {
+        // Appliquer à toutes les cases de la timeline
+        const newData = timelineData.map(cell => ({
+            ...cell,
+            ...dataToApply
+        }))
+        onChange('cultureTimelineData', newData)
+    }
+
+    const handleApplyToSelection = (dataToApply) => {
+        // Note: Nécessite implémentation mode sélection dans TimelineGrid
+        console.log('Mode sélection activé, cliquez sur les cases cibles', dataToApply)
+        // TODO: Stocker dataToApply et activer mode sélection
+    }
+
+    // Obtenir données de la case actuelle (première case ou dernière modifiée)
+    const getCurrentCellData = () => {
+        if (timelineData.length === 0) return {}
+        return timelineData[timelineData.length - 1] || {}
+    }
+
     return (
         <div className="space-y-8">
             {/* ===== TIMELINE VISUELLE AVEC CONFIGURATION INTÉGRÉE ===== */}
@@ -128,6 +175,16 @@ export default function CulturePipelineTimeline({ data, onChange }) {
                     <br />
                     📊 Cliquez sur les autres cases pour éditer les paramètres environnementaux à ce moment précis.
                 </p>
+
+                {/* Toolbar pour gérer presets et attribution masse */}
+                <PipelineToolbar
+                    currentCellData={getCurrentCellData()}
+                    onApplyToAll={handleApplyToAll}
+                    onApplyToSelection={handleApplyToSelection}
+                    onSavePreset={handleSavePreset}
+                    onLoadPreset={handleLoadPreset}
+                    presets={presets}
+                />
 
                 <TimelineGrid
                     data={timelineData}

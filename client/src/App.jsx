@@ -7,6 +7,9 @@ import HomePage from './pages/HomePage'
 import ReviewDetailPage from './pages/ReviewDetailPage'
 import CreateReviewPage from './pages/CreateReviewPage'
 import CreateFlowerReview from './pages/CreateFlowerReview'
+import CreateHashReview from './pages/CreateHashReview'
+import CreateConcentrateReview from './pages/CreateConcentrateReview'
+import CreateEdibleReview from './pages/CreateEdibleReview'
 import EditReviewPage from './pages/EditReviewPage'
 import LibraryPage from './pages/LibraryPage'
 import StatsPage from './pages/StatsPage'
@@ -162,6 +165,12 @@ function App() {
                                 {/* Routes spécifiques AVANT les routes génériques */}
                                 <Route path="/create/flower" element={<CreateFlowerReview />} />
                                 <Route path="/edit/flower/:id" element={<CreateFlowerReview />} />
+                                <Route path="/create/hash" element={<CreateHashReview />} />
+                                <Route path="/edit/hash/:id" element={<CreateHashReview />} />
+                                <Route path="/create/concentrate" element={<CreateConcentrateReview />} />
+                                <Route path="/edit/concentrate/:id" element={<CreateConcentrateReview />} />
+                                <Route path="/create/edible" element={<CreateEdibleReview />} />
+                                <Route path="/edit/edible/:id" element={<CreateEdibleReview />} />
                                 <Route path="/create/type/:productType" element={<CreateReviewPage />} />
                                 <Route path="/edit/:id" element={<EditReviewPage />} />
                                 <Route path="/library" element={<LibraryPage />} />

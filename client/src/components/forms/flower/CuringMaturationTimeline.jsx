@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import TimelineGrid from '../../TimelineGrid'
+import PipelineToolbar from '../PipelineToolbar'
 import { CURING_VALUES } from '../../../data/formValues'
 
 /**
@@ -7,6 +8,12 @@ import { CURING_VALUES } from '../../../data/formValues'
  * Ajout: type maturation, emballage primaire, opacité récipient, volume occupé
  */
 export default function CuringMaturationTimeline({ data, onChange }) {
+    // État pour les presets
+    const [presets, setPresets] = useState(() => {
+        const saved = localStorage.getItem('curingPipelinePresets')
+        return saved ? JSON.parse(saved) : []
+    })
+
     // Configuration Timeline pour curing (intervalles : jours, semaines, phases)
     const curingTimelineConfig = data.curingTimelineConfig || {
         type: 'jour', // jour | semaine | phase
@@ -16,6 +23,11 @@ export default function CuringMaturationTimeline({ data, onChange }) {
 
     // Données de la timeline curing
     const curingTimelineData = data.curingTimelineData || []
+
+    // Sauvegarder presets dans localStorage
+    useEffect(() => {
+        localStorage.setItem('curingPipelinePresets', JSON.stringify(presets))
+    }, [presets])
 
     // Champs de configuration générale (affichés dans la première cellule uniquement)
     const curingGeneralConfigFields = [
@@ -99,6 +111,36 @@ export default function CuringMaturationTimeline({ data, onChange }) {
         }
     }
 
+    // Handlers pour PipelineToolbar
+    const handleSavePreset = (preset) => {
+        setPresets([...presets, preset])
+    }
+
+    const handleLoadPreset = (preset) => {
+        preset.fields.forEach(field => {
+            if (preset.data[field] !== undefined) {
+                onChange(field, preset.data[field])
+            }
+        })
+    }
+
+    const handleApplyToAll = (dataToApply) => {
+        const newData = curingTimelineData.map(cell => ({
+            ...cell,
+            ...dataToApply
+        }))
+        onChange('curingTimelineData', newData)
+    }
+
+    const handleApplyToSelection = (dataToApply) => {
+        console.log('Mode sélection activé pour curing, cliquez sur les cases cibles', dataToApply)
+    }
+
+    const getCurrentCellData = () => {
+        if (curingTimelineData.length === 0) return {}
+        return curingTimelineData[curingTimelineData.length - 1] || {}
+    }
+
     return (
         <div className="space-y-8">
             {/* Timeline du curing avec configuration intégrée */}
@@ -114,6 +156,16 @@ export default function CuringMaturationTimeline({ data, onChange }) {
                     <br />
                     📊 Cliquez sur les autres cases pour documenter température, humidité, ballotage et observations à chaque étape.
                 </p>
+
+                {/* Toolbar pour gérer presets et attribution masse */}
+                <PipelineToolbar
+                    currentCellData={getCurrentCellData()}
+                    onApplyToAll={handleApplyToAll}
+                    onApplyToSelection={handleApplyToSelection}
+                    onSavePreset={handleSavePreset}
+                    onLoadPreset={handleLoadPreset}
+                    presets={presets}
+                />
 
                 <TimelineGrid
                     data={curingTimelineData}

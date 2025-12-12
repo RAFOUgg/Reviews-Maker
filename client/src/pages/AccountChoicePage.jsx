@@ -121,8 +121,8 @@ export default function AccountChoicePage() {
 
                                 {/* Carte principale */}
                                 <div className={`relative overflow-hidden rounded-3xl shadow-2xl transition-all duration-300 ${isSelected
-                                        ? 'ring-4 ring-white ring-offset-4 ring-offset-purple-600'
-                                        : 'hover:shadow-purple-900/50'
+                                    ? 'ring-4 ring-white ring-offset-4 ring-offset-purple-600'
+                                    : 'hover:shadow-purple-900/50'
                                     }`}>
                                     {/* Background gradient */}
                                     <div className={`absolute inset-0 bg-gradient-to-br ${accountType.gradient} opacity-90 group-hover:opacity-100 transition-opacity`}></div>
@@ -193,8 +193,8 @@ export default function AccountChoicePage() {
                                         {/* Bouton de sélection */}
                                         <div className="pt-4">
                                             <div className={`w-full py-4 rounded-xl font-bold text-center transition-all ${isSelected
-                                                    ? 'bg-white text-purple-700 shadow-lg'
-                                                    : 'bg-white/20 text-white hover:bg-white/30'
+                                                ? 'bg-white text-purple-700 shadow-lg'
+                                                : 'bg-white/20 text-white hover:bg-white/30'
                                                 }`}>
                                                 {isSelected ? '✓ Sélectionné' : 'Choisir ce plan'}
                                             </div>
