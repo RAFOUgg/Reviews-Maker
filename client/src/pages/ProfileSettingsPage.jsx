@@ -446,6 +446,11 @@ export default function ProfileSettingsPage() {
                                 <KYCUploader userId={profile?.id} accountType={profile?.accountType} />
                             )}
 
+                            <div className="bg-green-50 rounded-2xl p-6 border-2 border-green-200">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <Award className="w-6 h-6 text-green-700" />
+                                    <h3 className="text-lg font-bold text-gray-900">Vérification d'âge</h3>
+                                </div>
                                 <div className="space-y-2 text-gray-900">
                                     <p><strong>Statut :</strong> {profile?.legalAge ? '✅ Vérifié' : '❌ Non vérifié'}</p>
                                     <p><strong>Pays :</strong> {profile?.country || 'Non renseigné'}</p>
