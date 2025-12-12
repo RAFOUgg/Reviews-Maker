@@ -8,6 +8,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import CuringMaturationTimeline from '../components/forms/flower/CuringMaturationTimeline'
 import ExperienceUtilisation from '../components/forms/flower/ExperienceUtilisation'
 import VisualSection from '../components/reviews/sections/VisualSection'
+import OdorSection from '../components/reviews/sections/OdorSection'
+import TextureSection from '../components/reviews/sections/TextureSection'
 
 /**
  * CreateConcentrateReview - Interface pour créer/éditer une review de Concentré
@@ -248,14 +250,18 @@ export default function CreateConcentrateReview() {
                             />
                         )}
                         {currentSection === 4 && (
-                            <OdorSection 
-                                productType="Concentré" 
-                                data={formData.odor || {}} 
-                                onChange={(odorData) => handleChange('odor', odorData)} 
+                            <OdorSection
+                                productType="Concentré"
+                                data={formData.odor || {}}
+                                onChange={(odorData) => handleChange('odor', odorData)}
                             />
                         )}
                         {currentSection === 5 && (
-                            <Texture data={formData} onChange={handleChange} />
+                            <TextureSection 
+                                productType="Concentré" 
+                                data={formData.texture || {}} 
+                                onChange={(textureData) => handleChange('texture', textureData)} 
+                            />
                         )}
                         {currentSection === 6 && (
                             <Gouts data={formData} onChange={handleChange} />

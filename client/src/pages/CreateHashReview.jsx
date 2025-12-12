@@ -9,6 +9,7 @@ import CuringMaturationTimeline from '../components/forms/flower/CuringMaturatio
 import ExperienceUtilisation from '../components/forms/flower/ExperienceUtilisation'
 import VisualSection from '../components/reviews/sections/VisualSection'
 import OdorSection from '../components/reviews/sections/OdorSection'
+import TextureSection from '../components/reviews/sections/TextureSection'
 
 /**
  * CreateHashReview - Interface pour créer/éditer une review de Hash
@@ -249,14 +250,18 @@ export default function CreateHashReview() {
                             />
                         )}
                         {currentSection === 4 && (
-                            <OdorSection 
-                                productType="Hash" 
-                                data={formData.odor || {}} 
-                                onChange={(odorData) => handleChange('odor', odorData)} 
+                            <OdorSection
+                                productType="Hash"
+                                data={formData.odor || {}}
+                                onChange={(odorData) => handleChange('odor', odorData)}
                             />
                         )}
                         {currentSection === 5 && (
-                            <Texture data={formData} onChange={handleChange} />
+                            <TextureSection 
+                                productType="Hash" 
+                                data={formData.texture || {}} 
+                                onChange={(textureData) => handleChange('texture', textureData)} 
+                            />
                         )}
                         {currentSection === 6 && (
                             <Gouts data={formData} onChange={handleChange} />
