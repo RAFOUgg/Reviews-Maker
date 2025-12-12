@@ -13,6 +13,7 @@ import TextureSection from '../components/reviews/sections/TextureSection'
 import TasteSection from '../components/reviews/sections/TasteSection'
 import EffectsSection from '../components/reviews/sections/EffectsSection'
 import AnalyticsSection from '../components/reviews/sections/AnalyticsSection'
+import SeparationPipelineSection from '../components/reviews/sections/SeparationPipelineSection'
 
 /**
  * CreateHashReview - Interface pour créer/éditer une review de Hash
@@ -241,16 +242,19 @@ export default function CreateHashReview() {
                             />
                         )}
                         {currentSection === 1 && (
-                            <PipelineSeparation data={formData} onChange={handleChange} />
+                            <SeparationPipelineSection 
+                                data={formData.separation || {}}
+                                onChange={(separationData) => handleChange('separation', separationData)}
+                            />
                         )}
                         {currentSection === 2 && (
                             <PipelinePurification data={formData} onChange={handleChange} />
                         )}
                         {currentSection === 3 && (
-                            <AnalyticsSection 
-                                productType="Hash" 
-                                data={formData.analytics || {}} 
-                                onChange={(analyticsData) => handleChange('analytics', analyticsData)} 
+                            <AnalyticsSection
+                                productType="Hash"
+                                data={formData.analytics || {}}
+                                onChange={(analyticsData) => handleChange('analytics', analyticsData)}
                             />
                         )}
                         {currentSection === 4 && (
