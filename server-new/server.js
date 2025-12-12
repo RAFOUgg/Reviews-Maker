@@ -23,6 +23,9 @@ import flowerReviewsRoutes from './routes/flower-reviews.js'
 import hashReviewsRoutes from './routes/hash-reviews.js'
 import concentrateReviewsRoutes from './routes/concentrate-reviews.js'
 import edibleReviewsRoutes from './routes/edible-reviews.js'
+import libraryRoutes from './routes/library.js'
+import galleryRoutes from './routes/gallery.js'
+import statsRoutes from './routes/stats.js'
 import { requireAuth, optionalAuth, logAuthRequest } from './middleware/auth.js'
 
 // Import config
@@ -216,6 +219,9 @@ app.use('/api/legal', legalRoutes)
 app.use('/api/account', accountRoutes)
 app.use('/api/cultivars', cultivarsRoutes)
 app.use('/api/pipelines', pipelinesRoutes)
+app.use('/api/library', libraryRoutes)
+app.use('/api/gallery', galleryRoutes)
+app.use('/api/stats', statsRoutes)
 
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {

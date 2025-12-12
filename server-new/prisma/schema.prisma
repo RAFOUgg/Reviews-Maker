@@ -70,6 +70,12 @@ model User {
   producerProfile     ProducerProfile?
   reportsSubmitted    Report[] @relation("Reporter")
   reportsReceived     Report[] @relation("ReportedUser")
+  cultivars           Cultivar[]
+  savedTemplates      SavedTemplate[]
+  watermarks          Watermark[]
+  savedData           SavedData[]
+  stats               UserStats?
+  comments            ReviewComment[]
 
   @@index([email])
   @@index([discordId])
@@ -237,6 +243,8 @@ model Review {
   hashData    HashReview? // Données spécifiques Hash (1-to-1)
   concentrateData ConcentrateReview? // Données spécifiques Concentré (1-to-1)
   edibleData  EdibleReview? // Données spécifiques Comestible (1-to-1)
+  views       ReviewView[]
+  comments    ReviewComment[]
 
   @@index([authorId])
   @@index([type])
@@ -847,4 +855,221 @@ model EdibleReview {
   @@index([reviewId])
   @@index([nomProduit])
   @@map("edible_reviews")
+}
+
+// ====================
+// BIBLIOTHÈQUE PERSONNELLE
+// ====================
+
+// Templates sauvegardés par l'utilisateur
+model SavedTemplate {
+  id            String   @id @default(uuid())
+  userId        String   // Propriétaire
+  
+  // Informations du template
+  name          String   // Nom personnalisé
+  description   String?  // Description
+  templateType  String   // "compact", "detailed", "complete", "custom"
+  format        String   // "1:1", "16:9", "9:16", "A4"
+  
+  // Configuration (même structure que Template.config)
+  config        String   // JSON: { pages, theme, colors, fonts, zones }
+  
+  // Prévisualisation
+  thumbnail     String?  // URL de la miniature générée
+  
+  // Utilisation
+  useCount      Int      @default(0) // Nombre d'utilisations
+  lastUsedAt    DateTime?
+  
+  // Tags personnalisés
+  tags          String?  // JSON: ["portrait", "minimaliste", "pro"]
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([templateType])
+  @@index([format])
+  @@index([useCount])
+  @@map("saved_templates")
+}
+
+// Filigranes (watermarks) personnalisés
+model Watermark {
+  id            String   @id @default(uuid())
+  userId        String   // Propriétaire
+  
+  // Informations
+  name          String   // Nom du filigrane
+  description   String?
+  
+  // Type
+  type          String   // "text", "image", "logo"
+  
+  // Contenu
+  content       String?  // Texte du filigrane (si type=text)
+  imageUrl      String?  // URL de l'image (si type=image ou logo)
+  
+  // Style
+  style         String   // JSON: { font, size, color, opacity, position, rotation }
+  
+  // Statut
+  isDefault     Boolean  @default(false) // Filigrane par défaut
+  
+  // Utilisation
+  useCount      Int      @default(0)
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([type])
+  @@index([isDefault])
+  @@map("watermarks")
+}
+
+// Données sauvegardées pour réutilisation rapide
+model SavedData {
+  id            String   @id @default(uuid())
+  userId        String   // Propriétaire
+  
+  // Type de données
+  dataType      String   // "cultivar", "pipeline", "recipe", "effect_profile", "custom"
+  
+  // Informations
+  name          String   // Nom de la donnée sauvegardée
+  description   String?  // Description
+  
+  // Contenu
+  data          String   // JSON: données complètes
+  
+  // Catégorie
+  category      String?  // Pour organiser (ex: "mes_cultivars", "pipelines_culture", etc.)
+  
+  // Tags
+  tags          String?  // JSON: ["bio", "indoor", "pheno_hunt"]
+  
+  // Utilisation
+  useCount      Int      @default(0)
+  lastUsedAt    DateTime?
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([dataType])
+  @@index([category])
+  @@map("saved_data")
+}
+
+// ====================
+// STATISTIQUES UTILISATEUR
+// ====================
+
+// Statistiques globales utilisateur
+model UserStats {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  
+  // Statistiques reviews
+  totalReviews    Int      @default(0) // Total reviews créées
+  publicReviews   Int      @default(0) // Reviews publiques
+  privateReviews  Int      @default(0) // Reviews privées
+  
+  // Répartition par type
+  flowerReviews   Int      @default(0)
+  hashReviews     Int      @default(0)
+  concentrateReviews Int   @default(0)
+  edibleReviews   Int      @default(0)
+  
+  // Exports
+  totalExports    Int      @default(0) // Nombre d'exports réalisés
+  exportsPNG      Int      @default(0)
+  exportsJPEG     Int      @default(0)
+  exportsPDF      Int      @default(0)
+  exportsSVG      Int      @default(0)
+  exportsCSV      Int      @default(0)
+  exportsJSON     Int      @default(0)
+  exportsHTML     Int      @default(0)
+  
+  // Engagement (reviews publiques uniquement)
+  totalLikes      Int      @default(0) // Likes reçus
+  totalViews      Int      @default(0) // Vues
+  totalShares     Int      @default(0) // Partages
+  totalComments   Int      @default(0) // Commentaires
+  
+  // Activité
+  lastReviewDate  DateTime? // Date dernière review
+  lastExportDate  DateTime? // Date dernier export
+  
+  // Producteurs : statistiques cultures
+  totalCultures   Int?     @default(0) // Nombre de cultures
+  totalYield      Float?   // Rendement total (g)
+  avgYield        Float?   // Rendement moyen par culture
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("user_stats")
+}
+
+// Vues des reviews (tracking anonyme)
+model ReviewView {
+  id          String   @id @default(uuid())
+  reviewId    String
+  
+  // Optionnel: userId si connecté
+  userId      String?
+  
+  // Tracking
+  ipAddress   String?  // Hash de l'IP pour analytics
+  userAgent   String?
+  referer     String?  // D'où vient le visiteur
+  
+  // Géolocalisation (optionnel)
+  country     String?
+  region      String?
+  
+  // Timestamp
+  viewedAt    DateTime @default(now())
+  
+  @@index([reviewId])
+  @@index([userId])
+  @@index([viewedAt])
+  @@map("review_views")
+}
+
+// Commentaires sur les reviews publiques
+model ReviewComment {
+  id          String   @id @default(uuid())
+  reviewId    String
+  userId      String
+  
+  // Contenu
+  content     String   // Texte du commentaire (max 1000 caractères)
+  
+  // Modération
+  isEdited    Boolean  @default(false)
+  editedAt    DateTime?
+  isDeleted   Boolean  @default(false)
+  deletedAt   DateTime?
+  deleteReason String?
+  
+  // Relations
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  author      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([reviewId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("review_comments")
 }
