@@ -10,6 +10,7 @@ import ExperienceUtilisation from '../components/forms/flower/ExperienceUtilisat
 import VisualSection from '../components/reviews/sections/VisualSection'
 import OdorSection from '../components/reviews/sections/OdorSection'
 import TextureSection from '../components/reviews/sections/TextureSection'
+import TasteSection from '../components/reviews/sections/TasteSection'
 
 /**
  * CreateConcentrateReview - Interface pour créer/éditer une review de Concentré
@@ -264,7 +265,11 @@ export default function CreateConcentrateReview() {
                             />
                         )}
                         {currentSection === 6 && (
-                            <Gouts data={formData} onChange={handleChange} />
+                            <TasteSection 
+                                productType="Concentré" 
+                                data={formData.taste || {}} 
+                                onChange={(tasteData) => handleChange('taste', tasteData)} 
+                            />
                         )}
                         {currentSection === 7 && (
                             <Effets data={formData} onChange={handleChange} />
