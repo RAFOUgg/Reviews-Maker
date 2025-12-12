@@ -58,12 +58,12 @@ model User {
   defaultExportTemplate String?  // ID du template préféré
   
   // Abonnement & restrictions
-  subscriptionType    String?   @default(null)  // "influencer", "producer", null pour amateur
+  subscriptionType    String?  // "influencer", "producer", null pour amateur
   subscriptionStart   DateTime?
   subscriptionEnd     DateTime?
-  subscriptionStatus  String?   @default("inactive")  // "active", "cancelled", "expired", "inactive"
-  dailyExportsUsed    Int       @default(0)
-  dailyExportsReset   DateTime  @default(now())
+  subscriptionStatus  String   @default("inactive")  // "active", "cancelled", "expired", "inactive"
+  dailyExportsUsed    Int      @default(0)
+  dailyExportsReset   DateTime @default(now())
   
   // Timestamps
   createdAt     DateTime @default(now())

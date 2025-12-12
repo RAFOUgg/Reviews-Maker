@@ -6,11 +6,11 @@
 ALTER TABLE users ADD COLUMN subscriptionType TEXT DEFAULT NULL;
 ALTER TABLE users ADD COLUMN subscriptionStart TEXT DEFAULT NULL;
 ALTER TABLE users ADD COLUMN subscriptionEnd TEXT DEFAULT NULL;
-ALTER TABLE users ADD COLUMN subscriptionStatus TEXT DEFAULT 'inactive';
+ALTER TABLE users ADD COLUMN subscriptionStatus TEXT DEFAULT 'inactive' NOT NULL;
 
 -- Étape 2: Ajouter colonnes limites quotidiennes
-ALTER TABLE users ADD COLUMN dailyExportsUsed INTEGER DEFAULT 0;
-ALTER TABLE users ADD COLUMN dailyExportsReset TEXT DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE users ADD COLUMN dailyExportsUsed INTEGER DEFAULT 0 NOT NULL;
+ALTER TABLE users ADD COLUMN dailyExportsReset TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL;
 
 -- Étape 3: Créer index pour performances
 CREATE INDEX IF NOT EXISTS idx_users_subscription ON users(subscriptionType, subscriptionStatus);
