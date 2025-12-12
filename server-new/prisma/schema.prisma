@@ -494,6 +494,7 @@ model AuditLog {
 model Cultivar {
   id          String   @id @default(uuid())
   userId      String   // Propriétaire du cultivar
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Informations cultivar
   name        String   // Nom du cultivar (ex: "Gorilla Glue #4")
@@ -865,6 +866,7 @@ model EdibleReview {
 model SavedTemplate {
   id            String   @id @default(uuid())
   userId        String   // Propriétaire
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Informations du template
   name          String   // Nom personnalisé
@@ -900,6 +902,7 @@ model SavedTemplate {
 model Watermark {
   id            String   @id @default(uuid())
   userId        String   // Propriétaire
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Informations
   name          String   // Nom du filigrane
@@ -935,6 +938,7 @@ model Watermark {
 model SavedData {
   id            String   @id @default(uuid())
   userId        String   // Propriétaire
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Type de données
   dataType      String   // "cultivar", "pipeline", "recipe", "effect_profile", "custom"
@@ -974,6 +978,7 @@ model SavedData {
 model UserStats {
   id              String   @id @default(uuid())
   userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Statistiques reviews
   totalReviews    Int      @default(0) // Total reviews créées
@@ -1022,6 +1027,7 @@ model UserStats {
 model ReviewView {
   id          String   @id @default(uuid())
   reviewId    String
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
   
   // Optionnel: userId si connecté
   userId      String?
