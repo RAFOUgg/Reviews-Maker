@@ -478,124 +478,124 @@ export default function ProfileSettingsPage() {
                         </div>
                     )}
 
-                {/* SECURITY TAB */}
-                {activeTab === 'security' && (
-                    <div className="space-y-6">
-                        <h2 className="text-2xl font-black text-gray-900 mb-6">Sécurité & Authentification</h2>
+                    {/* SECURITY TAB */}
+                    {activeTab === 'security' && (
+                        <div className="space-y-6">
+                            <h2 className="text-2xl font-black text-gray-900 mb-6">Sécurité & Authentification</h2>
 
-                        <div className="bg-red-50 rounded-2xl p-6 border-2 border-red-200">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <Lock className="w-5 h-5 text-red-700" />
-                                Mot de passe
-                            </h3>
-                            <button className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold">
-                                Changer le mot de passe
-                            </button>
-                        </div>
+                            <div className="bg-red-50 rounded-2xl p-6 border-2 border-red-200">
+                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <Lock className="w-5 h-5 text-red-700" />
+                                    Mot de passe
+                                </h3>
+                                <button className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold">
+                                    Changer le mot de passe
+                                </button>
+                            </div>
 
-                        <div className="bg-blue-50 rounded-2xl p-6 border-2 border-blue-200">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <Smartphone className="w-5 h-5 text-blue-700" />
-                                Authentification à deux facteurs (2FA)
-                            </h3>
-                            <p className="text-gray-700 mb-4">Statut : {profile?.totpEnabled ? '✅ Activée' : '❌ Désactivée'}</p>
-                            <button className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-bold">
-                                {profile?.totpEnabled ? 'Désactiver 2FA' : 'Activer 2FA'}
-                            </button>
-                        </div>
+                            <div className="bg-blue-50 rounded-2xl p-6 border-2 border-blue-200">
+                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <Smartphone className="w-5 h-5 text-blue-700" />
+                                    Authentification à deux facteurs (2FA)
+                                </h3>
+                                <p className="text-gray-700 mb-4">Statut : {profile?.totpEnabled ? '✅ Activée' : '❌ Désactivée'}</p>
+                                <button className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-bold">
+                                    {profile?.totpEnabled ? 'Désactiver 2FA' : 'Activer 2FA'}
+                                </button>
+                            </div>
 
-                        <div className="bg-purple-50 rounded-2xl p-6 border-2 border-purple-200">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4">Sessions Actives</h3>
-                            <p className="text-gray-700 mb-4">Gérez les appareils connectés à votre compte</p>
-                            <button className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all font-bold">
-                                Voir les sessions
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* PREFERENCES TAB */}
-                {activeTab === 'preferences' && (
-                    <div className="space-y-6">
-                        <h2 className="text-2xl font-black text-gray-900 mb-6">Préférences & Apparence</h2>
-
-                        {/* Theme Selection */}
-                        <div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <Palette className="w-5 h-5 text-purple-700" />
-                                Thème de l'application
-                            </h3>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                {themeOptions.map((option) => (
-                                    <button
-                                        key={option.value}
-                                        onClick={() => setTheme(option.value)}
-                                        className={`relative p-4 rounded-xl border-3 transition-all ${theme === option.value
-                                            ? 'border-purple-600 shadow-lg scale-105'
-                                            : 'border-gray-300 hover:border-purple-400'
-                                            }`}
-                                    >
-                                        <div className={`h-16 rounded-lg bg-gradient-to-br ${option.gradient} mb-3`}></div>
-                                        <div className="text-sm font-bold text-gray-900">{option.label}</div>
-                                        {theme === option.value && (
-                                            <div className="absolute top-2 right-2 bg-purple-600 text-white rounded-full p-1">
-                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
-                                                </svg>
-                                            </div>
-                                        )}
-                                    </button>
-                                ))}
+                            <div className="bg-purple-50 rounded-2xl p-6 border-2 border-purple-200">
+                                <h3 className="text-lg font-bold text-gray-900 mb-4">Sessions Actives</h3>
+                                <p className="text-gray-700 mb-4">Gérez les appareils connectés à votre compte</p>
+                                <button className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all font-bold">
+                                    Voir les sessions
+                                </button>
                             </div>
                         </div>
+                    )}
 
-                        {/* Language */}
-                        <div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <Globe className="w-5 h-5 text-purple-700" />
-                                Langue
-                            </h3>
-                            <select
-                                value={language}
-                                onChange={(e) => {
-                                    setLanguage(e.target.value)
-                                    changeLanguage(e.target.value)
-                                }}
-                                className="w-full md:w-1/2 px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 transition-all text-gray-900 font-medium"
-                            >
-                                {SUPPORTED_LANGUAGES.map((lang) => (
-                                    <option key={lang.code} value={lang.code}>
-                                        {lang.flag} {lang.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                    {/* PREFERENCES TAB */}
+                    {activeTab === 'preferences' && (
+                        <div className="space-y-6">
+                            <h2 className="text-2xl font-black text-gray-900 mb-6">Préférences & Apparence</h2>
 
-                        {/* Notifications */}
-                        <div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <Bell className="w-5 h-5 text-purple-700" />
-                                Notifications
-                            </h3>
-                            <div className="space-y-3">
-                                <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all cursor-pointer">
-                                    <span className="text-gray-900 font-medium">Notifications par email</span>
-                                    <input type="checkbox" className="w-6 h-6 text-purple-600" defaultChecked />
-                                </label>
-                                <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all cursor-pointer">
-                                    <span className="text-gray-900 font-medium">Nouveaux likes sur mes reviews</span>
-                                    <input type="checkbox" className="w-6 h-6 text-purple-600" defaultChecked />
-                                </label>
-                                <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all cursor-pointer">
-                                    <span className="text-gray-900 font-medium">Nouveaux commentaires</span>
-                                    <input type="checkbox" className="w-6 h-6 text-purple-600" />
-                                </label>
+                            {/* Theme Selection */}
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <Palette className="w-5 h-5 text-purple-700" />
+                                    Thème de l'application
+                                </h3>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    {themeOptions.map((option) => (
+                                        <button
+                                            key={option.value}
+                                            onClick={() => setTheme(option.value)}
+                                            className={`relative p-4 rounded-xl border-3 transition-all ${theme === option.value
+                                                ? 'border-purple-600 shadow-lg scale-105'
+                                                : 'border-gray-300 hover:border-purple-400'
+                                                }`}
+                                        >
+                                            <div className={`h-16 rounded-lg bg-gradient-to-br ${option.gradient} mb-3`}></div>
+                                            <div className="text-sm font-bold text-gray-900">{option.label}</div>
+                                            {theme === option.value && (
+                                                <div className="absolute top-2 right-2 bg-purple-600 text-white rounded-full p-1">
+                                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
+                                                    </svg>
+                                                </div>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Language */}
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <Globe className="w-5 h-5 text-purple-700" />
+                                    Langue
+                                </h3>
+                                <select
+                                    value={language}
+                                    onChange={(e) => {
+                                        setLanguage(e.target.value)
+                                        changeLanguage(e.target.value)
+                                    }}
+                                    className="w-full md:w-1/2 px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 transition-all text-gray-900 font-medium"
+                                >
+                                    {SUPPORTED_LANGUAGES.map((lang) => (
+                                        <option key={lang.code} value={lang.code}>
+                                            {lang.flag} {lang.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Notifications */}
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                    <Bell className="w-5 h-5 text-purple-700" />
+                                    Notifications
+                                </h3>
+                                <div className="space-y-3">
+                                    <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all cursor-pointer">
+                                        <span className="text-gray-900 font-medium">Notifications par email</span>
+                                        <input type="checkbox" className="w-6 h-6 text-purple-600" defaultChecked />
+                                    </label>
+                                    <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all cursor-pointer">
+                                        <span className="text-gray-900 font-medium">Nouveaux likes sur mes reviews</span>
+                                        <input type="checkbox" className="w-6 h-6 text-purple-600" defaultChecked />
+                                    </label>
+                                    <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all cursor-pointer">
+                                        <span className="text-gray-900 font-medium">Nouveaux commentaires</span>
+                                        <input type="checkbox" className="w-6 h-6 text-purple-600" />
+                                    </label>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
-        </div>
         </div >
     )
 }
