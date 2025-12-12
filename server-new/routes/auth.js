@@ -4,6 +4,7 @@ import { asyncHandler, Errors } from '../utils/errorHandler.js'
 import { prisma } from '../server.js'
 import { ACCOUNT_TYPES, getUserAccountType } from '../services/account.js'
 import { hashPassword, verifyPassword } from '../services/password.js'
+import { getUserLimits } from '../middleware/permissions.js'
 
 const router = express.Router()
 
@@ -239,7 +240,85 @@ router.get('/me', asyncHandler(async (req, res) => {
         throw Errors.UNAUTHORIZED()
     }
 
-    res.json(sanitizeUser(req.user))
+    const sanitized = sanitizeUser(req.user)
+    
+    // Ajouter limites & features selon type de compte
+    const limits = getUserLimits(req.user)
+    
+    res.json({
+        ...sanitized,
+        limits: {
+            accountType: limits.accountType,
+            daily: limits.limits.daily,
+            templates: limits.limits.templates,
+            watermarks: limits.limits.watermarks,
+            reviews: limits.limits.reviews,
+            savedData: limits.limits.savedData,
+            dpi: limits.dpi,
+            formats: limits.formats,
+            features: limits.features
+        }
+    })
+}))
+
+// GET /api/auth/limits - Récupérer limites utilisateur
+router.get('/limits', asyncHandler(async (req, res) => {
+    if (typeof req.isAuthenticated !== 'function' || !req.isAuthenticated()) {
+        throw Errors.UNAUTHORIZED()
+    }
+
+    const limits = getUserLimits(req.user)
+    
+    // Récupérer compteurs actuels depuis DB
+    const [templateCount, watermarkCount, reviewCount, dataCount] = await Promise.all([
+        prisma.savedTemplate.count({ where: { userId: req.user.id } }),
+        prisma.watermark.count({ where: { userId: req.user.id } }),
+        prisma.review.count({ where: { authorId: req.user.id } }),
+        prisma.savedData.count({ where: { userId: req.user.id } })
+    ])
+    
+    res.json({
+        accountType: limits.accountType,
+        limits: {
+            dailyExports: {
+                limit: limits.limits.daily,
+                used: req.user.dailyExportsUsed || 0,
+                remaining: limits.limits.daily === -1 ? -1 : Math.max(0, limits.limits.daily - (req.user.dailyExportsUsed || 0)),
+                resetTime: req.user.dailyExportsReset
+            },
+            templates: {
+                limit: limits.limits.templates,
+                used: templateCount,
+                remaining: limits.limits.templates === -1 ? -1 : Math.max(0, limits.limits.templates - templateCount)
+            },
+            watermarks: {
+                limit: limits.limits.watermarks,
+                used: watermarkCount,
+                remaining: limits.limits.watermarks === -1 ? -1 : Math.max(0, limits.limits.watermarks - watermarkCount)
+            },
+            reviews: {
+                limit: limits.limits.reviews,
+                used: reviewCount,
+                remaining: limits.limits.reviews === -1 ? -1 : Math.max(0, limits.limits.reviews - reviewCount)
+            },
+            savedData: {
+                limit: limits.limits.savedData,
+                used: dataCount,
+                remaining: limits.limits.savedData === -1 ? -1 : Math.max(0, limits.limits.savedData - dataCount)
+            }
+        },
+        export: {
+            dpi: limits.dpi,
+            formats: limits.formats
+        },
+        features: limits.features,
+        subscription: {
+            type: req.user.subscriptionType,
+            status: req.user.subscriptionStatus,
+            start: req.user.subscriptionStart,
+            end: req.user.subscriptionEnd
+        }
+    })
 }))
 
 // POST /api/auth/logout - Déconnexion
