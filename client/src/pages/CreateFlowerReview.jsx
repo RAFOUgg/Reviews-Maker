@@ -9,6 +9,13 @@ import { AnimatePresence, motion } from 'framer-motion'
 import CulturePipelineTimeline from '../components/forms/flower/CulturePipelineTimeline'
 import ExperienceUtilisation from '../components/forms/flower/ExperienceUtilisation'
 import CuringMaturationTimeline from '../components/forms/flower/CuringMaturationTimeline'
+import VisualSection from '../components/reviews/sections/VisualSection'
+import OdorSection from '../components/reviews/sections/OdorSection'
+import TextureSection from '../components/reviews/sections/TextureSection'
+import TasteSection from '../components/reviews/sections/TasteSection'
+import EffectsSection from '../components/reviews/sections/EffectsSection'
+import AnalyticsSection from '../components/reviews/sections/AnalyticsSection'
+import CulturePipelineSection from '../components/reviews/sections/CulturePipelineSection'
 
 /**
  * CreateFlowerReview - Interface complète pour créer/éditer une review de Fleur
@@ -247,25 +254,52 @@ export default function CreateFlowerReview() {
                             <Genetiques data={formData} onChange={handleChange} />
                         )}
                         {currentSection === 2 && (
-                            <CulturePipelineTimeline data={formData} onChange={handleChange} />
+                            <CulturePipelineSection
+                                data={formData.culture || {}}
+                                onChange={(cultureData) => handleChange('culture', cultureData)}
+                            />
                         )}
                         {currentSection === 3 && (
-                            <AnalytiquesPDF data={formData} onChange={handleChange} />
+                            <AnalyticsSection
+                                productType="Fleurs"
+                                data={formData.analytics || {}}
+                                onChange={(analyticsData) => handleChange('analytics', analyticsData)}
+                            />
                         )}
                         {currentSection === 4 && (
-                            <VisuelTechnique data={formData} onChange={handleChange} />
+                            <VisualSection
+                                productType="Fleurs"
+                                data={formData.visual || {}}
+                                onChange={(visualData) => handleChange('visual', visualData)}
+                            />
                         )}
                         {currentSection === 5 && (
-                            <Odeurs data={formData} onChange={handleChange} />
+                            <OdorSection
+                                productType="Fleurs"
+                                data={formData.odor || {}}
+                                onChange={(odorData) => handleChange('odor', odorData)}
+                            />
                         )}
                         {currentSection === 6 && (
-                            <Texture data={formData} onChange={handleChange} />
+                            <TextureSection
+                                productType="Fleurs"
+                                data={formData.texture || {}}
+                                onChange={(textureData) => handleChange('texture', textureData)}
+                            />
                         )}
                         {currentSection === 7 && (
-                            <Gouts data={formData} onChange={handleChange} />
+                            <TasteSection
+                                productType="Fleurs"
+                                data={formData.taste || {}}
+                                onChange={(tasteData) => handleChange('taste', tasteData)}
+                            />
                         )}
                         {currentSection === 8 && (
-                            <Effets data={formData} onChange={handleChange} />
+                            <EffectsSection
+                                productType="Fleurs"
+                                data={formData.effects || {}}
+                                onChange={(effectsData) => handleChange('effects', effectsData)}
+                            />
                         )}
                         {currentSection === 9 && (
                             <CuringMaturationTimeline data={formData} onChange={handleChange} />
