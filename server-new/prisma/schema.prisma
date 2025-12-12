@@ -65,6 +65,12 @@ model User {
   dailyExportsUsed    Int      @default(0)
   dailyExportsReset   DateTime @default(now())
   
+  // eKYC (vérification identité pour Producer/Influencer)
+  kycStatus           String?  // "none", "pending", "verified", "rejected"
+  kycDocuments        String?  // JSON array des documents uploadés
+  kycVerifiedAt       DateTime?
+  kycRejectionReason  String?
+  
   // Timestamps
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

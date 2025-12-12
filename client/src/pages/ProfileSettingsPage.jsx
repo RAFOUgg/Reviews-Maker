@@ -8,8 +8,8 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import { useTranslation } from 'react-i18next'
 import { SUPPORTED_LANGUAGES, changeLanguage } from '../i18n/i18n'
-import { 
-    User, Shield, Settings, FileText, Bell, Palette, Globe, 
+import KYCUploader from '../components/kyc/KYCUploader'
+User, Shield, Settings, FileText, Bell, Palette, Globe,
     Camera, Mail, Lock, Smartphone, ArrowLeft, Save, X, Edit2,
     Building2, CreditCard, Award, TrendingUp
 } from 'lucide-react'
@@ -24,7 +24,7 @@ export default function ProfileSettingsPage() {
     const [saving, setSaving] = useState(false)
     const [profile, setProfile] = useState(null)
     const [editing, setEditing] = useState(false)
-    
+
     // Form states
     const [formData, setFormData] = useState({
         username: '',
@@ -110,7 +110,7 @@ export default function ProfileSettingsPage() {
         const applyTheme = (t) => {
             root.removeAttribute('data-theme')
             root.classList.remove('dark')
-            
+
             switch (t) {
                 case 'dark':
                     root.setAttribute('data-theme', 'dark')
@@ -129,7 +129,7 @@ export default function ProfileSettingsPage() {
                     root.setAttribute('data-theme', t)
             }
         }
-        
+
         applyTheme(theme)
         localStorage.setItem('theme', theme)
     }, [theme])
@@ -211,7 +211,7 @@ export default function ProfileSettingsPage() {
                                 </span>
                             </div>
                             <p className="text-gray-700 text-lg mb-4">{profile?.email}</p>
-                            
+
                             {/* Stats Row */}
                             <div className="flex gap-6 flex-wrap">
                                 <div className="text-center">
@@ -272,11 +272,10 @@ export default function ProfileSettingsPage() {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold whitespace-nowrap transition-all ${
-                                        isActive
-                                            ? 'bg-gradient-to-r from-purple-600 to-violet-700 text-white shadow-lg'
-                                            : 'text-gray-700 hover:bg-white/50'
-                                    }`}
+                                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold whitespace-nowrap transition-all ${isActive
+                                        ? 'bg-gradient-to-r from-purple-600 to-violet-700 text-white shadow-lg'
+                                        : 'text-gray-700 hover:bg-white/50'
+                                        }`}
                                 >
                                     <Icon className="w-5 h-5" />
                                     {tab.label}
@@ -364,8 +363,8 @@ export default function ProfileSettingsPage() {
                                         <input
                                             type="text"
                                             value={formData.socialLinks?.instagram || ''}
-                                            onChange={(e) => setFormData({ 
-                                                ...formData, 
+                                            onChange={(e) => setFormData({
+                                                ...formData,
                                                 socialLinks: { ...formData.socialLinks, instagram: e.target.value }
                                             })}
                                             disabled={!editing}
@@ -375,8 +374,8 @@ export default function ProfileSettingsPage() {
                                         <input
                                             type="text"
                                             value={formData.socialLinks?.tiktok || ''}
-                                            onChange={(e) => setFormData({ 
-                                                ...formData, 
+                                            onChange={(e) => setFormData({
+                                                ...formData,
                                                 socialLinks: { ...formData.socialLinks, tiktok: e.target.value }
                                             })}
                                             disabled={!editing}
@@ -386,8 +385,8 @@ export default function ProfileSettingsPage() {
                                         <input
                                             type="text"
                                             value={formData.socialLinks?.youtube || ''}
-                                            onChange={(e) => setFormData({ 
-                                                ...formData, 
+                                            onChange={(e) => setFormData({
+                                                ...formData,
                                                 socialLinks: { ...formData.socialLinks, youtube: e.target.value }
                                             })}
                                             disabled={!editing}
@@ -440,12 +439,12 @@ export default function ProfileSettingsPage() {
                     {activeTab === 'legal' && (
                         <div className="space-y-6">
                             <h2 className="text-2xl font-black text-gray-900 mb-6">Informations Légales</h2>
-                            
-                            <div className="bg-green-50 rounded-2xl p-6 border-2 border-green-200">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <Award className="w-6 h-6 text-green-700" />
-                                    <h3 className="text-lg font-bold text-gray-900">Vérification d'âge</h3>
-                                </div>
+
+                            {/* eKYC Component */}
+                            {(profile?.accountType === 'producer' || profile?.accountType === 'influencer') && (
+                                <KYCUploader userId={profile?.id} accountType={profile?.accountType} />
+                            )}
+
                                 <div className="space-y-2 text-gray-900">
                                     <p><strong>Statut :</strong> {profile?.legalAge ? '✅ Vérifié' : '❌ Non vérifié'}</p>
                                     <p><strong>Pays :</strong> {profile?.country || 'Non renseigné'}</p>
@@ -473,125 +472,124 @@ export default function ProfileSettingsPage() {
                         </div>
                     )}
 
-                    {/* SECURITY TAB */}
-                    {activeTab === 'security' && (
-                        <div className="space-y-6">
-                            <h2 className="text-2xl font-black text-gray-900 mb-6">Sécurité & Authentification</h2>
+                {/* SECURITY TAB */}
+                {activeTab === 'security' && (
+                    <div className="space-y-6">
+                        <h2 className="text-2xl font-black text-gray-900 mb-6">Sécurité & Authentification</h2>
 
-                            <div className="bg-red-50 rounded-2xl p-6 border-2 border-red-200">
-                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Lock className="w-5 h-5 text-red-700" />
-                                    Mot de passe
-                                </h3>
-                                <button className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold">
-                                    Changer le mot de passe
-                                </button>
-                            </div>
-
-                            <div className="bg-blue-50 rounded-2xl p-6 border-2 border-blue-200">
-                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Smartphone className="w-5 h-5 text-blue-700" />
-                                    Authentification à deux facteurs (2FA)
-                                </h3>
-                                <p className="text-gray-700 mb-4">Statut : {profile?.totpEnabled ? '✅ Activée' : '❌ Désactivée'}</p>
-                                <button className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-bold">
-                                    {profile?.totpEnabled ? 'Désactiver 2FA' : 'Activer 2FA'}
-                                </button>
-                            </div>
-
-                            <div className="bg-purple-50 rounded-2xl p-6 border-2 border-purple-200">
-                                <h3 className="text-lg font-bold text-gray-900 mb-4">Sessions Actives</h3>
-                                <p className="text-gray-700 mb-4">Gérez les appareils connectés à votre compte</p>
-                                <button className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all font-bold">
-                                    Voir les sessions
-                                </button>
-                            </div>
+                        <div className="bg-red-50 rounded-2xl p-6 border-2 border-red-200">
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <Lock className="w-5 h-5 text-red-700" />
+                                Mot de passe
+                            </h3>
+                            <button className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold">
+                                Changer le mot de passe
+                            </button>
                         </div>
-                    )}
 
-                    {/* PREFERENCES TAB */}
-                    {activeTab === 'preferences' && (
-                        <div className="space-y-6">
-                            <h2 className="text-2xl font-black text-gray-900 mb-6">Préférences & Apparence</h2>
+                        <div className="bg-blue-50 rounded-2xl p-6 border-2 border-blue-200">
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <Smartphone className="w-5 h-5 text-blue-700" />
+                                Authentification à deux facteurs (2FA)
+                            </h3>
+                            <p className="text-gray-700 mb-4">Statut : {profile?.totpEnabled ? '✅ Activée' : '❌ Désactivée'}</p>
+                            <button className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-bold">
+                                {profile?.totpEnabled ? 'Désactiver 2FA' : 'Activer 2FA'}
+                            </button>
+                        </div>
 
-                            {/* Theme Selection */}
-                            <div>
-                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Palette className="w-5 h-5 text-purple-700" />
-                                    Thème de l'application
-                                </h3>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                    {themeOptions.map((option) => (
-                                        <button
-                                            key={option.value}
-                                            onClick={() => setTheme(option.value)}
-                                            className={`relative p-4 rounded-xl border-3 transition-all ${
-                                                theme === option.value
-                                                    ? 'border-purple-600 shadow-lg scale-105'
-                                                    : 'border-gray-300 hover:border-purple-400'
+                        <div className="bg-purple-50 rounded-2xl p-6 border-2 border-purple-200">
+                            <h3 className="text-lg font-bold text-gray-900 mb-4">Sessions Actives</h3>
+                            <p className="text-gray-700 mb-4">Gérez les appareils connectés à votre compte</p>
+                            <button className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all font-bold">
+                                Voir les sessions
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* PREFERENCES TAB */}
+                {activeTab === 'preferences' && (
+                    <div className="space-y-6">
+                        <h2 className="text-2xl font-black text-gray-900 mb-6">Préférences & Apparence</h2>
+
+                        {/* Theme Selection */}
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <Palette className="w-5 h-5 text-purple-700" />
+                                Thème de l'application
+                            </h3>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                {themeOptions.map((option) => (
+                                    <button
+                                        key={option.value}
+                                        onClick={() => setTheme(option.value)}
+                                        className={`relative p-4 rounded-xl border-3 transition-all ${theme === option.value
+                                            ? 'border-purple-600 shadow-lg scale-105'
+                                            : 'border-gray-300 hover:border-purple-400'
                                             }`}
-                                        >
-                                            <div className={`h-16 rounded-lg bg-gradient-to-br ${option.gradient} mb-3`}></div>
-                                            <div className="text-sm font-bold text-gray-900">{option.label}</div>
-                                            {theme === option.value && (
-                                                <div className="absolute top-2 right-2 bg-purple-600 text-white rounded-full p-1">
-                                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
-                                                    </svg>
-                                                </div>
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Language */}
-                            <div>
-                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Globe className="w-5 h-5 text-purple-700" />
-                                    Langue
-                                </h3>
-                                <select
-                                    value={language}
-                                    onChange={(e) => {
-                                        setLanguage(e.target.value)
-                                        changeLanguage(e.target.value)
-                                    }}
-                                    className="w-full md:w-1/2 px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 transition-all text-gray-900 font-medium"
-                                >
-                                    {SUPPORTED_LANGUAGES.map((lang) => (
-                                        <option key={lang.code} value={lang.code}>
-                                            {lang.flag} {lang.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* Notifications */}
-                            <div>
-                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Bell className="w-5 h-5 text-purple-700" />
-                                    Notifications
-                                </h3>
-                                <div className="space-y-3">
-                                    <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all cursor-pointer">
-                                        <span className="text-gray-900 font-medium">Notifications par email</span>
-                                        <input type="checkbox" className="w-6 h-6 text-purple-600" defaultChecked />
-                                    </label>
-                                    <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all cursor-pointer">
-                                        <span className="text-gray-900 font-medium">Nouveaux likes sur mes reviews</span>
-                                        <input type="checkbox" className="w-6 h-6 text-purple-600" defaultChecked />
-                                    </label>
-                                    <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all cursor-pointer">
-                                        <span className="text-gray-900 font-medium">Nouveaux commentaires</span>
-                                        <input type="checkbox" className="w-6 h-6 text-purple-600" />
-                                    </label>
-                                </div>
+                                    >
+                                        <div className={`h-16 rounded-lg bg-gradient-to-br ${option.gradient} mb-3`}></div>
+                                        <div className="text-sm font-bold text-gray-900">{option.label}</div>
+                                        {theme === option.value && (
+                                            <div className="absolute top-2 right-2 bg-purple-600 text-white rounded-full p-1">
+                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
+                                                </svg>
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
                             </div>
                         </div>
-                    )}
-                </div>
+
+                        {/* Language */}
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <Globe className="w-5 h-5 text-purple-700" />
+                                Langue
+                            </h3>
+                            <select
+                                value={language}
+                                onChange={(e) => {
+                                    setLanguage(e.target.value)
+                                    changeLanguage(e.target.value)
+                                }}
+                                className="w-full md:w-1/2 px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 transition-all text-gray-900 font-medium"
+                            >
+                                {SUPPORTED_LANGUAGES.map((lang) => (
+                                    <option key={lang.code} value={lang.code}>
+                                        {lang.flag} {lang.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Notifications */}
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <Bell className="w-5 h-5 text-purple-700" />
+                                Notifications
+                            </h3>
+                            <div className="space-y-3">
+                                <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all cursor-pointer">
+                                    <span className="text-gray-900 font-medium">Notifications par email</span>
+                                    <input type="checkbox" className="w-6 h-6 text-purple-600" defaultChecked />
+                                </label>
+                                <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all cursor-pointer">
+                                    <span className="text-gray-900 font-medium">Nouveaux likes sur mes reviews</span>
+                                    <input type="checkbox" className="w-6 h-6 text-purple-600" defaultChecked />
+                                </label>
+                                <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all cursor-pointer">
+                                    <span className="text-gray-900 font-medium">Nouveaux commentaires</span>
+                                    <input type="checkbox" className="w-6 h-6 text-purple-600" />
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
+        </div >
     )
 }

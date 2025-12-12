@@ -16,6 +16,7 @@ import reviewRoutes from './routes/reviews.js'
 import userRoutes from './routes/users.js'
 import templatesRoutes from './routes/templates.js'
 import legalRoutes from './routes/legal.js'
+import kycRoutes from './routes/kyc.js'
 import accountRoutes from './routes/account.js'
 import cultivarsRoutes from './routes/cultivars.js'
 import pipelinesRoutes from './routes/pipelines.js'
@@ -216,6 +217,7 @@ app.use('/api/reviews', reviewRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/templates', templatesRoutes)
 app.use('/api/legal', legalRoutes)
+app.use('/api/kyc', kycRoutes)
 app.use('/api/account', accountRoutes)
 app.use('/api/cultivars', cultivarsRoutes)
 app.use('/api/pipelines', pipelinesRoutes)
