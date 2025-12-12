@@ -14,47 +14,47 @@ import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js';
  * Limites par type de compte
  */
 export const EXPORT_LIMITS = {
-    [ACCOUNT_TYPES.BETA_TESTER]: { 
-        daily: -1, 
-        templates: -1, 
-        watermarks: -1, 
+    [ACCOUNT_TYPES.BETA_TESTER]: {
+        daily: -1,
+        templates: -1,
+        watermarks: -1,
         reviews: -1,
         savedData: -1
     },
-    [ACCOUNT_TYPES.CONSUMER]: { 
-        daily: 3, 
-        templates: 3, 
-        watermarks: 1, 
+    [ACCOUNT_TYPES.CONSUMER]: {
+        daily: 3,
+        templates: 3,
+        watermarks: 1,
         reviews: 10,
         savedData: 10
     },
-    [ACCOUNT_TYPES.INFLUENCER_BASIC]: { 
-        daily: 50, 
-        templates: 20, 
-        watermarks: 5, 
+    [ACCOUNT_TYPES.INFLUENCER_BASIC]: {
+        daily: 50,
+        templates: 20,
+        watermarks: 5,
         reviews: 100,
         savedData: 50
     },
-    [ACCOUNT_TYPES.INFLUENCER_PRO]: { 
-        daily: 100, 
-        templates: 50, 
-        watermarks: 10, 
+    [ACCOUNT_TYPES.INFLUENCER_PRO]: {
+        daily: 100,
+        templates: 50,
+        watermarks: 10,
         reviews: 500,
         savedData: 100
     },
-    [ACCOUNT_TYPES.PRODUCER]: { 
-        daily: -1, 
-        templates: -1, 
-        watermarks: -1, 
+    [ACCOUNT_TYPES.PRODUCER]: {
+        daily: -1,
+        templates: -1,
+        watermarks: -1,
         reviews: -1,
         savedData: -1,
         cultivars: -1,
         phenoProjects: -1
     },
-    [ACCOUNT_TYPES.MERCHANT]: { 
-        daily: -1, 
-        templates: -1, 
-        watermarks: -1, 
+    [ACCOUNT_TYPES.MERCHANT]: {
+        daily: -1,
+        templates: -1,
+        watermarks: -1,
         reviews: -1,
         savedData: -1
     },
@@ -97,7 +97,7 @@ export function canAccessFeature(user, feature, options = {}) {
     }
 
     const accountType = getUserAccountType(user);
-    
+
     // Beta testers : accès complet à tout
     if (accountType === ACCOUNT_TYPES.BETA_TESTER) {
         return { allowed: true, accountType };
@@ -110,8 +110,8 @@ export function canAccessFeature(user, feature, options = {}) {
             if (accountType === ACCOUNT_TYPES.PRODUCER || accountType === ACCOUNT_TYPES.MERCHANT) {
                 return { allowed: true, accountType };
             }
-            return { 
-                allowed: false, 
+            return {
+                allowed: false,
                 reason: 'Templates personnalisés réservés aux Producteurs',
                 upgradeRequired: 'producer'
             };
@@ -119,22 +119,22 @@ export function canAccessFeature(user, feature, options = {}) {
         // Export haute qualité (300dpi)
         case 'export_high_quality':
             const allowedAccounts = [
-                ACCOUNT_TYPES.INFLUENCER_BASIC, 
+                ACCOUNT_TYPES.INFLUENCER_BASIC,
                 ACCOUNT_TYPES.INFLUENCER_PRO,
                 ACCOUNT_TYPES.PRODUCER,
                 ACCOUNT_TYPES.MERCHANT
             ];
-            
+
             if (allowedAccounts.includes(accountType)) {
-                return { 
-                    allowed: true, 
+                return {
+                    allowed: true,
                     accountType,
-                    dpi: EXPORT_DPI[accountType] 
+                    dpi: EXPORT_DPI[accountType]
                 };
             }
-            
-            return { 
-                allowed: false, 
+
+            return {
+                allowed: false,
                 reason: 'Export haute qualité réservé aux abonnés Influencer/Producer',
                 currentDpi: EXPORT_DPI[accountType],
                 upgradeRequired: 'influencer'
@@ -144,29 +144,29 @@ export function canAccessFeature(user, feature, options = {}) {
         case 'export_format':
             const allowedFormats = EXPORT_FORMATS[accountType] || EXPORT_FORMATS[ACCOUNT_TYPES.CONSUMER];
             const requestedFormat = options.format?.toLowerCase();
-            
+
             if (!requestedFormat) {
-                return { 
-                    allowed: true, 
+                return {
+                    allowed: true,
                     accountType,
-                    allowedFormats 
+                    allowedFormats
                 };
             }
-            
+
             if (!allowedFormats.includes(requestedFormat)) {
-                return { 
-                    allowed: false, 
+                return {
+                    allowed: false,
                     reason: `Format ${requestedFormat.toUpperCase()} non disponible pour votre type de compte`,
                     allowedFormats,
                     upgradeRequired: requestedFormat === 'svg' ? 'influencer' : 'producer'
                 };
             }
-            
-            return { 
-                allowed: true, 
+
+            return {
+                allowed: true,
                 accountType,
                 format: requestedFormat,
-                allowedFormats 
+                allowedFormats
             };
 
         // Pipeline culture (phases configurables)
@@ -176,8 +176,8 @@ export function canAccessFeature(user, feature, options = {}) {
             if (accountType === ACCOUNT_TYPES.PRODUCER || accountType === ACCOUNT_TYPES.MERCHANT) {
                 return { allowed: true, accountType };
             }
-            return { 
-                allowed: false, 
+            return {
+                allowed: false,
                 reason: 'Pipelines configurables réservés aux Producteurs',
                 upgradeRequired: 'producer'
             };
@@ -189,8 +189,8 @@ export function canAccessFeature(user, feature, options = {}) {
             if (accountType === ACCOUNT_TYPES.PRODUCER || accountType === ACCOUNT_TYPES.MERCHANT) {
                 return { allowed: true, accountType };
             }
-            return { 
-                allowed: false, 
+            return {
+                allowed: false,
                 reason: 'Gestion génétique réservée aux Producteurs',
                 upgradeRequired: 'producer'
             };
@@ -199,28 +199,28 @@ export function canAccessFeature(user, feature, options = {}) {
         case 'library_templates':
             const templateLimits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.CONSUMER];
             const currentTemplateCount = options.currentCount || 0;
-            
+
             if (templateLimits.templates === -1) {
-                return { 
-                    allowed: true, 
+                return {
+                    allowed: true,
                     accountType,
                     limit: -1,
-                    unlimited: true 
+                    unlimited: true
                 };
             }
-            
+
             if (currentTemplateCount >= templateLimits.templates) {
-                return { 
-                    allowed: false, 
+                return {
+                    allowed: false,
                     reason: `Limite de ${templateLimits.templates} templates atteinte`,
                     limit: templateLimits.templates,
                     current: currentTemplateCount,
                     upgradeRequired: accountType === ACCOUNT_TYPES.CONSUMER ? 'influencer' : 'producer'
                 };
             }
-            
-            return { 
-                allowed: true, 
+
+            return {
+                allowed: true,
                 accountType,
                 limit: templateLimits.templates,
                 remaining: templateLimits.templates - currentTemplateCount,
@@ -231,28 +231,28 @@ export function canAccessFeature(user, feature, options = {}) {
         case 'library_watermarks':
             const watermarkLimits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.CONSUMER];
             const currentWatermarkCount = options.currentCount || 0;
-            
+
             if (watermarkLimits.watermarks === -1) {
-                return { 
-                    allowed: true, 
+                return {
+                    allowed: true,
                     accountType,
                     limit: -1,
-                    unlimited: true 
+                    unlimited: true
                 };
             }
-            
+
             if (currentWatermarkCount >= watermarkLimits.watermarks) {
-                return { 
-                    allowed: false, 
+                return {
+                    allowed: false,
                     reason: `Limite de ${watermarkLimits.watermarks} filigranes atteinte`,
                     limit: watermarkLimits.watermarks,
                     current: currentWatermarkCount,
                     upgradeRequired: 'influencer'
                 };
             }
-            
-            return { 
-                allowed: true, 
+
+            return {
+                allowed: true,
                 accountType,
                 limit: watermarkLimits.watermarks,
                 remaining: watermarkLimits.watermarks - currentWatermarkCount,
@@ -263,28 +263,28 @@ export function canAccessFeature(user, feature, options = {}) {
         case 'library_saved_data':
             const dataLimits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.CONSUMER];
             const currentDataCount = options.currentCount || 0;
-            
+
             if (dataLimits.savedData === -1) {
-                return { 
-                    allowed: true, 
+                return {
+                    allowed: true,
                     accountType,
                     limit: -1,
-                    unlimited: true 
+                    unlimited: true
                 };
             }
-            
+
             if (currentDataCount >= dataLimits.savedData) {
-                return { 
-                    allowed: false, 
+                return {
+                    allowed: false,
                     reason: `Limite de ${dataLimits.savedData} données sauvegardées atteinte`,
                     limit: dataLimits.savedData,
                     current: currentDataCount,
                     upgradeRequired: accountType === ACCOUNT_TYPES.CONSUMER ? 'influencer' : 'producer'
                 };
             }
-            
-            return { 
-                allowed: true, 
+
+            return {
+                allowed: true,
                 accountType,
                 limit: dataLimits.savedData,
                 remaining: dataLimits.savedData - currentDataCount,
@@ -295,19 +295,19 @@ export function canAccessFeature(user, feature, options = {}) {
         case 'daily_exports':
             const exportLimits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.CONSUMER];
             const todayExports = options.todayCount || 0;
-            
+
             if (exportLimits.daily === -1) {
-                return { 
-                    allowed: true, 
+                return {
+                    allowed: true,
                     accountType,
                     limit: -1,
-                    unlimited: true 
+                    unlimited: true
                 };
             }
-            
+
             if (todayExports >= exportLimits.daily) {
-                return { 
-                    allowed: false, 
+                return {
+                    allowed: false,
                     reason: `Limite quotidienne de ${exportLimits.daily} exports atteinte`,
                     limit: exportLimits.daily,
                     current: todayExports,
@@ -315,9 +315,9 @@ export function canAccessFeature(user, feature, options = {}) {
                     upgradeRequired: accountType === ACCOUNT_TYPES.CONSUMER ? 'influencer' : 'producer'
                 };
             }
-            
-            return { 
-                allowed: true, 
+
+            return {
+                allowed: true,
                 accountType,
                 limit: exportLimits.daily,
                 remaining: exportLimits.daily - todayExports,
@@ -332,13 +332,13 @@ export function canAccessFeature(user, feature, options = {}) {
                 ACCOUNT_TYPES.PRODUCER,
                 ACCOUNT_TYPES.MERCHANT
             ];
-            
+
             if (influencerAccounts.includes(accountType)) {
                 return { allowed: true, accountType };
             }
-            
-            return { 
-                allowed: false, 
+
+            return {
+                allowed: false,
                 reason: 'Filigranes personnalisés réservés aux Influencers et Producteurs',
                 forceSystemWatermark: true,
                 upgradeRequired: 'influencer'
@@ -354,13 +354,13 @@ export function canAccessFeature(user, feature, options = {}) {
                 ACCOUNT_TYPES.PRODUCER,
                 ACCOUNT_TYPES.MERCHANT
             ];
-            
+
             if (statsAccounts.includes(accountType)) {
                 return { allowed: true, accountType };
             }
-            
-            return { 
-                allowed: false, 
+
+            return {
+                allowed: false,
                 reason: 'Statistiques avancées réservées aux abonnés',
                 upgradeRequired: 'influencer'
             };
@@ -372,8 +372,8 @@ export function canAccessFeature(user, feature, options = {}) {
             if (accountType === ACCOUNT_TYPES.PRODUCER || accountType === ACCOUNT_TYPES.MERCHANT) {
                 return { allowed: true, accountType };
             }
-            return { 
-                allowed: false, 
+            return {
+                allowed: false,
                 reason: 'Statistiques producteur réservées aux comptes Producer',
                 upgradeRequired: 'producer'
             };
@@ -384,8 +384,8 @@ export function canAccessFeature(user, feature, options = {}) {
             if (accountType === ACCOUNT_TYPES.PRODUCER || accountType === ACCOUNT_TYPES.MERCHANT) {
                 return { allowed: true, accountType };
             }
-            return { 
-                allowed: false, 
+            return {
+                allowed: false,
                 reason: 'Branding entreprise réservé aux Producteurs',
                 upgradeRequired: 'producer'
             };
@@ -398,20 +398,20 @@ export function canAccessFeature(user, feature, options = {}) {
                 ACCOUNT_TYPES.PRODUCER,
                 ACCOUNT_TYPES.MERCHANT
             ];
-            
+
             if (socialAccounts.includes(accountType)) {
                 return { allowed: true, accountType };
             }
-            
-            return { 
-                allowed: false, 
+
+            return {
+                allowed: false,
                 reason: 'Partage automatique réservé aux abonnés',
                 upgradeRequired: 'influencer'
             };
 
         default:
-            return { 
-                allowed: false, 
+            return {
+                allowed: false,
                 reason: `Feature "${feature}" inconnue`,
                 accountType
             };
@@ -429,22 +429,22 @@ export function canAccessFeature(user, feature, options = {}) {
 export function requireFeature(feature, optionsGetter = null) {
     return async (req, res, next) => {
         if (!req.user) {
-            return res.status(401).json({ 
+            return res.status(401).json({
                 error: 'authentication_required',
                 message: 'Authentification requise'
             });
         }
-        
+
         // Récupérer options si fonction fournie
-        const options = typeof optionsGetter === 'function' 
-            ? await optionsGetter(req) 
+        const options = typeof optionsGetter === 'function'
+            ? await optionsGetter(req)
             : {};
-        
+
         // Vérifier permission
         const check = canAccessFeature(req.user, feature, options);
-        
+
         if (!check.allowed) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 error: 'feature_restricted',
                 message: check.reason,
                 accountType: check.accountType || getUserAccountType(req.user),
@@ -454,7 +454,7 @@ export function requireFeature(feature, optionsGetter = null) {
                 remaining: check.remaining
             });
         }
-        
+
         // Attacher résultat au req pour usage dans handler
         req.featureCheck = check;
         next();
@@ -471,7 +471,7 @@ export function getUserLimits(user) {
     const limits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.CONSUMER];
     const formats = EXPORT_FORMATS[accountType] || EXPORT_FORMATS[ACCOUNT_TYPES.CONSUMER];
     const dpi = EXPORT_DPI[accountType] || EXPORT_DPI[ACCOUNT_TYPES.CONSUMER];
-    
+
     return {
         accountType,
         limits,
@@ -508,41 +508,41 @@ export async function checkAndIncrementDailyExports(prisma, userId) {
     const user = await prisma.user.findUnique({
         where: { id: userId }
     });
-    
+
     if (!user) {
         throw new Error('Utilisateur non trouvé');
     }
-    
+
     const accountType = getUserAccountType(user);
     const limits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.CONSUMER];
-    
+
     // Pas de limite pour certains comptes
     if (limits.daily === -1) {
-        return { 
-            allowed: true, 
-            count: -1, 
+        return {
+            allowed: true,
+            count: -1,
             limit: -1,
-            unlimited: true 
+            unlimited: true
         };
     }
-    
+
     // Vérifier si reset nécessaire (nouveau jour)
     const now = new Date();
     const lastReset = user.dailyExportsReset ? new Date(user.dailyExportsReset) : new Date(0);
     const isSameDay = now.toDateString() === lastReset.toDateString();
-    
+
     let currentCount = isSameDay ? (user.dailyExportsUsed || 0) : 0;
-    
+
     // Vérifier limite
     if (currentCount >= limits.daily) {
-        return { 
-            allowed: false, 
-            count: currentCount, 
+        return {
+            allowed: false,
+            count: currentCount,
             limit: limits.daily,
             resetTime: new Date(now.setHours(24, 0, 0, 0))
         };
     }
-    
+
     // Incrémenter
     const newCount = currentCount + 1;
     await prisma.user.update({
@@ -552,10 +552,10 @@ export async function checkAndIncrementDailyExports(prisma, userId) {
             dailyExportsReset: isSameDay ? user.dailyExportsReset : now
         }
     });
-    
-    return { 
-        allowed: true, 
-        count: newCount, 
+
+    return {
+        allowed: true,
+        count: newCount,
         limit: limits.daily,
         remaining: limits.daily - newCount
     };

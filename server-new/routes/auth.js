@@ -241,10 +241,10 @@ router.get('/me', asyncHandler(async (req, res) => {
     }
 
     const sanitized = sanitizeUser(req.user)
-    
+
     // Ajouter limites & features selon type de compte
     const limits = getUserLimits(req.user)
-    
+
     res.json({
         ...sanitized,
         limits: {
@@ -268,7 +268,7 @@ router.get('/limits', asyncHandler(async (req, res) => {
     }
 
     const limits = getUserLimits(req.user)
-    
+
     // Récupérer compteurs actuels depuis DB
     const [templateCount, watermarkCount, reviewCount, dataCount] = await Promise.all([
         prisma.savedTemplate.count({ where: { userId: req.user.id } }),
@@ -276,7 +276,7 @@ router.get('/limits', asyncHandler(async (req, res) => {
         prisma.review.count({ where: { authorId: req.user.id } }),
         prisma.savedData.count({ where: { userId: req.user.id } })
     ])
-    
+
     res.json({
         accountType: limits.accountType,
         limits: {

@@ -43,7 +43,7 @@ function getNewAccountType(roles) {
             subscriptionStatus: 'inactive'
         };
     }
-    
+
     if (roles.includes('producer') || roles.includes('merchant')) {
         return {
             newRoles: ['producer'],
@@ -51,7 +51,7 @@ function getNewAccountType(roles) {
             subscriptionStatus: 'active'
         };
     }
-    
+
     if (roles.includes('influencer_pro') || roles.includes('influencer_basic')) {
         return {
             newRoles: ['influencer'],
@@ -59,7 +59,7 @@ function getNewAccountType(roles) {
             subscriptionStatus: 'active'
         };
     }
-    
+
     return {
         newRoles: ['amateur'],
         subscriptionType: null,
@@ -72,7 +72,7 @@ function getNewAccountType(roles) {
  */
 async function migrateAccountTypes() {
     console.log('\n🔄 Démarrage migration types de comptes...\n');
-    
+
     // Récupérer tous les utilisateurs
     const users = await prisma.user.findMany({
         select: {
@@ -82,9 +82,9 @@ async function migrateAccountTypes() {
             createdAt: true
         }
     });
-    
+
     console.log(`📊 Total utilisateurs: ${users.length}\n`);
-    
+
     const stats = {
         amateur: 0,
         influencer: 0,
@@ -92,15 +92,15 @@ async function migrateAccountTypes() {
         beta: 0,
         errors: 0
     };
-    
+
     const errors = [];
-    
+
     // Migrer chaque utilisateur
     for (const user of users) {
         try {
             const currentRoles = parseRoles(user.roles);
             const migration = getNewAccountType(currentRoles);
-            
+
             // Mise à jour
             await prisma.user.update({
                 where: { id: user.id },
@@ -112,23 +112,23 @@ async function migrateAccountTypes() {
                     updatedAt: new Date()
                 }
             });
-            
+
             // Incrémenter stats
             const newType = migration.newRoles[0];
             if (newType === 'beta_tester') stats.beta++;
             else if (newType === 'producer') stats.producer++;
             else if (newType === 'influencer') stats.influencer++;
             else stats.amateur++;
-            
+
             console.log(`✅ ${user.username}: ${currentRoles.join(',')} → ${migration.newRoles[0]}`);
-            
+
         } catch (error) {
             stats.errors++;
             errors.push({ user: user.username, error: error.message });
             console.error(`❌ Erreur pour ${user.username}:`, error.message);
         }
     }
-    
+
     // Afficher résultats
     console.log('\n' + '='.repeat(60));
     console.log('📈 RÉSUMÉ DE LA MIGRATION');
@@ -141,7 +141,7 @@ async function migrateAccountTypes() {
     console.log('-'.repeat(60));
     console.log(`📊 TOTAL:                    ${users.length.toString().padStart(5)}`);
     console.log('='.repeat(60) + '\n');
-    
+
     if (errors.length > 0) {
         console.log('⚠️  ERREURS DÉTAILLÉES:');
         errors.forEach(err => {
@@ -149,23 +149,23 @@ async function migrateAccountTypes() {
         });
         console.log('');
     }
-    
+
     // Vérification post-migration
     console.log('🔍 Vérification post-migration...\n');
-    
+
     const verification = await prisma.user.groupBy({
         by: ['subscriptionType'],
         _count: true
     });
-    
+
     console.log('Distribution subscriptionType:');
     verification.forEach(group => {
         const type = group.subscriptionType || 'amateur (null)';
         console.log(`   ${type}: ${group._count}`);
     });
-    
+
     console.log('\n✅ Migration terminée avec succès!\n');
-    
+
     return stats;
 }
 
@@ -174,7 +174,7 @@ async function migrateAccountTypes() {
  */
 async function rollbackMigration() {
     console.log('\n⚠️  ROLLBACK: Restauration anciens types de comptes...\n');
-    
+
     const users = await prisma.user.findMany({
         select: {
             id: true,
@@ -183,12 +183,12 @@ async function rollbackMigration() {
             subscriptionType: true
         }
     });
-    
+
     for (const user of users) {
         try {
             const currentRoles = parseRoles(user.roles);
             let oldRoles = currentRoles;
-            
+
             // Mapping inverse
             if (currentRoles.includes('beta_tester')) {
                 oldRoles = ['beta_tester'];
@@ -200,7 +200,7 @@ async function rollbackMigration() {
             } else {
                 oldRoles = ['consumer'];
             }
-            
+
             await prisma.user.update({
                 where: { id: user.id },
                 data: {
@@ -213,14 +213,14 @@ async function rollbackMigration() {
                     updatedAt: new Date()
                 }
             });
-            
+
             console.log(`✅ ${user.username}: restauré vers ${oldRoles[0]}`);
-            
+
         } catch (error) {
             console.error(`❌ Erreur rollback pour ${user.username}:`, error.message);
         }
     }
-    
+
     console.log('\n✅ Rollback terminé\n');
 }
 
