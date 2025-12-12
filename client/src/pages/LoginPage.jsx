@@ -28,7 +28,8 @@ export default function LoginPage() {
 
     const accountTypeLabels = {
         consumer: 'Amateur',
-        influencer: 'Influenceur',
+        influencer_basic: 'Influenceur Basic',
+        influencer_pro: 'Influenceur',
         producer: 'Producteur',
     }
 
@@ -115,7 +116,7 @@ export default function LoginPage() {
                             </h1>
                             <p className="text-white/90 text-sm md:text-base drop-shadow">
                                 {selectedType === 'consumer' && 'Créez et gérez vos reviews personnelles'}
-                                {selectedType === 'influencer' && 'Exports avancés et partage optimisé'}
+                                {(selectedType === 'influencer_basic' || selectedType === 'influencer_pro') && 'Exports avancés et partage optimisé'}
                                 {selectedType === 'producer' && 'Traçabilité complète et exports professionnels'}
                             </p>
                             <button

@@ -31,7 +31,7 @@ export default function AccountChoicePage() {
             ]
         },
         {
-            type: 'influencer',
+            type: 'influencer_pro',
             name: 'Influenceur',
             subtitle: 'Pour Créateurs de Contenu',
             description: 'Exports avancés et partage optimisé',
