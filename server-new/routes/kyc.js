@@ -9,7 +9,7 @@ import path from 'path'
 import fs from 'fs/promises'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
-import { authenticateUser } from '../middleware/auth.js'
+import { requireAuth } from '../middleware/auth.js'
 import { prisma } from '../server.js'
 
 const router = express.Router()
@@ -25,7 +25,7 @@ await fs.mkdir(uploadDir, { recursive: true })
 // Configuration Multer
 const storage = multer.diskStorage({
     destination: async (req, file, cb) => {
-        const userId = req.userId
+        const userId = req.user.id
         const userDir = join(uploadDir, userId.toString())
 
         try {
@@ -69,9 +69,9 @@ const upload = multer({
  * POST /api/kyc/upload
  * Upload un document d'identité (Producer ou Influencer uniquement)
  */
-router.post('/upload', authenticateUser, upload.single('document'), async (req, res) => {
+router.post('/upload', requireAuth, upload.single('document'), async (req, res) => {
     try {
-        const userId = req.userId
+        const userId = req.user.id
         const { documentType } = req.body // 'id_card', 'passport', 'driving_license', 'business_license'
 
         if (!req.file) {
@@ -170,9 +170,9 @@ router.post('/upload', authenticateUser, upload.single('document'), async (req, 
  * GET /api/kyc/documents
  * Récupérer la liste des documents uploadés
  */
-router.get('/documents', authenticateUser, async (req, res) => {
+router.get('/documents', requireAuth, async (req, res) => {
     try {
-        const userId = req.userId
+        const userId = req.user.id
 
         const user = await prisma.user.findUnique({
             where: { id: userId },
@@ -225,9 +225,9 @@ router.get('/documents', authenticateUser, async (req, res) => {
  * DELETE /api/kyc/document/:documentId
  * Supprimer un document
  */
-router.delete('/document/:documentId', authenticateUser, async (req, res) => {
+router.delete('/document/:documentId', requireAuth, async (req, res) => {
     try {
-        const userId = req.userId
+        const userId = req.user.id
         const { documentId } = req.params
 
         const user = await prisma.user.findUnique({
@@ -304,9 +304,9 @@ router.delete('/document/:documentId', authenticateUser, async (req, res) => {
  * GET /api/kyc/document/:documentId/view
  * Voir un document (retourne le fichier)
  */
-router.get('/document/:documentId/view', authenticateUser, async (req, res) => {
+router.get('/document/:documentId/view', requireAuth, async (req, res) => {
     try {
-        const userId = req.userId
+        const userId = req.user.id
         const { documentId } = req.params
 
         const user = await prisma.user.findUnique({
