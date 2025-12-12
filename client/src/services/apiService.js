@@ -18,6 +18,16 @@ export class APIError extends Error {
 }
 
 /**
+ * Types de produits et leurs routes correspondantes
+ */
+export const PRODUCT_TYPES = {
+    Fleurs: 'flower',
+    Hash: 'hash',
+    Concentré: 'concentrate',
+    Comestible: 'edible'
+}
+
+/**
  * Wrapper fetch avec gestion d'erreurs
  */
 async function fetchAPI(url, options = {}) {
@@ -142,6 +152,108 @@ export const reviewsService = {
      */
     async getLikes(id) {
         return fetchAPI(`${API_BASE}/reviews/${id}/likes`)
+    }
+}
+
+/**
+ * Service pour les reviews Fleurs
+ */
+export const flowerReviewsService = {
+    /**
+     * Créer une review Fleur
+     * @param {FormData} formData - Données du formulaire avec images
+     */
+    async create(formData) {
+        return fetchAPI(`${API_BASE}/reviews/flower`, {
+            method: 'POST',
+            body: formData
+        })
+    },
+
+    /**
+     * Mettre à jour une review Fleur
+     */
+    async update(id, formData) {
+        return fetchAPI(`${API_BASE}/reviews/flower/${id}`, {
+            method: 'PUT',
+            body: formData
+        })
+    },
+
+    /**
+     * Récupérer une review Fleur par ID
+     */
+    async getById(id) {
+        return fetchAPI(`${API_BASE}/reviews/flower/${id}`)
+    }
+}
+
+/**
+ * Service pour les reviews Hash
+ */
+export const hashReviewsService = {
+    async create(formData) {
+        return fetchAPI(`${API_BASE}/reviews/hash`, {
+            method: 'POST',
+            body: formData
+        })
+    },
+
+    async update(id, formData) {
+        return fetchAPI(`${API_BASE}/reviews/hash/${id}`, {
+            method: 'PUT',
+            body: formData
+        })
+    },
+
+    async getById(id) {
+        return fetchAPI(`${API_BASE}/reviews/hash/${id}`)
+    }
+}
+
+/**
+ * Service pour les reviews Concentrés
+ */
+export const concentrateReviewsService = {
+    async create(formData) {
+        return fetchAPI(`${API_BASE}/reviews/concentrate`, {
+            method: 'POST',
+            body: formData
+        })
+    },
+
+    async update(id, formData) {
+        return fetchAPI(`${API_BASE}/reviews/concentrate/${id}`, {
+            method: 'PUT',
+            body: formData
+        })
+    },
+
+    async getById(id) {
+        return fetchAPI(`${API_BASE}/reviews/concentrate/${id}`)
+    }
+}
+
+/**
+ * Service pour les reviews Comestibles
+ */
+export const edibleReviewsService = {
+    async create(formData) {
+        return fetchAPI(`${API_BASE}/reviews/edible`, {
+            method: 'POST',
+            body: formData
+        })
+    },
+
+    async update(id, formData) {
+        return fetchAPI(`${API_BASE}/reviews/edible/${id}`, {
+            method: 'PUT',
+            body: formData
+        })
+    },
+
+    async getById(id) {
+        return fetchAPI(`${API_BASE}/reviews/edible/${id}`)
     }
 }
 

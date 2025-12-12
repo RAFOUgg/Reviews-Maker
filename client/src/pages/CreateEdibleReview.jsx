@@ -5,6 +5,7 @@ import { useStore } from '../store/useStore'
 import { useToast } from '../components/ToastContainer'
 import OrchardPanel from '../components/orchard/OrchardPanel'
 import { AnimatePresence, motion } from 'framer-motion'
+import { edibleReviewsService } from '../services/apiService'
 
 /**
  * CreateEdibleReview - Interface pour créer/éditer une review de Comestible
@@ -96,11 +97,39 @@ export default function CreateEdibleReview() {
 
         setSaving(true)
         try {
-            // TODO: Backend submission
-            toast.success('Review Comestible enregistrée!')
+            // Créer FormData pour l'upload
+            const submitData = new FormData()
+            
+            // Ajouter les photos
+            photos.forEach((photo) => {
+                if (photo.file) {
+                    submitData.append('images', photo.file)
+                }
+            })
+            
+            // Ajouter les données du formulaire
+            Object.entries(formData).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    if (typeof value === 'object') {
+                        submitData.append(key, JSON.stringify(value))
+                    } else {
+                        submitData.append(key, value)
+                    }
+                }
+            })
+            
+            // Soumettre au backend
+            if (id) {
+                await edibleReviewsService.update(id, submitData)
+                toast.success('Review Comestible mise à jour!')
+            } else {
+                await edibleReviewsService.create(submitData)
+                toast.success('Review Comestible créée avec succès!')
+            }
             navigate('/library')
         } catch (error) {
-            toast.error('Erreur lors de l\'enregistrement')
+            console.error('Erreur soumission:', error)
+            toast.error(error.message || 'Erreur lors de l\'enregistrement')
         } finally {
             setSaving(false)
         }

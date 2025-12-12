@@ -15,6 +15,7 @@ import EffectsSection from '../components/reviews/sections/EffectsSection'
 import AnalyticsSection from '../components/reviews/sections/AnalyticsSection'
 import SeparationPipelineSection from '../components/reviews/sections/SeparationPipelineSection'
 import CuringPipelineSection from '../components/reviews/sections/CuringPipelineSection'
+import { hashReviewsService } from '../services/apiService'
 
 /**
  * CreateHashReview - Interface pour créer/éditer une review de Hash
@@ -113,11 +114,39 @@ export default function CreateHashReview() {
 
         setSaving(true)
         try {
-            // TODO: Backend submission
-            toast.success('Review Hash enregistrée!')
+            // Créer FormData pour l'upload
+            const submitData = new FormData()
+            
+            // Ajouter les photos
+            photos.forEach((photo) => {
+                if (photo.file) {
+                    submitData.append('images', photo.file)
+                }
+            })
+            
+            // Ajouter les données du formulaire
+            Object.entries(formData).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    if (typeof value === 'object') {
+                        submitData.append(key, JSON.stringify(value))
+                    } else {
+                        submitData.append(key, value)
+                    }
+                }
+            })
+            
+            // Soumettre au backend
+            if (id) {
+                await hashReviewsService.update(id, submitData)
+                toast.success('Review Hash mise à jour!')
+            } else {
+                await hashReviewsService.create(submitData)
+                toast.success('Review Hash créée avec succès!')
+            }
             navigate('/library')
         } catch (error) {
-            toast.error('Erreur lors de l\'enregistrement')
+            console.error('Erreur soumission:', error)
+            toast.error(error.message || 'Erreur lors de l\'enregistrement')
         } finally {
             setSaving(false)
         }

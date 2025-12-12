@@ -17,6 +17,7 @@ import EffectsSection from '../components/reviews/sections/EffectsSection'
 import AnalyticsSection from '../components/reviews/sections/AnalyticsSection'
 import CulturePipelineSection from '../components/reviews/sections/CulturePipelineSection'
 import CuringPipelineSection from '../components/reviews/sections/CuringPipelineSection'
+import { flowerReviewsService } from '../services/apiService'
 
 /**
  * CreateFlowerReview - Interface complète pour créer/éditer une review de Fleur
@@ -119,11 +120,44 @@ export default function CreateFlowerReview() {
 
         setSaving(true)
         try {
-            // TODO: Implémenter la soumission au backend
-            toast.success('Review enregistrée!')
+            // Créer FormData pour l'upload
+            const submitData = new FormData()
+            
+            // Ajouter les photos
+            photos.forEach((photo, index) => {
+                if (photo.file) {
+                    submitData.append('images', photo.file)
+                }
+            })
+            
+            // Ajouter les données du formulaire
+            Object.entries(formData).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    if (typeof value === 'object') {
+                        submitData.append(key, JSON.stringify(value))
+                    } else {
+                        submitData.append(key, value)
+                    }
+                }
+            })
+            
+            // Ajouter le type de variété par défaut si non spécifié
+            if (!formData.varietyType) {
+                submitData.append('varietyType', 'hybride')
+            }
+            
+            // Soumettre au backend
+            if (id) {
+                await flowerReviewsService.update(id, submitData)
+                toast.success('Review mise à jour!')
+            } else {
+                await flowerReviewsService.create(submitData)
+                toast.success('Review créée avec succès!')
+            }
             navigate('/library')
         } catch (error) {
-            toast.error('Erreur lors de l\'enregistrement')
+            console.error('Erreur soumission:', error)
+            toast.error(error.message || 'Erreur lors de l\'enregistrement')
         } finally {
             setSaving(false)
         }

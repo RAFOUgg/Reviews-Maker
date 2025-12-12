@@ -15,6 +15,7 @@ import EffectsSection from '../components/reviews/sections/EffectsSection'
 import AnalyticsSection from '../components/reviews/sections/AnalyticsSection'
 import ExtractionPipelineSection from '../components/reviews/sections/ExtractionPipelineSection'
 import CuringPipelineSection from '../components/reviews/sections/CuringPipelineSection'
+import { concentrateReviewsService } from '../services/apiService'
 
 /**
  * CreateConcentrateReview - Interface pour créer/éditer une review de Concentré
@@ -113,11 +114,39 @@ export default function CreateConcentrateReview() {
 
         setSaving(true)
         try {
-            // TODO: Backend submission
-            toast.success('Review Concentré enregistrée!')
+            // Créer FormData pour l'upload
+            const submitData = new FormData()
+            
+            // Ajouter les photos
+            photos.forEach((photo) => {
+                if (photo.file) {
+                    submitData.append('images', photo.file)
+                }
+            })
+            
+            // Ajouter les données du formulaire
+            Object.entries(formData).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    if (typeof value === 'object') {
+                        submitData.append(key, JSON.stringify(value))
+                    } else {
+                        submitData.append(key, value)
+                    }
+                }
+            })
+            
+            // Soumettre au backend
+            if (id) {
+                await concentrateReviewsService.update(id, submitData)
+                toast.success('Review Concentré mise à jour!')
+            } else {
+                await concentrateReviewsService.create(submitData)
+                toast.success('Review Concentré créée avec succès!')
+            }
             navigate('/library')
         } catch (error) {
-            toast.error('Erreur lors de l\'enregistrement')
+            console.error('Erreur soumission:', error)
+            toast.error(error.message || 'Erreur lors de l\'enregistrement')
         } finally {
             setSaving(false)
         }
