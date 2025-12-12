@@ -389,22 +389,92 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
                 aspectRatio: `${currentFormat?.width} / ${currentFormat?.height}`
               }}
             >
-              {/* Aperçu du template */}
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-50">
-                <div className="text-center p-8">
-                  <FileImage className="w-24 h-24 text-purple-300 mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                    {currentTemplateType?.label || 'Template'}
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Format: {currentFormat?.label}
+              {/* Rendu du template avec données */}
+              <div className="w-full h-full flex flex-col bg-gradient-to-br from-purple-50 to-indigo-50 p-4">
+                {/* Header */}
+                <div className="text-center mb-4">
+                  <h2 className="text-xl font-bold text-gray-900">
+                    {reviewData?.holderName || reviewData?.nomCommercial || 'Nom du produit'}
+                  </h2>
+                  <p className="text-sm text-purple-600 font-medium">
+                    {productType}
                   </p>
-                  <p className="text-sm text-gray-500">
-                    {predefinedTemplate?.elements.length || 0} éléments prédéfinis
-                  </p>
-                  <div className="mt-6 text-xs text-gray-400">
-                    Aperçu en construction - Phase 3 MVP
+                </div>
+
+                {/* Photo principale */}
+                {reviewData?.mainImage || reviewData?.images?.[0] ? (
+                  <div className="flex-1 flex items-center justify-center mb-4">
+                    <img
+                      src={`/images/${reviewData.mainImage || reviewData.images[0]}`}
+                      alt="Produit"
+                      className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                      crossOrigin="anonymous"
+                    />
                   </div>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center mb-4">
+                    <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
+                      <ImageIcon className="w-12 h-12 text-gray-400" />
+                    </div>
+                  </div>
+                )}
+
+                {/* Infos selon template */}
+                {selectedTemplate !== 'minimal' && (
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    {reviewData?.thcPercent && (
+                      <div className="bg-white/80 rounded-lg p-2 text-center">
+                        <div className="font-bold text-green-600">THC</div>
+                        <div>{reviewData.thcPercent}%</div>
+                      </div>
+                    )}
+                    {reviewData?.cbdPercent && (
+                      <div className="bg-white/80 rounded-lg p-2 text-center">
+                        <div className="font-bold text-blue-600">CBD</div>
+                        <div>{reviewData.cbdPercent}%</div>
+                      </div>
+                    )}
+                    {reviewData?.variety && (
+                      <div className="bg-white/80 rounded-lg p-2 col-span-2 text-center">
+                        <div className="font-bold text-purple-600">Variété</div>
+                        <div>{reviewData.variety}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Scores si template détaillé */}
+                {(selectedTemplate === 'detailed' || selectedTemplate === 'custom') && (
+                  <div className="mt-3 grid grid-cols-5 gap-1 text-xs">
+                    {reviewData?.visualData?.density && (
+                      <div className="text-center">
+                        <div className="font-medium">Densité</div>
+                        <div className="text-purple-600">{reviewData.visualData.density}/10</div>
+                      </div>
+                    )}
+                    {reviewData?.odorData?.intensity && (
+                      <div className="text-center">
+                        <div className="font-medium">Odeur</div>
+                        <div className="text-purple-600">{reviewData.odorData.intensity}/10</div>
+                      </div>
+                    )}
+                    {reviewData?.effectsData?.intensity && (
+                      <div className="text-center">
+                        <div className="font-medium">Effets</div>
+                        <div className="text-purple-600">{reviewData.effectsData.intensity}/10</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Footer */}
+                <div className="mt-auto pt-3 border-t border-gray-200 text-center">
+                  <p className="text-xs text-gray-500">
+                    {currentTemplateType?.label} • {currentFormat?.ratio}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Généré par Reviews-Maker
+                  </p>
                 </div>
               </div>
             </div>
