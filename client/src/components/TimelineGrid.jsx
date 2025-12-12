@@ -155,13 +155,13 @@ export default function TimelineGrid({
     const selectedCellInfo = cells.find(c => c.timestamp === selectedCell)
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
             {/* Configuration de la trame */}
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-2xl border-2 border-purple-200">
-                <h3 className="text-lg font-bold text-purple-800 mb-4 flex items-center gap-2">
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 sm:p-6 rounded-2xl border-2 border-purple-200">
+                <h3 className="text-base sm:text-lg font-bold text-purple-800 mb-3 sm:mb-4 flex items-center gap-2">
                     <span>⚙️</span> Configuration de la timeline
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     <div>
                         <label className="text-sm font-semibold text-gray-700 mb-1 block">
                             Type d'intervalles
@@ -223,15 +223,15 @@ export default function TimelineGrid({
 
                 {/* Validation messages */}
                 {config?.type === 'jour' && (!config?.start || !config?.end) && (
-                    <div className="mt-3 p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
-                        <p className="text-sm text-yellow-800">
+                    <div className="mt-2 sm:mt-3 p-2 sm:p-3 bg-yellow-50 border-l-2 sm:border-l-4 border-yellow-500 rounded">
+                        <p className="text-xs sm:text-sm text-yellow-800">
                             ⚠️ <strong>Mode Jours</strong> : Date début ET date fin sont obligatoires
                         </p>
                     </div>
                 )}
                 {config?.type === 'semaine' && !config?.start && (
-                    <div className="mt-3 p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
-                        <p className="text-sm text-yellow-800">
+                    <div className="mt-2 sm:mt-3 p-2 sm:p-3 bg-yellow-50 border-l-2 sm:border-l-4 border-yellow-500 rounded">
+                        <p className="text-xs sm:text-sm text-yellow-800">
                             ⚠️ <strong>Mode Semaines</strong> : Semaine début obligatoire (la fin est facultative, max 52 semaines si non précisée)
                         </p>
                     </div>
@@ -239,19 +239,19 @@ export default function TimelineGrid({
             </div>
 
             {/* Timeline Grid type GitHub */}
-            <div className="bg-white p-6 rounded-2xl border-2 border-gray-200">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <span>📊</span> Timeline visuelle ({cells.length} points)
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border-2 border-gray-200">
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
+                    <span>📊</span> <span className="hidden sm:inline">Timeline visuelle ({cells.length} points)</span><span className="sm:hidden">Timeline ({cells.length})</span>
                 </h3>
 
                 {cells.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500">
-                        <p className="text-lg">⚠️ Configurez la période pour voir la timeline</p>
+                    <div className="text-center py-8 sm:py-12 text-gray-500">
+                        <p className="text-sm sm:text-lg">⚠️ Configurez la période pour voir la timeline</p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <div className="inline-grid gap-1" style={{
-                            gridTemplateColumns: `repeat(${Math.min(cells.length, 53)}, minmax(14px, 1fr))`
+                    <div className="overflow-x-auto pb-2">
+                        <div className="inline-grid gap-0.5 sm:gap-1" style={{
+                            gridTemplateColumns: `repeat(${Math.min(cells.length, window.innerWidth < 640 ? 30 : window.innerWidth < 1024 ? 40 : 53)}, minmax(10px, 1fr))`
                         }}>
                             {cells.map((cell, index) => (
                                 <div
@@ -259,7 +259,7 @@ export default function TimelineGrid({
                                     onClick={() => handleCellClick(cell.timestamp, index)}
                                     onMouseEnter={() => setHoveredCell(cell)}
                                     onMouseLeave={() => setHoveredCell(null)}
-                                    className={`w-3.5 h-3.5 rounded-sm cursor-pointer transition-all hover:ring-2 hover:ring-purple-500 hover:scale-125 ${getCellColor(cell.timestamp)} ${selectedCell === cell.timestamp ? 'ring-2 ring-blue-600 scale-125' : ''
+                                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 rounded-sm cursor-pointer transition-all hover:ring-1 sm:hover:ring-2 hover:ring-purple-500 hover:scale-110 sm:hover:scale-125 ${getCellColor(cell.timestamp)} ${selectedCell === cell.timestamp ? 'ring-1 sm:ring-2 ring-blue-600 scale-110 sm:scale-125' : ''
                                         }`}
                                     title={`${cell.label} - ${cell.date}`}
                                 />
@@ -268,7 +268,7 @@ export default function TimelineGrid({
 
                         {/* Tooltip au survol */}
                         {hoveredCell && (
-                            <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-300">
+                            <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-gray-50 rounded-lg border border-gray-300">
                                 <p className="text-sm font-semibold text-gray-800">{hoveredCell.label}</p>
                                 <p className="text-xs text-gray-600">{hoveredCell.date}</p>
                                 {getCellData(hoveredCell.timestamp) && (
@@ -282,40 +282,40 @@ export default function TimelineGrid({
 
             {/* Modal d'édition */}
             {selectedCell && selectedCellInfo && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={closeModal}>
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-0 sm:p-4" onClick={closeModal}>
                     <div
-                        className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+                        className="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[90vh] overflow-y-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 rounded-t-2xl">
+                        <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 sm:p-6 sm:rounded-t-2xl">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-2xl font-bold">{selectedCellInfo.label}</h2>
-                                    <p className="text-purple-100 text-sm">{selectedCellInfo.date}</p>
+                                    <h2 className="text-lg sm:text-2xl font-bold">{selectedCellInfo.label}</h2>
+                                    <p className="text-purple-100 text-xs sm:text-sm">{selectedCellInfo.date}</p>
                                 </div>
                                 <button
                                     onClick={closeModal}
-                                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                                    className="p-1.5 sm:p-2 hover:bg-white/20 rounded-lg transition-colors"
                                 >
-                                    <span className="text-2xl">✕</span>
+                                    <span className="text-xl sm:text-2xl">✕</span>
                                 </button>
                             </div>
                         </div>
 
                         {/* Formulaire de saisie */}
-                        <div className="p-6 space-y-6">
+                        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                             <p className="text-sm text-gray-600 italic">
                                 📝 Modifiez les données pour ce point de la timeline
                             </p>
 
                             {/* Configuration générale (uniquement cellule #0) */}
                             {selectedCellIndex === 0 && generalConfigFields.length > 0 && (
-                                <div className="border-l-4 border-purple-500 pl-4 bg-purple-50/50 p-4 rounded-lg space-y-4">
-                                    <h3 className="text-lg font-bold text-purple-800 flex items-center gap-2">
-                                        <span>⚙️</span> Configuration générale (point de départ)
+                                <div className="border-l-2 sm:border-l-4 border-purple-500 pl-2 sm:pl-4 bg-purple-50/50 p-3 sm:p-4 rounded-lg space-y-3 sm:space-y-4">
+                                    <h3 className="text-base sm:text-lg font-bold text-purple-800 flex items-center gap-2">
+                                        <span>⚙️</span> <span className="hidden sm:inline">Configuration générale (point de départ)</span><span className="sm:hidden">Config initiale</span>
                                     </h3>
-                                    <p className="text-xs text-purple-700 italic mb-3">
+                                    <p className="text-xs text-purple-700 italic mb-2 sm:mb-3">
                                         Ces informations représentent la configuration initiale de votre culture
                                     </p>
 
@@ -385,8 +385,8 @@ export default function TimelineGrid({
 
                             {/* Séparateur entre config et timeline data (cellule #0) */}
                             {selectedCellIndex === 0 && generalConfigFields.length > 0 && (
-                                <div className="border-t-2 border-dashed border-gray-300 my-4 pt-4">
-                                    <h3 className="text-md font-bold text-gray-700 flex items-center gap-2 mb-3">
+                                <div className="border-t-2 border-dashed border-gray-300 my-3 sm:my-4 pt-3 sm:pt-4">
+                                    <h3 className="text-sm sm:text-md font-bold text-gray-700 flex items-center gap-2 mb-2 sm:mb-3">
                                         <span>📊</span> Données du point {selectedCellInfo?.label}
                                     </h3>
                                 </div>
