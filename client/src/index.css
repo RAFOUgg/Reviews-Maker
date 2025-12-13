@@ -1,5 +1,6 @@
-/* === ORCHARD STUDIO STYLES === */
+/* === REVIEWS-MAKER V2 - DESIGN SYSTEM === */
 @import './assets/orchard.css';
+@import './assets/themes-v2.css';
 
 @tailwind base;
 @tailwind components;
