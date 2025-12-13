@@ -28,17 +28,17 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
   const [customElements, setCustomElements] = useState([]);
   const [isExporting, setIsExporting] = useState(false);
   const [previewMode, setPreviewMode] = useState(true);
-  
+
   const canvasRef = useRef(null);
-  
+
   const currentFormat = EXPORT_FORMATS[selectedFormat];
   const currentTemplateType = TEMPLATE_TYPES[selectedTemplate];
   const maxPages = currentFormat?.maxPages || 1;
   const maxElements = getMaxElements(selectedFormat, selectedTemplate);
-  
+
   // Charger template prédéfini
   const predefinedTemplate = getPredefinedTemplate(productType, selectedTemplate);
-  
+
   /**
    * Export réel avec html2canvas
    */
@@ -47,14 +47,14 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
       alert('Canvas non disponible');
       return;
     }
-    
+
     setIsExporting(true);
-    
+
     try {
       const format = EXPORT_FORMATS[selectedFormat];
       const quality = EXPORT_OPTIONS.quality[exportQuality];
       const scale = quality?.dpi ? quality.dpi / 72 : 1;
-      
+
       // Capturer le canvas avec html2canvas
       const canvas = await html2canvas(canvasRef.current, {
         scale: scale,
@@ -65,16 +65,16 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
         height: format.height,
         logging: false
       });
-      
+
       // Générer le nom du fichier
       const timestamp = new Date().toISOString().slice(0, 10);
       const filename = `review-${productType}-${selectedTemplate}-${timestamp}`;
-      
+
       if (exportFileFormat === 'png' || exportFileFormat === 'jpeg') {
         // Export image
         const mimeType = exportFileFormat === 'png' ? 'image/png' : 'image/jpeg';
         const dataUrl = canvas.toDataURL(mimeType, exportFileFormat === 'jpeg' ? 0.9 : 1);
-        
+
         // Télécharger
         const link = document.createElement('a');
         link.download = `${filename}.${exportFileFormat}`;
@@ -82,7 +82,7 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
       } else if (exportFileFormat === 'svg') {
         // Export SVG (via canvas2svg si besoin, sinon fallback PNG)
         const dataUrl = canvas.toDataURL('image/png');
@@ -92,7 +92,7 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
       } else if (exportFileFormat === 'pdf') {
         // Export PDF via jsPDF (si disponible) sinon PNG
         try {
@@ -102,7 +102,7 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
             unit: 'px',
             format: [format.width, format.height]
           });
-          
+
           const imgData = canvas.toDataURL('image/jpeg', 0.9);
           pdf.addImage(imgData, 'JPEG', 0, 0, format.width, format.height);
           pdf.save(`${filename}.pdf`);
@@ -118,7 +118,7 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
           document.body.removeChild(link);
         }
       }
-      
+
       alert('Export réussi!');
     } catch (error) {
       console.error('Erreur export:', error);
@@ -147,7 +147,7 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl shadow-2xl max-w-7xl w-full h-[90vh] flex flex-col overflow-hidden">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-purple-500 to-indigo-500">
           <div className="flex items-center gap-3 text-white">
@@ -175,11 +175,11 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
         </div>
 
         <div className="flex flex-1 overflow-hidden">
-          
+
           {/* Sidebar gauche - Configuration */}
           <div className="w-80 bg-gray-50 border-r border-gray-200 overflow-y-auto">
             <div className="p-6 space-y-6">
-              
+
               {/* Format */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
@@ -191,11 +191,10 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
                     <button
                       key={format.id}
                       onClick={() => setSelectedFormat(format.id)}
-                      className={`p-3 rounded-xl text-center transition-all ${
-                        selectedFormat === format.id
+                      className={`p-3 rounded-xl text-center transition-all ${selectedFormat === format.id
                           ? 'bg-purple-500 text-white shadow-lg'
                           : 'bg-white text-gray-700 hover:bg-gray-100'
-                      }`}
+                        }`}
                     >
                       <div className="text-2xl mb-1">{format.icon}</div>
                       <div className="text-xs font-medium">{format.label}</div>
@@ -224,13 +223,12 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
                         key={template.id}
                         onClick={() => available && setSelectedTemplate(template.id)}
                         disabled={!available}
-                        className={`w-full p-3 rounded-xl text-left transition-all ${
-                          selectedTemplate === template.id
+                        className={`w-full p-3 rounded-xl text-left transition-all ${selectedTemplate === template.id
                             ? 'bg-indigo-500 text-white shadow-lg'
                             : available
-                            ? 'bg-white text-gray-700 hover:bg-gray-100'
-                            : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50'
-                        }`}
+                              ? 'bg-white text-gray-700 hover:bg-gray-100'
+                              : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50'
+                          }`}
                       >
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-2">
@@ -259,7 +257,7 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
                   <Settings className="w-5 h-5 text-green-500" />
                   <h3 className="font-semibold text-gray-900">Export</h3>
                 </div>
-                
+
                 {/* Format fichier */}
                 <div className="mb-3">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -270,11 +268,10 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
                       <button
                         key={format.id}
                         onClick={() => setExportFileFormat(format.id)}
-                        className={`p-2 rounded-lg text-center transition-all ${
-                          exportFileFormat === format.id
+                        className={`p-2 rounded-lg text-center transition-all ${exportFileFormat === format.id
                             ? 'bg-green-500 text-white'
                             : 'bg-white text-gray-700 hover:bg-gray-100'
-                        }`}
+                          }`}
                       >
                         <div className="text-xl mb-1">{format.icon}</div>
                         <div className="text-xs font-medium">{format.label}</div>
@@ -293,11 +290,10 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
                       <button
                         key={quality.id}
                         onClick={() => setExportQuality(quality.id)}
-                        className={`w-full p-2 rounded-lg text-left transition-all ${
-                          exportQuality === quality.id
+                        className={`w-full p-2 rounded-lg text-left transition-all ${exportQuality === quality.id
                             ? 'bg-green-500 text-white'
                             : 'bg-white text-gray-700 hover:bg-gray-100'
-                        }`}
+                          }`}
                       >
                         <div className="font-medium text-sm">{quality.label}</div>
                         <div className="text-xs opacity-75">{quality.description}</div>

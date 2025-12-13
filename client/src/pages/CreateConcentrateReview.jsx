@@ -116,14 +116,14 @@ export default function CreateConcentrateReview() {
         try {
             // Créer FormData pour l'upload
             const submitData = new FormData()
-            
+
             // Ajouter les photos
             photos.forEach((photo) => {
                 if (photo.file) {
                     submitData.append('images', photo.file)
                 }
             })
-            
+
             // Ajouter les données du formulaire
             Object.entries(formData).forEach(([key, value]) => {
                 if (value !== undefined && value !== null && value !== '') {
@@ -134,7 +134,7 @@ export default function CreateConcentrateReview() {
                     }
                 }
             })
-            
+
             // Soumettre au backend
             if (id) {
                 await concentrateReviewsService.update(id, submitData)

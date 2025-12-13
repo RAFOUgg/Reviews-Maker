@@ -122,14 +122,14 @@ export default function CreateFlowerReview() {
         try {
             // Créer FormData pour l'upload
             const submitData = new FormData()
-            
+
             // Ajouter les photos
             photos.forEach((photo, index) => {
                 if (photo.file) {
                     submitData.append('images', photo.file)
                 }
             })
-            
+
             // Ajouter les données du formulaire
             Object.entries(formData).forEach(([key, value]) => {
                 if (value !== undefined && value !== null && value !== '') {
@@ -140,12 +140,12 @@ export default function CreateFlowerReview() {
                     }
                 }
             })
-            
+
             // Ajouter le type de variété par défaut si non spécifié
             if (!formData.varietyType) {
                 submitData.append('varietyType', 'hybride')
             }
-            
+
             // Soumettre au backend
             if (id) {
                 await flowerReviewsService.update(id, submitData)
