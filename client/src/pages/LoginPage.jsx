@@ -2,8 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import OAuthButtons from '../components/auth/OAuthButtons'
 import AgeVerificationModal from '../components/auth/AgeVerificationModal'
+import LiquidButton from '../components/LiquidButton'
+import LiquidInput from '../components/LiquidInput'
+import LiquidCard from '../components/LiquidCard'
 import { authService } from '../services/apiService'
 import { useStore } from '../store/useStore'
+import { Mail, Lock, User, ArrowRight } from 'lucide-react'
 
 export default function LoginPage() {
     const navigate = useNavigate()
@@ -107,117 +111,139 @@ export default function LoginPage() {
                 onVerified={handleAgeVerified}
             />
 
-            <div className="min-h-screen bg-gradient-to-br from-purple-600 via-violet-700 to-purple-800 text-gray-900 flex items-center justify-center px-4 py-10">
-                <div className="w-full max-w-4xl glass rounded-3xl shadow-2xl overflow-hidden animate-fade-in">
-                    <div className="p-8 md:p-10 space-y-7">
-                        <div className="text-center space-y-2">
-                            <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight drop-shadow-lg">
+            <div className="min-h-screen flex items-center justify-center px-4 py-10">
+                <LiquidCard className="w-full max-w-4xl" padding="lg" hover={false}>
+                    <div className="space-y-8">
+                        {/* Header */}
+                        <div className="text-center space-y-3">
+                            <h1 className="text-4xl md:text-5xl font-bold text-gradient">
                                 Connexion {accountTypeLabels[selectedType] || 'Amateur'}
                             </h1>
-                            <p className="text-white/90 text-sm md:text-base drop-shadow">
+                            <p className="text-[var(--text-secondary)] text-lg">
                                 {selectedType === 'consumer' && 'Créez et gérez vos reviews personnelles'}
                                 {(selectedType === 'influencer_basic' || selectedType === 'influencer_pro') && 'Exports avancés et partage optimisé'}
                                 {selectedType === 'producer' && 'Traçabilité complète et exports professionnels'}
                             </p>
                             <button
                                 onClick={() => navigate('/choose-account')}
-                                className="text-sm text-white/80 hover:text-white underline"
+                                className="text-sm text-[var(--text-tertiary)] hover:text-[var(--accent-primary)] transition-smooth inline-flex items-center gap-1"
                             >
-                                Changer de plan →
+                                Changer de plan <ArrowRight size={16} />
                             </button>
                         </div>
 
-                        <div className="bg-white/95 backdrop-blur-lg border-2 border-white/50 rounded-2xl p-5 space-y-4 shadow-xl">
-                            <div className="flex gap-2 text-sm font-semibold bg-gray-100 rounded-xl p-1.5 shadow-inner">
-                                <button
-                                    type="button"
-                                    className={`flex-1 px-4 py-2.5 rounded-lg transition-all duration-300 ${mode === 'login' ? 'bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-lg scale-105' : 'text-gray-900 hover:bg-white hover:shadow-md'}`}
-                                    onClick={() => setMode('login')}
-                                >
-                                    Connexion
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`flex-1 px-4 py-2.5 rounded-lg transition-all duration-300 ${mode === 'signup' ? 'bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-lg scale-105' : 'text-gray-900 hover:bg-white hover:shadow-md'}`}
-                                    onClick={() => setMode('signup')}
-                                >
-                                    Créer un compte
-                                </button>
-                            </div>
-
-                            <form className="space-y-3" onSubmit={handleSubmitEmail}>
-                                {mode === 'signup' && (
-                                    <div className="space-y-1">
-                                        <label className="text-sm font-semibold text-gray-900">Pseudo</label>
-                                        <input
-                                            type="text"
-                                            value={username}
-                                            onChange={(e) => setUsername(e.target.value)}
-                                            placeholder="Votre pseudo"
-                                            className="input-light w-full rounded-lg px-3 py-2.5 text-gray-900"
-                                        />
-                                    </div>
-                                )}
-                                <div className="space-y-1">
-                                    <label className="text-sm font-semibold text-gray-900">Email</label>
-                                    <input
-                                        type="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        required
-                                        placeholder="vous@example.com"
-                                        className="input-light w-full rounded-lg px-3 py-2.5 text-gray-900"
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-sm font-semibold text-gray-900">Mot de passe</label>
-                                    <input
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        required
-                                        minLength={8}
-                                        placeholder="••••••••"
-                                        className="input-light w-full rounded-lg px-3 py-2.5 text-gray-900"
-                                    />
-                                </div>
-
-                                {error && (
-                                    <div className="text-sm text-red-800 bg-red-50 border-2 border-red-300 rounded-xl px-4 py-3 flex items-center gap-2 animate-slide-down">
-                                        <span className="text-lg">⚠️</span>
-                                        {error}
-                                    </div>
-                                )}
-
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold px-4 py-3.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
-                                >
-                                    {loading ? '⏳ Patientez...' : mode === 'signup' ? '🚀 Créer mon compte' : '🔐 Se connecter'}
-                                </button>
-                            </form>
+                        {/* Mode Toggle */}
+                        <div className="flex gap-2 liquid-glass rounded-xl p-1.5">
+                            <button
+                                type="button"
+                                className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-smooth ${mode === 'login'
+                                        ? 'bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white shadow-lg'
+                                        : 'text-[var(--text-secondary)] hover:bg-white/10'
+                                    }`}
+                                onClick={() => setMode('login')}
+                            >
+                                Connexion
+                            </button>
+                            <button
+                                type="button"
+                                className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-smooth ${mode === 'signup'
+                                        ? 'bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white shadow-lg'
+                                        : 'text-[var(--text-secondary)] hover:bg-white/10'
+                                    }`}
+                                onClick={() => setMode('signup')}
+                            >
+                                Créer un compte
+                            </button>
                         </div>
 
+                        {/* Email/Password Form */}
+                        <form className="space-y-4" onSubmit={handleSubmitEmail}>
+                            {mode === 'signup' && (
+                                <LiquidInput
+                                    label="Pseudo"
+                                    type="text"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    placeholder="Votre pseudo"
+                                    icon={User}
+                                />
+                            )}
+
+                            <LiquidInput
+                                label="Email"
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="vous@example.com"
+                                icon={Mail}
+                                required
+                            />
+
+                            <LiquidInput
+                                label="Mot de passe"
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
+                                icon={Lock}
+                                required
+                                hint={mode === 'signup' ? 'Minimum 8 caractères' : undefined}
+                            />
+
+                            {error && (
+                                <div className="liquid-glass border-2 border-red-500/50 rounded-xl px-4 py-3 flex items-center gap-2">
+                                    <span className="text-lg">⚠️</span>
+                                    <span className="text-red-500">{error}</span>
+                                </div>
+                            )}
+
+                            <LiquidButton
+                                type="submit"
+                                variant="primary"
+                                size="lg"
+                                fullWidth
+                                loading={loading}
+                                icon={ArrowRight}
+                                iconPosition="right"
+                            >
+                                {mode === 'signup' ? 'Créer mon compte' : 'Se connecter'}
+                            </LiquidButton>
+                        </form>
+
+                        {/* Divider */}
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t-2 border-white/30"></div>
+                                <div className="w-full border-t border-[var(--border-primary)]"></div>
                             </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-4 bg-gradient-to-br from-purple-600 via-violet-700 to-purple-800 text-white font-semibold">Ou continuez avec</span>
+                            <div className="relative flex justify-center">
+                                <span className="px-4 liquid-glass text-sm font-medium">
+                                    Ou continuez avec
+                                </span>
                             </div>
                         </div>
 
+                        {/* OAuth Buttons */}
                         <OAuthButtons
                             onLoginStart={(provider) => handleProviderClick(provider)}
                         />
 
-                        <div className="text-sm text-white/90 border-t-2 border-white/30 pt-5 space-y-2">
-                            <p className="text-center text-xs">En continuant, vous confirmez avoir l'âge légal et accepter la vérification RDR après connexion.</p>
-                            <p className="text-center text-xs">Besoin d'aide ? <button className="text-emerald-300 hover:text-emerald-200 hover:underline font-bold transition-colors" onClick={() => navigate('/')}>Retour accueil</button></p>
+                        {/* Footer */}
+                        <div className="text-sm text-[var(--text-tertiary)] text-center space-y-2 pt-4 border-t border-[var(--border-primary)]">
+                            <p className="text-xs">
+                                En continuant, vous confirmez avoir l'âge légal et accepter la vérification RDR après connexion.
+                            </p>
+                            <p className="text-xs">
+                                Besoin d'aide ?
+                                <button
+                                    className="text-[var(--accent-primary)] hover:underline font-medium ml-1 transition-smooth"
+                                    onClick={() => navigate('/')}
+                                >
+                                    Retour accueil
+                                </button>
+                            </p>
                         </div>
                     </div>
-                </div>
+                </LiquidCard>
             </div>
         </>
     )
