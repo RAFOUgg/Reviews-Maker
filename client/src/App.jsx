@@ -28,6 +28,7 @@ import AgeVerification from './components/legal/AgeVerification'
 import ConsentModal from './components/legal/ConsentModal'
 import AccountSelector from './components/account/AccountSelector'
 import LegalConsentGate from './components/LegalConsentGate'
+import { initializeTheme } from './store/themeStore'
 
 function App() {
     const checkAuth = useStore((state) => state.checkAuth)
@@ -45,7 +46,12 @@ function App() {
         handleAgeRejected,
     } = useAuth()
 
-    // ✅ Appliquer le thème au démarrage
+    // ✅ REVIEWS-MAKER V2 - Initialiser le système de thème
+    useEffect(() => {
+        initializeTheme()
+    }, [])
+
+    // ✅ Appliquer le thème au démarrage (ancien système - maintenu pour compatibilité)
     useEffect(() => {
         const savedTheme = localStorage.getItem('theme') || 'violet-lean'
         const root = window.document.documentElement
