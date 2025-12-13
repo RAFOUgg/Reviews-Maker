@@ -12,7 +12,7 @@ import {
   Grid, Layout, Maximize2, FileImage, File, Save, X, Check,
   ChevronLeft, ChevronRight, Plus, Trash2, Copy, Sparkles,
   Share2, Zap, Star, Droplets, Flame, Leaf, Wind, Moon,
-  Sun, Heart, Clock, Award, Lock, Unlock, Move, 
+  Sun, Heart, Clock, Award, Lock, Unlock, Move,
   Instagram, Twitter, Facebook, Mail, Link2
 } from 'lucide-react';
 import {
@@ -79,7 +79,7 @@ const GlowBadge = ({ children, color = 'purple', icon: Icon, size = 'md' }) => {
     blue: 'from-blue-500 to-cyan-500 shadow-blue-500/30',
     gray: 'from-gray-500 to-slate-500 shadow-gray-500/30'
   };
-  
+
   const sizes = {
     sm: 'px-2 py-0.5 text-xs',
     md: 'px-3 py-1 text-xs',
@@ -102,7 +102,7 @@ const CircularScore = ({ value, max = 10, size = 60, strokeWidth = 6, color = 'p
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const progress = (value / max) * circumference;
-  
+
   const colors = {
     purple: { stroke: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.2)' },
     emerald: { stroke: '#10B981', bg: 'rgba(16, 185, 129, 0.2)' },
@@ -159,7 +159,7 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
   const [exportFileFormat, setExportFileFormat] = useState('png');
   const [isExporting, setIsExporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Personnalisation (selon type de compte)
   const [customization, setCustomization] = useState({
     colorScheme: 'violet',
@@ -202,9 +202,9 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
       canAddCustomWatermark: isPremium,
       maxPages: isProducer ? 9 : (isInfluencer ? 5 : 1),
       maxDPI: isProducer ? 300 : (isInfluencer ? 300 : 150),
-      formats: isProducer 
+      formats: isProducer
         ? ['png', 'jpeg', 'svg', 'pdf', 'csv', 'json', 'html']
-        : isPremium 
+        : isPremium
           ? ['png', 'jpeg', 'svg', 'pdf']
           : ['png', 'jpeg', 'pdf']
     };
@@ -224,22 +224,22 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
       breeder: reviewData.breeder || '',
       farm: reviewData.farm || '',
       hashmaker: reviewData.hashmaker || '',
-      
+
       // Type et classification
       type: reviewData.strainType || reviewData.type || productType,
       indicaRatio: reviewData.indicaRatio,
       sativaRatio: reviewData.sativaRatio,
-      
+
       // Données analytiques
       thc: reviewData.thcPercent || reviewData.thc,
       cbd: reviewData.cbdPercent || reviewData.cbd,
       cbg: reviewData.cbgPercent || reviewData.cbg,
       terpenes: reviewData.terpenes || reviewData.terpeneProfile || [],
-      
+
       // Images
       images: reviewData.images || [],
       mainImage: reviewData.mainImage || reviewData.images?.[0],
-      
+
       // Scores par catégorie
       visual: {
         density: reviewData.visualDensity || reviewData.visual?.density,
@@ -278,16 +278,16 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
         duration: reviewData.effectsDuration || reviewData.effects?.duration,
         average: reviewData.effectsAverage || reviewData.effects?.average
       },
-      
+
       // Pipelines
       culturePipeline: reviewData.culturePipeline,
       curingPipeline: reviewData.curingPipeline,
       separationPipeline: reviewData.separationPipeline,
       extractionPipeline: reviewData.extractionPipeline,
-      
+
       // Note globale
       overallRating: reviewData.overallRating || reviewData.rating,
-      
+
       // Métadonnées
       createdAt: reviewData.createdAt,
       author: reviewData.author || reviewData.holderName
@@ -298,46 +298,46 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
   // SCHÉMAS DE COULEURS (THÈMES)
   // ─────────────────────────────────────────────────────────────────
   const colorSchemes = {
-    violet: { 
+    violet: {
       name: 'Violet Lean',
       gradient: 'from-violet-600 via-purple-600 to-indigo-700',
-      primary: '#8B5CF6', 
+      primary: '#8B5CF6',
       secondary: '#A78BFA',
       accent: '#C4B5FD',
       text: '#FFFFFF',
       textMuted: 'rgba(255,255,255,0.7)'
     },
-    emerald: { 
+    emerald: {
       name: 'Vert Émeraude',
       gradient: 'from-emerald-600 via-teal-600 to-cyan-700',
-      primary: '#10B981', 
+      primary: '#10B981',
       secondary: '#34D399',
       accent: '#6EE7B7',
       text: '#FFFFFF',
       textMuted: 'rgba(255,255,255,0.7)'
     },
-    tahiti: { 
+    tahiti: {
       name: 'Bleu Tahiti',
       gradient: 'from-cyan-600 via-sky-600 to-blue-700',
-      primary: '#06B6D4', 
+      primary: '#06B6D4',
       secondary: '#22D3EE',
       accent: '#67E8F9',
       text: '#FFFFFF',
       textMuted: 'rgba(255,255,255,0.7)'
     },
-    sakura: { 
+    sakura: {
       name: 'Sakura',
       gradient: 'from-pink-500 via-rose-500 to-fuchsia-600',
-      primary: '#EC4899', 
+      primary: '#EC4899',
       secondary: '#F472B6',
       accent: '#FBCFE8',
       text: '#FFFFFF',
       textMuted: 'rgba(255,255,255,0.7)'
     },
-    midnight: { 
+    midnight: {
       name: 'Minuit',
       gradient: 'from-slate-800 via-gray-900 to-zinc-900',
-      primary: '#334155', 
+      primary: '#334155',
       secondary: '#475569',
       accent: '#94A3B8',
       text: '#FFFFFF',
@@ -438,7 +438,7 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
     const isCustom = selectedTemplate === 'custom';
 
     return (
-      <div 
+      <div
         className={`w-full h-full flex flex-col relative overflow-hidden bg-gradient-to-br ${currentScheme.gradient}`}
       >
         {/* Effet Liquid Glass Background */}
@@ -451,7 +451,7 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
         {/* Contenu principal */}
         <div className="relative z-10 flex flex-col h-full p-6">
           {/* HEADER */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-4"
@@ -470,7 +470,7 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
           </motion.div>
 
           {/* IMAGE PRINCIPALE */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
@@ -480,15 +480,15 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
               {normalizedData.mainImage ? (
                 <img
                   src={normalizedData.mainImage.startsWith('http') || normalizedData.mainImage.startsWith('data:') || normalizedData.mainImage.startsWith('blob:')
-                    ? normalizedData.mainImage 
+                    ? normalizedData.mainImage
                     : `/uploads/review_images/${normalizedData.mainImage}`}
                   alt={normalizedData.name}
                   className="w-full h-auto rounded-xl object-cover"
-                  style={{ 
+                  style={{
                     maxHeight: selectedFormat === 'story' ? '280px' : '220px',
                     filter: customization.imageEffect === 'vintage' ? 'sepia(0.3) contrast(1.1)' :
-                            customization.imageEffect === 'vivid' ? 'saturate(1.3) contrast(1.05)' :
-                            customization.imageEffect === 'bw' ? 'grayscale(1)' : 'none'
+                      customization.imageEffect === 'vivid' ? 'saturate(1.3) contrast(1.05)' :
+                        customization.imageEffect === 'bw' ? 'grayscale(1)' : 'none'
                   }}
                   crossOrigin="anonymous"
                 />
@@ -513,7 +513,7 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
 
           {/* DONNÉES ANALYTIQUES (THC/CBD) */}
           {!isMinimal && (normalizedData.thc || normalizedData.cbd) && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
@@ -542,7 +542,7 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
 
           {/* SCORES PAR CATÉGORIE */}
           {!isMinimal && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
@@ -566,15 +566,15 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
 
           {/* NOTES AROMATIQUES (Template détaillé) */}
           {isDetailed && normalizedData.odor?.dominant?.length > 0 && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
               className="flex flex-wrap gap-1.5 justify-center mb-4"
             >
               {normalizedData.odor.dominant.slice(0, 5).map((aroma, i) => (
-                <span 
-                  key={i} 
+                <span
+                  key={i}
                   className="px-3 py-1 backdrop-blur-md bg-white/15 rounded-full text-xs text-white border border-white/20"
                 >
                   {typeof aroma === 'string' ? aroma : aroma.name || aroma.label}
@@ -585,15 +585,15 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
 
           {/* EFFETS (Template détaillé) */}
           {isDetailed && normalizedData.effects?.selected?.length > 0 && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
               className="flex flex-wrap gap-1.5 justify-center mb-4"
             >
               {normalizedData.effects.selected.slice(0, 4).map((effect, i) => (
-                <span 
-                  key={i} 
+                <span
+                  key={i}
                   className="px-3 py-1 backdrop-blur-md bg-white/15 rounded-full text-xs text-white border border-white/20"
                 >
                   {typeof effect === 'string' ? effect : effect.name || effect.label}
@@ -640,19 +640,19 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
   // ─────────────────────────────────────────────────────────────────
   return (
     <AnimatePresence>
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
         style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}
       >
-        <motion.div 
+        <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           className="w-full max-w-7xl h-[90vh] rounded-3xl overflow-hidden shadow-2xl flex"
-          style={{ 
+          style={{
             background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(249,250,251,0.98) 100%)',
             border: '1px solid rgba(255,255,255,0.5)'
           }}
@@ -680,11 +680,10 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 py-3 text-xs font-medium transition-all ${
-                    activeTab === tab.id 
-                      ? 'text-purple-600 border-b-2 border-purple-500 bg-white/50' 
+                  className={`flex-1 py-3 text-xs font-medium transition-all ${activeTab === tab.id
+                      ? 'text-purple-600 border-b-2 border-purple-500 bg-white/50'
                       : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/50'
-                  }`}
+                    }`}
                 >
                   <tab.icon className="w-4 h-4 mx-auto mb-1" />
                   {tab.label}
@@ -709,13 +708,12 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
                         key={template.id}
                         onClick={() => available && setSelectedTemplate(template.id)}
                         disabled={!available}
-                        className={`w-full p-4 rounded-xl text-left transition-all ${
-                          isSelected
+                        className={`w-full p-4 rounded-xl text-left transition-all ${isSelected
                             ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg shadow-purple-500/25'
                             : available
                               ? 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 hover:border-purple-300'
                               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
@@ -741,11 +739,10 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
                     <div className="pt-3 border-t border-gray-200">
                       <button
                         onClick={() => setDragDropMode(!dragDropMode)}
-                        className={`w-full p-3 rounded-xl flex items-center justify-between transition-all ${
-                          dragDropMode 
-                            ? 'bg-purple-100 text-purple-700 border-2 border-purple-500' 
+                        className={`w-full p-3 rounded-xl flex items-center justify-between transition-all ${dragDropMode
+                            ? 'bg-purple-100 text-purple-700 border-2 border-purple-500'
                             : 'bg-white text-gray-600 border border-gray-200 hover:border-purple-300'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-2">
                           <Move className="w-5 h-5" />
@@ -773,11 +770,10 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
                       <button
                         key={format.id}
                         onClick={() => setSelectedFormat(format.id)}
-                        className={`p-3 rounded-xl text-center transition-all ${
-                          selectedFormat === format.id
+                        className={`p-3 rounded-xl text-center transition-all ${selectedFormat === format.id
                             ? 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg'
                             : 'bg-white text-gray-700 border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50'
-                        }`}
+                          }`}
                       >
                         <div className="text-2xl mb-1">{format.icon}</div>
                         <div className="text-xs font-semibold">{format.label}</div>
@@ -836,11 +832,10 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
                         <button
                           key={key}
                           onClick={() => setCustomization(c => ({ ...c, colorScheme: key }))}
-                          className={`p-2 rounded-xl transition-all ${
-                            customization.colorScheme === key
+                          className={`p-2 rounded-xl transition-all ${customization.colorScheme === key
                               ? 'ring-2 ring-purple-500 ring-offset-2'
                               : ''
-                          }`}
+                            }`}
                         >
                           <div className={`h-8 rounded-lg bg-gradient-to-r ${scheme.gradient} mb-1`} />
                           <span className="text-[10px] font-medium text-gray-600">{scheme.name}</span>
@@ -862,11 +857,10 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
                         <button
                           key={effect.id}
                           onClick={() => setCustomization(c => ({ ...c, imageEffect: effect.id }))}
-                          className={`p-2 rounded-lg text-xs font-medium transition-all ${
-                            customization.imageEffect === effect.id
+                          className={`p-2 rounded-lg text-xs font-medium transition-all ${customization.imageEffect === effect.id
                               ? 'bg-purple-500 text-white'
                               : 'bg-white text-gray-600 border border-gray-200 hover:border-purple-300'
-                          }`}
+                            }`}
                         >
                           {effect.label}
                         </button>
@@ -877,7 +871,7 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
                   {/* Options */}
                   <div className="space-y-3">
                     <h3 className="text-sm font-semibold text-gray-700">Options</h3>
-                    
+
                     <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
                       <span className="text-sm text-gray-700">Afficher branding</span>
                       <input
@@ -928,13 +922,12 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
                             key={format.id}
                             onClick={() => allowed && setExportFileFormat(format.id)}
                             disabled={!allowed}
-                            className={`p-3 rounded-xl text-center transition-all ${
-                              exportFileFormat === format.id
+                            className={`p-3 rounded-xl text-center transition-all ${exportFileFormat === format.id
                                 ? 'bg-gradient-to-br from-green-500 to-emerald-500 text-white shadow-lg'
                                 : allowed
                                   ? 'bg-white text-gray-700 border border-gray-200 hover:border-green-300'
                                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            }`}
+                              }`}
                           >
                             <div className="text-lg mb-1">{format.icon}</div>
                             <div className="text-xs font-semibold">{format.label}</div>
@@ -956,13 +949,12 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
                             key={quality.id}
                             onClick={() => allowed && setExportQuality(quality.id)}
                             disabled={!allowed}
-                            className={`w-full p-3 rounded-xl text-left transition-all ${
-                              exportQuality === quality.id
+                            className={`w-full p-3 rounded-xl text-left transition-all ${exportQuality === quality.id
                                 ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
                                 : allowed
                                   ? 'bg-white text-gray-700 border border-gray-200 hover:border-green-300'
                                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            }`}
+                              }`}
                           >
                             <div className="flex items-center justify-between">
                               <span className="font-medium">{quality.label}</span>
@@ -1013,7 +1005,7 @@ const ExportMaker = ({ reviewData, productType = 'Fleurs', accountType = 'Amateu
           {/* ZONE CENTRALE - Aperçu */}
           {/* ═══════════════════════════════════════════════════════════ */}
           <div className="flex-1 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-8 overflow-auto">
-            <div 
+            <div
               ref={canvasRef}
               className="rounded-2xl shadow-2xl overflow-hidden transition-all duration-300"
               style={{
