@@ -31,25 +31,6 @@ async function resetLegalFields() {
         console.log('  • country: reset à null')
         console.log('  • region: reset à null')
 
-        // Vérification finale
-        const verification = await prisma.user.findMany({
-            select: {
-                id: true,
-                username: true,
-                legalAge: true,
-                consentRDR: true,
-                accountType: true
-            }
-        })
-
-        console.log('\n📊 État final des utilisateurs:')
-        verification.forEach((user, index) => {
-            console.log(`\nUser ${index + 1}: ${user.username || user.id}`)
-            console.log(`  • Account Type: ${user.accountType}`)
-            console.log(`  • Legal Age: ${user.legalAge}`)
-            console.log(`  • Consent RDR: ${user.consentRDR}`)
-        })
-
         console.log('\n✅ Reset terminé avec succès!')
         console.log('🎯 Les utilisateurs verront maintenant les modals légales au login')
 
