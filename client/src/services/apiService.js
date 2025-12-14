@@ -185,6 +185,21 @@ export const flowerReviewsService = {
      */
     async getById(id) {
         return fetchAPI(`${API_BASE}/reviews/flower/${id}`)
+    },
+
+    /**
+     * Sauvegarder un brouillon
+     */
+    async saveDraft(formData) {
+        const reviewData = {
+            ...formData,
+            status: 'draft'
+        }
+        return fetchAPI(`${API_BASE}/reviews/flower`, {
+            method: 'POST',
+            body: JSON.stringify(reviewData),
+            headers: { 'Content-Type': 'application/json' }
+        })
     }
 }
 

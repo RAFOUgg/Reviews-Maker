@@ -55,6 +55,13 @@ export default function CreateFlowerReview() {
     const [showOrchard, setShowOrchard] = useState(false)
     const scrollContainerRef = useRef(null)
 
+    // Synchroniser les photos avec formData
+    useEffect(() => {
+        if (photos.length > 0) {
+            handleChange('photos', photos)
+        }
+    }, [photos])
+
     // Définition des 11 sections
     const sections = [
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
@@ -80,13 +87,103 @@ export default function CreateFlowerReview() {
     }, [isAuthenticated])
 
     const handleSave = async () => {
-        // TODO: Implement save logic
-        toast.info('Sauvegarde en cours...')
+        try {
+            setSaving(true)
+            
+            // Préparer les données pour l'upload
+            const reviewFormData = new FormData()
+            
+            // Ajouter toutes les données du formulaire
+            Object.keys(formData).forEach(key => {
+                if (key !== 'photos' && formData[key] !== undefined && formData[key] !== null) {
+                    reviewFormData.append(key, typeof formData[key] === 'object' 
+                        ? JSON.stringify(formData[key]) 
+                        : formData[key]
+                    )
+                }
+            })
+            
+            // Ajouter les photos
+            if (photos && photos.length > 0) {
+                photos.forEach((photo) => {
+                    if (photo.file) {
+                        reviewFormData.append('photos', photo.file)
+                    }
+                })
+            }
+            
+            reviewFormData.append('status', 'draft')
+            
+            let savedReview
+            if (id) {
+                savedReview = await flowerReviewsService.update(id, reviewFormData)
+            } else {
+                savedReview = await flowerReviewsService.create(reviewFormData)
+            }
+            
+            toast.success('Brouillon sauvegardé')
+            
+            if (!id && savedReview?.id) {
+                navigate(`/edit/flower/${savedReview.id}`)
+            }
+        } catch (error) {
+            toast.error('Erreur lors de la sauvegarde')
+            console.error(error)
+        } finally {
+            setSaving(false)
+        }
     }
 
     const handleSubmit = async () => {
-        // TODO: Implement submit logic
-        toast.info('Soumission en cours...')
+        // Validation des champs requis
+        if (!formData.nomCommercial || !photos || photos.length === 0) {
+            toast.error('Veuillez remplir les champs obligatoires : Nom commercial et au moins 1 photo')
+            setCurrentSection(0) // Retour à la première section
+            return
+        }
+
+        try {
+            setSaving(true)
+            
+            // Préparer les données pour l'upload
+            const reviewFormData = new FormData()
+            
+            // Ajouter toutes les données du formulaire
+            Object.keys(formData).forEach(key => {
+                if (key !== 'photos' && formData[key] !== undefined && formData[key] !== null) {
+                    reviewFormData.append(key, typeof formData[key] === 'object' 
+                        ? JSON.stringify(formData[key]) 
+                        : formData[key]
+                    )
+                }
+            })
+            
+            // Ajouter les photos
+            if (photos && photos.length > 0) {
+                photos.forEach((photo) => {
+                    if (photo.file) {
+                        reviewFormData.append('photos', photo.file)
+                    }
+                })
+            }
+            
+            reviewFormData.append('status', 'published')
+            
+            if (id) {
+                await flowerReviewsService.update(id, reviewFormData)
+                toast.success('Review mise à jour et publiée')
+            } else {
+                await flowerReviewsService.create(reviewFormData)
+                toast.success('Review publiée avec succès')
+            }
+            
+            navigate('/library')
+        } catch (error) {
+            toast.error('Erreur lors de la publication')
+            console.error(error)
+        } finally {
+            setSaving(false)
+        }
     }
 
     const handlePrevious = () => {
@@ -181,15 +278,15 @@ export default function CreateFlowerReview() {
                         {/* Render current section */}
                         {currentSection === 0 && (
                             <InfosGenerales
-                                data={formData}
+                                formData={formData}
                                 photos={photos}
-                                onChange={handleChange}
-                                onPhotoUpload={handlePhotoUpload}
-                                onPhotoRemove={removePhoto}
+                                handleChange={handleChange}
+                                handlePhotoUpload={handlePhotoUpload}
+                                removePhoto={removePhoto}
                             />
                         )}
                         {currentSection === 1 && (
-                            <Genetiques data={formData} onChange={handleChange} />
+                            <Genetiques formData={formData} handleChange={handleChange} />
                         )}
                         {currentSection === 2 && (
                             <CulturePipelineSection
