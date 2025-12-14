@@ -1,6 +1,7 @@
 /* === REVIEWS-MAKER V2 - DESIGN SYSTEM === */
 @import './assets/orchard.css';
 @import './assets/themes-v2.css';
+@import './assets/liquid-glass.css';
 
 @tailwind base;
 @tailwind components;

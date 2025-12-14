@@ -12,6 +12,7 @@ import CreateConcentrateReview from './pages/CreateConcentrateReview'
 import CreateEdibleReview from './pages/CreateEdibleReview'
 import EditReviewPage from './pages/EditReviewPage'
 import LibraryPage from './pages/LibraryPage'
+import GalleryPage from './pages/GalleryPage'
 import StatsPage from './pages/StatsPage'
 import SettingsPage from './pages/SettingsPage'
 import ProfilePage from './pages/ProfilePage'
@@ -38,7 +39,6 @@ function App() {
         needsAgeVerification,
         needsConsent,
         needsAccountTypeSelection,
-        accountInfo,
         handleAgeVerified,
         handleConsentAccepted,
         handleAccountTypeSelected,
@@ -46,96 +46,24 @@ function App() {
         handleAgeRejected,
     } = useAuth()
 
-    // ✅ REVIEWS-MAKER V2 - Initialiser le système de thème
     useEffect(() => {
         initializeTheme()
     }, [])
 
-    // ✅ Appliquer le thème au démarrage (ancien système - maintenu pour compatibilité)
-    useEffect(() => {
-        const savedTheme = localStorage.getItem('theme') || 'violet-lean'
-        const root = window.document.documentElement
-
-        const applyTheme = (themeValue) => {
-            root.removeAttribute('data-theme')
-
-            switch (themeValue) {
-                case 'violet-lean':
-                    root.setAttribute('data-theme', 'violet-lean')
-                    root.classList.remove('dark')
-                    break
-                case 'emerald':
-                    root.setAttribute('data-theme', 'emerald')
-                    root.classList.remove('dark')
-                    break
-                case 'tahiti':
-                    root.setAttribute('data-theme', 'tahiti')
-                    root.classList.remove('dark')
-                    break
-                case 'sakura':
-                    root.setAttribute('data-theme', 'sakura')
-                    root.classList.remove('dark')
-                    break
-                case 'dark':
-                    root.setAttribute('data-theme', 'dark')
-                    root.classList.add('dark')
-                    break
-                case 'auto':
-                    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-                    if (isDark) {
-                        root.setAttribute('data-theme', 'dark')
-                        root.classList.add('dark')
-                    } else {
-                        // keep default accent theme when system is light
-                        root.setAttribute('data-theme', 'violet-lean')
-                        root.classList.remove('dark')
-                    }
-                    break
-                default:
-                    root.setAttribute('data-theme', 'violet-lean')
-            }
-        }
-
-        applyTheme(savedTheme)
-
-        // If user chose 'auto', listen to system changes globally so the whole app respects system theme
-        if (savedTheme === 'auto') {
-            const mq = window.matchMedia('(prefers-color-scheme: dark)')
-            const handler = (e) => {
-                applyTheme('auto')
-            }
-            // Modern API
-            if (mq.addEventListener) mq.addEventListener('change', handler)
-            else if (mq.addListener) mq.addListener(handler)
-
-            return () => {
-                if (mq.removeEventListener) mq.removeEventListener('change', handler)
-                else if (mq.removeListener) mq.removeListener(handler)
-            }
-        }
-    }, [])
-
-    // ✅ Vérifier la session au démarrage
     useEffect(() => {
         checkAuth()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     return (
         <I18nextProvider i18n={i18n}>
             <ErrorBoundary>
-                {/* Gate légal - Premier niveau de protection, s'affiche AVANT tout le reste */}
                 <LegalConsentGate>
                     <div className="min-h-screen bg-dark-bg text-dark-text">
-                        {/* Bannière RDR - Toujours visible */}
                         <RDRBanner />
-
                         <ToastContainer />
-
-                        {/* Modales d'onboarding - Affichage conditionnel pour utilisateurs authentifiés */}
+                        
                         {isAuthenticated && !loading && (
                             <>
-                                {/* 1. Vérification d'âge - Première étape obligatoire */}
                                 {needsAgeVerification && (
                                     <AgeVerification
                                         isOpen={true}
@@ -143,8 +71,6 @@ function App() {
                                         onReject={handleAgeRejected}
                                     />
                                 )}
-
-                                {/* 2. Consentement RDR - Après vérification d'âge */}
                                 {needsConsent && (
                                     <ConsentModal
                                         isOpen={true}
@@ -152,8 +78,6 @@ function App() {
                                         onDecline={handleConsentDeclined}
                                     />
                                 )}
-
-                                {/* 3. Sélection type de compte - Après consentement */}
                                 {needsAccountTypeSelection && (
                                     <AccountSelector
                                         isOpen={true}
@@ -168,23 +92,31 @@ function App() {
                                 <Route index element={<HomePage />} />
                                 <Route path="/review/:id" element={<ReviewDetailPage />} />
                                 <Route path="/create" element={<CreateReviewPage />} />
-                                {/* Routes spécifiques AVANT les routes génériques */}
+                                
                                 <Route path="/create/flower" element={<CreateFlowerReview />} />
                                 <Route path="/edit/flower/:id" element={<CreateFlowerReview />} />
+                                
                                 <Route path="/create/hash" element={<CreateHashReview />} />
                                 <Route path="/edit/hash/:id" element={<CreateHashReview />} />
+                                
                                 <Route path="/create/concentrate" element={<CreateConcentrateReview />} />
                                 <Route path="/edit/concentrate/:id" element={<CreateConcentrateReview />} />
+                                
                                 <Route path="/create/edible" element={<CreateEdibleReview />} />
                                 <Route path="/edit/edible/:id" element={<CreateEdibleReview />} />
+                                
                                 <Route path="/create/type/:productType" element={<CreateReviewPage />} />
                                 <Route path="/edit/:id" element={<EditReviewPage />} />
+                                
                                 <Route path="/library" element={<LibraryPage />} />
+                                <Route path="/gallery" element={<GalleryPage />} />
                                 <Route path="/stats" element={<StatsPage />} />
+                                
                                 <Route path="/settings" element={<SettingsPage />} />
                                 <Route path="/profile" element={<ProfilePage />} />
                                 <Route path="/account" element={<ProfileSettingsPage />} />
                             </Route>
+                            
                             <Route path="/choose-account" element={<AccountChoicePage />} />
                             <Route path="/login" element={<LoginPage />} />
                             <Route path="/auth/callback" element={<AuthCallback />} />
