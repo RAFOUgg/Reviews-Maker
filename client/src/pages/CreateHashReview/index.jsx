@@ -1,16 +1,15 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Save, Eye } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { useToast } from '../../components/ToastContainer'
 import OrchardPanel from '../../components/orchard/OrchardPanel'
 import { AnimatePresence, motion } from 'framer-motion'
-import { flowerReviewsService } from '../../services/apiService'
+import { hashReviewsService } from '../../services/apiService'
 
-// Import sections
+// Import sections réutilisables
 import InfosGenerales from './sections/InfosGenerales'
-import Genetiques from './sections/Genetiques'
-import CulturePipelineSection from '../../components/reviews/sections/CulturePipelineSection'
+import SeparationPipelineSection from '../../components/reviews/sections/SeparationPipelineSection'
 import AnalyticsSection from '../../components/reviews/sections/AnalyticsSection'
 import VisualSection from '../../components/reviews/sections/VisualSection'
 import OdorSection from '../../components/reviews/sections/OdorSection'
@@ -18,32 +17,29 @@ import TextureSection from '../../components/reviews/sections/TextureSection'
 import TasteSection from '../../components/reviews/sections/TasteSection'
 import EffectsSection from '../../components/reviews/sections/EffectsSection'
 import ExperienceUtilisation from '../../components/forms/flower/ExperienceUtilisation'
-import CuringMaturationTimeline from '../../components/forms/flower/CuringMaturationTimeline'
+import CuringPipelineSection from '../../components/reviews/sections/CuringPipelineSection'
 
 // Import hooks
-import { useFlowerForm } from './hooks/useFlowerForm'
+import { useHashForm } from './hooks/useHashForm'
 import { usePhotoUpload } from './hooks/usePhotoUpload'
 
 /**
- * CreateFlowerReview - Formulaire création review Fleur (version modulaire)
- * Refactorisé de 2253 lignes → ~200 lignes
+ * CreateHashReview - Formulaire création review Hash (version modulaire)
+ * Types: Hash, Kief, Ice-O-Lator, Dry-Sift
  */
-export default function CreateFlowerReview() {
+export default function CreateHashReview() {
     const navigate = useNavigate()
     const toast = useToast()
     const { id } = useParams()
-    const [searchParams] = useSearchParams()
     const { user, isAuthenticated } = useStore()
 
     const {
         formData,
-        setFormData,
         handleChange,
         loading,
-        setLoading,
         saving,
         setSaving
-    } = useFlowerForm(id)
+    } = useHashForm(id)
 
     const {
         photos,
@@ -62,19 +58,18 @@ export default function CreateFlowerReview() {
         }
     }, [photos])
 
-    // Définition des 11 sections
+    // Définition des 10 sections spécifiques au Hash
     const sections = [
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
-        { id: 'genetics', icon: '🧬', title: 'Génétiques' },
-        { id: 'culture', icon: '🌱', title: 'Culture & Pipeline' },
-        { id: 'analytics', icon: '🔬', title: 'Analytiques PDF' },
+        { id: 'separation', icon: '🔬', title: 'Pipeline Séparation' },
+        { id: 'analytics', icon: '⚗️', title: 'Données Analytiques' },
         { id: 'visual', icon: '👁️', title: 'Visuel & Technique' },
         { id: 'odeurs', icon: '👃', title: 'Odeurs' },
         { id: 'texture', icon: '🤚', title: 'Texture' },
         { id: 'gouts', icon: '😋', title: 'Goûts' },
-        { id: 'effets', icon: '💥', title: 'Effets ressentis' },
-        { id: 'experience', icon: '🔥', title: 'Expérience d\'utilisation' },
-        { id: 'curing', icon: '🌡️', title: 'Curing & Maturation' },
+        { id: 'effets', icon: '💥', title: 'Effets' },
+        { id: 'curing', icon: '🔥', title: 'Curing & Maturation' },
+        { id: 'experience', icon: '🧪', title: 'Expérience d\'utilisation' }
     ]
 
     const currentSectionData = sections[currentSection]
@@ -89,21 +84,18 @@ export default function CreateFlowerReview() {
     const handleSave = async () => {
         try {
             setSaving(true)
-
-            // Préparer les données pour l'upload
+            
             const reviewFormData = new FormData()
-
-            // Ajouter toutes les données du formulaire
+            
             Object.keys(formData).forEach(key => {
                 if (key !== 'photos' && formData[key] !== undefined && formData[key] !== null) {
-                    reviewFormData.append(key, typeof formData[key] === 'object'
-                        ? JSON.stringify(formData[key])
+                    reviewFormData.append(key, typeof formData[key] === 'object' 
+                        ? JSON.stringify(formData[key]) 
                         : formData[key]
                     )
                 }
             })
-
-            // Ajouter les photos
+            
             if (photos && photos.length > 0) {
                 photos.forEach((photo) => {
                     if (photo.file) {
@@ -111,20 +103,20 @@ export default function CreateFlowerReview() {
                     }
                 })
             }
-
+            
             reviewFormData.append('status', 'draft')
-
+            
             let savedReview
             if (id) {
-                savedReview = await flowerReviewsService.update(id, reviewFormData)
+                savedReview = await hashReviewsService.update(id, reviewFormData)
             } else {
-                savedReview = await flowerReviewsService.create(reviewFormData)
+                savedReview = await hashReviewsService.create(reviewFormData)
             }
-
+            
             toast.success('Brouillon sauvegardé')
-
+            
             if (!id && savedReview?.id) {
-                navigate(`/edit/flower/${savedReview.id}`)
+                navigate(`/edit/hash/${savedReview.id}`)
             }
         } catch (error) {
             toast.error('Erreur lors de la sauvegarde')
@@ -135,30 +127,26 @@ export default function CreateFlowerReview() {
     }
 
     const handleSubmit = async () => {
-        // Validation des champs requis
         if (!formData.nomCommercial || !photos || photos.length === 0) {
             toast.error('Veuillez remplir les champs obligatoires : Nom commercial et au moins 1 photo')
-            setCurrentSection(0) // Retour à la première section
+            setCurrentSection(0)
             return
         }
 
         try {
             setSaving(true)
-
-            // Préparer les données pour l'upload
+            
             const reviewFormData = new FormData()
-
-            // Ajouter toutes les données du formulaire
+            
             Object.keys(formData).forEach(key => {
                 if (key !== 'photos' && formData[key] !== undefined && formData[key] !== null) {
-                    reviewFormData.append(key, typeof formData[key] === 'object'
-                        ? JSON.stringify(formData[key])
+                    reviewFormData.append(key, typeof formData[key] === 'object' 
+                        ? JSON.stringify(formData[key]) 
                         : formData[key]
                     )
                 }
             })
-
-            // Ajouter les photos
+            
             if (photos && photos.length > 0) {
                 photos.forEach((photo) => {
                     if (photo.file) {
@@ -166,17 +154,17 @@ export default function CreateFlowerReview() {
                     }
                 })
             }
-
+            
             reviewFormData.append('status', 'published')
-
+            
             if (id) {
-                await flowerReviewsService.update(id, reviewFormData)
+                await hashReviewsService.update(id, reviewFormData)
                 toast.success('Review mise à jour et publiée')
             } else {
-                await flowerReviewsService.create(reviewFormData)
+                await hashReviewsService.create(reviewFormData)
                 toast.success('Review publiée avec succès')
             }
-
+            
             navigate('/library')
         } catch (error) {
             toast.error('Erreur lors de la publication')
@@ -229,10 +217,10 @@ export default function CreateFlowerReview() {
                                 key={section.id}
                                 onClick={() => setCurrentSection(idx)}
                                 className={`w-3 h-3 rounded-full transition-all ${idx === currentSection
-                                    ? 'bg-white w-8'
-                                    : idx < currentSection
-                                        ? 'bg-green-400'
-                                        : 'bg-white/30'
+                                        ? 'bg-white w-8'
+                                        : idx < currentSection
+                                            ? 'bg-green-400'
+                                            : 'bg-white/30'
                                     }`}
                                 title={section.title}
                             />
@@ -242,10 +230,11 @@ export default function CreateFlowerReview() {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={handleSave}
-                            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all"
+                            disabled={saving}
+                            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all disabled:opacity-50"
                         >
                             <Save className="w-5 h-5" />
-                            <span>Sauvegarder</span>
+                            <span>{saving ? 'Sauvegarde...' : 'Sauvegarder'}</span>
                         </button>
                         <button
                             onClick={() => setShowOrchard(!showOrchard)}
@@ -286,61 +275,58 @@ export default function CreateFlowerReview() {
                             />
                         )}
                         {currentSection === 1 && (
-                            <Genetiques formData={formData} handleChange={handleChange} />
-                        )}
-                        {currentSection === 2 && (
-                            <CulturePipelineSection
-                                data={formData.culture || {}}
-                                onChange={(cultureData) => handleChange('culture', cultureData)}
+                            <SeparationPipelineSection
+                                data={formData.separation || {}}
+                                onChange={(separationData) => handleChange('separation', separationData)}
                             />
                         )}
-                        {currentSection === 3 && (
+                        {currentSection === 2 && (
                             <AnalyticsSection
-                                productType="Fleurs"
+                                productType="Hash"
                                 data={formData.analytics || {}}
                                 onChange={(analyticsData) => handleChange('analytics', analyticsData)}
                             />
                         )}
-                        {currentSection === 4 && (
+                        {currentSection === 3 && (
                             <VisualSection
                                 data={formData.visual || {}}
                                 onChange={(visualData) => handleChange('visual', visualData)}
                             />
                         )}
-                        {currentSection === 5 && (
+                        {currentSection === 4 && (
                             <OdorSection
                                 data={formData.odeurs || {}}
                                 onChange={(odeursData) => handleChange('odeurs', odeursData)}
                             />
                         )}
-                        {currentSection === 6 && (
+                        {currentSection === 5 && (
                             <TextureSection
                                 data={formData.texture || {}}
                                 onChange={(textureData) => handleChange('texture', textureData)}
                             />
                         )}
-                        {currentSection === 7 && (
+                        {currentSection === 6 && (
                             <TasteSection
                                 data={formData.gouts || {}}
                                 onChange={(goutsData) => handleChange('gouts', goutsData)}
                             />
                         )}
-                        {currentSection === 8 && (
+                        {currentSection === 7 && (
                             <EffectsSection
                                 data={formData.effets || {}}
                                 onChange={(effetsData) => handleChange('effets', effetsData)}
+                            />
+                        )}
+                        {currentSection === 8 && (
+                            <CuringPipelineSection
+                                data={formData.curing || {}}
+                                onChange={(curingData) => handleChange('curing', curingData)}
                             />
                         )}
                         {currentSection === 9 && (
                             <ExperienceUtilisation
                                 data={formData.experience || {}}
                                 onChange={(expData) => handleChange('experience', expData)}
-                            />
-                        )}
-                        {currentSection === 10 && (
-                            <CuringMaturationTimeline
-                                data={formData.curing || {}}
-                                onChange={(curingData) => handleChange('curing', curingData)}
                             />
                         )}
                     </motion.div>
@@ -359,9 +345,10 @@ export default function CreateFlowerReview() {
                     {currentSection === sections.length - 1 ? (
                         <button
                             onClick={handleSubmit}
-                            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:opacity-90 transition-all font-semibold"
+                            disabled={saving}
+                            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:opacity-90 transition-all font-semibold disabled:opacity-50"
                         >
-                            Publier la review
+                            {saving ? 'Publication...' : 'Publier la review'}
                         </button>
                     ) : (
                         <button
