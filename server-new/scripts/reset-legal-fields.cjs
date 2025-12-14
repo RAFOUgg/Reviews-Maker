@@ -8,31 +8,12 @@ async function resetLegalFields() {
     console.log('🔄 Reset des champs légaux pour forcer le workflow...\n')
 
     try {
-        // Compter les utilisateurs concernés
-        const usersWithNull = await prisma.user.count({
-            where: {
-                OR: [
-                    { legalAge: null },
-                    { consentRDR: null }
-                ]
-            }
-        })
+        // Compter tous les utilisateurs
+        const totalUsers = await prisma.user.count()
+        console.log(`📊 ${totalUsers} utilisateur(s) dans la base`)
 
-        console.log(`📊 ${usersWithNull} utilisateur(s) avec champs légaux null`)
-
-        if (usersWithNull === 0) {
-            console.log('✅ Tous les utilisateurs ont déjà des valeurs légales définies')
-            return
-        }
-
-        // Mettre à jour les champs
+        // Mettre à jour TOUS les champs légaux à false pour forcer le workflow
         const result = await prisma.user.updateMany({
-            where: {
-                OR: [
-                    { legalAge: null },
-                    { consentRDR: null }
-                ]
-            },
             data: {
                 legalAge: false,
                 consentRDR: false,
@@ -44,8 +25,8 @@ async function resetLegalFields() {
 
         console.log(`\n✅ ${result.count} utilisateur(s) mis à jour`)
         console.log('\n📋 Actions effectuées:')
-        console.log('  • legalAge: null → false')
-        console.log('  • consentRDR: null → false')
+        console.log('  • legalAge: → false')
+        console.log('  • consentRDR: → false')
         console.log('  • birthdate: reset à null (pour resaisie)')
         console.log('  • country: reset à null')
         console.log('  • region: reset à null')
