@@ -24,6 +24,8 @@ import { useStore } from './store/useStore'
 import { useAuth } from './hooks/useAuth'
 import LoginPage from './pages/LoginPage'
 import AccountChoicePage from './pages/AccountChoicePage'
+import AgeVerificationPage from './pages/AgeVerificationPage'
+import DisclaimerRDR from './components/legal/DisclaimerRDR'
 import RDRBanner from './components/legal/RDRBanner'
 import AgeVerification from './components/legal/AgeVerification'
 import ConsentModal from './components/legal/ConsentModal'
@@ -117,6 +119,8 @@ function App() {
                                 <Route path="/profile-settings" element={<ProfileSettingsPage />} />
                             </Route>
                             <Route path="/login" element={<LoginPage />} />
+                            <Route path="/age-verification" element={<AgeVerificationPage />} />
+                            <Route path="/disclaimer-rdr" element={<DisclaimerRDR />} />
                             <Route path="/auth/callback" element={<AuthCallback />} />
                         </Routes>
                         

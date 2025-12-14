@@ -126,4 +126,80 @@ router.get('/:id/reviews', asyncHandler(async (req, res) => {
     res.json(formattedReviews)
 }))
 
+// POST /api/users/update-legal-info - Mettre à jour les infos légales (âge, pays)
+router.post('/update-legal-info', asyncHandler(async (req, res) => {
+    requireAuthOrThrow(req)
+
+    const { birthdate, country, region, legalAge } = req.body
+
+    if (!birthdate || !country) {
+        throw Errors.VALIDATION_ERROR('Date de naissance et pays requis')
+    }
+
+    // Vérifier que l'utilisateur a l'âge légal
+    const birth = new Date(birthdate)
+    const today = new Date()
+    let age = today.getFullYear() - birth.getFullYear()
+    const monthDiff = today.getMonth() - birth.getMonth()
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--
+    }
+
+    // Âge minimum selon pays
+    const minAge = (country === 'US' || country === 'CA') ? 21 : 18
+
+    if (age < minAge) {
+        return res.status(403).json({
+            error: 'age_insufficient',
+            message: `Vous devez avoir ${minAge} ans minimum`,
+            requiredAge: minAge,
+            yourAge: age
+        })
+    }
+
+    // Mettre à jour l'utilisateur
+    const updatedUser = await prisma.user.update({
+        where: { id: req.user.id },
+        data: {
+            birthdate: new Date(birthdate),
+            country,
+            region: region || null,
+            legalAge: true
+        }
+    })
+
+    res.json({
+        success: true,
+        message: 'Informations légales mises à jour',
+        legalAge: true
+    })
+}))
+
+// POST /api/users/accept-rdr - Accepter le disclaimer RDR
+router.post('/accept-rdr', asyncHandler(async (req, res) => {
+    requireAuthOrThrow(req)
+
+    const { consentRDR } = req.body
+
+    if (!consentRDR) {
+        throw Errors.VALIDATION_ERROR('Le consentement est requis')
+    }
+
+    // Mettre à jour l'utilisateur
+    const updatedUser = await prisma.user.update({
+        where: { id: req.user.id },
+        data: {
+            consentRDR: true,
+            consentDate: new Date()
+        }
+    })
+
+    res.json({
+        success: true,
+        message: 'Consentement RDR enregistré',
+        consentRDR: true
+    })
+}))
+
 export default router

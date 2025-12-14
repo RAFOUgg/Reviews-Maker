@@ -8,15 +8,25 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 /**
- * Types de comptes disponibles
+ * Types de comptes disponibles - Conforme CDC
+ * Amateur: gratuit, fonctionnalités limitées
+ * Producteur: 29.99€/mois, accès complet pipelines et exports pros
+ * Influenceur: 15.99€/mois, exports haute qualité et statistiques
  */
 export const ACCOUNT_TYPES = {
-    BETA_TESTER: 'beta_tester',
-    CONSUMER: 'consumer',
-    INFLUENCER_BASIC: 'influencer_basic',
-    INFLUENCER_PRO: 'influencer_pro',
-    PRODUCER: 'producer',
-    MERCHANT: 'merchant',
+    AMATEUR: 'amateur',           // Gratuit (ancien consumer)
+    PRODUCTEUR: 'producteur',     // 29.99€/mois (ancien producer)
+    INFLUENCEUR: 'influenceur',   // 15.99€/mois (anciens influencer_basic/pro)
+    ADMIN: 'admin',               // Administrateur
+};
+
+/**
+ * Prix des abonnements
+ */
+export const SUBSCRIPTION_PRICES = {
+    amateur: 0,
+    producteur: 29.99,
+    influenceur: 15.99
 };
 
 /**
@@ -61,24 +71,29 @@ function stringifyRoles(roles) {
  */
 export function getUserAccountType(user) {
     if (!user) {
-        return ACCOUNT_TYPES.CONSUMER;
+        return ACCOUNT_TYPES.AMATEUR;
     }
 
     const roles = parseRoles(user.roles);
 
     // Ensure roles is an array before using includes
     if (!Array.isArray(roles) || roles.length === 0) {
-        return ACCOUNT_TYPES.CONSUMER;
+        return ACCOUNT_TYPES.AMATEUR;
     }
 
-    // Ordre de priorité décroissant
-    if (roles.includes('beta_tester')) return ACCOUNT_TYPES.BETA_TESTER;
-    if (roles.includes('merchant')) return ACCOUNT_TYPES.MERCHANT;
-    if (roles.includes('producer')) return ACCOUNT_TYPES.PRODUCER;
-    if (roles.includes('influencer_pro')) return ACCOUNT_TYPES.INFLUENCER_PRO;
-    if (roles.includes('influencer_basic')) return ACCOUNT_TYPES.INFLUENCER_BASIC;
+    // Ordre de priorité: Admin > Producteur > Influenceur > Amateur
+    if (roles.includes('admin')) return ACCOUNT_TYPES.ADMIN;
+    if (roles.includes('producteur')) return ACCOUNT_TYPES.PRODUCTEUR;
+    if (roles.includes('influenceur')) return ACCOUNT_TYPES.INFLUENCEUR;
+    
+    // Rétrocompatibilité avec anciens types
+    if (roles.includes('producer')) return ACCOUNT_TYPES.PRODUCTEUR;
+    if (roles.includes('influencer_pro') || roles.includes('influencer_basic')) {
+        return ACCOUNT_TYPES.INFLUENCEUR;
+    }
+    if (roles.includes('consumer')) return ACCOUNT_TYPES.AMATEUR;
 
-    return ACCOUNT_TYPES.CONSUMER;
+    return ACCOUNT_TYPES.AMATEUR;
 }
 
 /**
@@ -100,36 +115,32 @@ export function canUpgradeAccountType(user, targetType) {
         return { allowed: false, reason: 'Rôles invalides' };
     }
 
-    // Profil bêta : accès complet pendant la bêta, transitions toujours autorisées
-    if (targetType === ACCOUNT_TYPES.BETA_TESTER || currentType === ACCOUNT_TYPES.BETA_TESTER) {
+    // Admin peut tout faire
+    if (targetType === ACCOUNT_TYPES.ADMIN || currentType === ACCOUNT_TYPES.ADMIN) {
         return { allowed: true };
     }
 
-    // Consumer peut tout devenir
-    if (currentType === ACCOUNT_TYPES.CONSUMER) {
-        return { allowed: true };
+    // Amateur peut upgrader vers Producteur ou Influenceur
+    if (currentType === ACCOUNT_TYPES.AMATEUR) {
+        if ([ACCOUNT_TYPES.PRODUCTEUR, ACCOUNT_TYPES.INFLUENCEUR].includes(targetType)) {
+            return { allowed: true };
+        }
     }
 
-    // Influencer basic peut devenir pro
-    if (currentType === ACCOUNT_TYPES.INFLUENCER_BASIC && targetType === ACCOUNT_TYPES.INFLUENCER_PRO) {
-        return { allowed: true };
+    // Influenceur peut downgrade vers Amateur ou upgrade vers Producteur
+    if (currentType === ACCOUNT_TYPES.INFLUENCEUR) {
+        if (targetType === ACCOUNT_TYPES.AMATEUR) {
+            return { allowed: true, needsCancellation: true };
+        }
+        if (targetType === ACCOUNT_TYPES.PRODUCTEUR) {
+            return { allowed: true, needsUpgrade: true };
+        }
     }
 
-    // Producer/Merchant ne peuvent pas downgrade
-    if ([ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(currentType)) {
-        return {
-            allowed: false,
-            reason: 'Les comptes professionnels ne peuvent pas changer de type. Contactez le support.'
-        };
-    }
-
-    // On ne peut pas avoir influencer + producer en même temps (conflit)
-    if (roles.includes('influencer_basic') || roles.includes('influencer_pro')) {
-        if (targetType === ACCOUNT_TYPES.PRODUCER || targetType === ACCOUNT_TYPES.MERCHANT) {
-            return {
-                allowed: false,
-                reason: 'Vous devez d\'abord annuler votre abonnement influenceur pour devenir producteur'
-            };
+    // Producteur peut downgrade vers Amateur ou Influenceur
+    if (currentType === ACCOUNT_TYPES.PRODUCTEUR) {
+        if ([ACCOUNT_TYPES.AMATEUR, ACCOUNT_TYPES.INFLUENCEUR].includes(targetType)) {
+            return { allowed: true, needsCancellation: true };
         }
     }
 
