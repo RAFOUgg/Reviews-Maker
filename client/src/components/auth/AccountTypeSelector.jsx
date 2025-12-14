@@ -96,7 +96,7 @@ export default function AccountTypeSelector({ selected, onChange }) {
                                         {type.price}
                                     </div>
                                     {type.id !== 'consumer' && (
-                                        <div className="text-xs text-gray-500">par mois</div>
+                                        <div className="text-xs text-gray-700 font-medium">par mois</div>
                                     )}
                                 </div>
                             </div>
@@ -109,7 +109,7 @@ export default function AccountTypeSelector({ selected, onChange }) {
                             {/* Features list */}
                             <ul className="space-y-2">
                                 {type.features.map((feature, idx) => (
-                                    <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
+                                    <li key={idx} className="flex items-start gap-2 text-sm text-gray-800">
                                         <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
                                         <span>{feature}</span>
                                     </li>
@@ -119,7 +119,7 @@ export default function AccountTypeSelector({ selected, onChange }) {
                             {/* Obligations légales */}
                             {(type.id === 'producer' || type.id === 'influencer') && (
                                 <div className="mt-4 pt-4 border-t border-gray-200">
-                                    <p className="text-xs text-gray-500 italic">
+                                    <p className="text-xs text-gray-700 italic">
                                         ⚠️ Vérification d'identité (KYC) requise
                                     </p>
                                 </div>
@@ -130,7 +130,7 @@ export default function AccountTypeSelector({ selected, onChange }) {
             </div>
 
             {/* Note légale */}
-            <p className="text-center text-xs text-gray-500 mt-6">
+            <p className="text-center text-xs text-gray-700 mt-6 font-medium">
                 Vous devez avoir {'>'}18 ans (ou {'>'}21 selon votre pays) pour créer un compte.
                 En continuant, vous acceptez nos CGU et notre politique de confidentialité.
             </p>
