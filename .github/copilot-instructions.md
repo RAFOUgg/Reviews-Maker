@@ -1,139 +1,68 @@
-# Fonctionnalités de Terpologie : Reviews-Maker
+## Purpose
+Short, actionable guidance for AI coding agents working on Reviews-Maker: how the repo is organized, how to run and debug locally, key patterns and integration points to preserve when making changes.
 
-### Outils de tracabilité produit cannabinique.
+## Quick architecture summary
+- Frontend: `client/` — Vite + React (hooks, `zustand`, `react-router`, `i18next`). Exports built with `html-to-image`, `jspdf`, `jszip`. See `client/src/components/export/ExportMaker.jsx` for export logic.
+- Backend: `server-new/` — Express + Passport + Prisma. API routes in `server-new/routes/`, session options in `server-new/session-options.js`, seed data `server-new/seed-templates.js`.
+- Data & assets: `data/` (static lookup JSON like `aromas.json`, `effects.json`), `db/review_images/`, `db/kyc_documents/` for uploads, `public/` for static files.
+- Deploy/scripts: top-level `deploy*.sh`, `ecosystem.config.cjs` (PM2), `nginx-terpologie.conf`, and `scripts/` for diagnostics and VPS helpers.
 
-#### Apparence de l'application : 
+## How to run locally (most common tasks)
+- Frontend: open a shell in `client/` and run `npm install` then `npm run dev` (Vite). Default port 5173.
+- Backend: open a shell in `server-new/` and run `npm install` then `npm run check-env` then `npm run dev` (node --watch server.js). Set env vars from `.env` as required.
+- Prisma: in `server-new/` run `npm run prisma:generate` and `npm run prisma:migrate` when schema changes. Use `npm run prisma:studio` to inspect DB.
 
-Par defaut : Mode clair/sombre (système de détection automatique selon préférence OS avec option de forçage manuel dans les paramètres)
-Interface claire, moderne et épurée, apple-like design. Intégration du liquid glass dans les modaux, boutons, menus, etc...
-    - Choix de thèmes
-Depuis paramètre utilisateur : 
-    - Thèmes : Violet Lean, Vert émeraude, Bleu tahiti, Sakura
-# Adaptation format pc, téléphone et tablette (responsive design) :
-- Interface adaptative selon la taille de l'écran (mobile, tablette, desktop)
-- Optimisation des performances pour chaque type d'appareil
-- Immersion totale en mode mobile (PWA)
+Notes: There is no standard test suite in the repo — rely on manual validation and the browser preview tasks. Use `scripts/diagnostic-*` tools for environment checks.
 
----
+## Important repo conventions & domain patterns
+- Domain-first UI: most forms use selectors/structured inputs rather than free text (the PipeLine model). Preserve this constraint when changing forms.
+- Export pipeline: `ExportMaker.jsx` uses `html-to-image` → `jspdf/jszip`. Avoid changing DOM structure that export code relies on.
+- Data-driven lists live in `data/*.json` — add new options there (e.g., `aromas.json`) rather than hardcoding strings.
+- OAuth and uploads: backend uses Passport strategies (`passport-*` libs) and `multer` for file uploads. Tokens, sessions, and KYC flows are centralized in `server-new/routes/` and `server-new/session-options.js`.
 
-# Choix de type de compte à l’inscription
-Revoir le système de choix du type de compte à l’inscription, avec une interface claire, designe et apple-like, expliquant les différences et obligations associées à chaque type de compte. Utiliser "## Répartition des fonctionnalités selon les types de comptes utilisateurs :" comme base.
+## Key files to inspect for common changes
+- Frontend examples: `client/src/components/export/ExportMaker.jsx`, `client/src/components/legal/` (age/consent), `client/src/pages/ReviewForm*` (forms). Data: `data/*.json`.
+- Backend examples: `server-new/routes/` (API shape), `server-new/server.js` (startup), `server-new/session-options.js`, `server-new/prisma/` (schema).
+- Devops/deploy: `ecosystem.config.cjs`, `deploy-vps.sh`, `scripts/deploy*`, `nginx-terpologie.conf`.
 
-# CONNEXION ET APPLICATIONS DE CONNEXION ET DE SECURITE :
-- Connexion par email/mot de passe (pseudo obligatoire)
-- Connexion via compte tiers : OAuth2 (Google, Facebook, Apple, Amazon, Discord)
-    - Pseudo facultatif, sinon utilisé celui du compte tiers
-    - Photo de profil depuis compte tiers
-    - Adresse mail depuis compte tiers  
-    - Langue et pays depuis compte tiers, sinon demander à l'inscription
-- Système de réinitialisation de mot de passe (email de réinitialisation avec token sécurisé, lien valable 1h)
-- Système de double authantification (2FA) via application d'authentification (Mail, Google Authenticator, Authy, etc...) depuis paramètre de compte
-- Gestion des sessions actives (liste des appareils connectés, possibilité de déconnecter un appareil depuis paramètre de compte)
+## Debugging & common commands
+- Check environment: `cd server-new && npm run check-env`.
+- Start client: `cd client && npm run dev` and open `http://localhost:5173` (or use the provided VS Code task to open `index.html`).
+- Start server: `cd server-new && npm run dev`, tail logs or use PM2 via `ecosystem.config.cjs` for production.
+- Quick sanity checks: `scripts/diagnostics.sh` and `scripts/diagnostic-console.js` exist for environment validation.
 
-# Vérification d'âge légal :
+## Safety & change guidance for agents
+- Preserve existing API contracts in `server-new/routes/*`. If you add fields to JSON payloads, update both frontend forms (`client/src`) and backend validation/routes.
+- When touching export or canvas code, verify end-to-end export (preview + final export file) manually — exports are fragile to DOM changes.
+- Avoid changing lookups in `data/*.json` without also updating UI components that use them (autocomplete/select lists).
 
-- Système de vérification d'âge légal (>18/21 ans selon pays) à l'inscription
-    - Collecte de la date de naissance
-    - Affichage d'un disclaimer légal (RDR) adapté au pays
-    - Option de vérification via pièce d'identité (upload sécurisé, vérification manuelle ou via service tiers eKYC) (pour les producteurs uniquement et influenceurs)
+## PR & workflow notes (repo-specific)
+- Always `git pull` before working and create a feature branch (`feat/...` or `fix/...`). Commit small atomic changes and open a PR for review.
+- For deployments to the VPS use `deploy-vps.sh` / `deploy.sh` or PM2 (`ecosystem.config.cjs`). SSH alias `vps-lafoncedalle` is used in project docs for server access.
 
-# Informations personnels des comptes et données sauvegardables : 
-
-# 1. **Producteurs** (comptes payants, accès à des fonctionnalités avancées et à l’export pro)
-
-### **A. Identité légale et conformité**
-- **Nom ou dénomination sociale**
-- **Prénom / Nom du représentant légal (si société)**
-- **Adresse professionnelle ou siège social**
-- **Pays, région, code postal**
-- **Numéro SIRET/SIREN pour la France ou équivalent national (registre du commerce, numéro fiscal)**
-- **Forme juridique** (auto-entrepreneur, société, association…)
-- **Numéro de TVA intracommunautaire (entreprises UE)**
-- **Pièce d'identité du représentant légal (RIB, passeport, carte d’identité)**
-- **Justificatif d'activité légale** (licence, attestation, extrait K-bis, licence cannabis légal/chanvre, ou équivalent selon réglementation locale)
-- **Adresse mail professionnelle vérifiée**
-- **Numéro de téléphone professionnel (pour vérification/SMS)**
-- **Documents prouvant la légalité de production ou distribution** (certificat d'autorisation, déclaration préfectorale…)
-- **Preuve d’âge légal** du/des représentants (>18/21 ans ou selon réglementation locale)
-
-### **B. Données de compte**
-- **Pseudo/nom d’affichage**
-- **Mot de passe sécurisé (hashé)**
-- **Logo/visuels entreprise**
-- **URL du site web ou boutique**
-- **Réseaux sociaux/publics professionnels**
-
-### **C. Paiement et facturation**
-- **Adresse de facturation**
-- **Méthode de paiement (CB, SEPA, Paypal, autres : tokenisée/sécurisée)**
-- **Historique des transactions et abonnements**
-
-- **Acceptation des CGU, politique de confidentialité et mentions légales**
-
-### **D. Préférences et utilisation de la plateforme : depuis parametre**
-- **Langue préférée**
-- **Types de produits cultivés/fabriqués**
-- **Accès API ou shop connecté (Shopify, autre)**
-- **Bibliothèque des reviews déposées**
-- **Thème/design du compte**
+## If something is missing
+- Ask for the specific area (frontend export, pipeline model, OAuth, or DB schema) and which environment (local/dev/vps) you want to validate. Include the failing route or component path for faster iteration.
 
 ---
+Please review this draft and tell me which areas need more detail (examples, commands, or file links) so I can iterate.
 
-# 2. **Influenceurs** (compte intermédiaire, accès à la publication publique et partagée)
+## Project domain notes (synthèse depuis `.docs/CLAUDE.md`)
+These are repository-specific product rules and UI constraints—follow them when changing UX, data models, or exports.
 
-**Données à recueillir :**
+- Minimal free-text: most inputs are controlled selectors, multi-selects and structured fields (PipeLine model). Avoid replacing selectors with free text.
+- PipeLines: time-series entry model supporting intervals (seconds, minutes, hours, days, weeks, months, phases). UI modes: "jours", "semaines", "phases" — each maps to a different granularity and storage shape; keep pipeline UI and export expectations intact (see `client/src/pages/ReviewForm*`).
+- Exports & templates: predefined templates (Compact, Détaillé, Complète, Influenceur, Personnalisé). Export flow relies on DOM structure in `client/src/components/export/ExportMaker.jsx` and static lookup files in `data/` — changing DOM or data keys will break exports.
+- Account tiers: three role behaviors are enforced in UI and export permissions — `Amateur`, `Producteur` (paid), `Influenceur` (paid). Check frontend guards and backend routes for permission checks when adding features.
+- Legal / KYC: age verification and optional KYC uploads are implemented in `client/src/components/legal/` and server handling under `server-new/routes/` (see `legal.js`); do not remove or rename these routes without updating related front-end calls.
+- Data sources: long lists (aromas, terpenes, effects, tastes) live in `data/*.json`. Add new options there and update any front-end selects that consume them.
+- Pipeline export expectations: curing/maturation pipeline stores repeated measurements (temp, humidity, container, packaging). When adding fields, ensure export templates and CSV/JSON serializers include mappings.
 
-### **A. Identité et présence en ligne**
-- **Nom / Prénom**
-- **Pseudo**
-- **Adresse mail vérifiée**
-- **Pays/région (pour conformité légale à la publication)**
-- **Preuve d’âge légal** (>18 ou 21 ans selon pays)
-- **Réseaux sociaux** (Instagram, TikTok, Youtube, etc.)
-- **ID de connexion tiers (Discord, Google, Facebook, Apple, Amazon)**
-- **Photo de profil/avatar**
-- **Site web/portfolio (facultatif)**
+Files to consult for domain rules:
+- `client/src/components/export/ExportMaker.jsx`
+- `client/src/components/legal/` and `server-new/routes/legal.js`
+- `data/*.json` (aromas.json, effects.json, tastes.json, terpenes.json)
 
-### **B. Données de compte**
-- **Mot de passe sécurisé (ou login tiers)**
-- **Historique des reviews partagées**
-- **Statistiques de publication/Audience**
-- **Préférences utilisateur (langue, thèmes, notifications)**
-
-### **C. Conditions légales**
-- **Acceptation des CGU, politique confidentialité, politique publication**
-- **Accord pour publication de contenus (droit à l’image, gestion droits d’auteur des reviews/photos)**
-
-
----
-
-# 3. **Amateurs** (consommateurs classiques, accès gratuit)
-
-**Données à recueillir :**
-
-### **A. Identité minimale**
-- **Pseudo**
-- **Adresse mail valide** (vérification nécessaire)
-- **Pays/région/âge déclaré** (contrôle âge >18 ou 21 ans, selon pays)
-- **ID de connexion tiers (Discord, Google, Facebook, Apple, Amazon)**
-- **Photo de profil/avatar (facultatif)**
-
-### **B. Données de compte**
-- **Mot de passe sécurisé (ou login tiers)**
-- **Historique des reviews déposées**
-- **Préférences utilisateur (langue d’interface, thème, notifications)**
-
-### **C. Légalité**
-- **Acceptation des CGU et des conditions légales d’utilisation**
-- **Mention et affichage du disclaimer RDR et réglementation locale à l’inscription et lors de chaque publication**
-
----
-
-## **Synthèse des points légaux**
-
-Définir des CGU et politiques de confidentialité adaptées à chaque type de compte, en tenant compte des obligations légales spécifiques aux producteurs et influenceurs.
-
----
+Follow-up: tell me which domain area you want fully expanded (API examples, Prisma model excerpts, or export test checklist) and I'll add them.
 
 - ## Répartition des fonctionnalités selon les types de comptes utilisateurs :
 

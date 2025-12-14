@@ -84,18 +84,44 @@ router.post('/verify-age', async (req, res) => {
             },
         });
 
-        res.json({
-            success: true,
-            legalAge: true,
-            minimumAge,
-            user: {
-                id: updatedUser.id,
-                birthdate: updatedUser.birthdate,
-                country: updatedUser.country,
-                region: updatedUser.region,
-                legalAge: updatedUser.legalAge,
-            },
-        });
+        // Mettre à jour la session Passport pour que req.user reflète le changement
+        if (typeof req.logIn === 'function') {
+            req.logIn(updatedUser, (err) => {
+                if (err) {
+                    console.error('Erreur mise à jour session après vérif âge:', err);
+                    return res.status(500).json({
+                        error: 'session_update_failed',
+                        message: 'Impossible de mettre à jour la session',
+                    });
+                }
+
+                return res.json({
+                    success: true,
+                    legalAge: true,
+                    minimumAge,
+                    user: {
+                        id: updatedUser.id,
+                        birthdate: updatedUser.birthdate,
+                        country: updatedUser.country,
+                        region: updatedUser.region,
+                        legalAge: updatedUser.legalAge,
+                    },
+                });
+            });
+        } else {
+            res.json({
+                success: true,
+                legalAge: true,
+                minimumAge,
+                user: {
+                    id: updatedUser.id,
+                    birthdate: updatedUser.birthdate,
+                    country: updatedUser.country,
+                    region: updatedUser.region,
+                    legalAge: updatedUser.legalAge,
+                },
+            });
+        }
     } catch (error) {
         console.error('Erreur vérification âge:', error);
         res.status(500).json({
@@ -144,11 +170,29 @@ router.post('/accept-consent', async (req, res) => {
             },
         });
 
-        res.json({
-            success: true,
-            consentRDR: true,
-            consentDate: updatedUser.consentDate,
-        });
+        if (typeof req.logIn === 'function') {
+            req.logIn(updatedUser, (err) => {
+                if (err) {
+                    console.error('Erreur mise à jour session après consentement:', err);
+                    return res.status(500).json({
+                        error: 'session_update_failed',
+                        message: 'Impossible de mettre à jour la session',
+                    });
+                }
+
+                return res.json({
+                    success: true,
+                    consentRDR: true,
+                    consentDate: updatedUser.consentDate,
+                });
+            });
+        } else {
+            res.json({
+                success: true,
+                consentRDR: true,
+                consentDate: updatedUser.consentDate,
+            });
+        }
     } catch (error) {
         console.error('Erreur enregistrement consentement:', error);
         res.status(500).json({
@@ -404,15 +448,37 @@ router.post('/consent', async (req, res) => {
             },
         });
 
-        res.json({
-            success: true,
-            message: 'Consentement enregistré',
-            user: {
-                id: updatedUser.id,
-                consentRDR: updatedUser.consentRDR,
-                consentDate: updatedUser.consentDate,
-            },
-        });
+        if (typeof req.logIn === 'function') {
+            req.logIn(updatedUser, (err) => {
+                if (err) {
+                    console.error('Erreur mise à jour session après consentement (consent):', err);
+                    return res.status(500).json({
+                        error: 'session_update_failed',
+                        message: 'Impossible de mettre à jour la session',
+                    });
+                }
+
+                return res.json({
+                    success: true,
+                    message: 'Consentement enregistré',
+                    user: {
+                        id: updatedUser.id,
+                        consentRDR: updatedUser.consentRDR,
+                        consentDate: updatedUser.consentDate,
+                    },
+                });
+            });
+        } else {
+            res.json({
+                success: true,
+                message: 'Consentement enregistré',
+                user: {
+                    id: updatedUser.id,
+                    consentRDR: updatedUser.consentRDR,
+                    consentDate: updatedUser.consentDate,
+                },
+            });
+        }
     } catch (error) {
         console.error('Erreur enregistrement consentement:', error);
         res.status(500).json({
