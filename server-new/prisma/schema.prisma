@@ -48,6 +48,9 @@ model User {
   
   // Rôles & permissions (JSON array: ["consumer", "influencer", "producer", "admin"])
   roles         String   @default("{\"roles\":[\"consumer\"]}")
+  
+  // Type de compte (Amateur, Influenceur, Producteur)
+  accountType   String   @default("consumer") // consumer | influencer | producer
   isBanned      Boolean  @default(false)
   bannedAt      DateTime?
   banReason     String?

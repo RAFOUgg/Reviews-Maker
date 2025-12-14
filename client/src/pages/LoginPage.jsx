@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import OAuthButtons from '../components/auth/OAuthButtons'
 import AgeVerificationModal from '../components/auth/AgeVerificationModal'
+import AccountTypeSelector from '../components/auth/AccountTypeSelector'
 import LiquidButton from '../components/LiquidButton'
 import LiquidInput from '../components/LiquidInput'
 import LiquidCard from '../components/LiquidCard'
@@ -155,6 +156,16 @@ export default function LoginPage() {
                                 Créer un compte
                             </button>
                         </div>
+
+                        {/* Sélecteur de type de compte (uniquement en mode signup) */}
+                        {mode === 'signup' && (
+                            <div className="mb-6">
+                                <AccountTypeSelector
+                                    selected={selectedType}
+                                    onChange={setSelectedType}
+                                />
+                            </div>
+                        )}
 
                         {/* Email/Password Form */}
                         <form className="space-y-4" onSubmit={handleSubmitEmail}>
