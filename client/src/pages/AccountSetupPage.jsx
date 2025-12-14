@@ -76,7 +76,7 @@ export default function AccountSetupPage() {
             })
 
             const data = await response.json()
-            
+
             if (data.url) {
                 // Rediriger vers Stripe Checkout
                 window.location.href = data.url
