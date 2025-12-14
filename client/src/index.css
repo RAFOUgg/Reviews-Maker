@@ -1791,3 +1791,68 @@ button.bg-indigo-600 {
 .animate-fade-in {
     animation: fade-in 0.6s ease-out forwards;
 }
+/* === THÈMES CSS VARIABLES === */
+
+/* High Contrast System - Enforcing Readability */
+:root {
+    /* Base Colors - Violet Brand */
+    --primary: #7c3aed; /* Violet 600 */
+    --primary-light: #a78bfa; /* Violet 400 */
+    --primary-dark: #5b21b6; /* Violet 800 */
+    
+    --accent: #db2777; /* Pink 600 */
+    --accent-light: #f472b6; /* Pink 400 */
+    --accent-dark: #9d174d; /* Pink 800 */
+
+    /* Type Colors */
+    --color-fleur: #a78bfa;
+    --color-hash: #e879f9;
+    --color-concentre: #fb7185;
+    --color-comestible: #38bdf8;
+    
+    /* Rating Colors */
+    --color-success: #4ade80;
+    --color-warning: #fbbf24;
+    --color-danger: #f87171;
+
+    /* Light Mode (Default) - High Contrast */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc; /* Slate 50 */
+    --bg-tertiary: #f1f5f9; /* Slate 100 */
+    
+    --text-primary: #0f172a; /* Slate 900 - Almost Black */
+    --text-secondary: #334155; /* Slate 700 */
+    --text-tertiary: #64748b; /* Slate 500 */
+    
+    --border: #e2e8f0; /* Slate 200 */
+    --shadow: rgba(15, 23, 42, 0.08);
+}
+
+/* Dark Mode - High Contrast */
+.dark, [data-theme='dark'] {
+    --bg-primary: #0f172a; /* Slate 900 */
+    --bg-secondary: #1e293b; /* Slate 800 */
+    --bg-tertiary: #334155; /* Slate 700 */
+    
+    --text-primary: #f8fafc; /* Slate 50 - Almost White */
+    --text-secondary: #cbd5e1; /* Slate 300 */
+    --text-tertiary: #94a3b8; /* Slate 400 */
+    
+    --border: #334155; /* Slate 700 */
+    --shadow: rgba(0, 0, 0, 0.3);
+}
+
+/* Orchard Specific Overrides (legacy support) */
+:root {
+    --color-primary: 124, 58, 237;
+    --color-accent: 219, 39, 119;
+    --bg-card: 255, 255, 255;
+    --text: 15, 23, 42;
+    --bg-overlay: rgba(15, 23, 42, 0.6);
+}
+
+.dark {
+    --bg-card: 30, 41, 59;
+    --text: 248, 250, 252;
+    --bg-overlay: rgba(0, 0, 0, 0.8);
+}

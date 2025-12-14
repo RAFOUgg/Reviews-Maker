@@ -407,7 +407,43 @@ router.put('/update', asyncHandler(async (req, res) => {
         updates.emailVerified = false; // Nécessite re-vérification
     }
 
+    if (email && email.trim().length > 0) {
+        // Vérifier que l'email n'existe pas déjà
+        const existing = await prisma.user.findFirst({
+            where: {
+                email: email.trim(),
+                id: { not: req.user.id }
+            }
+        });
+
+        if (existing) {
+            return res.status(400).json({
+                error: 'email_taken',
+                message: 'Cet email est déjà utilisé',
+            });
+        }
+        updates.email = email.trim();
+        updates.emailVerified = false; // Nécessite re-vérification
+    }
+
+    // === FIX: Handle Account Type Update ===
+    const { accountType } = req.body;
+    if (accountType) {
+        // Map frontend accountType to backend roles/subscription
+        if (accountType === 'producer') {
+            updates.subscriptionType = 'producer';
+            updates.roles = JSON.stringify({ roles: ['producer', 'consumer'] });
+        } else if (accountType === 'influencer') {
+            updates.subscriptionType = 'influencer';
+            updates.roles = JSON.stringify({ roles: ['influencer', 'consumer'] });
+        } else if (accountType === 'consumer') {
+             updates.subscriptionType = null;
+             updates.roles = JSON.stringify({ roles: ['consumer'] });
+        }
+    }
+
     if (theme) {
+
         const validThemes = ['violet-lean', 'emerald', 'tahiti', 'sakura', 'dark'];
         if (validThemes.includes(theme)) {
             updates.theme = theme;
@@ -531,3 +567,5 @@ router.patch('/language', asyncHandler(async (req, res) => {
 }));
 
 export default router;
+
+
