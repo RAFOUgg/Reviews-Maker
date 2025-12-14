@@ -28,11 +28,12 @@ export function useAuth() {
                 setLegalStatus(data)
 
                 // Vérifier les étapes à compléter
-                if (!data.legalAge) {
+                // Note: traiter null comme false pour forcer le workflow légal
+                if (!data.legalAge || data.legalAge === null) {
                     setNeedsAgeVerification(true)
                     setNeedsConsent(false)
                     setNeedsAccountTypeSelection(false)
-                } else if (!data.consentRDR) {
+                } else if (!data.consentRDR || data.consentRDR === null) {
                     setNeedsAgeVerification(false)
                     setNeedsConsent(true)
                     setNeedsAccountTypeSelection(false)
