@@ -85,12 +85,20 @@ export default function LoginPage() {
             const user = await authService.loginWithEmail(payload)
             setUser(user)
 
-            // Vérifier si l'utilisateur a déjà validé son âge
-            if (!user.legalAge) {
+            // Vérifier si l'utilisateur a déjà validé son âge ET accepté le disclaimer
+            // Si legalAge === false OU consentRDR === false, afficher le modal
+            if (!user.legalAge || !user.consentRDR) {
                 setTempUser(user)
                 setShowAgeVerification(true)
             } else {
-                navigate('/')
+                // Redirection selon type de compte
+                if (user.accountType === 'influencer' || user.accountType === 'producer') {
+                    // Vérifier si le paiement est validé et KYC complété
+                    // TODO: Implémenter vérification statut abonnement + KYC
+                    navigate('/')
+                } else {
+                    navigate('/')
+                }
             }
         } catch (err) {
             setError(err.message || 'Connexion impossible')

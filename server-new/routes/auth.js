@@ -81,7 +81,13 @@ function sanitizeUser(user) {
             } catch (err) {
                 return ['consumer']
             }
-        })()
+        })(),
+        // Champs légaux pour ne pas redemander à chaque connexion
+        legalAge: user.legalAge || false,
+        consentRDR: user.consentRDR || false,
+        birthdate: user.birthdate || null,
+        country: user.country || null,
+        region: user.region || null
     }
 }
 
