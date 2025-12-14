@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, CheckCircle, X } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { useToast } from '../ToastContainer'
-import { post } from '../../services/apiService'
+import { usersService } from '../../services/apiService'
 
 /**
  * Disclaimers RDR par pays - Conforme CDC
@@ -172,7 +172,7 @@ export default function DisclaimerRDR() {
 
         try {
             // Enregistrer le consentement RDR
-            const response = await post('/api/users/accept-rdr', {
+            const response = await usersService.acceptRDR({
                 consentRDR: true,
                 consentDate: new Date().toISOString()
             })

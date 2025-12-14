@@ -351,5 +351,25 @@ export const usersService = {
      */
     async getUserReviews(userId) {
         return fetchAPI(`${API_BASE}/users/${userId}/reviews`)
+    },
+
+    /**
+     * Mettre à jour les informations légales (âge, pays)
+     */
+    async updateLegalInfo(data) {
+        return fetchAPI(`${API_BASE}/users/update-legal-info`, {
+            method: 'POST',
+            body: JSON.stringify(data)
+        })
+    },
+
+    /**
+     * Accepter le disclaimer RDR
+     */
+    async acceptRDR(data) {
+        return fetchAPI(`${API_BASE}/users/accept-rdr`, {
+            method: 'POST',
+            body: JSON.stringify(data)
+        })
     }
 }

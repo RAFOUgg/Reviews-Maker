@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Calendar, MapPin, AlertTriangle } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { useToast } from '../components/ToastContainer'
-import { post } from '../services/apiService'
+import { usersService } from '../services/apiService'
 
 /**
  * Page de vérification d'âge légal - Conforme CDC
@@ -84,7 +84,7 @@ export default function AgeVerificationPage() {
 
         try {
             // Sauvegarder les données de vérification
-            await post('/api/users/update-legal-info', {
+            await usersService.updateLegalInfo({
                 birthdate,
                 country,
                 region: region || null,
