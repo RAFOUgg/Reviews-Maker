@@ -26,12 +26,12 @@ function checkImports(filePath) {
 
     while ((match = importRegex.exec(content)) !== null) {
         const importPath = match[1]
-        
+
         // Skip node_modules
         if (importPath.startsWith('.')) {
             const dir = path.dirname(filePath)
             const fullPath = path.resolve(dir, importPath)
-            
+
             const possiblePaths = [
                 fullPath,
                 `${fullPath}.js`,
@@ -41,7 +41,7 @@ function checkImports(filePath) {
             ]
 
             const exists = possiblePaths.some(p => fs.existsSync(p))
-            
+
             if (!exists) {
                 results.brokenImports.push({
                     file: filePath,

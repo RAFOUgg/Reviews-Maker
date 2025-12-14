@@ -1,10 +1,11 @@
 /**
  * Routes pour gestion des paiements Stripe (Influenceur/Producteur)
  */
-const express = require('express')
+import express from 'express'
+import { requireAuth } from '../middleware/auth.js'
+import prisma from '../config/database.js'
+
 const router = express.Router()
-const { requireAuth } = require('../middleware/auth')
-const prisma = require('../config/database')
 
 // Prix des abonnements (en centimes)
 const PRICES = {
@@ -104,4 +105,4 @@ router.get('/status', requireAuth, async (req, res) => {
     }
 })
 
-module.exports = router
+export default router
