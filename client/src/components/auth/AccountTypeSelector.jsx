@@ -58,23 +58,22 @@ export default function AccountTypeSelector({ selected, onChange }) {
             <h3 className="text-xl font-bold text-center mb-6 bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
                 Choisissez votre type de compte
             </h3>
-            
+
             <div className="grid md:grid-cols-3 gap-4">
                 {accountTypes.map((type) => {
                     const Icon = type.icon
                     const isSelected = selected === type.id
-                    
+
                     return (
                         <motion.button
                             key={type.id}
                             onClick={() => onChange(type.id)}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            className={`relative p-6 rounded-2xl text-left transition-all duration-300 ${
-                                isSelected
+                            className={`relative p-6 rounded-2xl text-left transition-all duration-300 ${isSelected
                                     ? 'bg-white shadow-2xl ring-4 ring-purple-500'
                                     : 'bg-white/80 hover:bg-white shadow-lg hover:shadow-xl'
-                            }`}
+                                }`}
                         >
                             {/* Badge sélectionné */}
                             {isSelected && (

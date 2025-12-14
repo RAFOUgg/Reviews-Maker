@@ -31,7 +31,17 @@ export default function HomePage() {
             toast.warning('Vous devez être connecté pour créer une review')
             return
         }
-        navigate(`/create/type/${type}`)
+
+        // Mapping des noms français vers les routes anglaises
+        const typeMap = {
+            'Fleur': 'flower',
+            'Hash': 'hash',
+            'Concentré': 'concentrate',
+            'Comestible': 'edible'
+        }
+
+        const route = typeMap[type] || type.toLowerCase()
+        navigate(`/create/${route}`)
     }
 
     const handleLike = async (reviewId, e) => {

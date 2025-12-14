@@ -138,8 +138,8 @@ export default function LoginPage() {
                             <button
                                 type="button"
                                 className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-smooth ${mode === 'login'
-                                        ? 'bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white shadow-lg'
-                                        : 'text-[var(--text-secondary)] hover:bg-white/10'
+                                    ? 'bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white shadow-lg'
+                                    : 'text-[var(--text-secondary)] hover:bg-white/10'
                                     }`}
                                 onClick={() => setMode('login')}
                             >
@@ -148,8 +148,8 @@ export default function LoginPage() {
                             <button
                                 type="button"
                                 className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-smooth ${mode === 'signup'
-                                        ? 'bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white shadow-lg'
-                                        : 'text-[var(--text-secondary)] hover:bg-white/10'
+                                    ? 'bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white shadow-lg'
+                                    : 'text-[var(--text-secondary)] hover:bg-white/10'
                                     }`}
                                 onClick={() => setMode('signup')}
                             >
