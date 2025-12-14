@@ -1,7 +1,7 @@
 import { Outlet, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import UserProfileDropdown from './UserProfileDropdown'
-import ThemeSwitcher from './ThemeSwitcher'
+// import ThemeSwitcher from './ThemeSwitcher' // REMOVED
 
 export default function Layout() {
     const { user, isAuthenticated } = useAuth()
@@ -26,9 +26,8 @@ export default function Layout() {
 
                         {/* Navigation Links */}
                         <div className="flex items-center space-x-4">
-                            {/* Theme Switcher */}
-                            <ThemeSwitcher />
-
+                            {/* Theme Switcher REMOVED */}
+                            
                             {!isAuthenticated ? (
                                 <Link
                                     to="/choose-account"
