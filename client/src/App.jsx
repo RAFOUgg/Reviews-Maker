@@ -1,32 +1,15 @@
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { I18nextProvider } from 'react-i18next'
 import i18n from './i18n/i18n'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
-import ReviewDetailPage from './pages/ReviewDetailPage'
-import CreateReviewPage from './pages/CreateReviewPage'
-import CreateFlowerReview from './pages/CreateFlowerReview'
-import CreateHashReview from './pages/CreateHashReview'
-import CreateConcentrateReview from './pages/CreateConcentrateReview'
-import CreateEdibleReview from './pages/CreateEdibleReview'
-import EditReviewPage from './pages/EditReviewPage'
-import LibraryPage from './pages/LibraryPage'
-import GalleryPage from './pages/GalleryPage'
-import StatsPage from './pages/StatsPage'
-import SettingsPage from './pages/SettingsPage'
-import ProfilePage from './pages/ProfilePage'
-import ProfileSettingsPage from './pages/ProfileSettingsPage'
-import AccountSetupPage from './pages/AccountSetupPage'
+import LoginPage from './pages/LoginPage'
 import AuthCallback from './components/AuthCallback'
 import ToastContainer from './components/ToastContainer'
 import ErrorBoundary from './components/ErrorBoundary'
 import { useStore } from './store/useStore'
 import { useAuth } from './hooks/useAuth'
-import LoginPage from './pages/LoginPage'
-import AccountChoicePage from './pages/AccountChoicePage'
-import AgeVerificationPage from './pages/AgeVerificationPage'
-import DisclaimerRDR from './components/legal/DisclaimerRDR'
 import RDRBanner from './components/legal/RDRBanner'
 import AgeVerification from './components/legal/AgeVerification'
 import ConsentModal from './components/legal/ConsentModal'
@@ -34,6 +17,32 @@ import AccountSelector from './components/account/AccountSelector'
 import LegalConsentGate from './components/LegalConsentGate'
 import { initializeTheme } from './store/themeStore'
 import AnimatedMeshGradient from './components/ui/AnimatedMeshGradient'
+
+// Lazy-loaded pages (code splitting)
+const ReviewDetailPage = lazy(() => import('./pages/ReviewDetailPage'))
+const CreateReviewPage = lazy(() => import('./pages/CreateReviewPage'))
+const CreateFlowerReview = lazy(() => import('./pages/CreateFlowerReview'))
+const CreateHashReview = lazy(() => import('./pages/CreateHashReview'))
+const CreateConcentrateReview = lazy(() => import('./pages/CreateConcentrateReview'))
+const CreateEdibleReview = lazy(() => import('./pages/CreateEdibleReview'))
+const EditReviewPage = lazy(() => import('./pages/EditReviewPage'))
+const LibraryPage = lazy(() => import('./pages/LibraryPage'))
+const GalleryPage = lazy(() => import('./pages/GalleryPage'))
+const StatsPage = lazy(() => import('./pages/StatsPage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const ProfileSettingsPage = lazy(() => import('./pages/ProfileSettingsPage'))
+const AccountSetupPage = lazy(() => import('./pages/AccountSetupPage'))
+const AccountChoicePage = lazy(() => import('./pages/AccountChoicePage'))
+const AgeVerificationPage = lazy(() => import('./pages/AgeVerificationPage'))
+const DisclaimerRDR = lazy(() => import('./components/legal/DisclaimerRDR'))
+
+// Loading fallback component
+const PageLoader = () => (
+    <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600"></div>
+    </div>
+)
 
 function App() {
     const checkAuth = useStore((state) => state.checkAuth)
@@ -92,40 +101,42 @@ function App() {
                             </>
                         )}
 
-                        <Routes>
-                            <Route path="/" element={<Layout />}>
-                                <Route index element={<HomePage />} />
-                                <Route path="/review/:id" element={<ReviewDetailPage />} />
-                                <Route path="/create" element={<CreateReviewPage />} />
+                        <Suspense fallback={<PageLoader />}>
+                            <Routes>
+                                <Route path="/" element={<Layout />}>
+                                    <Route index element={<HomePage />} />
+                                    <Route path="/review/:id" element={<ReviewDetailPage />} />
+                                    <Route path="/create" element={<CreateReviewPage />} />
 
-                                <Route path="/create/flower" element={<CreateFlowerReview />} />
-                                <Route path="/edit/flower/:id" element={<CreateFlowerReview />} />
+                                    <Route path="/create/flower" element={<CreateFlowerReview />} />
+                                    <Route path="/edit/flower/:id" element={<CreateFlowerReview />} />
 
-                                <Route path="/create/hash" element={<CreateHashReview />} />
-                                <Route path="/edit/hash/:id" element={<CreateHashReview />} />
+                                    <Route path="/create/hash" element={<CreateHashReview />} />
+                                    <Route path="/edit/hash/:id" element={<CreateHashReview />} />
 
-                                <Route path="/create/concentrate" element={<CreateConcentrateReview />} />
-                                <Route path="/edit/concentrate/:id" element={<CreateConcentrateReview />} />
+                                    <Route path="/create/concentrate" element={<CreateConcentrateReview />} />
+                                    <Route path="/edit/concentrate/:id" element={<CreateConcentrateReview />} />
 
-                                <Route path="/create/edible" element={<CreateEdibleReview />} />
-                                <Route path="/edit/edible/:id" element={<CreateEdibleReview />} />
+                                    <Route path="/create/edible" element={<CreateEdibleReview />} />
+                                    <Route path="/edit/edible/:id" element={<CreateEdibleReview />} />
 
-                                <Route path="/library" element={<LibraryPage />} />
-                                <Route path="/gallery" element={<GalleryPage />} />
-                                <Route path="/stats" element={<StatsPage />} />
-                                <Route path="/profile" element={<ProfilePage />} />
-                                <Route path="/settings" element={<SettingsPage />} />
-                                <Route path="/account" element={<SettingsPage />} />
+                                    <Route path="/library" element={<LibraryPage />} />
+                                    <Route path="/gallery" element={<GalleryPage />} />
+                                    <Route path="/stats" element={<StatsPage />} />
+                                    <Route path="/profile" element={<ProfilePage />} />
+                                    <Route path="/settings" element={<SettingsPage />} />
+                                    <Route path="/account" element={<SettingsPage />} />
 
-                                <Route path="/choose-account" element={<AccountChoicePage />} />
-                                <Route path="/profile-settings" element={<ProfileSettingsPage />} />
-                            </Route>
-                            <Route path="/login" element={<LoginPage />} />
-                            <Route path="/account-setup" element={<AccountSetupPage />} />
-                            <Route path="/age-verification" element={<AgeVerificationPage />} />
-                            <Route path="/disclaimer-rdr" element={<DisclaimerRDR />} />
-                            <Route path="/auth/callback" element={<AuthCallback />} />
-                        </Routes>
+                                    <Route path="/choose-account" element={<AccountChoicePage />} />
+                                    <Route path="/profile-settings" element={<ProfileSettingsPage />} />
+                                </Route>
+                                <Route path="/login" element={<LoginPage />} />
+                                <Route path="/account-setup" element={<AccountSetupPage />} />
+                                <Route path="/age-verification" element={<AgeVerificationPage />} />
+                                <Route path="/disclaimer-rdr" element={<DisclaimerRDR />} />
+                                <Route path="/auth/callback" element={<AuthCallback />} />
+                            </Routes>
+                        </Suspense>
 
                     </div>
                 </LegalConsentGate>
