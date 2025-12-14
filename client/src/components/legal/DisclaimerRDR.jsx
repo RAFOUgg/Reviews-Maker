@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, CheckCircle, X } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { useToast } from '../ToastContainer'
-import { apiService } from '../../services/apiService'
+import { post } from '../../services/apiService'
 
 /**
  * Disclaimers RDR par pays - Conforme CDC
@@ -151,7 +151,7 @@ export default function DisclaimerRDR() {
     const navigate = useNavigate()
     const toast = useToast()
     const { user, updateUser } = useStore()
-    
+
     const [accepted, setAccepted] = useState(false)
     const [loading, setLoading] = useState(false)
 
@@ -172,7 +172,7 @@ export default function DisclaimerRDR() {
 
         try {
             // Enregistrer le consentement RDR
-            const response = await apiService.post('/api/users/accept-rdr', {
+            const response = await post('/api/users/accept-rdr', {
                 consentRDR: true,
                 consentDate: new Date().toISOString()
             })
@@ -181,7 +181,7 @@ export default function DisclaimerRDR() {
             updateUser({ consentRDR: true })
 
             toast.success('Inscription finalisée !')
-            
+
             // Rediriger vers la page d'accueil
             navigate('/home')
 
@@ -270,7 +270,7 @@ export default function DisclaimerRDR() {
 
                     {/* Footer légal */}
                     <p className="mt-6 text-xs text-center text-gray-500 dark:text-gray-400">
-                        Reviews-Maker ne promeut ni n'encourage la consommation illégale de substances. 
+                        Reviews-Maker ne promeut ni n'encourage la consommation illégale de substances.
                         Respectez la législation en vigueur dans votre pays.
                     </p>
                 </div>

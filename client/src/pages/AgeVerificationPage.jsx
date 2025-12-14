@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Calendar, MapPin, AlertTriangle } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { useToast } from '../components/ToastContainer'
-import { apiService } from '../services/apiService'
+import { post } from '../services/apiService'
 
 /**
  * Page de vérification d'âge légal - Conforme CDC
@@ -13,7 +13,7 @@ export default function AgeVerificationPage() {
     const navigate = useNavigate()
     const toast = useToast()
     const { user } = useStore()
-    
+
     const [birthdate, setBirthdate] = useState('')
     const [country, setCountry] = useState('FR')
     const [region, setRegion] = useState('')
@@ -46,11 +46,11 @@ export default function AgeVerificationPage() {
         const birth = new Date(birthdate)
         let age = today.getFullYear() - birth.getFullYear()
         const monthDiff = today.getMonth() - birth.getMonth()
-        
+
         if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
             age--
         }
-        
+
         return age
     }
 
@@ -66,7 +66,7 @@ export default function AgeVerificationPage() {
      */
     const handleSubmit = async (e) => {
         e.preventDefault()
-        
+
         if (!birthdate) {
             toast.error('Veuillez entrer votre date de naissance')
             return
@@ -84,7 +84,7 @@ export default function AgeVerificationPage() {
 
         try {
             // Sauvegarder les données de vérification
-            await apiService.post('/api/users/update-legal-info', {
+            await post('/api/users/update-legal-info', {
                 birthdate,
                 country,
                 region: region || null,
@@ -92,7 +92,7 @@ export default function AgeVerificationPage() {
             })
 
             toast.success('Vérification d\'âge validée')
-            
+
             // Rediriger vers le disclaimer RDR
             navigate('/disclaimer-rdr')
 
