@@ -71,8 +71,8 @@ export default function AccountTypeSelector({ selected, onChange }) {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             className={`relative p-6 rounded-2xl text-left transition-all duration-300 ${isSelected
-                                    ? 'bg-white shadow-2xl ring-4 ring-purple-500'
-                                    : 'bg-white/80 hover:bg-white shadow-lg hover:shadow-xl'
+                                ? 'bg-white shadow-2xl ring-4 ring-purple-500'
+                                : 'bg-white/80 hover:bg-white shadow-lg hover:shadow-xl'
                                 }`}
                         >
                             {/* Badge sélectionné */}
