@@ -306,6 +306,22 @@ export const authService = {
 }
 
 /**
+ * Service pour les templates d'export
+ */
+export const templatesService = {
+    /**
+     * Créer un nouveau template
+     * @param {object} templateData - Données du template { name, description, isPublic, config }
+     */
+    async create(templateData) {
+        return fetchAPI(`${API_BASE}/templates`, {
+            method: 'POST',
+            body: JSON.stringify(templateData)
+        });
+    }
+};
+
+/**
  * Service pour les utilisateurs
  */
 export const usersService = {

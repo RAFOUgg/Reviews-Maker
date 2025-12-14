@@ -5,7 +5,8 @@ import TemplateRenderer from '../components/orchard/TemplateRenderer'
 import ReviewFullDisplay from '../components/ReviewFullDisplay'
 import { useStore } from '../store/useStore'
 import { useToast } from '../components/ToastContainer'
-import FlowerExportModal from '../components/export/FlowerExportModal'
+import ExportMaker from '../components/export/ExportMaker' // Remplacé
+import { templatesService } from '../services/apiService' // Ajouté
 import { Download } from 'lucide-react'
 
 export default function ReviewDetailPage() {
@@ -71,6 +72,27 @@ export default function ReviewDetailPage() {
             setLoading(false)
         }
     }
+    
+    // Nouvelle fonction pour sauvegarder le template
+    const handleSaveTemplate = async (templateConfig) => {
+        const templateName = prompt('Entrez un nom pour votre template :', 'Mon Template Personnalisé');
+        if (!templateName) return;
+
+        try {
+            const dataToSave = {
+                name: templateName,
+                description: `Template personnalisé basé sur la review ${review.holderName}`,
+                isPublic: false,
+                config: templateConfig,
+            };
+            await templatesService.create(dataToSave);
+            toast.success('Template sauvegardé avec succès !');
+        } catch (error) {
+            console.error('Erreur lors de la sauvegarde du template:', error);
+            toast.error(error.message || 'Erreur lors de la sauvegarde du template.');
+        }
+    };
+
 
     const renderStars = (rating) => {
         const fullStars = Math.floor(rating / 2)
@@ -117,15 +139,15 @@ export default function ReviewDetailPage() {
                     </button>
 
                     <div className="flex items-center gap-2">
-                        {review?.type === 'Fleur' && (
-                            <button
-                                onClick={() => setShowExportModal(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white rounded-xl font-semibold shadow-lg transition-all"
-                            >
-                                <Download className="w-5 h-5" />
-                                <span>Exporter</span>
-                            </button>
-                        )}
+                        
+                        <button
+                            onClick={() => setShowExportModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white rounded-xl font-semibold shadow-lg transition-all"
+                        >
+                            <Download className="w-5 h-5" />
+                            <span>Exporter</span>
+                        </button>
+                        
 
                         {isAuthenticated && user?.id === review?.authorId && (
                             <button
@@ -203,12 +225,14 @@ export default function ReviewDetailPage() {
                 )}
             </div>
 
-            {/* Export Modal - Flower only */}
-            {showExportModal && review?.type === 'Fleur' && (
-                <FlowerExportModal
-                    review={review}
+            {/* Export Modal using ExportMaker */}
+            {showExportModal && (
+                <ExportMaker
+                    reviewData={review}
+                    productType={review.type}
+                    accountType={user?.accountType || 'Amateur'}
                     onClose={() => setShowExportModal(false)}
-                    isDark={true}
+                    onSave={handleSaveTemplate}
                 />
             )}
         </div>
