@@ -17,6 +17,7 @@ import StatsPage from './pages/StatsPage'
 import SettingsPage from './pages/SettingsPage'
 import ProfilePage from './pages/ProfilePage'
 import ProfileSettingsPage from './pages/ProfileSettingsPage'
+import AccountSetupPage from './pages/AccountSetupPage'
 import AuthCallback from './components/AuthCallback'
 import ToastContainer from './components/ToastContainer'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -119,6 +120,7 @@ function App() {
                                 <Route path="/profile-settings" element={<ProfileSettingsPage />} />
                             </Route>
                             <Route path="/login" element={<LoginPage />} />
+                            <Route path="/account-setup" element={<AccountSetupPage />} />
                             <Route path="/age-verification" element={<AgeVerificationPage />} />
                             <Route path="/disclaimer-rdr" element={<DisclaimerRDR />} />
                             <Route path="/auth/callback" element={<AuthCallback />} />
