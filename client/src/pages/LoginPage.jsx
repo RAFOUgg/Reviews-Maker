@@ -94,8 +94,11 @@ export default function LoginPage() {
                 // Redirection selon type de compte
                 if (user.accountType === 'influencer' || user.accountType === 'producer') {
                     // Vérifier si le paiement est validé et KYC complété
-                    // TODO: Implémenter vérification statut abonnement + KYC
-                    navigate('/')
+                    if (user.subscriptionStatus !== 'active' || user.kycStatus !== 'verified') {
+                        navigate('/account-setup')
+                    } else {
+                        navigate('/')
+                    }
                 } else {
                     navigate('/')
                 }

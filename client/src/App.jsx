@@ -115,6 +115,7 @@ function App() {
                                 <Route path="/stats" element={<StatsPage />} />
                                 <Route path="/profile" element={<ProfilePage />} />
                                 <Route path="/settings" element={<SettingsPage />} />
+                                <Route path="/account" element={<SettingsPage />} />
 
                                 <Route path="/choose-account" element={<AccountChoicePage />} />
                                 <Route path="/profile-settings" element={<ProfileSettingsPage />} />
