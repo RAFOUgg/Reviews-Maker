@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
-  Experiment, Scale, Filter, Thermometer, Clock, 
-  Droplets, Grid3x3, RefreshCw 
+  FlaskConical, Scale, Filter, Thermometer, Clock, 
+  Droplets, Grid3x3, RefreshCw, Zap
 } from 'lucide-react';
 import PipelineTimeline from '../../pipeline/PipelineTimeline';
 import PipelineEditor from '../../pipeline/PipelineEditor';
@@ -48,17 +48,11 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
         { id: 'static', name: 'Static Tech', icon: Zap },
     ];
 
-    const Zap = ({ className }) => (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={className}>
-          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-    );
-
     return (
         <div className="space-y-6">
             <LiquidGlass variant="card" className="p-6">
                 <div className="flex items-center gap-2 mb-4">
-                    <Experiment className="w-6 h-6 text-purple-500" />
+                    <FlaskConical className="w-6 h-6 text-purple-500" />
                     <h3 className="text-xl font-bold dark:text-white">Pipeline de Séparation</h3>
                 </div>
 
