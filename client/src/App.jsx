@@ -65,47 +65,47 @@ function App() {
                         <AnimatedMeshGradient />
                         <RDRBanner />
                         <ToastContainer />
-                        
+
                         {isAuthenticated && !loading && (
                             <>
                                 {needsAgeVerification && (
-                                    <AgeVerification 
+                                    <AgeVerification
                                         isOpen={true}
                                         onVerified={handleAgeVerified}
                                         onReject={handleAgeRejected}
                                     />
                                 )}
                                 {needsConsent && (
-                                    <ConsentModal 
+                                    <ConsentModal
                                         isOpen={true}
                                         onAccept={handleConsentAccepted}
                                         onDecline={handleConsentDeclined}
                                     />
                                 )}
                                 {needsAccountTypeSelection && (
-                                        <AccountSelector 
-                                            isOpen={true}
-                                            onAccountSelected={handleAccountTypeSelected}
-                                        />
-                                    )}
+                                    <AccountSelector
+                                        isOpen={true}
+                                        onAccountSelected={handleAccountTypeSelected}
+                                    />
+                                )}
                             </>
                         )}
-                        
+
                         <Routes>
                             <Route path="/" element={<Layout />}>
                                 <Route index element={<HomePage />} />
                                 <Route path="/review/:id" element={<ReviewDetailPage />} />
                                 <Route path="/create" element={<CreateReviewPage />} />
-                                
+
                                 <Route path="/create/flower" element={<CreateFlowerReview />} />
                                 <Route path="/edit/flower/:id" element={<CreateFlowerReview />} />
-                                
+
                                 <Route path="/create/hash" element={<CreateHashReview />} />
                                 <Route path="/edit/hash/:id" element={<CreateHashReview />} />
 
                                 <Route path="/create/concentrate" element={<CreateConcentrateReview />} />
                                 <Route path="/edit/concentrate/:id" element={<CreateConcentrateReview />} />
-                                
+
                                 <Route path="/create/edible" element={<CreateEdibleReview />} />
                                 <Route path="/edit/edible/:id" element={<CreateEdibleReview />} />
 
@@ -114,7 +114,7 @@ function App() {
                                 <Route path="/stats" element={<StatsPage />} />
                                 <Route path="/profile" element={<ProfilePage />} />
                                 <Route path="/settings" element={<SettingsPage />} />
-                                
+
                                 <Route path="/choose-account" element={<AccountChoicePage />} />
                                 <Route path="/profile-settings" element={<ProfileSettingsPage />} />
                             </Route>
@@ -123,7 +123,7 @@ function App() {
                             <Route path="/disclaimer-rdr" element={<DisclaimerRDR />} />
                             <Route path="/auth/callback" element={<AuthCallback />} />
                         </Routes>
-                        
+
                     </div>
                 </LegalConsentGate>
             </ErrorBoundary>

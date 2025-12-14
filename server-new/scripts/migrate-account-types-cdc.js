@@ -50,11 +50,11 @@ async function migrateAccountTypes() {
 
                 // Migrer chaque rôle
                 const newRoles = roles.map(role => MIGRATION_MAP[role] || 'amateur');
-                
+
                 // Dédupliquer et garder le plus élevé
                 const uniqueRoles = [...new Set(newRoles)];
                 let finalRole = 'amateur';
-                
+
                 if (uniqueRoles.includes('producteur')) {
                     finalRole = 'producteur';
                 } else if (uniqueRoles.includes('influenceur')) {
@@ -73,7 +73,7 @@ async function migrateAccountTypes() {
                         subscriptionType,
                         // Conserver les dates d'abonnement existantes si présentes
                         subscriptionStart: user.subscriptionStart || (subscriptionType ? new Date() : null),
-                        subscriptionStatus: subscriptionType 
+                        subscriptionStatus: subscriptionType
                             ? (user.subscriptionStatus || 'active')
                             : 'inactive'
                     }
@@ -90,7 +90,7 @@ async function migrateAccountTypes() {
         }
 
         console.log(`\n✅ Migration terminée: ${migratedCount}/${users.length} utilisateurs migrés`);
-        
+
         if (errors.length > 0) {
             console.log(`\n⚠️  ${errors.length} erreur(s):`);
             errors.forEach(e => console.log(e));

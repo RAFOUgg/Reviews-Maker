@@ -2,7 +2,7 @@
 // Met legalAge et consentRDR à false (au lieu de null) pour déclencher les modals
 
 const { PrismaClient } = require('@prisma/client')
-const prisma = new Prisma Client()
+const prisma = new PrismaClient()
 
 async function resetLegalFields() {
     console.log('🔄 Reset des champs légaux pour forcer le workflow...\n')
