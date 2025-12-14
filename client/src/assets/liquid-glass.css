@@ -1,167 +1,66 @@
-/* === LIQUID GLASS DESIGN SYSTEM - Apple-like Effects === */
+/* === LIQUID GLASS DESIGN SYSTEM v2 - Enhanced Apple-like Effects === */
 
-/* Base liquid glass effect */
+/* Base liquid glass effect - Stronger Blur */
 .liquid-glass {
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 
-    0 8px 32px rgba(31, 38, 135, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    0 8px 32px 0 rgba(31, 38, 135, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* Dark mode */
+/* Dark mode - Deep Glass */
 .dark .liquid-glass {
-  background: rgba(30, 30, 40, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* Hover effect */
-.liquid-glass--hover:hover {
-  transform: translateY(-2px);
+  background: rgba(17, 25, 40, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 
-    0 12px 40px rgba(31, 38, 135, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    0 8px 32px 0 rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
-/* Glow variant */
+/* Hover effect - Lift & Glow */
+.liquid-glass--hover:hover {
+  transform: translateY(-4px) scale(1.01);
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.1),
+    0 0 20px rgba(139, 92, 246, 0.2), /* Subtle purple glow */
+    inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.dark .liquid-glass--hover:hover {
+  background: rgba(25, 30, 50, 0.8);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(139, 92, 246, 0.15);
+}
+
+/* Glow variant - Neon vibe */
 .liquid-glass--glow {
   box-shadow: 
-    0 8px 32px rgba(147, 51, 234, 0.15),
-    0 0 20px rgba(147, 51, 234, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 8px 32px 0 rgba(139, 92, 246, 0.15),
+    0 0 0 1px rgba(139, 92, 246, 0.2);
 }
 
 .liquid-glass--glow:hover {
   box-shadow: 
-    0 12px 40px rgba(147, 51, 234, 0.25),
-    0 0 30px rgba(147, 51, 234, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    0 15px 45px 0 rgba(139, 92, 246, 0.3),
+    0 0 20px rgba(139, 92, 246, 0.4);
 }
 
-/* Variant: Modal */
+/* Variant: Modal - Maximum Depth */
 .liquid-glass--modal {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
 .dark .liquid-glass--modal {
-  background: rgba(20, 20, 30, 0.85);
-}
-
-/* Variant: Card */
-.liquid-glass--card {
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 1rem;
-}
-
-.dark .liquid-glass--card {
-  background: rgba(40, 40, 55, 0.7);
-}
-
-/* Variant: Sidebar */
-.liquid-glass--sidebar {
-  background: rgba(250, 250, 255, 0.8);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-
-.dark .liquid-glass--sidebar {
-  background: rgba(25, 25, 35, 0.8);
-}
-
-/* Variant: Button */
-.liquid-glass--button {
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  cursor: pointer;
-}
-
-.dark .liquid-glass--button {
-  background: rgba(50, 50, 65, 0.6);
-}
-
-.liquid-glass--button:hover {
-  background: rgba(255, 255, 255, 0.7);
-}
-
-.dark .liquid-glass--button:hover {
-  background: rgba(60, 60, 75, 0.7);
-}
-
-/* Apple-style subtle animation */
-@keyframes liquid-shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.liquid-glass--shimmer::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.1) 50%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: liquid-shimmer 3s infinite;
-  pointer-events: none;
-  border-radius: inherit;
-}
-
-/* === THÈMES ADDITIONNELS === */
-
-/* Vert Émeraude */
-[data-theme="vert-emeraude"] {
-  --primary: #059669;
-  --primary-light: #10B981;
-  --primary-dark: #047857;
-  --accent: #14B8A6;
-  --accent-light: #2DD4BF;
-  --accent-dark: #0D9488;
-  --bg-primary: #A7F3D0;
-  --bg-secondary: #6EE7B7;
-  --bg-tertiary: #34D399;
-  --gradient-bg: linear-gradient(135deg, #6EE7B7 0%, #34D399 50%, #10B981 100%);
-}
-
-/* Bleu Tahiti */
-[data-theme="bleu-tahiti"] {
-  --primary: #0891B2;
-  --primary-light: #22D3EE;
-  --primary-dark: #0E7490;
-  --accent: #06B6D4;
-  --accent-light: #67E8F9;
-  --accent-dark: #0891B2;
-  --bg-primary: #A5F3FC;
-  --bg-secondary: #67E8F9;
-  --bg-tertiary: #22D3EE;
-  --gradient-bg: linear-gradient(135deg, #67E8F9 0%, #22D3EE 50%, #06B6D4 100%);
-}
-
-/* Sakura (Rose Cerisier) */
-[data-theme="sakura"] {
-  --primary: #EC4899;
-  --primary-light: #F472B6;
-  --primary-dark: #DB2777;
-  --accent: #F9A8D4;
-  --accent-light: #FBCFE8;
-  --accent-dark: #F472B6;
-  --bg-primary: #FCE7F3;
-  --bg-secondary: #FBCFE8;
-  --bg-tertiary: #F9A8D4;
-  --gradient-bg: linear-gradient(135deg, #FBCFE8 0%, #F9A8D4 50%, #F472B6 100%);
+  background: rgba(15, 23, 42, 0.9);
 }

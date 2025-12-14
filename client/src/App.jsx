@@ -30,6 +30,7 @@ import ConsentModal from './components/legal/ConsentModal'
 import AccountSelector from './components/account/AccountSelector'
 import LegalConsentGate from './components/LegalConsentGate'
 import { initializeTheme } from './store/themeStore'
+import AnimatedMeshGradient from './components/ui/AnimatedMeshGradient'
 
 function App() {
     const checkAuth = useStore((state) => state.checkAuth)
@@ -58,35 +59,36 @@ function App() {
         <I18nextProvider i18n={i18n}>
             <ErrorBoundary>
                 <LegalConsentGate>
-                    <div className="min-h-screen bg-dark-bg text-dark-text">
+                    <div className="min-h-screen bg-transparent text-dark-text relative overflow-hidden">
+                        <AnimatedMeshGradient />
                         <RDRBanner />
                         <ToastContainer />
                         
                         {isAuthenticated && !loading && (
                             <>
                                 {needsAgeVerification && (
-                                    <AgeVerification
+                                    <AgeVerification 
                                         isOpen={true}
                                         onVerified={handleAgeVerified}
                                         onReject={handleAgeRejected}
                                     />
                                 )}
                                 {needsConsent && (
-                                    <ConsentModal
+                                    <ConsentModal 
                                         isOpen={true}
                                         onAccept={handleConsentAccepted}
                                         onDecline={handleConsentDeclined}
                                     />
                                 )}
                                 {needsAccountTypeSelection && (
-                                    <AccountSelector
-                                        isOpen={true}
-                                        onAccountSelected={handleAccountTypeSelected}
-                                    />
-                                )}
+                                        <AccountSelector 
+                                            isOpen={true}
+                                            onAccountSelected={handleAccountTypeSelected}
+                                        />
+                                    )}
                             </>
                         )}
-
+                        
                         <Routes>
                             <Route path="/" element={<Layout />}>
                                 <Route index element={<HomePage />} />
@@ -98,29 +100,26 @@ function App() {
                                 
                                 <Route path="/create/hash" element={<CreateHashReview />} />
                                 <Route path="/edit/hash/:id" element={<CreateHashReview />} />
-                                
+
                                 <Route path="/create/concentrate" element={<CreateConcentrateReview />} />
                                 <Route path="/edit/concentrate/:id" element={<CreateConcentrateReview />} />
                                 
                                 <Route path="/create/edible" element={<CreateEdibleReview />} />
                                 <Route path="/edit/edible/:id" element={<CreateEdibleReview />} />
-                                
-                                <Route path="/create/type/:productType" element={<CreateReviewPage />} />
-                                <Route path="/edit/:id" element={<EditReviewPage />} />
-                                
+
                                 <Route path="/library" element={<LibraryPage />} />
                                 <Route path="/gallery" element={<GalleryPage />} />
                                 <Route path="/stats" element={<StatsPage />} />
-                                
-                                <Route path="/settings" element={<SettingsPage />} />
                                 <Route path="/profile" element={<ProfilePage />} />
-                                <Route path="/account" element={<ProfileSettingsPage />} />
+                                <Route path="/settings" element={<SettingsPage />} />
+                                
+                                <Route path="/choose-account" element={<AccountChoicePage />} />
+                                <Route path="/profile-settings" element={<ProfileSettingsPage />} />
                             </Route>
-                            
-                            <Route path="/choose-account" element={<AccountChoicePage />} />
                             <Route path="/login" element={<LoginPage />} />
                             <Route path="/auth/callback" element={<AuthCallback />} />
                         </Routes>
+                        
                     </div>
                 </LegalConsentGate>
             </ErrorBoundary>
