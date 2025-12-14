@@ -3,11 +3,35 @@ import { extractCategoryRatings, extractExtraData, extractPipelines, extractSubs
 export default function ReviewFullDisplay({ review }) {
     if (!review) return null
 
-    // Parse des données JSON
-    const categoryRatings = extractCategoryRatings(review.categoryRatings, review)
-    const extraData = extractExtraData(review.extraData, review)
-    const pipelines = extractPipelines(review)
-    const substrat = extractSubstrat(review.substratMix)
+    // Parse des données JSON avec protection contre les erreurs
+    let categoryRatings = []
+    let extraData = []
+    let pipelines = []
+    let substrat = null
+
+    try {
+        categoryRatings = extractCategoryRatings(review.categoryRatings, review) || []
+    } catch (e) {
+        console.error('Error extracting category ratings:', e)
+    }
+
+    try {
+        extraData = extractExtraData(review.extraData, review) || []
+    } catch (e) {
+        console.error('Error extracting extra data:', e)
+    }
+
+    try {
+        pipelines = extractPipelines(review) || []
+    } catch (e) {
+        console.error('Error extracting pipelines:', e)
+    }
+
+    try {
+        substrat = extractSubstrat(review.substratMix)
+    } catch (e) {
+        console.error('Error extracting substrat:', e)
+    }
 
     // Parse cultivars list
     let cultivarsList = []

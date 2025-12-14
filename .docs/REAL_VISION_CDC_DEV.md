@@ -4,6 +4,8 @@
 
 #### Apparence de l'application : 
 
+Page principal : 
+HomePage avec accès aux fonctionnalités principales :
 Par defaut : Mode clair/sombre (système de détection automatique selon préférence OS avec option de forçage manuel dans les paramètres)
 Interface claire, moderne et épurée, apple-like design. Intégration du liquid glass dans les modaux, boutons, menus, etc...
     - Choix de thèmes
