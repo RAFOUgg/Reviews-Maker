@@ -453,4 +453,64 @@ router.post('/exports/track', requireAuth, asyncHandler(async (req, res) => {
     res.json(updated);
 }));
 
+/**
+ * GET /api/stats/quick/:userId
+ * Statistiques rapides pour HomePage CDC : total reviews, exports, type favori, likes
+ */
+router.get('/quick/:userId', requireAuth, asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+
+    // Vérifier que l'utilisateur demande ses propres stats
+    if (req.user.id !== userId) {
+        return res.status(403).json({ error: 'Accès refusé' });
+    }
+
+    // 1. Total reviews créées
+    const totalReviews = await prisma.review.count({
+        where: { authorId: userId }
+    });
+
+    // 2. Total exports réalisés via UserStats
+    const userStats = await prisma.userStats.findUnique({
+        where: { userId }
+    });
+    const totalExports = userStats?.totalExports || 0;
+
+    // 3. Type de produit favori (le plus créé)
+    const reviewsByType = await prisma.review.groupBy({
+        by: ['type'],
+        where: { authorId: userId },
+        _count: { id: true }
+    });
+
+    let favoriteType = 'Aucun';
+    let maxCount = 0;
+
+    reviewsByType.forEach(group => {
+        if (group._count.id > maxCount) {
+            maxCount = group._count.id;
+            favoriteType = group.type;
+        }
+    });
+
+    // 4. Total likes reçus sur toutes les reviews
+    const totalLikes = await prisma.reviewLike.count({
+        where: {
+            review: {
+                authorId: userId
+            },
+            isLike: true
+        }
+    });
+
+    res.json({
+        stats: {
+            totalReviews,
+            totalExports,
+            favoriteType,
+            totalLikes
+        }
+    });
+}));
+
 export default router;
