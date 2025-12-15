@@ -426,8 +426,8 @@ router.put('/update', asyncHandler(async (req, res) => {
             updates.subscriptionType = 'influencer';
             updates.roles = JSON.stringify({ roles: ['influencer', 'consumer'] });
         } else if (accountType === 'consumer') {
-             updates.subscriptionType = null;
-             updates.roles = JSON.stringify({ roles: ['consumer'] });
+            updates.subscriptionType = null;
+            updates.roles = JSON.stringify({ roles: ['consumer'] });
         }
     }
 

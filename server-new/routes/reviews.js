@@ -196,12 +196,12 @@ router.post('/', requireAuth, upload.array('images', 10), asyncHandler(async (re
     // Vérifier limite reviews privées
     if (visibility === 'private' && limits.reviews !== -1) {
         const privateCount = await prisma.review.count({
-            where: { 
-                authorId: req.user.id, 
-                visibility: 'private' 
+            where: {
+                authorId: req.user.id,
+                visibility: 'private'
             }
         });
-        
+
         if (privateCount >= limits.reviews) {
             return res.status(403).json({
                 error: 'review_limit_reached',
@@ -217,12 +217,12 @@ router.post('/', requireAuth, upload.array('images', 10), asyncHandler(async (re
     // Vérifier limite reviews publiques
     if (visibility === 'public' && limits.publicReviews !== -1) {
         const publicCount = await prisma.review.count({
-            where: { 
-                authorId: req.user.id, 
-                visibility: 'public' 
+            where: {
+                authorId: req.user.id,
+                visibility: 'public'
             }
         });
-        
+
         if (publicCount >= limits.publicReviews) {
             return res.status(403).json({
                 error: 'public_review_limit_reached',

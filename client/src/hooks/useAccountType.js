@@ -11,7 +11,7 @@ import { useStore } from '../store/useStore';
  */
 export function useAccountType() {
   const { user } = useStore();
-  
+
   const accountType = useMemo(() => {
     return user?.accountType || user?.type || 'consumer';
   }, [user]);
@@ -37,7 +37,7 @@ export function useAccountType() {
       curing: true,                       // TOUS (PipeLine Curing/Maturation)
       experience: true,                   // TOUS
     },
-    
+
     // PipeLines
     pipelines: {
       culture: isProducer,                // Producteur uniquement (CDC)
@@ -47,7 +47,7 @@ export function useAccountType() {
       recipe: true,                       // TOUS (CDC: Comestibles)
       configurable: isProducer,           // PipeLines entièrement configurables (Producteur)
     },
-    
+
     // Export Maker
     export: {
       formats: {
@@ -77,7 +77,7 @@ export function useAccountType() {
         formatChoice: isPremium, // Choix libre du format
       },
     },
-    
+
     // Bibliothèque
     library: {
       reviews: true,
@@ -85,7 +85,7 @@ export function useAccountType() {
       watermarks: isPremium,
       savedData: true,
     },
-    
+
     // Galerie publique
     gallery: {
       view: true,
@@ -94,13 +94,13 @@ export function useAccountType() {
       comment: true,
       share: true,
     },
-    
+
     // Génétique (arbres généalogiques)
     genetics: {
       canva: isProducer,
       library: true,
     },
-    
+
     // Statistiques
     stats: {
       basic: true,
@@ -123,7 +123,7 @@ export function useAccountType() {
   // Message pour upgrade
   const getUpgradeMessage = (feature) => {
     if (isProducer) return null;
-    
+
     const producerFeatures = [
       'pipelines.culture',
       'pipelines.configurable',
@@ -135,7 +135,7 @@ export function useAccountType() {
       'genetics.canva',
       'stats.production',
     ];
-    
+
     if (producerFeatures.includes(feature)) {
       return {
         title: 'Fonctionnalité Producteur',
@@ -143,7 +143,7 @@ export function useAccountType() {
         upgradeType: 'producer',
       };
     }
-    
+
     if (isConsumer) {
       return {
         title: 'Fonctionnalité Premium',
@@ -151,7 +151,7 @@ export function useAccountType() {
         upgradeType: 'influencer',
       };
     }
-    
+
     return null;
   };
 

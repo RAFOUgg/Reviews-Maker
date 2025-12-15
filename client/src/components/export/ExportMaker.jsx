@@ -158,8 +158,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                         key={t.id}
                                         onClick={() => setSelectedTemplate(t.id)}
                                         className={`w-full text-left p-3 rounded-xl border transition-all flex items-center gap-3 ${selectedTemplate === t.id
-                                                ? 'bg-purple-600/20 border-purple-500 text-white'
-                                                : 'bg-white/5 border-transparent text-gray-300 hover:bg-white/10'
+                                            ? 'bg-purple-600/20 border-purple-500 text-white'
+                                            : 'bg-white/5 border-transparent text-gray-300 hover:bg-white/10'
                                             }`}
                                     >
                                         <div className={`p-2 rounded-lg ${selectedTemplate === t.id ? 'bg-purple-500 text-white' : 'bg-white/10 text-gray-400'}`}>
