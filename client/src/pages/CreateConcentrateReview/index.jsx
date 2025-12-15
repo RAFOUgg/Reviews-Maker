@@ -6,6 +6,7 @@ import { useToast } from '../../components/ToastContainer'
 import OrchardPanel from '../../components/orchard/OrchardPanel'
 import { AnimatePresence, motion } from 'framer-motion'
 import { concentrateReviewsService } from '../../services/apiService'
+import { LiquidCard, LiquidButton } from '../../components/liquid'
 
 // Import sections réutilisables
 import InfosGenerales from './sections/InfosGenerales'
@@ -88,18 +89,18 @@ export default function CreateConcentrateReview() {
     const handleSave = async () => {
         try {
             setSaving(true)
-            
+
             const reviewFormData = new FormData()
-            
+
             Object.keys(formData).forEach(key => {
                 if (key !== 'photos' && formData[key] !== undefined && formData[key] !== null) {
-                    reviewFormData.append(key, typeof formData[key] === 'object' 
-                        ? JSON.stringify(formData[key]) 
+                    reviewFormData.append(key, typeof formData[key] === 'object'
+                        ? JSON.stringify(formData[key])
                         : formData[key]
                     )
                 }
             })
-            
+
             if (photos && photos.length > 0) {
                 photos.forEach((photo) => {
                     if (photo.file) {
@@ -107,18 +108,18 @@ export default function CreateConcentrateReview() {
                     }
                 })
             }
-            
+
             reviewFormData.append('status', 'draft')
-            
+
             let savedReview
             if (id) {
                 savedReview = await concentrateReviewsService.update(id, reviewFormData)
             } else {
                 savedReview = await concentrateReviewsService.create(reviewFormData)
             }
-            
+
             toast.success('Brouillon sauvegardé')
-            
+
             if (!id && savedReview?.id) {
                 navigate(`/edit/concentrate/${savedReview.id}`)
             }
@@ -139,18 +140,18 @@ export default function CreateConcentrateReview() {
 
         try {
             setSaving(true)
-            
+
             const reviewFormData = new FormData()
-            
+
             Object.keys(formData).forEach(key => {
                 if (key !== 'photos' && formData[key] !== undefined && formData[key] !== null) {
-                    reviewFormData.append(key, typeof formData[key] === 'object' 
-                        ? JSON.stringify(formData[key]) 
+                    reviewFormData.append(key, typeof formData[key] === 'object'
+                        ? JSON.stringify(formData[key])
                         : formData[key]
                     )
                 }
             })
-            
+
             if (photos && photos.length > 0) {
                 photos.forEach((photo) => {
                     if (photo.file) {
@@ -158,9 +159,9 @@ export default function CreateConcentrateReview() {
                     }
                 })
             }
-            
+
             reviewFormData.append('status', 'published')
-            
+
             if (id) {
                 await concentrateReviewsService.update(id, reviewFormData)
                 toast.success('Review mise à jour et publiée')
@@ -168,7 +169,7 @@ export default function CreateConcentrateReview() {
                 await concentrateReviewsService.create(reviewFormData)
                 toast.success('Review publiée avec succès')
             }
-            
+
             navigate('/library')
         } catch (error) {
             toast.error('Erreur lors de la publication')
@@ -202,17 +203,19 @@ export default function CreateConcentrateReview() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 pb-20">
+        <div className="min-h-screen bg-slate-900 relative pb-20">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-indigo-900/20 to-blue-900/20 pointer-events-none"></div>
+
             {/* Header Navigation */}
-            <div className="sticky top-0 z-50 backdrop-blur-xl bg-white/5 border-b border-white/10 shadow-xl">
+            <div className="sticky top-0 z-50 liquid-glass border-b border-white/10 shadow-xl">
                 <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <button
+                    <LiquidButton
                         onClick={() => navigate('/library')}
-                        className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all"
+                        variant="ghost"
+                        leftIcon={<ChevronLeft className="w-5 h-5" />}
                     >
-                        <ChevronLeft className="w-5 h-5" />
-                        <span>Retour</span>
-                    </button>
+                        Retour
+                    </LiquidButton>
 
                     {/* Section Navigation */}
                     <div className="flex items-center gap-3">
@@ -221,10 +224,10 @@ export default function CreateConcentrateReview() {
                                 key={section.id}
                                 onClick={() => setCurrentSection(idx)}
                                 className={`w-3 h-3 rounded-full transition-all ${idx === currentSection
-                                        ? 'bg-white w-8'
-                                        : idx < currentSection
-                                            ? 'bg-green-400'
-                                            : 'bg-white/30'
+                                    ? 'bg-white w-8'
+                                    : idx < currentSection
+                                        ? 'bg-green-400'
+                                        : 'bg-white/30'
                                     }`}
                                 title={section.title}
                             />
@@ -232,21 +235,21 @@ export default function CreateConcentrateReview() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <button
+                        <LiquidButton
                             onClick={handleSave}
-                            disabled={saving}
-                            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all disabled:opacity-50"
+                            variant="secondary"
+                            loading={saving}
+                            leftIcon={<Save className="w-5 h-5" />}
                         >
-                            <Save className="w-5 h-5" />
-                            <span>{saving ? 'Sauvegarde...' : 'Sauvegarder'}</span>
-                        </button>
-                        <button
+                            {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                        </LiquidButton>
+                        <LiquidButton
                             onClick={() => setShowOrchard(!showOrchard)}
-                            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all"
+                            variant="primary"
+                            leftIcon={<Eye className="w-5 h-5" />}
                         >
-                            <Eye className="w-5 h-5" />
-                            <span>Aperçu</span>
-                        </button>
+                            Aperçu
+                        </LiquidButton>
                     </div>
                 </div>
             </div>
@@ -260,114 +263,117 @@ export default function CreateConcentrateReview() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.4 }}
-                        className="bg-white/98 backdrop-blur-2xl rounded-3xl shadow-2xl p-10"
+                        className=""
                     >
-                        <h2 className="text-2xl font-semibold text-purple-900 mb-6 flex items-center gap-3">
-                            <span className="text-4xl">{currentSectionData.icon}</span>
-                            {currentSectionData.title}
-                            {currentSectionData.required && <span className="text-red-500">*</span>}
-                        </h2>
+                        <LiquidCard padding="lg" className="shadow-2xl">
+                            <h2 className="text-2xl font-semibold text-white mb-6 flex items-center gap-3">
+                                <span className="text-4xl">{currentSectionData.icon}</span>
+                                {currentSectionData.title}
+                                {currentSectionData.required && <span className="text-red-500">*</span>}
+                            </h2>
 
-                        {/* Render current section */}
-                        {currentSection === 0 && (
-                            <InfosGenerales
-                                formData={formData}
-                                photos={photos}
-                                handleChange={handleChange}
-                                handlePhotoUpload={handlePhotoUpload}
-                                removePhoto={removePhoto}
-                            />
-                        )}
-                        {currentSection === 1 && (
-                            <SeparationPipelineSection
-                                data={formData.extraction || {}}
-                                onChange={(extractionData) => handleChange('extraction', extractionData)}
-                            />
-                        )}
-                        {currentSection === 2 && (
-                            <SeparationPipelineSection
-                                data={formData.purification || {}}
-                                onChange={(purificationData) => handleChange('purification', purificationData)}
-                            />
-                        )}
-                        {currentSection === 3 && (
-                            <AnalyticsSection
-                                productType="Concentré"
-                                data={formData.analytics || {}}
-                                onChange={(analyticsData) => handleChange('analytics', analyticsData)}
-                            />
-                        )}
-                        {currentSection === 4 && (
-                            <VisualSection
-                                data={formData.visual || {}}
-                                onChange={(visualData) => handleChange('visual', visualData)}
-                            />
-                        )}
-                        {currentSection === 5 && (
-                            <OdorSection
-                                data={formData.odeurs || {}}
-                                onChange={(odeursData) => handleChange('odeurs', odeursData)}
-                            />
-                        )}
-                        {currentSection === 6 && (
-                            <TextureSection
-                                data={formData.texture || {}}
-                                onChange={(textureData) => handleChange('texture', textureData)}
-                            />
-                        )}
-                        {currentSection === 7 && (
-                            <TasteSection
-                                data={formData.gouts || {}}
-                                onChange={(goutsData) => handleChange('gouts', goutsData)}
-                            />
-                        )}
-                        {currentSection === 8 && (
-                            <EffectsSection
-                                data={formData.effets || {}}
-                                onChange={(effetsData) => handleChange('effets', effetsData)}
-                            />
-                        )}
-                        {currentSection === 9 && (
-                            <CuringPipelineSection
-                                data={formData.curing || {}}
-                                onChange={(curingData) => handleChange('curing', curingData)}
-                            />
-                        )}
-                        {currentSection === 10 && (
-                            <ExperienceUtilisation
-                                data={formData.experience || {}}
-                                onChange={(expData) => handleChange('experience', expData)}
-                            />
-                        )}
+                            {/* Render current section */}
+                            {currentSection === 0 && (
+                                <InfosGenerales
+                                    formData={formData}
+                                    photos={photos}
+                                    handleChange={handleChange}
+                                    handlePhotoUpload={handlePhotoUpload}
+                                    removePhoto={removePhoto}
+                                />
+                            )}
+                            {currentSection === 1 && (
+                                <SeparationPipelineSection
+                                    data={formData.extraction || {}}
+                                    onChange={(extractionData) => handleChange('extraction', extractionData)}
+                                />
+                            )}
+                            {currentSection === 2 && (
+                                <SeparationPipelineSection
+                                    data={formData.purification || {}}
+                                    onChange={(purificationData) => handleChange('purification', purificationData)}
+                                />
+                            )}
+                            {currentSection === 3 && (
+                                <AnalyticsSection
+                                    productType="Concentré"
+                                    data={formData.analytics || {}}
+                                    onChange={(analyticsData) => handleChange('analytics', analyticsData)}
+                                />
+                            )}
+                            {currentSection === 4 && (
+                                <VisualSection
+                                    data={formData.visual || {}}
+                                    onChange={(visualData) => handleChange('visual', visualData)}
+                                />
+                            )}
+                            {currentSection === 5 && (
+                                <OdorSection
+                                    data={formData.odeurs || {}}
+                                    onChange={(odeursData) => handleChange('odeurs', odeursData)}
+                                />
+                            )}
+                            {currentSection === 6 && (
+                                <TextureSection
+                                    data={formData.texture || {}}
+                                    onChange={(textureData) => handleChange('texture', textureData)}
+                                />
+                            )}
+                            {currentSection === 7 && (
+                                <TasteSection
+                                    data={formData.gouts || {}}
+                                    onChange={(goutsData) => handleChange('gouts', goutsData)}
+                                />
+                            )}
+                            {currentSection === 8 && (
+                                <EffectsSection
+                                    data={formData.effets || {}}
+                                    onChange={(effetsData) => handleChange('effets', effetsData)}
+                                />
+                            )}
+                            {currentSection === 9 && (
+                                <CuringPipelineSection
+                                    data={formData.curing || {}}
+                                    onChange={(curingData) => handleChange('curing', curingData)}
+                                />
+                            )}
+                            {currentSection === 10 && (
+                                <ExperienceUtilisation
+                                    data={formData.experience || {}}
+                                    onChange={(expData) => handleChange('experience', expData)}
+                                />
+                            )}
+                        </LiquidCard>
                     </motion.div>
                 </AnimatePresence>
 
                 {/* Navigation Buttons */}
                 <div className="flex justify-between mt-8">
-                    <button
+                    <LiquidButton
                         onClick={handlePrevious}
                         disabled={currentSection === 0}
-                        className="px-6 py-3 bg-white/10 text-white rounded-xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/20 transition-all flex items-center gap-2"
+                        variant="ghost"
+                        leftIcon={<ChevronLeft className="w-5 h-5" />}
                     >
-                        <ChevronLeft className="w-5 h-5" />
                         Précédent
-                    </button>
+                    </LiquidButton>
                     {currentSection === sections.length - 1 ? (
-                        <button
+                        <LiquidButton
                             onClick={handleSubmit}
-                            disabled={saving}
-                            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:opacity-90 transition-all font-semibold disabled:opacity-50"
+                            loading={saving}
+                            variant="primary"
+                            size="lg"
                         >
                             {saving ? 'Publication...' : 'Publier la review'}
-                        </button>
+                        </LiquidButton>
                     ) : (
-                        <button
+                        <LiquidButton
                             onClick={handleNext}
-                            className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all flex items-center gap-2"
+                            variant="primary"
+                            rightIcon={<ChevronRight className="w-5 h-5" />}
                         >
                             Suivant
-                            <ChevronRight className="w-5 h-5" />
-                        </button>
+                        </LiquidButton>
                     )}
                 </div>
             </div>

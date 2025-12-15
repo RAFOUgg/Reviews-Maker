@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { useStore } from '../store/useStore'
 import { useToast } from '../components/ToastContainer'
+import { LiquidButton } from '../components/liquid'
 import FilterBar from '../components/FilterBar'
 import HeroSection from '../components/HeroSection'
 import ProductTypeCards from '../components/ProductTypeCards'
@@ -75,8 +77,9 @@ export default function HomePage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
-            <div className="max-w-7xl mx-auto px-4 py-12 space-y-12">
+        <div className="min-h-screen bg-slate-900 relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-900/50 via-gray-800/50 to-black/50 pointer-events-none"></div>
+            <div className="relative max-w-7xl mx-auto px-4 py-12 space-y-12">
                 {/* Hero Section */}
                 <HeroSection user={user} isAuthenticated={isAuthenticated} />
 
@@ -124,30 +127,51 @@ export default function HomePage() {
                     />
                 ) : (
                     <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {(showAll ? filteredReviews : filteredReviews.slice(0, 8)).map((review) => (
-                                <HomeReviewCard
+                        <motion.div
+                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+                            initial="hidden"
+                            animate="visible"
+                            variants={{
+                                visible: {
+                                    transition: {
+                                        staggerChildren: 0.05
+                                    }
+                                }
+                            }}
+                        >
+                            {(showAll ? filteredReviews : filteredReviews.slice(0, 8)).map((review, index) => (
+                                <motion.div
                                     key={review.id}
-                                    review={review}
-                                    onLike={handleLike}
-                                    onDislike={handleDislike}
-                                    onAuthorClick={setSelectedAuthor}
-                                />
+                                    variants={{
+                                        hidden: { opacity: 0, y: 20 },
+                                        visible: { opacity: 1, y: 0 }
+                                    }}
+                                >
+                                    <HomeReviewCard
+                                        review={review}
+                                        onLike={handleLike}
+                                        onDislike={handleDislike}
+                                        onAuthorClick={setSelectedAuthor}
+                                    />
+                                </motion.div>
                             ))}
-                        </div>
+                        </motion.div>
 
                         {/* Show More Button */}
                         {filteredReviews.length > 8 && (
                             <div className="text-center pt-8">
-                                <button
+                                <LiquidButton
                                     onClick={() => setShowAll(!showAll)}
-                                    className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 text-white font-black text-lg hover:from-green-700 hover:to-emerald-700 transition-all hover:scale-110 shadow-2xl hover:shadow-green-600/50 transform"
+                                    variant="primary"
+                                    size="lg"
+                                    leftIcon={
+                                        <svg className={`w-6 h-6 transition-transform duration-500 ${showAll ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    }
                                 >
-                                    <svg className={`w-6 h-6 transition-transform duration-500 ${showAll ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                    <span>{showAll ? 'Afficher moins' : `Afficher plus (${filteredReviews.length - 8} restantes)`}</span>
-                                </button>
+                                    {showAll ? 'Afficher moins' : `Afficher plus (${filteredReviews.length - 8} restantes)`}
+                                </LiquidButton>
                             </div>
                         )}
 

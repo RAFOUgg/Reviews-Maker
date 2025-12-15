@@ -1,17 +1,22 @@
 import React, { useState } from 'react';
-import { 
-  FlaskConical, Thermometer, Timer, Gauge, 
-  Settings, CheckCircle2, AlertTriangle 
+import {
+    FlaskConical, Thermometer, Timer, Gauge,
+    Settings, CheckCircle2, AlertTriangle
 } from 'lucide-react';
+// OLD SYSTEM (keep for backward compat)
 import PipelineTimeline from '../../pipeline/PipelineTimeline';
 import PipelineEditor from '../../pipeline/PipelineEditor';
+// NEW SYSTEM (Phase 4.1 - CDC compliant)
+import PipelineGitHubGrid from '../../pipeline/PipelineGitHubGrid';
 import { LiquidGlass } from '../../ui';
 
 const ExtractionPipelineSection = ({ data = {}, onChange }) => {
-    const [editingCell, setEditingCell] = useState(null);
+    // NEW SYSTEM: Use PipelineGitHubGrid (Phase 4.1)
+    const handlePipelineChange = (pipelineData) => {
+        onChange?.({ ...data, pipelineGithub: pipelineData });
+    };
 
-    // Initialisation
-    const pipelineData = data.pipeline || Array(12).fill(null);
+    // Support old data format (migration)
     const processData = data.process || {
         method: 'bho', // 'bho', 'rosin', 'co2', 'alcohol'
         solvent: 'butane',
@@ -58,11 +63,10 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
                                 <button
                                     key={m.id}
                                     onClick={() => handleProcessChange('method', m.id)}
-                                    className={`flex-1 p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${
-                                        processData.method === m.id
-                                        ? 'bg-amber-600/20 border-amber-500 text-amber-400'
-                                        : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
-                                    }`}
+                                    className={`flex-1 p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${processData.method === m.id
+                                            ? 'bg-amber-600/20 border-amber-500 text-amber-400'
+                                            : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+                                        }`}
                                 >
                                     <m.icon className="w-5 h-5" />
                                     <span className="text-xs font-medium text-center">{m.name}</span>
@@ -77,8 +81,8 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
                             <label className="text-xs text-gray-500 flex items-center gap-1">
                                 <Thermometer className="w-3 h-3" /> Temp. (°C)
                             </label>
-                            <input 
-                                type="number" 
+                            <input
+                                type="number"
                                 value={processData.temperature}
                                 onChange={(e) => handleProcessChange('temperature', parseFloat(e.target.value))}
                                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white"
@@ -88,8 +92,8 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
                             <label className="text-xs text-gray-500 flex items-center gap-1">
                                 <Gauge className="w-3 h-3" /> Pression/Vide
                             </label>
-                            <input 
-                                type="number" 
+                            <input
+                                type="number"
                                 value={processData.pressure}
                                 onChange={(e) => handleProcessChange('pressure', parseFloat(e.target.value))}
                                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white"
@@ -97,29 +101,15 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
                         </div>
                     </div>
                 </div>
-
-                {/* Timeline */}
-                <div className="mt-6">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-                        Suivi du Processus
-                    </label>
-                    <PipelineTimeline 
-                        data={pipelineData}
-                        onCellClick={handleCellClick}
-                        label="Étapes d'extraction"
-                        mode="phases"
-                    />
-                </div>
             </LiquidGlass>
 
-            {editingCell && (
-                <PipelineEditor 
-                    cell={editingCell}
-                    onSave={handleSaveCell}
-                    onClose={() => setEditingCell(null)}
-                    type="extraction"
-                />
-            )}
+            {/* NEW: GitHub-style Pipeline Grid (Phase 4.1) */}
+            <PipelineGitHubGrid
+                value={data.pipelineGithub}
+                onChange={handlePipelineChange}
+                type="extraction"
+                productType="concentrate"
+            />
         </div>
     );
 };

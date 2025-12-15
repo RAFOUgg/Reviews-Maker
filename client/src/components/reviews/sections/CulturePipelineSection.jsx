@@ -25,8 +25,32 @@ import {
     calculateTotalDuration,
     estimateYield
 } from '../../../data/cultureMethods';
+// NEW: Phase 4.1 - PipelineGitHubGrid integration
+import PipelineGitHubGrid from '../../pipeline/PipelineGitHubGrid';
 
 const CulturePipelineSection = ({ data = {}, onChange }) => {
+    // NEW: Handler pour PipelineGitHubGrid (Phase 4.1)
+    const handlePipelineChange = (pipelineData) => {
+        onChange?.({
+            ...data,
+            mode: config.mode,
+            startDate: config.startDate,
+            endDate: config.endDate,
+            startPhase: config.startPhase,
+            endPhase: config.endPhase,
+            space,
+            propagation,
+            environment,
+            fertilization,
+            training,
+            phaseData,
+            harvest,
+            estimatedYield,
+            totalDuration,
+            pipelineGithub: pipelineData // NEW: Données GitHub-style
+        });
+    };
+
     const [config, setConfig] = useState({
         mode: data.mode || 'indoor',
         startDate: data.startDate || new Date().toISOString().split('T')[0],
@@ -162,8 +186,8 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                             key={mode.id}
                             onClick={() => setConfig({ ...config, mode: mode.id })}
                             className={`p-4 rounded-xl text-center transition-all ${config.mode === mode.id
-                                    ? 'bg-green-500 text-white shadow-lg scale-105'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                ? 'bg-green-500 text-white shadow-lg scale-105'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                         >
                             <div className="text-3xl mb-2">{mode.icon}</div>
@@ -230,8 +254,8 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                                     key={type.id}
                                     onClick={() => setSpace({ ...space, type: type.id })}
                                     className={`p-3 rounded-xl transition-all ${space.type === type.id
-                                            ? 'bg-blue-500 text-white shadow-lg'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        ? 'bg-blue-500 text-white shadow-lg'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                         }`}
                                 >
                                     <div className="text-xl mb-1">{type.icon}</div>
@@ -309,8 +333,8 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                                     key={method.id}
                                     onClick={() => setPropagation({ ...propagation, method: method.id })}
                                     className={`p-3 rounded-xl transition-all ${propagation.method === method.id
-                                            ? 'bg-emerald-500 text-white shadow-lg'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        ? 'bg-emerald-500 text-white shadow-lg'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                         }`}
                                 >
                                     <div className="text-2xl mb-1">{method.icon}</div>
@@ -356,8 +380,8 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                                     key={substrate.id}
                                     onClick={() => setEnvironment({ ...environment, substrate: substrate.id })}
                                     className={`p-3 rounded-xl transition-all ${environment.substrate === substrate.id
-                                            ? 'bg-cyan-500 text-white shadow-lg'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        ? 'bg-cyan-500 text-white shadow-lg'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                         }`}
                                 >
                                     <div className="text-xl mb-1">{substrate.icon}</div>
@@ -380,8 +404,8 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                                     key={system.id}
                                     onClick={() => setEnvironment({ ...environment, irrigation: system.id })}
                                     className={`p-3 rounded-xl transition-all ${environment.irrigation === system.id
-                                            ? 'bg-blue-500 text-white shadow-lg'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        ? 'bg-blue-500 text-white shadow-lg'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                         }`}
                                 >
                                     <div className="text-xl mb-1">{system.icon}</div>
@@ -549,8 +573,8 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                             key={method.id}
                             onClick={() => toggleTraining(method.id)}
                             className={`p-4 rounded-xl text-left transition-all ${training.includes(method.id)
-                                    ? 'bg-amber-500 text-white shadow-lg'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                ? 'bg-amber-500 text-white shadow-lg'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                         >
                             <div className="flex items-center gap-2 mb-2">
@@ -584,8 +608,8 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                                     key={color.id}
                                     onClick={() => setHarvest({ ...harvest, trichomeColor: color.id })}
                                     className={`p-3 rounded-xl transition-all ${harvest.trichomeColor === color.id
-                                            ? 'bg-purple-500 text-white shadow-lg'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        ? 'bg-purple-500 text-white shadow-lg'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                         }`}
                                 >
                                     <div className="text-2xl mb-1">{color.icon}</div>
@@ -649,15 +673,23 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                 </div>
             </div>
 
-            {/* Note info */}
+            {/* NEW: GitHub-style Pipeline Grid (Phase 4.1) */}
+            <PipelineGitHubGrid
+                value={data.pipelineGithub}
+                onChange={handlePipelineChange}
+                type="culture"
+                productType="flower"
+            />
+
+            {/* Info message pour futures fonctionnalités */}
             <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
                 <div className="flex gap-3">
                     <AlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-gray-700">
-                        <p className="font-medium mb-1">Pipeline en cours de développement</p>
+                        <p className="font-medium mb-1">🌱 Nouveau : Tracabilité GitHub-style disponible</p>
                         <p>
-                            La visualisation détaillée par phase (type GitHub commits) et les données évolutives
-                            (morphologie, notes par phase) seront ajoutées dans une prochaine mise à jour.
+                            Utilisez la grille ci-dessus pour suivre l'évolution de votre culture phase par phase.
+                            Mode <strong>Phases</strong> activé par défaut (12 phases de croissance).
                         </p>
                     </div>
                 </div>

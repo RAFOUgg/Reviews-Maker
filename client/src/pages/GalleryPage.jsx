@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
+import {
   Search, Filter, Grid, List, SortAsc, SortDesc,
   Heart, MessageCircle, Share2, Eye, Star, Flame,
   ChevronDown, X, Calendar, TrendingUp, Award
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store/useStore';
+import { LiquidButton, LiquidInput, LiquidCard } from '../components/liquid';
 
 // Types de produits avec icônes
 const PRODUCT_TYPES = [
@@ -65,7 +66,7 @@ const ReviewCard = ({ review, onLike, onView }) => {
       onClick={() => onView?.(review.id)}
       className="cursor-pointer group"
     >
-      <div className="liquid-glass liquid-glass--card overflow-hidden rounded-2xl">
+      <LiquidCard className="overflow-hidden">
         {/* Image */}
         <div className="relative aspect-square overflow-hidden">
           <img
@@ -73,18 +74,18 @@ const ReviewCard = ({ review, onLike, onView }) => {
             alt={review.name}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           />
-          
+
           {/* Type badge */}
           <div className="absolute top-3 left-3 px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-white text-sm font-medium flex items-center gap-1">
             <span>{getTypeIcon(review.type)}</span>
             {review.typeName || 'Produit'}
           </div>
-          
+
           {/* Rating */}
           <div className={`absolute top-3 right-3 w-12 h-12 rounded-full bg-gradient-to-br ${getRatingColor(review.rating)} flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
             {review.rating?.toFixed(1) || '-'}
           </div>
-          
+
           {/* Hover overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <div className="absolute bottom-4 left-4 right-4">
@@ -94,7 +95,7 @@ const ReviewCard = ({ review, onLike, onView }) => {
             </div>
           </div>
         </div>
-        
+
         {/* Content */}
         <div className="p-4">
           <h3 className="font-semibold text-gray-900 dark:text-white truncate mb-1">
@@ -103,7 +104,7 @@ const ReviewCard = ({ review, onLike, onView }) => {
           <p className="text-sm text-gray-500 dark:text-gray-400 truncate mb-3">
             par @{review.author?.username || 'anonyme'}
           </p>
-          
+
           {/* Stats */}
           <div className="flex items-center justify-between text-sm text-gray-500">
             <button
@@ -123,7 +124,7 @@ const ReviewCard = ({ review, onLike, onView }) => {
             </div>
           </div>
         </div>
-      </div>
+      </LiquidCard>
     </motion.div>
   );
 };
@@ -131,7 +132,7 @@ const ReviewCard = ({ review, onLike, onView }) => {
 export default function GalleryPage() {
   const navigate = useNavigate();
   const { user } = useStore();
-  
+
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -172,7 +173,7 @@ export default function GalleryPage() {
     let result = [...reviews];
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(r => 
+      result = result.filter(r =>
         r.name?.toLowerCase().includes(query) ||
         r.author?.username?.toLowerCase().includes(query)
       );
@@ -193,8 +194,9 @@ export default function GalleryPage() {
   const handleLike = (id, liked) => console.log('Like:', id, liked);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-violet-700 to-purple-800">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-slate-900 relative">
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 via-violet-700/20 to-purple-800/20 pointer-events-none" />
+      <div className="max-w-7xl mx-auto px-4 py-8 relative z-10">
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-black text-white mb-4 drop-shadow-lg">
             🌿 Galerie Publique
@@ -204,7 +206,7 @@ export default function GalleryPage() {
           </p>
         </div>
 
-        <div className="liquid-glass liquid-glass--card p-4 mb-6">
+        <LiquidCard padding="md" className="mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -221,9 +223,8 @@ export default function GalleryPage() {
                 <button
                   key={type.id}
                   onClick={() => setSelectedType(type.id)}
-                  className={`px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${
-                    selectedType === type.id ? 'bg-white text-purple-600' : 'bg-white/10 text-white hover:bg-white/20'
-                  }`}
+                  className={`px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${selectedType === type.id ? 'bg-white text-purple-600' : 'bg-white/10 text-white hover:bg-white/20'
+                    }`}
                 >
                   {type.icon} {type.name}
                 </button>
@@ -247,7 +248,7 @@ export default function GalleryPage() {
               </button>
             </div>
           </div>
-        </div>
+        </LiquidCard>
 
         {loading ? (
           <div className="text-center text-white">Chargement...</div>

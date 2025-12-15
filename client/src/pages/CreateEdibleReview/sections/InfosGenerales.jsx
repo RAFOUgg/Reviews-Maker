@@ -1,5 +1,6 @@
 import React from 'react'
 import { Camera } from 'lucide-react'
+import { LiquidInput, LiquidSelect } from '../../../components/liquid'
 
 const EDIBLE_TYPES = [
     'Brownie',
@@ -23,63 +24,44 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
     return (
         <div className="space-y-6">
             {/* Nom du produit */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Nom du produit *
-                </label>
-                <input
-                    type="text"
-                    value={formData.nomProduit || ''}
-                    onChange={(e) => handleChange('nomProduit', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                    placeholder="Nom du comestible"
-                />
-            </div>
+            <LiquidInput
+                label="Nom du produit"
+                type="text"
+                value={formData.nomProduit || ''}
+                onChange={(e) => handleChange('nomProduit', e.target.value)}
+                placeholder="Nom du comestible"
+                required
+            />
 
             {/* Type de comestible */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Type de comestible
-                </label>
-                <select
-                    value={formData.type || ''}
-                    onChange={(e) => handleChange('type', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                >
-                    <option value="">Sélectionnez un type</option>
-                    {EDIBLE_TYPES.map(type => (
-                        <option key={type} value={type}>{type}</option>
-                    ))}
-                </select>
-            </div>
+            <LiquidSelect
+                label="Type de comestible"
+                value={formData.type || ''}
+                onChange={(e) => handleChange('type', e.target.value)}
+                options={[
+                    { value: '', label: 'Sélectionnez un type' },
+                    ...EDIBLE_TYPES.map(type => ({ value: type, label: type }))
+                ]}
+            />
 
             {/* Fabricant */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Fabricant
-                </label>
-                <input
-                    type="text"
-                    value={formData.fabricant || ''}
-                    onChange={(e) => handleChange('fabricant', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                    placeholder="Nom du fabricant"
-                />
-            </div>
+            <LiquidInput
+                label="Fabricant"
+                type="text"
+                value={formData.fabricant || ''}
+                onChange={(e) => handleChange('fabricant', e.target.value)}
+                placeholder="Nom du fabricant"
+            />
 
             {/* Cultivars/Génétiques utilisés */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Type de génétiques utilisées
-                </label>
-                <input
-                    type="text"
-                    value={formData.cultivars || ''}
-                    onChange={(e) => handleChange('cultivars', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                    placeholder="Génétiques ou cultivars utilisés"
-                />
-            </div>
+            <LiquidInput
+                label="Type de génétiques utilisées"
+                type="text"
+                value={formData.cultivars || ''}
+                onChange={(e) => handleChange('cultivars', e.target.value)}
+                placeholder="Génétiques ou cultivars utilisés"
+                hint="Exemple: Indica, Sativa, Hybride ou noms de cultivars"
+            />
 
             {/* Photos */}
             <div>

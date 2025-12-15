@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Hand, Sparkles } from 'lucide-react';
+import { LiquidSlider } from '../../../components/liquid';
 
 /**
  * Niveaux de qualité pour les sliders de texture
@@ -104,52 +105,6 @@ export default function TextureSection({ productType, data = {}, onChange }) {
         onChange(textureData);
     }, [hardness, density, malleability, elasticity, stickiness, melting, residue, friability, viscosity, productType]);
 
-    const CustomSlider = ({ value, onChange, label, customLabels, invertedLabels = false }) => {
-        let displayLabel, colorClass;
-
-        if (customLabels) {
-            displayLabel = customLabels[value];
-            // Inverser couleurs si labels inversés
-            const colorIndex = invertedLabels ? (11 - value) : value;
-            colorClass = TEXTURE_QUALITY_LEVELS[colorIndex - 1]?.color || 'text-gray-600';
-        } else {
-            displayLabel = TEXTURE_QUALITY_LEVELS[value - 1]?.label;
-            colorClass = TEXTURE_QUALITY_LEVELS[value - 1]?.color;
-        }
-
-        return (
-            <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
-                    <span className={`text-sm font-semibold ${colorClass}`}>{value}/10</span>
-                </div>
-                <div className="relative">
-                    <input
-                        type="range"
-                        min="1"
-                        max="10"
-                        value={value}
-                        onChange={(e) => onChange(Number(e.target.value))}
-                        className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer 
-                     slider-thumb:appearance-none slider-thumb:w-4 slider-thumb:h-4 
-                     slider-thumb:rounded-full slider-thumb:bg-gradient-to-br 
-                     slider-thumb:from-purple-500 slider-thumb:to-pink-500 
-                     slider-thumb:cursor-pointer slider-thumb:shadow-lg"
-                    />
-                </div>
-                <p className={`text-xs text-center ${colorClass} font-medium`}>{displayLabel}</p>
-            </div>
-        );
-    };
-
-    // Calcul du score de pureté (moyenne melting + residue inversé pour Hash/Concentré)
-    const calculatePurityScore = () => {
-        if (productType === 'Hash' || productType === 'Concentré') {
-            return ((melting + residue) / 2).toFixed(1);
-        }
-        return null;
-    };
-
     const purityScore = calculatePurityScore();
 
     return (
@@ -169,40 +124,56 @@ export default function TextureSection({ productType, data = {}, onChange }) {
             {/* Champs communs (tous types) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-xl">
-                    <CustomSlider
+                    <LiquidSlider
+                        label="Dureté"
+                        min={1}
+                        max={10}
                         value={hardness}
                         onChange={setHardness}
-                        label="Dureté"
-                        customLabels={TEXTURE_LABELS.hardness}
+                        color="cyan"
+                        showValue
+                        unit="/10"
                     />
                 </div>
 
                 <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl">
-                    <CustomSlider
+                    <LiquidSlider
+                        label="Densité tactile"
+                        min={1}
+                        max={10}
                         value={density}
                         onChange={setDensity}
-                        label="Densité tactile"
-                        customLabels={TEXTURE_LABELS.density}
+                        color="green"
+                        showValue
+                        unit="/10"
                     />
                 </div>
 
                 <div className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-xl">
-                    <CustomSlider
+                    <LiquidSlider
+                        label="Collant"
+                        min={1}
+                        max={10}
                         value={stickiness}
                         onChange={setStickiness}
-                        label="Collant"
-                        customLabels={TEXTURE_LABELS.stickiness}
+                        color="orange"
+                        showValue
+                        unit="/10"
                     />
                 </div>
 
                 {/* Élasticité (Fleurs uniquement) */}
                 {productType === 'Fleurs' && (
                     <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl">
-                        <CustomSlider
+                        <LiquidSlider
+                            label="Élasticité"
+                            min={1}
+                            max={10}
                             value={elasticity}
                             onChange={setElasticity}
-                            label="Élasticité"
-                            customLabels={TEXTURE_LABELS.elasticity}
+                            color="purple"
+                            showValue
+                            unit="/10"
                         />
                     </div>
                 )}
@@ -210,11 +181,15 @@ export default function TextureSection({ productType, data = {}, onChange }) {
                 {/* Malléabilité (Hash uniquement) */}
                 {productType === 'Hash' && (
                     <div className="p-4 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl">
-                        <CustomSlider
+                        <LiquidSlider
+                            label="Malléabilité"
+                            min={1}
+                            max={10}
                             value={malleability}
                             onChange={setMalleability}
-                            label="Malléabilité"
-                            customLabels={TEXTURE_LABELS.malleability}
+                            color="purple"
+                            showValue
+                            unit="/10"
                         />
                     </div>
                 )}
@@ -222,11 +197,15 @@ export default function TextureSection({ productType, data = {}, onChange }) {
                 {/* Friabilité (Hash uniquement) */}
                 {productType === 'Hash' && (
                     <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl">
-                        <CustomSlider
+                        <LiquidSlider
+                            label="Friabilité"
+                            min={1}
+                            max={10}
                             value={friability}
                             onChange={setFriability}
-                            label="Friabilité"
-                            customLabels={TEXTURE_LABELS.friability}
+                            color="orange"
+                            showValue
+                            unit="/10"
                         />
                     </div>
                 )}
@@ -234,11 +213,15 @@ export default function TextureSection({ productType, data = {}, onChange }) {
                 {/* Viscosité (Concentrés uniquement) */}
                 {productType === 'Concentré' && (
                     <div className="p-4 bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 rounded-xl">
-                        <CustomSlider
+                        <LiquidSlider
+                            label="Viscosité"
+                            min={1}
+                            max={10}
                             value={viscosity}
                             onChange={setViscosity}
-                            label="Viscosité"
-                            customLabels={TEXTURE_LABELS.viscosity}
+                            color="cyan"
+                            showValue
+                            unit="/10"
                         />
                     </div>
                 )}
@@ -254,21 +237,28 @@ export default function TextureSection({ productType, data = {}, onChange }) {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-xl">
-                            <CustomSlider
+                            <LiquidSlider
+                                label="Melting (10 = Full Melt)"
+                                min={1}
+                                max={10}
                                 value={melting}
                                 onChange={setMelting}
-                                label="Melting (10 = Full Melt)"
-                                customLabels={TEXTURE_LABELS.melting}
+                                color="purple"
+                                showValue
+                                unit="/10"
                             />
                         </div>
 
                         <div className="p-4 bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-900/20 dark:to-slate-900/20 rounded-xl">
-                            <CustomSlider
+                            <LiquidSlider
+                                label="Résidus (10 = aucun)"
+                                min={1}
+                                max={10}
                                 value={residue}
                                 onChange={setResidue}
-                                label="Résidus (10 = aucun)"
-                                customLabels={TEXTURE_LABELS.residue}
-                                invertedLabels={true}
+                                color="orange"
+                                showValue
+                                unit="/10"
                             />
                         </div>
                     </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { LiquidSlider } from '../../../components/liquid';
 import {
     CANNABIS_COLORS,
     getAllColorShades,
@@ -37,45 +38,6 @@ export default function VisualSection({ productType, data, onChange }) {
 
     const allColors = getAllColorShades();
     const isHashOrConcentrate = productType === 'Hash' || productType === 'Concentré';
-
-    // Composant Slider personnalisé
-    const CustomSlider = ({ value, onChange, label, invertedLabels = null, min = 1, max = 10 }) => {
-        const displayLabel = invertedLabels ? invertedLabels[value] : VISUAL_QUALITY_LEVELS[value - 1]?.label;
-        const colorClass = VISUAL_QUALITY_LEVELS[value - 1]?.color || 'text-gray-600';
-
-        return (
-            <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700">{label}</span>
-                    <span className={`text-sm font-bold ${colorClass}`}>
-                        {value}/10 - {displayLabel}
-                    </span>
-                </div>
-                <input
-                    type="range"
-                    min={min}
-                    max={max}
-                    value={value}
-                    onChange={(e) => onChange(parseInt(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer 
-                     [&::-webkit-slider-thumb]:appearance-none 
-                     [&::-webkit-slider-thumb]:w-4 
-                     [&::-webkit-slider-thumb]:h-4 
-                     [&::-webkit-slider-thumb]:rounded-full 
-                     [&::-webkit-slider-thumb]:bg-violet-600 
-                     [&::-webkit-slider-thumb]:cursor-pointer
-                     [&::-webkit-slider-thumb]:shadow-md
-                     [&::-webkit-slider-thumb]:hover:bg-violet-700
-                     [&::-webkit-slider-thumb]:transition-colors"
-                />
-                <div className="flex justify-between text-xs text-gray-500 px-1">
-                    <span>1</span>
-                    <span>5</span>
-                    <span>10</span>
-                </div>
-            </div>
-        );
-    };
 
     return (
         <div className="space-y-6 bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
@@ -148,48 +110,70 @@ export default function VisualSection({ productType, data, onChange }) {
             {/* Transparence (Hash/Concentrés uniquement) */}
             {isHashOrConcentrate && (
                 <div className="space-y-3">
-                    <CustomSlider
+                    <LiquidSlider
+                        label="Transparence"
+                        min={1}
+                        max={10}
                         value={transparency}
                         onChange={setTransparency}
-                        label="Transparence"
-                        invertedLabels={null}
+                        color="cyan"
+                        showValue
+                        unit="/10"
                     />
-                    <p className="text-xs text-gray-500 italic">
+                    <p className="text-xs text-gray-400 italic">
                         {TRANSPARENCY_LEVELS[transparency - 1]?.example}
                     </p>
                 </div>
             )}
 
             {/* Densité */}
-            <CustomSlider
+            <LiquidSlider
+                label="Densité"
+                min={1}
+                max={10}
                 value={density}
                 onChange={setDensity}
-                label="Densité"
+                color="purple"
+                showValue
+                unit="/10"
             />
 
             {/* Trichomes (Fleurs uniquement) */}
             {productType === 'Fleur' && (
-                <CustomSlider
+                <LiquidSlider
+                    label="Trichomes (quantité/qualité)"
+                    min={1}
+                    max={10}
                     value={trichomes}
                     onChange={setTrichomes}
-                    label="Trichomes (quantité/qualité)"
+                    color="green"
+                    showValue
+                    unit="/10"
                 />
             )}
 
             {/* Moisissures (inversé) */}
-            <CustomSlider
+            <LiquidSlider
+                label="Moisissures (10 = aucune)"
+                min={1}
+                max={10}
                 value={mold}
                 onChange={setMold}
-                label="Moisissures (10 = aucune)"
-                invertedLabels={INVERTED_LABELS.moisissures}
+                color="orange"
+                showValue
+                unit="/10"
             />
 
             {/* Graines (inversé) */}
-            <CustomSlider
+            <LiquidSlider
+                label="Graines (10 = aucune)"
+                min={1}
+                max={10}
                 value={seeds}
                 onChange={setSeeds}
-                label="Graines (10 = aucune)"
-                invertedLabels={INVERTED_LABELS.graines}
+                color="orange"
+                showValue
+                unit="/10"
             />
 
             {/* Résumé visuel */}

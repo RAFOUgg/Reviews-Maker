@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { EFFECTS_CATEGORIES, getAllEffects, getEffectsByFilter, ONSET_LEVELS, INTENSITY_LEVELS, DURATION_OPTIONS } from '../../../data/effectsCategories';
 import { Zap, Sparkles, Clock, Filter, Plus, X } from 'lucide-react';
+import { LiquidSlider } from '../../../components/liquid';
 
 /**
  * Section Effets Ressentis pour Hash/Concentrés/Fleurs
@@ -34,39 +35,6 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
             if (prev.length >= 8) return prev; // Max 8 effets
             return [...prev, effectId];
         });
-    };
-
-    const CustomSlider = ({ value, onChange, label, levels }) => {
-        const displayLabel = levels[value - 1]?.label || label;
-        const colorClass = levels[value - 1]?.color || 'text-gray-600';
-        const extraInfo = levels[value - 1]?.time || '';
-
-        return (
-            <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
-                    <span className={`text-sm font-semibold ${colorClass}`}>{value}/10</span>
-                </div>
-                <div className="relative">
-                    <input
-                        type="range"
-                        min="1"
-                        max="10"
-                        value={value}
-                        onChange={(e) => onChange(Number(e.target.value))}
-                        className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer 
-                     slider-thumb:appearance-none slider-thumb:w-4 slider-thumb:h-4 
-                     slider-thumb:rounded-full slider-thumb:bg-gradient-to-br 
-                     slider-thumb:from-purple-500 slider-thumb:to-pink-500 
-                     slider-thumb:cursor-pointer slider-thumb:shadow-lg"
-                    />
-                </div>
-                <div className="flex justify-between items-center">
-                    <p className={`text-xs ${colorClass} font-medium`}>{displayLabel}</p>
-                    {extraInfo && <p className="text-xs text-gray-500 dark:text-gray-400">{extraInfo}</p>}
-                </div>
-            </div>
-        );
     };
 
     const filteredEffects = getEffectsByFilter(categoryFilter, sentimentFilter);
@@ -106,20 +74,28 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
             {/* Montée, Intensité, Durée */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-xl">
-                    <CustomSlider
+                    <LiquidSlider
+                        label="Montée (rapidité)"
+                        min={1}
+                        max={10}
                         value={onset}
                         onChange={setOnset}
-                        label="Montée (rapidité)"
-                        levels={ONSET_LEVELS}
+                        color="cyan"
+                        showValue
+                        unit="/10"
                     />
                 </div>
 
                 <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl">
-                    <CustomSlider
+                    <LiquidSlider
+                        label="Intensité"
+                        min={1}
+                        max={10}
                         value={intensity}
                         onChange={setIntensity}
-                        label="Intensité"
-                        levels={INTENSITY_LEVELS}
+                        color="purple"
+                        showValue
+                        unit="/10"
                     />
                 </div>
             </div>
@@ -136,8 +112,8 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                             key={option.id}
                             onClick={() => setDuration(option.id)}
                             className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${duration === option.id
-                                    ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                                 }`}
                         >
                             {option.label}
@@ -158,8 +134,8 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                     <button
                         onClick={() => setCategoryFilter(null)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${categoryFilter === null
-                                ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                             }`}
                     >
                         Toutes catégories
@@ -169,8 +145,8 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                             key={category.id}
                             onClick={() => setCategoryFilter(category.id)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${categoryFilter === category.id
-                                    ? 'text-white shadow-lg'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                ? 'text-white shadow-lg'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                                 }`}
                             style={categoryFilter === category.id ? { background: category.color } : {}}
                         >
@@ -185,8 +161,8 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                     <button
                         onClick={() => setSentimentFilter(null)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === null
-                                ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                             }`}
                     >
                         Tous
@@ -194,8 +170,8 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                     <button
                         onClick={() => setSentimentFilter('positive')}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === 'positive'
-                                ? 'bg-green-500 text-white shadow-lg'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            ? 'bg-green-500 text-white shadow-lg'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                             }`}
                     >
                         ✅ Positifs
@@ -203,8 +179,8 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                     <button
                         onClick={() => setSentimentFilter('negative')}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === 'negative'
-                                ? 'bg-red-500 text-white shadow-lg'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            ? 'bg-red-500 text-white shadow-lg'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                             }`}
                     >
                         ⚠️ Négatifs
@@ -212,8 +188,8 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                     <button
                         onClick={() => setSentimentFilter('neutral')}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === 'neutral'
-                                ? 'bg-blue-500 text-white shadow-lg'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            ? 'bg-blue-500 text-white shadow-lg'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                             }`}
                     >
                         ⚕️ Thérapeutiques
@@ -229,8 +205,8 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                         Effets sélectionnés
                     </label>
                     <span className={`text-xs font-semibold px-3 py-1 rounded-full ${selectedEffects.length >= 8
-                            ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
-                            : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                        ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                         }`}>
                         {selectedEffects.length}/8
                     </span>
@@ -276,10 +252,10 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                                 onClick={() => !isDisabled && toggleEffect(effect.id)}
                                 disabled={isDisabled}
                                 className={`p-3 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isSelected
-                                        ? `bg-gradient-to-br ${badgeColor} text-white shadow-lg transform scale-105`
-                                        : isDisabled
-                                            ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
-                                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:shadow-md border border-gray-200 dark:border-gray-700'
+                                    ? `bg-gradient-to-br ${badgeColor} text-white shadow-lg transform scale-105`
+                                    : isDisabled
+                                        ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
+                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:shadow-md border border-gray-200 dark:border-gray-700'
                                     }`}
                             >
                                 <span>{getCategoryIcon(effect.category)}</span>

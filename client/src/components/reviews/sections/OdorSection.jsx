@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ODOR_FAMILIES, getAllOdorNotes, AROMA_INTENSITY_LEVELS } from '../../../data/odorNotes';
 import { Flower2, Sparkles, Star, Plus, X } from 'lucide-react';
+import { LiquidSlider } from '../../../components/liquid';
 
 /**
  * Section Odeurs pour Hash/Concentrés/Fleurs
@@ -43,35 +44,6 @@ export default function OdorSection({ productType, data = {}, onChange }) {
         });
     };
 
-    const CustomSlider = ({ value, onChange, label, max = 10 }) => {
-        const displayLabel = AROMA_INTENSITY_LEVELS[value - 1]?.label || label;
-        const colorClass = AROMA_INTENSITY_LEVELS[value - 1]?.color || 'text-gray-600';
-
-        return (
-            <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
-                    <span className={`text-sm font-semibold ${colorClass}`}>{value}/{max}</span>
-                </div>
-                <div className="relative">
-                    <input
-                        type="range"
-                        min="1"
-                        max={max}
-                        value={value}
-                        onChange={(e) => onChange(Number(e.target.value))}
-                        className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer 
-                     slider-thumb:appearance-none slider-thumb:w-4 slider-thumb:h-4 
-                     slider-thumb:rounded-full slider-thumb:bg-gradient-to-br 
-                     slider-thumb:from-purple-500 slider-thumb:to-pink-500 
-                     slider-thumb:cursor-pointer slider-thumb:shadow-lg"
-                    />
-                </div>
-                <p className={`text-xs text-center ${colorClass} font-medium`}>{displayLabel}</p>
-            </div>
-        );
-    };
-
     const allNotes = getAllOdorNotes();
     const filteredNotes = selectedFamily
         ? allNotes.filter(note => note.familyId === selectedFamily)
@@ -94,20 +66,30 @@ export default function OdorSection({ productType, data = {}, onChange }) {
             {/* Fidélité cultivars (Hash/Concentrés uniquement) */}
             {(productType === 'Hash' || productType === 'Concentré') && (
                 <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl">
-                    <CustomSlider
+                    <LiquidSlider
+                        label="Fidélité aux cultivars"
+                        min={1}
+                        max={10}
                         value={fidelity}
                         onChange={setFidelity}
-                        label="Fidélité aux cultivars"
+                        color="purple"
+                        showValue
+                        unit="/10"
                     />
                 </div>
             )}
 
             {/* Intensité aromatique */}
             <div className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-xl">
-                <CustomSlider
+                <LiquidSlider
+                    label="Intensité aromatique"
+                    min={1}
+                    max={10}
                     value={intensity}
                     onChange={setIntensity}
-                    label="Intensité aromatique"
+                    color="cyan"
+                    showValue
+                    unit="/10"
                 />
             </div>
 
@@ -121,8 +103,8 @@ export default function OdorSection({ productType, data = {}, onChange }) {
                     <button
                         onClick={() => setSelectedFamily(null)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedFamily === null
-                                ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                             }`}
                     >
                         Toutes
@@ -132,8 +114,8 @@ export default function OdorSection({ productType, data = {}, onChange }) {
                             key={family.id}
                             onClick={() => setSelectedFamily(family.id)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${selectedFamily === family.id
-                                    ? 'text-white shadow-lg'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                ? 'text-white shadow-lg'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                                 }`}
                             style={selectedFamily === family.id ? { background: family.color } : {}}
                         >
@@ -152,8 +134,8 @@ export default function OdorSection({ productType, data = {}, onChange }) {
                         Notes dominantes
                     </label>
                     <span className={`text-xs font-semibold px-3 py-1 rounded-full ${dominantNotes.length >= 7
-                            ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
-                            : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                        ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                         }`}>
                         {dominantNotes.length}/7
                     </span>
@@ -193,10 +175,10 @@ export default function OdorSection({ productType, data = {}, onChange }) {
                                 onClick={() => !isDisabled && toggleDominantNote(note.id)}
                                 disabled={isDisabled}
                                 className={`p-3 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isSelected
-                                        ? 'text-white shadow-lg transform scale-105'
-                                        : isDisabled
-                                            ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
-                                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:shadow-md border border-gray-200 dark:border-gray-700'
+                                    ? 'text-white shadow-lg transform scale-105'
+                                    : isDisabled
+                                        ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
+                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:shadow-md border border-gray-200 dark:border-gray-700'
                                     }`}
                                 style={isSelected ? { background: note.familyColor } : {}}
                             >
@@ -217,8 +199,8 @@ export default function OdorSection({ productType, data = {}, onChange }) {
                         Notes secondaires
                     </label>
                     <span className={`text-xs font-semibold px-3 py-1 rounded-full ${secondaryNotes.length >= 7
-                            ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
-                            : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                        ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                         }`}>
                         {secondaryNotes.length}/7
                     </span>
@@ -258,10 +240,10 @@ export default function OdorSection({ productType, data = {}, onChange }) {
                                 onClick={() => !isDisabled && toggleSecondaryNote(note.id)}
                                 disabled={isDisabled}
                                 className={`p-3 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isSelected
-                                        ? 'text-white shadow-lg transform scale-105'
-                                        : isDisabled
-                                            ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
-                                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:shadow-md border border-gray-200 dark:border-gray-700'
+                                    ? 'text-white shadow-lg transform scale-105'
+                                    : isDisabled
+                                        ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
+                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:shadow-md border border-gray-200 dark:border-gray-700'
                                     }`}
                                 style={isSelected ? { background: note.familyColor } : {}}
                             >

@@ -572,6 +572,42 @@ model PipelineStep {
   @@map("pipeline_steps")
 }
 
+// Pipeline GitHub-style (nouvelle structure pour grilles 365 cases)
+model PipelineGithub {
+  id              String   @id @default(uuid())
+  
+  // Lien avec review
+  reviewId        String   
+  reviewType      String   // "flower", "hash", "concentrate", "edible"
+  pipelineType    String   // "culture", "curing", "extraction", "recipe", "separation"
+  
+  // Configuration de la trame
+  intervalType    String   // "seconds", "minutes", "hours", "days", "weeks", "months", "phase"
+  startDate       DateTime? // Date de début (si mode jours/semaines/mois)
+  endDate         DateTime? // Date de fin (si mode jours/semaines/mois)
+  
+  // Configuration curing (si pipelineType="curing")
+  curingType      String?  // "froid" (<5°C) ou "chaud" (>5°C)
+  curingDuration  Int?     // Durée totale
+  
+  // Cells data (grille complète JSON)
+  // Structure: { "0": {intensity: 0-3, temp, humidity, container, packaging, notes}, "1": {...}, ... }
+  cells           String   // JSON: Map<cellIndex, CellData>
+  
+  // Statistiques calculées
+  totalCells      Int      @default(0)    // Nombre total de cases
+  filledCells     Int      @default(0)    // Nombre de cases remplies
+  completionRate  Float    @default(0.0)  // % de complétion
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([reviewId, pipelineType])
+  @@index([reviewType])
+  @@map("pipeline_github")
+}
+
 // Review complète avec données spécifiques Fleurs
 model FlowerReview {
   id          String   @id @default(uuid())
@@ -601,7 +637,10 @@ model FlowerReview {
   // ===== PIPELINE CULTURE (Producteurs) =====
   // Stocké comme JSON dans une table séparée PipelineStep
   // Référencé par: culturePipelineId
-  culturePipelineId String? // ID du premier step de la pipeline culture
+  culturePipelineId String? // ID du premier step de la pipeline culture (OLD)
+  
+  // NEW: GitHub-style pipeline culture
+  culturePipelineGithubId String? // ID PipelineGithub pour culture
   
   // Configuration globale culture
   cultureStartDate  DateTime? // Début de culture
@@ -663,7 +702,10 @@ model FlowerReview {
   effetsFiltre        String? // "tous", "neutre", "positif", "negatif"
   
   // ===== PIPELINE CURING / MATURATION =====
-  curingPipelineId    String? // ID du premier step de la pipeline curing
+  curingPipelineId    String? // ID du premier step de la pipeline curing (OLD)
+  
+  // NEW: GitHub-style pipeline curing
+  curingPipelineGithubId String? // ID PipelineGithub pour curing
   
   // Configuration globale curing
   curingDuration      Int?    // Durée (jours/semaines/mois selon trame)
@@ -696,7 +738,11 @@ model HashReview {
   photos          String?  // JSON: ["/images/hash-xxx.jpg"]
   
   // ===== PIPELINE SÉPARATION =====
-  separationPipelineId String? // ID pipeline séparation
+  separationPipelineId String? // ID pipeline séparation (OLD)
+  
+  // NEW: GitHub-style pipeline separation
+  separationPipelineGithubId String? // ID PipelineGithub pour séparation
+  
   methodeSeparation   String?  // "manuelle", "tamisage à sec", "eau/glace", "autre"
   nombrePasses        Int?     // Nombre de passes (si eau/glace)
   temperatureEau      Float?   // Température eau (°C, si eau/glace)
@@ -707,7 +753,10 @@ model HashReview {
   tempsTotalSeparation Int?    // Temps total séparation (minutes)
   
   // ===== PIPELINE PURIFICATION =====
-  purificationPipelineId String? // ID pipeline purification
+  purificationPipelineId String? // ID pipeline purification (OLD)
+  
+  // NEW: GitHub-style pipeline purification
+  purificationPipelineGithubId String? // ID PipelineGithub pour purification
   
   // ===== VISUEL & TECHNIQUE =====
   couleurTransparence Float?   // Couleur/transparence /10 (nuancier noir->blanc)
@@ -746,7 +795,11 @@ model HashReview {
   dureeEffets         String? // Durée effets
   
   // ===== CURING =====
-  curingPipelineId   String? // ID pipeline curing
+  curingPipelineId   String? // ID pipeline curing (OLD)
+  
+  // NEW: GitHub-style pipeline curing
+  curingPipelineGithubId String? // ID PipelineGithub pour curing
+  
   curingDuration     Int?    // Durée curing
   curingType         String? // "froid", "chaud"
   curingInterval     String? // Intervalle
@@ -776,11 +829,18 @@ model ConcentrateReview {
   photos             String?  // JSON: ["/images/concentrate-xxx.jpg"]
   
   // ===== PIPELINE EXTRACTION =====
-  extractionPipelineId String? // ID pipeline extraction
+  extractionPipelineId String? // ID pipeline extraction (OLD)
+  
+  // NEW: GitHub-style pipeline extraction
+  extractionPipelineGithubId String? // ID PipelineGithub pour extraction
+  
   methodeExtraction    String? // Méthode d'extraction
   
   // ===== PIPELINE PURIFICATION =====
-  purificationPipelineId String? // ID pipeline purification
+  purificationPipelineId String? // ID pipeline purification (OLD)
+  
+  // NEW: GitHub-style pipeline purification
+  purificationPipelineGithubId String? // ID PipelineGithub pour purification
   
   // ===== VISUEL & TECHNIQUE =====
   couleurTransparence Float?   // Couleur/Transparence /10
@@ -820,7 +880,11 @@ model ConcentrateReview {
   dureeEffets         String? // Durée effets
   
   // ===== CURING =====
-  curingPipelineId   String? // ID pipeline curing
+  curingPipelineId   String? // ID pipeline curing (OLD)
+  
+  // NEW: GitHub-style pipeline curing (concentrate)
+  curingPipelineGithubIdConcentrate String? // ID PipelineGithub pour curing concentré
+  
   curingDuration     Int?    // Durée curing
   curingType         String? // "froid", "chaud"
   curingInterval     String? // Intervalle
@@ -846,7 +910,11 @@ model EdibleReview {
   nomProduit      String   // Nom du produit* (requis)
   typeComestible  String?  // Type de comestible
   fabricant       String?  // Fabricant
-  typeGenetiques  String?  // Type de génétiques
+  typeGenetiques  String?  // Type de génétiques (OLD)
+  
+  // NEW: GitHub-style pipeline recette
+  recipePipelineGithubId String? // ID PipelineGithub pour recette
+  
   photos          String?  // JSON: ["/images/edible-xxx.jpg"]
   
   // ===== PIPELINE RECETTE =====

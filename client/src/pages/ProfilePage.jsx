@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore'
+import { LiquidButton, LiquidCard, LiquidInput } from '../components/liquid'
 
 /**
  * Page Profil Utilisateur - Review Maker by Terpologie
@@ -71,17 +72,18 @@ export default function ProfilePage() {
 
     if (loading || !profile) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-purple-600 via-violet-700 to-purple-800 flex items-center justify-center">
+            <div className="min-h-screen bg-slate-900 flex items-center justify-center">
                 <div className="text-white">Chargement...</div>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-600 via-violet-700 to-purple-800">
-            <div className="max-w-4xl mx-auto px-4 py-12">
+        <div className="min-h-screen bg-slate-900 relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 via-violet-700/20 to-purple-800/20 pointer-events-none" />
+            <div className="max-w-4xl mx-auto px-4 py-12 relative z-10 relative z-10">
                 {/* Header */}
-                <div className="glass rounded-3xl p-8 mb-8">
+                <LiquidCard padding="lg" className="mb-8">
                     <button
                         onClick={() => navigate(-1)}
                         className="flex items-center gap-2 text-gray-700 hover:text-gray-900 mb-6 transition-colors"
@@ -127,7 +129,7 @@ export default function ProfilePage() {
                             </div>
                         </div>
                     </div>
-                </div>
+                </LiquidCard>
 
                 {/* Tabs */}
                 <div className="flex gap-4 mb-8 border-b border-white/20">
@@ -150,7 +152,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Tab Content */}
-                <div className="glass rounded-3xl p-8">
+                <LiquidCard padding="lg">
                     {/* Info Tab */}
                     {activeTab === 'info' && (
                         <form onSubmit={handleUpdateProfile} className="space-y-6">
@@ -203,28 +205,29 @@ export default function ProfilePage() {
 
                             <div className="flex gap-4 pt-4">
                                 {!editing ? (
-                                    <button
-                                        type="button"
+                                    <LiquidButton
+                                        variant="primary"
+                                        size="md"
                                         onClick={() => setEditing(true)}
-                                        className="bg-violet-600 hover:bg-violet-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
                                     >
                                         Modifier
-                                    </button>
+                                    </LiquidButton>
                                 ) : (
                                     <>
-                                        <button
-                                            type="submit"
-                                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+                                        <LiquidButton
+                                            variant="primary"
+                                            size="md"
+                                            onClick={handleUpdateProfile}
                                         >
                                             Enregistrer
-                                        </button>
-                                        <button
-                                            type="button"
+                                        </LiquidButton>
+                                        <LiquidButton
+                                            variant="secondary"
+                                            size="md"
                                             onClick={() => setEditing(false)}
-                                            className="bg-gray-600 hover:bg-gray-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
                                         >
                                             Annuler
-                                        </button>
+                                        </LiquidButton>
                                     </>
                                 )}
                             </div>
@@ -287,9 +290,9 @@ export default function ProfilePage() {
                                             <p className="font-semibold text-gray-900">Authentification multi-facteurs (2FA)</p>
                                             <p className="text-sm text-gray-600">Protégez votre compte avec 2FA</p>
                                         </div>
-                                        <button className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                                        <LiquidButton variant="primary" size="sm">
                                             Activer
-                                        </button>
+                                        </LiquidButton>
                                     </div>
                                 </div>
                             </div>
@@ -302,7 +305,7 @@ export default function ProfilePage() {
                             </div>
                         </div>
                     )}
-                </div>
+                </LiquidCard>
             </div>
         </div>
     )
