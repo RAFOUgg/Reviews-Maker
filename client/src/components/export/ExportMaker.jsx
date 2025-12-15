@@ -4,13 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Download, Settings, Image as ImageIcon, Type, Palette, 
     Grid, Layout, Maximize2, FileImage, File, Save, X, ChevronsRight,
-    Share2, Info, CheckCircle
+    Share2, Info, CheckCircle, Film
 } from 'lucide-react';
 import { LiquidGlass } from '../ui';
 import { useAccountType } from '../../hooks/useAccountType';
 import { FeatureGate } from '../account';
 import DragDropExport from './DragDropExport';
 import WatermarkEditor from './WatermarkEditor';
+import { exportPipelineToGIF, downloadGIF } from '../../utils/GIFExporter';
 
 /**
  * ExportMaker - Gestionnaire final d'exports
@@ -32,6 +33,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     });
     const [customSections, setCustomSections] = useState([]);
     const [exporting, setExporting] = useState(false);
+    const [exportingGIF, setExportingGIF] = useState(false);
+    const [gifProgress, setGifProgress] = useState(0);
 
     // Templates prédéfinis
     const templates = [
@@ -66,6 +69,45 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             console.error(err);
         } finally {
             setExporting(false);
+        }
+    };
+
+    const handleExportGIF = async () => {
+        if (!exportRef.current) return;
+
+        // Vérifier qu'il y a au moins un pipeline dans la review
+        const hasPipeline = reviewData?.pipelineGlobal || reviewData?.pipelineSeparation || 
+                           reviewData?.pipelineExtraction || reviewData?.pipelineCuring;
+        
+        if (!hasPipeline) {
+            alert('Cette review ne contient aucun pipeline à exporter en GIF.');
+            return;
+        }
+
+        setExportingGIF(true);
+        setGifProgress(0);
+
+        try {
+            // Récupérer le premier pipeline disponible
+            const pipelineData = reviewData.pipelineGlobal || 
+                               reviewData.pipelineSeparation || 
+                               reviewData.pipelineExtraction || 
+                               reviewData.pipelineCuring;
+
+            const blob = await exportPipelineToGIF(pipelineData, exportRef.current, {
+                delay: 200,
+                quality: 10,
+                onProgress: (percent) => setGifProgress(percent)
+            });
+
+            const filename = `review-${reviewData.name || 'export'}-pipeline-${Date.now()}.gif`;
+            downloadGIF(blob, filename);
+        } catch (error) {
+            console.error('❌ Export GIF failed:', error);
+            alert('Erreur lors de l\'export GIF. Voir console pour détails.');
+        } finally {
+            setExportingGIF(false);
+            setGifProgress(0);
         }
     };
 
@@ -154,6 +196,28 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
                     {/* Actions footer */}
                     <div className="p-4 border-t border-white/10 space-y-3 bg-black/20">
+                        {/* Bouton Export GIF - Disponible pour tous si pipeline présent */}
+                        {(reviewData?.pipelineGlobal || reviewData?.pipelineSeparation || 
+                          reviewData?.pipelineExtraction || reviewData?.pipelineCuring) && (
+                            <button 
+                                onClick={handleExportGIF}
+                                disabled={exportingGIF}
+                                className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl text-white font-bold shadow-lg hover:shadow-amber-500/30 transition-all flex items-center justify-center gap-2"
+                            >
+                                {exportingGIF ? (
+                                    <>
+                                        <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                                        <span>{gifProgress}%</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Film className="w-5 h-5" />
+                                        <span>Exporter Pipeline en GIF</span>
+                                    </>
+                                )}
+                            </button>
+                        )}
+                        
                         <FeatureGate hasAccess={isProducer} upgradeType="producer" showOverlay={false}>
                             <div className="flex gap-2">
                                 <button onClick={() => handleExport('svg')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">SVG</button>

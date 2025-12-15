@@ -3,10 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Calendar, Clock, Activity, Plus, Edit2, Trash2,
     ChevronDown, Info, Thermometer, Droplets, Package,
-    Sun, Moon, Sprout, Download, Film
+    Sun, Moon, Sprout, Download
 } from 'lucide-react';
 import { LiquidCard, LiquidButton } from '../liquid';
-import { exportPipelineToGIF, downloadGIF } from '../../utils/GIFExporter';
 
 /**
  * PipelineGitHubGrid - Système de Pipeline GitHub-style CDC-compliant
@@ -391,35 +390,8 @@ export default function PipelineGitHubGrid({
     const [cellsData, setCellsData] = useState(value.cells || {});
     const [editingCell, setEditingCell] = useState(null);
     const [showModal, setShowModal] = useState(false);
-    const [isExportingGIF, setIsExportingGIF] = useState(false);
-    const [exportProgress, setExportProgress] = useState(0);
-    const containerRef = useRef(null);
 
-    // Handler pour export GIF
-    const handleExportGIF = async () => {
-        if (!containerRef.current) return;
 
-        setIsExportingGIF(true);
-        setExportProgress(0);
-
-        try {
-            const pipelineData = { config, cells: cellsData };
-            const blob = await exportPipelineToGIF(pipelineData, containerRef.current, {
-                delay: 200,
-                quality: 10,
-                onProgress: (percent) => setExportProgress(percent)
-            });
-
-            const filename = `pipeline-${type}-${productType}-${Date.now()}.gif`;
-            downloadGIF(blob, filename);
-        } catch (error) {
-            console.error('❌ Export GIF failed:', error);
-            alert('Erreur lors de l\'export GIF. Voir console pour détails.');
-        } finally {
-            setIsExportingGIF(false);
-            setExportProgress(0);
-        }
-    };
 
     // Calcul nombre de cases
     const totalCells = useMemo(() => {
@@ -503,18 +475,6 @@ export default function PipelineGitHubGrid({
                         <div className="text-2xl font-bold text-blue-400">{completionPercent}%</div>
                         <div className="text-xs text-gray-400">{filledCellsCount}/{totalCells} cases</div>
                     </div>
-
-                    {/* Export GIF (à implémenter) */}
-                    <LiquidButton
-                        variant="secondary"
-                        size="sm"
-                        className="flex items-center gap-2"
-                        title="Export GIF disponible prochainement"
-                        disabled
-                    >
-                        <Download className="w-4 h-4" />
-                        GIF
-                    </LiquidButton>
                 </div>
             </div>
 
@@ -602,33 +562,10 @@ export default function PipelineGitHubGrid({
 
             {/* Grille GitHub-style */}
             <div ref={containerRef} className="p-6 bg-black/20 rounded-xl border border-gray-700">
-                {/* Header avec info + export */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                        <Info className="w-4 h-4" />
-                        <span>Cliquez sur une case pour éditer les données de cette période</span>
-                    </div>
-
-                    {/* Bouton export GIF */}
-                    <LiquidButton
-                        onClick={handleExportGIF}
-                        disabled={isExportingGIF || Object.keys(cellsData).length === 0}
-                        size="sm"
-                        variant="secondary"
-                        className="flex items-center gap-2"
-                    >
-                        {isExportingGIF ? (
-                            <>
-                                <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
-                                <span>{exportProgress}%</span>
-                            </>
-                        ) : (
-                            <>
-                                <Film className="w-4 h-4" />
-                                <span>Export GIF</span>
-                            </>
-                        )}
-                    </LiquidButton>
+                {/* Header avec info */}
+                <div className="flex items-center gap-2 text-xs text-gray-400 mb-4">
+                    <Info className="w-4 h-4" />
+                    <span>Cliquez sur une case pour éditer les données de cette période</span>
                 </div>
 
                 {config.intervalType === 'phases' ? (

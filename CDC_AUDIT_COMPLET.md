@@ -133,7 +133,7 @@
 **Impact:** MAJEUR - Core feature du CDC
 
 **Requis:**
-- Trame configurable: jours/semaines/phases
+- Trame configurable: secondes/heures/jours/semaines/phases
 - Intervalles: secondes, minutes, heures, jour, semaine, mois
 - Phases prédéfinies (12 phases culture fleurs)
 - UI style commits GitHub (365 cases pour 365 jours)
