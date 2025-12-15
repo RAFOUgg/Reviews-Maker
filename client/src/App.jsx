@@ -13,6 +13,7 @@ import { useAuth } from './hooks/useAuth'
 import RDRBanner from './components/legal/RDRBanner'
 import AgeVerification from './components/legal/AgeVerification'
 import ConsentModal from './components/legal/ConsentModal'
+import DisclaimerRDRModal from './components/legal/DisclaimerRDRModal'
 import AccountSelector from './components/account/AccountSelector'
 import LegalConsentGate from './components/LegalConsentGate'
 import { initializeTheme } from './store/themeStore'
@@ -74,6 +75,7 @@ function App() {
                     <div className="min-h-screen bg-transparent text-dark-text relative overflow-hidden">
                         <AnimatedMeshGradient />
                         <RDRBanner />
+                        <DisclaimerRDRModal />
                         <ToastContainer />
 
                         {isAuthenticated && !loading && (

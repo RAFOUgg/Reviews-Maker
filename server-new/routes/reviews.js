@@ -7,6 +7,8 @@ import { prisma } from '../server.js'
 import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } from '../utils/errorHandler.js'
 import { formatReview, formatReviews, prepareReviewData, buildReviewFilters, extractImageFilenames, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
 import { validateReviewData, validateReviewId } from '../utils/validation.js'
+import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js'
+import { EXPORT_LIMITS } from '../middleware/permissions.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -185,6 +187,53 @@ router.get('/:id', asyncHandler(async (req, res) => {
 router.post('/', requireAuth, upload.array('images', 10), asyncHandler(async (req, res) => {
     console.log('📝 Creating review with data:', JSON.stringify(req.body, null, 2))
     console.log('📎 Files uploaded:', req.files?.length || 0)
+
+    // Vérifier les limites de reviews pour les comptes consumer
+    const accountType = getUserAccountType(req.user);
+    const limits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.CONSUMER];
+    const visibility = req.body.visibility || 'private';
+
+    // Vérifier limite reviews privées
+    if (visibility === 'private' && limits.reviews !== -1) {
+        const privateCount = await prisma.review.count({
+            where: { 
+                authorId: req.user.id, 
+                visibility: 'private' 
+            }
+        });
+        
+        if (privateCount >= limits.reviews) {
+            return res.status(403).json({
+                error: 'review_limit_reached',
+                message: `Vous avez atteint la limite de ${limits.reviews} reviews privées.`,
+                limit: limits.reviews,
+                current: privateCount,
+                upgradeRequired: true,
+                upgradeType: 'influencer'
+            });
+        }
+    }
+
+    // Vérifier limite reviews publiques
+    if (visibility === 'public' && limits.publicReviews !== -1) {
+        const publicCount = await prisma.review.count({
+            where: { 
+                authorId: req.user.id, 
+                visibility: 'public' 
+            }
+        });
+        
+        if (publicCount >= limits.publicReviews) {
+            return res.status(403).json({
+                error: 'public_review_limit_reached',
+                message: `Vous avez atteint la limite de ${limits.publicReviews} reviews publiques.`,
+                limit: limits.publicReviews,
+                current: publicCount,
+                upgradeRequired: true,
+                upgradeType: 'influencer'
+            });
+        }
+    }
 
     // Valider les données de la review
     const validation = validateReviewData(req.body)

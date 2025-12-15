@@ -17,7 +17,7 @@ export function useAccountType() {
   }, [user]);
 
   const isProducer = accountType === 'producer';
-  const isInfluencer = accountType === 'influencer_pro';
+  const isInfluencer = accountType === 'influencer';
   const isConsumer = accountType === 'consumer';
   const isPremium = isProducer || isInfluencer;
 
@@ -25,27 +25,27 @@ export function useAccountType() {
   const permissions = useMemo(() => ({
     // Sections de review accessibles
     sections: {
-      infosGenerales: true,
-      genetiques: true,
-      culture: isProducer, // PipeLine Culture = Producteur uniquement
-      analytics: true,
-      visual: true,
-      odeurs: true,
-      texture: true,
-      gouts: true,
-      effets: true,
-      curing: true,
-      experience: true,
+      infosGenerales: true,              // TOUS
+      genetiques: isProducer,             // Producteur uniquement (CDC)
+      culture: false,                     // Aucune section culture (legacy)
+      analytics: true,                    // TOUS
+      visual: true,                       // TOUS (Visuel & Technique)
+      odeurs: true,                       // TOUS
+      texture: true,                      // TOUS
+      gouts: true,                        // TOUS
+      effets: true,                       // TOUS
+      curing: true,                       // TOUS (PipeLine Curing/Maturation)
+      experience: true,                   // TOUS
     },
     
     // PipeLines
     pipelines: {
-      culture: isProducer,
-      curing: true,
-      separation: isPremium,
-      extraction: isPremium,
-      recipe: true,
-      configurable: isProducer, // PipeLines entièrement configurables
+      culture: isProducer,                // Producteur uniquement (CDC)
+      curing: true,                       // TOUS (CDC: PipeLine Curing accessible partout)
+      separation: isProducer,             // Producteur uniquement (CDC: Hash)
+      extraction: isProducer,             // Producteur uniquement (CDC: Concentrés)
+      recipe: true,                       // TOUS (CDC: Comestibles)
+      configurable: isProducer,           // PipeLines entièrement configurables (Producteur)
     },
     
     // Export Maker
@@ -148,7 +148,7 @@ export function useAccountType() {
       return {
         title: 'Fonctionnalité Premium',
         message: 'Passez à Influenceur (15.99€/mois) ou Producteur pour accéder à cette fonctionnalité',
-        upgradeType: 'influencer_pro',
+        upgradeType: 'influencer',
       };
     }
     

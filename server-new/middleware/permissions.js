@@ -24,22 +24,17 @@ export const EXPORT_LIMITS = {
     [ACCOUNT_TYPES.CONSUMER]: {
         daily: 3,
         templates: 3,
-        watermarks: 1,
-        reviews: 10,
+        watermarks: 0,
+        reviews: 20,
+        publicReviews: 5,
         savedData: 10
     },
-    [ACCOUNT_TYPES.INFLUENCER_BASIC]: {
+    [ACCOUNT_TYPES.INFLUENCER]: {
         daily: 50,
         templates: 20,
-        watermarks: 5,
-        reviews: 100,
-        savedData: 50
-    },
-    [ACCOUNT_TYPES.INFLUENCER_PRO]: {
-        daily: 100,
-        templates: 50,
         watermarks: 10,
-        reviews: 500,
+        reviews: -1,
+        publicReviews: -1,
         savedData: 100
     },
     [ACCOUNT_TYPES.PRODUCER]: {
@@ -66,8 +61,7 @@ export const EXPORT_LIMITS = {
 export const EXPORT_FORMATS = {
     [ACCOUNT_TYPES.BETA_TESTER]: ['png', 'jpeg', 'pdf', 'svg', 'csv', 'json', 'html', 'gif'],
     [ACCOUNT_TYPES.CONSUMER]: ['png', 'jpeg', 'pdf'],
-    [ACCOUNT_TYPES.INFLUENCER_BASIC]: ['png', 'jpeg', 'pdf', 'svg'],
-    [ACCOUNT_TYPES.INFLUENCER_PRO]: ['png', 'jpeg', 'pdf', 'svg'],
+    [ACCOUNT_TYPES.INFLUENCER]: ['png', 'jpeg', 'pdf', 'svg', 'gif'],
     [ACCOUNT_TYPES.PRODUCER]: ['png', 'jpeg', 'pdf', 'svg', 'csv', 'json', 'html', 'gif'],
     [ACCOUNT_TYPES.MERCHANT]: ['png', 'jpeg', 'pdf', 'svg', 'csv', 'json', 'html'],
 };
@@ -78,8 +72,7 @@ export const EXPORT_FORMATS = {
 export const EXPORT_DPI = {
     [ACCOUNT_TYPES.BETA_TESTER]: 300,
     [ACCOUNT_TYPES.CONSUMER]: 150,
-    [ACCOUNT_TYPES.INFLUENCER_BASIC]: 300,
-    [ACCOUNT_TYPES.INFLUENCER_PRO]: 300,
+    [ACCOUNT_TYPES.INFLUENCER]: 300,
     [ACCOUNT_TYPES.PRODUCER]: 300,
     [ACCOUNT_TYPES.MERCHANT]: 300,
 };
@@ -119,8 +112,7 @@ export function canAccessFeature(user, feature, options = {}) {
         // Export haute qualité (300dpi)
         case 'export_high_quality':
             const allowedAccounts = [
-                ACCOUNT_TYPES.INFLUENCER_BASIC,
-                ACCOUNT_TYPES.INFLUENCER_PRO,
+                ACCOUNT_TYPES.INFLUENCER,
                 ACCOUNT_TYPES.PRODUCER,
                 ACCOUNT_TYPES.MERCHANT
             ];
@@ -327,8 +319,7 @@ export function canAccessFeature(user, feature, options = {}) {
         // Filigrane personnalisé (Influencer+)
         case 'watermark_custom':
             const influencerAccounts = [
-                ACCOUNT_TYPES.INFLUENCER_BASIC,
-                ACCOUNT_TYPES.INFLUENCER_PRO,
+                ACCOUNT_TYPES.INFLUENCER,
                 ACCOUNT_TYPES.PRODUCER,
                 ACCOUNT_TYPES.MERCHANT
             ];
@@ -349,8 +340,7 @@ export function canAccessFeature(user, feature, options = {}) {
         case 'stats_engagement':
         case 'stats_exports':
             const statsAccounts = [
-                ACCOUNT_TYPES.INFLUENCER_BASIC,
-                ACCOUNT_TYPES.INFLUENCER_PRO,
+                ACCOUNT_TYPES.INFLUENCER,
                 ACCOUNT_TYPES.PRODUCER,
                 ACCOUNT_TYPES.MERCHANT
             ];
@@ -393,8 +383,7 @@ export function canAccessFeature(user, feature, options = {}) {
         // Partage réseaux sociaux (API)
         case 'social_sharing':
             const socialAccounts = [
-                ACCOUNT_TYPES.INFLUENCER_BASIC,
-                ACCOUNT_TYPES.INFLUENCER_PRO,
+                ACCOUNT_TYPES.INFLUENCER,
                 ACCOUNT_TYPES.PRODUCER,
                 ACCOUNT_TYPES.MERCHANT
             ];
@@ -480,14 +469,12 @@ export function getUserLimits(user) {
         features: {
             customTemplates: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
             highQualityExport: [
-                ACCOUNT_TYPES.INFLUENCER_BASIC,
-                ACCOUNT_TYPES.INFLUENCER_PRO,
+                ACCOUNT_TYPES.INFLUENCER,
                 ACCOUNT_TYPES.PRODUCER,
                 ACCOUNT_TYPES.MERCHANT
             ].includes(accountType),
             advancedStats: [
-                ACCOUNT_TYPES.INFLUENCER_BASIC,
-                ACCOUNT_TYPES.INFLUENCER_PRO,
+                ACCOUNT_TYPES.INFLUENCER,
                 ACCOUNT_TYPES.PRODUCER,
                 ACCOUNT_TYPES.MERCHANT
             ].includes(accountType),

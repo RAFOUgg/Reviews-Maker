@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    Download, Settings, Image as ImageIcon, Type, Palette, 
+import {
+    Download, Settings, Image as ImageIcon, Type, Palette,
     Grid, Layout, Maximize2, FileImage, File, Save, X, ChevronsRight,
     Share2, Info, CheckCircle, Film
 } from 'lucide-react';
@@ -18,7 +18,7 @@ import { exportPipelineToGIF, downloadGIF } from '../../utils/GIFExporter';
  * Intègre Drag & Drop (Phase 5) et Filigranes
  */
 const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
-    const { isPremium, isProducer } = useAccountType();
+    const { isPremium, isProducer, isConsumer, accountType } = useAccountType();
     const exportRef = useRef(null);
     const [mode, setMode] = useState('templates'); // 'templates', 'custom', 'watermark'
     const [selectedTemplate, setSelectedTemplate] = useState('compact');
@@ -53,7 +53,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const handleExport = async (exportFormat = 'png') => {
         if (!exportRef.current) return;
         setExporting(true);
-        
+
         try {
             const canvas = await html2canvas(exportRef.current, {
                 scale: 2,
@@ -76,9 +76,9 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         if (!exportRef.current) return;
 
         // Vérifier qu'il y a au moins un pipeline dans la review
-        const hasPipeline = reviewData?.pipelineGlobal || reviewData?.pipelineSeparation || 
-                           reviewData?.pipelineExtraction || reviewData?.pipelineCuring;
-        
+        const hasPipeline = reviewData?.pipelineGlobal || reviewData?.pipelineSeparation ||
+            reviewData?.pipelineExtraction || reviewData?.pipelineCuring;
+
         if (!hasPipeline) {
             alert('Cette review ne contient aucun pipeline à exporter en GIF.');
             return;
@@ -89,10 +89,10 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
         try {
             // Récupérer le premier pipeline disponible
-            const pipelineData = reviewData.pipelineGlobal || 
-                               reviewData.pipelineSeparation || 
-                               reviewData.pipelineExtraction || 
-                               reviewData.pipelineCuring;
+            const pipelineData = reviewData.pipelineGlobal ||
+                reviewData.pipelineSeparation ||
+                reviewData.pipelineExtraction ||
+                reviewData.pipelineCuring;
 
             const blob = await exportPipelineToGIF(pipelineData, exportRef.current, {
                 delay: 200,
@@ -114,7 +114,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
             <LiquidGlass variant="modal" className="w-full max-w-6xl h-[90vh] flex flex-col md:flex-row overflow-hidden relative">
-                
+
                 {/* Sidebar options */}
                 <div className="w-full md:w-80 border-r border-white/10 flex flex-col bg-white/5">
                     <div className="p-4 border-b border-white/10 flex justify-between items-center">
@@ -126,22 +126,22 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             <X className="w-5 h-5" />
                         </button>
                     </div>
-                    
+
                     {/* Navigation Modes */}
                     <div className="flex p-2 gap-1 bg-black/20">
-                        <button 
+                        <button
                             onClick={() => setMode('templates')}
                             className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'templates' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'}`}
                         >
                             Templates
                         </button>
-                        <button 
+                        <button
                             onClick={() => setMode('custom')}
                             className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'custom' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'}`}
                         >
                             Custom
                         </button>
-                        <button 
+                        <button
                             onClick={() => setMode('watermark')}
                             className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'watermark' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'}`}
                         >
@@ -157,11 +157,10 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     <button
                                         key={t.id}
                                         onClick={() => setSelectedTemplate(t.id)}
-                                        className={`w-full text-left p-3 rounded-xl border transition-all flex items-center gap-3 ${
-                                            selectedTemplate === t.id 
-                                            ? 'bg-purple-600/20 border-purple-500 text-white' 
-                                            : 'bg-white/5 border-transparent text-gray-300 hover:bg-white/10'
-                                        }`}
+                                        className={`w-full text-left p-3 rounded-xl border transition-all flex items-center gap-3 ${selectedTemplate === t.id
+                                                ? 'bg-purple-600/20 border-purple-500 text-white'
+                                                : 'bg-white/5 border-transparent text-gray-300 hover:bg-white/10'
+                                            }`}
                                     >
                                         <div className={`p-2 rounded-lg ${selectedTemplate === t.id ? 'bg-purple-500 text-white' : 'bg-white/10 text-gray-400'}`}>
                                             <t.icon className="w-5 h-5" />
@@ -197,35 +196,35 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     {/* Actions footer */}
                     <div className="p-4 border-t border-white/10 space-y-3 bg-black/20">
                         {/* Bouton Export GIF - Disponible pour tous si pipeline présent */}
-                        {(reviewData?.pipelineGlobal || reviewData?.pipelineSeparation || 
-                          reviewData?.pipelineExtraction || reviewData?.pipelineCuring) && (
-                            <button 
-                                onClick={handleExportGIF}
-                                disabled={exportingGIF}
-                                className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl text-white font-bold shadow-lg hover:shadow-amber-500/30 transition-all flex items-center justify-center gap-2"
-                            >
-                                {exportingGIF ? (
-                                    <>
-                                        <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
-                                        <span>{gifProgress}%</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Film className="w-5 h-5" />
-                                        <span>Exporter Pipeline en GIF</span>
-                                    </>
-                                )}
-                            </button>
-                        )}
-                        
+                        {(reviewData?.pipelineGlobal || reviewData?.pipelineSeparation ||
+                            reviewData?.pipelineExtraction || reviewData?.pipelineCuring) && (
+                                <button
+                                    onClick={handleExportGIF}
+                                    disabled={exportingGIF}
+                                    className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl text-white font-bold shadow-lg hover:shadow-amber-500/30 transition-all flex items-center justify-center gap-2"
+                                >
+                                    {exportingGIF ? (
+                                        <>
+                                            <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                                            <span>{gifProgress}%</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Film className="w-5 h-5" />
+                                            <span>Exporter Pipeline en GIF</span>
+                                        </>
+                                    )}
+                                </button>
+                            )}
+
                         <FeatureGate hasAccess={isProducer} upgradeType="producer" showOverlay={false}>
                             <div className="flex gap-2">
                                 <button onClick={() => handleExport('svg')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">SVG</button>
                                 <button onClick={() => handleExport('pdf')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">PDF</button>
                             </div>
                         </FeatureGate>
-                        
-                        <button 
+
+                        <button
                             onClick={() => handleExport('png')}
                             disabled={exporting}
                             className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl text-white font-bold shadow-lg hover:shadow-purple-500/30 transition-all flex items-center justify-center gap-2"
@@ -243,8 +242,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                 {/* Preview Area */}
                 <div className="flex-1 bg-gray-900/50 p-8 flex items-center justify-center overflow-auto relative">
                     <div className="bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] absolute inset-0 opacity-20 pointer-events-none" />
-                    
-                    <div 
+
+                    <div
                         ref={exportRef}
                         className="bg-gradient-to-br from-gray-900 to-black rounded-none shadow-2xl relative overflow-hidden"
                         style={{
@@ -291,7 +290,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                         </div>
                                     )}
                                 </div>
-                                
+
                                 <div className="space-y-4">
                                     {/* Stats grid */}
                                     <div className="grid grid-cols-2 gap-3">
@@ -321,7 +320,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             {/* Footer */}
                             <div className="mt-auto pt-6 border-t border-white/10 flex justify-between items-end">
                                 <div className="text-xs text-gray-500">
-                                    Review réalisée sur<br/>
+                                    Review réalisée sur<br />
                                     <span className="text-white font-bold text-lg">Reviews-Maker</span>
                                 </div>
                                 <div className="flex gap-4">
@@ -339,7 +338,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
                         {/* Filigrane Overlay */}
                         {watermark.visible && (
-                            <div 
+                            <div
                                 className="absolute pointer-events-none z-50"
                                 style={{
                                     left: `${watermark.position.x}%`,
@@ -349,14 +348,14 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 }}
                             >
                                 {watermark.type === 'image' && watermark.imageUrl ? (
-                                    <img 
-                                        src={watermark.imageUrl} 
-                                        alt="Watermark" 
-                                        style={{ width: `${watermark.size * 5}px` }} 
+                                    <img
+                                        src={watermark.imageUrl}
+                                        alt="Watermark"
+                                        style={{ width: `${watermark.size * 5}px` }}
                                     />
                                 ) : (
-                                    <div 
-                                        style={{ 
+                                    <div
+                                        style={{
                                             fontSize: `${watermark.size}px`,
                                             color: watermark.color || '#ffffff',
                                             fontWeight: 'bold',
@@ -366,6 +365,31 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                         {watermark.content}
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {/* Filigrane Terpologie forcé pour comptes Amateur */}
+                        {(accountType === 'consumer' || accountType === 'amateur' || !isPremium) && (
+                            <div
+                                className="absolute pointer-events-none z-[60]"
+                                style={{
+                                    bottom: '20px',
+                                    right: '20px',
+                                    opacity: 0.3,
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        fontSize: '14px',
+                                        fontWeight: 600,
+                                        color: '#8B5CF6',
+                                        textShadow: '0 0 10px rgba(139, 92, 246, 0.5), 0 2px 4px rgba(0,0,0,0.3)',
+                                        letterSpacing: '1px',
+                                        userSelect: 'none',
+                                    }}
+                                >
+                                    Terpologie
+                                </div>
                             </div>
                         )}
                     </div>

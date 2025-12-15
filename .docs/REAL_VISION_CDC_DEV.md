@@ -3,41 +3,100 @@
 ### Outils de tracabilité produit cannabinique.
 
 #### Apparence de l'application : 
+[FRONT-END]
+Page principal (terpologie.eu): 
 
-Page principal : 
 HomePage avec accès aux fonctionnalités principales :
+- Branding (home) : 
+    - Logo Terpologie en haut à gauche (cliquable, redirige vers home)
+- Menu de profil en haut à droite : 
+        - Mon compte : Profil & paramètres
+        - Ma bibliothèque : Reviews et préférences
+        - Statistiques
+    - Bouton "Créer une review" bien visible au centre de la page
+    - Section "Mes reviews récentes" avec aperçu des dernières reviews créées
+    - Section "Statistiques rapides" : nombre total de reviews, types de produits les plus évalués, etc...
+    - Pied de page avec liens vers CGU, Politique de confidentialité, Contact, Réseaux sociaux
+- Création d'une reviews via les 4 boutons : 
+    - Créer une review Fleurs
+    - Créer une review Hash
+    - Créer une review Concentrés
+    - Créer une review Comestibles
+- Galerie Publique 
+    - Filtres par données des produits, date, popularité etc..
+
+Pop-up RDR récurente : 
+- Affichage d'un pop-up de rappel RDR (Responsibility, Disclosure, Regulation) à chaque venu sur le site. 
+
+#### Thèmes et design :
 Par defaut : Mode clair/sombre (système de détection automatique selon préférence OS avec option de forçage manuel dans les paramètres)
 Interface claire, moderne et épurée, apple-like design. Intégration du liquid glass dans les modaux, boutons, menus, etc...
-    - Choix de thèmes
-Depuis paramètre utilisateur : 
-    - Thèmes : Violet Lean, Vert émeraude, Bleu tahiti, Sakura
+    - Choix de thèmes depuis les paramètres utilisateur :
+        - Mode clair
+        - Mode sombre
+        - Mode Violet Lean
+        - Vert émeraude
+        - Bleu Tahiti
+
 # Adaptation format pc, téléphone et tablette (responsive design) :
 - Interface adaptative selon la taille de l'écran (mobile, tablette, desktop)
 - Optimisation des performances pour chaque type d'appareil
-- Immersion totale en mode mobile (PWA)
+- Immersion totale en mode mobile (PWA) Indentation et positionnement à améliorer pour immersion et lisibilité totale.
 
 ---
 
+[FRONT-END]
 # Choix de type de compte à l’inscription
-Revoir le système de choix du type de compte à l’inscription, avec une interface claire, designe et apple-like, expliquant les différences et obligations associées à chaque type de compte. Utiliser "## Répartition des fonctionnalités selon les types de comptes utilisateurs :" comme base.
+Interface claire, designe et apple-like, expliquant les différences et obligations associées à chaque type de compte.
+┌─────────────────────────────────────────────────────────────────┐
+│                        Choisissez votre Plan                    │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│ Des outils de traçabilité adaptés à vos besoins, du simple amateur au producteur professionnel │
+│                                                                 │
+│ GRILLE 3 COLONNES (Responsive: 1 col mobile, 2  tablet, 3 PC)  │
+│                                                                 │
+│ ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│ │     ✨       │  │      📱      │  │      👨🏼‍🌾     |          │
+│ │       GRATUIT│  │         15.99│  │         29.99│          │
+│ │ ■════════■   │  │ ■════════■   │  │ ■════════■   │          │
+│ │ Spécs        │  │ Spécs        │  │ Spécs        │          │
+│ │ Amateur      │  │ Influenceur  │  │ Producteur   │          │
+│ └──────────────┘  └──────────────┘  └──────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+
+[BACK-END]
+En cliquant sur un des 3 boutons, la fenètre pop-up des informations détaillées du compte s'affiche avec :
+- Description complète des fonctionnalités incluses
+- Prix et modalités de paiement (mensuel/annuel)
+- Obligations légales (KYC pour Influenceur et Producteur)
+- Bouton "Passer à l'inscription"(amateur) ou "Passer au paiment"(producteur/influenceur) pour confirmer le choix
+    - Redirection vers la page d'inscription avec le type de compte pré-sélectionné
 
 # CONNEXION ET APPLICATIONS DE CONNEXION ET DE SECURITE :
-- Connexion par email/mot de passe (pseudo obligatoire)
-- Connexion via compte tiers : OAuth2 (Google, Facebook, Apple, Amazon, Discord)
-    - Pseudo facultatif, sinon utilisé celui du compte tiers
-    - Photo de profil depuis compte tiers
-    - Adresse mail depuis compte tiers  
-    - Langue et pays depuis compte tiers, sinon demander à l'inscription
+[Amateur]
+- Inscription par mail/mot de passe (pseudo obligatoire)
+- Inscription par compte tiers : OAuth2 (Google, Facebook, Apple, Amazon, Discord)
+    - Utilisé pseudo récupérée du compte tiers
+    - Photo de profil récupérée depuis compte tiers
+    - Adresse mail récupérée depuis compte tiers  
+    - Date de naissance récupérée depuis compte tiers.
+    - Langue et pays depuis compte tiers, si introuvable car non renseigné à l'app OAuth2 -> demander à l'inscription et sauvegardé
+
+- Connexion rapide par email/mot de passe - vérification email obligatoire à chaque connexion (code de vérification à 6 chiffres/Lettres envoyé par mail)
+- Connexion rapide via compte tiers : OAuth2 (Google, Facebook, Apple, Amazon, Discord)
 - Système de réinitialisation de mot de passe (email de réinitialisation avec token sécurisé, lien valable 1h)
-- Système de double authantification (2FA) via application d'authentification (Mail, Google Authenticator, Authy, etc...) depuis paramètre de compte
+Depuis les paramètres : 
+- Système de double authantification (2FA) via application d'authentification (Mail, Google Authenticator, Authy, etc...) 
 - Gestion des sessions actives (liste des appareils connectés, possibilité de déconnecter un appareil depuis paramètre de compte)
+
+[PRODUCTEUR_IINFLUENCEUR] :
 
 # Vérification d'âge légal :
 
 - Système de vérification d'âge légal (>18/21 ans selon pays) à l'inscription
-    - Collecte de la date de naissance
-    - Affichage d'un disclaimer légal (RDR) adapté au pays
-    - Option de vérification via pièce d'identité (upload sécurisé, vérification manuelle ou via service tiers eKYC) (pour les producteurs uniquement et influenceurs)
+    - Collecte de la date de naissance via méthode de connexion OAuhth2 ou formulaire d'inscription
+    - Option de vérification via pièce d'identité (upload sécurisé, vérification manuelle ou via service tiers eKYC)
 
 # Informations personnels des comptes et données sauvegardables : 
 
@@ -137,32 +196,69 @@ Définir des CGU et politiques de confidentialité adaptées à chaque type de c
 
 ---
 
-- ## Répartition des fonctionnalités selon les types de comptes utilisateurs :
+- ## Répartition des fonctionnalités de création de reviews selon les types de comptes utilisateurs :
 
 - **Compte standard (Amateur) :**
-    - Accès aux section : 
+
+- Limitations : 
+FILIGRANE TERPOLOGIE SUR TOUT LES REVIEWS (EXPORT ET APERCUS)
+    - Bibliothèque privée restreintes 20 reviews max.
+    - Accès restreint à la galerie publique : 5 reviews publique max.
+    DANS LES REVIEWS :
+    - Accès aux sections : 
         - Information général
         - Visuel & Technique
         - PipeLine CURING MATURATION
         - Odeurs
         - Goûts
         - Effets ressentis
+    EXPORT ET APERCUS :
     - Accès aux templates prédéfinis (Compact, Détaillé, Complète)
-        - Format imposé par les templates obligatoire.
+        - Format et contenus des reviews imposé par les templates obligatoire.
     - Export en PNG/JPEG/PDF moyenne qualité
-    - Personnalisation limitée (thème clair/sombre, choix de couleurs complet, configuration image et typo)
-Détailler
-- **Compte Producteur (Payant 29.99€/mois) :**
-    - Accès à tous les templates (y compris Personnalisé)
-        - Mode contenus zone personnalisable avec drag and drop des contenus sur mesure 
-    - Export en haute qualité (PNG/JPEG/PDF 300dpi, SVG, CSV, JSON, HTML)
-    - Personnalisation avancée (polices personnalisées, filigrane, agencement complet)
-    - Accès au PipeLine configurable pour exports
-Détailler
+    - Personnalisation limitée (choix de couleurs complet, configuration image et typo)
+
 - **Influenceur (Payant 15.99€/mois) :**
+PAS DE FILIGRANNE TERPOLOGIE
+    DANS LES REVIEWS :
+    - Accès aux sections : 
+        - Information général
+        - Visuel & Technique
+        - PipeLine CURING MATURATION
+        - Odeurs
+        - Goûts
+        - Effets ressentis
+    EXPORT ET APERCUS :
+    - Accès aux templates prédéfinis (Compact, Détaillé, Complète, Social Media Influenceur, etc...)
+    - Accès aux aperçus et rendu détaillé complet avec système de configuration précises etc...
+    - Export en haute qualité (GIF/PNG/JPEG/SVG/PDF 300dpi)
+        - Format et contenus des reviews imposé par les templates obligatoire.
+        - GIF pour évolution des PipeLine
+    - Personnalisation complète (choix de couleurs complet, configuration image et typo, ajout logo filigrane, )
     - Accès aux aperçus et rendu détaillé et complet avec système drag and drop, configuration etc...
-    - Export en haute qualité (PNG/JPEG/SVG/PDF 300dpi)
-Détailler
+    - Export en haute qualité (PNG/JPEG/SVG/PDF/GIF 300dpi)
+
+- **Compte Producteur (Payant 29.99€/mois) :**
+PAS DE FILIGRANNE TERPOLOGIE
+    DANS LES REVIEWS :
+    - Accès aux sections : 
+        - Information général
+        - PipeLine (Culture, Sépération&Purifications, Extraction, Recèttes) 
+        - Visuel & Technique
+        - PipeLine CURING MATURATION
+        - Odeurs
+        - Goûts
+        - Effets ressentis
+    EXPORT ET APERCUS :
+    - Accès aux templates prédéfinis (Compact, Détaillé, Complète), Social Media Influenceur, Professionnel, Personnalisé etc...
+        - Mode contenus zone personnalisable avec drag and drop des contenus sur mesure
+    - Accès aux aperçus et rendu détaillé complet avec système de configuration précises etc...
+    - Export en haute qualité (GIF/PNG/JPEG/SVG/PDF, CSV, JSON, HTML 300dpi)
+        - Format et contenus des reviews imposé par les templates obligatoire.
+        - GIF pour évolution des PipeLine
+    - Personnalisation complète (choix de couleurs complet, configuration image et typo, ajout logo filigrane, branding, entreprise)
+    - Accès aux aperçus et rendu détaillé et complet avec système drag and drop, configuration etc...
+    - Accès à tous les templates (y compris Personnalisé)
 
 
 --- 

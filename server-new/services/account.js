@@ -206,7 +206,7 @@ export async function changeAccountType(userId, newType, options = {}) {
         });
     }
 
-    if ([ACCOUNT_TYPES.INFLUENCER_BASIC, ACCOUNT_TYPES.INFLUENCER_PRO].includes(newType) && !user.influencerProfile) {
+    if (ACCOUNT_TYPES.INFLUENCEUR === newType && !user.influencerProfile) {
         await prisma.influencerProfile.create({
             data: {
                 userId: userId,

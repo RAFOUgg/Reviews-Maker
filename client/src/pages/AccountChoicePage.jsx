@@ -31,7 +31,7 @@ export default function AccountChoicePage() {
             ]
         },
         {
-            type: 'influencer_pro',
+            type: 'influencer',
             name: 'Influenceur',
             subtitle: 'Pour Créateurs de Contenu',
             description: 'Exports avancés et partage optimisé',
@@ -40,15 +40,17 @@ export default function AccountChoicePage() {
             gradient: 'from-violet-500 to-purple-600',
             popular: true,
             features: [
-                'Accès à tous les aperçus et rendus détaillés',
+                'Sans filigrane Terpologie',
+                'Export GIF pour PipeLines',
                 'Système drag & drop pour personnalisation',
                 'Export haute qualité (PNG/JPEG/SVG/PDF 300dpi)',
-                'Templates avancés et personnalisables',
-                'Statistiques de publication et audience',
-                'Partage optimisé réseaux sociaux',
+                'Templates avancés (20 max)',
+                'Filigrane personnalisé (10 max)',
+                'Statistiques avancées',
+                'Bibliothèque illimitée',
             ],
             limitations: [
-                'PipeLines non configurables',
+                'PipeLines Culture/Extraction non accessibles',
             ]
         },
         {
@@ -226,7 +228,7 @@ export default function AccountChoicePage() {
 
                         {selectedType === 'influencer' && (
                             <p className="bg-white/10 p-4 rounded-xl backdrop-blur-sm">
-                                <strong className="text-white">📱 Compte Influenceur :</strong> Une vérification de votre présence en ligne (réseaux sociaux) pourra être demandée. Une pièce d'identité est requise pour la vérification d'âge.
+                                <strong className="text-white">📱 Compte Influenceur :</strong> Vérification d'âge par pièce d'identité requise.
                             </p>
                         )}
 
