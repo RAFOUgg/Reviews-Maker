@@ -45,7 +45,7 @@ export default function ResetPasswordPage() {
     const getPasswordStrength = (password) => {
         if (password.length === 0) return { strength: 0, label: '', color: '' };
         if (password.length < 8) return { strength: 1, label: 'Faible', color: 'bg-red-500' };
-        
+
         let strength = 1;
         if (password.length >= 12) strength++;
         if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
@@ -193,18 +193,17 @@ export default function ResetPasswordPage() {
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
-                            className={`w-full px-4 py-2 rounded-lg border ${
-                                errors.password
+                            className={`w-full px-4 py-2 rounded-lg border ${errors.password
                                     ? 'border-red-500 focus:ring-red-500'
                                     : 'border-gray-300 dark:border-gray-600 focus:ring-green-500'
-                            } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
+                                } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
                             placeholder="••••••••"
                             required
                         />
                         {errors.password && (
                             <p className="mt-1 text-sm text-red-500">{errors.password}</p>
                         )}
-                        
+
                         {/* Password Strength */}
                         {formData.password && (
                             <div className="mt-2">
@@ -237,11 +236,10 @@ export default function ResetPasswordPage() {
                             name="confirmPassword"
                             value={formData.confirmPassword}
                             onChange={handleChange}
-                            className={`w-full px-4 py-2 rounded-lg border ${
-                                errors.confirmPassword
+                            className={`w-full px-4 py-2 rounded-lg border ${errors.confirmPassword
                                     ? 'border-red-500 focus:ring-red-500'
                                     : 'border-gray-300 dark:border-gray-600 focus:ring-green-500'
-                            } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
+                                } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
                             placeholder="••••••••"
                             required
                         />

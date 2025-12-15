@@ -11,8 +11,6 @@ import HomeReviewCard from '../components/HomeReviewCard'
 import AuthorStatsModal from '../components/AuthorStatsModal'
 import LoadingSpinner from '../components/LoadingSpinner'
 import EmptyState from '../components/EmptyState'
-import RecentReviewsSection from '../components/home/RecentReviewsSection'
-import QuickStatsSection from '../components/home/QuickStatsSection'
 
 export default function HomePage() {
     const navigate = useNavigate()
@@ -85,21 +83,11 @@ export default function HomePage() {
                 {/* Hero Section */}
                 <HeroSection user={user} isAuthenticated={isAuthenticated} />
 
-                {/* Statistiques Rapides - Visible uniquement si connecté */}
-                {isAuthenticated && user && (
-                    <QuickStatsSection userId={user.id} />
-                )}
-
                 {/* Create Review Section */}
                 <ProductTypeCards
                     isAuthenticated={isAuthenticated}
                     onCreateReview={handleCreateReview}
                 />
-
-                {/* Mes Reviews Récentes - Visible uniquement si connecté */}
-                {isAuthenticated && user && (
-                    <RecentReviewsSection userId={user.id} />
-                )}
 
                 {/* Divider */}
                 <div className="relative py-8">

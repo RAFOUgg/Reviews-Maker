@@ -142,11 +142,10 @@ export default function ForgotPasswordPage() {
                                 setEmail(e.target.value);
                                 setError('');
                             }}
-                            className={`w-full px-4 py-2 rounded-lg border ${
-                                error
+                            className={`w-full px-4 py-2 rounded-lg border ${error
                                     ? 'border-red-500 focus:ring-red-500'
                                     : 'border-gray-300 dark:border-gray-600 focus:ring-green-500'
-                            } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
+                                } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
                             placeholder="votre@email.com"
                             required
                         />
