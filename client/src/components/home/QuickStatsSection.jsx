@@ -21,7 +21,7 @@ export default function QuickStatsSection({ userId }) {
                     credentials: 'include'
                 })
                 const data = await response.json()
-                
+
                 if (response.ok) {
                     setStats(data.stats)
                 } else {
@@ -83,10 +83,10 @@ export default function QuickStatsSection({ userId }) {
             color: 'from-amber-500 to-orange-600',
             iconBg: 'bg-amber-500/20',
             iconColor: 'text-amber-400',
-            emoji: displayStats.favoriteType === 'Fleur' ? '🌿' : 
-                   displayStats.favoriteType === 'Hash' ? '🧊' :
-                   displayStats.favoriteType === 'Concentré' ? '💧' :
-                   displayStats.favoriteType === 'Comestible' ? '🍪' : '❓'
+            emoji: displayStats.favoriteType === 'Fleur' ? '🌿' :
+                displayStats.favoriteType === 'Hash' ? '🧊' :
+                    displayStats.favoriteType === 'Concentré' ? '💧' :
+                        displayStats.favoriteType === 'Comestible' ? '🍪' : '❓'
         },
         {
             icon: Heart,

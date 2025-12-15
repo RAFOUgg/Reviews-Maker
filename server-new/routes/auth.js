@@ -445,4 +445,245 @@ router.get('/facebook/callback', (req, res, next) => {
     })
 })
 
+// =============================================================================
+// Email Verification Code System (CDC Requirement)
+// =============================================================================
+
+/**
+ * POST /api/auth/send-verification-code
+ * Envoie un code 6 chiffres par email
+ * CDC: "code de vérification 6 chiffres obligatoire à chaque connexion"
+ */
+router.post('/send-verification-code', asyncHandler(async (req, res) => {
+    const { email, type = 'login' } = req.body
+
+    if (!email) {
+        return res.status(400).json({ error: 'missing_email', message: 'Email requis' })
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase()
+
+    // Vérifier que l'utilisateur existe
+    const user = await prisma.user.findFirst({ where: { email: normalizedEmail } })
+    if (!user && type === 'login') {
+        // Ne pas révéler si l'email existe ou pas (sécurité)
+        return res.status(200).json({ message: 'Si cet email existe, un code a été envoyé' })
+    }
+
+    // Générer code 6 caractères alphanumériques
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase()
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+
+    // Supprimer les anciens codes non vérifiés pour cet email
+    await prisma.verificationCode.deleteMany({
+        where: {
+            email: normalizedEmail,
+            type,
+            verified: false
+        }
+    })
+
+    // Créer nouveau code
+    await prisma.verificationCode.create({
+        data: {
+            email: normalizedEmail,
+            code,
+            type,
+            expiresAt
+        }
+    })
+
+    // Envoyer email
+    const emailService = await import('../services/email.js')
+    await emailService.sendVerificationCode(normalizedEmail, code, user?.locale || 'fr')
+
+    res.json({ message: 'Code envoyé par email', expiresIn: 600 })
+}))
+
+/**
+ * POST /api/auth/verify-code
+ * Vérifie un code 6 chiffres
+ */
+router.post('/verify-code', asyncHandler(async (req, res) => {
+    const { email, code, type = 'login' } = req.body
+
+    if (!email || !code) {
+        return res.status(400).json({ error: 'missing_fields', message: 'Email et code requis' })
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase()
+    const normalizedCode = String(code).trim().toUpperCase()
+
+    // Trouver le code
+    const verificationRecord = await prisma.verificationCode.findFirst({
+        where: {
+            email: normalizedEmail,
+            type,
+            verified: false
+        },
+        orderBy: { createdAt: 'desc' }
+    })
+
+    if (!verificationRecord) {
+        return res.status(404).json({ error: 'code_not_found', message: 'Aucun code trouvé ou code déjà utilisé' })
+    }
+
+    // Vérifier expiration
+    if (new Date() > verificationRecord.expiresAt) {
+        await prisma.verificationCode.delete({ where: { id: verificationRecord.id } })
+        return res.status(410).json({ error: 'code_expired', message: 'Code expiré (10 minutes)' })
+    }
+
+    // Vérifier limite tentatives (5 max)
+    if (verificationRecord.attempts >= 5) {
+        await prisma.verificationCode.delete({ where: { id: verificationRecord.id } })
+        return res.status(429).json({ error: 'too_many_attempts', message: 'Trop de tentatives. Demandez un nouveau code.' })
+    }
+
+    // Incrémenter tentatives
+    await prisma.verificationCode.update({
+        where: { id: verificationRecord.id },
+        data: { attempts: verificationRecord.attempts + 1 }
+    })
+
+    // Vérifier code
+    if (normalizedCode !== verificationRecord.code) {
+        return res.status(401).json({
+            error: 'invalid_code',
+            message: 'Code invalide',
+            attemptsLeft: 5 - (verificationRecord.attempts + 1)
+        })
+    }
+
+    // Code valide ! Marquer comme vérifié
+    await prisma.verificationCode.update({
+        where: { id: verificationRecord.id },
+        data: { verified: true }
+    })
+
+    // Si type login, connecter l'utilisateur
+    if (type === 'login') {
+        const user = await prisma.user.findFirst({ where: { email: normalizedEmail } })
+        if (user) {
+            await new Promise((resolve, reject) => {
+                req.login(user, (err) => {
+                    if (err) return reject(err)
+                    resolve()
+                })
+            })
+            return res.json({ message: 'Code vérifié', user: sanitizeUser(user) })
+        }
+    }
+
+    res.json({ message: 'Code vérifié', verified: true })
+}))
+
+// =============================================================================
+// Password Reset System
+// =============================================================================
+
+/**
+ * POST /api/auth/forgot-password
+ * Envoie un email avec lien de réinitialisation (token 1h)
+ */
+router.post('/forgot-password', asyncHandler(async (req, res) => {
+    const { email } = req.body
+
+    if (!email) {
+        return res.status(400).json({ error: 'missing_email', message: 'Email requis' })
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase()
+    const user = await prisma.user.findFirst({ where: { email: normalizedEmail } })
+
+    // Ne pas révéler si l'email existe (sécurité)
+    if (!user) {
+        return res.status(200).json({ message: 'Si cet email existe, un lien de réinitialisation a été envoyé' })
+    }
+
+    // Générer token sécurisé
+    const crypto = await import('crypto')
+    const token = crypto.randomBytes(32).toString('hex')
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 heure
+
+    // Créer code de type reset_password
+    await prisma.verificationCode.deleteMany({
+        where: { email: normalizedEmail, type: 'reset_password' }
+    })
+
+    await prisma.verificationCode.create({
+        data: {
+            email: normalizedEmail,
+            code: token,
+            type: 'reset_password',
+            expiresAt
+        }
+    })
+
+    // Envoyer email avec lien
+    const emailService = await import('../services/email.js')
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}&email=${encodeURIComponent(normalizedEmail)}`
+    await emailService.sendPasswordResetEmail(normalizedEmail, resetLink, user.locale || 'fr')
+
+    res.json({ message: 'Email de réinitialisation envoyé', expiresIn: 3600 })
+}))
+
+/**
+ * POST /api/auth/reset-password
+ * Réinitialise le mot de passe avec token
+ */
+router.post('/reset-password', asyncHandler(async (req, res) => {
+    const { email, token, newPassword } = req.body
+
+    if (!email || !token || !newPassword) {
+        return res.status(400).json({ error: 'missing_fields', message: 'Email, token et nouveau mot de passe requis' })
+    }
+
+    if (typeof newPassword !== 'string' || newPassword.length < 8) {
+        return res.status(400).json({ error: 'weak_password', message: 'Mot de passe trop court (8 caractères min.)' })
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase()
+
+    // Trouver le token
+    const verificationRecord = await prisma.verificationCode.findFirst({
+        where: {
+            email: normalizedEmail,
+            code: token,
+            type: 'reset_password',
+            verified: false
+        }
+    })
+
+    if (!verificationRecord) {
+        return res.status(404).json({ error: 'invalid_token', message: 'Token invalide ou déjà utilisé' })
+    }
+
+    // Vérifier expiration
+    if (new Date() > verificationRecord.expiresAt) {
+        await prisma.verificationCode.delete({ where: { id: verificationRecord.id } })
+        return res.status(410).json({ error: 'token_expired', message: 'Token expiré (1 heure)' })
+    }
+
+    // Mettre à jour le mot de passe
+    const user = await prisma.user.findFirst({ where: { email: normalizedEmail } })
+    if (!user) {
+        return res.status(404).json({ error: 'user_not_found', message: 'Utilisateur introuvable' })
+    }
+
+    const passwordHash = await hashPassword(newPassword)
+    await prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash }
+    })
+
+    // Marquer token comme utilisé
+    await prisma.verificationCode.update({
+        where: { id: verificationRecord.id },
+        data: { verified: true }
+    })
+
+    res.json({ message: 'Mot de passe réinitialisé avec succès' })
+}))
+
 export default router

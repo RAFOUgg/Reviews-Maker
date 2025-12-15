@@ -118,11 +118,10 @@ export default function RecentReviewsSection({ userId }) {
                                     </div>
                                     {/* Badge visibilité */}
                                     <div className="absolute top-3 right-3">
-                                        <span className={`px-3 py-1 backdrop-blur-sm text-white text-xs font-bold rounded-full border ${
-                                            review.visibility === 'public'
+                                        <span className={`px-3 py-1 backdrop-blur-sm text-white text-xs font-bold rounded-full border ${review.visibility === 'public'
                                                 ? 'bg-green-500/60 border-green-300/40'
                                                 : 'bg-gray-500/60 border-gray-300/40'
-                                        }`}>
+                                            }`}>
                                             {review.visibility === 'public' ? '🌐 Public' : '🔒 Privé'}
                                         </span>
                                     </div>

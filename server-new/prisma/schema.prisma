@@ -1164,3 +1164,20 @@ model ReviewComment {
   @@index([createdAt])
   @@map("review_comments")
 }
+
+// Modèle VerificationCode (codes email 6 chiffres)
+model VerificationCode {
+  id         String   @id @default(uuid())
+  email      String   // Email destinataire
+  code       String   // Code 6 chiffres (ex: "A3B7K9")
+  type       String   // "login" | "register" | "reset_password"
+  expiresAt  DateTime // Expiration 10 minutes
+  attempts   Int      @default(0) // Nombre de tentatives (max 5)
+  verified   Boolean  @default(false) // Marqué vérifié après validation
+  createdAt  DateTime @default(now())
+  
+  @@index([email, type])
+  @@index([code])
+  @@index([expiresAt])
+  @@map("verification_codes")
+}

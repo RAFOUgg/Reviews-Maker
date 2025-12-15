@@ -37,6 +37,10 @@ const AccountSetupPage = lazy(() => import('./pages/AccountSetupPage'))
 const AccountChoicePage = lazy(() => import('./pages/AccountChoicePage'))
 const AgeVerificationPage = lazy(() => import('./pages/AgeVerificationPage'))
 const DisclaimerRDR = lazy(() => import('./components/legal/DisclaimerRDR'))
+const RegisterPage = lazy(() => import('./pages/RegisterPage'))
+const EmailVerificationPage = lazy(() => import('./pages/EmailVerificationPage'))
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -133,6 +137,10 @@ function App() {
                                     <Route path="/profile-settings" element={<ProfileSettingsPage />} />
                                 </Route>
                                 <Route path="/login" element={<LoginPage />} />
+                                <Route path="/register" element={<RegisterPage />} />
+                                <Route path="/verify-email" element={<EmailVerificationPage />} />
+                                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                                <Route path="/reset-password" element={<ResetPasswordPage />} />
                                 <Route path="/account-setup" element={<AccountSetupPage />} />
                                 <Route path="/age-verification" element={<AgeVerificationPage />} />
                                 <Route path="/disclaimer-rdr" element={<DisclaimerRDR />} />

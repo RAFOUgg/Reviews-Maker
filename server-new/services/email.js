@@ -199,9 +199,57 @@ async function sendModerationNotification(email, reason, status, locale = 'fr') 
     return data;
 }
 
+/**
+ * Envoie un email de réinitialisation de mot de passe
+ * @param {string} email - Email destinataire
+ * @param {string} resetLink - Lien de réinitialisation
+ * @param {string} locale - Langue (fr, en)
+ */
+async function sendPasswordResetEmail(email, resetLink, locale = 'fr') {
+    const subject = locale === 'fr'
+        ? 'Réinitialisation de votre mot de passe'
+        : 'Password reset request';
+
+    const html = locale === 'fr'
+        ? `
+      <h2>Réinitialisation de mot de passe</h2>
+      <p>Bonjour,</p>
+      <p>Vous avez demandé à réinitialiser votre mot de passe pour Reviews-Maker.</p>
+      <p>Cliquez sur le bouton ci-dessous pour définir un nouveau mot de passe :</p>
+      <p><a href="${resetLink}" style="background: #8B5CF6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Réinitialiser mon mot de passe</a></p>
+      <p style="color: #888; font-size: 14px;">Ce lien expire dans 1 heure.</p>
+      <p>Si vous n'avez pas fait cette demande, ignorez cet email. Votre mot de passe restera inchangé.</p>
+      <p>L'équipe Reviews-Maker</p>
+    `
+        : `
+      <h2>Password Reset</h2>
+      <p>Hello,</p>
+      <p>You requested to reset your password for Reviews-Maker.</p>
+      <p>Click the button below to set a new password:</p>
+      <p><a href="${resetLink}" style="background: #8B5CF6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Reset my password</a></p>
+      <p style="color: #888; font-size: 14px;">This link expires in 1 hour.</p>
+      <p>If you didn't request this, please ignore this email. Your password will remain unchanged.</p>
+      <p>The Reviews-Maker Team</p>
+    `;
+
+    const { data, error } = await resend.emails.send({
+        from: FROM_EMAIL,
+        to: email,
+        subject,
+        html,
+    });
+
+    if (error) {
+        throw new Error(`Échec envoi email: ${error.message}`);
+    }
+
+    return data;
+}
+
 module.exports = {
     sendVerificationCode,
     sendWelcomeEmail,
     sendSubscriptionConfirmation,
     sendModerationNotification,
+    sendPasswordResetEmail,
 };
