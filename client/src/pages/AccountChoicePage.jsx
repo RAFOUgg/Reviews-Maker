@@ -7,7 +7,7 @@ export default function AccountChoicePage() {
     const initial = useMemo(() => localStorage.getItem('preferredAccountType') || 'consumer', [])
     const [selectedType, setSelectedType] = useState(initial)
 
-    // Définition statique des types de comptes selon le cahier des charges
+    // Définition statique des types de comptes selon le CDC (cahier des charges)
     const accountTypes = [
         {
             type: 'consumer',
@@ -18,16 +18,20 @@ export default function AccountChoicePage() {
             icon: Sparkles,
             gradient: 'from-green-500 to-emerald-600',
             features: [
+                '⚠️ Filigrane "Terpologie" forcé sur tous les exports et aperçus',
                 'Sections : Info générale, Visuel, Curing, Odeurs, Goûts, Effets',
-                'Templates prédéfinis (Compact, Détaillé, Complète)',
+                'Templates prédéfinis imposés (Compact, Détaillé, Complète)',
                 'Export PNG/JPEG/PDF qualité standard',
-                'Personnalisation de base (thèmes, couleurs)',
-                'Bibliothèque personnelle',
+                'Personnalisation de base (thèmes, couleurs, typo)',
+                '📚 Bibliothèque privée limitée : 20 reviews max',
+                '🌐 Publications publiques limitées : 5 reviews max',
+                '📤 Exports quotidiens limités : 3 par jour',
             ],
             limitations: [
-                'Formats d\'export imposés',
-                'Pas d\'accès aux PipeLines configurables',
-                'Qualité d\'export limitée',
+                'Formats d\'export imposés par templates',
+                'Pas d\'accès aux PipeLines Culture/Extraction/Séparation',
+                'Pas de filigrane personnalisé',
+                'Pas d\'export GIF',
             ]
         },
         {
@@ -40,17 +44,20 @@ export default function AccountChoicePage() {
             gradient: 'from-violet-500 to-purple-600',
             popular: true,
             features: [
-                'Sans filigrane Terpologie',
-                'Export GIF pour PipeLines',
-                'Système drag & drop pour personnalisation',
-                'Export haute qualité (PNG/JPEG/SVG/PDF 300dpi)',
-                'Templates avancés (20 max)',
-                'Filigrane personnalisé (10 max)',
-                'Statistiques avancées',
-                'Bibliothèque illimitée',
+                '✨ Sans filigrane Terpologie',
+                '🎬 Export GIF animé pour PipeLines',
+                '🎨 Système drag & drop pour personnalisation des rendus',
+                '📸 Export haute qualité (PNG/JPEG/SVG/PDF 300dpi)',
+                '🎭 Templates avancés (20 max)',
+                '🏷️ Filigranes personnalisés (10 max)',
+                '📊 Statistiques avancées et analytics',
+                '📚 Bibliothèque illimitée (reviews publiques et privées)',
+                '📤 50 exports par jour',
+                'Toutes les sections Amateur incluses',
             ],
             limitations: [
-                'PipeLines Culture/Extraction non accessibles',
+                'PipeLines Culture/Extraction/Séparation non accessibles (réservés Producteurs)',
+                'Pas d\'accès au système de génétique',
             ]
         },
         {
@@ -62,14 +69,17 @@ export default function AccountChoicePage() {
             icon: Building2,
             gradient: 'from-blue-500 to-indigo-600',
             features: [
-                'Accès complet à toutes les fonctionnalités',
-                'PipeLines configurables (Culture, Extraction, Curing)',
-                'Système de génétique avec canva (arbres généalogiques)',
-                'Templates 100% personnalisés avec drag & drop',
-                'Export tous formats (PNG/JPEG/PDF/SVG/CSV/JSON/HTML 300dpi)',
-                'Polices personnalisées et filigranes',
-                'Gestion entreprise (SIRET, logo, infos légales)',
-                'Statistiques de production avancées',
+                '🌿 Accès complet à TOUTES les fonctionnalités',
+                '⚙️ PipeLines configurables (Culture, Extraction, Séparation, Curing)',
+                '🧬 Système de génétique avec canvas (arbres généalogiques)',
+                '🎨 Templates 100% personnalisables avec drag & drop',
+                '📦 Export TOUS formats (PNG/JPEG/PDF/SVG 300dpi + CSV/JSON/HTML)',
+                '🔤 Polices personnalisées et filigranes illimités',
+                '🏢 Gestion entreprise (SIRET, logo, infos légales)',
+                '📊 Statistiques de production avancées',
+                '📚 Bibliothèque illimitée avec organisation avancée',
+                '♾️ Exports illimités',
+                'Toutes les fonctionnalités Influenceur incluses',
             ],
             limitations: []
         },
