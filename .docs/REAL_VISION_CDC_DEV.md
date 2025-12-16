@@ -213,7 +213,6 @@ FILIGRANE TERPOLOGIE SUR TOUT LES REVIEWS (EXPORT ET APERCUS)
     - Accès aux sections : 
         - Information général
         - Visuel & Technique
-        - PipeLine CURING MATURATION
         - Odeurs
         - Goûts
         - Effets ressentis
