@@ -90,7 +90,8 @@ export default function CulturePipelineTimeline({ data, onChange }) {
             icon: '💡',
             items: [
                 { key: 'typeLampe', label: 'Type de lampe', icon: '💡', type: 'select', options: CULTURE_VALUES.typeLampe, defaultValue: 'LED' },
-                { key: 'spectreLumiere', label: 'Spectre', icon: '🌈', type: 'select', options: CULTURE_VALUES.spectreLumiere, defaultValue: 'complet' },
+                { key: 'spectreDocument', label: 'PDF/Image spectre', icon: '📄', type: 'file', accept: '.pdf,.jpg,.jpeg,.png', defaultValue: '', help: 'Upload du spectre lumineux (1 fichier max)' },
+                { key: 'spectreLumiere', label: 'Type spectre', icon: '🌈', type: 'select', options: CULTURE_VALUES.spectreLumiere, defaultValue: 'complet' },
                 { key: 'distanceLampe', label: 'Distance lampe (cm)', icon: '📏', type: 'number', defaultValue: 30 },
                 { key: 'puissanceLumiere', label: 'Puissance (W)', icon: '⚡', type: 'number', defaultValue: 200 },
                 { key: 'dureeEclairage', label: 'Durée (h/jour)', icon: '⏱️', type: 'number', defaultValue: 18 },
@@ -117,7 +118,15 @@ export default function CulturePipelineTimeline({ data, onChange }) {
                 { key: 'typeEngrais', label: 'Type engrais', icon: '🧪', type: 'select', options: CULTURE_VALUES.typeEngrais, defaultValue: 'bio' },
                 { key: 'marqueEngrais', label: 'Marque', icon: '🏷️', type: 'text', defaultValue: '', placeholder: 'BioBizz, AN...' },
                 { key: 'dosageEngrais', label: 'Dosage', icon: '💊', type: 'text', defaultValue: '2 ml/L', placeholder: '2 ml/L' },
-                { key: 'frequenceEngrais', label: 'Fréquence', icon: '📅', type: 'text', defaultValue: '2x/semaine', placeholder: '2x/semaine' }
+                { key: 'frequenceEngrais', label: 'Fréquence', icon: '📅', type: 'text', defaultValue: '2x/semaine', placeholder: '2x/semaine' },
+                { 
+                    key: 'lienArrosage', 
+                    label: 'Lier à arrosage', 
+                    icon: '🔗', 
+                    type: 'checkbox', 
+                    defaultValue: false,
+                    help: 'Cocher pour lier cet engraissage à un arrosage de la même cellule'
+                }
             ]
         },
         {

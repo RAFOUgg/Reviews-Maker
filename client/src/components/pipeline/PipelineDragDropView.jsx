@@ -24,6 +24,7 @@ import { ChevronDown, ChevronRight, Plus, Settings, Save, Upload, CheckSquare, S
 import PipelineCellModal from './PipelineCellModal';
 import PipelineCellBadge from './PipelineCellBadge';
 import PipelineCellTooltip from './PipelineCellTooltip';
+import MassAssignModal from './MassAssignModal';
 
 export default function PipelineDragDropView({
     type = 'culture',
@@ -48,6 +49,8 @@ export default function PipelineDragDropView({
     const [tooltipData, setTooltipData] = useState({ visible: false, cellData: null, position: { x: 0, y: 0 }, section: '' });
     const [massAssignMode, setMassAssignMode] = useState(false);
     const [selectedCells, setSelectedCells] = useState([]);
+    const [showMassAssignModal, setShowMassAssignModal] = useState(false);
+    const [sourceCellForMassAssign, setSourceCellForMassAssign] = useState(null);
 
     // Toggle section
     const toggleSection = (sectionId) => {
@@ -61,8 +64,8 @@ export default function PipelineDragDropView({
     const handleCellClick = (timestamp) => {
         if (massAssignMode) {
             // Mode sélection multiple
-            setSelectedCells(prev => 
-                prev.includes(timestamp) 
+            setSelectedCells(prev =>
+                prev.includes(timestamp)
                     ? prev.filter(t => t !== timestamp)
                     : [...prev, timestamp]
             );
@@ -76,12 +79,12 @@ export default function PipelineDragDropView({
     // Sauvegarder données depuis modal
     const handleModalSave = (data) => {
         if (!data || !data.timestamp) return;
-        
+
         // Sauvegarder toutes les données
         Object.entries(data.data).forEach(([key, value]) => {
             onDataChange(data.timestamp, key, value);
         });
-        
+
         // Sauvegarder métadonnées
         onDataChange(data.timestamp, '_meta', {
             completionPercentage: data.completionPercentage,
@@ -110,9 +113,63 @@ export default function PipelineDragDropView({
     // Mass assign handlers
     const handleMassAssign = () => {
         if (selectedCells.length === 0) return;
-        
-        // TODO: Ouvrir modal pour choisir quelles données copier
-        alert(`Attribution en masse à ${selectedCells.length} cellules`);
+
+        // Trouver une cellule remplie pour servir de source
+        let sourceCell = null;
+        for (const timestamp of selectedCells) {
+            const cellData = getCellData(timestamp);
+            if (cellData && cellData.data && Object.keys(cellData.data).length > 0) {
+                sourceCell = { timestamp, data: cellData };
+                break;
+            }
+        }
+
+        // Si aucune cellule sélectionnée n'a de données, chercher dans toutes les cellules
+        if (!sourceCell) {
+            for (const cell of cells) {
+                const cellData = getCellData(cell.timestamp);
+                if (cellData && cellData.data && Object.keys(cellData.data).length > 0) {
+                    sourceCell = { timestamp: cell.timestamp, data: cellData };
+                    break;
+                }
+            }
+        }
+
+        if (!sourceCell) {
+            alert('Aucune cellule avec des données à copier. Veuillez d\'abord remplir une cellule.');
+            return;
+        }
+
+        setSourceCellForMassAssign(sourceCell);
+        setShowMassAssignModal(true);
+    };
+
+    const handleMassAssignApply = (selectedFields) => {
+        if (!sourceCellForMassAssign || selectedCells.length === 0) return;
+
+        // Copier les champs sélectionnés vers toutes les cellules sélectionnées
+        selectedCells.forEach(timestamp => {
+            selectedFields.forEach(fieldKey => {
+                const value = sourceCellForMassAssign.data.data[fieldKey];
+                onDataChange(timestamp, fieldKey, value);
+            });
+
+            // Mettre à jour les métadonnées
+            const totalFields = sidebarContent.reduce((acc, section) => acc + (section.items?.length || 0), 0);
+            const filledFields = selectedFields.length;
+            const completionPercentage = Math.round((filledFields / totalFields) * 100);
+
+            onDataChange(timestamp, '_meta', {
+                completionPercentage,
+                lastModified: new Date().toISOString()
+            });
+        });
+
+        // Réinitialiser
+        setShowMassAssignModal(false);
+        setMassAssignMode(false);
+        setSelectedCells([]);
+        setSourceCellForMassAssign(null);
     };
 
     const toggleMassAssignMode = () => {
@@ -542,12 +599,12 @@ export default function PipelineDragDropView({
                                         >
                                             {/* Badge visuel si données présentes */}
                                             {hasData && cellData._meta && (
-                                                <PipelineCellBadge 
+                                                <PipelineCellBadge
                                                     cellData={cellData._meta}
                                                     sectionId={Object.keys(cellData).find(k => k !== 'timestamp' && k !== '_meta')}
                                                 />
                                             )}
-                                            
+
                                             {/* Label cellule */}
                                             <div className="relative z-10">
                                                 <div className="text-xs font-bold text-gray-900 dark:text-white mb-1">
@@ -566,7 +623,7 @@ export default function PipelineDragDropView({
                                         </div>
                                     );
                                 })}
-                                
+
                                 {/* Bouton + pour ajouter des cellules */}
                                 {cells.length > 0 && (
                                     <div
@@ -630,6 +687,16 @@ export default function PipelineDragDropView({
                 onSave={handleModalSave}
                 timestamp={currentCellTimestamp}
                 intervalLabel={cells.find(c => c.timestamp === currentCellTimestamp)?.label || ''}
+            />
+
+            {/* Modal attribution en masse */}
+            <MassAssignModal
+                isOpen={showMassAssignModal}
+                onClose={() => setShowMassAssignModal(false)}
+                sourceCellData={sourceCellForMassAssign?.data}
+                selectedCellsCount={selectedCells.length}
+                sidebarSections={sidebarContent}
+                onApply={handleMassAssignApply}
             />
 
             {/* Tooltip au survol */}
