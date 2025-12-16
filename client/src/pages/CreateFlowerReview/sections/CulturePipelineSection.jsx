@@ -13,7 +13,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock, Sprout, Droplets, Sun, Wind, Beaker, Ruler, ChevronDown, Plus, Settings } from 'lucide-react';
 import LiquidCard from '../../../components/LiquidCard';
-import PipelineCore from '../../../components/pipeline/PipelineCore';
+import CulturePipelineTimeline from '../../../components/forms/flower/CulturePipelineTimeline';
 import { CULTURE_PHASES, getTotalPhaseDuration, getPhaseById } from '../../../data/culturePhases';
 import { INTERVAL_TYPES } from '../../../types/pipelineTypes';
 
@@ -254,53 +254,27 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                 </AnimatePresence>
             </LiquidCard>
 
-            {/* Pipeline visuel */}
+            {/* Pipeline Culture CDC - Sidebar + Timeline Drag & Drop */}
             <LiquidCard className="p-6">
-                <h3 className="text-lg font-semibold mb-4">
-                    Timeline Culture
-                </h3>
-
-                <PipelineCore
-                    data={config}
-                    intervalType={config.intervalType}
-                    customPhases={config.intervalType === 'phases' ? config.customPhases : undefined}
-                    onCellClick={handleCellClick}
-                    showPhaseLabels={config.intervalType === 'phases'}
+                <CulturePipelineTimeline
+                    data={{
+                        cultureTimelineConfig: {
+                            type: config.intervalType === 'phases' ? 'phase' : config.intervalType === 'days' ? 'jour' : 'semaine',
+                            start: config.startDate,
+                            end: config.endDate,
+                            duration: config.duration,
+                            phases: config.customPhases
+                        },
+                        cultureTimelineData: data.cultureTimelineData || []
+                    }}
+                    onChange={(field, value) => {
+                        onChange({
+                            ...data,
+                            [field]: value
+                        });
+                    }}
                 />
             </LiquidCard>
-
-            {/* Panneau édition cellule sélectionnée */}
-            <AnimatePresence>
-                {selectedCell && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 20 }}
-                    >
-                        <LiquidCard className="p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h4 className="text-md font-semibold">
-                                    Éditer {config.intervalType === 'phases'
-                                        ? getPhaseById(selectedCell.phaseId, config.customPhases)?.name
-                                        : `${config.intervalType === 'days' ? 'Jour' : 'Semaine'} ${selectedCell.index + 1}`
-                                    }
-                                </h4>
-                                <button
-                                    onClick={() => setSelectedCell(null)}
-                                    className="text-sm px-3 py-1 rounded-lg hover:bg-white/10"
-                                >
-                                    Fermer
-                                </button>
-                            </div>
-
-                            {/* Contenus drag & drop seront ajoutés ici dans Phase 1.3 */}
-                            <div className="text-sm text-white/60 text-center py-8">
-                                Fonctionnalité drag & drop disponible en Phase 1.3
-                            </div>
-                        </LiquidCard>
-                    </motion.div>
-                )}
-            </AnimatePresence>
 
             {/* Indicateur : données modifiables listées */}
             <LiquidCard className="p-6">
