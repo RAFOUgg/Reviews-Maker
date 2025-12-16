@@ -1,60 +1,21 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import OAuthButtons from '../components/auth/OAuthButtons'
 import AgeVerificationModal from '../components/auth/AgeVerificationModal'
-import AccountTypeSelector from '../components/auth/AccountTypeSelector'
 import LiquidButton from '../components/LiquidButton'
 import LiquidInput from '../components/LiquidInput'
-import LiquidCard from '../components/LiquidCard'
 import { authService } from '../services/apiService'
 import { useStore } from '../store/useStore'
-import { Mail, Lock, User, ArrowRight } from 'lucide-react'
+import { Mail, Lock, ArrowRight, LogIn, UserPlus } from 'lucide-react'
 
 export default function LoginPage() {
     const navigate = useNavigate()
     const setUser = useStore((state) => state.setUser)
-    const initial = useMemo(() => localStorage.getItem('preferredAccountType') || 'consumer', [])
-    const [selectedType, setSelectedType] = useState(initial)
-    const [mode, setMode] = useState('login') // login | signup
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
-    const [username, setUsername] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const [showAgeVerification, setShowAgeVerification] = useState(false)
-    const [tempUser, setTempUser] = useState(null)
-
-    useEffect(() => {
-        const preferred = localStorage.getItem('preferredAccountType')
-        if (!preferred) {
-            navigate('/choose-account', { replace: true })
-        }
-    }, [navigate])
-
-    const accountTypeLabels = {
-        consumer: 'Amateur',
-        influencer_basic: 'Influenceur Basic',
-        influencer_pro: 'Influenceur',
-        producer: 'Producteur',
-    }
-
-    const handleProviderClick = (provider) => {
-        const type = selectedType || 'consumer'
-        localStorage.setItem('preferredAccountType', type)
-        localStorage.setItem('accountTypeSelected', 'true')
-
-        const targets = {
-            discord: '/api/auth/discord',
-            google: '/api/auth/google',
-            apple: '/api/auth/apple',
-            facebook: '/api/auth/facebook',
-            amazon: '/api/auth/amazon',
-        }
-
-        if (targets[provider]) {
-            window.location.href = targets[provider]
-        }
-    }
 
     const handleSubmitEmail = async (e) => {
         e.preventDefault()
@@ -62,38 +23,15 @@ export default function LoginPage() {
         setLoading(true)
 
         try {
-            const payload = {
-                email,
-                password,
-            }
-
-            if (mode === 'signup') {
-                payload.username = username || email.split('@')[0]
-                payload.accountType = selectedType || 'consumer'
-                localStorage.setItem('preferredAccountType', selectedType || 'consumer')
-                localStorage.setItem('accountTypeSelected', 'true')
-
-                const user = await authService.signupWithEmail(payload)
-
-                // Après inscription, afficher le modal de vérification d'âge
-                setTempUser(user)
-                setUser(user)
-                setShowAgeVerification(true)
-                return
-            }
-
-            const user = await authService.loginWithEmail(payload)
+            const user = await authService.loginWithEmail({ email, password })
             setUser(user)
 
             // Vérifier si l'utilisateur a déjà validé son âge ET accepté le disclaimer
-            // Si legalAge === false OU consentRDR === false, afficher le modal
             if (!user.legalAge || !user.consentRDR) {
-                setTempUser(user)
                 setShowAgeVerification(true)
             } else {
                 // Redirection selon type de compte
                 if (user.accountType === 'influencer' || user.accountType === 'producer') {
-                    // Vérifier si le paiement est validé et KYC complété
                     if (user.subscriptionStatus !== 'active' || user.kycStatus !== 'verified') {
                         navigate('/account-setup')
                     } else {
@@ -110,8 +48,7 @@ export default function LoginPage() {
         }
     }
 
-    const handleAgeVerified = (data) => {
-        // Rediriger vers l'accueil après vérification
+    const handleAgeVerified = () => {
         navigate('/')
     }
 
@@ -123,155 +60,143 @@ export default function LoginPage() {
                 onVerified={handleAgeVerified}
             />
 
-            <div className="min-h-screen flex items-center justify-center px-4 py-10" style={{ background: 'var(--bg-primary)' }}>
-                <LiquidCard className="w-full max-w-4xl" padding="lg" hover={false}>
-                    <div className="space-y-8">
-                        {/* Header */}
-                        <div className="text-center space-y-3">
-                            <h1 className="text-4xl md:text-5xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                                Connexion {accountTypeLabels[selectedType] || 'Amateur'}
-                            </h1>
-                            <p style={{ color: 'var(--text-secondary)' }} className="text-lg">
-                                {selectedType === 'consumer' && 'Créez et gérez vos reviews personnelles'}
-                                {(selectedType === 'influencer_basic' || selectedType === 'influencer_pro') && 'Exports avancés et partage optimisé'}
-                                {selectedType === 'producer' && 'Traçabilité complète et exports professionnels'}
-                            </p>
-                            <button
-                                onClick={() => navigate('/choose-account')}
-                                style={{ color: 'var(--text-tertiary)' }}
-                                className="text-sm hover:opacity-80 transition-all inline-flex items-center gap-1"
-                                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-primary)'}
-                                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-tertiary)'}
-                            >
-                                Changer de plan <ArrowRight size={16} />
-                            </button>
+            <div className="min-h-screen bg-gradient-to-br from-purple-600 via-violet-700 to-purple-800 text-white flex items-center justify-center px-4 py-8">
+                <div className="w-full max-w-md">
+                    {/* Header */}
+                    <div className="text-center mb-8 space-y-4 animate-fade-in">
+                        <div className="inline-block p-4 bg-white/20 backdrop-blur-xl rounded-3xl shadow-2xl mb-4">
+                            <LogIn className="w-12 h-12 text-white" strokeWidth={2.5} />
                         </div>
+                        <h1 className="text-5xl md:text-6xl font-black tracking-tight drop-shadow-2xl">
+                            Connexion
+                        </h1>
+                        <p className="text-xl text-white font-light drop-shadow-lg">
+                            Accédez à votre espace personnel
+                        </p>
+                    </div>
 
-                        {/* Mode Toggle */}
-                        <div className="flex gap-2 rounded-xl p-1.5" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border-color)' }}>
-                            <button
-                                type="button"
-                                style={{
-                                    background: mode === 'login' ? 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' : 'transparent',
-                                    color: mode === 'login' ? '#FFFFFF' : 'var(--text-secondary)'
-                                }}
-                                className="flex-1 px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:opacity-90"
-                                onClick={() => setMode('login')}
-                            >
-                                Connexion
-                            </button>
-                            <button
-                                type="button"
-                                style={{
-                                    background: mode === 'signup' ? 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' : 'transparent',
-                                    color: mode === 'signup' ? '#FFFFFF' : 'var(--text-secondary)'
-                                }}
-                                className="flex-1 px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:opacity-90"
-                                onClick={() => setMode('signup')}
-                            >
-                                Créer un compte
-                            </button>
-                        </div>
+                    {/* Carte principale */}
+                    <div className="relative overflow-hidden rounded-3xl shadow-2xl mb-6">
+                        {/* Background gradient */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/95 to-white/90"></div>
+                        
+                        {/* Liquid glass effect */}
+                        <div className="absolute inset-0 backdrop-blur-xl"></div>
 
-                        {/* Sélecteur de type de compte (uniquement en mode signup) */}
-                        {mode === 'signup' && (
-                            <div className="mb-6">
-                                <AccountTypeSelector
-                                    selected={selectedType}
-                                    onChange={setSelectedType}
-                                />
+                        {/* Contenu */}
+                        <div className="relative p-8 space-y-6">
+                            {/* OAuth Buttons */}
+                            <div className="space-y-3">
+                                <OAuthButtons />
                             </div>
-                        )}
 
-                        {/* Email/Password Form */}
-                        <form className="space-y-4" onSubmit={handleSubmitEmail}>
-                            {mode === 'signup' && (
-                                <LiquidInput
-                                    label="Pseudo"
-                                    type="text"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    placeholder="Votre pseudo"
-                                    icon={User}
-                                />
-                            )}
-
-                            <LiquidInput
-                                label="Email"
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="vous@example.com"
-                                icon={Mail}
-                                required
-                            />
-
-                            <LiquidInput
-                                label="Mot de passe"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="••••••••"
-                                icon={Lock}
-                                required
-                                hint={mode === 'signup' ? 'Minimum 8 caractères' : undefined}
-                            />
-
-                            {error && (
-                                <div style={{ background: 'var(--glass-bg)', borderColor: '#EF4444', color: '#EF4444' }} className="border-2 rounded-xl px-4 py-3 flex items-center gap-2">
-                                    <span className="text-lg">⚠️</span>
-                                    <span>{error}</span>
+                            {/* Divider */}
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-gray-300"></div>
                                 </div>
-                            )}
-
-                            <LiquidButton
-                                type="submit"
-                                variant="primary"
-                                size="lg"
-                                fullWidth
-                                loading={loading}
-                                icon={ArrowRight}
-                                iconPosition="right"
-                            >
-                                {mode === 'signup' ? 'Créer mon compte' : 'Se connecter'}
-                            </LiquidButton>
-                        </form>
-
-                        {/* Divider */}
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t" style={{ borderColor: 'var(--border-primary)' }}></div>
+                                <div className="relative flex justify-center">
+                                    <span className="px-4 text-sm font-semibold text-gray-600 bg-white">
+                                        Ou par email
+                                    </span>
+                                </div>
                             </div>
-                            <div className="relative flex justify-center">
-                                <span className="px-4 text-sm font-medium" style={{ background: 'var(--glass-bg)', color: 'var(--text-secondary)' }}>
-                                    Ou continuez avec
-                                </span>
-                            </div>
-                        </div>
 
-                        {/* OAuth Buttons */}
-                        <OAuthButtons
-                            onLoginStart={(provider) => handleProviderClick(provider)}
-                        />
+                            {/* Email/Password Form */}
+                            <form className="space-y-4" onSubmit={handleSubmitEmail}>
+                                <LiquidInput
+                                    label="Email"
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="vous@example.com"
+                                    icon={Mail}
+                                    required
+                                />
 
-                        {/* Footer */}
-                        <div className="text-sm text-center space-y-2 pt-4 border-t" style={{ color: 'var(--text-tertiary)', borderColor: 'var(--border-primary)' }}>
-                            <p className="text-xs">
-                                En continuant, vous confirmez avoir l'âge légal et accepter la vérification RDR après connexion.
-                            </p>
-                            <p className="text-xs">
-                                Besoin d'aide ?
-                                <button
-                                    style={{ color: 'var(--accent-primary)' }}
-                                    className="hover:underline font-medium ml-1 transition-all"
-                                    onClick={() => navigate('/')}
+                                <LiquidInput
+                                    label="Mot de passe"
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    icon={Lock}
+                                    required
+                                />
+
+                                {error && (
+                                    <div className="border-2 border-red-500 bg-red-50 rounded-xl px-4 py-3 flex items-center gap-2">
+                                        <span className="text-lg">⚠️</span>
+                                        <span className="text-red-600 text-sm font-medium">{error}</span>
+                                    </div>
+                                )}
+
+                                <LiquidButton
+                                    type="submit"
+                                    variant="primary"
+                                    size="lg"
+                                    fullWidth
+                                    loading={loading}
+                                    icon={ArrowRight}
+                                    iconPosition="right"
                                 >
-                                    Retour accueil
+                                    Se connecter
+                                </LiquidButton>
+                            </form>
+
+                            {/* Mot de passe oublié */}
+                            <div className="text-center">
+                                <button
+                                    type="button"
+                                    onClick={() => navigate('/forgot-password')}
+                                    className="text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors"
+                                >
+                                    Mot de passe oublié ?
                                 </button>
-                            </p>
+                            </div>
                         </div>
                     </div>
-                </LiquidCard>
+
+                    {/* Bouton créer un compte */}
+                    <button
+                        type="button"
+                        onClick={() => navigate('/choose-account')}
+                        className="w-full relative overflow-hidden rounded-3xl shadow-2xl transition-all duration-300 hover:scale-105 group"
+                    >
+                        {/* Background gradient */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                        
+                        {/* Liquid glass effect */}
+                        <div className="absolute inset-0 backdrop-blur-xl bg-white/10"></div>
+
+                        {/* Contenu */}
+                        <div className="relative p-6 flex items-center justify-center gap-3">
+                            <UserPlus className="w-6 h-6 text-white" strokeWidth={2.5} />
+                            <span className="text-xl font-black text-white drop-shadow-lg">
+                                Créer un compte
+                            </span>
+                        </div>
+                    </button>
+
+                    {/* Footer */}
+                    <div className="text-center mt-6 space-y-2">
+                        <p className="text-sm text-white/90 font-light">
+                            En continuant, vous acceptez nos{' '}
+                            <button
+                                onClick={() => navigate('/cgu')}
+                                className="underline hover:text-white font-medium transition-colors"
+                            >
+                                CGU
+                            </button>
+                        </p>
+                        <button
+                            onClick={() => navigate('/')}
+                            className="text-sm text-white/80 hover:text-white font-medium transition-colors"
+                        >
+                            ← Retour à l'accueil
+                        </button>
+                    </div>
+                </div>
             </div>
         </>
     )
