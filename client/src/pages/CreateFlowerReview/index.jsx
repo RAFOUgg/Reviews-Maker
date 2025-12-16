@@ -315,6 +315,7 @@ export default function CreateFlowerReview() {
                         )}
                         {currentSection === 6 && (
                             <TextureSection
+                                productType="Fleurs"
                                 data={formData.texture || {}}
                                 onChange={(textureData) => handleChange('texture', textureData)}
                             />

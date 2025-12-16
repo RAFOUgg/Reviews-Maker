@@ -1,11 +1,12 @@
 /**
- * Page Profil Utilisateur - Infos personnelles, avatar, paramètres
+ * Page Profil Utilisateur - Infos personnelles, avatar, paramètres, statistiques
  */
 
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import { LiquidButton, LiquidCard, LiquidInput } from '../components/liquid'
+import { Award, FileText, Heart, MessageCircle, Download, TrendingUp, Calendar, Star } from 'lucide-react'
 
 /**
  * Page Profil Utilisateur - Review Maker by Terpologie
@@ -15,6 +16,8 @@ export default function ProfilePage() {
     const navigate = useNavigate()
     const user = useStore((state) => state.user)
     const [profile, setProfile] = useState(null)
+    const [stats, setStats] = useState(null)
+    const [recentReviews, setRecentReviews] = useState([])
     const [loading, setLoading] = useState(true)
     const [editing, setEditing] = useState(false)
     const [formData, setFormData] = useState({
@@ -22,7 +25,7 @@ export default function ProfilePage() {
         email: '',
         theme: 'violet-lean'
     })
-    const [activeTab, setActiveTab] = useState('info') // info | legal | security
+    const [activeTab, setActiveTab] = useState('stats') // stats | info | legal | security
 
     useEffect(() => {
         if (!user) {
@@ -30,6 +33,8 @@ export default function ProfilePage() {
             return
         }
         fetchProfile()
+        fetchStats()
+        fetchRecentReviews()
     }, [user, navigate])
 
     const fetchProfile = async () => {
@@ -50,6 +55,64 @@ export default function ProfilePage() {
         } finally {
             setLoading(false)
         }
+    }
+
+    const fetchStats = async () => {
+        try {
+            const response = await fetch('/api/user/stats', {
+                credentials: 'include'
+            })
+            if (response.ok) {
+                const data = await response.json()
+                setStats(data)
+            }
+        } catch (err) {
+            console.error('Erreur chargement stats:', err)
+        }
+    }
+
+    const fetchRecentReviews = async () => {
+        try {
+            const response = await fetch('/api/reviews?limit=5', {
+                credentials: 'include'
+            })
+            if (response.ok) {
+                const data = await response.json()
+                setRecentReviews(data.reviews || [])
+            }
+        } catch (err) {
+            console.error('Erreur chargement reviews:', err)
+        }
+    }
+
+    const getBadges = () => {
+        if (!profile) return []
+        const badges = []
+        
+        // Badge selon type de compte
+        if (profile.accountType === 'Producteur') {
+            badges.push({ icon: '🌱', label: 'Producteur Certifié', color: 'bg-emerald-500' })
+        } else if (profile.accountType === 'Influenceur') {
+            badges.push({ icon: '⭐', label: 'Influenceur', color: 'bg-purple-500' })
+        }
+        
+        // Badge vérification d'âge
+        if (profile.legalAge) {
+            badges.push({ icon: '✓', label: 'Vérifié', color: 'bg-blue-500' })
+        }
+        
+        // Badge selon nombre de reviews (si stats disponibles)
+        if (stats) {
+            if (stats.totalReviews >= 100) {
+                badges.push({ icon: '🏆', label: 'Expert', color: 'bg-amber-500' })
+            } else if (stats.totalReviews >= 50) {
+                badges.push({ icon: '🥇', label: 'Contributeur', color: 'bg-yellow-500' })
+            } else if (stats.totalReviews >= 10) {
+                badges.push({ icon: '🥈', label: 'Actif', color: 'bg-gray-400' })
+            }
+        }
+        
+        return badges
     }
 
     const handleUpdateProfile = async (e) => {
@@ -118,34 +181,68 @@ export default function ProfilePage() {
                                 <span className="bg-violet-600 text-white px-4 py-2 rounded-full text-sm font-semibold">
                                     {profile.accountType || 'Consommateur'}
                                 </span>
-                                <span className="text-gray-600 text-sm">
+                                <span className="text-gray-600 text-sm flex items-center gap-1">
+                                    <Calendar className="w-4 h-4" />
                                     Membre depuis {new Date(profile.createdAt).toLocaleDateString('fr-FR')}
                                 </span>
-                                {profile.legalAge && (
-                                    <span className="bg-emerald-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                                        ✓ Vérification d'âge
+                            </div>
+                            
+                            {/* Badges */}
+                            <div className="flex items-center gap-2 mt-4 flex-wrap">
+                                {getBadges().map((badge, idx) => (
+                                    <span key={idx} className={`${badge.color} text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1`}>
+                                        <span>{badge.icon}</span>
+                                        {badge.label}
                                     </span>
-                                )}
+                                ))}
                             </div>
                         </div>
                     </div>
                 </LiquidCard>
 
+                {/* Stats rapides */}
+                {stats && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <LiquidCard padding="md" className="text-center">
+                            <FileText className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                            <div className="text-3xl font-bold text-gray-900">{stats.totalReviews || 0}</div>
+                            <div className="text-sm text-gray-600">Reviews</div>
+                        </LiquidCard>
+                        <LiquidCard padding="md" className="text-center">
+                            <Download className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                            <div className="text-3xl font-bold text-gray-900">{stats.totalExports || 0}</div>
+                            <div className="text-sm text-gray-600">Exports</div>
+                        </LiquidCard>
+                        <LiquidCard padding="md" className="text-center">
+                            <Heart className="w-8 h-8 text-rose-600 mx-auto mb-2" />
+                            <div className="text-3xl font-bold text-gray-900">{stats.totalLikes || 0}</div>
+                            <div className="text-sm text-gray-600">Likes</div>
+                        </LiquidCard>
+                        <LiquidCard padding="md" className="text-center">
+                            <MessageCircle className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
+                            <div className="text-3xl font-bold text-gray-900">{stats.totalComments || 0}</div>
+                            <div className="text-sm text-gray-600">Commentaires</div>
+                        </LiquidCard>
+                    </div>
+                )}
+
                 {/* Tabs */}
                 <div className="flex gap-4 mb-8 border-b border-white/20">
                     {[
-                        { id: 'info', label: 'Informations' },
-                        { id: 'legal', label: 'Légal' },
-                        { id: 'security', label: 'Sécurité' }
+                        { id: 'stats', label: 'Statistiques', icon: TrendingUp },
+                        { id: 'info', label: 'Informations', icon: FileText },
+                        { id: 'legal', label: 'Légal', icon: Award },
+                        { id: 'security', label: 'Sécurité', icon: Star }
                     ].map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`pb-4 px-4 font-semibold transition-colors border-b-2 ${activeTab === tab.id
+                            className={`pb-4 px-4 font-semibold transition-colors border-b-2 flex items-center gap-2 ${activeTab === tab.id
                                 ? 'text-white border-violet-500'
                                 : 'text-white/60 hover:text-white border-transparent'
                                 }`}
                         >
+                            <tab.icon className="w-4 h-4" />
                             {tab.label}
                         </button>
                     ))}
@@ -153,6 +250,93 @@ export default function ProfilePage() {
 
                 {/* Tab Content */}
                 <LiquidCard padding="lg">
+                    {/* Stats Tab */}
+                    {activeTab === 'stats' && (
+                        <div className="space-y-8">
+                            {/* Stats détaillées */}
+                            {stats && (
+                                <div>
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-6">Vue d'ensemble</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="p-6 bg-gradient-to-br from-purple-50 to-violet-100 rounded-xl">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h4 className="font-bold text-gray-900">Production</h4>
+                                                <Star className="w-6 h-6 text-purple-600" />
+                                            </div>
+                                            <div className="space-y-3">
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-700">Reviews créées</span>
+                                                    <span className="font-bold text-purple-900">{stats.totalReviews || 0}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-700">Exports générés</span>
+                                                    <span className="font-bold text-purple-900">{stats.totalExports || 0}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-700">Templates sauvegardés</span>
+                                                    <span className="font-bold text-purple-900">{stats.savedTemplates || 0}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="p-6 bg-gradient-to-br from-rose-50 to-pink-100 rounded-xl">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h4 className="font-bold text-gray-900">Engagement</h4>
+                                                <Heart className="w-6 h-6 text-rose-600" />
+                                            </div>
+                                            <div className="space-y-3">
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-700">Likes reçus</span>
+                                                    <span className="font-bold text-rose-900">{stats.likesReceived || 0}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-700">Commentaires reçus</span>
+                                                    <span className="font-bold text-rose-900">{stats.commentsReceived || 0}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-700">Partages</span>
+                                                    <span className="font-bold text-rose-900">{stats.shares || 0}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {/* Dernières reviews */}
+                            {recentReviews.length > 0 && (
+                                <div>
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-6">Dernières reviews</h3>
+                                    <div className="space-y-4">
+                                        {recentReviews.map((review) => (
+                                            <div
+                                                key={review.id}
+                                                onClick={() => navigate(`/review/${review.id}`)}
+                                                className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl hover:shadow-lg transition-shadow cursor-pointer"
+                                            >
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex-1">
+                                                        <h4 className="font-bold text-gray-900">{review.productName}</h4>
+                                                        <p className="text-sm text-gray-600">{review.productType}</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="text-sm text-gray-500">
+                                                            {new Date(review.createdAt).toLocaleDateString('fr-FR')}
+                                                        </div>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <Heart className="w-4 h-4 text-rose-500" />
+                                                            <span className="text-sm">{review.likes || 0}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* Info Tab */}
                     {activeTab === 'info' && (
                         <form onSubmit={handleUpdateProfile} className="space-y-6">

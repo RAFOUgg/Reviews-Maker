@@ -312,6 +312,7 @@ export default function CreateHashReview() {
                             )}
                             {currentSection === 5 && (
                                 <TextureSection
+                                    productType="Hash"
                                     data={formData.texture || {}}
                                     onChange={(textureData) => handleChange('texture', textureData)}
                                 />

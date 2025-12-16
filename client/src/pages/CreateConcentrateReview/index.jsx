@@ -311,6 +311,7 @@ export default function CreateConcentrateReview() {
                             )}
                             {currentSection === 6 && (
                                 <TextureSection
+                                    productType="Concentré"
                                     data={formData.texture || {}}
                                     onChange={(textureData) => handleChange('texture', textureData)}
                                 />

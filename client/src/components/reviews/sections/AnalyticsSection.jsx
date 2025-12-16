@@ -117,7 +117,15 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
 
             {/* Taux cannabinoïdes */}
             <div className="space-y-4">
-                <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200">Taux de cannabinoïdes (%)</h4>
+                <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200">Taux de cannabinoïdes (%)</h4>
+                    {!uploadedFile && (
+                        <span className="text-xs px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            Certificat requis
+                        </span>
+                    )}
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* THC */}
@@ -131,9 +139,10 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                                 value={thc}
                                 onChange={(e) => handleNumberInput(e.target.value, setThc)}
                                 placeholder="0.0"
+                                disabled={!uploadedFile}
                                 className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 
                          rounded-lg text-gray-900 dark:text-white placeholder-gray-400 
-                         focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                         focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">%</span>
                         </div>
@@ -150,9 +159,10 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                                 value={cbd}
                                 onChange={(e) => handleNumberInput(e.target.value, setCbd)}
                                 placeholder="0.0"
+                                disabled={!uploadedFile}
                                 className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 
                          rounded-lg text-gray-900 dark:text-white placeholder-gray-400 
-                         focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                         focus:outline-none focus:ring-2 focus:ring-green-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">%</span>
                         </div>
@@ -169,9 +179,10 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                                 value={cbg}
                                 onChange={(e) => handleNumberInput(e.target.value, setCbg)}
                                 placeholder="0.0"
+                                disabled={!uploadedFile}
                                 className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 
                          rounded-lg text-gray-900 dark:text-white placeholder-gray-400 
-                         focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                         focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">%</span>
                         </div>
@@ -188,9 +199,10 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                                 value={cbc}
                                 onChange={(e) => handleNumberInput(e.target.value, setCbc)}
                                 placeholder="0.0"
+                                disabled={!uploadedFile}
                                 className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 
                          rounded-lg text-gray-900 dark:text-white placeholder-gray-400 
-                         focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">%</span>
                         </div>
