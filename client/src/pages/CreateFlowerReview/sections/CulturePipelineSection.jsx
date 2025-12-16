@@ -255,62 +255,24 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
             </LiquidCard>
 
             {/* Pipeline Culture CDC - Sidebar + Timeline Drag & Drop */}
-            <LiquidCard className="p-6">
-                <CulturePipelineTimeline
-                    data={{
-                        cultureTimelineConfig: {
-                            type: config.intervalType === 'phases' ? 'phase' : config.intervalType === 'days' ? 'jour' : 'semaine',
-                            start: config.startDate,
-                            end: config.endDate,
-                            duration: config.duration,
-                            phases: config.customPhases
-                        },
-                        cultureTimelineData: data.cultureTimelineData || []
-                    }}
-                    onChange={(field, value) => {
-                        onChange({
-                            ...data,
-                            [field]: value
-                        });
-                    }}
-                />
-            </LiquidCard>
-
-            {/* Indicateur : données modifiables listées */}
-            <LiquidCard className="p-6">
-                <h3 className="text-lg font-semibold mb-4">
-                    Données modifiables par étape
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                    <div className="flex items-center gap-2 p-2 bg-white/5 rounded-lg">
-                        <Sprout className="w-4 h-4 text-green-400" />
-                        <span>Substrat & composition</span>
-                    </div>
-                    <div className="flex items-center gap-2 p-2 bg-white/5 rounded-lg">
-                        <Droplets className="w-4 h-4 text-blue-400" />
-                        <span>Irrigation & fréquence</span>
-                    </div>
-                    <div className="flex items-center gap-2 p-2 bg-white/5 rounded-lg">
-                        <Beaker className="w-4 h-4 text-purple-400" />
-                        <span>Engrais & dosage</span>
-                    </div>
-                    <div className="flex items-center gap-2 p-2 bg-white/5 rounded-lg">
-                        <Sun className="w-4 h-4 text-yellow-400" />
-                        <span>Lumière & spectre</span>
-                    </div>
-                    <div className="flex items-center gap-2 p-2 bg-white/5 rounded-lg">
-                        <Wind className="w-4 h-4 text-cyan-400" />
-                        <span>Environnement (T°, HR, CO₂)</span>
-                    </div>
-                    <div className="flex items-center gap-2 p-2 bg-white/5 rounded-lg">
-                        <Ruler className="w-4 h-4 text-orange-400" />
-                        <span>Morphologie plante</span>
-                    </div>
-                </div>
-                <p className="text-xs text-white/60 mt-3">
-                    Chaque donnée peut être modifiée à n'importe quelle étape de la pipeline
-                </p>
-            </LiquidCard>
+            <CulturePipelineTimeline
+                data={{
+                    cultureTimelineConfig: {
+                        type: config.intervalType === 'phases' ? 'phase' : config.intervalType === 'days' ? 'jour' : 'semaine',
+                        start: config.startDate,
+                        end: config.endDate,
+                        duration: config.duration,
+                        phases: config.customPhases
+                    },
+                    cultureTimelineData: data.cultureTimelineData || []
+                }}
+                onChange={(field, value) => {
+                    onChange({
+                        ...data,
+                        [field]: value
+                    });
+                }}
+            />
         </div>
     );
 };
