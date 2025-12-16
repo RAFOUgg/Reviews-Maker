@@ -44,7 +44,7 @@ const DisclaimerRDRModal = () => {
                     >
                         <X className="w-5 h-5" />
                     </button>
-                    
+
                     <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center">
                         <AlertTriangle className="w-10 h-10 text-white" strokeWidth={2.5} />
                     </div>
@@ -63,7 +63,7 @@ const DisclaimerRDRModal = () => {
                             <span className="text-2xl flex-shrink-0">🔒</span>
                             <p className="text-sm leading-relaxed">
                                 <strong className="text-gray-900 dark:text-white block mb-1">Conformité légale :</strong>
-                                Terpologie est une plateforme de traçabilité pour produits cannabiniques légaux uniquement. 
+                                Terpologie est une plateforme de traçabilité pour produits cannabiniques légaux uniquement.
                                 L'accès et l'utilisation sont soumis aux lois locales de votre pays de résidence.
                             </p>
                         </div>
@@ -72,7 +72,7 @@ const DisclaimerRDRModal = () => {
                             <span className="text-2xl flex-shrink-0">🔞</span>
                             <p className="text-sm leading-relaxed">
                                 <strong className="text-gray-900 dark:text-white block mb-1">Âge légal :</strong>
-                                Vous devez avoir <strong className="text-orange-600">18 ans minimum</strong> (ou 21 ans selon votre juridiction) 
+                                Vous devez avoir <strong className="text-orange-600">18 ans minimum</strong> (ou 21 ans selon votre juridiction)
                                 pour utiliser cette plateforme. Une vérification d'âge est requise à l'inscription.
                             </p>
                         </div>
@@ -81,7 +81,7 @@ const DisclaimerRDRModal = () => {
                             <span className="text-2xl flex-shrink-0">⚖️</span>
                             <p className="text-sm leading-relaxed">
                                 <strong className="text-gray-900 dark:text-white block mb-1">Responsabilité :</strong>
-                                Les informations partagées sur Terpologie sont fournies par les utilisateurs à des fins de documentation. 
+                                Les informations partagées sur Terpologie sont fournies par les utilisateurs à des fins de documentation.
                                 Terpologie ne garantit pas l'exactitude des données publiées.
                             </p>
                         </div>
@@ -90,7 +90,7 @@ const DisclaimerRDRModal = () => {
                             <span className="text-2xl flex-shrink-0">⚕️</span>
                             <p className="text-sm leading-relaxed">
                                 <strong className="text-gray-900 dark:text-white block mb-1">Usage et santé :</strong>
-                                Les produits cannabiniques peuvent avoir des effets sur la santé. Consultez un professionnel avant utilisation, 
+                                Les produits cannabiniques peuvent avoir des effets sur la santé. Consultez un professionnel avant utilisation,
                                 surtout si vous êtes enceinte, allaitez, ou prenez des médicaments.
                             </p>
                         </div>
@@ -99,7 +99,7 @@ const DisclaimerRDRModal = () => {
                             <span className="text-2xl flex-shrink-0">🚫</span>
                             <p className="text-sm leading-relaxed">
                                 <strong className="text-gray-900 dark:text-white block mb-1">Interdictions :</strong>
-                                Toute promotion, vente, ou incitation à l'achat de produits illégaux est strictement interdite. 
+                                Toute promotion, vente, ou incitation à l'achat de produits illégaux est strictement interdite.
                                 Les comptes ne respectant pas ces règles seront supprimés.
                             </p>
                         </div>
