@@ -26,12 +26,12 @@ const LiquidInput = React.forwardRef(({
     ${Icon && iconPosition === 'right' ? 'pr-12' : ''}
     ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}
   `;
-  
+
   // Pour les champs password: fond blanc, texte noir, points noirs
-  const passwordClasses = type === 'password' 
+  const passwordClasses = type === 'password'
     ? 'bg-white text-gray-900 placeholder:text-gray-500'
     : 'text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]';
-  
+
   const inputClasses = `${baseInputClasses} ${passwordClasses} ${className}`;
 
   return (
