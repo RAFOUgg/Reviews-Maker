@@ -104,21 +104,19 @@ export default function GeneticsLibraryCanvas({ userId, accountType }) {
                     <div className="flex gap-2 mt-3">
                         <button
                             onClick={() => setActiveTab('library')}
-                            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                activeTab === 'library'
+                            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'library'
                                     ? 'bg-green-500 text-white'
                                     : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                            }`}
+                                }`}
                         >
                             📚 Bibliothèque
                         </button>
                         <button
                             onClick={() => setActiveTab('phenohunt')}
-                            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                activeTab === 'phenohunt'
+                            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'phenohunt'
                                     ? 'bg-purple-500 text-white'
                                     : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                            }`}
+                                }`}
                         >
                             🔬 PhenoHunt
                         </button>

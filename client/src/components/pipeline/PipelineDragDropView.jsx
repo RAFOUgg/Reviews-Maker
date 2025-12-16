@@ -20,7 +20,10 @@
  */
 
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Plus, Settings, Save, Upload } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Settings, Save, Upload, CheckSquare, Square } from 'lucide-react';
+import PipelineCellModal from './PipelineCellModal';
+import PipelineCellBadge from './PipelineCellBadge';
+import PipelineCellTooltip from './PipelineCellTooltip';
 
 export default function PipelineDragDropView({
     type = 'culture',
@@ -40,6 +43,11 @@ export default function PipelineDragDropView({
     const [draggedContent, setDraggedContent] = useState(null);
     const [selectedCell, setSelectedCell] = useState(null);
     const [showPresets, setShowPresets] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [currentCellTimestamp, setCurrentCellTimestamp] = useState(null);
+    const [tooltipData, setTooltipData] = useState({ visible: false, cellData: null, position: { x: 0, y: 0 }, section: '' });
+    const [massAssignMode, setMassAssignMode] = useState(false);
+    const [selectedCells, setSelectedCells] = useState([]);
 
     // Toggle section
     const toggleSection = (sectionId) => {
@@ -47,6 +55,69 @@ export default function PipelineDragDropView({
             ...prev,
             [sectionId]: !prev[sectionId]
         }));
+    };
+
+    // Ouvrir modal cellule
+    const handleCellClick = (timestamp) => {
+        if (massAssignMode) {
+            // Mode sélection multiple
+            setSelectedCells(prev => 
+                prev.includes(timestamp) 
+                    ? prev.filter(t => t !== timestamp)
+                    : [...prev, timestamp]
+            );
+        } else {
+            // Mode normal: ouvrir modal
+            setCurrentCellTimestamp(timestamp);
+            setIsModalOpen(true);
+        }
+    };
+
+    // Sauvegarder données depuis modal
+    const handleModalSave = (data) => {
+        if (!data || !data.timestamp) return;
+        
+        // Sauvegarder toutes les données
+        Object.entries(data.data).forEach(([key, value]) => {
+            onDataChange(data.timestamp, key, value);
+        });
+        
+        // Sauvegarder métadonnées
+        onDataChange(data.timestamp, '_meta', {
+            completionPercentage: data.completionPercentage,
+            lastModified: data.lastModified
+        });
+    };
+
+    // Tooltip handlers
+    const handleCellHover = (e, timestamp) => {
+        const cellData = getCellData(timestamp);
+        if (!cellData || Object.keys(cellData).length === 0) return;
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        setTooltipData({
+            visible: true,
+            cellData: cellData._meta || cellData,
+            position: { x: rect.right, y: rect.top + rect.height / 2 },
+            section: 'Données'
+        });
+    };
+
+    const handleCellLeave = () => {
+        setTooltipData({ visible: false, cellData: null, position: { x: 0, y: 0 }, section: '' });
+    };
+
+    // Mass assign handlers
+    const handleMassAssign = () => {
+        if (selectedCells.length === 0) return;
+        
+        // TODO: Ouvrir modal pour choisir quelles données copier
+        alert(`Attribution en masse à ${selectedCells.length} cellules`);
+    };
+
+    const toggleMassAssignMode = () => {
+        setMassAssignMode(!massAssignMode);
+        setSelectedCells([]);
     };
 
     // Handlers drag & drop
@@ -440,46 +511,74 @@ export default function PipelineDragDropView({
                             <div className="grid grid-cols-7 gap-2">
                                 {cells.map((cell, idx) => {
                                     const hasData = hasCellData(cell.timestamp);
+                                    const cellData = getCellData(cell.timestamp);
                                     const isFirst = idx === 0;
+                                    const isSelected = selectedCells.includes(cell.timestamp);
 
                                     return (
                                         <div
                                             key={cell.timestamp}
                                             onDragOver={handleDragOver}
                                             onDrop={(e) => handleDrop(e, cell.timestamp)}
-                                            onClick={() => setSelectedCell(cell.timestamp)}
+                                            onClick={() => handleCellClick(cell.timestamp)}
+                                            onMouseEnter={(e) => handleCellHover(e, cell.timestamp)}
+                                            onMouseLeave={handleCellLeave}
                                             className={`
-                                                relative p-3 rounded-lg border-2 transition-all cursor-pointer
+                                                relative p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[80px]
                                                 ${hasData
-                                                    ? 'border-green-500 bg-green-500/20'
+                                                    ? 'border-green-500 bg-green-500/10'
                                                     : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800'
                                                 }
                                                 ${selectedCell === cell.timestamp
                                                     ? 'ring-2 ring-blue-500 shadow-lg'
                                                     : 'hover:border-blue-400 hover:shadow-md'
                                                 }
+                                                ${isSelected
+                                                    ? 'ring-2 ring-purple-500 bg-purple-50'
+                                                    : ''
+                                                }
                                                 ${isFirst ? 'col-span-2 bg-purple-500/10 border-purple-500' : ''}
                                             `}
                                         >
-                                            <div className="text-xs font-bold text-gray-900 dark:text-white mb-1">
-                                                {isFirst ? '⚙️ ' : ''}{cell.label}
-                                            </div>
-                                            <div className="text-[10px] text-gray-600 dark:text-gray-400">
-                                                {cell.date || cell.week || cell.phase?.name || ''}
-                                            </div>
-                                            {hasData && (
-                                                <div className="absolute top-1 right-1">
-                                                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                                                </div>
+                                            {/* Badge visuel si données présentes */}
+                                            {hasData && cellData._meta && (
+                                                <PipelineCellBadge 
+                                                    cellData={cellData._meta}
+                                                    sectionId={Object.keys(cellData).find(k => k !== 'timestamp' && k !== '_meta')}
+                                                />
                                             )}
-                                            {isFirst && (
-                                                <div className="mt-1 text-[10px] text-purple-700 dark:text-purple-300 font-semibold">
-                                                    Config générale
+                                            
+                                            {/* Label cellule */}
+                                            <div className="relative z-10">
+                                                <div className="text-xs font-bold text-gray-900 dark:text-white mb-1">
+                                                    {massAssignMode && isSelected && '✓ '}
+                                                    {isFirst ? '⚙️ ' : ''}{cell.label}
                                                 </div>
-                                            )}
+                                                <div className="text-[10px] text-gray-600 dark:text-gray-400">
+                                                    {cell.date || cell.week || cell.phase?.name || ''}
+                                                </div>
+                                                {isFirst && (
+                                                    <div className="mt-1 text-[10px] text-purple-700 dark:text-purple-300 font-semibold">
+                                                        Config générale
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     );
                                 })}
+                                
+                                {/* Bouton + pour ajouter des cellules */}
+                                {cells.length > 0 && (
+                                    <div
+                                        className="p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all cursor-pointer flex items-center justify-center min-h-[80px]"
+                                        onClick={() => {
+                                            // TODO: Ajouter une cellule dynamiquement
+                                            alert('Ajout de cellule à implémenter');
+                                        }}
+                                    >
+                                        <Plus className="w-6 h-6 text-gray-400" />
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -521,6 +620,25 @@ export default function PipelineDragDropView({
                     </div>
                 </div>
             )}
+
+            {/* Modal d'édition de cellule */}
+            <PipelineCellModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                cellData={getCellData(currentCellTimestamp)}
+                sidebarSections={sidebarContent}
+                onSave={handleModalSave}
+                timestamp={currentCellTimestamp}
+                intervalLabel={cells.find(c => c.timestamp === currentCellTimestamp)?.label || ''}
+            />
+
+            {/* Tooltip au survol */}
+            <PipelineCellTooltip
+                cellData={tooltipData.cellData}
+                sectionLabel={tooltipData.section}
+                visible={tooltipData.visible}
+                position={tooltipData.position}
+            />
         </div>
     );
 }
