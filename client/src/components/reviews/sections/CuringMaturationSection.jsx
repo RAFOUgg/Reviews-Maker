@@ -109,8 +109,8 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                             key={interval}
                                             onClick={() => updateConfig('intervalType', interval)}
                                             className={`py-2 px-3 rounded-lg border-2 text-sm transition-all ${config.intervalType === interval
-                                                    ? 'border-amber-500 bg-amber-500/20'
-                                                    : 'border-white/20 hover:border-white/40'
+                                                ? 'border-amber-500 bg-amber-500/20'
+                                                : 'border-white/20 hover:border-white/40'
                                                 }`}
                                         >
                                             {INTERVAL_TYPES[interval]}
@@ -155,8 +155,8 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                     <button
                                         onClick={() => updateConfig('curingType', 'cold')}
                                         className={`p-3 rounded-lg border-2 transition-all ${config.curingType === 'cold'
-                                                ? 'border-blue-500 bg-blue-500/20'
-                                                : 'border-white/20 hover:border-white/40'
+                                            ? 'border-blue-500 bg-blue-500/20'
+                                            : 'border-white/20 hover:border-white/40'
                                             }`}
                                     >
                                         <div className="text-2xl mb-1">❄️</div>
@@ -165,8 +165,8 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                     <button
                                         onClick={() => updateConfig('curingType', 'warm')}
                                         className={`p-3 rounded-lg border-2 transition-all ${config.curingType === 'warm'
-                                                ? 'border-orange-500 bg-orange-500/20'
-                                                : 'border-white/20 hover:border-white/40'
+                                            ? 'border-orange-500 bg-orange-500/20'
+                                            : 'border-white/20 hover:border-white/40'
                                             }`}
                                     >
                                         <div className="text-2xl mb-1">🔥</div>
@@ -244,8 +244,8 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                             key={type.id}
                                             onClick={() => updateConfig('containerType', type.id)}
                                             className={`p-2 rounded-lg border-2 text-sm transition-all ${config.containerType === type.id
-                                                    ? 'border-amber-500 bg-amber-500/20'
-                                                    : 'border-white/20 hover:border-white/40'
+                                                ? 'border-amber-500 bg-amber-500/20'
+                                                : 'border-white/20 hover:border-white/40'
                                                 }`}
                                         >
                                             <div className="text-xl mb-1">{type.icon}</div>
@@ -264,8 +264,8 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                             key={type.id}
                                             onClick={() => updateConfig('packagingType', type.id)}
                                             className={`p-2 rounded-lg border-2 text-sm transition-all ${config.packagingType === type.id
-                                                    ? 'border-purple-500 bg-purple-500/20'
-                                                    : 'border-white/20 hover:border-white/40'
+                                                ? 'border-purple-500 bg-purple-500/20'
+                                                : 'border-white/20 hover:border-white/40'
                                                 }`}
                                         >
                                             <div className="text-xl mb-1">{type.icon}</div>
@@ -284,8 +284,8 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                             key={level.id}
                                             onClick={() => updateConfig('opacity', level.id)}
                                             className={`p-2 rounded-lg border-2 text-sm transition-all ${config.opacity === level.id
-                                                    ? 'border-cyan-500 bg-cyan-500/20'
-                                                    : 'border-white/20 hover:border-white/40'
+                                                ? 'border-cyan-500 bg-cyan-500/20'
+                                                : 'border-white/20 hover:border-white/40'
                                                 }`}
                                         >
                                             <div className="text-xl mb-1">{level.icon}</div>

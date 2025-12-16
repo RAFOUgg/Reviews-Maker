@@ -89,8 +89,8 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
                                         key={id}
                                         onClick={() => updateConfig('extractionMethod', id)}
                                         className={`p-3 rounded-lg border-2 transition-all ${config.extractionMethod === id
-                                                ? 'border-purple-500 bg-purple-500/20'
-                                                : 'border-white/20 hover:border-white/40'
+                                            ? 'border-purple-500 bg-purple-500/20'
+                                            : 'border-white/20 hover:border-white/40'
                                             }`}
                                     >
                                         <div className="text-2xl mb-1">{method.icon}</div>
