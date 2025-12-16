@@ -1,6 +1,6 @@
 /* === REVIEWS-MAKER V2 - DESIGN SYSTEM === */
+@import './assets/themes-v2.css'; /* PRIORITÉ 1 : Définitions des thèmes */
 @import './assets/orchard.css';
-@import './assets/themes-v2.css';
 @import './assets/liquid-glass.css';
 
 @tailwind base;
@@ -8,117 +8,47 @@
 @tailwind utilities;
 
 /* === THÈMES CSS VARIABLES === */
-
-/* Par défaut - Violet Lean - VIOLET POURPRE INTENSE */
-:root,
-[data-theme="violet-lean"] {
-    --primary: #9333EA;
-    /* Violet INTENSE */
-    --primary-light: #A855F7;
-    --primary-dark: #7E22CE;
-    --accent: #DB2777;
-    /* Rose INTENSE */
-    --accent-light: #EC4899;
-    --accent-dark: #BE185D;
-
-    /* Backgrounds VIOLET POURPRE SATURÉ - ÉQUILIBRÉ POUR LISIBILITÉ */
-    --bg-primary: #C4B5FD;
-    /* Violet 300 - fond principal PLUS CLAIR */
-    --bg-secondary: #A78BFA;
-    /* Violet 400 - containers PLUS CLAIR */
-    --bg-tertiary: #8B5CF6;
-    /* Violet 500 - cards avec bon contraste */
-    --bg-surface: #FDFCFF;
-    /* Blanc cassé violet - modals avec contraste maximal */
-    --bg-input: #FFFFFF;
-    /* Blanc pur - inputs avec contraste optimal */
-
-    /* TEXTES - Contraste optimal sur tous les fonds */
-    --text-primary: #0F172A;
-    /* GRIS TRÈS FONCÉ pour lisibilité maximale */
-    --text-secondary: #1E293B;
-    /* Gris foncé pour sous-titres */
-    --text-tertiary: #334155;
-    /* Gris pour textes secondaires */
-    --text-on-light: #0F172A;
-    /* Texte très sombre pour inputs clairs */
-    --text-on-dark: #FFFFFF;
-    /* Blanc pour boutons et éléments foncés */
-    --border: #4C1D95;
-    /* Violet 900 - très sombre pour contraste maximal */
-    --shadow: rgba(15, 23, 42, 0.15);
-    /* Gris foncé au lieu de violet pour meilleure lisibilité */
-    --shadow-lg: rgba(15, 23, 42, 0.25);
-    --glow: rgba(76, 29, 149, 0.3);
-    /* Violet 900 atténué pour glow subtil */
-
-    --gradient-primary: linear-gradient(135deg, #A855F7 0%, #EC4899 100%);
-    --gradient-accent: linear-gradient(135deg, #DB2777 0%, #F472B6 100%);
-    --gradient-bg: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 50%, #7C3AED 100%);
-
-    /* COULEURS HARMONISÉES - Types de produits dans la palette VIOLET/ROSE */
-    --color-fleur: #C084FC;
-    /* Violet clair - au lieu de vert */
-    --color-hash: #A855F7;
-    /* Violet moyen - au lieu de orange */
-    --color-concentre: #9333EA;
-    /* Violet intense - reste violet */
-    --color-comestible: #EC4899;
-    /* Rose - reste rose mais harmonisé */
-
-    /* Notes/Rating colors harmonisées */
-    --color-success: #A855F7;
-    /* Violet au lieu de vert */
-    --color-warning: #DB2777;
-    /* Rose au lieu de jaune */
-    --color-danger: #BE185D;
-    /* Rose foncé au lieu de rouge */
-
-    /* ORCHARD - Couleurs pour templates (SANS TRANSPARENCE) */
-    --color-primary: 147, 51, 234;
-    /* Violet RGB pour rgb() */
-    --color-accent: 219, 39, 119;
-    /* Rose RGB pour rgb() */
-    --bg-card: 255, 255, 255;
-    /* Fond cartes/forms clair pour lisibilité */
-    --text: 31, 41, 55;
-    /* Texte sombre pour surfaces claires */
-    --bg-overlay: rgba(0, 0, 0, 0.85);
-    /* Overlay sombre pour modals */
-    --text-on-overlay: #FFFFFF;
-    /* Texte blanc sur overlay sombre */
-}
+/* Les définitions principales sont dans themes-v2.css */
+/* Ce fichier ne contient que des overrides spécifiques Tailwind */
 
 /* === UTILITAIRES TAILWIND PERSONNALISÉS === */
 @layer utilities {
-    .input-light {
-        @apply bg-white text-gray-900 border-violet-900 placeholder-gray-500;
+    .input-themed {
+        background: var(--bg-input);
+        color: var(--text-primary);
+        border-color: var(--border-primary);
     }
 
-    .input-light:focus {
-        @apply ring-2 ring-violet-600 border-violet-600 outline-none;
+    .input-themed:focus {
+        outline: none;
+        ring: 2px;
+        ring-color: var(--accent-primary);
+        border-color: var(--accent-primary);
     }
 
-    .modal-light {
-        @apply bg-white text-gray-900 border-violet-900;
+    .modal-themed {
+        background: var(--bg-surface);
+        color: var(--text-primary);
+        border-color: var(--border-primary);
     }
 
     .glass {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(76, 29, 149, 0.2);
-    }
-}
-
-/* === STYLES GLOBAUX - Applique le thème PARTOUT === */
-html {
-    background: var(--gradient-bg) !important;
+        background: var(--glass-bg);
+        backdrop-filtebg-primary);
     min-height: 100vh;
 }
 
 body {
-    background: transparent !important;
-    color: var(--text-primary) !important;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#root {
+    background: transparertant;
     min-height: 100vh;
     margin: 0;
     padding: 0;
@@ -129,275 +59,45 @@ body {
     min-height: 100vh;
 }
 
-/* Titres avec couleurs du thème - BLANC pour contraste */
+/* Titres avec couleurs du thème */
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
-    color: var(--text-primary) !important;
+    color: var(--text-primary);
 }
 
 h1 {
     font-weight: 700;
 }
 
-/* === EFFET LUEUR (GLOW) - ALTERNATIVE AUX BACKGROUNDS COLORÉS === */
-.glow-text {
-    text-shadow: 0 0 20px var(--glow), 0 0 40px var(--glow), 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.glow-text-subtle {
-    text-shadow: 0 0 10px var(--glow), 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.glow-container {
-    box-shadow: 0 0 30px var(--shadow-lg), 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.glow-container-subtle {
-    box-shadow: 0 0 15px var(--shadow), 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.glow-border {
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 0 20px var(--shadow), inset 0 0 20px rgba(255, 255, 255, 0.05);
-}
-
-/* CONTOUR BLANC pour textes sur backgrounds colorés/gradients */
-.text-stroke-white {
-    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.8);
-    paint-order: stroke fill;
-}
-
-.text-stroke-white-thin {
-    -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.6);
-    paint-order: stroke fill;
-}
-
-/* Textes avec contraste optimal selon le fond */
-.text-white {
-    color: #FFFFFF !important;
-}
-
-.text-white\/90 {
-    color: rgba(255, 255, 255, 0.9) !important;
-}
-
-.text-white\/80 {
-    color: rgba(255, 255, 255, 0.8) !important;
-}
-
-.text-white\/70 {
-    color: rgba(255, 255, 255, 0.7) !important;
-}
-
-/* Force le contraste sur les boutons et badges colorés */
-button,
-.badge,
-[class*="bg-purple"],
-[class*="bg-indigo"],
-[class*="bg-violet"],
-[class*="bg-pink"],
-[class*="bg-rose"] {
-    color: #FFFFFF !important;
-}
-
-/* Badges et éléments de contenu avec backgrounds colorés */
-[class*="bg-green"],
-[class*="bg-emerald"],
-[class*="bg-cyan"],
-[class*="bg-teal"],
-[class*="bg-blue"] {
-    color: #FFFFFF !important;
-}
-
 h2 {
     font-weight: 600;
 }
 
-/* Mode Sombre */
-.dark {
-    --bg-primary: #1F2937;
-    /* Gray-800 */
-    --bg-secondary: #2D1B4E;
-    /* Violet très foncé */
-    --bg-tertiary: #3F2C5C;
-    /* Violet foncé */
-
-    --text-primary: #F3E8FF;
-    /* Violet très pâle */
-    --text-secondary: #D8B4FE;
-    /* Violet pâle */
-    --text-tertiary: #A78BFA;
-    /* Violet moyen */
-
-    --border: #4C1D95;
-    /* Violet-900 */
-
-    --shadow: rgba(139, 92, 246, 0.2);
-    --shadow-lg: rgba(139, 92, 246, 0.3);
-    --bg-card: 30, 41, 59;
-    --text: 243, 232, 255;
+/* Textes avec couleurs thématiques */
+.text-primary {
+    color: var(--text-primary);
 }
 
-/* === THÈME: ÉMERAUDE === */
-[data-theme="emerald"] {
-    --primary: #059669;
-    /* Vert INTENSE */
-    --primary-light: #10B981;
-    --primary-dark: #047857;
-    --accent: #0891B2;
-    /* Cyan INTENSE */
-    --accent-light: #06B6D4;
-    --accent-dark: #0E7490;
-
-    /* Backgrounds VERT/ÉMERAUDE - ÉQUILIBRÉ POUR LISIBILITÉ */
-    --bg-primary: #A7F3D0;
-    /* Emerald 200 - fond principal PLUS CLAIR */
-    --bg-secondary: #6EE7B7;
-    /* Emerald 300 - containers PLUS CLAIR */
-    --bg-tertiary: #34D399;
-    /* Emerald 400 - cards avec bon contraste */
-    --bg-surface: #D1FAE5;
-    /* Emerald 100 - modals très clair */
-    --bg-input: #ECFDF5;
-    /* Emerald 50 - inputs avec contraste optimal */
-
-    /* TEXTES - Contraste optimal sur tous les fonds */
-    --text-primary: #064E3B;
-    /* VERT FONCÉ pour lisibilité sur fond clair */
-    --text-secondary: #065F46;
-    /* Vert sombre pour sous-titres */
-    --text-tertiary: #047857;
-    /* Vert moyen pour textes secondaires */
-    --text-on-light: #064E3B;
-    /* Texte sombre pour inputs clairs */
-    --text-on-dark: #FFFFFF;
-    /* Blanc pour boutons et éléments foncés */
-    --border: #059669;
-    /* Vert INTENSE */
-    --shadow: rgba(5, 150, 105, 0.4);
-    --shadow-lg: rgba(5, 150, 105, 0.7);
-    --glow: rgba(6, 182, 212, 0.8);
-
-    --gradient-primary: linear-gradient(135deg, #10B981 0%, #06B6D4 100%);
-    --gradient-accent: linear-gradient(135deg, #34D399 0%, #22D3EE 100%);
-    --gradient-bg: linear-gradient(135deg, #34D399 0%, #10B981 50%, #059669 100%);
-
-    /* COULEURS HARMONISÉES - Types de produits dans la palette VERT/CYAN */
-    --color-fleur: #34D399;
-    /* Vert clair - harmonisé */
-    --color-hash: #10B981;
-    /* Vert moyen - au lieu de orange */
-    --color-concentre: #059669;
-    /* Vert foncé - au lieu de violet */
-    --color-comestible: #06B6D4;
-    /* Cyan - au lieu de rose */
-
-    /* Notes/Rating colors harmonisées */
-    --color-success: #10B981;
-    /* Vert */
-    --color-warning: #06B6D4;
-    /* Cyan au lieu de jaune */
-    --color-danger: #0E7490;
-    /* Cyan foncé au lieu de rouge */
+.text-secondary {
+    color: var(--text-secondary);
 }
 
-[data-theme="emerald"].dark {
-    --bg-primary: #064E3B;
-    /* Green-900 */
-    --bg-secondary: #0F2E20;
-    /* Vert très foncé */
-    --bg-tertiary: #155E4E;
-    /* Vert foncé */
-
-    --text-primary: #ECFDF5;
-    /* Vert très pâle */
-    --text-secondary: #A7F3D0;
-    /* Green-300 */
-    --text-tertiary: #6EE7B7;
-    /* Green-400 */
-
-    --border: #047857;
-    /* Green-700 */
-
-    --shadow: rgba(16, 185, 129, 0.25);
-
-    --gradient-primary: linear-gradient(135deg, #06B6D4 0%, #10B981 100%);
-    --gradient-accent: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+.text-tertiary {
+    color: var(--text-tertiary);
 }
 
-/* === THÈME: BLEU TAHITI === */
-[data-theme="tahiti"] {
-    --primary: #0891B2;
-    /* Cyan INTENSE */
-    --primary-light: #06B6D4;
-    --primary-dark: #0E7490;
-    --accent: #0D9488;
-    /* Teal INTENSE */
-    --accent-light: #14B8A6;
-    --accent-dark: #0F766E;
-
-    /* Backgrounds CYAN/BLEU - ÉQUILIBRÉ POUR LISIBILITÉ */
-    --bg-primary: #A5F3FC;
-    /* Cyan 200 - fond principal PLUS CLAIR */
-    --bg-secondary: #67E8F9;
-    /* Cyan 300 - containers PLUS CLAIR */
-    --bg-tertiary: #22D3EE;
-    /* Cyan 400 - cards avec bon contraste */
-    --bg-surface: #CFFAFE;
-    /* Cyan 100 - modals très clair */
-    --bg-input: #ECFEFF;
-    /* Cyan 50 - inputs avec contraste optimal */
-
-    /* TEXTES - Contraste optimal sur tous les fonds */
-    --text-primary: #164E63;
-    /* CYAN FONCÉ pour lisibilité sur fond clair */
-    --text-secondary: #155E75;
-    /* Cyan sombre pour sous-titres */
-    --text-tertiary: #0E7490;
-    /* Cyan moyen pour textes secondaires */
-    --text-on-light: #164E63;
-    /* Texte sombre pour inputs clairs */
-    --text-on-dark: #FFFFFF;
-    /* Blanc pour boutons et éléments foncés */
-    --border: #0891B2;
-    /* Cyan INTENSE */
-    --shadow: rgba(8, 145, 178, 0.4);
-    --shadow-lg: rgba(8, 145, 178, 0.7);
-    --glow: rgba(34, 211, 238, 0.8);
-
-    --gradient-primary: linear-gradient(135deg, #06B6D4 0%, #14B8A6 100%);
-    --gradient-accent: linear-gradient(135deg, #22D3EE 0%, #0891B2 100%);
-    --gradient-bg: linear-gradient(135deg, #22D3EE 0%, #06B6D4 50%, #0891B2 100%);
-
-    /* COULEURS HARMONISÉES - Types de produits dans la palette CYAN/BLEU */
-    --color-fleur: #67E8F9;
-    /* Cyan clair - au lieu de vert */
-    --color-hash: #22D3EE;
-    /* Cyan moyen - au lieu de orange */
-    --color-concentre: #0891B2;
-    /* Cyan foncé - au lieu de violet */
-    --color-comestible: #14B8A6;
-    /* Teal - au lieu de rose */
-
-    /* Notes/Rating colors harmonisées */
-    --color-success: #06B6D4;
-    /* Cyan au lieu de vert */
-    --color-warning: #14B8A6;
-    /* Teal au lieu de jaune */
-    --color-danger: #0E7490;
-    /* Cyan foncé au lieu de rouge */
+/* Force le contraste sur les boutons */
+button {
+    transition: all 0.3s ease;
 }
 
-/* === THÈME: SAKURA === */
-[data-theme="sakura"] {
-    --primary: #DB2777;
-    /* Rose INTENSE */
-    --primary-light: #EC4899;
-    --primary-dark: #BE185D;
+button:hover {
+    opacity: 0.9;
+}
     --accent: #EC4899;
     /* Pink INTENSE */
     --accent-light: #F472B6;

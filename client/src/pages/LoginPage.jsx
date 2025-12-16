@@ -123,45 +123,50 @@ export default function LoginPage() {
                 onVerified={handleAgeVerified}
             />
 
-            <div className="min-h-screen flex items-center justify-center px-4 py-10">
+            <div className="min-h-screen flex items-center justify-center px-4 py-10" style={{ background: 'var(--bg-primary)' }}>
                 <LiquidCard className="w-full max-w-4xl" padding="lg" hover={false}>
                     <div className="space-y-8">
                         {/* Header */}
                         <div className="text-center space-y-3">
-                            <h1 className="text-4xl md:text-5xl font-bold text-gradient">
+                            <h1 className="text-4xl md:text-5xl font-bold" style={{ color: 'var(--text-primary)' }}>
                                 Connexion {accountTypeLabels[selectedType] || 'Amateur'}
                             </h1>
-                            <p className="text-[var(--text-secondary)] text-lg">
+                            <p style={{ color: 'var(--text-secondary)' }} className="text-lg">
                                 {selectedType === 'consumer' && 'Créez et gérez vos reviews personnelles'}
                                 {(selectedType === 'influencer_basic' || selectedType === 'influencer_pro') && 'Exports avancés et partage optimisé'}
                                 {selectedType === 'producer' && 'Traçabilité complète et exports professionnels'}
                             </p>
                             <button
                                 onClick={() => navigate('/choose-account')}
-                                className="text-sm text-[var(--text-tertiary)] hover:text-[var(--accent-primary)] transition-smooth inline-flex items-center gap-1"
+                                style={{ color: 'var(--text-tertiary)' }}
+                                className="text-sm hover:opacity-80 transition-all inline-flex items-center gap-1"
+                                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-primary)'}
+                                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-tertiary)'}
                             >
                                 Changer de plan <ArrowRight size={16} />
                             </button>
                         </div>
 
                         {/* Mode Toggle */}
-                        <div className="flex gap-2 liquid-glass rounded-xl p-1.5">
+                        <div className="flex gap-2 rounded-xl p-1.5" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border-color)' }}>
                             <button
                                 type="button"
-                                className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-smooth ${mode === 'login'
-                                    ? 'bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white shadow-lg'
-                                    : 'text-[var(--text-secondary)] hover:bg-white/10'
-                                    }`}
+                                style={{
+                                    background: mode === 'login' ? 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' : 'transparent',
+                                    color: mode === 'login' ? '#FFFFFF' : 'var(--text-secondary)'
+                                }}
+                                className="flex-1 px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:opacity-90"
                                 onClick={() => setMode('login')}
                             >
                                 Connexion
                             </button>
                             <button
                                 type="button"
-                                className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-smooth ${mode === 'signup'
-                                    ? 'bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white shadow-lg'
-                                    : 'text-[var(--text-secondary)] hover:bg-white/10'
-                                    }`}
+                                style={{
+                                    background: mode === 'signup' ? 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' : 'transparent',
+                                    color: mode === 'signup' ? '#FFFFFF' : 'var(--text-secondary)'
+                                }}
+                                className="flex-1 px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:opacity-90"
                                 onClick={() => setMode('signup')}
                             >
                                 Créer un compte
@@ -213,9 +218,9 @@ export default function LoginPage() {
                             />
 
                             {error && (
-                                <div className="liquid-glass border-2 border-red-500/50 rounded-xl px-4 py-3 flex items-center gap-2">
+                                <div style={{ background: 'var(--glass-bg)', borderColor: '#EF4444', color: '#EF4444' }} className="border-2 rounded-xl px-4 py-3 flex items-center gap-2">
                                     <span className="text-lg">⚠️</span>
-                                    <span className="text-red-500">{error}</span>
+                                    <span>{error}</span>
                                 </div>
                             )}
 
@@ -235,10 +240,10 @@ export default function LoginPage() {
                         {/* Divider */}
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-[var(--border-primary)]"></div>
+                                <div className="w-full border-t" style={{ borderColor: 'var(--border-primary)' }}></div>
                             </div>
                             <div className="relative flex justify-center">
-                                <span className="px-4 liquid-glass text-sm font-medium">
+                                <span className="px-4 text-sm font-medium" style={{ background: 'var(--glass-bg)', color: 'var(--text-secondary)' }}>
                                     Ou continuez avec
                                 </span>
                             </div>
@@ -250,14 +255,15 @@ export default function LoginPage() {
                         />
 
                         {/* Footer */}
-                        <div className="text-sm text-[var(--text-tertiary)] text-center space-y-2 pt-4 border-t border-[var(--border-primary)]">
+                        <div className="text-sm text-center space-y-2 pt-4 border-t" style={{ color: 'var(--text-tertiary)', borderColor: 'var(--border-primary)' }}>
                             <p className="text-xs">
                                 En continuant, vous confirmez avoir l'âge légal et accepter la vérification RDR après connexion.
                             </p>
                             <p className="text-xs">
                                 Besoin d'aide ?
                                 <button
-                                    className="text-[var(--accent-primary)] hover:underline font-medium ml-1 transition-smooth"
+                                    style={{ color: 'var(--accent-primary)' }}
+                                    className="hover:underline font-medium ml-1 transition-all"
                                     onClick={() => navigate('/')}
                                 >
                                     Retour accueil

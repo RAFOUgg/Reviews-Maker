@@ -25,7 +25,7 @@ export default function HeroSection({ user, isAuthenticated }) {
                     <span className="text-2xl">👋</span>
                 </div>
             ) : (
-                <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Link
                         to="/login"
                         className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm text-white font-semibold shadow-lg hover:bg-white/20 hover:shadow-xl transition-all"
