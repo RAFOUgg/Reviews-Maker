@@ -13,19 +13,26 @@ const LiquidInput = React.forwardRef(({
   iconPosition = 'left',
   fullWidth = true,
   className = '',
+  type,
   ...props
 }, ref) => {
-  const inputClasses = `
+  // Style spécial pour les inputs password pour meilleure lisibilité
+  const baseInputClasses = `
     liquid-glass w-full px-4 py-3 rounded-xl
-    text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]
     border border-[var(--border-primary)]
     focus:border-[var(--accent-primary)] focus:ring-2 focus:ring-[var(--accent-primary)]/20
     transition-smooth outline-none
     ${Icon && iconPosition === 'left' ? 'pl-12' : ''}
     ${Icon && iconPosition === 'right' ? 'pr-12' : ''}
     ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}
-    ${className}
   `;
+  
+  // Pour les champs password: fond blanc, texte noir, points noirs
+  const passwordClasses = type === 'password' 
+    ? 'bg-white text-gray-900 placeholder:text-gray-500'
+    : 'text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]';
+  
+  const inputClasses = `${baseInputClasses} ${passwordClasses} ${className}`;
 
   return (
     <div className={fullWidth ? 'w-full' : ''}>
@@ -44,6 +51,7 @@ const LiquidInput = React.forwardRef(({
 
         <input
           ref={ref}
+          type={type}
           className={inputClasses}
           {...props}
         />

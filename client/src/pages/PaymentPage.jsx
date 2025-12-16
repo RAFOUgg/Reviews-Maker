@@ -42,7 +42,7 @@ export default function PaymentPage() {
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState('card'); // card | sepa | paypal
+    const paymentMethod = 'paypal'; // Uniquement PayPal disponible
 
     useEffect(() => {
         if (!accountType || !ACCOUNT_TYPES[accountType]) {
@@ -149,44 +149,21 @@ export default function PaymentPage() {
                             Méthode de paiement
                         </h2>
 
-                        {/* Sélection méthode */}
-                        <div className="space-y-3 mb-6">
-                            <button
-                                onClick={() => setPaymentMethod('card')}
-                                className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${paymentMethod === 'card'
-                                        ? 'border-green-600 bg-green-50 dark:bg-green-900/20'
-                                        : 'border-gray-300 dark:border-gray-600'
-                                    }`}
-                            >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        {/* Méthode PayPal (uniquement) */}
+                        <div className="mb-6">
+                            <div className="w-full flex items-center gap-4 p-5 rounded-xl border-2 border-[#0070BA] bg-gradient-to-r from-[#0070BA]/10 to-[#003087]/10">
+                                <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none">
+                                    <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.72A.75.75 0 0 1 5.682 3h6.063c2.838 0 4.544 1.447 4.544 3.86 0 2.683-1.875 4.353-5.007 4.353H8.61l-1.116 6.615a.641.641 0 0 1-.633.533l.215-.024z" fill="#003087"/>
+                                    <path d="M18.868 3.72L15.762 21.097a.641.641 0 0 1-.633.533h-4.606a.641.641 0 0 1-.633-.74L12.997 3.72A.75.75 0 0 1 13.735 3h4.395c.346 0 .638.254.698.59l.04.13z" fill="#0070BA"/>
                                 </svg>
-                                <span className="font-medium">Carte bancaire</span>
-                            </button>
-
-                            <button
-                                onClick={() => setPaymentMethod('sepa')}
-                                className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${paymentMethod === 'sepa'
-                                        ? 'border-green-600 bg-green-50 dark:bg-green-900/20'
-                                        : 'border-gray-300 dark:border-gray-600'
-                                    }`}
-                            >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-                                </svg>
-                                <span className="font-medium">Prélèvement SEPA</span>
-                            </button>
-
-                            <button
-                                onClick={() => setPaymentMethod('paypal')}
-                                className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${paymentMethod === 'paypal'
-                                        ? 'border-green-600 bg-green-50 dark:bg-green-900/20'
-                                        : 'border-gray-300 dark:border-gray-600'
-                                    }`}
-                            >
-                                <span className="text-2xl">💳</span>
-                                <span className="font-medium">PayPal</span>
-                            </button>
+                                <div className="flex-1">
+                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">PayPal</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Paiement sécurisé avec PayPal</p>
+                                </div>
+                                <div className="px-4 py-2 bg-[#0070BA] text-white rounded-lg text-sm font-semibold">
+                                    Sélectionné
+                                </div>
+                            </div>
                         </div>
 
                         {/* Placeholder formulaire */}
