@@ -111,21 +111,21 @@ export default function CuringMaturationTimeline({ data, onChange }) {
                 { key: 'note-trichomes', label: 'Trichomes', icon: '✨', type: 'slider', min: 0, max: 10, defaultValue: 5 },
                 { key: 'note-pistils', label: 'Pistils', icon: '🌸', type: 'slider', min: 0, max: 10, defaultValue: 5 },
                 { key: 'note-manucure', label: 'Manucure', icon: '✂️', type: 'slider', min: 0, max: 10, defaultValue: 5 },
-                
+
                 // Odeurs
                 { key: 'note-intensite-odeur', label: 'Intensité odeur', icon: '👃', type: 'slider', min: 0, max: 10, defaultValue: 5 },
                 { key: 'note-fidelite-cultivar', label: 'Fidélité cultivar', icon: '🧬', type: 'slider', min: 0, max: 10, defaultValue: 5 },
-                
+
                 // Texture
                 { key: 'note-durete', label: 'Dureté', icon: '💪', type: 'slider', min: 0, max: 10, defaultValue: 5 },
                 { key: 'note-densite-tactile', label: 'Densité tactile', icon: '✋', type: 'slider', min: 0, max: 10, defaultValue: 5 },
                 { key: 'note-elasticite', label: 'Élasticité', icon: '🔄', type: 'slider', min: 0, max: 10, defaultValue: 5 },
                 { key: 'note-collant', label: 'Collant', icon: '🫧', type: 'slider', min: 0, max: 10, defaultValue: 5 },
-                
+
                 // Goûts
                 { key: 'note-intensite-gout', label: 'Intensité goût', icon: '😋', type: 'slider', min: 0, max: 10, defaultValue: 5 },
                 { key: 'note-agressivite', label: 'Agressivité/piquant', icon: '🌶️', type: 'slider', min: 0, max: 10, defaultValue: 5 },
-                
+
                 // Effets
                 { key: 'note-montee', label: 'Montée (rapidité)', icon: '⚡', type: 'slider', min: 0, max: 10, defaultValue: 5 },
                 { key: 'note-intensite-effet', label: 'Intensité effet', icon: '💥', type: 'slider', min: 0, max: 10, defaultValue: 5 }
