@@ -88,19 +88,19 @@ export default function ProfilePage() {
     const getBadges = () => {
         if (!profile) return []
         const badges = []
-        
+
         // Badge selon type de compte
         if (profile.accountType === 'Producteur') {
             badges.push({ icon: '🌱', label: 'Producteur Certifié', color: 'bg-emerald-500' })
         } else if (profile.accountType === 'Influenceur') {
             badges.push({ icon: '⭐', label: 'Influenceur', color: 'bg-purple-500' })
         }
-        
+
         // Badge vérification d'âge
         if (profile.legalAge) {
             badges.push({ icon: '✓', label: 'Vérifié', color: 'bg-blue-500' })
         }
-        
+
         // Badge selon nombre de reviews (si stats disponibles)
         if (stats) {
             if (stats.totalReviews >= 100) {
@@ -111,7 +111,7 @@ export default function ProfilePage() {
                 badges.push({ icon: '🥈', label: 'Actif', color: 'bg-gray-400' })
             }
         }
-        
+
         return badges
     }
 
@@ -186,7 +186,7 @@ export default function ProfilePage() {
                                     Membre depuis {new Date(profile.createdAt).toLocaleDateString('fr-FR')}
                                 </span>
                             </div>
-                            
+
                             {/* Badges */}
                             <div className="flex items-center gap-2 mt-4 flex-wrap">
                                 {getBadges().map((badge, idx) => (
@@ -278,7 +278,7 @@ export default function ProfilePage() {
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
                                         <div className="p-6 bg-gradient-to-br from-rose-50 to-pink-100 rounded-xl">
                                             <div className="flex items-center justify-between mb-4">
                                                 <h4 className="font-bold text-gray-900">Engagement</h4>
@@ -302,7 +302,7 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
                             )}
-                            
+
                             {/* Dernières reviews */}
                             {recentReviews.length > 0 && (
                                 <div>

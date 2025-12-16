@@ -323,25 +323,7 @@ Chaque formulaire de saisie est adapté au type de PipeLine et permet à l'utili
 Depuis la vue principale de la PipeLine, l'utilisateur peut visualiser un résumé des données saisies pour chaque étape (icônes, couleurs, graphiques miniatures, etc...) pour avoir une vue d'ensemble rapide de son processus de production. 
 Il à accès à un système de séléction lui permettant d'assigner rapidement une masse de donnée à plusieurs étapes en une seule fois (ex: même arrosage/engraissage/lumière/ventilation/etc... sur plusieurs jours/phases etc...), les préréglage sont sauvegardé dans la bibliothèque utilisateur pour une réutilisation rapide depuis le créateur de reviews.
 
----
 
-# Introduction au systèmes de génétique avec canva de séléctions (Pour Producteur et type Fleurs uniquement):
-
-Disponible depuis la bibliothèque de l'utilisateur :
-Création d'arbe généalogique avec des relations parents/enfants entre les cultivars de sa propre bibliothèque.
-    - Gestion de projet PhenoHunt, nomination et création de cultivars spécifique
-Un système de gestion des génétiques permet aux utilisateurs de créer et gérer une bibliothèque de cultivars, variétés et lignées.
-[Interface]
-bandeau lateral gauche contenant :
-    - onglet en haut : Bibliothèque (liste des cultivars enregistrés)
-    - onglet en haut : Projets PhenoHunt (gestion des cultivars en cours de développement, des canvas de sélection, etc...)
-    - Navigation dans les onglet jusqu'à sa bibliothèque de génétiques. Galerie ou liste (filtre etc...)
-Canva vide à droite : 
-    - Drag and drop des cultivars depuis la bibliothèque vers le canva
-    - Création de relations parents/enfants entre les cultivars (lignée généalogique)
-    - Visualisation graphique de l'arbre généalogique
-    - Options pour ajouter/modifier/supprimer des cultivars directement depuis le canva
-    - Canva utilisable dans le rendu. 
 ---
 
 ## 1. Enumération des types de produits et de leurs champs spécifiques
@@ -361,6 +343,24 @@ Canva vide à droite :
     - Pourcentage de chaque génétique (si dispo)
     - Généalogie (parents, lignée, phénotype/clone)
     - Code phénotype ou sélection (“Pheno” pour hunt)
+    # Introduction au systèmes de génétique avec canva de séléctions (Pour Producteur et type Fleurs uniquement):
+
+    Disponible depuis la bibliothèque de l'utilisateur :
+    Création d'arbe généalogique avec des relations parents/enfants entre les cultivars de sa propre bibliothèque.
+        - Gestion de projet PhenoHunt, nomination et création de cultivars spécifique
+    Un système de gestion des génétiques permet aux utilisateurs de créer et gérer une bibliothèque de cultivars, variétés et lignées.
+    [Interface]
+    bandeau lateral gauche contenant :
+        - onglet en haut : Bibliothèque (liste des cultivars enregistrés)
+        - onglet en haut : Projets PhenoHunt (gestion des cultivars en cours de développement, des canvas de sélection, etc...)
+        - Navigation dans les onglet jusqu'à sa bibliothèque de génétiques. Galerie ou liste (filtre etc...)
+    Canva vide à droite : 
+        - Drag and drop des cultivars depuis la bibliothèque vers le canva
+        - Création de relations parents/enfants entre les cultivars (lignée généalogique)
+        - Visualisation graphique de l'arbre généalogique
+        - Options pour ajouter/modifier/supprimer des cultivars directement depuis le canva
+        - Canva utilisable dans le rendu. 
+
 - **PipeLine : Données de culture**
     - Configurations :
         - Définition de la trame de la PipeLine :
