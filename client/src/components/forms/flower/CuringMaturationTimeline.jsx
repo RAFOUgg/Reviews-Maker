@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react'
-import TimelineGrid from '../../TimelineGrid'
-import PipelineToolbar from '../PipelineToolbar'
+import PipelineDragDropView from '../../pipeline/PipelineDragDropView'
 import { CURING_VALUES } from '../../../data/formValues'
 
 /**
- * CuringMaturationTimeline - Version enrichie avec Timeline et tous les champs du cahier des charges
- * Ajout: type maturation, emballage primaire, opacité récipient, volume occupé
+ * CuringMaturationTimeline - Version CDC conforme avec drag & drop
+ * Remplace l'ancienne implémentation TimelineGrid par PipelineDragDropView
  */
 export default function CuringMaturationTimeline({ data, onChange }) {
     // État pour les presets
@@ -14,11 +13,12 @@ export default function CuringMaturationTimeline({ data, onChange }) {
         return saved ? JSON.parse(saved) : []
     })
 
-    // Configuration Timeline pour curing (intervalles : jours, semaines, phases)
+    // Configuration Timeline pour curing
     const curingTimelineConfig = data.curingTimelineConfig || {
-        type: 'jour', // jour | semaine | phase
+        type: 'jour', // jour | semaine | mois
         start: '',
-        end: ''
+        end: '',
+        duration: null
     }
 
     // Données de la timeline curing
@@ -29,56 +29,60 @@ export default function CuringMaturationTimeline({ data, onChange }) {
         localStorage.setItem('curingPipelinePresets', JSON.stringify(presets))
     }, [presets])
 
-    // Champs de configuration générale (affichés dans la première cellule uniquement)
-    const curingGeneralConfigFields = [
-        // Type maturation
-        { key: 'typeMaturation', label: 'Type de maturation', icon: '❄️', type: 'select', options: CURING_VALUES.typeMaturation },
-
-        // Méthode séchage
-        { key: 'methodeSechage', label: 'Méthode de séchage', icon: '🔪', type: 'select', options: CURING_VALUES.methodeSechage },
-
-        // Type récipient
-        { key: 'typeRecipient', label: 'Type de récipient principal', icon: '🏺', type: 'select', options: CURING_VALUES.typeRecipient },
-
-        // Emballage primaire
-        { key: 'emballagePrimaire', label: 'Emballage/Ballotage primaire', icon: '📦', type: 'select', options: CURING_VALUES.emballagePrimaire },
-
-        // Opacité
-        { key: 'opaciteRecipient', label: 'Opacité du récipient', icon: '🌑', type: 'select', options: CURING_VALUES.opaciteRecipient },
-
-        // Volume occupé
-        { key: 'volumeOccupe', label: 'Volume occupé', icon: '📏', type: 'number', step: '0.01', placeholder: '500', min: 0 },
+    // Structure hiérarchisée du panneau latéral selon CDC
+    const sidebarContent = [
         {
-            key: 'volumeOccupeUnite', label: 'Unité volume', icon: '📐', type: 'select', options: [
-                { value: 'L', label: 'L (litres)' },
-                { value: 'mL', label: 'mL (millilitres)' }
+            id: 'general',
+            label: 'GÉNÉRAL',
+            icon: '⚙️',
+            items: [
+                { key: 'typeMaturation', label: 'Type maturation', icon: '❄️', type: 'select', options: CURING_VALUES.typeMaturation, defaultValue: 'froid' },
+                { key: 'methodeSechage', label: 'Méthode séchage', icon: '🔪', type: 'select', options: CURING_VALUES.methodeSechage, defaultValue: 'suspendus' },
+                { key: 'dureeCuring', label: 'Durée totale', icon: '⏱️', type: 'number', defaultValue: 14, placeholder: '14' },
+                { key: 'dureeCuringUnite', label: 'Unité durée', icon: '📅', type: 'select', options: [
+                    { value: 'jours', label: 'Jours' },
+                    { value: 'semaines', label: 'Semaines' },
+                    { value: 'mois', label: 'Mois' }
+                ], defaultValue: 'jours' }
             ]
         },
-
-        // Durée curing
-        { key: 'dureeCuring', label: 'Durée totale de curing', icon: '⏱️', type: 'number', placeholder: '14', min: 0 },
         {
-            key: 'dureeCuringUnite', label: 'Unité durée', icon: '📅', type: 'select', options: [
-                { value: 'jours', label: 'Jours' },
-                { value: 'semaines', label: 'Semaines' },
-                { value: 'mois', label: 'Mois' }
+            id: 'environnement',
+            label: 'ENVIRONNEMENT',
+            icon: '🌡️',
+            items: [
+                { key: 'temperature', label: 'Température (°C)', icon: '🌡️', type: 'number', defaultValue: 18, min: 0, max: 30 },
+                { key: 'humidite', label: 'Humidité (%)', icon: '💧', type: 'number', defaultValue: 62, min: 0, max: 100 }
+            ]
+        },
+        {
+            id: 'ballotage',
+            label: 'BALLOTAGE & EMBALLAGE',
+            icon: '📦',
+            items: [
+                { key: 'typeRecipient', label: 'Type récipient', icon: '🏺', type: 'select', options: CURING_VALUES.typeRecipient, defaultValue: 'verre' },
+                { key: 'emballagePrimaire', label: 'Emballage primaire', icon: '📦', type: 'select', options: CURING_VALUES.emballagePrimaire, defaultValue: 'aucun' },
+                { key: 'opaciteRecipient', label: 'Opacité récipient', icon: '🌑', type: 'select', options: CURING_VALUES.opaciteRecipient, defaultValue: 'opaque' },
+                { key: 'volumeOccupe', label: 'Volume occupé', icon: '📏', type: 'number', defaultValue: '', placeholder: '500' },
+                { key: 'volumeOccupeUnite', label: 'Unité volume', icon: '📐', type: 'select', options: [
+                    { value: 'L', label: 'L (litres)' },
+                    { value: 'mL', label: 'mL (millilitres)' }
+                ], defaultValue: 'mL' },
+                { key: 'ballotage', label: 'Ballotage effectué', icon: '🔄', type: 'select', options: [
+                    { value: 'oui', label: 'Oui (quotidien)' },
+                    { value: 'occasionnel', label: 'Occasionnel' },
+                    { value: 'non', label: 'Non' }
+                ], defaultValue: 'occasionnel' }
+            ]
+        },
+        {
+            id: 'observations',
+            label: 'OBSERVATIONS',
+            icon: '👃',
+            items: [
+                { key: 'observations', label: 'Observations odeur/texture', icon: '📝', type: 'textarea', defaultValue: '', placeholder: 'Notez vos observations...' }
             ]
         }
-    ]
-
-    // Champs éditables dans la timeline curing
-    const curingEditableFields = [
-        { key: 'temperature', label: 'Température (°C)', icon: '🌡️', type: 'number', min: 0, max: 30, step: 0.1 },
-        { key: 'humidite', label: 'Humidité (%)', icon: '💧', type: 'number', min: 0, max: 100 },
-        { key: 'conteneur', label: 'Type de récipient', icon: '🏺', type: 'select', options: CURING_VALUES.typeRecipient },
-        {
-            key: 'ballotage', label: 'Ballotage effectué', icon: '🔄', type: 'select', options: [
-                { value: 'oui', label: 'Oui (quotidien)' },
-                { value: 'occasionnel', label: 'Occasionnel' },
-                { value: 'non', label: 'Non' }
-            ]
-        },
-        { key: 'observations', label: 'Observations odeur/texture', icon: '👃', type: 'textarea', rows: 2, maxLength: 300 }
     ]
 
     // Handler pour modification de configuration timeline
@@ -90,7 +94,7 @@ export default function CuringMaturationTimeline({ data, onChange }) {
     }
 
     // Handler pour modification de données timeline curing
-    const handleCuringTimelineDataChange = (timestamp, field, value) => {
+    const handleCuringDataChange = (timestamp, field, value) => {
         const existingIndex = curingTimelineData.findIndex(d => d.timestamp === timestamp)
 
         if (existingIndex >= 0) {
@@ -111,77 +115,49 @@ export default function CuringMaturationTimeline({ data, onChange }) {
         }
     }
 
-    // Handlers pour PipelineToolbar
+    // Handlers pour presets
     const handleSavePreset = (preset) => {
         setPresets([...presets, preset])
     }
 
     const handleLoadPreset = (preset) => {
-        preset.fields.forEach(field => {
-            if (preset.data[field] !== undefined) {
-                onChange(field, preset.data[field])
-            }
-        })
-    }
-
-    const handleApplyToAll = (dataToApply) => {
-        const newData = curingTimelineData.map(cell => ({
-            ...cell,
-            ...dataToApply
-        }))
-        onChange('curingTimelineData', newData)
-    }
-
-    const handleApplyToSelection = (dataToApply) => {
-        console.log('Mode sélection activé pour curing, cliquez sur les cases cibles', dataToApply)
-    }
-
-    const getCurrentCellData = () => {
-        if (curingTimelineData.length === 0) return {}
-        return curingTimelineData[curingTimelineData.length - 1] || {}
+        if (preset.data) {
+            Object.entries(preset.data).forEach(([key, value]) => {
+                onChange(key, value)
+            })
+        }
     }
 
     return (
-        <div className="space-y-8">
-            {/* Timeline du curing avec configuration intégrée */}
-            <div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <span>📊</span> Pipeline de curing - Timeline interactive
+        <div className="space-y-6">
+            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
+                <h3 className="font-bold text-amber-900 dark:text-amber-100 mb-2 flex items-center gap-2">
+                    <span>🔥</span> Pipeline de curing : Timeline interactive CDC
                 </h3>
-                <p className="text-sm text-gray-600 mb-6 italic">
-                    📝 Visualisez l'évolution du curing dans le temps.
-                    Chaque case représente un moment (jour, semaine ou phase).
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                    📝 Glissez les contenus depuis le panneau latéral vers les cases de la timeline.
                     <br />
-                    🎯 <strong>Cliquez sur la PREMIÈRE case pour configurer les informations générales</strong> (type maturation, méthode séchage, récipient, etc.).
+                    🎯 <strong>Drag & drop</strong> : Sélectionnez un contenu à gauche et déposez-le sur une case.
                     <br />
-                    📊 Cliquez sur les autres cases pour documenter température, humidité, ballotage et observations à chaque étape.
+                    📊 <strong>Édition</strong> : Cliquez sur une case pour modifier ses données.
                 </p>
-
-                {/* Toolbar pour gérer presets et attribution masse */}
-                <PipelineToolbar
-                    currentCellData={getCurrentCellData()}
-                    onApplyToAll={handleApplyToAll}
-                    onApplyToSelection={handleApplyToSelection}
-                    onSavePreset={handleSavePreset}
-                    onLoadPreset={handleLoadPreset}
-                    presets={presets}
-                />
-
-                <TimelineGrid
-                    data={curingTimelineData}
-                    onChange={handleCuringTimelineDataChange}
-                    config={curingTimelineConfig}
-                    onConfigChange={handleCuringConfigChange}
-                    editableFields={curingEditableFields}
-                    generalConfigFields={curingGeneralConfigFields}
-                    generalConfigData={data}
-                    onGeneralConfigChange={onChange}
-                />
             </div>
 
+            <PipelineDragDropView
+                type="curing"
+                sidebarContent={sidebarContent}
+                timelineConfig={curingTimelineConfig}
+                timelineData={curingTimelineData}
+                onConfigChange={handleCuringConfigChange}
+                onDataChange={handleCuringDataChange}
+                presets={presets}
+                onSavePreset={handleSavePreset}
+                onLoadPreset={handleLoadPreset}
+            />
+
             {/* Note informative */}
-            <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl">
-                <p className="text-sm text-amber-800">
+            <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-r-xl">
+                <p className="text-sm text-amber-800 dark:text-amber-200">
                     <span className="font-semibold">ℹ️ Conseil:</span> Le curing est une étape cruciale qui développe les arômes et la qualité du produit final. Documentez précisément les paramètres pour reproduire vos meilleurs résultats.
                 </p>
             </div>
