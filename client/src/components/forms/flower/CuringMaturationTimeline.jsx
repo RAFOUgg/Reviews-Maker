@@ -39,11 +39,13 @@ export default function CuringMaturationTimeline({ data, onChange }) {
                 { key: 'typeMaturation', label: 'Type maturation', icon: '❄️', type: 'select', options: CURING_VALUES.typeMaturation, defaultValue: 'froid' },
                 { key: 'methodeSechage', label: 'Méthode séchage', icon: '🔪', type: 'select', options: CURING_VALUES.methodeSechage, defaultValue: 'suspendus' },
                 { key: 'dureeCuring', label: 'Durée totale', icon: '⏱️', type: 'number', defaultValue: 14, placeholder: '14' },
-                { key: 'dureeCuringUnite', label: 'Unité durée', icon: '📅', type: 'select', options: [
-                    { value: 'jours', label: 'Jours' },
-                    { value: 'semaines', label: 'Semaines' },
-                    { value: 'mois', label: 'Mois' }
-                ], defaultValue: 'jours' }
+                {
+                    key: 'dureeCuringUnite', label: 'Unité durée', icon: '📅', type: 'select', options: [
+                        { value: 'jours', label: 'Jours' },
+                        { value: 'semaines', label: 'Semaines' },
+                        { value: 'mois', label: 'Mois' }
+                    ], defaultValue: 'jours'
+                }
             ]
         },
         {
@@ -64,15 +66,19 @@ export default function CuringMaturationTimeline({ data, onChange }) {
                 { key: 'emballagePrimaire', label: 'Emballage primaire', icon: '📦', type: 'select', options: CURING_VALUES.emballagePrimaire, defaultValue: 'aucun' },
                 { key: 'opaciteRecipient', label: 'Opacité récipient', icon: '🌑', type: 'select', options: CURING_VALUES.opaciteRecipient, defaultValue: 'opaque' },
                 { key: 'volumeOccupe', label: 'Volume occupé', icon: '📏', type: 'number', defaultValue: '', placeholder: '500' },
-                { key: 'volumeOccupeUnite', label: 'Unité volume', icon: '📐', type: 'select', options: [
-                    { value: 'L', label: 'L (litres)' },
-                    { value: 'mL', label: 'mL (millilitres)' }
-                ], defaultValue: 'mL' },
-                { key: 'ballotage', label: 'Ballotage effectué', icon: '🔄', type: 'select', options: [
-                    { value: 'oui', label: 'Oui (quotidien)' },
-                    { value: 'occasionnel', label: 'Occasionnel' },
-                    { value: 'non', label: 'Non' }
-                ], defaultValue: 'occasionnel' }
+                {
+                    key: 'volumeOccupeUnite', label: 'Unité volume', icon: '📐', type: 'select', options: [
+                        { value: 'L', label: 'L (litres)' },
+                        { value: 'mL', label: 'mL (millilitres)' }
+                    ], defaultValue: 'mL'
+                },
+                {
+                    key: 'ballotage', label: 'Ballotage effectué', icon: '🔄', type: 'select', options: [
+                        { value: 'oui', label: 'Oui (quotidien)' },
+                        { value: 'occasionnel', label: 'Occasionnel' },
+                        { value: 'non', label: 'Non' }
+                    ], defaultValue: 'occasionnel'
+                }
             ]
         },
         {

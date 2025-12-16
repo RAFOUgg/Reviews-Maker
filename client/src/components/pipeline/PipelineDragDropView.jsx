@@ -27,14 +27,14 @@ export default function PipelineDragDropView({
     sidebarContent = [],
     timelineConfig = {},
     timelineData = [],
-    onConfigChange = () => {},
-    onDataChange = () => {},
+    onConfigChange = () => { },
+    onDataChange = () => { },
     generalFields = [],
     generalData = {},
-    onGeneralDataChange = () => {},
+    onGeneralDataChange = () => { },
     presets = [],
-    onSavePreset = () => {},
-    onLoadPreset = () => {}
+    onSavePreset = () => { },
+    onLoadPreset = () => { }
 }) {
     const [expandedSections, setExpandedSections] = useState({});
     const [draggedContent, setDraggedContent] = useState(null);
@@ -73,12 +73,12 @@ export default function PipelineDragDropView({
     // Générer les cases de la timeline
     const generateCells = () => {
         const { type: intervalType, start, end, duration } = timelineConfig;
-        
+
         if (intervalType === 'jour' && start && end) {
             const startDate = new Date(start);
             const endDate = new Date(end);
             const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
-            
+
             return Array.from({ length: days + 1 }, (_, i) => {
                 const date = new Date(startDate);
                 date.setDate(date.getDate() + i);
@@ -305,12 +305,12 @@ export default function PipelineDragDropView({
                                             onClick={() => setSelectedCell(cell.timestamp)}
                                             className={`
                                                 relative p-3 rounded-lg border-2 transition-all cursor-pointer
-                                                ${hasData 
-                                                    ? 'border-green-500 bg-green-500/20' 
+                                                ${hasData
+                                                    ? 'border-green-500 bg-green-500/20'
                                                     : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800'
                                                 }
-                                                ${selectedCell === cell.timestamp 
-                                                    ? 'ring-2 ring-blue-500 shadow-lg' 
+                                                ${selectedCell === cell.timestamp
+                                                    ? 'ring-2 ring-blue-500 shadow-lg'
                                                     : 'hover:border-blue-400 hover:shadow-md'
                                                 }
                                                 ${isFirst ? 'col-span-2 bg-purple-500/10 border-purple-500' : ''}
