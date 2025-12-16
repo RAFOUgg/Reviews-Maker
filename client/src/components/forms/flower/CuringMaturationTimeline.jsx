@@ -15,10 +15,20 @@ export default function CuringMaturationTimeline({ data, onChange }) {
 
     // Configuration Timeline pour curing
     const curingTimelineConfig = data.curingTimelineConfig || {
-        type: 'jour', // jour | semaine | mois
+        type: 'jour', // seconde | heure | jour | date | semaine | phase
         start: '',
         end: '',
-        duration: null
+        duration: null,
+        totalSeconds: null,
+        totalHours: null,
+        totalDays: null,
+        totalWeeks: null,
+        phases: [
+            { name: '🔪 Séchage', id: 'sechage' },
+            { name: '🏺 Début curing', id: 'curing-debut' },
+            { name: '⏳ Maturation', id: 'maturation' },
+            { name: '✨ Affinage', id: 'affinage' }
+        ]
     }
 
     // Données de la timeline curing

@@ -70,34 +70,69 @@ export default function PipelineDragDropView({
         setDraggedContent(null);
     };
 
-    // Générer les cases de la timeline
+    // Générer les cases de la timeline selon le type d'intervalle
     const generateCells = () => {
-        const { type: intervalType, start, end, duration } = timelineConfig;
+        const { type: intervalType, start, end, duration, totalSeconds, totalHours, totalDays, totalWeeks } = timelineConfig;
 
-        if (intervalType === 'jour' && start && end) {
+        // SECONDES (max 900s avec pagination)
+        if (intervalType === 'seconde' && totalSeconds) {
+            const count = Math.min(totalSeconds, 900); // Max 900s
+            return Array.from({ length: count }, (_, i) => ({
+                timestamp: Date.now() + (i * 1000),
+                label: `${i}s`,
+                seconds: i
+            }));
+        }
+
+        // HEURES (max 336h = 14 jours)
+        if (intervalType === 'heure' && totalHours) {
+            const count = Math.min(totalHours, 336); // Max 336h
+            return Array.from({ length: count }, (_, i) => ({
+                timestamp: Date.now() + (i * 60 * 60 * 1000),
+                label: `${i}h`,
+                hours: i
+            }));
+        }
+
+        // JOURS avec nombre total (max 365 jours)
+        if (intervalType === 'jour' && totalDays) {
+            const count = Math.min(totalDays, 365); // Max 365 jours
+            return Array.from({ length: count }, (_, i) => ({
+                timestamp: Date.now() + (i * 24 * 60 * 60 * 1000),
+                label: `J${i + 1}`,
+                day: i + 1
+            }));
+        }
+
+        // DATES avec début et fin (calcul automatique + pagination si > 365 jours)
+        if (intervalType === 'date' && start && end) {
             const startDate = new Date(start);
             const endDate = new Date(end);
-            const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+            const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+            const count = Math.min(days, 365); // Pagination si > 365 jours
 
-            return Array.from({ length: days + 1 }, (_, i) => {
+            return Array.from({ length: count }, (_, i) => {
                 const date = new Date(startDate);
                 date.setDate(date.getDate() + i);
                 return {
                     timestamp: date.getTime(),
-                    label: `J${i}`,
-                    date: date.toISOString().split('T')[0]
+                    label: date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
+                    date: date.toISOString().split('T')[0],
+                    day: i + 1
                 };
             });
         }
 
-        if (intervalType === 'semaine' && duration) {
-            return Array.from({ length: duration }, (_, i) => ({
+        // SEMAINES avec nombre total
+        if (intervalType === 'semaine' && totalWeeks) {
+            return Array.from({ length: totalWeeks }, (_, i) => ({
                 timestamp: Date.now() + (i * 7 * 24 * 60 * 60 * 1000),
                 label: `S${i + 1}`,
                 week: i + 1
             }));
         }
 
+        // PHASES prédéfinies selon type de pipeline
         if (intervalType === 'phase' && timelineConfig.phases?.length) {
             return timelineConfig.phases.map((phase, i) => ({
                 timestamp: Date.now() + (i * 24 * 60 * 60 * 1000),
@@ -197,7 +232,7 @@ export default function PipelineDragDropView({
                         </div>
                     </div>
 
-                    {/* Configuration inline */}
+                    {/* Configuration inline - Dynamique selon type d'intervalle */}
                     <div className="grid grid-cols-4 gap-3">
                         <div>
                             <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
@@ -208,13 +243,71 @@ export default function PipelineDragDropView({
                                 onChange={(e) => onConfigChange('type', e.target.value)}
                                 className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
                             >
+                                <option value="seconde">⏱️ Secondes</option>
+                                <option value="heure">🕐 Heures</option>
                                 <option value="jour">🗓️ Jours</option>
-                                <option value="semaine">📅 Semaines</option>
+                                <option value="date">📅 Dates</option>
+                                <option value="semaine">📆 Semaines</option>
                                 <option value="phase">🌱 Phases</option>
                             </select>
                         </div>
 
+                        {/* SECONDES - Max 900s */}
+                        {timelineConfig.type === 'seconde' && (
+                            <div className="col-span-3">
+                                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                                    Nombre de secondes (max 900s)
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="900"
+                                    value={timelineConfig.totalSeconds || ''}
+                                    onChange={(e) => onConfigChange('totalSeconds', parseInt(e.target.value))}
+                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Ex: 300"
+                                />
+                            </div>
+                        )}
+
+                        {/* HEURES - Max 336h */}
+                        {timelineConfig.type === 'heure' && (
+                            <div className="col-span-3">
+                                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                                    Nombre d'heures (max 336h)
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="336"
+                                    value={timelineConfig.totalHours || ''}
+                                    onChange={(e) => onConfigChange('totalHours', parseInt(e.target.value))}
+                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Ex: 72"
+                                />
+                            </div>
+                        )}
+
+                        {/* JOURS - Max 365 jours */}
                         {timelineConfig.type === 'jour' && (
+                            <div className="col-span-3">
+                                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                                    Nombre de jours (max 365)
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="365"
+                                    value={timelineConfig.totalDays || ''}
+                                    onChange={(e) => onConfigChange('totalDays', parseInt(e.target.value))}
+                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Ex: 90"
+                                />
+                            </div>
+                        )}
+
+                        {/* DATES - Date début + Date fin avec calcul automatique */}
+                        {timelineConfig.type === 'date' && (
                             <>
                                 <div>
                                     <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
@@ -238,11 +331,22 @@ export default function PipelineDragDropView({
                                         className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
+                                {timelineConfig.start && timelineConfig.end && (
+                                    <div>
+                                        <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                                            Durée calculée
+                                        </label>
+                                        <div className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-900 dark:text-white">
+                                            {Math.ceil((new Date(timelineConfig.end) - new Date(timelineConfig.start)) / (1000 * 60 * 60 * 24)) + 1} jours
+                                        </div>
+                                    </div>
+                                )}
                             </>
                         )}
 
+                        {/* SEMAINES - Nombre de semaines */}
                         {timelineConfig.type === 'semaine' && (
-                            <div>
+                            <div className="col-span-3">
                                 <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                                     Nombre de semaines
                                 </label>
@@ -250,10 +354,23 @@ export default function PipelineDragDropView({
                                     type="number"
                                     min="1"
                                     max="52"
-                                    value={timelineConfig.duration || ''}
-                                    onChange={(e) => onConfigChange('duration', parseInt(e.target.value))}
+                                    value={timelineConfig.totalWeeks || ''}
+                                    onChange={(e) => onConfigChange('totalWeeks', parseInt(e.target.value))}
                                     className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Ex: 12"
                                 />
+                            </div>
+                        )}
+
+                        {/* PHASES - Prédéfinies selon type de pipeline */}
+                        {timelineConfig.type === 'phase' && (
+                            <div className="col-span-3">
+                                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                                    Phases prédéfinies
+                                </label>
+                                <div className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-900 dark:text-white">
+                                    {type === 'culture' ? '12 phases (Graine → Récolte)' : '4 phases (Séchage → Affinage)'}
+                                </div>
                             </div>
                         )}
 
@@ -265,11 +382,39 @@ export default function PipelineDragDropView({
                         </div>
                     </div>
 
-                    {timelineConfig.type === 'jour' && (!timelineConfig.start || !timelineConfig.end) && (
+                    {/* Messages d'aide selon type d'intervalle */}
+                    {timelineConfig.type === 'date' && (!timelineConfig.start || !timelineConfig.end) && (
                         <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
                             <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
                             <p className="text-xs text-yellow-800 dark:text-yellow-300">
-                                Mode Jours : Date début ET date fin sont obligatoires
+                                Mode Dates : Date début ET date fin sont obligatoires
+                            </p>
+                        </div>
+                    )}
+
+                    {timelineConfig.type === 'seconde' && (!timelineConfig.totalSeconds || timelineConfig.totalSeconds > 900) && (
+                        <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
+                            <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                            <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                                Maximum 900 secondes (pagination automatique si dépassement)
+                            </p>
+                        </div>
+                    )}
+
+                    {timelineConfig.type === 'heure' && (!timelineConfig.totalHours || timelineConfig.totalHours > 336) && (
+                        <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
+                            <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                            <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                                Maximum 336 heures (14 jours)
+                            </p>
+                        </div>
+                    )}
+
+                    {timelineConfig.type === 'jour' && (!timelineConfig.totalDays || timelineConfig.totalDays > 365) && (
+                        <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
+                            <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                            <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                                Maximum 365 jours (pagination automatique si dépassement)
                             </p>
                         </div>
                     )}

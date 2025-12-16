@@ -15,11 +15,28 @@ export default function CulturePipelineTimeline({ data, onChange }) {
 
     // Configuration Timeline
     const timelineConfig = data.cultureTimelineConfig || {
-        type: 'jour', // jour | semaine | phase
+        type: 'jour', // seconde | heure | jour | date | semaine | phase
         start: '',
         end: '',
         duration: null,
-        phases: []
+        totalSeconds: null,
+        totalHours: null,
+        totalDays: null,
+        totalWeeks: null,
+        phases: [
+            { name: '🌰 Graine (J0)', id: 'graine' },
+            { name: '🌱 Germination', id: 'germination' },
+            { name: '🌿 Plantule', id: 'plantule' },
+            { name: '🌾 Début croissance', id: 'croissance-debut' },
+            { name: '🌳 Milieu croissance', id: 'croissance-milieu' },
+            { name: '🌴 Fin croissance', id: 'croissance-fin' },
+            { name: '🌸 Début stretch', id: 'stretch-debut' },
+            { name: '💐 Milieu stretch', id: 'stretch-milieu' },
+            { name: '🌺 Fin stretch', id: 'stretch-fin' },
+            { name: '🌼 Début floraison', id: 'floraison-debut' },
+            { name: '🌻 Milieu floraison', id: 'floraison-milieu' },
+            { name: '🏵️ Fin floraison', id: 'floraison-fin' }
+        ]
     }
 
     // Données de la timeline (array d'objets {timestamp, date, ...fields})
