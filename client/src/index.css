@@ -91,7 +91,7 @@ h2 {
     color: var(--text-tertiary);
 }
 
-/* Force le contraste sur les boutons */
+/* Boutons */
 button {
     transition: all 0.3s ease;
 }
@@ -99,6 +99,8 @@ button {
 button:hover {
     opacity: 0.9;
 }
+
+/* Fin du fichier */
     --accent: #EC4899;
     /* Pink INTENSE */
     --accent-light: #F472B6;
