@@ -79,7 +79,7 @@ export default function LoginPage() {
                     <div className="relative overflow-hidden rounded-3xl shadow-2xl mb-6">
                         {/* Background gradient */}
                         <div className="absolute inset-0 bg-gradient-to-br from-white/95 to-white/90"></div>
-                        
+
                         {/* Liquid glass effect */}
                         <div className="absolute inset-0 backdrop-blur-xl"></div>
 
@@ -165,7 +165,7 @@ export default function LoginPage() {
                     >
                         {/* Background gradient */}
                         <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
-                        
+
                         {/* Liquid glass effect */}
                         <div className="absolute inset-0 backdrop-blur-xl bg-white/10"></div>
 
