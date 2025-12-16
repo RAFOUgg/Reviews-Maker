@@ -82,13 +82,13 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
                                         key={id}
                                         onClick={() => updateConfig('method', id)}
                                         className={`p-4 rounded-lg border-2 transition-all ${config.method === id
-                                            ? 'border-blue-500 bg-blue-500/20'
-                                            : 'border-white/20 hover:border-white/40'
+                                            ? 'border-blue-500 bg-blue-500/20 shadow-lg'
+                                            : 'border-gray-600 hover:border-blue-400 bg-gray-800/50'
                                             }`}
                                     >
-                                        <div className="text-3xl mb-2">{method.icon}</div>
-                                        <div className="text-sm font-medium">{method.name}</div>
-                                        <div className="text-xs opacity-60 mt-1">{method.description}</div>
+                                        <div className="text-4xl mb-2">{method.icon}</div>
+                                        <div className="text-base font-bold text-white">{method.name}</div>
+                                        <div className="text-sm text-gray-300 mt-1">{method.description}</div>
                                     </button>
                                 ))}
                             </div>

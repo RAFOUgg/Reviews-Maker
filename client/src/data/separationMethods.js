@@ -4,33 +4,53 @@
  */
 
 export const SEPARATION_METHODS = {
-    manual: {
-        id: 'manual',
-        label: 'Manuelle',
-        icon: '✋',
-        description: 'Séparation manuelle des trichomes',
-        fields: ['quality', 'time']
-    },
-    drySift: {
-        id: 'drySift',
-        label: 'Tamisage à sec (Dry-Sift)',
-        icon: '🥄',
-        description: 'Tamisage mécanique sans solvant',
-        fields: ['meshSizes', 'passes', 'quality', 'time']
-    },
-    iceWater: {
-        id: 'iceWater',
-        label: 'Eau/Glace (Ice-O-Lator)',
+    ice_water: {
+        id: 'ice_water',
+        name: 'Eau/Glace (Ice-O-Lator)',
         icon: '❄️',
         description: 'Extraction par agitation dans eau glacée',
-        fields: ['waterTemp', 'meshSizes', 'passes', 'iceRatio', 'quality', 'time']
+        fields: [
+            { key: 'waterTemp', label: 'Température eau', type: 'number', unit: '°C', min: 0, max: 10, required: true },
+            { key: 'passes', label: 'Nombre de passes', type: 'number', min: 1, max: 10, required: true },
+            { key: 'iceRatio', label: 'Ratio glace/eau', type: 'select', options: ['1:1', '2:1', '3:1'], required: true },
+            { key: 'duration', label: 'Durée totale', type: 'number', unit: 'min', required: true },
+            { key: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Observations...', required: false }
+        ]
+    },
+    dry_sift: {
+        id: 'dry_sift',
+        name: 'Tamisage à sec (Dry-Sift)',
+        icon: '🥄',
+        description: 'Tamisage mécanique sans solvant',
+        fields: [
+            { key: 'passes', label: 'Nombre de passes', type: 'number', min: 1, max: 10, required: true },
+            { key: 'duration', label: 'Durée totale', type: 'number', unit: 'min', required: true },
+            { key: 'temperature', label: 'Température', type: 'number', unit: '°C', min: -20, max: 30, required: false },
+            { key: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Observations...', required: false }
+        ]
+    },
+    manual: {
+        id: 'manual',
+        name: 'Manuelle',
+        icon: '✋',
+        description: 'Séparation manuelle des trichomes',
+        fields: [
+            { key: 'duration', label: 'Durée totale', type: 'number', unit: 'min', required: true },
+            { key: 'method', label: 'Méthode utilisée', type: 'text', placeholder: 'Décrivez la méthode...', required: true },
+            { key: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Observations...', required: false }
+        ]
     },
     other: {
         id: 'other',
-        label: 'Autre méthode',
+        name: 'Autre méthode',
         icon: '🔧',
         description: 'Méthode personnalisée',
-        fields: ['customMethod', 'quality', 'time']
+        fields: [
+            { key: 'customMethod', label: 'Nom de la méthode', type: 'text', required: true },
+            { key: 'description', label: 'Description', type: 'textarea', placeholder: 'Décrivez le processus...', required: true },
+            { key: 'duration', label: 'Durée totale', type: 'number', unit: 'min', required: false },
+            { key: 'notes', label: 'Notes additionnelles', type: 'textarea', placeholder: 'Observations...', required: false }
+        ]
     }
 };
 

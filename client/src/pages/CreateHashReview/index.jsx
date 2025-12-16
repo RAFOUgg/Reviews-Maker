@@ -23,6 +23,7 @@ import CuringMaturationSection from '../../components/reviews/sections/CuringMat
 // Import hooks
 import { useHashForm } from './hooks/useHashForm'
 import { usePhotoUpload } from './hooks/usePhotoUpload'
+import { useAccountPermissions } from '../../hooks/useAccountPermissions'
 
 /**
  * CreateHashReview - Formulaire création review Hash (version modulaire)
@@ -33,6 +34,7 @@ export default function CreateHashReview() {
     const toast = useToast()
     const { id } = useParams()
     const { user, isAuthenticated } = useStore()
+    const { canAccessSection, filterSections, getPipelinePermissions, accountType } = useAccountPermissions()
 
     const {
         formData,
@@ -60,9 +62,9 @@ export default function CreateHashReview() {
     }, [photos])
 
     // Définition des 10 sections spécifiques au Hash
-    const sections = [
+    const allSections = [
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
-        { id: 'separation', icon: '🔬', title: 'Pipeline Séparation' },
+        { id: 'separation', icon: '🔬', title: 'Pipeline Séparation', premium: true },
         { id: 'analytics', icon: '⚗️', title: 'Données Analytiques' },
         { id: 'visual', icon: '👁️', title: 'Visuel & Technique' },
         { id: 'odeurs', icon: '👃', title: 'Odeurs' },
@@ -72,6 +74,9 @@ export default function CreateHashReview() {
         { id: 'curing', icon: '🔥', title: 'Curing & Maturation' },
         { id: 'experience', icon: '🧪', title: 'Expérience d\'utilisation' }
     ]
+
+    // Filtrer sections selon permissions
+    const sections = filterSections(allSections)
 
     const currentSectionData = sections[currentSection]
 

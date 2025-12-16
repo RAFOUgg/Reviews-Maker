@@ -105,8 +105,6 @@ export default function TextureSection({ productType, data = {}, onChange }) {
         onChange(textureData);
     }, [hardness, density, malleability, elasticity, stickiness, melting, residue, friability, viscosity, productType]);
 
-    const purityScore = calculatePurityScore();
-
     return (
         <div className="space-y-8 p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50">
 
