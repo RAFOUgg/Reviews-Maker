@@ -4,19 +4,26 @@
 
 #### Apparence de l'application : 
 [FRONT-END]
-Page principal (terpologie.eu): 
 
-HomePage avec accès aux fonctionnalités principales :
-- Branding (home) : 
-    - Logo Terpologie en haut à gauche (cliquable, redirige vers home)
-- Menu de profil en haut à droite : 
-        - Mon compte : Profil & paramètres
-        - Ma bibliothèque : Reviews et préférences
-        - Statistiques
-    - Bouton "Créer une review" bien visible au centre de la page
-    - Section "Mes reviews récentes" avec aperçu des dernières reviews créées
-    - Section "Statistiques rapides" : nombre total de reviews, types de produits les plus évalués, etc...
+    BANDEAU UNIVERSEL EN HAUT DE PAGE :
+    - Branding (home) : 
+        - Logo Terpologie en haut à gauche (cliquable, redirige vers home)
+    - Menu de profil en haut à droite : 
+            - Mon compte : Profil & paramètres
+            - Ma bibliothèque : Reviews et préférences
+            - Statistiques
     - Pied de page avec liens vers CGU, Politique de confidentialité, Contact, Réseaux sociaux
+
+Pop-up RDR récurente : 
+- Affichage d'un pop-up de rappel RDR (Responsibility, Disclosure, Regulation) à chaque venu sur le site. Validation d'âge légal obligatoire (>18/21 ans selon pays) pour accéder au contenu.
+    - Bouton "J'ai +18 ans" pour valider l'âge et fermer le pop-up
+    - Lien vers la politique de confidentialité et les conditions d'utilisation
+
+
+Page principal (terpologie.eu): 
+HomePage avec accès aux fonctionnalités principales :
+    - Section "Mes reviews récentes" avec aperçu des dernières reviews créées (uniquement pour utilisateur déjà connecté)
+
 - Création d'une reviews via les 4 boutons : 
     - Créer une review Fleurs
     - Créer une review Hash
@@ -25,8 +32,6 @@ HomePage avec accès aux fonctionnalités principales :
 - Galerie Publique 
     - Filtres par données des produits, date, popularité etc..
 
-Pop-up RDR récurente : 
-- Affichage d'un pop-up de rappel RDR (Responsibility, Disclosure, Regulation) à chaque venu sur le site. 
 
 #### Thèmes et design :
 Par defaut : Mode clair/sombre (système de détection automatique selon préférence OS avec option de forçage manuel dans les paramètres)
@@ -90,7 +95,7 @@ Depuis les paramètres :
 - Système de double authantification (2FA) via application d'authentification (Mail, Google Authenticator, Authy, etc...) 
 - Gestion des sessions actives (liste des appareils connectés, possibilité de déconnecter un appareil depuis paramètre de compte)
 
-[PRODUCTEUR_IINFLUENCEUR] :
+[PRODUCTEUR_INFLUENCEUR] :
 
 # Vérification d'âge légal :
 
@@ -280,23 +285,46 @@ Utiliser les unités du système international (SI) lorsque c’est possible (g,
 
 # Introduction aux PipeLines :
 
-Les PipeLines sont des systèmes de saisie structurée permettant aux utilisateurs de documenter les différentes étapes de production, culture, extraction, conservation ou préparation de leurs produits. 
+Les PipeLines sont des systèmes de saisie structurée permettant aux utilisateurs de documenter les différentes étapes de production, culture, sepération/extraction, purification, conservation ou les préparation de leurs produits commestibles. 
 
-Chaque PipeLine est adaptée au type de produit (fleurs, hash, concentrés, comestibles) et permet une saisie détaillée et organisée de certaines des données pertinentes.
-Les PipeLine permettent d'avoir des reviews et fiches technique évolutives et complètes, reflétant fidèlement le processus de production et les caractéristiques du produit final. Les producteur peuvent avoir des exports GIF pour refleter l'évolution de leur culture, et les influenceurs peuvent montrer les étapes de curing ou de préparation de leurs comestibles.
+"Une culture ou fabrication/maturation de résine n'est pas toutes simple et récitable en quelque ligne, en plusieurs mois il peut se passer des milliers d'actions sur un plant de cannabis, de la germination à la récolte, en passant par la croissance, le stretch, la floraison, le séchage et le curing. Chaque étape peut influencer le produit final de manière significative. C'est pour cela qu'il doit être possible non pas de faire une review en 2D, mais en 3D, le plan, et le temps."
 
-"Chaque infos est définissable, et modifiable à un moment de la PipeLine. Chaque PipeLine permet de définir sa trame (type et temps d'une case : seconde, heure, mois phase, etc...). J'aimerais reprendre le principe visuel du nombre de commit de github. On voit (dans ce cas) les 365 case équivalante aux 365 jours de l'année. Chaque jours contient des infos (pour github c'est le nombre de commit). Mais dans notre projet, chaque "case" jours, semaines, mois ou phase / autres, contiendras des données et informations. Pour chaque PipeLine, ce n'est plus un simple détails des données et statistiques mais une vraie tracabilité évolutive et représentative des actions évènements."
+Chaque PipeLine est adaptée au type de produit (fleurs, hash, concentrés, comestibles) et permet une saisie détaillée et organisée de certaines voir toutes les données pertinentes.
+Les PipeLine permettent d'avoir des reviews et fiches technique évolutives et complètes, reflétant fidèlement le processus de production et les caractéristiques du produit final. Les producteur peuvent avoir des exports GIF depuis export maker pour utiliser à 100% leurs PipeLine pour refleter l'évolution de leur culture et curing nottament, et les influenceurs peuvent montrer les étapes de curing ou de préparation de leurs comestibles.
 
-"Lorsque on choisi :
-- jours : date debut et fin obligatoire
-- Semaines : semaine début obligatoire et fin facultatif
-- Phases : Phase prédéfinit selon type de PipeLine
+Concept visuel des PipeLines :
 
-Jours : chaque case correspond à un jours
-Semaines : chaque case représente S1, S2 Sn ...
-Phase : Une case pour chacune des 12 phases prédéfinis"
-"Une culture ou fabrication/maturation de résine n'est pas toutes simple et récitable ene quelque ligne, en plusieurs mois il peut se passer des milliers d'actions sur un plant de cannabis, de la germination à la récolte, en passant par la croissance, le stretch, la floraison, le séchage et le curing. Chaque étape peut influencer le produit final de manière significative. C'est pour cela qu'il doit être possible non pas de faire une review en 2D, mais en 3D, le plan, et le temps.
+┌─────────────────────────────────────────────────────────────────┐
+│                        PipeLine ***                             │
+├─────────────────────────────────────────────────────────────────┤
+│ (nombre de secondes,heures, jours, mois, phases, dates)         │
+│ _______________________________________________________________ │
+│            │☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ +             │
+│            │                                                    │
+│   Contenus │                                                    │
+│     et     │                                                    │
+│    données │                                                    │ 
+└─────────────────────────────────────────────────────────────────┘
+"Lorsque on choisi en haut la trame de la PipeLine (secondes, heures, jours, phases etc...), la partie du bas s'adapte automatiquement pour afficher les cases correspondantes à la trame choisie. :
+- secondes : nombre de secondes total de la PipeLine (max 900s pagination car trop gros)
+- Heures : nombre d'heures total de la PipeLine (max 336h)
+- jours : nombre de jours total de la PipeLine (max 365 jours)
+- Dates : date de début et date de fin, avec calcul automatique du nombre de jours entre les 2 dates. Pagination si plus de 365 jours.
+- Semaines : nombre de semaines total de la PipeLine
+- Phases : Phase prédéfinit selon type de PipeLine (nombre de phases variable selon type de PipeLine mais prédéfinit dans l'application)
 
+Au bout de toutes les cases il est possible d'ajouter des étapes supplémentaires (+) pour allonger la PipeLine si besoin.
+
+L'utilisateur déplace les contenus et données spécifiques rangée par sections hierarchisée dans le volet latéral gauche,  à chaque étape de la PipeLine dans les cases correspondantes en droite.
+
+A chaque case correspondante à une étape de la PipeLine, l'utilisateur peut aussi cliquer pour ouvrir un menu contextuel lui permettant de saisir les données spécifiques à cette étape (via des menus déroulants, boutons, choix multiples, etc...).
+
+Chaque formulaire de saisie est adapté au type de PipeLine et permet à l'utilisateur de sauvegardé ses préréglages pour les réutiliser rapidement dans d'autres étapes ou d'autres PipeLines du même type.
+
+Depuis la vue principale de la PipeLine, l'utilisateur peut visualiser un résumé des données saisies pour chaque étape (icônes, couleurs, graphiques miniatures, etc...) pour avoir une vue d'ensemble rapide de son processus de production. 
+Il à accès à un système de séléction lui permettant d'assigner rapidement une masse de donnée à plusieurs étapes en une seule fois (ex: même arrosage/engraissage/lumière/ventilation/etc... sur plusieurs jours/phases etc...), les préréglage sont sauvegardé dans la bibliothèque utilisateur pour une réutilisation rapide depuis le créateur de reviews.
+
+---
 
 # Introduction au systèmes de génétique avec canva de séléctions (Pour Producteur et type Fleurs uniquement):
 
@@ -334,19 +362,11 @@ Canva vide à droite :
     - Pourcentage de chaque génétique (si dispo)
     - Généalogie (parents, lignée, phénotype/clone)
     - Code phénotype ou sélection (“Pheno” pour hunt)
-- **PipeLine GLOBAL : Données de culture**
-    Système de saisie structuré pour producteurs avec PipeLine complète.
-    Pipeline :
+- **PipeLine : Données de culture**
     - Configurations :
-        - Définition de la trame de la PipeLine (intervalles : phase (0day=graine, Germination, Plantule, debut/milieu/fin de croissance, debut/milieu/fin du stretch, debut/milieu/fin de floraison.))
-            - Définition d'un début et d'une fin de culture.
-            - En mode semaine : permettre d'ajouter les semaine une par une, commme une journal de bord.
-
-        - Période de culture (dates début/fin/durée/saisons)
-    - Fonctionnement de la PiepeLine :
-        - Saisie des données à chaque étape (J+X, semaine Y, saison, phase Z etc...)
-        - Possibilité d’ajouter/supprimer des étapes custom (données modifiables)
-        - Champs custom par étape (notes (commentaire 500 caractères), ajouts / modification d'une données de la review)
+        - Définition de la trame de la PipeLine :
+        Trames possibles : heures, jours, dates, semaines, mois, phases
+            - Phases : 0day = Graine, Germination, Plantule, Debut/Milieu/Fin de Croissance, Debut/Milieu/Fin du Stretch, Debut/Milieu/Fin de Floraison.
     - Données modifiables :       
         [GENERAL]
         - Définition des phases (si pipeline par phase choisie)
@@ -375,6 +395,7 @@ Canva vide à droite :
             - Fréquence d'application (seconde, minute, heure, jour, semaine)
         - Lumière : 
             - Type de lampe (LED, HPS, CFL, Naturel, Mixte, etc.)
+            - PDF ou IMAGE du spectre 1 max
             - Type de spectre (complet, bleu, rouge, etc.) si dispo
             - Distance lampe/plante (cm/m/pieds etc...)
             - Puissance totale (W)
@@ -447,7 +468,6 @@ Canva vide à droite :
         - Début des effets (immédiat, différé, etc.)
         - Durée des effets (courte/moyenne/longue)
         - Usage préféré (soir, journée, seul, social, médical)
-    
 - **🔥 PipeLine CURING MATURATION :** 
 - Configurations :
         - Définition de la trame de la PipeLine (intervalles : seconde, minute, heures, jour, semaine, mois)
@@ -459,7 +479,7 @@ Canva vide à droite :
     - Emballage/Ballotage primaire : (celophane, papier cuisson, aliminium, paper hash, sac à viade, congelation, sous vide(complète par machine, partiel manuellement), autre)
     - Opacité du recipient de curing (opaque, semi-opaque, transparent, ambré, etc...)
     - Volume ocupé par le produit dans le recipient (L/mL)
-    - Modification des testes : 
+    - Modification des notes : 
         - Visuel & Technique
         - Odeurs
         - Goûts
@@ -479,7 +499,7 @@ Canva vide à droite :
 **Système de saisie structuré pour producteurs avec PipeLine complète.**
 Pipeline :
 - Configurations :
-        - Définition de la trame de la PipeLine (intervalles : s, m, h)
+        - Définition de la trame de la PipeLine (intervalles : secondes, minutes, heures)
     - Méthode de séparation (manuelle, tamisage à sec, eau/glace, autre)
     - Nombre de passes (si eau/glace)
     - Température de l’eau (si eau/glace)
@@ -534,8 +554,8 @@ Avec pour chacun des valeurs et données associées (température, durée, solva
         - Usage préféré (soir, journée, seul, social, médical)
 - **🔥 PipeLine CURING MATURATION :** 
 - Configurations :
-        - Définition de la trame de la PipeLine (intervalles : s, m, h)
-        - Durée de curing (jours/semaines/mois selon trame choisie)
+        - Définition de la trame de la PipeLine (intervalles : seconde, minute, heures, jour, semaine, mois)
+        - Durée de curing (trame choisie)
     - Type de maturation/curing (froid <5°C/ chaud >5°C)
     - Température de curing (°C)
     - Humidité relative dans recipient (%)
@@ -543,6 +563,11 @@ Avec pour chacun des valeurs et données associées (température, durée, solva
     - Emballage/Ballotage primaire : (celophane, papier cuisson, aliminium, paper hash, sac à viade, congelation, sous vide(complète par machine, partiel manuellement), autre)
     - Opacité du recipient de curing (opaque, semi-opaque, transparent, ambré, etc...)
     - Volume ocupé par le produit dans le recipient (L/mL)
+    - Modification des notes : 
+        - Visuel & Technique
+        - Odeurs
+        - Goûts
+        - Effets ressentis
  
 ---
 
@@ -556,7 +581,7 @@ Avec pour chacun des valeurs et données associées (température, durée, solva
     - Photo (1-4)*
 - **🔬 Pipeline Extraction**
 - Configurations :
-        - Définition de la trame de la PipeLine (intervalles : s, m, h)
+        - Définition de la trame de la PipeLine (intervalles : secondes, minutes, heures)
     - Méthode d'extraction - Vous devez spécifier les cultivars avant de définir les étapes du pipeline
 "Extraction à l'éthanol (EHO)Extraction à l'alcool isopropylique (IPA)Extraction à l'acétone (AHO)Extraction au butane (BHO)Extraction a l'isobutane (IHO)Extraction au propane (PHO)Extraction à l'hexane (HHO)Extraction aux huiles végétales (coco, olive)Extraction au CO₂ supercritiqueAutrePressage à chaud (Rosin)Pressage à froidExtraction par ultrasons (UAE)Extraction assistée par micro-ondes (MAE)Extraction avec tensioactifs (Tween 20)Autre"
 Pipeline de purification : 
@@ -604,8 +629,8 @@ Choisir des méthode + définir des paramètres associés :
         - Usage préféré (soir, journée, seul, social, médical)
 - **🔥 PipeLine CURING MATURATION :** 
 - Configurations :
-        - Définition de la trame de la PipeLine (intervalles : s, m, h)
-        - Durée de curing (jours/semaines/mois selon trame choisie)
+        - Définition de la trame de la PipeLine (intervalles : seconde, minute, heures, jour, semaine, mois)
+        - Durée de curing (trame choisie)
     - Type de maturation/curing (froid <5°C/ chaud >5°C)
     - Température de curing (°C)
     - Humidité relative dans recipient (%)
@@ -613,6 +638,11 @@ Choisir des méthode + définir des paramètres associés :
     - Emballage/Ballotage primaire : (celophane, papier cuisson, aliminium, paper hash, sac à viade, congelation, sous vide(complète par machine, partiel manuellement), autre)
     - Opacité du recipient de curing (opaque, semi-opaque, transparent, ambré, etc...)
     - Volume ocupé par le produit dans le recipient (L/mL)
+    - Modification des notes : 
+        - Visuel & Technique
+        - Odeurs
+        - Goûts
+        - Effets ressentis
 
 ---
 
