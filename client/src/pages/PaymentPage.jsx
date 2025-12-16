@@ -39,7 +39,7 @@ export default function PaymentPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const accountType = searchParams.get('type');
-    
+
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('card'); // card | sepa | paypal
@@ -153,11 +153,10 @@ export default function PaymentPage() {
                         <div className="space-y-3 mb-6">
                             <button
                                 onClick={() => setPaymentMethod('card')}
-                                className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${
-                                    paymentMethod === 'card'
+                                className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${paymentMethod === 'card'
                                         ? 'border-green-600 bg-green-50 dark:bg-green-900/20'
                                         : 'border-gray-300 dark:border-gray-600'
-                                }`}
+                                    }`}
                             >
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
@@ -167,11 +166,10 @@ export default function PaymentPage() {
 
                             <button
                                 onClick={() => setPaymentMethod('sepa')}
-                                className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${
-                                    paymentMethod === 'sepa'
+                                className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${paymentMethod === 'sepa'
                                         ? 'border-green-600 bg-green-50 dark:bg-green-900/20'
                                         : 'border-gray-300 dark:border-gray-600'
-                                }`}
+                                    }`}
                             >
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
@@ -181,11 +179,10 @@ export default function PaymentPage() {
 
                             <button
                                 onClick={() => setPaymentMethod('paypal')}
-                                className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${
-                                    paymentMethod === 'paypal'
+                                className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${paymentMethod === 'paypal'
                                         ? 'border-green-600 bg-green-50 dark:bg-green-900/20'
                                         : 'border-gray-300 dark:border-gray-600'
-                                }`}
+                                    }`}
                             >
                                 <span className="text-2xl">💳</span>
                                 <span className="font-medium">PayPal</span>

@@ -93,6 +93,8 @@ model User {
   savedData           SavedData[]
   stats               UserStats?
   comments            ReviewComment[]
+  exports             Export[]
+  exportTemplates     ExportTemplate[]
 
   @@index([email])
   @@index([discordId])
@@ -1180,4 +1182,40 @@ model VerificationCode {
   @@index([code])
   @@index([expiresAt])
   @@map("verification_codes")
+}
+
+// Modèle Export (suivi des exports)
+model Export {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewId  String?  // Optionnel: review exportée
+  format    String   // "png", "jpeg", "pdf", "svg", "gif", "csv", "json", "html"
+  quality   String   // "standard", "high", "ultra"
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@map("exports")
+}
+
+// Modèle ExportTemplate (templates d'export personnalisés)
+model ExportTemplate {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String   // Nom du template
+  description String?
+  isCustom    Boolean  @default(true)  // true pour templates personnalisés
+  isDefault   Boolean  @default(false) // template par défaut pour l'utilisateur
+  config      String   // JSON: configuration complète du template
+  useCount    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([isCustom])
+  @@index([isDefault])
+  @@map("export_templates")
 }

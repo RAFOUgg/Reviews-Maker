@@ -42,6 +42,7 @@ const EmailVerificationPage = lazy(() => import('./pages/EmailVerificationPage')
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
 const PaymentPage = lazy(() => import('./pages/PaymentPage'))
+const PreferencesPage = lazy(() => import('./pages/PreferencesPage'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -132,6 +133,7 @@ function App() {
                                     <Route path="/stats" element={<StatsPage />} />
                                     <Route path="/profile" element={<ProfilePage />} />
                                     <Route path="/settings" element={<SettingsPage />} />
+                                    <Route path="/preferences" element={<PreferencesPage />} />
                                     <Route path="/account" element={<SettingsPage />} />
 
                                     <Route path="/choose-account" element={<AccountChoicePage />} />

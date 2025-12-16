@@ -29,6 +29,7 @@ import libraryRoutes from './routes/library.js'
 import galleryRoutes from './routes/gallery.js'
 import statsRoutes from './routes/stats.js'
 import pipelineGithubRoutes from './routes/pipeline-github.js'
+import usageRoutes from './routes/usage.js'
 import { requireAuth, optionalAuth, logAuthRequest } from './middleware/auth.js'
 
 // Import config
@@ -227,6 +228,7 @@ app.use('/api/pipelines', pipelinesRoutes)
 app.use('/api/library', libraryRoutes)
 app.use('/api/gallery', galleryRoutes)
 app.use('/api/stats', statsRoutes)
+app.use('/api/usage', usageRoutes)
 app.use('/api/pipeline-github', pipelineGithubRoutes)
 
 // Serve frontend in production

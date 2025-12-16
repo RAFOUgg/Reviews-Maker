@@ -128,6 +128,7 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
             data: {
                 passwordHash,
                 username: existing.username || username || normalizedEmail.split('@')[0],
+                accountType: chosenType,
                 roles: existing.roles || JSON.stringify({ roles: [chosenType] })
             }
         })
@@ -137,6 +138,7 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
                 email: normalizedEmail,
                 username: username || normalizedEmail.split('@')[0],
                 passwordHash,
+                accountType: chosenType,
                 roles: JSON.stringify({ roles: [chosenType] })
             }
         })

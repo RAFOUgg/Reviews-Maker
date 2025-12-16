@@ -45,7 +45,7 @@ export default function PipelineCellEditor({
         // Navigation dans objet avec notation pointée (ex: "environment.temperature")
         const keys = fieldKey.split('.');
         const newData = { ...editedData };
-        
+
         let current = newData;
         for (let i = 0; i < keys.length - 1; i++) {
             if (!current[keys[i]]) {
@@ -53,7 +53,7 @@ export default function PipelineCellEditor({
             }
             current = current[keys[i]];
         }
-        
+
         current[keys[keys.length - 1]] = value;
         setEditedData(newData);
     };
@@ -61,12 +61,12 @@ export default function PipelineCellEditor({
     const getFieldValue = (fieldKey) => {
         const keys = fieldKey.split('.');
         let value = editedData;
-        
+
         for (const key of keys) {
             if (value === undefined || value === null) return '';
             value = value[key];
         }
-        
+
         return value ?? '';
     };
 

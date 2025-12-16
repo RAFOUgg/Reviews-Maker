@@ -88,7 +88,7 @@ export default function AccountChoicePage() {
     const handleContinue = () => {
         localStorage.setItem('preferredAccountType', selectedType)
         localStorage.setItem('accountTypeSelected', 'true')
-        
+
         // Si compte payant (influenceur ou producteur) → page de paiement
         // Si compte gratuit (consumer/amateur) → inscription directe
         if (selectedType === 'influencer' || selectedType === 'producer') {

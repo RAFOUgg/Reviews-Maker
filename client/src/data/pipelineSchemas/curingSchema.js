@@ -121,7 +121,7 @@ export const curingSchema = {
                     step: 0.5,
                     unit: '/10'
                 },
-                
+
                 // Odeurs
                 {
                     key: 'reviewEvolution.aromas.intensity',
@@ -150,7 +150,7 @@ export const curingSchema = {
                     ],
                     maxItems: 7
                 },
-                
+
                 // Goûts
                 {
                     key: 'reviewEvolution.tastes.intensity',
@@ -175,13 +175,13 @@ export const curingSchema = {
                     label: 'Goûts dominants',
                     type: 'multiselect',
                     options: [
-                        'Citronné', 'Fruité', 'Floral', 'Épicé', 'Boisé', 
+                        'Citronné', 'Fruité', 'Floral', 'Épicé', 'Boisé',
                         'Terreux', 'Diesel', 'Sucré', 'Herbal', 'Fromage',
                         'Amer', 'Acide', 'Salé', 'Umami'
                     ],
                     maxItems: 7
                 },
-                
+
                 // Effets
                 {
                     key: 'reviewEvolution.effects.onset',

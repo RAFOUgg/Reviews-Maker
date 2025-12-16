@@ -31,7 +31,7 @@ export default function RegisterPage() {
     const [searchParams] = useSearchParams();
     const accountType = searchParams.get('type') || 'consumer'; // consumer, influencer, producer
     const isPaid = searchParams.get('paid') === 'true';
-    
+
     const [formData, setFormData] = useState({
         email: '',
         pseudo: '',
@@ -176,8 +176,8 @@ export default function RegisterPage() {
                             value={formData.email}
                             onChange={handleChange}
                             className={`w-full px-4 py-2 rounded-lg border ${errors.email
-                                    ? 'border-red-500 focus:ring-red-500'
-                                    : 'border-gray-300 dark:border-gray-600 focus:ring-green-500'
+                                ? 'border-red-500 focus:ring-red-500'
+                                : 'border-gray-300 dark:border-gray-600 focus:ring-green-500'
                                 } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
                             placeholder="votre@email.com"
                             required
@@ -199,8 +199,8 @@ export default function RegisterPage() {
                             value={formData.pseudo}
                             onChange={handleChange}
                             className={`w-full px-4 py-2 rounded-lg border ${errors.pseudo
-                                    ? 'border-red-500 focus:ring-red-500'
-                                    : 'border-gray-300 dark:border-gray-600 focus:ring-green-500'
+                                ? 'border-red-500 focus:ring-red-500'
+                                : 'border-gray-300 dark:border-gray-600 focus:ring-green-500'
                                 } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
                             placeholder="MonPseudo"
                             required
@@ -222,8 +222,8 @@ export default function RegisterPage() {
                             value={formData.password}
                             onChange={handleChange}
                             className={`w-full px-4 py-2 rounded-lg border ${errors.password
-                                    ? 'border-red-500 focus:ring-red-500'
-                                    : 'border-gray-300 dark:border-gray-600 focus:ring-green-500'
+                                ? 'border-red-500 focus:ring-red-500'
+                                : 'border-gray-300 dark:border-gray-600 focus:ring-green-500'
                                 } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
                             placeholder="••••••••"
                             required
@@ -245,8 +245,8 @@ export default function RegisterPage() {
                             value={formData.confirmPassword}
                             onChange={handleChange}
                             className={`w-full px-4 py-2 rounded-lg border ${errors.confirmPassword
-                                    ? 'border-red-500 focus:ring-red-500'
-                                    : 'border-gray-300 dark:border-gray-600 focus:ring-green-500'
+                                ? 'border-red-500 focus:ring-red-500'
+                                : 'border-gray-300 dark:border-gray-600 focus:ring-green-500'
                                 } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
                             placeholder="••••••••"
                             required
