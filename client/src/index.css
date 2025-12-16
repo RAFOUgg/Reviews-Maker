@@ -34,7 +34,15 @@
 
     .glass {
         background: var(--glass-bg);
-        backdrop-filtebg-primary);
+        backdrop-filter: blur(40px);
+        -webkit-backdrop-filter: blur(40px);
+        border: 1px solid var(--glass-border-color);
+    }
+}
+
+/* === STYLES GLOBAUX - Applique le thème PARTOUT === */
+html {
+    background: var(--bg-primary);
     min-height: 100vh;
 }
 
@@ -48,14 +56,7 @@ body {
 }
 
 #root {
-    background: transparertant;
-    min-height: 100vh;
-    margin: 0;
-    padding: 0;
-}
-
-#root {
-    background: transparent !important;
+    background: transparent;
     min-height: 100vh;
 }
 
