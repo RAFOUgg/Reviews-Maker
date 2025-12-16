@@ -10,7 +10,7 @@ import { flowerReviewsService } from '../../services/apiService'
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
 import Genetiques from './sections/Genetiques'
-import CulturePipelineSection from '../../components/reviews/sections/CulturePipelineSection'
+import CulturePipelineSection from './sections/CulturePipelineSection'
 import AnalyticsSection from '../../components/reviews/sections/AnalyticsSection'
 import VisualSection from '../../components/reviews/sections/VisualSection'
 import OdorSection from '../../components/reviews/sections/OdorSection'

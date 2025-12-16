@@ -10,7 +10,7 @@ import { LiquidCard, LiquidButton } from '../../components/liquid'
 
 // Import sections réutilisables
 import InfosGenerales from './sections/InfosGenerales'
-import RecipePipelineSection from '../../components/reviews/sections/RecipePipelineSection'
+import RecipePipelineSection from './sections/RecipePipelineSection'
 import AnalyticsSection from '../../components/reviews/sections/AnalyticsSection'
 import TasteSection from '../../components/reviews/sections/TasteSection'
 import EffectsSection from '../../components/reviews/sections/EffectsSection'
