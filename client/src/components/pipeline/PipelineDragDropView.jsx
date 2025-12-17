@@ -285,9 +285,13 @@ export default function PipelineDragDropView({
 
     // Handlers drag & drop
     const handleDragStart = (e, content) => {
+        console.log('🎯 Début du drag:', content);
         setDraggedContent(content);
         e.dataTransfer.effectAllowed = 'copy';
+        e.dataTransfer.dropEffect = 'copy';
         e.dataTransfer.setData('text/plain', JSON.stringify(content));
+        // Ajouter une classe CSS pour indiquer que le drag est actif
+        e.currentTarget.classList.add('dragging');
     };
 
     const handleDragOver = (e, timestamp) => {
@@ -302,8 +306,18 @@ export default function PipelineDragDropView({
 
     const handleDrop = (e, timestamp) => {
         e.preventDefault();
+        e.stopPropagation();
         setHoveredCell(null);
-        if (!draggedContent) return;
+
+        console.log('💧 Drop détecté sur timestamp:', timestamp);
+        console.log('📦 draggedContent:', draggedContent);
+
+        if (!draggedContent) {
+            console.warn('⚠️ Pas de draggedContent disponible');
+            return;
+        }
+
+        console.log('✓ Ouverture de la modal pour', draggedContent.label);
 
         // Stocker l'item droppé et ouvrir la modal pour saisir les valeurs
         setDroppedItem({ content: draggedContent, timestamp });
@@ -457,6 +471,15 @@ export default function PipelineDragDropView({
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                         Glissez les éléments vers les cases →
                     </p>
+
+                    {/* Bouton créer préréglage global */}
+                    <button
+                        onClick={() => handleOpenPresetConfig()}
+                        className="mt-3 w-full px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Créer un préréglage global
+                    </button>
                 </div>
 
                 <div className="p-3 space-y-2">
@@ -484,9 +507,13 @@ export default function PipelineDragDropView({
                                     {section.items.map((item) => (
                                         <div
                                             key={item.key}
-                                            draggable
+                                            draggable="true"
                                             onDragStart={(e) => handleDragStart(e, item)}
-                                            className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-move border border-transparent hover:border-blue-500 transition-all group"
+                                            onDragEnd={(e) => {
+                                                e.currentTarget.classList.remove('dragging');
+                                            }}
+                                            className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-grab active:cursor-grabbing border border-transparent hover:border-blue-500 transition-all group"
+                                            style={{ touchAction: 'none' }}
                                         >
                                             <span className="text-base">{item.icon}</span>
                                             <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex-1">
@@ -536,6 +563,18 @@ export default function PipelineDragDropView({
                                     )}
                                 </div>
                             )}
+
+                            <button
+                                onClick={toggleMassAssignMode}
+                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${massAssignMode
+                                        ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                        : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100'
+                                    }`}
+                                title="Mode sélection multiple pour assigner en masse"
+                            >
+                                <CheckSquare className="w-4 h-4" />
+                                {massAssignMode ? 'Mode masse ON' : 'Assignation masse'}
+                            </button>
 
                             <button
                                 onClick={() => setShowPresets(!showPresets)}
