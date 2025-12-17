@@ -34,20 +34,26 @@ const PipelineCellModal = ({
 
     // Obtenir le label de la case
     const getCellLabel = () => {
-        if (config.intervalType === 'phases') {
-            const phase = config.customPhases?.[cellIndex];
-            return `${phase?.icon} ${phase?.name}` || `Phase ${cellIndex + 1}`;
+        if (!config) return `Étape ${cellIndex + 1}`;
+
+        if (config.intervalType === 'phases' || config.type === 'phase') {
+            const phase = config.customPhases?.[cellIndex] || config.phases?.[cellIndex];
+            return `${phase?.icon || '📍'} ${phase?.name}` || `Phase ${cellIndex + 1}`;
         }
 
-        if (config.intervalType === 'dates' && config.startDate) {
-            const start = new Date(config.startDate);
+        if ((config.intervalType === 'dates' || config.type === 'date') && (config.startDate || config.start)) {
+            const start = new Date(config.startDate || config.start);
             const cellDate = new Date(start);
             cellDate.setDate(cellDate.getDate() + cellIndex);
             return `Jour ${cellIndex + 1} (${cellDate.toLocaleDateString('fr-FR')})`;
         }
 
-        if (config.intervalType === 'weeks') {
+        if (config.intervalType === 'weeks' || config.type === 'semaine') {
             return `Semaine ${cellIndex + 1}`;
+        }
+
+        if (config.type === 'jour') {
+            return `Jour ${cellIndex + 1}`;
         }
 
         return `Étape ${cellIndex + 1}`;

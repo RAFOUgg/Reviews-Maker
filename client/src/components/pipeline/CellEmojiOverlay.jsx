@@ -9,7 +9,7 @@ export default function CellEmojiOverlay({ cellData, sidebarContent }) {
         if (!cellData || !sidebarContent) return []
 
         const emojis = []
-        const dataKeys = Object.keys(cellData).filter(key => 
+        const dataKeys = Object.keys(cellData).filter(key =>
             !['timestamp', 'date', 'label', 'phase', 'day', 'week', 'hours', 'seconds', 'note', '_meta'].includes(key)
         )
 
@@ -65,7 +65,7 @@ export default function CellEmojiOverlay({ cellData, sidebarContent }) {
 
             {/* Badge compteur si plus de 4 données */}
             {Object.keys(cellData).filter(k => !['timestamp', 'date', 'label', 'phase', 'day', 'week', 'hours', 'seconds', 'note', '_meta'].includes(k)).length > 4 && (
-                <div 
+                <div
                     className="absolute -bottom-1 -right-1 bg-blue-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg"
                     title={`${Object.keys(cellData).length - 4} données supplémentaires`}
                 >
