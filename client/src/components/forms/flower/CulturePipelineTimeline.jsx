@@ -24,18 +24,18 @@ export default function CulturePipelineTimeline({ data, onChange }) {
         totalDays: null,
         totalWeeks: null,
         phases: [
-            { name: '🌰 Graine (J0)', id: 'graine' },
-            { name: '🌱 Germination', id: 'germination' },
-            { name: '🌿 Plantule', id: 'plantule' },
-            { name: '🌾 Début croissance', id: 'croissance-debut' },
-            { name: '🌳 Milieu croissance', id: 'croissance-milieu' },
-            { name: '🌴 Fin croissance', id: 'croissance-fin' },
-            { name: '🌸 Début stretch', id: 'stretch-debut' },
-            { name: '💐 Milieu stretch', id: 'stretch-milieu' },
-            { name: '🌺 Fin stretch', id: 'stretch-fin' },
-            { name: '🌼 Début floraison', id: 'floraison-debut' },
-            { name: '🌻 Milieu floraison', id: 'floraison-milieu' },
-            { name: '🏵️ Fin floraison', id: 'floraison-fin' }
+            { name: '🌰 Graine (J0)', id: 'graine', duration: 1 },
+            { name: '🌱 Germination', id: 'germination', duration: 3 },
+            { name: '🌿 Plantule', id: 'plantule', duration: 7 },
+            { name: '🌾 Début croissance', id: 'croissance-debut', duration: 14 },
+            { name: '🌳 Milieu croissance', id: 'croissance-milieu', duration: 14 },
+            { name: '🌴 Fin croissance', id: 'croissance-fin', duration: 7 },
+            { name: '🌸 Début stretch', id: 'stretch-debut', duration: 7 },
+            { name: '💐 Milieu stretch', id: 'stretch-milieu', duration: 7 },
+            { name: '🌺 Fin stretch', id: 'stretch-fin', duration: 7 },
+            { name: '🌼 Début floraison', id: 'floraison-debut', duration: 14 },
+            { name: '🌻 Milieu floraison', id: 'floraison-milieu', duration: 14 },
+            { name: '🏵️ Fin floraison', id: 'floraison-fin', duration: 14 }
         ]
     }
 

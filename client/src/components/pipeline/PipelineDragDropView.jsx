@@ -23,8 +23,10 @@ import { useState } from 'react';
 import { ChevronDown, ChevronRight, Plus, Settings, Save, Upload, CheckSquare, Square } from 'lucide-react';
 import PipelineCellModal from './PipelineCellModal';
 import PipelineCellBadge from './PipelineCellBadge';
+import CellEmojiOverlay from './CellEmojiOverlay';
 import PipelineCellTooltip from './PipelineCellTooltip';
 import MassAssignModal from './MassAssignModal';
+import PresetSelector from './PresetSelector';
 
 export default function PipelineDragDropView({
     type = 'culture',
@@ -51,6 +53,27 @@ export default function PipelineDragDropView({
     const [selectedCells, setSelectedCells] = useState([]);
     const [showMassAssignModal, setShowMassAssignModal] = useState(false);
     const [sourceCellForMassAssign, setSourceCellForMassAssign] = useState(null);
+    const [selectedPresets, setSelectedPresets] = useState([]);
+
+    // Handlers pour préréglages
+    const handleTogglePreset = (presetId) => {
+        setSelectedPresets(prev =>
+            prev.includes(presetId)
+                ? prev.filter(id => id !== presetId)
+                : [...prev, presetId]
+        );
+    };
+
+    const handleDeletePreset = (presetId) => {
+        // Appeler le handler parent pour supprimer le preset
+        const newPresets = presets.filter(p => p.id !== presetId);
+        // Notifier le parent (via un nouveau callback à ajouter)
+        if (onSavePreset) {
+            // Pour l'instant, on utilise onSavePreset pour gérer tous les presets
+            localStorage.setItem(`${type}PipelinePresets`, JSON.stringify(newPresets));
+        }
+        setSelectedPresets(prev => prev.filter(id => id !== presetId));
+    };
 
     // Toggle section
     const toggleSection = (sectionId) => {
@@ -262,11 +285,18 @@ export default function PipelineDragDropView({
 
         // PHASES prédéfinies selon type de pipeline
         if (intervalType === 'phase' && timelineConfig.phases?.length) {
-            return timelineConfig.phases.map((phase, i) => ({
-                timestamp: Date.now() + (i * 24 * 60 * 60 * 1000),
-                label: phase.name || `Phase ${i + 1}`,
-                phase: phase
-            }));
+            let cumulativeDays = 0;
+            return timelineConfig.phases.map((phase, i) => {
+                const cell = {
+                    timestamp: Date.now() + (cumulativeDays * 24 * 60 * 60 * 1000),
+                    label: phase.name || `Phase ${i + 1}`,
+                    phase: phase,
+                    phaseId: phase.id || `phase-${i}`,
+                    duration: phase.duration || 7 // Durée par défaut si non spécifiée
+                };
+                cumulativeDays += phase.duration || 7;
+                return cell;
+            });
         }
 
         return [];
@@ -290,6 +320,16 @@ export default function PipelineDragDropView({
         <div className="flex gap-6 h-[600px]">
             {/* PANNEAU LATÉRAL HIÉRARCHISÉ */}
             <div className="w-80 flex-shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-y-auto">
+                {/* Section Préréglages en haut */}
+                <PresetSelector
+                    presets={presets}
+                    selectedPresets={selectedPresets}
+                    onTogglePreset={handleTogglePreset}
+                    onSaveNew={onSavePreset}
+                    onDelete={handleDeletePreset}
+                />
+
+                {/* Header Contenus */}
                 <div className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm p-4 border-b border-gray-200 dark:border-gray-700 z-10">
                     <h3 className="font-bold text-gray-900 dark:text-white text-lg">📦 Contenus</h3>
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
@@ -597,11 +637,11 @@ export default function PipelineDragDropView({
                                                 ${isFirst ? 'col-span-2 bg-purple-500/10 border-purple-500' : ''}
                                             `}
                                         >
-                                            {/* Badge visuel si données présentes */}
-                                            {hasData && cellData._meta && (
-                                                <PipelineCellBadge
-                                                    cellData={cellData._meta}
-                                                    sectionId={Object.keys(cellData).find(k => k !== 'timestamp' && k !== '_meta')}
+                                            {/* Affichage 4 emojis superposables CDC-conforme */}
+                                            {hasData && (
+                                                <CellEmojiOverlay
+                                                    cellData={cellData}
+                                                    sidebarContent={sidebarContent}
                                                 />
                                             )}
 
@@ -612,7 +652,7 @@ export default function PipelineDragDropView({
                                                     {isFirst ? '⚙️ ' : ''}{cell.label}
                                                 </div>
                                                 <div className="text-[10px] text-gray-600 dark:text-gray-400">
-                                                    {cell.date || cell.week || cell.phase?.name || ''}
+                                                    {cell.date || cell.week || (cell.phase ? `(${cell.duration || 7}j)` : '')}
                                                 </div>
                                                 {isFirst && (
                                                     <div className="mt-1 text-[10px] text-purple-700 dark:text-purple-300 font-semibold">

@@ -24,10 +24,10 @@ export default function CuringMaturationTimeline({ data, onChange }) {
         totalDays: null,
         totalWeeks: null,
         phases: [
-            { name: '🔪 Séchage', id: 'sechage' },
-            { name: '🏺 Début curing', id: 'curing-debut' },
-            { name: '⏳ Maturation', id: 'maturation' },
-            { name: '✨ Affinage', id: 'affinage' }
+            { name: '🔪 Séchage', id: 'sechage', duration: 7 },
+            { name: '🏺 Début curing', id: 'curing-debut', duration: 14 },
+            { name: '⏳ Maturation', id: 'maturation', duration: 30 },
+            { name: '✨ Affinage', id: 'affinage', duration: 60 }
         ]
     }
 

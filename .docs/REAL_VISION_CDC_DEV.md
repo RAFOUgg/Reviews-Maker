@@ -298,8 +298,9 @@ Concept visuel des PipeLines :
 ├─────────────────────────────────────────────────────────────────┤
 │ (nombre de secondes,heures, jours, mois, phases, dates)         │
 │ _______________________________________________________________ │
-│            │☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ +             │
-│            │                                                    │
+│ prérég.    |☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ +            │
+|sauvegardes │
+│____________│                                                    │
 │   Contenus │                                                    │
 │     et     │                                                    │
 │    données │                                                    │ 
@@ -312,17 +313,22 @@ Concept visuel des PipeLines :
 - Semaines : nombre de semaines total de la PipeLine
 - Phases : Phase prédéfinit selon type de PipeLine (nombre de phases variable selon type de PipeLine mais prédéfinit dans l'application)
 
-Au bout de toutes les cases il est possible d'ajouter des étapes supplémentaires (+) pour allonger la PipeLine si besoin.
+Au bout de toutes les cases il est possible d'ajouter des étapes supplémentaires (+) pour allonger la PipeLine si besoin. (cela change la configuration de la trame de la PipeLine ci-dessus en temps réel)
 
-L'utilisateur déplace les contenus et données spécifiques rangée par sections hierarchisée dans le volet latéral gauche,  à chaque étape de la PipeLine dans les cases correspondantes en droite.
+Depuis le volet latéral gauche : contenus et données :
+L'utilisateur doit pouvoir crée une configuration général, en créant un préréglage (templates), il définit les valeurs de TOUTES les données dispo pour cette pipeline. 
+L'utilisateur définit une configuration général, puis il peux ajouter en drag and drop des contenus, ou supprimer des contenus en cliquant sur la case et en appuyant sur la croix de suppression du contenus en questions. 
+L'utilisateur peut déplacer les contenus et données spécifiques rangée par sections hierarchisée dans le volet latéral gauche, à chaque étape de la PipeLine dans les cases correspondantes en droite.
+Les configuration et préréglages sont sauvegardés dans la bibliothèque utilisateur pour une réutilisation rapide depuis les pipeline du créateur de reviews.
+A chaque case correspondante à une étape de la PipeLine, l'utilisateur peut aussi cliquer pour ouvrir un menu contextuel lui permettant de saisir les données spécifiques à cette étape (via fenetre pop-up modale).
+Chaque formulaire de saisie dispo sur la fenetre pop-up modale de la case est adapté au type de PipeLine et permet à l'utilisateur de sauvegardé ses préréglages pour les réutiliser rapidement dans d'autres étapes ou d'autres PipeLines du même type.
+Il à accès à un système de séléction lui permettant d'assigner rapidement une masse de donnée à plusieurs étapes en une seule fois, les préréglage sont sauvegardé dans la bibliothèque utilisateur pour une réutilisation rapide depuis le créateur de reviews.
 
-A chaque case correspondante à une étape de la PipeLine, l'utilisateur peut aussi cliquer pour ouvrir un menu contextuel lui permettant de saisir les données spécifiques à cette étape (via des menus déroulants, boutons, choix multiples, etc...).
-
-Chaque formulaire de saisie est adapté au type de PipeLine et permet à l'utilisateur de sauvegardé ses préréglages pour les réutiliser rapidement dans d'autres étapes ou d'autres PipeLines du même type.
-
+Case et timeline :
+Chaque case doit permettre d'afficher 4 emojis superposable (en laissant ceux du dessous visible stylysé etc...) décrivant les contenus et données assignées à cette étape de la PipeLine. 
+Un clique sur une case sans valeurs assignées ouvre un modale avec tout les contenus disponible dans la pipeline en question.
+Un clique sur une case avec des valeurs assignées ouvre le modale avec toutes les valeurs assignées à cette étape, avec possibilité de modifier, supprimer ou ajouter des contenus et données spécifiques à cette étape depuis le volet latéral gauche.
 Depuis la vue principale de la PipeLine, l'utilisateur peut visualiser un résumé des données saisies pour chaque étape (icônes, couleurs, graphiques miniatures, etc...) pour avoir une vue d'ensemble rapide de son processus de production. 
-Il à accès à un système de séléction lui permettant d'assigner rapidement une masse de donnée à plusieurs étapes en une seule fois (ex: même arrosage/engraissage/lumière/ventilation/etc... sur plusieurs jours/phases etc...), les préréglage sont sauvegardé dans la bibliothèque utilisateur pour une réutilisation rapide depuis le créateur de reviews.
-
 
 ---
 
