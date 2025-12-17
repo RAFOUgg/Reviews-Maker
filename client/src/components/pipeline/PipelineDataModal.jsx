@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save } from 'lucide-react';
-import { LiquidButton } from '../liquid';
-import { CULTURE_VALUES } from '../../data/formValues';
 
 /**
  * PipelineDataModal - Modal pour saisir les valeurs lors d'un drop
@@ -77,25 +75,28 @@ export default function PipelineDataModal({
 
     // Rendu du champ selon le type
     const renderField = (item) => {
+        if (!item || !item.key) return null;
+
         const value = formData[item.key] || '';
         const { key, label, icon, type = 'text' } = item;
 
         // SELECT avec options
-        if (type === 'select' && item.options) {
+        if (type === 'select' && Array.isArray(item.options)) {
             return (
                 <div key={key} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {icon} {label}
+                        {icon && <span className="mr-2">{icon}</span>}
+                        {label}
                     </label>
                     <select
                         value={value}
                         onChange={(e) => handleChange(key, e.target.value)}
                         className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
-                        required={droppedItem !== null} // Obligatoire si c'est un drop
+                        required={droppedItem !== null}
                     >
                         <option value="">Sélectionner...</option>
-                        {item.options.map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
+                        {item.options.map((opt, idx) => (
+                            <option key={`${key}-${idx}-${opt}`} value={opt}>{opt}</option>
                         ))}
                     </select>
                 </div>
@@ -107,12 +108,16 @@ export default function PipelineDataModal({
             return (
                 <div key={key} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {icon} {label}
+                        {icon && <span className="mr-2">{icon}</span>}
+                        {label}
                     </label>
                     <input
                         type="number"
-                        value={value}
-                        onChange={(e) => handleChange(key, parseFloat(e.target.value) || 0)}
+                        value={value || ''}
+                        onChange={(e) => {
+                            const val = e.target.value === '' ? '' : parseFloat(e.target.value);
+                            handleChange(key, val);
+                        }}
                         step={item.step || '0.1'}
                         min={item.min}
                         max={item.max}
@@ -130,12 +135,13 @@ export default function PipelineDataModal({
                 <div key={key} className="flex items-center gap-3">
                     <input
                         type="checkbox"
-                        checked={value === true || value === 'true'}
+                        checked={Boolean(value)}
                         onChange={(e) => handleChange(key, e.target.checked)}
                         className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-2 focus:ring-blue-500"
                     />
                     <label className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {icon} {label}
+                        {icon && <span className="mr-2">{icon}</span>}
+                        {label}
                     </label>
                 </div>
             );
@@ -143,22 +149,24 @@ export default function PipelineDataModal({
 
         // TEXTAREA
         if (type === 'textarea') {
+            const textValue = String(value || '');
             return (
                 <div key={key} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {icon} {label}
+                        {icon && <span className="mr-2">{icon}</span>}
+                        {label}
                     </label>
                     <textarea
-                        value={value}
+                        value={textValue}
                         onChange={(e) => handleChange(key, e.target.value)}
                         rows={3}
                         maxLength={item.maxLength || 500}
                         className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 resize-none"
-                        placeholder={item.placeholder}
+                        placeholder={item.placeholder || ''}
                     />
                     {item.maxLength && (
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {value.length || 0} / {item.maxLength} caractères
+                            {textValue.length} / {item.maxLength} caractères
                         </p>
                     )}
                 </div>
@@ -169,14 +177,15 @@ export default function PipelineDataModal({
         return (
             <div key={key} className="space-y-2">
                 <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {icon} {label}
+                    {icon && <span className="mr-2">{icon}</span>}
+                    {label}
                 </label>
                 <input
                     type="text"
-                    value={value}
+                    value={value || ''}
                     onChange={(e) => handleChange(key, e.target.value)}
                     className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
-                    placeholder={item.placeholder}
+                    placeholder={item.placeholder || ''}
                     required={droppedItem !== null}
                 />
             </div>
@@ -242,21 +251,23 @@ export default function PipelineDataModal({
 
                         {/* Footer */}
                         <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
-                            <LiquidButton
-                                variant="ghost"
-                                onClick={onClose}
+                            <button
                                 type="button"
+                                onClick={onClose}
+                                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                             >
                                 Annuler
-                            </LiquidButton>
+                            </button>
 
-                            <LiquidButton
+                            <button
+                                type="submit"
                                 onClick={handleSubmit}
                                 disabled={itemsToDisplay.length === 0}
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors flex items-center gap-2"
                             >
-                                <Save className="w-4 h-4 mr-2" />
+                                <Save className="w-4 h-4" />
                                 Enregistrer
-                            </LiquidButton>
+                            </button>
                         </div>
                     </motion.div>
                 </motion.div>
