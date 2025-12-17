@@ -23,7 +23,8 @@ const PipelineCellModal = ({
     config,
     contentSchema = [],
     onSave,
-    pipelineType = 'culture'
+    pipelineType = 'culture',
+    droppedItem = null // Ajout du prop pour l'item droppé
 }) => {
     const [localData, setLocalData] = useState({ ...cellData });
     const [activeTab, setActiveTab] = useState(0);

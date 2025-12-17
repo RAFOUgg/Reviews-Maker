@@ -21,7 +21,7 @@
 
 import { useState } from 'react';
 import { ChevronDown, ChevronRight, Plus, Settings, Save, Upload, CheckSquare, Square } from 'lucide-react';
-import PipelineCellModal from './PipelineCellModal';
+import PipelineDataModal from './PipelineDataModal';
 import PipelineCellBadge from './PipelineCellBadge';
 import CellEmojiOverlay from './CellEmojiOverlay';
 import PipelineCellTooltip from './PipelineCellTooltip';
@@ -54,6 +54,7 @@ export default function PipelineDragDropView({
     const [showMassAssignModal, setShowMassAssignModal] = useState(false);
     const [sourceCellForMassAssign, setSourceCellForMassAssign] = useState(null);
     const [selectedPresets, setSelectedPresets] = useState([]);
+    const [droppedItem, setDroppedItem] = useState(null); // Item droppé en attente de saisie
 
     // Handlers pour préréglages
     const handleTogglePreset = (presetId) => {
@@ -103,16 +104,27 @@ export default function PipelineDragDropView({
     const handleModalSave = (data) => {
         if (!data || !data.timestamp) return;
 
-        // Sauvegarder toutes les données
-        Object.entries(data.data).forEach(([key, value]) => {
-            onDataChange(data.timestamp, key, value);
-        });
+        // Si c'est un drop, sauvegarder uniquement le champ droppé
+        if (droppedItem && droppedItem.timestamp === data.timestamp) {
+            const fieldKey = droppedItem.content.key;
+            if (data.data && data.data[fieldKey] !== undefined) {
+                onDataChange(data.timestamp, fieldKey, data.data[fieldKey]);
+            }
+            setDroppedItem(null);
+        } else {
+            // Sauvegarder toutes les données (cas modal normale)
+            Object.entries(data.data || {}).forEach(([key, value]) => {
+                onDataChange(data.timestamp, key, value);
+            });
+        }
 
-        // Sauvegarder métadonnées
-        onDataChange(data.timestamp, '_meta', {
-            completionPercentage: data.completionPercentage,
-            lastModified: data.lastModified
-        });
+        // Sauvegarder métadonnées si présentes
+        if (data.completionPercentage !== undefined) {
+            onDataChange(data.timestamp, '_meta', {
+                completionPercentage: data.completionPercentage,
+                lastModified: data.lastModified || new Date().toISOString()
+            });
+        }
     };
 
     // Tooltip handlers
@@ -216,8 +228,10 @@ export default function PipelineDragDropView({
         e.preventDefault();
         if (!draggedContent) return;
 
-        // Appliquer la donnée à la case
-        onDataChange(timestamp, draggedContent.key, draggedContent.defaultValue || '');
+        // Stocker l'item droppé et ouvrir la modal pour saisir les valeurs
+        setDroppedItem({ content: draggedContent, timestamp });
+        setCurrentCellTimestamp(timestamp);
+        setIsModalOpen(true);
         setDraggedContent(null);
     };
 
@@ -303,7 +317,18 @@ export default function PipelineDragDropView({
     };
 
     const cells = generateCells();
-    const filledCells = timelineData.length;
+
+    // Compter les cases avec au moins une donnée (hors timestamp, date, label, etc.)
+    const filledCells = cells.filter(cell => {
+        const data = getCellData(cell.timestamp);
+        if (!data) return false;
+        // Compter uniquement les champs de données (pas les méta-champs)
+        const dataKeys = Object.keys(data).filter(k =>
+            !['timestamp', 'date', 'label', 'phase', 'day', 'week', 'hours', 'seconds', '_meta'].includes(k)
+        );
+        return dataKeys.length > 0;
+    }).length;
+
     const completionPercent = cells.length > 0 ? Math.round((filledCells / cells.length) * 100) : 0;
 
     // Vérifier si une case a des données
@@ -719,14 +744,18 @@ export default function PipelineDragDropView({
             )}
 
             {/* Modal d'édition de cellule */}
-            <PipelineCellModal
+            <PipelineDataModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setDroppedItem(null);
+                }}
                 cellData={getCellData(currentCellTimestamp)}
                 sidebarSections={sidebarContent}
                 onSave={handleModalSave}
                 timestamp={currentCellTimestamp}
                 intervalLabel={cells.find(c => c.timestamp === currentCellTimestamp)?.label || ''}
+                droppedItem={droppedItem} // Passer l'item droppé à la modal
             />
 
             {/* Modal attribution en masse */}
