@@ -318,6 +318,16 @@ export default function PipelineDragDropView({
 
     const cells = generateCells();
 
+    // Vérifier si une case a des données (définir AVANT utilisation)
+    const getCellData = (timestamp) => {
+        return timelineData.find(d => d.timestamp === timestamp) || {};
+    };
+
+    const hasCellData = (timestamp) => {
+        const data = getCellData(timestamp);
+        return Object.keys(data).length > 1; // Plus que juste timestamp
+    };
+
     // Compter les cases avec au moins une donnée (hors timestamp, date, label, etc.)
     const filledCells = cells.filter(cell => {
         const data = getCellData(cell.timestamp);
@@ -330,16 +340,6 @@ export default function PipelineDragDropView({
     }).length;
 
     const completionPercent = cells.length > 0 ? Math.round((filledCells / cells.length) * 100) : 0;
-
-    // Vérifier si une case a des données
-    const getCellData = (timestamp) => {
-        return timelineData.find(d => d.timestamp === timestamp) || {};
-    };
-
-    const hasCellData = (timestamp) => {
-        const data = getCellData(timestamp);
-        return Object.keys(data).length > 1; // Plus que juste timestamp
-    };
 
     return (
         <div className="flex gap-6 h-[600px]">
@@ -690,13 +690,24 @@ export default function PipelineDragDropView({
                                 })}
 
                                 {/* Bouton + pour ajouter des cellules */}
-                                {cells.length > 0 && (
+                                {cells.length > 0 && (timelineConfig.type === 'jour' || timelineConfig.type === 'date') && (
                                     <div
                                         className="p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all cursor-pointer flex items-center justify-center min-h-[80px]"
                                         onClick={() => {
-                                            // TODO: Ajouter une cellule dynamiquement
-                                            alert('Ajout de cellule à implémenter');
+                                            // Ajouter un jour à la timeline
+                                            if (timelineConfig.type === 'jour') {
+                                                const currentDays = timelineConfig.totalDays || cells.length;
+                                                if (currentDays < 365) {
+                                                    onConfigChange('totalDays', currentDays + 1);
+                                                }
+                                            } else if (timelineConfig.type === 'date' && timelineConfig.end) {
+                                                // Ajouter 1 jour à la date de fin
+                                                const endDate = new Date(timelineConfig.end);
+                                                endDate.setDate(endDate.getDate() + 1);
+                                                onConfigChange('end', endDate.toISOString().split('T')[0]);
+                                            }
                                         }}
+                                        title="Ajouter un jour"
                                     >
                                         <Plus className="w-6 h-6 text-gray-400" />
                                     </div>
