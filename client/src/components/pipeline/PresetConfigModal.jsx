@@ -203,15 +203,16 @@ export default function PresetConfigModal({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                className="fixed inset-0 z-[9999] flex items-center justify-center backdrop-blur-md p-4"
                 onClick={onClose}
             >
                 <motion.div
-                    initial={{ scale: 0.95, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.95, opacity: 0 }}
+                    initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
                     onClick={(e) => e.stopPropagation()}
-                    className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-gray-200 dark:border-gray-700"
+                    className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-gray-200/50 dark:border-gray-700/50"
                 >
                     {/* Header */}
                     <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-850">

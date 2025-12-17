@@ -159,19 +159,29 @@ export default function PipelineDragDropView({
 
     // Sauvegarder données depuis modal
     const handleModalSave = (data) => {
-        if (!data || !data.timestamp) return;
+        console.log('💾 Début sauvegarde - data reçue:', data);
+
+        if (!data || !data.timestamp) {
+            console.error('❌ Erreur: pas de timestamp dans les données');
+            return;
+        }
 
         // Si c'est un drop, sauvegarder uniquement le champ droppé
         if (droppedItem && droppedItem.timestamp === data.timestamp) {
             const fieldKey = droppedItem.content.key;
             if (data.data && data.data[fieldKey] !== undefined) {
+                console.log('✓ Sauvegarde champ droppé:', fieldKey, '=', data.data[fieldKey]);
                 onDataChange(data.timestamp, fieldKey, data.data[fieldKey]);
             }
             setDroppedItem(null);
         } else {
             // Sauvegarder toutes les données (cas modal normale)
+            console.log('✓ Sauvegarde de tous les champs:', Object.keys(data.data || {}));
             Object.entries(data.data || {}).forEach(([key, value]) => {
-                onDataChange(data.timestamp, key, value);
+                if (value !== undefined && value !== null && value !== '') {
+                    console.log('  → Sauvegarde:', key, '=', value);
+                    onDataChange(data.timestamp, key, value);
+                }
             });
         }
 
@@ -182,6 +192,10 @@ export default function PipelineDragDropView({
                 lastModified: data.lastModified || new Date().toISOString()
             });
         }
+
+        console.log('✅ Sauvegarde terminée avec succès');
+        setIsModalOpen(false);
+        setDroppedItem(null);
     };
 
     // Tooltip handlers
@@ -843,8 +857,8 @@ export default function PipelineDragDropView({
 
             {/* Modal préréglages (simplifié) */}
             {showPresets && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowPresets(false)}>
-                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-50" onClick={() => setShowPresets(false)}>
+                    <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-3xl p-6 max-w-md w-full shadow-2xl border border-gray-200/50 dark:border-gray-700/50" onClick={(e) => e.stopPropagation()}>
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">📦 Préréglages</h3>
                         {presets.length === 0 ? (
                             <p className="text-sm text-gray-600 dark:text-gray-400">Aucun préréglage sauvegardé</p>
@@ -869,7 +883,7 @@ export default function PipelineDragDropView({
                         )}
                         <button
                             onClick={() => setShowPresets(false)}
-                            className="mt-4 w-full px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors"
+                            className="mt-4 w-full px-4 py-2 bg-gray-200/80 dark:bg-gray-700/80 hover:bg-gray-300/80 dark:hover:bg-gray-600/80 rounded-xl font-medium transition-all hover:scale-[1.02]"
                         >
                             Fermer
                         </button>

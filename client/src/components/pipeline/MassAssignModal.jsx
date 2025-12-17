@@ -107,8 +107,8 @@ const MassAssignModal = ({
     });
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md">
+            <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden border border-gray-200/50 dark:border-gray-700/50">
                 {/* Header */}
                 <div className="px-6 py-4 border-b bg-gradient-to-r from-purple-500 to-pink-500 text-white">
                     <div className="flex items-center justify-between">
@@ -147,8 +147,8 @@ const MassAssignModal = ({
                         <div
                             onClick={handleSelectAll}
                             className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${selectAll
-                                    ? 'bg-purple-500 border-purple-500'
-                                    : 'border-gray-300 dark:border-gray-600'
+                                ? 'bg-purple-500 border-purple-500'
+                                : 'border-gray-300 dark:border-gray-600'
                                 }`}
                         >
                             {selectAll && <CheckSquare className="w-4 h-4 text-white" />}
@@ -182,8 +182,8 @@ const MassAssignModal = ({
                                                 <div
                                                     onClick={() => handleToggleField(field.key)}
                                                     className={`w-5 h-5 mt-0.5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${selectedFields[field.key]
-                                                            ? 'bg-purple-500 border-purple-500'
-                                                            : 'border-gray-300 dark:border-gray-600'
+                                                        ? 'bg-purple-500 border-purple-500'
+                                                        : 'border-gray-300 dark:border-gray-600'
                                                         }`}
                                                 >
                                                     {selectedFields[field.key] && (
@@ -223,8 +223,8 @@ const MassAssignModal = ({
                             onClick={handleApply}
                             disabled={selectedCount === 0}
                             className={`px-6 py-2 rounded-lg font-semibold flex items-center gap-2 transition-all ${selectedCount === 0
-                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
                                 }`}
                         >
                             <Copy className="w-4 h-4" />

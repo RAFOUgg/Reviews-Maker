@@ -12,7 +12,7 @@ const PipelineEditor = ({
   type = 'culture' // 'culture', 'curing', etc.
 }) => {
   const [data, setData] = useState(cell.value || {});
-  
+
   // Configuration des champs selon le type de pipeline
   const fields = {
     culture: [
@@ -43,7 +43,7 @@ const PipelineEditor = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md p-4">
       <LiquidGlass variant="modal" className="w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
         <div className="flex justify-between items-center p-4 border-b border-white/10">
           <h3 className="font-bold text-lg dark:text-white">

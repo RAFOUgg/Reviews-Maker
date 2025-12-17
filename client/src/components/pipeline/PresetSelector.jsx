@@ -92,7 +92,7 @@ export default function PresetSelector({ presets = [], selectedPresets = [], onT
 
             {/* Modal création nouveau préréglage */}
             {showSaveModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]" onClick={() => setShowSaveModal(false)}>
+                <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-[9999]" onClick={() => setShowSaveModal(false)}>
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
                         <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">
                             💾 Nouveau préréglage
