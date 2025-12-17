@@ -22,6 +22,7 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight, Plus, Settings, Save, Upload, CheckSquare, Square } from 'lucide-react';
 import PipelineDataModal from './PipelineDataModal';
+import PresetConfigModal from './PresetConfigModal';
 import PipelineCellBadge from './PipelineCellBadge';
 import CellEmojiOverlay from './CellEmojiOverlay';
 import PipelineCellTooltip from './PipelineCellTooltip';
@@ -55,6 +56,8 @@ export default function PipelineDragDropView({
     const [sourceCellForMassAssign, setSourceCellForMassAssign] = useState(null);
     const [selectedPresets, setSelectedPresets] = useState([]);
     const [droppedItem, setDroppedItem] = useState(null); // Item droppé en attente de saisie
+    const [showPresetConfigModal, setShowPresetConfigModal] = useState(false);
+    const [editingPreset, setEditingPreset] = useState(null);
 
     // Handlers pour préréglages
     const handleTogglePreset = (presetId) => {
@@ -63,6 +66,36 @@ export default function PipelineDragDropView({
                 ? prev.filter(id => id !== presetId)
                 : [...prev, presetId]
         );
+    };
+
+    const handleOpenPresetConfig = (initialData = null) => {
+        setEditingPreset(initialData);
+        setShowPresetConfigModal(true);
+    };
+
+    const handleSavePresetConfig = (preset) => {
+        // Sauvegarder le préréglage avec toutes ses données
+        const existingPresets = presets || [];
+        const presetIndex = existingPresets.findIndex(p => p.id === preset.id);
+
+        let updatedPresets;
+        if (presetIndex >= 0) {
+            // Modifier existant
+            updatedPresets = [...existingPresets];
+            updatedPresets[presetIndex] = preset;
+        } else {
+            // Nouveau
+            updatedPresets = [...existingPresets, preset];
+        }
+
+        // Sauvegarder via le handler parent ou localStorage
+        if (onSavePreset) {
+            onSavePreset(updatedPresets);
+        }
+        localStorage.setItem(`${type}PipelinePresets`, JSON.stringify(updatedPresets));
+
+        setShowPresetConfigModal(false);
+        setEditingPreset(null);
     };
 
     const handleDeletePreset = (presetId) => {
@@ -352,6 +385,7 @@ export default function PipelineDragDropView({
                     onTogglePreset={handleTogglePreset}
                     onSaveNew={onSavePreset}
                     onDelete={handleDeletePreset}
+                    onOpenConfigModal={handleOpenPresetConfig}
                 />
 
                 {/* Header Contenus */}
@@ -777,6 +811,18 @@ export default function PipelineDragDropView({
                 selectedCellsCount={selectedCells.length}
                 sidebarSections={sidebarContent}
                 onApply={handleMassAssignApply}
+            />
+
+            {/* Modal configuration préréglage complet CDC */}
+            <PresetConfigModal
+                isOpen={showPresetConfigModal}
+                onClose={() => {
+                    setShowPresetConfigModal(false);
+                    setEditingPreset(null);
+                }}
+                sidebarSections={sidebarContent}
+                onSavePreset={handleSavePresetConfig}
+                initialPreset={editingPreset}
             />
 
             {/* Tooltip au survol */}

@@ -5,7 +5,7 @@ import { useState } from 'react'
  * Affiche une liste de cases à cocher pour sélectionner/sauvegarder des préréglages
  * Conforme CDC : système de préréglages en haut de sidebar
  */
-export default function PresetSelector({ presets = [], selectedPresets = [], onTogglePreset, onSaveNew, onDelete }) {
+export default function PresetSelector({ presets = [], selectedPresets = [], onTogglePreset, onSaveNew, onDelete, onOpenConfigModal }) {
     const [showSaveModal, setShowSaveModal] = useState(false)
     const [newPresetName, setNewPresetName] = useState('')
     const [newPresetDesc, setNewPresetDesc] = useState('')
@@ -13,14 +13,11 @@ export default function PresetSelector({ presets = [], selectedPresets = [], onT
     const handleSaveNewPreset = () => {
         if (!newPresetName.trim()) return
 
-        const preset = {
-            id: Date.now().toString(),
-            name: newPresetName.trim(),
-            description: newPresetDesc.trim(),
-            createdAt: new Date().toISOString()
+        // Au lieu de sauvegarder directement, ouvrir le modal de configuration complète
+        if (onOpenConfigModal) {
+            onOpenConfigModal({ name: newPresetName.trim(), description: newPresetDesc.trim() })
         }
 
-        onSaveNew?.(preset)
         setNewPresetName('')
         setNewPresetDesc('')
         setShowSaveModal(false)
