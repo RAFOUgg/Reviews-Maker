@@ -130,7 +130,30 @@ export default function PipelineDragDropView({
             // Mode normal: ouvrir modal
             setCurrentCellTimestamp(timestamp);
             setIsModalOpen(true);
+
+            // Si des préréglages sont sélectionnés, proposer de les appliquer
+            if (selectedPresets.length > 0) {
+                const shouldApply = window.confirm(
+                    `Voulez-vous appliquer les ${selectedPresets.length} préréglage(s) sélectionné(s) à cette cellule ?`
+                );
+                if (shouldApply) {
+                    applyPresetsToCell(timestamp, selectedPresets);
+                }
+            }
         }
+    };
+
+    // Appliquer des préréglages à une cellule
+    const applyPresetsToCell = (timestamp, presetIds) => {
+        presetIds.forEach(presetId => {
+            const preset = presets.find(p => p.id === presetId);
+            if (preset && preset.data) {
+                // Appliquer toutes les données du préréglage
+                Object.entries(preset.data).forEach(([key, value]) => {
+                    onDataChange(timestamp, key, value);
+                });
+            }
+        });
     };
 
     // Sauvegarder données depuis modal
@@ -449,6 +472,31 @@ export default function PipelineDragDropView({
                             Pipeline {type === 'culture' ? 'Culture' : 'Curing/Maturation'}
                         </h3>
                         <div className="flex items-center gap-2">
+                            {/* Mode sélection multiple */}
+                            {massAssignMode && (
+                                <div className="flex items-center gap-2 mr-2 px-3 py-1.5 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                                    <span className="text-xs font-medium text-purple-800 dark:text-purple-300">
+                                        {selectedCells.length} cellule(s) sélectionnée(s)
+                                    </span>
+                                    {selectedCells.length > 0 && selectedPresets.length > 0 && (
+                                        <button
+                                            onClick={() => {
+                                                selectedCells.forEach(timestamp => {
+                                                    applyPresetsToCell(timestamp, selectedPresets);
+                                                });
+                                                setMassAssignMode(false);
+                                                setSelectedCells([]);
+                                                alert(`✓ Préréglage(s) appliqué(s) à ${selectedCells.length} cellule(s) !`);
+                                            }}
+                                            className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium"
+                                            title="Appliquer les préréglages sélectionnés"
+                                        >
+                                            ✓ Appliquer
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
                             <button
                                 onClick={() => setShowPresets(!showPresets)}
                                 className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
@@ -801,6 +849,7 @@ export default function PipelineDragDropView({
                 timestamp={currentCellTimestamp}
                 intervalLabel={cells.find(c => c.timestamp === currentCellTimestamp)?.label || ''}
                 droppedItem={droppedItem} // Passer l'item droppé à la modal
+                pipelineType={type} // Passer le type de pipeline pour localStorage
             />
 
             {/* Modal attribution en masse */}
