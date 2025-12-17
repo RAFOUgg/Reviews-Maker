@@ -126,7 +126,8 @@ export default function PipelineDataModal({
         setFieldPresets(updatedPresets);
         localStorage.setItem(`${pipelineType}_field_${fieldKey}_presets`, JSON.stringify(updatedPresets));
         setNewPresetName('');
-        alert(`✓ Préréglage "${newPreset.name}" sauvegardé !`);
+        // Message de succès sans "Préréglage"
+        alert(`✓ "${newPreset.name}" sauvegardé !`);
     };
 
     // Charger un préréglage
@@ -289,10 +290,13 @@ export default function PipelineDataModal({
                         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
                             <div>
                                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                                    {droppedItem ? '📝 Saisir les valeurs' : '✏️ Modifier les données'}
+                                    {droppedItem ? `📝 Attribution pour ${intervalLabel}` : '✏️ Modifier les données'}
                                 </h2>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    {intervalLabel} • {droppedItem ? 'Nouveau champ' : `${itemsToDisplay.length} champ(s)`}
+                                    {droppedItem
+                                        ? `Définir les valeurs de "${droppedItem.content.label}"`
+                                        : `${intervalLabel} • ${itemsToDisplay.length} champ(s)`
+                                    }
                                 </p>
                             </div>
                             <button

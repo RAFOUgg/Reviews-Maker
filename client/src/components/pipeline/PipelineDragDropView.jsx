@@ -58,6 +58,7 @@ export default function PipelineDragDropView({
     const [droppedItem, setDroppedItem] = useState(null); // Item droppé en attente de saisie
     const [showPresetConfigModal, setShowPresetConfigModal] = useState(false);
     const [editingPreset, setEditingPreset] = useState(null);
+    const [hoveredCell, setHoveredCell] = useState(null); // Cellule survolée pendant drag
 
     // Handlers pour préréglages
     const handleTogglePreset = (presetId) => {
@@ -275,13 +276,19 @@ export default function PipelineDragDropView({
         e.dataTransfer.setData('text/plain', JSON.stringify(content));
     };
 
-    const handleDragOver = (e) => {
+    const handleDragOver = (e, timestamp) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'copy';
+        setHoveredCell(timestamp); // Mettre à jour la cellule survolée
+    };
+
+    const handleDragLeave = () => {
+        setHoveredCell(null);
     };
 
     const handleDrop = (e, timestamp) => {
         e.preventDefault();
+        setHoveredCell(null);
         if (!draggedContent) return;
 
         // Stocker l'item droppé et ouvrir la modal pour saisir les valeurs
@@ -354,15 +361,34 @@ export default function PipelineDragDropView({
         }
 
         // PHASES prédéfinies selon type de pipeline
-        if (intervalType === 'phase' && timelineConfig.phases?.length) {
+        if (intervalType === 'phase') {
+            // Phases prédéfinies pour culture (CDC)
+            const culturePhases = [
+                { id: 'phase-0', name: 'Graine (J0)', duration: 0, emoji: '🌰' },
+                { id: 'phase-1', name: 'Germination', duration: 3, emoji: '🌱' },
+                { id: 'phase-2', name: 'Plantule', duration: 7, emoji: '🌿' },
+                { id: 'phase-3', name: 'Début Croissance', duration: 14, emoji: '🌳' },
+                { id: 'phase-4', name: 'Milieu Croissance', duration: 14, emoji: '🌳' },
+                { id: 'phase-5', name: 'Fin Croissance', duration: 7, emoji: '🌳' },
+                { id: 'phase-6', name: 'Début Stretch', duration: 7, emoji: '🌲' },
+                { id: 'phase-7', name: 'Milieu Stretch', duration: 7, emoji: '🌲' },
+                { id: 'phase-8', name: 'Fin Stretch', duration: 7, emoji: '🌲' },
+                { id: 'phase-9', name: 'Début Floraison', duration: 21, emoji: '🌸' },
+                { id: 'phase-10', name: 'Milieu Floraison', duration: 21, emoji: '🌺' },
+                { id: 'phase-11', name: 'Fin Floraison', duration: 14, emoji: '🏵️' }
+            ];
+
+            const phases = timelineConfig.phases?.length ? timelineConfig.phases : culturePhases;
             let cumulativeDays = 0;
-            return timelineConfig.phases.map((phase, i) => {
+
+            return phases.map((phase, i) => {
                 const cell = {
                     timestamp: Date.now() + (cumulativeDays * 24 * 60 * 60 * 1000),
                     label: phase.name || `Phase ${i + 1}`,
                     phase: phase,
                     phaseId: phase.id || `phase-${i}`,
-                    duration: phase.duration || 7 // Durée par défaut si non spécifiée
+                    duration: phase.duration || 7,
+                    emoji: phase.emoji || '🌿'
                 };
                 cumulativeDays += phase.duration || 7;
                 return cell;
@@ -718,11 +744,13 @@ export default function PipelineDragDropView({
                                     const cellData = getCellData(cell.timestamp);
                                     const isFirst = idx === 0;
                                     const isSelected = selectedCells.includes(cell.timestamp);
+                                    const isHovered = hoveredCell === cell.timestamp;
 
                                     return (
                                         <div
                                             key={cell.timestamp}
-                                            onDragOver={handleDragOver}
+                                            onDragOver={(e) => handleDragOver(e, cell.timestamp)}
+                                            onDragLeave={handleDragLeave}
                                             onDrop={(e) => handleDrop(e, cell.timestamp)}
                                             onClick={() => handleCellClick(cell.timestamp)}
                                             onMouseEnter={(e) => handleCellHover(e, cell.timestamp)}
@@ -738,12 +766,25 @@ export default function PipelineDragDropView({
                                                     : 'hover:border-blue-400 hover:shadow-md'
                                                 }
                                                 ${isSelected
-                                                    ? 'ring-2 ring-purple-500 bg-purple-50'
+                                                    ? 'ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                                                    : ''
+                                                }
+                                                ${isHovered && draggedContent
+                                                    ? 'ring-4 ring-blue-500 bg-blue-100 dark:bg-blue-900/30 scale-105 shadow-2xl border-blue-500 animate-pulse'
                                                     : ''
                                                 }
                                                 ${isFirst ? 'col-span-2 bg-purple-500/10 border-purple-500' : ''}
                                             `}
                                         >
+                                            {/* Indicateur visuel drop */}
+                                            {isHovered && draggedContent && (
+                                                <div className="absolute inset-0 bg-blue-500/20 rounded-lg flex items-center justify-center z-20 pointer-events-none">
+                                                    <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                                                        📌 Déposer ici
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             {/* Affichage 4 emojis superposables CDC-conforme */}
                                             {hasData && (
                                                 <CellEmojiOverlay
