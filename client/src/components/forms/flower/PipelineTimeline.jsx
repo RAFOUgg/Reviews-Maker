@@ -269,8 +269,8 @@ export default function PipelineTimeline({
     // Calcul du nombre de cases selon la configuration
     const getCellCount = () => {
         if (timelineConfig.intervalType === 'phases') {
-            // 12 phases prédéfinies selon type de pipeline
-            return 12
+            // 16 phases physiologiques selon PIPELINE_DONNEE_CULTURES.md
+            return 16
         }
         return timelineConfig.totalIntervals
     }
@@ -295,7 +295,25 @@ export default function PipelineTimeline({
             case 'mois':
                 return `M${index + 1}`
             case 'phases':
-                const phases = ['Graine', 'Germination', 'Plantule', 'Début croissance', 'Mi-croissance', 'Fin croissance', 'Début stretch', 'Mi-stretch', 'Fin stretch', 'Début floraison', 'Mi-floraison', 'Fin floraison']
+                // 16 phases physiologiques exhaustives selon PIPELINE_DONNEE_CULTURES.md
+                const phases = [
+                    '0 day / Graine',
+                    'Germination',
+                    'Plantule',
+                    'Croissance – Début',
+                    'Croissance – Milieu',
+                    'Croissance – Fin',
+                    'Stretch – Début',
+                    'Stretch – Milieu',
+                    'Stretch – Fin',
+                    'Floraison – Début',
+                    'Floraison – Milieu',
+                    'Floraison – Fin',
+                    'Maturation',
+                    'Rinçage',
+                    'Séchage',
+                    'Curing'
+                ]
                 return phases[index] || `Phase ${index + 1}`
             case 'dates':
                 // Calculer la date basée sur startDate + index jours
