@@ -335,6 +335,7 @@ Coques de coco (brutes)
 - IR / Far‑red inclus  
 - Spectre ajustable / multi‑canaux  
 - Non spécifié  
+- Photo du spectre (1 upload image / pdf)
 
 ### Distance lampe / plante
 
