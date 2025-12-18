@@ -2,6 +2,239 @@ import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, Settings, Save, Trash2, Calendar, Info } from 'lucide-react'
 
+// ============ SOUS-COMPOSANTS MODAUX ============
+
+// Modal pour configurer TOUTES les données d'un préréglage
+function PresetConfigModal({ fields, onSave, onClose }) {
+    const [presetName, setPresetName] = useState('')
+    const [presetDescription, setPresetDescription] = useState('')
+    const [presetData, setPresetData] = useState({})
+
+    const handleSubmit = (e) => {
+        e.preventDefault()
+        if (!presetName.trim()) return
+        onSave(presetName, presetDescription)
+    }
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        📦 Nouveau préréglage
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        Définissez toutes les données de la pipeline. Ce préréglage sera sauvegardé dans votre bibliothèque.
+                    </p>
+                </div>
+
+                <form onSubmit={handleSubmit} className="flex-1 overflow-auto">
+                    <div className="p-6 space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Nom du préréglage *
+                            </label>
+                            <input
+                                type="text"
+                                value={presetName}
+                                onChange={(e) => setPresetName(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                placeholder="ex: Culture Indoor LED Bio"
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Description (optionnel)
+                            </label>
+                            <textarea
+                                value={presetDescription}
+                                onChange={(e) => setPresetDescription(e.target.value)}
+                                rows="2"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                placeholder="Décrivez votre configuration..."
+                            />
+                        </div>
+
+                        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                                Configuration des données
+                            </h4>
+
+                            {Object.entries(
+                                fields.reduce((acc, field) => {
+                                    const section = field.section || 'Général'
+                                    if (!acc[section]) acc[section] = []
+                                    acc[section].push(field)
+                                    return acc
+                                }, {})
+                            ).map(([section, sectionFields]) => (
+                                <div key={section} className="mb-4">
+                                    <h5 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">
+                                        {section}
+                                    </h5>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {sectionFields.map(field => (
+                                            <div key={field.name}>
+                                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                    {field.label}
+                                                </label>
+                                                {field.type === 'select' ? (
+                                                    <select
+                                                        value={presetData[field.name] || field.defaultValue || ''}
+                                                        onChange={(e) => setPresetData(prev => ({ ...prev, [field.name]: e.target.value }))}
+                                                        className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                                    >
+                                                        <option value="">Sélectionner...</option>
+                                                        {field.options?.map(opt => (
+                                                            <option key={opt} value={opt}>{opt}</option>
+                                                        ))}
+                                                    </select>
+                                                ) : field.type === 'number' ? (
+                                                    <input
+                                                        type="number"
+                                                        value={presetData[field.name] || field.defaultValue || ''}
+                                                        onChange={(e) => setPresetData(prev => ({ ...prev, [field.name]: e.target.value }))}
+                                                        placeholder={field.placeholder}
+                                                        className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                                    />
+                                                ) : (
+                                                    <input
+                                                        type="text"
+                                                        value={presetData[field.name] || field.defaultValue || ''}
+                                                        onChange={(e) => setPresetData(prev => ({ ...prev, [field.name]: e.target.value }))}
+                                                        placeholder={field.placeholder}
+                                                        className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                                    />
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                        >
+                            Annuler
+                        </button>
+                        <button
+                            type="submit"
+                            className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
+                        >
+                            <Save className="w-4 h-4 inline mr-2" />
+                            Sauvegarder le préréglage
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    )
+}
+
+// Modal pour définir la valeur d'un contenu (clic droit)
+function ContentValueModal({ content, onSave, onClose, selectedCellsCount }) {
+    const [value, setValue] = useState(content.defaultValue || '')
+
+    const handleSubmit = (e) => {
+        e.preventDefault()
+        onSave(content.name, value)
+    }
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full">
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Définir : {content.label}
+                    </h3>
+                    {selectedCellsCount > 0 ? (
+                        <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                            ✓ Sera appliqué à {selectedCellsCount} case(s) sélectionnée(s)
+                        </p>
+                    ) : (
+                        <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">
+                            ⚠️ Veuillez d'abord sélectionner des cases sur la timeline
+                        </p>
+                    )}
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Valeur
+                        </label>
+                        {content.type === 'select' ? (
+                            <select
+                                value={value}
+                                onChange={(e) => setValue(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                autoFocus
+                            >
+                                <option value="">Sélectionner...</option>
+                                {content.options?.map(opt => (
+                                    <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                            </select>
+                        ) : content.type === 'number' ? (
+                            <input
+                                type="number"
+                                value={value}
+                                onChange={(e) => setValue(e.target.value)}
+                                placeholder={content.placeholder}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                autoFocus
+                            />
+                        ) : content.type === 'date' ? (
+                            <input
+                                type="date"
+                                value={value}
+                                onChange={(e) => setValue(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                autoFocus
+                            />
+                        ) : (
+                            <input
+                                type="text"
+                                value={value}
+                                onChange={(e) => setValue(e.target.value)}
+                                placeholder={content.placeholder}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                autoFocus
+                            />
+                        )}
+                    </div>
+
+                    <div className="flex gap-3">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                        >
+                            Annuler
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={selectedCellsCount === 0}
+                            className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Appliquer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    )
+}
+
+// ============ COMPOSANT PRINCIPAL ============
+
 /**
  * Timeline GitHub-style pour les PipeLines selon CDC
  * Système avec préréglages, drag & drop, et timeline interactive
@@ -629,235 +862,5 @@ export default function PipelineTimeline({
         )
     }
         </div >
-    )
-}
-
-// Modal pour configurer TOUTES les données d'un préréglage
-function PresetConfigModal({ fields, onSave, onClose }) {
-    const [presetName, setPresetName] = useState('')
-    const [presetDescription, setPresetDescription] = useState('')
-    const [presetData, setPresetData] = useState({})
-
-    const handleSubmit = (e) => {
-        e.preventDefault()
-        if (!presetName.trim()) return
-        onSave(presetName, presetDescription)
-    }
-
-    return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        📦 Nouveau préréglage
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        Définissez toutes les données de la pipeline. Ce préréglage sera sauvegardé dans votre bibliothèque.
-                    </p>
-                </div>
-
-                <form onSubmit={handleSubmit} className="flex-1 overflow-auto">
-                    <div className="p-6 space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Nom du préréglage *
-                            </label>
-                            <input
-                                type="text"
-                                value={presetName}
-                                onChange={(e) => setPresetName(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                placeholder="ex: Culture Indoor LED Bio"
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Description (optionnel)
-                            </label>
-                            <textarea
-                                value={presetDescription}
-                                onChange={(e) => setPresetDescription(e.target.value)}
-                                rows="2"
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                placeholder="Décrivez votre configuration..."
-                            />
-                        </div>
-
-                        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                                Configuration des données
-                            </h4>
-
-                            {/* Grouper par section */}
-                            {Object.entries(
-                                fields.reduce((acc, field) => {
-                                    const section = field.section || 'Général'
-                                    if (!acc[section]) acc[section] = []
-                                    acc[section].push(field)
-                                    return acc
-                                }, {})
-                            ).map(([section, sectionFields]) => (
-                                <div key={section} className="mb-4">
-                                    <h5 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">
-                                        {section}
-                                    </h5>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        {sectionFields.map(field => (
-                                            <div key={field.name}>
-                                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                    {field.label}
-                                                </label>
-                                                {field.type === 'select' ? (
-                                                    <select
-                                                        value={presetData[field.name] || field.defaultValue || ''}
-                                                        onChange={(e) => setPresetData(prev => ({ ...prev, [field.name]: e.target.value }))}
-                                                        className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                                    >
-                                                        <option value="">Sélectionner...</option>
-                                                        {field.options?.map(opt => (
-                                                            <option key={opt} value={opt}>{opt}</option>
-                                                        ))}
-                                                    </select>
-                                                ) : field.type === 'number' ? (
-                                                    <input
-                                                        type="number"
-                                                        value={presetData[field.name] || field.defaultValue || ''}
-                                                        onChange={(e) => setPresetData(prev => ({ ...prev, [field.name]: e.target.value }))}
-                                                        placeholder={field.placeholder}
-                                                        className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                                    />
-                                                ) : (
-                                                    <input
-                                                        type="text"
-                                                        value={presetData[field.name] || field.defaultValue || ''}
-                                                        onChange={(e) => setPresetData(prev => ({ ...prev, [field.name]: e.target.value }))}
-                                                        placeholder={field.placeholder}
-                                                        className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                                    />
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                        >
-                            Annuler
-                        </button>
-                        <button
-                            type="submit"
-                            className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
-                        >
-                            <Save className="w-4 h-4 inline mr-2" />
-                            Sauvegarder le préréglage
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    )
-}
-
-// Modal pour définir la valeur d'un contenu (clic droit)
-function ContentValueModal({ content, onSave, onClose, selectedCellsCount }) {
-    const [value, setValue] = useState(content.defaultValue || '')
-
-    const handleSubmit = (e) => {
-        e.preventDefault()
-        onSave(content.name, value)
-    }
-
-    return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full">
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Définir : {content.label}
-                    </h3>
-                    {selectedCellsCount > 0 ? (
-                        <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                            ✓ Sera appliqué à {selectedCellsCount} case(s) sélectionnée(s)
-                        </p>
-                    ) : (
-                        <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">
-                            ⚠️ Veuillez d'abord sélectionner des cases sur la timeline
-                        </p>
-                    )}
-                </div>
-
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Valeur
-                        </label>
-                        {content.type === 'select' ? (
-                            <select
-                                value={value}
-                                onChange={(e) => setValue(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                autoFocus
-                            >
-                                <option value="">Sélectionner...</option>
-                                {content.options?.map(opt => (
-                                    <option key={opt} value={opt}>{opt}</option>
-                                ))}
-                            </select>
-                        ) : content.type === 'number' ? (
-                            <input
-                                type="number"
-                                value={value}
-                                onChange={(e) => setValue(e.target.value)}
-                                placeholder={content.placeholder}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                autoFocus
-                            />
-                        ) : content.type === 'date' ? (
-                            <input
-                                type="date"
-                                value={value}
-                                onChange={(e) => setValue(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                autoFocus
-                            />
-                        ) : (
-                            <input
-                                type="text"
-                                value={value}
-                                onChange={(e) => setValue(e.target.value)}
-                                placeholder={content.placeholder}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                autoFocus
-                            />
-                        )}
-                    </div>
-
-                    <div className="flex gap-3">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                        >
-                            Annuler
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={selectedCellsCount === 0}
-                            className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            Appliquer
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
     )
 }
