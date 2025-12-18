@@ -69,11 +69,12 @@
 
 ### Dimensions / Surface / Volume
 
-- Longueur (cm ou m) – nombre libre  
-- Largeur (cm ou m) – nombre libre  
-- Hauteur (cm ou m) – nombre libre  
-- Surface au sol (m²) – calculée ou saisie  
-- Volume total (m³) – calculé ou saisi  
+- Unité : [sélecteur cm / m]  
+- Longueur – champ numérique libre  
+- Largeur – champ numérique libre  
+- Hauteur – champ numérique libre  
+- Surface au sol (m²) – calculée automatiquement ou saisie manuellement  
+- Volume total (m³) – calculé automatiquement ou saisi manuellement  
 
 ***
 
@@ -122,6 +123,13 @@
 - Mélange coco / perlite  
 - Mélange coco / billes d’argile  
 - Mélange personnalisé (composition précisée)  
+
+### Drainage
+
+- Bon  
+- Moyen  
+- Faible  
+- Aucun (hydro/aéro)  
 
 ### Volume de substrat
 
@@ -238,11 +246,17 @@ Coques de coco (brutes)
 
 ### Volume d’eau par arrosage
 
-- Champ numérique (L ou mL)  
+- Unité : [sélecteur L / mL]  
+- Champ numérique libre  
 - Mode :  
   - Volume fixe par pot  
   - Volume fixe par m²  
   - Volume variable (commentaire)  
+
+### Durée d'arrosage
+
+- Unité : [sélecteur secondes / minutes / heures]  
+- Champ numérique libre  
 
 [7][8][4][6]
 
@@ -277,10 +291,18 @@ Coques de coco (brutes)
 - Remo Nutrients  
 - Autre (texte libre)  
 
+### Nom du produit
+
+- Champ texte libre (ex: Bio-Bloom, Sensi Grow Part A, Big Bud, etc.)  
+
 ### Dosage
 
-- Unité : g/L, ml/L, ml/10 L, EC cible, ppm cible  
-- Champ numérique  
+- Unité : [sélecteur g/L / ml/L / ml/10L / EC (mS/cm) / ppm]  
+- Champ numérique libre  
+
+### pH cible de la solution
+
+- Champ numérique libre (pH 0-14)  
 
 ### Fréquence d’application (sélection)
 
@@ -323,6 +345,29 @@ Coques de coco (brutes)
 - Lumière naturelle + HPS  
 - Autre (texte libre)  
 
+### Fabricant / Marque (sélection + texte libre)
+
+- Spider Farmer  
+- Mars Hydro  
+- HLG (Horticulture Lighting Group)  
+- Lumatek  
+- Migro  
+- Samsung (LM301B/H)  
+- Sanlight  
+- SANlight  
+- Gavita  
+- Lumii  
+- Viparspectra  
+- Secret Jardin  
+- Adjust-A-Wings  
+- Osram  
+- Philips  
+- Autre (texte libre)  
+
+### Modèle
+
+- Champ texte libre (ex: SF-4000, TS-1000, HLG 550 V2, etc.)  
+
 ### Spectre
 
 - Spectre complet  
@@ -339,15 +384,16 @@ Coques de coco (brutes)
 
 ### Distance lampe / plante
 
-- Unité : cm / m / pouces  
+- Unité : [sélecteur cm / m / pouces]  
+- Champ numérique libre  
 - Mode :  
   - Fixe  
   - Variable (suivi dans pipeline)  
 
 ### Puissance
 
-- Puissance totale (W) – champ numérique  
-- Puissance par m² (W/m²) – calculable  
+- Puissance totale (W) – champ numérique libre  
+- Puissance par m² (W/m²) – calculée automatiquement = Puissance totale (W) / Surface au sol (m²)  
 - Dimmable : oui / non  
 
 ### Photopériode / durée d’éclairage
@@ -359,7 +405,9 @@ Coques de coco (brutes)
 - 12/12  
 - 11/13  
 - 10/14  
-- Personnalisée (heures ON/OFF libres)  
+- Personnalisée :  
+  - Heures ON – champ numérique libre (0-24)  
+  - Heures OFF – champ numérique libre (0-24)
 
 ### Paramètres lumineux avancés
 
@@ -382,32 +430,44 @@ Coques de coco (brutes)
 
 ### Température
 
-- Température moyenne (°C) – champ numérique  
+- Température moyenne (°C) – champ numérique libre  
 - Plage cible :  
-  - Végétatif jour : 22–30 °C (sélections prédéfinies)  
-  - Végétatif nuit : 18–24 °C  
-  - Floraison jour : 20–28 °C  
-  - Floraison nuit : 16–22 °C[3][1][2]
+  - Végétatif jour : 22–30 °C (suggestions)  
+  - Végétatif nuit : 18–24 °C (suggestions)  
+  - Floraison jour : 20–28 °C (suggestions)  
+  - Floraison nuit : 16–22 °C (suggestions)[3][1][2]  
+- Plage personnalisée :  
+  - Minimum (°C) – champ numérique libre  
+  - Maximum (°C) – champ numérique libre  
 - Mode : contrôlée / non contrôlée  
 
 ### Humidité relative
 
-- HR moyenne (%) – champ numérique  
+- HR moyenne (%) – champ numérique libre  
 - Plages typiques :  
-  - Germination : 70–90%  
-  - Plantule : 65–80%  
-  - Croissance : 55–80%  
-  - Floraison : 40–60%  
-  - Fin de floraison : 35–50%[10][1]
+  - Germination : 70–90% (suggestions)  
+  - Plantule : 65–80% (suggestions)  
+  - Croissance : 55–80% (suggestions)  
+  - Floraison : 40–60% (suggestions)  
+  - Fin de floraison : 35–50% (suggestions)[10][1]  
+- Plage personnalisée :  
+  - Minimum (%) – champ numérique libre  
+  - Maximum (%) – champ numérique libre  
+
+### VPD (Vapor Pressure Deficit) – optionnel avancé
+
+- Calculé automatiquement (depuis Température + HR) ou saisi manuellement  
+- Valeur (kPa) – champ numérique libre  
 
 ### CO₂
 
 - Non enrichi (~400–500 ppm)  
-- CO₂ enrichi :  
+- CO₂ enrichi (suggestions) :  
   - 600–800 ppm  
   - 800–1000 ppm  
   - 1000–1200 ppm  
-  - >1200 ppm (avancé)[1][3]
+  - >1200 ppm (avancé)[1][3]  
+- Valeur personnalisée (ppm) – champ numérique libre  
 - Mode : injection bouteille, générateur, HVACD, pas de contrôle  
 
 ### Ventilation
@@ -420,8 +480,8 @@ Coques de coco (brutes)
   - Ventilation par gaines (HVACD)  
   - Déshumidificateur  
   - Humidificateur  
-  - Filtre à charbon  
-- Mode :  
+  - Filtre à charbon  - Débit extracteur (m³/h) – champ numérique libre  
+- Puissance ventilateur (W) – champ numérique libre  - Mode :  
   - Continu  
   - Cyclé (minuterie)  
   - Piloté par hygromètre/thermostat  
@@ -492,7 +552,8 @@ Coques de coco (brutes)
 
 ### Poids de la plante fraîche (hors racines)
 
-- Champ numérique (g/kg)  
+- Unité : [sélecteur g / kg]  
+- Champ numérique libre  
 
 ### Nombre de branches principales
 
@@ -538,16 +599,16 @@ Prévoir sélection multiple + % :
 
 ### Poids
 
-- Poids brut (plante entière fraîche) – g  
-- Poids net après première défoliation – g  
-- Poids sec final (optionnel) – g  
-- Taux de perte (%) – calculable  
+- Poids brut (plante entière fraîche) – champ numérique (g)  
+- Poids net après première défoliation – champ numérique (g)  
+- Poids sec final (optionnel) – champ numérique (g)  
+- Taux de perte (%) – calculé automatiquement = ((Poids brut - Poids sec) / Poids brut) × 100  
 
 ### Rendement
 
-- g/m² – champ numérique  
-- g/plante – champ numérique  
-- g/W – optionnel  
+- g/m² – champ numérique libre  
+- g/plante – champ numérique libre  
+- g/W – calculé automatiquement = Poids sec final (g) / Puissance totale (W)  
 - Catégories qualitatives :  
   - Faible  
   - Moyen  
