@@ -5,7 +5,7 @@ import { Plus, Settings, Save, Trash2, Calendar, Info } from 'lucide-react'
 // ============ SOUS-COMPOSANTS MODAUX ============
 
 // Modal pour configurer TOUTES les données d'un préréglage
-function PresetConfigModal({ fields, onSave, onClose }) {
+const PresetConfigModal = ({ fields, onSave, onClose }) => {
     const [presetName, setPresetName] = useState('')
     const [presetDescription, setPresetDescription] = useState('')
     const [presetData, setPresetData] = useState({})
@@ -160,7 +160,7 @@ function PresetConfigModal({ fields, onSave, onClose }) {
 }
 
 // Modal pour définir la valeur d'un contenu (clic droit)
-function ContentValueModal({ content, onSave, onClose, selectedCellsCount }) {
+const ContentValueModal = ({ content, onSave, onClose, selectedCellsCount }) => {
     const [value, setValue] = useState(content.defaultValue || '')
 
     const handleSubmit = (e) => {
@@ -284,7 +284,7 @@ function ContentValueModal({ content, onSave, onClose, selectedCellsCount }) {
 }
 
 // Modal menu contextuel clic droit sur contenu
-function ContextMenu({ content, position, onClose, onAssignToRange, onDefineValue }) {
+const ContextMenu = ({ content, position, onClose, onAssignToRange, onDefineValue }) => {
     return (
         <>
             {/* Overlay transparent pour fermer au clic extérieur */}
@@ -337,7 +337,7 @@ function ContextMenu({ content, position, onClose, onAssignToRange, onDefineValu
 }
 
 // Modal pour assigner une donnée à une plage de cases
-function AssignToRangeModal({ content, cellCount, onSave, onClose }) {
+const AssignToRangeModal = ({ content, cellCount, onSave, onClose }) => {
     const [startCell, setStartCell] = useState(1)
     const [endCell, setEndCell] = useState(cellCount)
     const [value, setValue] = useState(content.defaultValue || '')
