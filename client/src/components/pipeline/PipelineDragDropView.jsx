@@ -119,17 +119,33 @@ export default function PipelineDragDropView({
     };
 
     // Ouvrir modal cellule
-    const handleCellClick = (timestamp) => {
+    const handleCellClick = (cellId) => {
+        console.log('🖱️ Clic sur cellule:', cellId);
+        console.log('📊 Mode masse actif:', massAssignMode);
+        console.log('📋 Cellules sélectionnées avant:', selectedCells);
+
         if (massAssignMode) {
-            // Mode sélection multiple
-            setSelectedCells(prev =>
-                prev.includes(timestamp)
-                    ? prev.filter(t => t !== timestamp)
-                    : [...prev, timestamp]
-            );
+            // Mode sélection multiple - TOGGLE la cellule
+            setSelectedCells(prev => {
+                const isAlreadySelected = prev.includes(cellId);
+                console.log('  → Cellule déjà sélectionnée:', isAlreadySelected);
+
+                if (isAlreadySelected) {
+                    // Retirer de la sélection
+                    const newSelection = prev.filter(id => id !== cellId);
+                    console.log('  → Retirée, nouvelle sélection:', newSelection);
+                    return newSelection;
+                } else {
+                    // Ajouter à la sélection
+                    const newSelection = [...prev, cellId];
+                    console.log('  → Ajoutée, nouvelle sélection:', newSelection);
+                    return newSelection;
+                }
+            });
         } else {
             // Mode normal: ouvrir modal
-            setCurrentCellTimestamp(timestamp);
+            console.log('📝 Ouverture modal pour:', cellId);
+            setCurrentCellTimestamp(cellId);
             setIsModalOpen(true);
 
             // Si des préréglages sont sélectionnés, proposer de les appliquer
@@ -138,7 +154,7 @@ export default function PipelineDragDropView({
                     `Voulez-vous appliquer les ${selectedPresets.length} préréglage(s) sélectionné(s) à cette cellule ?`
                 );
                 if (shouldApply) {
-                    applyPresetsToCell(timestamp, selectedPresets);
+                    applyPresetsToCell(cellId, selectedPresets);
                 }
             }
         }
@@ -327,6 +343,7 @@ export default function PipelineDragDropView({
     };
 
     // Générer les cases de la timeline selon le type d'intervalle
+    // IMPORTANT: Utiliser des IDs stables, pas Date.now() qui change à chaque render!
     const generateCells = () => {
         const { type: intervalType, start, end, duration, totalSeconds, totalHours, totalDays, totalWeeks } = timelineConfig;
 
@@ -334,7 +351,8 @@ export default function PipelineDragDropView({
         if (intervalType === 'seconde' && totalSeconds) {
             const count = Math.min(totalSeconds, 900); // Max 900s
             return Array.from({ length: count }, (_, i) => ({
-                timestamp: Date.now() + (i * 1000),
+                id: `sec-${i}`, // ID stable
+                timestamp: `sec-${i}`,
                 label: `${i}s`,
                 seconds: i
             }));
@@ -344,7 +362,8 @@ export default function PipelineDragDropView({
         if (intervalType === 'heure' && totalHours) {
             const count = Math.min(totalHours, 336); // Max 336h
             return Array.from({ length: count }, (_, i) => ({
-                timestamp: Date.now() + (i * 60 * 60 * 1000),
+                id: `hour-${i}`,
+                timestamp: `hour-${i}`,
                 label: `${i}h`,
                 hours: i
             }));
@@ -354,7 +373,8 @@ export default function PipelineDragDropView({
         if (intervalType === 'jour' && totalDays) {
             const count = Math.min(totalDays, 365); // Max 365 jours
             return Array.from({ length: count }, (_, i) => ({
-                timestamp: Date.now() + (i * 24 * 60 * 60 * 1000),
+                id: `day-${i + 1}`,
+                timestamp: `day-${i + 1}`,
                 label: `J${i + 1}`,
                 day: i + 1
             }));
@@ -370,10 +390,12 @@ export default function PipelineDragDropView({
             return Array.from({ length: count }, (_, i) => {
                 const date = new Date(startDate);
                 date.setDate(date.getDate() + i);
+                const dateStr = date.toISOString().split('T')[0];
                 return {
-                    timestamp: date.getTime(),
+                    id: `date-${dateStr}`,
+                    timestamp: `date-${dateStr}`,
                     label: date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
-                    date: date.toISOString().split('T')[0],
+                    date: dateStr,
                     day: i + 1
                 };
             });
@@ -382,7 +404,8 @@ export default function PipelineDragDropView({
         // SEMAINES avec nombre total
         if (intervalType === 'semaine' && totalWeeks) {
             return Array.from({ length: totalWeeks }, (_, i) => ({
-                timestamp: Date.now() + (i * 7 * 24 * 60 * 60 * 1000),
+                id: `week-${i + 1}`,
+                timestamp: `week-${i + 1}`,
                 label: `S${i + 1}`,
                 week: i + 1
             }));
@@ -410,11 +433,13 @@ export default function PipelineDragDropView({
             let cumulativeDays = 0;
 
             return phases.map((phase, i) => {
+                const phaseId = phase.id || `phase-${i}`;
                 const cell = {
-                    timestamp: Date.now() + (cumulativeDays * 24 * 60 * 60 * 1000),
+                    id: phaseId,
+                    timestamp: phaseId, // ID stable au lieu de Date.now()
                     label: phase.name || `Phase ${i + 1}`,
                     phase: phase,
-                    phaseId: phase.id || `phase-${i}`,
+                    phaseId: phaseId,
                     duration: phase.duration || 7,
                     emoji: phase.emoji || '🌿'
                 };
@@ -567,8 +592,8 @@ export default function PipelineDragDropView({
                             <button
                                 onClick={toggleMassAssignMode}
                                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${massAssignMode
-                                        ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                                        : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100'
+                                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                    : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100'
                                     }`}
                                 title="Mode sélection multiple pour assigner en masse"
                             >
