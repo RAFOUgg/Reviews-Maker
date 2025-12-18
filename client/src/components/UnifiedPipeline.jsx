@@ -12,15 +12,15 @@
  */
 
 import { useState, useEffect } from 'react'
-import { getPipelineConfig } from '../../config/pipelineConfigs'
-import PipelineDragDropView from '../pipeline/PipelineDragDropView'
-import LiquidCard from '../LiquidCard'
+import { getPipelineConfig } from '../config/pipelineConfigs'
+import PipelineDragDropView from './pipeline/PipelineDragDropView'
+import LiquidCard from './ui/LiquidCard'
 
-export default function UnifiedPipeline({
+const UnifiedPipeline = ({
     type = 'culture', // 'culture' | 'curing' | 'separation' | 'extraction' | 'recipe'
     data = {},
     onChange
-}) {
+}) => {
     // Récupérer la configuration statique selon le type
     const config = getPipelineConfig(type)
 
@@ -157,5 +157,7 @@ export default function UnifiedPipeline({
                 phases={config.phases}
             />
         </LiquidCard>
-    )
-}
+    );
+};
+
+export default UnifiedPipeline;
