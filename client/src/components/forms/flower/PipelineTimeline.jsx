@@ -29,7 +29,10 @@ export default function PipelineTimeline({
     const [showPresetModal, setShowPresetModal] = useState(false)
     const [showConfigModal, setShowConfigModal] = useState(false)
     const [selectedCells, setSelectedCells] = useState([])
+    const [selectedContents, setSelectedContents] = useState([]) // Sélection multiple de contenus
     const [draggedContent, setDraggedContent] = useState(null)
+    const [showContentValueModal, setShowContentValueModal] = useState(false)
+    const [contentToEdit, setContentToEdit] = useState(null)
 
     // Calcul du nombre de cases selon la configuration
     const getCellCount = () => {
@@ -129,19 +132,75 @@ export default function PipelineTimeline({
     }
 
     const handleDrop = (cellIndex) => {
-        if (!draggedContent) return
+        // Utiliser les contenus sélectionnés s'il y en a, sinon le contenu dragué
+        const contentsToApply = selectedContents.length > 0 ? selectedContents : (draggedContent ? [draggedContent] : [])
+
+        if (contentsToApply.length === 0) return
 
         const newTimelineData = { ...timelineData }
-        if (!newTimelineData[cellIndex]) {
-            newTimelineData[cellIndex] = { data: {} }
-        }
 
-        // Ajouter ou modifier la donnée
-        newTimelineData[cellIndex].data[draggedContent.name] = draggedContent.defaultValue || ''
+        // Appliquer à la case cliquée ou à toutes les cases sélectionnées
+        const cellsToUpdate = selectedCells.length > 0 ? selectedCells : [cellIndex]
+
+        cellsToUpdate.forEach(cellIdx => {
+            if (!newTimelineData[cellIdx]) {
+                newTimelineData[cellIdx] = { data: {} }
+            }
+
+            // Ajouter toutes les données sélectionnées
+            contentsToApply.forEach(content => {
+                newTimelineData[cellIdx].data[content.name] = content.defaultValue || ''
+            })
+        })
 
         setTimelineData(newTimelineData)
         updateParentData({ timelineData: newTimelineData })
         setDraggedContent(null)
+        setSelectedContents([]) // Clear selection après drop
+    }
+
+    // Gestion de la sélection multiple de contenus (Ctrl+clic)
+    const handleContentClick = (content, e) => {
+        if (e.ctrlKey || e.metaKey) {
+            // Toggle dans la sélection
+            setSelectedContents(prev =>
+                prev.find(c => c.name === content.name)
+                    ? prev.filter(c => c.name !== content.name)
+                    : [...prev, content]
+            )
+        } else {
+            // Sélection simple
+            setSelectedContents([content])
+        }
+    }
+
+    // Clic droit pour définir une valeur
+    const handleContentRightClick = (content, e) => {
+        e.preventDefault()
+        setContentToEdit(content)
+        setShowContentValueModal(true)
+    }
+
+    // Appliquer une valeur définie aux cases sélectionnées
+    const handleApplyContentValue = (fieldName, value) => {
+        if (selectedCells.length === 0) {
+            alert('Veuillez sélectionner au moins une case sur la timeline')
+            return
+        }
+
+        const newTimelineData = { ...timelineData }
+
+        selectedCells.forEach(cellIdx => {
+            if (!newTimelineData[cellIdx]) {
+                newTimelineData[cellIdx] = { data: {} }
+            }
+            newTimelineData[cellIdx].data[fieldName] = value
+        })
+
+        setTimelineData(newTimelineData)
+        updateParentData({ timelineData: newTimelineData })
+        setShowContentValueModal(false)
+        setContentToEdit(null)
     }
 
     // Sélection multiple de cases
@@ -221,23 +280,15 @@ export default function PipelineTimeline({
                 <div className="p-4 space-y-4">
                     {/* Onglet Préréglages */}
                     <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                                <Settings className="w-4 h-4" />
-                                Préréglages
-                            </h3>
-                            <button
-                                type="button"
-                                onClick={() => setShowPresetModal(true)}
-                                className="p-1 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded"
-                            >
-                                <Plus className="w-4 h-4" />
-                            </button>
-                        </div>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <Settings className="w-4 h-4" />
+                            Préréglages sauvegardés
+                        </h3>
 
                         {presets.length === 0 ? (
-                            <p className="text-xs italic text-gray-500 dark:text-gray-400">
-                                Aucun préréglage sauvegardé
+                            <p className="text-xs italic text-gray-500 dark:text-gray-400 py-4">
+                                Aucun préréglage.<br />
+                                Créez-en un via le bouton ci-dessous.
                             </p>
                         ) : (
                             <div className="space-y-2">
@@ -246,9 +297,10 @@ export default function PipelineTimeline({
                                         key={preset.id}
                                         draggable
                                         onDragStart={() => handleLoadPreset(preset.id)}
-                                        className={`p-3 border rounded-lg cursor-move transition-all ${activePresetId === preset.id
-                                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                                                : 'border-gray-200 dark:border-gray-700 hover:border-primary-300'
+                                        onClick={() => handleLoadPreset(preset.id)}
+                                        className={`p-3 border rounded-lg cursor-pointer transition-all ${activePresetId === preset.id
+                                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                                            : 'border-gray-200 dark:border-gray-700 hover:border-primary-300'
                                             }`}
                                     >
                                         <div className="flex items-start justify-between gap-2">
@@ -264,10 +316,15 @@ export default function PipelineTimeline({
                                             </div>
                                             <button
                                                 type="button"
-                                                onClick={() => {
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
                                                     setPresets(prev => prev.filter(p => p.id !== preset.id))
+                                                    if (activePresetId === preset.id) {
+                                                        setActivePresetId(null)
+                                                    }
                                                 }}
                                                 className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                                                title="Supprimer"
                                             >
                                                 <Trash2 className="w-3 h-3" />
                                             </button>
@@ -285,18 +342,29 @@ export default function PipelineTimeline({
                             Contenus
                         </h3>
                         <p className="text-xs text-gray-600 dark:text-gray-400">
-                            Glissez les éléments vers les cases →
+                            • Glissez vers les cases →<br />
+                            • Ctrl+clic pour sélection multiple<br />
+                            • Clic droit → Définir la valeur
                         </p>
+
+                        {/* Compteur de sélection */}
+                        {selectedContents.length > 0 && (
+                            <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700 rounded-lg p-2">
+                                <p className="text-xs font-medium text-primary-900 dark:text-primary-100">
+                                    {selectedContents.length} contenu(s) sélectionné(s)
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedContents([])}
+                                    className="text-xs text-primary-600 hover:underline mt-1"
+                                >
+                                    Désélectionner tout
+                                </button>
+                            </div>
+                        )}
 
                         {/* Liste des contenus disponibles par section */}
                         <div className="space-y-3">
-                            {availableDataFields.reduce((acc, field) => {
-                                const section = field.section || 'Général'
-                                if (!acc[section]) acc[section] = []
-                                acc[section].push(field)
-                                return acc
-                            }, Object.create(null)).map = Object.entries}
-
                             {Object.entries(
                                 availableDataFields.reduce((acc, field) => {
                                     const section = field.section || 'Général'
@@ -309,16 +377,26 @@ export default function PipelineTimeline({
                                     <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                                         {section}
                                     </p>
-                                    {fields.map(field => (
-                                        <div
-                                            key={field.name}
-                                            draggable
-                                            onDragStart={() => handleDragStart(field)}
-                                            className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded cursor-move hover:border-primary-400 hover:shadow-sm transition-all text-xs"
-                                        >
-                                            <span className="text-gray-900 dark:text-white">{field.label}</span>
-                                        </div>
-                                    ))}
+                                    {fields.map(field => {
+                                        const isSelected = selectedContents.find(c => c.name === field.name)
+                                        return (
+                                            <div
+                                                key={field.name}
+                                                draggable
+                                                onDragStart={() => handleDragStart(field)}
+                                                onClick={(e) => handleContentClick(field, e)}
+                                                onContextMenu={(e) => handleContentRightClick(field, e)}
+                                                className={`px-3 py-2 border rounded cursor-move hover:shadow-sm transition-all text-xs ${isSelected
+                                                        ? 'bg-primary-100 dark:bg-primary-900/30 border-primary-400 dark:border-primary-600'
+                                                        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-primary-400'
+                                                    }`}
+                                            >
+                                                <span className={`${isSelected ? 'font-semibold text-primary-900 dark:text-primary-100' : 'text-gray-900 dark:text-white'}`}>
+                                                    {field.label}
+                                                </span>
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                             ))}
                         </div>
@@ -497,11 +575,16 @@ export default function PipelineTimeline({
                 />
             )}
 
-            {/* Modal simple de nom de préréglage (pour drag depuis existant) */}
-            {showPresetModal && (
-                <SimplePresetModal
-                    onSave={handleSavePreset}
-                    onClose={() => setShowPresetModal(false)}
+            {/* Modal de définition de valeur pour un contenu */}
+            {showContentValueModal && contentToEdit && (
+                <ContentValueModal
+                    content={contentToEdit}
+                    onSave={handleApplyContentValue}
+                    onClose={() => {
+                        setShowContentValueModal(false)
+                        setContentToEdit(null)
+                    }}
+                    selectedCellsCount={selectedCells.length}
                 />
             )}
         </div>
@@ -634,7 +717,7 @@ function PresetConfigModal({ fields, onSave, onClose }) {
                             className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
                         >
                             <Save className="w-4 h-4 inline mr-2" />
-                            Sauvegarder
+                            Sauvegarder le préréglage
                         </button>
                     </div>
                 </form>
@@ -643,71 +726,96 @@ function PresetConfigModal({ fields, onSave, onClose }) {
     )
 }
 
-// Modal simple pour nommer un préréglage
-function SimplePresetModal({ onSave, onClose }) {
-    const [name, setName] = useState('')
-    const [description, setDescription] = useState('')
+// Modal pour définir la valeur d'un contenu (clic droit)
+function ContentValueModal({ content, onSave, onClose, selectedCellsCount }) {
+    const [value, setValue] = useState(content.defaultValue || '')
 
     const handleSubmit = (e) => {
         e.preventDefault()
-        if (!name.trim()) return
-        onSave(name, description)
+        onSave(content.name, value)
     }
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full">
-                <div className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                        Nouveau préréglage
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Définir : {content.label}
                     </h3>
+                    {selectedCellsCount > 0 ? (
+                        <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                            ✓ Sera appliqué à {selectedCellsCount} case(s) sélectionnée(s)
+                        </p>
+                    ) : (
+                        <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">
+                            ⚠️ Veuillez d'abord sélectionner des cases sur la timeline
+                        </p>
+                    )}
+                </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Nom *
-                            </label>
-                            <input
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
+                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Valeur
+                        </label>
+                        {content.type === 'select' ? (
+                            <select
+                                value={value}
+                                onChange={(e) => setValue(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                placeholder="Nom du préréglage"
-                                required
+                                autoFocus
+                            >
+                                <option value="">Sélectionner...</option>
+                                {content.options?.map(opt => (
+                                    <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                            </select>
+                        ) : content.type === 'number' ? (
+                            <input
+                                type="number"
+                                value={value}
+                                onChange={(e) => setValue(e.target.value)}
+                                placeholder={content.placeholder}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                                 autoFocus
                             />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Description
-                            </label>
-                            <textarea
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                rows="2"
+                        ) : content.type === 'date' ? (
+                            <input
+                                type="date"
+                                value={value}
+                                onChange={(e) => setValue(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                placeholder="Description optionnelle"
+                                autoFocus
                             />
-                        </div>
+                        ) : (
+                            <input
+                                type="text"
+                                value={value}
+                                onChange={(e) => setValue(e.target.value)}
+                                placeholder={content.placeholder}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                autoFocus
+                            />
+                        )}
+                    </div>
 
-                        <div className="flex gap-3">
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                            >
-                                Annuler
-                            </button>
-                            <button
-                                type="submit"
-                                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
-                            >
-                                Créer
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    <div className="flex gap-3">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                        >
+                            Annuler
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={selectedCellsCount === 0}
+                            className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Appliquer
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     )
