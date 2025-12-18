@@ -7,251 +7,644 @@ import PipelineTimeline from '../../../components/forms/flower/PipelineTimeline'
  * Utilise le nouveau système PipelineTimeline selon CDC
  */
 export default function PipelineCulture({ formData, handleChange }) {
-    // Culture-specific data fields selon REAL_VISION_CDC_DEV.md
+    // Culture-specific data fields selon PIPELINE_DONNEE_CULTURES.md
     const cultureDataFields = [
-        // GÉNÉRAL
+        // ========== GÉNÉRAL ==========
         {
             name: 'mode',
             label: 'Mode de culture',
             section: 'GÉNÉRAL',
             type: 'select',
-            options: ['Indoor', 'Outdoor', 'Greenhouse', 'No-till', 'Autre'],
-            defaultValue: 'Indoor'
+            options: [
+                'Indoor (intérieur)',
+                'Outdoor (extérieur plein champ)',
+                'Greenhouse / Serre chauffée',
+                'Greenhouse froide / non chauffée',
+                'Greenhouse avec assistance lumineuse',
+                'No-till indoor',
+                'No-till outdoor',
+                'Culture en container / bac hors-sol',
+                'Culture verticale (multi-niveaux)',
+                'Culture mixte',
+                'Autre'
+            ],
+            defaultValue: 'Indoor (intérieur)'
         },
         {
             name: 'spaceType',
-            label: "Type d'espace",
+            label: "Type d'espace de culture",
             section: 'GÉNÉRAL',
             type: 'select',
-            options: ['Armoire', 'Tente', 'Serre', 'Extérieur', 'Autre'],
-            defaultValue: 'Tente'
+            options: [
+                'Armoire de culture',
+                'Tente de culture',
+                'Chambre dédiée',
+                'Pièce industrielle / salle blanche',
+                'Serre verre',
+                'Serre polycarbonate',
+                'Tunnel plastique',
+                'Plein champ extérieur',
+                'Balcon / terrasse',
+                'Box DIY / caisson technique',
+                'Autre'
+            ],
+            defaultValue: 'Tente de culture'
         },
         {
-            name: 'spaceDimensions',
-            label: 'Dimensions (LxlxH cm)',
+            name: 'spaceLength',
+            label: 'Longueur (cm)',
             section: 'GÉNÉRAL',
-            type: 'text',
-            placeholder: '120x120x200',
+            type: 'number',
+            unit: 'cm',
+            placeholder: '120',
+            defaultValue: ''
+        },
+        {
+            name: 'spaceWidth',
+            label: 'Largeur (cm)',
+            section: 'GÉNÉRAL',
+            type: 'number',
+            unit: 'cm',
+            placeholder: '120',
+            defaultValue: ''
+        },
+        {
+            name: 'spaceHeight',
+            label: 'Hauteur (cm)',
+            section: 'GÉNÉRAL',
+            type: 'number',
+            unit: 'cm',
+            placeholder: '200',
+            defaultValue: ''
+        },
+        {
+            name: 'spaceArea',
+            label: 'Surface au sol (m²)',
+            section: 'GÉNÉRAL',
+            type: 'number',
+            unit: 'm²',
+            placeholder: '1.44',
+            defaultValue: ''
+        },
+        {
+            name: 'spaceVolume',
+            label: 'Volume total (m³)',
+            section: 'GÉNÉRAL',
+            type: 'number',
+            unit: 'm³',
+            placeholder: '2.88',
             defaultValue: ''
         },
 
-        // ENVIRONNEMENT
+        // ========== ENVIRONNEMENT - Propagation ==========
         {
             name: 'propagation',
             label: 'Technique de propagation',
             section: 'ENVIRONNEMENT',
             type: 'select',
-            options: ['Graine', 'Clone', 'Bouture', 'Sopalin', 'Autre'],
-            defaultValue: 'Graine'
+            options: [
+                'Graine directement en substrat',
+                'Graine en pastille Jiffy / tourbe',
+                'Graine en laine de roche',
+                'Graine en cube Root Riot / similaire',
+                'Germination sur sopalin',
+                'Germination sur coton',
+                'Germination dans serviette humide',
+                'Germination en eau (verre d\'eau)',
+                'Germination en propagateur chauffant',
+                'Clone / bouture prélevée en interne',
+                'Clone acheté / externe',
+                'Bouture en eau claire',
+                'Bouture en eau + hormone d\'enracinement',
+                'Bouture en substrat (tourbe/terre/coco)',
+                'Bouture en laine de roche',
+                'Bouture en cube de propagation (Root Riot, etc.)',
+                'Micropropagation / in vitro',
+                'Autre'
+            ],
+            defaultValue: 'Graine directement en substrat'
         },
+
+        // ========== ENVIRONNEMENT - Substrat ==========
         {
             name: 'substrateType',
             label: 'Type de substrat',
             section: 'ENVIRONNEMENT',
             type: 'select',
-            options: ['Hydro', 'Bio', 'Organique'],
-            defaultValue: 'Bio'
+            options: [
+                'Hydroponique recirculé',
+                'Hydroponique drain-to-waste',
+                'DWC (deep water culture)',
+                'RDWC (recirculating DWC)',
+                'NFT (nutrient film technique)',
+                'Aéroponie haute pression',
+                'Aéroponie basse pression',
+                'Substrat inerte (coco, laine de roche, billes, perlite)',
+                'Terreau « Bio »',
+                'Terreau organique vivant (living soil)',
+                'Super-soil / no-till',
+                'Mélange terre / coco',
+                'Mélange terre / perlite',
+                'Mélange coco / perlite',
+                'Mélange coco / billes d\'argile',
+                'Mélange personnalisé',
+                'Autre'
+            ],
+            defaultValue: 'Terreau « Bio »'
         },
         {
             name: 'substrateVolume',
-            label: 'Volume substrat (L)',
+            label: 'Volume par contenant (L)',
             section: 'ENVIRONNEMENT',
             type: 'number',
+            unit: 'L',
             placeholder: '11',
             defaultValue: ''
         },
         {
-            name: 'substrateComposition',
-            label: 'Composition substrat',
+            name: 'substrateTotalVolume',
+            label: 'Volume total de substrat (L)',
             section: 'ENVIRONNEMENT',
-            type: 'text',
-            placeholder: 'Terre 70%, Coco 20%, Perlite 10%',
+            type: 'number',
+            unit: 'L',
+            placeholder: '44',
             defaultValue: ''
         },
         {
-            name: 'irrigationType',
-            label: "Système d'irrigation",
+            name: 'substrateComposition',
+            label: 'Composition substrat (%)',
+            section: 'ENVIRONNEMENT',
+            type: 'text',
+            placeholder: 'Terre 60%, Coco 30%, Perlite 10%',
+            defaultValue: ''
+        },
+        {
+            name: 'substrateBrand',
+            label: 'Marque substrat',
             section: 'ENVIRONNEMENT',
             type: 'select',
-            options: ['Goutte à goutte', 'Inondation', 'Manuel', 'Autre'],
-            defaultValue: 'Manuel'
+            options: [
+                'Canna',
+                'Plagron',
+                'Biobizz',
+                'Atami',
+                'Advanced Nutrients',
+                'House & Garden',
+                'General Hydroponics / Terra Aquatica',
+                'FoxFarm',
+                'Mills',
+                'Green House Feeding',
+                'BAC',
+                'Aptus',
+                'Remo',
+                'Autre'
+            ],
+            defaultValue: ''
+        },
+
+        // ========== ENVIRONNEMENT - Irrigation ==========
+        {
+            name: 'irrigationType',
+            label: "Type de système d'irrigation",
+            section: 'ENVIRONNEMENT',
+            type: 'select',
+            options: [
+                'Arrosage manuel (arrosoir)',
+                'Arrosage manuel + pompe électrique',
+                'Goutte à goutte simple',
+                'Goutte à goutte avec piquets',
+                'Goutte à goutte réglable',
+                'Goutte à goutte multi-sorties',
+                'Ligne de goutte à goutte (drip line)',
+                'Ebb & Flow / Flood & Drain',
+                'Sub-irrigation / bottom feeding',
+                'Systèmes top-feed automatisés',
+                'Systèmes à mèche / wicking',
+                'DWC avec bullage',
+                'RDWC',
+                'NFT',
+                'Aéroponie basse pression',
+                'Aéroponie haute pression',
+                'Système hybride',
+                'Brumisation / fogponic',
+                'Autre'
+            ],
+            defaultValue: 'Arrosage manuel (arrosoir)'
         },
         {
             name: 'irrigationFrequency',
             label: "Fréquence d'arrosage",
             section: 'ENVIRONNEMENT',
-            type: 'text',
-            placeholder: 'Tous les 2 jours',
-            defaultValue: ''
+            type: 'select',
+            options: [
+                '1 fois par jour',
+                '2 fois par jour',
+                '3 fois par jour',
+                '4 fois par jour',
+                '6 fois par jour',
+                '8 fois par jour',
+                '12 fois par jour',
+                '1 fois tous les 2 jours',
+                '2 fois par semaine',
+                '3 fois par semaine',
+                'Irrigation en continu',
+                'Irrigation à la demande (capteurs)',
+                'Autre'
+            ],
+            defaultValue: '1 fois tous les 2 jours'
         },
         {
             name: 'waterVolume',
-            label: "Volume d'eau par arrosage (L)",
+            label: "Volume d'eau par arrosage",
             section: 'ENVIRONNEMENT',
             type: 'number',
+            unit: 'L',
             placeholder: '2',
             defaultValue: ''
         },
 
-        // ENGRAIS
+        // ========== ENGRAIS ==========
         {
             name: 'fertilizerType',
             label: "Type d'engrais",
             section: 'ENGRAIS',
             type: 'select',
-            options: ['Bio', 'Chimique', 'Mixte'],
-            defaultValue: 'Bio'
+            options: [
+                'Minéral / chimique',
+                'Organique',
+                'Organique-minéral / mixte',
+                'Biologique certifié',
+                'Amendement solide à libération lente',
+                'Solution nutritive hydroponique',
+                'Booster / stimulateur racinaire',
+                'Booster floraison',
+                'Additifs (enzymes, sucres, PK, etc.)',
+                'Autre'
+            ],
+            defaultValue: 'Organique'
         },
         {
             name: 'fertilizerBrand',
             label: 'Marque et gamme',
             section: 'ENGRAIS',
-            type: 'text',
-            placeholder: 'BioBizz - Light Mix',
+            type: 'select',
+            options: [
+                'Canna (Terra, Aqua, Coco, BioCanna)',
+                'Plagron (Terra, Alga, Coco)',
+                'Biobizz (Bio-Grow, Bio-Bloom)',
+                'Advanced Nutrients (pH Perfect)',
+                'General Hydroponics / Terra Aquatica',
+                'House & Garden',
+                'Green House Feeding',
+                'FoxFarm',
+                'Mills',
+                'Aptus',
+                'Remo Nutrients',
+                'Autre'
+            ],
             defaultValue: ''
         },
         {
             name: 'fertilizerDosage',
-            label: 'Dosage (g/L ou ml/L)',
+            label: 'Dosage',
             section: 'ENGRAIS',
             type: 'text',
-            placeholder: '2ml/L',
+            unit: 'g/L, ml/L, EC, ppm',
+            placeholder: '2ml/L ou EC 1.8',
             defaultValue: ''
         },
+        {
+            name: 'fertilizerFrequency',
+            label: "Fréquence d'application",
+            section: 'ENGRAIS',
+            type: 'select',
+            options: [
+                'À chaque arrosage',
+                '1 arrosage sur 2',
+                '1 fois par jour',
+                '1 fois tous les 2 jours',
+                '1 fois par semaine',
+                '1 fois toutes les 2 semaines',
+                'Continu (fertigation permanente)',
+                'Ponctuel',
+                'Autre'
+            ],
+            defaultValue: 'À chaque arrosage'
+        },
 
-        // LUMIÈRE
+        // ========== LUMIÈRE ==========
         {
             name: 'lightType',
             label: 'Type de lampe',
             section: 'LUMIÈRE',
             type: 'select',
-            options: ['LED', 'HPS', 'CFL', 'Naturel', 'Mixte', 'Autre'],
-            defaultValue: 'LED'
+            options: [
+                'LED panneau',
+                'LED barre linéaire',
+                'LED quantum board',
+                'LED COB',
+                'HPS (sodium haute pression)',
+                'MH (métal halide)',
+                'CMH / LEC',
+                'CFL / néon / T5',
+                'Plasma',
+                'Halogénure céramique',
+                'Multibar industrial LED',
+                'Lumière naturelle uniquement',
+                'Lumière naturelle + complément LED',
+                'Lumière naturelle + HPS',
+                'Autre'
+            ],
+            defaultValue: 'LED panneau'
         },
         {
             name: 'lightSpectrum',
             label: 'Type de spectre',
             section: 'LUMIÈRE',
             type: 'select',
-            options: ['Complet', 'Bleu', 'Rouge', 'Mixte'],
-            defaultValue: 'Complet'
+            options: [
+                'Spectre complet',
+                'Dominante bleue',
+                'Dominante rouge',
+                'Croissance (blue heavy)',
+                'Floraison (red heavy)',
+                'UV-A inclus',
+                'UV-B inclus',
+                'IR / Far-red inclus',
+                'Spectre ajustable / multi-canaux',
+                'Non spécifié'
+            ],
+            defaultValue: 'Spectre complet'
         },
         {
             name: 'lightDistance',
-            label: 'Distance lampe/plante (cm)',
+            label: 'Distance lampe/plante',
             section: 'LUMIÈRE',
             type: 'number',
+            unit: 'cm',
             placeholder: '30',
             defaultValue: ''
         },
         {
             name: 'lightPower',
-            label: 'Puissance totale (W)',
+            label: 'Puissance totale',
             section: 'LUMIÈRE',
             type: 'number',
+            unit: 'W',
             placeholder: '600',
             defaultValue: ''
         },
         {
-            name: 'lightDuration',
-            label: "Durée d'éclairage (h/jour)",
+            name: 'lightPowerPerM2',
+            label: 'Puissance par m²',
             section: 'LUMIÈRE',
             type: 'number',
-            placeholder: '18',
+            unit: 'W/m²',
+            placeholder: '400',
             defaultValue: ''
         },
         {
+            name: 'lightDimmable',
+            label: 'Dimmable',
+            section: 'LUMIÈRE',
+            type: 'select',
+            options: ['Oui', 'Non'],
+            defaultValue: 'Non'
+        },
+        {
+            name: 'lightPhotoperiod',
+            label: 'Photopériode',
+            section: 'LUMIÈRE',
+            type: 'select',
+            options: [
+                '24/0',
+                '20/4',
+                '18/6',
+                '16/8',
+                '12/12',
+                '11/13',
+                '10/14',
+                'Personnalisée'
+            ],
+            defaultValue: '18/6'
+        },
+        {
             name: 'lightDLI',
-            label: 'DLI (mol/m²/jour)',
+            label: 'DLI',
             section: 'LUMIÈRE',
             type: 'number',
+            unit: 'mol/m²/jour',
             placeholder: '40',
             defaultValue: ''
         },
         {
             name: 'lightPPFD',
-            label: 'PPFD moyen (µmol/m²/s)',
+            label: 'PPFD moyen',
             section: 'LUMIÈRE',
             type: 'number',
+            unit: 'µmol/m²/s',
             placeholder: '500',
             defaultValue: ''
         },
+        {
+            name: 'lightKelvin',
+            label: 'Kelvin (température de couleur)',
+            section: 'LUMIÈRE',
+            type: 'select',
+            options: [
+                '2700 K',
+                '3000 K',
+                '3500 K',
+                '4000 K',
+                '5000 K',
+                '6500 K',
+                'Spectre mixte / non applicable'
+            ],
+            defaultValue: 'Spectre mixte / non applicable'
+        },
 
-        // CLIMAT
+        // ========== CLIMAT ==========
         {
             name: 'temperature',
-            label: 'Température moyenne (°C)',
+            label: 'Température moyenne',
             section: 'CLIMAT',
             type: 'number',
+            unit: '°C',
             placeholder: '24',
             defaultValue: ''
         },
         {
-            name: 'humidity',
-            label: 'Humidité relative (%)',
+            name: 'temperatureDay',
+            label: 'Température jour',
             section: 'CLIMAT',
             type: 'number',
+            unit: '°C',
+            placeholder: '26',
+            defaultValue: ''
+        },
+        {
+            name: 'temperatureNight',
+            label: 'Température nuit',
+            section: 'CLIMAT',
+            type: 'number',
+            unit: '°C',
+            placeholder: '20',
+            defaultValue: ''
+        },
+        {
+            name: 'humidity',
+            label: 'Humidité relative moyenne',
+            section: 'CLIMAT',
+            type: 'number',
+            unit: '%',
             placeholder: '60',
             defaultValue: ''
         },
         {
             name: 'co2',
-            label: 'CO₂ (ppm)',
+            label: 'CO₂',
             section: 'CLIMAT',
-            type: 'number',
-            placeholder: '400',
-            defaultValue: ''
+            type: 'select',
+            options: [
+                'Non enrichi (~400-500 ppm)',
+                '600-800 ppm',
+                '800-1000 ppm',
+                '1000-1200 ppm',
+                '1200+ ppm (avancé)'
+            ],
+            defaultValue: 'Non enrichi (~400-500 ppm)'
         },
         {
             name: 'ventilation',
-            label: 'Ventilation',
+            label: 'Type de ventilation',
             section: 'CLIMAT',
-            type: 'text',
-            placeholder: 'Continue, extracteur 100m³/h',
-            defaultValue: ''
+            type: 'select',
+            options: [
+                'Extracteur d\'air',
+                'Intracteur d\'air',
+                'Ventilateur oscillant',
+                'Ventilation au plafond',
+                'Ventilation par gaines (HVACD)',
+                'Déshumidificateur',
+                'Humidificateur',
+                'Filtre à charbon',
+                'Combinaison',
+                'Autre'
+            ],
+            defaultValue: 'Extracteur d\'air'
+        },
+        {
+            name: 'ventilationMode',
+            label: 'Mode de ventilation',
+            section: 'CLIMAT',
+            type: 'select',
+            options: [
+                'Continu',
+                'Cyclé (minuterie)',
+                'Piloté par hygromètre/thermostat',
+                'Piloté par pression différentielle',
+                'Autre'
+            ],
+            defaultValue: 'Continu'
         },
 
-        // PALISSAGE
+        // ========== PALISSAGE ==========
         {
             name: 'training',
             label: 'Méthodologie LST/HST',
             section: 'PALISSAGE',
-            type: 'select',
-            options: ['SCROG', 'SOG', 'Main-Lining', 'LST', 'HST', 'Aucun', 'Autre'],
-            defaultValue: 'Aucun'
+            type: 'multiselect',
+            options: [
+                'LST (Low Stress Training)',
+                'HST (High Stress Training)',
+                'Topping (étêtage)',
+                'Fimming',
+                'Main-Lining / Manifolding',
+                'SCROG (Screen of Green)',
+                'SOG (Sea of Green)',
+                'Lollipopping',
+                'Super-cropping',
+                'Defoliation ciblée',
+                'Super-cropping + support tuteur / filet',
+                'Splitting / fente de tige',
+                'Tuteurs individuels',
+                'Filets multi-niveaux',
+                'Palissage horizontal',
+                'Palissage vertical',
+                'Ligaturage / tie-down simple',
+                'Ligaturage en étoile',
+                'Taille apicale répétée',
+                'Taille latérale',
+                'Taille de racines',
+                'Pas de palissage',
+                'Autre'
+            ],
+            defaultValue: ['Pas de palissage']
         },
         {
             name: 'trainingComment',
             label: 'Description manipulation',
             section: 'PALISSAGE',
-            type: 'text',
-            placeholder: 'Décrivez la manipulation...',
+            type: 'textarea',
+            placeholder: 'Décrivez les techniques de palissage appliquées...',
             defaultValue: ''
         },
 
-        // MORPHOLOGIE
+        // ========== MORPHOLOGIE ==========
         {
             name: 'plantHeight',
-            label: 'Taille (cm)',
+            label: 'Taille de la plante',
             section: 'MORPHOLOGIE',
             type: 'number',
+            unit: 'cm',
             placeholder: '80',
             defaultValue: ''
         },
         {
-            name: 'plantVolume',
-            label: 'Volume',
+            name: 'plantHeightCategory',
+            label: 'Catégorie de taille',
             section: 'MORPHOLOGIE',
-            type: 'text',
-            placeholder: 'Estimation visuelle',
+            type: 'select',
+            options: [
+                '<30 cm',
+                '30-60 cm',
+                '60-90 cm',
+                '90-120 cm',
+                '120-150 cm',
+                '150-200 cm',
+                '>200 cm'
+            ],
             defaultValue: ''
         },
         {
-            name: 'plantWeight',
-            label: 'Poids estimé',
+            name: 'plantVolume',
+            label: 'Volume de canopée',
             section: 'MORPHOLOGIE',
-            type: 'text',
-            placeholder: 'Avant récolte',
+            type: 'select',
+            options: [
+                'Petit',
+                'Moyen',
+                'Grand',
+                'Très volumineux'
+            ],
+            defaultValue: 'Moyen'
+        },
+        {
+            name: 'plantVolumeM3',
+            label: 'Volume chiffré',
+            section: 'MORPHOLOGIE',
+            type: 'number',
+            unit: 'm³',
+            placeholder: '0.5',
+            defaultValue: ''
+        },
+        {
+            name: 'plantWeightFresh',
+            label: 'Poids plante fraîche (hors racines)',
+            section: 'MORPHOLOGIE',
+            type: 'number',
+            unit: 'g',
+            placeholder: '500',
             defaultValue: ''
         },
         {
@@ -262,15 +655,49 @@ export default function PipelineCulture({ formData, handleChange }) {
             placeholder: '8',
             defaultValue: ''
         },
+        {
+            name: 'leavesCount',
+            label: 'Nombre de feuilles (estimé)',
+            section: 'MORPHOLOGIE',
+            type: 'select',
+            options: [
+                '<50',
+                '50-100',
+                '100-200',
+                '>200'
+            ],
+            defaultValue: ''
+        },
+        {
+            name: 'budsCount',
+            label: 'Nombre de buds / sites floraux',
+            section: 'MORPHOLOGIE',
+            type: 'select',
+            options: [
+                '<20',
+                '20-50',
+                '50-100',
+                '>100'
+            ],
+            defaultValue: ''
+        },
 
-        // RÉCOLTE
+        // ========== RÉCOLTE ==========
         {
             name: 'trichomeColor',
             label: 'Couleur des trichomes',
             section: 'RÉCOLTE',
-            type: 'select',
-            options: ['Laiteux', 'Ambré', 'Translucide', 'Mixte'],
-            defaultValue: 'Laiteux'
+            type: 'multiselect',
+            options: [
+                'Transparent / translucide',
+                'Laiteux / opaque',
+                'Ambré',
+                'Mélange transparent-laiteux',
+                'Mélange laiteux-ambré',
+                'Majorité laiteux',
+                'Majorité ambré'
+            ],
+            defaultValue: ['Majorité laiteux']
         },
         {
             name: 'harvestDate',
@@ -281,27 +708,79 @@ export default function PipelineCulture({ formData, handleChange }) {
         },
         {
             name: 'wetWeight',
-            label: 'Poids brut (g)',
+            label: 'Poids brut (plante entière fraîche)',
             section: 'RÉCOLTE',
             type: 'number',
+            unit: 'g',
             placeholder: '250',
             defaultValue: ''
         },
         {
-            name: 'dryWeight',
-            label: 'Poids net après défoliation (g)',
+            name: 'dryWeightAfterDefoliation',
+            label: 'Poids net après première défoliation',
             section: 'RÉCOLTE',
             type: 'number',
+            unit: 'g',
+            placeholder: '180',
+            defaultValue: ''
+        },
+        {
+            name: 'dryWeightFinal',
+            label: 'Poids sec final',
+            section: 'RÉCOLTE',
+            type: 'number',
+            unit: 'g',
             placeholder: '80',
             defaultValue: ''
         },
         {
-            name: 'yield',
-            label: 'Rendement (g/m² ou g/plante)',
+            name: 'weightLossPercent',
+            label: 'Taux de perte',
             section: 'RÉCOLTE',
-            type: 'text',
-            placeholder: '400g/m²',
+            type: 'number',
+            unit: '%',
+            placeholder: '68',
             defaultValue: ''
+        },
+        {
+            name: 'yieldPerM2',
+            label: 'Rendement par m²',
+            section: 'RÉCOLTE',
+            type: 'number',
+            unit: 'g/m²',
+            placeholder: '400',
+            defaultValue: ''
+        },
+        {
+            name: 'yieldPerPlant',
+            label: 'Rendement par plante',
+            section: 'RÉCOLTE',
+            type: 'number',
+            unit: 'g/plante',
+            placeholder: '80',
+            defaultValue: ''
+        },
+        {
+            name: 'yieldPerWatt',
+            label: 'Rendement par Watt',
+            section: 'RÉCOLTE',
+            type: 'number',
+            unit: 'g/W',
+            placeholder: '0.8',
+            defaultValue: ''
+        },
+        {
+            name: 'yieldQuality',
+            label: 'Qualité du rendement',
+            section: 'RÉCOLTE',
+            type: 'select',
+            options: [
+                'Faible',
+                'Moyen',
+                'Bon',
+                'Très élevé'
+            ],
+            defaultValue: 'Bon'
         }
     ]
 
