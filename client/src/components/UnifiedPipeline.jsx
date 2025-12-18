@@ -23,7 +23,7 @@ export default function UnifiedPipeline({
 }) {
     // Récupérer la configuration statique selon le type
     const config = getPipelineConfig(type)
-    
+
     // État local pour préréglages
     const [presets, setPresets] = useState(() => {
         const saved = localStorage.getItem(`${type}PipelinePresets`)
@@ -54,7 +54,7 @@ export default function UnifiedPipeline({
             ...timelineConfig,
             [field]: value
         }
-        
+
         // Recalculer le nombre de cases selon le type d'intervalle
         if (field === 'type') {
             const intervalType = config.intervalTypes.find(t => t.value === value)
@@ -62,7 +62,7 @@ export default function UnifiedPipeline({
                 newConfig.totalCells = intervalType.maxCells
             }
         }
-        
+
         onChange?.({
             ...data,
             timelineConfig: newConfig
@@ -73,7 +73,7 @@ export default function UnifiedPipeline({
     const handleDataChange = (timestamp, field, value) => {
         const existingIndex = timelineData.findIndex(d => d.timestamp === timestamp)
         let newTimelineData = [...timelineData]
-        
+
         if (existingIndex >= 0) {
             // Mettre à jour cellule existante
             newTimelineData[existingIndex] = {
@@ -90,7 +90,7 @@ export default function UnifiedPipeline({
                 data: { [field]: value }
             })
         }
-        
+
         onChange?.({
             ...data,
             timelineData: newTimelineData
@@ -101,14 +101,14 @@ export default function UnifiedPipeline({
     const handleSavePreset = (preset) => {
         const existingIndex = presets.findIndex(p => p.id === preset.id)
         let newPresets
-        
+
         if (existingIndex >= 0) {
             newPresets = [...presets]
             newPresets[existingIndex] = preset
         } else {
             newPresets = [...presets, preset]
         }
-        
+
         setPresets(newPresets)
     }
 
@@ -116,15 +116,15 @@ export default function UnifiedPipeline({
     const handleLoadPreset = (presetId) => {
         const preset = presets.find(p => p.id === presetId)
         if (!preset) return
-        
+
         // Appliquer les données du préréglage
         // (logique à implémenter selon besoin)
         console.log('Chargement preset:', preset)
     }
 
     return (
-        <LiquidCard 
-            title={config.title} 
+        <LiquidCard
+            title={config.title}
             subtitle={config.description}
             bordered
         >

@@ -19,14 +19,14 @@ export const CULTURE_PIPELINE_CONFIG = {
     type: 'culture',
     title: '🌱 Pipeline de Culture',
     description: 'Traçabilité complète de la culture du cannabis',
-    
+
     // Configuration des types d'intervalles disponibles
     intervalTypes: [
         { value: 'jour', label: 'Jours', icon: '📅', maxCells: 365 },
         { value: 'semaine', label: 'Semaines', icon: '📆', maxCells: 52 },
         { value: 'phase', label: 'Phases physiologiques', icon: '🌱', maxCells: 12 }
     ],
-    
+
     // Phases physiologiques (si type = 'phase')
     phases: [
         { id: 'graine', label: '🌰 Graine (J0)', duration: 1 },
@@ -42,7 +42,7 @@ export const CULTURE_PIPELINE_CONFIG = {
         { id: 'floraison-milieu', label: '🌻 Milieu floraison', duration: 14 },
         { id: 'floraison-fin', label: '🏵️ Fin floraison', duration: 14 }
     ],
-    
+
     // Panneau latéral - Contenus disponibles
     sidebarContent: [
         {
@@ -50,11 +50,11 @@ export const CULTURE_PIPELINE_CONFIG = {
             label: 'GÉNÉRAL',
             icon: '⚙️',
             items: [
-                { 
-                    id: 'modeCulture', 
-                    label: 'Mode de culture', 
-                    icon: '🏕️', 
-                    type: 'select', 
+                {
+                    id: 'modeCulture',
+                    label: 'Mode de culture',
+                    icon: '🏕️',
+                    type: 'select',
                     options: [
                         { value: 'indoor', label: 'Indoor (intérieur)' },
                         { value: 'outdoor', label: 'Outdoor (extérieur)' },
@@ -68,10 +68,10 @@ export const CULTURE_PIPELINE_CONFIG = {
                         { value: 'mixte', label: 'Culture mixte' }
                     ]
                 },
-                { 
-                    id: 'typeEspace', 
-                    label: "Type d'espace", 
-                    icon: '📦', 
+                {
+                    id: 'typeEspace',
+                    label: "Type d'espace",
+                    icon: '📦',
                     type: 'select',
                     options: [
                         { value: 'armoire', label: 'Armoire' },
@@ -89,10 +89,10 @@ export const CULTURE_PIPELINE_CONFIG = {
                 { id: 'dimensionsH', label: 'Hauteur (cm)', icon: '📏', type: 'number', min: 1, max: 1000, unit: 'cm' },
                 { id: 'surfaceSol', label: 'Surface au sol (m²)', icon: '📐', type: 'number', min: 0.01, max: 10000, step: 0.01, unit: 'm²' },
                 { id: 'volumeTotal', label: 'Volume total (m³)', icon: '📦', type: 'number', min: 0.01, max: 100000, step: 0.01, unit: 'm³' },
-                { 
-                    id: 'techniquePropagation', 
-                    label: 'Technique de propagation', 
-                    icon: '🌰', 
+                {
+                    id: 'techniquePropagation',
+                    label: 'Technique de propagation',
+                    icon: '🌰',
                     type: 'select',
                     options: [
                         { value: 'graine', label: 'Graine' },
@@ -114,10 +114,10 @@ export const CULTURE_PIPELINE_CONFIG = {
             label: 'SUBSTRAT & COMPOSITION',
             icon: '🪴',
             items: [
-                { 
-                    id: 'typeSubstrat', 
-                    label: 'Type de substrat', 
-                    icon: '🧪', 
+                {
+                    id: 'typeSubstrat',
+                    label: 'Type de substrat',
+                    icon: '🧪',
                     type: 'select',
                     options: [
                         { value: 'terre', label: 'Terre' },
@@ -156,10 +156,10 @@ export const CULTURE_PIPELINE_CONFIG = {
                 { id: 'humiditeNuit', label: 'Humidité nuit (%)', icon: '🌙', type: 'number', min: 10, max: 100, unit: '%' },
                 { id: 'vpd', label: 'VPD (kPa)', icon: '📊', type: 'number', min: 0.2, max: 2.5, step: 0.05, unit: 'kPa' },
                 { id: 'co2', label: 'CO₂ (ppm)', icon: '🫧', type: 'number', min: 200, max: 2000, step: 50, unit: 'ppm' },
-                { 
-                    id: 'typeVentilation', 
-                    label: 'Type de ventilation', 
-                    icon: '🌀', 
+                {
+                    id: 'typeVentilation',
+                    label: 'Type de ventilation',
+                    icon: '🌀',
                     type: 'select',
                     options: [
                         { value: 'extracteur', label: 'Extracteur seul' },
@@ -172,10 +172,10 @@ export const CULTURE_PIPELINE_CONFIG = {
                     ]
                 },
                 { id: 'debitExtraction', label: 'Débit extraction (m³/h)', icon: '💨', type: 'number', min: 10, max: 5000, unit: 'm³/h' },
-                { 
-                    id: 'frequenceVentilation', 
-                    label: 'Fréquence ventilation', 
-                    icon: '🔁', 
+                {
+                    id: 'frequenceVentilation',
+                    label: 'Fréquence ventilation',
+                    icon: '🔁',
                     type: 'select',
                     options: [
                         { value: 'continu', label: 'Continu 24h/24' },
@@ -193,10 +193,10 @@ export const CULTURE_PIPELINE_CONFIG = {
             label: 'LUMIÈRE & SPECTRE',
             icon: '💡',
             items: [
-                { 
-                    id: 'typeLampe', 
-                    label: 'Type de lampe', 
-                    icon: '💡', 
+                {
+                    id: 'typeLampe',
+                    label: 'Type de lampe',
+                    icon: '💡',
                     type: 'select',
                     options: [
                         { value: 'led-full', label: 'LED full spectrum' },
@@ -211,10 +211,10 @@ export const CULTURE_PIPELINE_CONFIG = {
                         { value: 'mixte', label: 'Mélange LED + HPS/MH' }
                     ]
                 },
-                { 
-                    id: 'spectreLumiere', 
-                    label: 'Spectre lumineux', 
-                    icon: '🌈', 
+                {
+                    id: 'spectreLumiere',
+                    label: 'Spectre lumineux',
+                    icon: '🌈',
                     type: 'select',
                     options: [
                         { value: 'full-spectrum', label: 'Full spectrum' },
@@ -240,10 +240,10 @@ export const CULTURE_PIPELINE_CONFIG = {
             label: 'IRRIGATION & FRÉQUENCE',
             icon: '💧',
             items: [
-                { 
-                    id: 'systemeIrrigation', 
-                    label: 'Système d\'irrigation', 
-                    icon: '💦', 
+                {
+                    id: 'systemeIrrigation',
+                    label: 'Système d\'irrigation',
+                    icon: '💦',
                     type: 'select',
                     options: [
                         { value: 'goutte-goutte', label: 'Goutte à goutte' },
@@ -269,10 +269,10 @@ export const CULTURE_PIPELINE_CONFIG = {
             label: 'ENGRAIS & DOSAGE',
             icon: '🧪',
             items: [
-                { 
-                    id: 'typeEngrais', 
-                    label: 'Type d\'engrais', 
-                    icon: '🌿', 
+                {
+                    id: 'typeEngrais',
+                    label: 'Type d\'engrais',
+                    icon: '🌿',
                     type: 'select',
                     options: [
                         { value: 'mineral', label: 'Minéral (chimique)' },
@@ -296,10 +296,10 @@ export const CULTURE_PIPELINE_CONFIG = {
             label: 'PALISSAGE & TECHNIQUES',
             icon: '✂️',
             items: [
-                { 
-                    id: 'methodePalissage', 
-                    label: 'Méthode de palissage', 
-                    icon: '🪢', 
+                {
+                    id: 'methodePalissage',
+                    label: 'Méthode de palissage',
+                    icon: '🪢',
                     type: 'multiselect',
                     options: [
                         { value: 'scrog', label: 'SCROG (Screen of Green)' },
@@ -336,10 +336,10 @@ export const CULTURE_PIPELINE_CONFIG = {
             label: 'RÉCOLTE',
             icon: '✂️',
             items: [
-                { 
-                    id: 'couleurTrichomes', 
-                    label: 'Couleur trichomes récolte', 
-                    icon: '💎', 
+                {
+                    id: 'couleurTrichomes',
+                    label: 'Couleur trichomes récolte',
+                    icon: '💎',
                     type: 'multiselect',
                     options: [
                         { value: 'translucide', label: 'Translucide (immature)' },
@@ -367,7 +367,7 @@ export const CURING_PIPELINE_CONFIG = {
     type: 'curing',
     title: '🌡️ Pipeline Curing & Maturation',
     description: 'Suivi de l\'affinage et de la maturation',
-    
+
     intervalTypes: [
         { value: 'seconde', label: 'Secondes', icon: '⏱️', maxCells: 3600 },
         { value: 'minute', label: 'Minutes', icon: '⏱️', maxCells: 1440 },
@@ -376,17 +376,17 @@ export const CURING_PIPELINE_CONFIG = {
         { value: 'semaine', label: 'Semaines', icon: '📆', maxCells: 52 },
         { value: 'mois', label: 'Mois', icon: '📆', maxCells: 24 }
     ],
-    
+
     sidebarContent: [
         {
             id: 'temperature',
             label: 'TEMPÉRATURE',
             icon: '🌡️',
             items: [
-                { 
-                    id: 'typeCuring', 
-                    label: 'Type de curing', 
-                    icon: '❄️', 
+                {
+                    id: 'typeCuring',
+                    label: 'Type de curing',
+                    icon: '❄️',
                     type: 'select',
                     options: [
                         { value: 'froid', label: 'Froid (< 5°C)' },
@@ -412,10 +412,10 @@ export const CURING_PIPELINE_CONFIG = {
             label: 'CONTENANT',
             icon: '🫙',
             items: [
-                { 
-                    id: 'typeRecipient', 
-                    label: 'Type de récipient', 
-                    icon: '🫙', 
+                {
+                    id: 'typeRecipient',
+                    label: 'Type de récipient',
+                    icon: '🫙',
                     type: 'select',
                     options: [
                         { value: 'air-libre', label: 'Air libre' },
@@ -428,10 +428,10 @@ export const CURING_PIPELINE_CONFIG = {
                         { value: 'autre', label: 'Autre' }
                     ]
                 },
-                { 
-                    id: 'opaciteRecipient', 
-                    label: 'Opacité du récipient', 
-                    icon: '🌑', 
+                {
+                    id: 'opaciteRecipient',
+                    label: 'Opacité du récipient',
+                    icon: '🌑',
                     type: 'select',
                     options: [
                         { value: 'opaque', label: 'Opaque (bloque lumière)' },
@@ -449,10 +449,10 @@ export const CURING_PIPELINE_CONFIG = {
             label: 'EMBALLAGE PRIMAIRE',
             icon: '📦',
             items: [
-                { 
-                    id: 'emballagePrimaire', 
-                    label: 'Type d\'emballage', 
-                    icon: '📦', 
+                {
+                    id: 'emballagePrimaire',
+                    label: 'Type d\'emballage',
+                    icon: '📦',
                     type: 'multiselect',
                     options: [
                         { value: 'cellophane', label: 'Cellophane' },
@@ -478,23 +478,23 @@ export const SEPARATION_PIPELINE_CONFIG = {
     type: 'separation',
     title: '🧊 Pipeline Séparation Hash',
     description: 'Extraction des trichomes par tamisage ou eau glacée',
-    
+
     intervalTypes: [
         { value: 'seconde', label: 'Secondes', icon: '⏱️', maxCells: 3600 },
         { value: 'minute', label: 'Minutes', icon: '⏱️', maxCells: 180 },
         { value: 'heure', label: 'Heures', icon: '🕐', maxCells: 24 }
     ],
-    
+
     sidebarContent: [
         {
             id: 'methode',
             label: 'MÉTHODE DE SÉPARATION',
             icon: '🔬',
             items: [
-                { 
-                    id: 'methodeSeparation', 
-                    label: 'Méthode', 
-                    icon: '🔬', 
+                {
+                    id: 'methodeSeparation',
+                    label: 'Méthode',
+                    icon: '🔬',
                     type: 'select',
                     options: [
                         { value: 'manuel', label: 'Tamisage manuel' },
@@ -508,10 +508,10 @@ export const SEPARATION_PIPELINE_CONFIG = {
                 },
                 { id: 'nombrePasses', label: 'Nombre de passes', icon: '🔁', type: 'number', min: 1, max: 20 },
                 { id: 'temperatureEau', label: 'Température eau (°C)', icon: '🌡️', type: 'number', min: -5, max: 25, step: 0.5, unit: '°C' },
-                { 
-                    id: 'tailleMailles', 
-                    label: 'Taille des mailles (µm)', 
-                    icon: '🔬', 
+                {
+                    id: 'tailleMailles',
+                    label: 'Taille des mailles (µm)',
+                    icon: '🔬',
                     type: 'multiselect',
                     options: [
                         { value: '220', label: '220µm (Bag 1 - Travail)' },
@@ -531,10 +531,10 @@ export const SEPARATION_PIPELINE_CONFIG = {
             label: 'MATIÈRE PREMIÈRE',
             icon: '🌿',
             items: [
-                { 
-                    id: 'typeMatierePremi', 
-                    label: 'Type de matière', 
-                    icon: '🌿', 
+                {
+                    id: 'typeMatierePremi',
+                    label: 'Type de matière',
+                    icon: '🌿',
                     type: 'multiselect',
                     options: [
                         { value: 'trim-frais', label: 'Trim frais' },
@@ -562,23 +562,23 @@ export const PURIFICATION_PIPELINE_CONFIG = {
     type: 'purification',
     title: '🧬 Pipeline Purification',
     description: 'Raffinage et purification post-extraction',
-    
+
     intervalTypes: [
         { value: 'seconde', label: 'Secondes', icon: '⏱️', maxCells: 600 },
         { value: 'minute', label: 'Minutes', icon: '⏱️', maxCells: 120 },
         { value: 'heure', label: 'Heures', icon: '🕐', maxCells: 48 }
     ],
-    
+
     sidebarContent: [
         {
             id: 'methode-purification',
             label: 'MÉTHODE',
             icon: '🧪',
             items: [
-                { 
-                    id: 'methodePurification', 
-                    label: 'Technique de purification', 
-                    icon: '🧪', 
+                {
+                    id: 'methodePurification',
+                    label: 'Technique de purification',
+                    icon: '🧪',
                     type: 'multiselect',
                     options: [
                         { value: 'chromatographie-colonne', label: 'Chromatographie sur colonne' },
@@ -616,23 +616,23 @@ export const EXTRACTION_PIPELINE_CONFIG = {
     type: 'extraction',
     title: '⚗️ Pipeline Extraction',
     description: 'Extraction de cannabinoïdes et terpènes',
-    
+
     intervalTypes: [
         { value: 'seconde', label: 'Secondes', icon: '⏱️', maxCells: 600 },
         { value: 'minute', label: 'Minutes', icon: '⏱️', maxCells: 120 },
         { value: 'heure', label: 'Heures', icon: '🕐', maxCells: 24 }
     ],
-    
+
     sidebarContent: [
         {
             id: 'methode-extraction',
             label: 'MÉTHODE D\'EXTRACTION',
             icon: '⚗️',
             items: [
-                { 
-                    id: 'methodeExtraction', 
-                    label: 'Technique d\'extraction', 
-                    icon: '⚗️', 
+                {
+                    id: 'methodeExtraction',
+                    label: 'Technique d\'extraction',
+                    icon: '⚗️',
                     type: 'select',
                     options: [
                         { value: 'ethanol-eho', label: 'Extraction à l\'éthanol (EHO)' },
@@ -668,13 +668,13 @@ export const RECIPE_PIPELINE_CONFIG = {
     type: 'recipe',
     title: '🍪 Pipeline Recette',
     description: 'Préparation de comestibles au cannabis',
-    
+
     intervalTypes: [
         { value: 'seconde', label: 'Secondes', icon: '⏱️', maxCells: 300 },
         { value: 'minute', label: 'Minutes', icon: '⏱️', maxCells: 180 },
         { value: 'heure', label: 'Heures', icon: '🕐', maxCells: 12 }
     ],
-    
+
     phases: [
         { id: 'preparation', label: '🔪 Préparation ingrédients', duration: 15 },
         { id: 'decarboxylation', label: '🔥 Décarboxylation', duration: 40 },
@@ -683,17 +683,17 @@ export const RECIPE_PIPELINE_CONFIG = {
         { id: 'refroidissement', label: '❄️ Refroidissement', duration: 120 },
         { id: 'conservation', label: '📦 Conservation', duration: 1440 }
     ],
-    
+
     sidebarContent: [
         {
             id: 'ingredients',
             label: 'INGRÉDIENTS',
             icon: '🥘',
             items: [
-                { 
-                    id: 'typeIngredient', 
-                    label: 'Type d\'ingrédient', 
-                    icon: '🌿', 
+                {
+                    id: 'typeIngredient',
+                    label: 'Type d\'ingrédient',
+                    icon: '🌿',
                     type: 'select',
                     options: [
                         { value: 'cannabique', label: 'Ingrédient cannabique' },
@@ -702,14 +702,16 @@ export const RECIPE_PIPELINE_CONFIG = {
                 },
                 { id: 'nomIngredient', label: 'Nom ingrédient', icon: '🏷️', type: 'text', placeholder: 'Farine, beurre, fleurs...' },
                 { id: 'quantiteIngredient', label: 'Quantité', icon: '⚖️', type: 'number', min: 0, max: 10000, step: 0.1 },
-                { id: 'uniteIngredient', label: 'Unité', icon: '📏', type: 'select', options: [
-                    { value: 'g', label: 'Grammes (g)' },
-                    { value: 'ml', label: 'Millilitres (ml)' },
-                    { value: 'L', label: 'Litres (L)' },
-                    { value: 'pcs', label: 'Pièces' },
-                    { value: 'cuillere-cafe', label: 'Cuillère à café' },
-                    { value: 'cuillere-soupe', label: 'Cuillère à soupe' }
-                ]}
+                {
+                    id: 'uniteIngredient', label: 'Unité', icon: '📏', type: 'select', options: [
+                        { value: 'g', label: 'Grammes (g)' },
+                        { value: 'ml', label: 'Millilitres (ml)' },
+                        { value: 'L', label: 'Litres (L)' },
+                        { value: 'pcs', label: 'Pièces' },
+                        { value: 'cuillere-cafe', label: 'Cuillère à café' },
+                        { value: 'cuillere-soupe', label: 'Cuillère à soupe' }
+                    ]
+                }
             ]
         },
         {
@@ -717,10 +719,10 @@ export const RECIPE_PIPELINE_CONFIG = {
             label: 'ÉTAPES DE PRÉPARATION',
             icon: '📝',
             items: [
-                { 
-                    id: 'actionPreparation', 
-                    label: 'Action', 
-                    icon: '👨‍🍳', 
+                {
+                    id: 'actionPreparation',
+                    label: 'Action',
+                    icon: '👨‍🍳',
                     type: 'select',
                     options: [
                         { value: 'hacher', label: 'Hacher / Broyer' },
@@ -757,6 +759,6 @@ export const getPipelineConfig = (type) => {
         extraction: EXTRACTION_PIPELINE_CONFIG,
         recipe: RECIPE_PIPELINE_CONFIG
     }
-    
+
     return configs[type] || CULTURE_PIPELINE_CONFIG
 }
