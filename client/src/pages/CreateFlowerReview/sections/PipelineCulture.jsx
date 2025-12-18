@@ -1,66 +1,338 @@
 import React from 'react'
 import LiquidCard from '../../../components/LiquidCard'
+import PipelineTimeline from '../../../components/forms/flower/PipelineTimeline'
 
+/**
+ * Section Pipeline Culture pour CreateFlowerReview
+ * Utilise le nouveau système PipelineTimeline selon CDC
+ */
 export default function PipelineCulture({ formData, handleChange }) {
+    // Culture-specific data fields selon REAL_VISION_CDC_DEV.md
+    const cultureDataFields = [
+        // GÉNÉRAL
+        {
+            name: 'mode',
+            label: 'Mode de culture',
+            section: 'GÉNÉRAL',
+            type: 'select',
+            options: ['Indoor', 'Outdoor', 'Greenhouse', 'No-till', 'Autre'],
+            defaultValue: 'Indoor'
+        },
+        {
+            name: 'spaceType',
+            label: "Type d'espace",
+            section: 'GÉNÉRAL',
+            type: 'select',
+            options: ['Armoire', 'Tente', 'Serre', 'Extérieur', 'Autre'],
+            defaultValue: 'Tente'
+        },
+        {
+            name: 'spaceDimensions',
+            label: 'Dimensions (LxlxH cm)',
+            section: 'GÉNÉRAL',
+            type: 'text',
+            placeholder: '120x120x200',
+            defaultValue: ''
+        },
+
+        // ENVIRONNEMENT
+        {
+            name: 'propagation',
+            label: 'Technique de propagation',
+            section: 'ENVIRONNEMENT',
+            type: 'select',
+            options: ['Graine', 'Clone', 'Bouture', 'Sopalin', 'Autre'],
+            defaultValue: 'Graine'
+        },
+        {
+            name: 'substrateType',
+            label: 'Type de substrat',
+            section: 'ENVIRONNEMENT',
+            type: 'select',
+            options: ['Hydro', 'Bio', 'Organique'],
+            defaultValue: 'Bio'
+        },
+        {
+            name: 'substrateVolume',
+            label: 'Volume substrat (L)',
+            section: 'ENVIRONNEMENT',
+            type: 'number',
+            placeholder: '11',
+            defaultValue: ''
+        },
+        {
+            name: 'substrateComposition',
+            label: 'Composition substrat',
+            section: 'ENVIRONNEMENT',
+            type: 'text',
+            placeholder: 'Terre 70%, Coco 20%, Perlite 10%',
+            defaultValue: ''
+        },
+        {
+            name: 'irrigationType',
+            label: "Système d'irrigation",
+            section: 'ENVIRONNEMENT',
+            type: 'select',
+            options: ['Goutte à goutte', 'Inondation', 'Manuel', 'Autre'],
+            defaultValue: 'Manuel'
+        },
+        {
+            name: 'irrigationFrequency',
+            label: "Fréquence d'arrosage",
+            section: 'ENVIRONNEMENT',
+            type: 'text',
+            placeholder: 'Tous les 2 jours',
+            defaultValue: ''
+        },
+        {
+            name: 'waterVolume',
+            label: "Volume d'eau par arrosage (L)",
+            section: 'ENVIRONNEMENT',
+            type: 'number',
+            placeholder: '2',
+            defaultValue: ''
+        },
+
+        // ENGRAIS
+        {
+            name: 'fertilizerType',
+            label: "Type d'engrais",
+            section: 'ENGRAIS',
+            type: 'select',
+            options: ['Bio', 'Chimique', 'Mixte'],
+            defaultValue: 'Bio'
+        },
+        {
+            name: 'fertilizerBrand',
+            label: 'Marque et gamme',
+            section: 'ENGRAIS',
+            type: 'text',
+            placeholder: 'BioBizz - Light Mix',
+            defaultValue: ''
+        },
+        {
+            name: 'fertilizerDosage',
+            label: 'Dosage (g/L ou ml/L)',
+            section: 'ENGRAIS',
+            type: 'text',
+            placeholder: '2ml/L',
+            defaultValue: ''
+        },
+
+        // LUMIÈRE
+        {
+            name: 'lightType',
+            label: 'Type de lampe',
+            section: 'LUMIÈRE',
+            type: 'select',
+            options: ['LED', 'HPS', 'CFL', 'Naturel', 'Mixte', 'Autre'],
+            defaultValue: 'LED'
+        },
+        {
+            name: 'lightSpectrum',
+            label: 'Type de spectre',
+            section: 'LUMIÈRE',
+            type: 'select',
+            options: ['Complet', 'Bleu', 'Rouge', 'Mixte'],
+            defaultValue: 'Complet'
+        },
+        {
+            name: 'lightDistance',
+            label: 'Distance lampe/plante (cm)',
+            section: 'LUMIÈRE',
+            type: 'number',
+            placeholder: '30',
+            defaultValue: ''
+        },
+        {
+            name: 'lightPower',
+            label: 'Puissance totale (W)',
+            section: 'LUMIÈRE',
+            type: 'number',
+            placeholder: '600',
+            defaultValue: ''
+        },
+        {
+            name: 'lightDuration',
+            label: "Durée d'éclairage (h/jour)",
+            section: 'LUMIÈRE',
+            type: 'number',
+            placeholder: '18',
+            defaultValue: ''
+        },
+        {
+            name: 'lightDLI',
+            label: 'DLI (mol/m²/jour)',
+            section: 'LUMIÈRE',
+            type: 'number',
+            placeholder: '40',
+            defaultValue: ''
+        },
+        {
+            name: 'lightPPFD',
+            label: 'PPFD moyen (µmol/m²/s)',
+            section: 'LUMIÈRE',
+            type: 'number',
+            placeholder: '500',
+            defaultValue: ''
+        },
+
+        // CLIMAT
+        {
+            name: 'temperature',
+            label: 'Température moyenne (°C)',
+            section: 'CLIMAT',
+            type: 'number',
+            placeholder: '24',
+            defaultValue: ''
+        },
+        {
+            name: 'humidity',
+            label: 'Humidité relative (%)',
+            section: 'CLIMAT',
+            type: 'number',
+            placeholder: '60',
+            defaultValue: ''
+        },
+        {
+            name: 'co2',
+            label: 'CO₂ (ppm)',
+            section: 'CLIMAT',
+            type: 'number',
+            placeholder: '400',
+            defaultValue: ''
+        },
+        {
+            name: 'ventilation',
+            label: 'Ventilation',
+            section: 'CLIMAT',
+            type: 'text',
+            placeholder: 'Continue, extracteur 100m³/h',
+            defaultValue: ''
+        },
+
+        // PALISSAGE
+        {
+            name: 'training',
+            label: 'Méthodologie LST/HST',
+            section: 'PALISSAGE',
+            type: 'select',
+            options: ['SCROG', 'SOG', 'Main-Lining', 'LST', 'HST', 'Aucun', 'Autre'],
+            defaultValue: 'Aucun'
+        },
+        {
+            name: 'trainingComment',
+            label: 'Description manipulation',
+            section: 'PALISSAGE',
+            type: 'text',
+            placeholder: 'Décrivez la manipulation...',
+            defaultValue: ''
+        },
+
+        // MORPHOLOGIE
+        {
+            name: 'plantHeight',
+            label: 'Taille (cm)',
+            section: 'MORPHOLOGIE',
+            type: 'number',
+            placeholder: '80',
+            defaultValue: ''
+        },
+        {
+            name: 'plantVolume',
+            label: 'Volume',
+            section: 'MORPHOLOGIE',
+            type: 'text',
+            placeholder: 'Estimation visuelle',
+            defaultValue: ''
+        },
+        {
+            name: 'plantWeight',
+            label: 'Poids estimé',
+            section: 'MORPHOLOGIE',
+            type: 'text',
+            placeholder: 'Avant récolte',
+            defaultValue: ''
+        },
+        {
+            name: 'mainBranches',
+            label: 'Nombre branches principales',
+            section: 'MORPHOLOGIE',
+            type: 'number',
+            placeholder: '8',
+            defaultValue: ''
+        },
+
+        // RÉCOLTE
+        {
+            name: 'trichomeColor',
+            label: 'Couleur des trichomes',
+            section: 'RÉCOLTE',
+            type: 'select',
+            options: ['Laiteux', 'Ambré', 'Translucide', 'Mixte'],
+            defaultValue: 'Laiteux'
+        },
+        {
+            name: 'harvestDate',
+            label: 'Date de récolte',
+            section: 'RÉCOLTE',
+            type: 'date',
+            defaultValue: ''
+        },
+        {
+            name: 'wetWeight',
+            label: 'Poids brut (g)',
+            section: 'RÉCOLTE',
+            type: 'number',
+            placeholder: '250',
+            defaultValue: ''
+        },
+        {
+            name: 'dryWeight',
+            label: 'Poids net après défoliation (g)',
+            section: 'RÉCOLTE',
+            type: 'number',
+            placeholder: '80',
+            defaultValue: ''
+        },
+        {
+            name: 'yield',
+            label: 'Rendement (g/m² ou g/plante)',
+            section: 'RÉCOLTE',
+            type: 'text',
+            placeholder: '400g/m²',
+            defaultValue: ''
+        }
+    ]
+
+    const handlePipelineChange = (pipelineData) => {
+        handleChange('culturePipeline', pipelineData)
+    }
+
     return (
-        <LiquidCard title="🌱 Pipeline Culture (Producteur)" bordered>
+        <LiquidCard title="🌱 Pipeline de culture" bordered>
             <div className="space-y-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Cette section est disponible uniquement pour les comptes Producteur.
-                    Elle permet de documenter toutes les étapes de culture avec des données détaillées.
-                </p>
-
-                {/* Mode de culture */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Mode de culture
-                    </label>
-                    <select
-                        value={formData.modeCulture || ''}
-                        onChange={(e) => handleChange('modeCulture', e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                    >
-                        <option value="">Sélectionner...</option>
-                        <option value="indoor">Indoor</option>
-                        <option value="outdoor">Outdoor</option>
-                        <option value="greenhouse">Greenhouse</option>
-                        <option value="no-till">No-till</option>
-                    </select>
+                {/* Instructions d'utilisation */}
+                <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-200 dark:border-purple-700 rounded-xl p-4">
+                    <h4 className="text-sm font-semibold text-purple-900 dark:text-purple-100 mb-2 flex items-center gap-2">
+                        📋 Pipeline de culture : Timeline interactive CDC
+                    </h4>
+                    <ul className="text-xs text-purple-800 dark:text-purple-200 space-y-1 list-disc list-inside">
+                        <li>Glissez les contenus depuis le panneau latéral vers les cases de la timeline</li>
+                        <li>Drag & drop : Sélectionnez un contenu à gauche et déposez-le sur une case</li>
+                        <li>Édition : Cliquez sur une case pour modifier ses données</li>
+                        <li>Préréglages sauvegardés : Créez des configurations globales réutilisables</li>
+                        <li>Assignation masse : Sélectionnez plusieurs cases (Ctrl/Shift) puis assignez un préréglage</li>
+                    </ul>
                 </div>
 
-                {/* Dates de culture */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Date de début
-                        </label>
-                        <input
-                            type="date"
-                            value={formData.dateDebut || ''}
-                            onChange={(e) => handleChange('dateDebut', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Date de fin
-                        </label>
-                        <input
-                            type="date"
-                            value={formData.dateFin || ''}
-                            onChange={(e) => handleChange('dateFin', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                        />
-                    </div>
-                </div>
-
-                {/* Note */}
-                <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <p className="text-sm text-blue-800 dark:text-blue-200">
-                        💡 La configuration complète du pipeline de culture (phases, événements, données détaillées)
-                        sera disponible dans une interface dédiée pour les comptes Producteur.
-                    </p>
-                </div>
+                {/* Composant Timeline */}
+                <PipelineTimeline
+                    pipelineType="culture"
+                    data={formData.culturePipeline || {}}
+                    onChange={handlePipelineChange}
+                    availableDataFields={cultureDataFields}
+                />
             </div>
         </LiquidCard>
     )
