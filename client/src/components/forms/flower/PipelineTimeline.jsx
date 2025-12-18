@@ -13,7 +13,8 @@ function PresetConfigModal({ fields, onSave, onClose }) {
     const handleSubmit = (e) => {
         e.preventDefault()
         if (!presetName.trim()) return
-        onSave(presetName, presetDescription)
+        // Passer nom, description ET les données configurées
+        onSave(presetName, presetDescription, presetData)
     }
 
     return (
@@ -91,6 +92,26 @@ function PresetConfigModal({ fields, onSave, onClose }) {
                                                             <option key={opt} value={opt}>{opt}</option>
                                                         ))}
                                                     </select>
+                                                ) : field.type === 'multiselect' ? (
+                                                    <div className="max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded p-2">
+                                                        {field.options?.map(opt => (
+                                                            <label key={opt} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-1 rounded">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={(Array.isArray(presetData[field.name]) ? presetData[field.name] : []).includes(opt)}
+                                                                    onChange={(e) => {
+                                                                        const current = Array.isArray(presetData[field.name]) ? presetData[field.name] : []
+                                                                        const newValue = e.target.checked
+                                                                            ? [...current, opt]
+                                                                            : current.filter(v => v !== opt)
+                                                                        setPresetData(prev => ({ ...prev, [field.name]: newValue }))
+                                                                    }}
+                                                                    className="w-3 h-3"
+                                                                />
+                                                                <span>{opt}</span>
+                                                            </label>
+                                                        ))}
+                                                    </div>
                                                 ) : field.type === 'number' ? (
                                                     <input
                                                         type="number"
@@ -529,18 +550,14 @@ export default function PipelineTimeline({
     }
 
     // Sauvegarder un préréglage
-    const handleSavePreset = (name, description) => {
+    // Sauvegarder un préréglage avec les données configurées
+    const handleSavePreset = (name, description, configuredData = {}) => {
         const newPreset = {
             id: Date.now().toString(),
             name,
             description,
             createdAt: new Date().toISOString(),
-            config: {
-                // Toutes les données configurables
-                ...Object.fromEntries(
-                    availableDataFields.map(field => [field.name, field.defaultValue || ''])
-                )
-            }
+            config: configuredData // Utiliser les données configurées dans le modal
         }
 
         const updatedPresets = [...presets, newPreset]
