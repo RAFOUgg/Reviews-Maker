@@ -5,7 +5,7 @@
 - Dates calendaires  
 - Semaines  
 - Mois  
-- Phases physiologiques  
+- Phases physiologiques  (décrite ci dessous)
 
 ### Phases physiologiques (exhaustif, modulaire)
 
@@ -132,25 +132,58 @@
 
 Prévoir des listes de composants sélectionnables, avec % en saisie numérique :
 
-- Terre végétale  
-- Terreau horticole  
-- Terreau spécial cannabis  
-- Coco pur  
-- Coco tamponnée  
-- Laine de roche  
-- Perlite  
-- Vermiculite  
-- Billes d’argile  
-- Pouzzolane  
-- Sable  
-- Biochar  
-- Compost maison  
-- Compost lombricompost  
-- Humus / moulm  
-- Tourbe blonde  
-- Tourbe brune  
-- Amendements minéraux (dolomie, basalte, etc.)  
-- Amendements organiques (guano, farine d’os, etc.)  
+Pour un système où le producteur définit lui‑même les mélanges par pourcentage, la liste doit ne contenir que des matières/ingrédients élémentaires, jamais de combinaisons.
+Matériaux de base « minéraux / inertes »
+Laine de roche
+Coco (fibres, chips, peat)
+Billes d’argile expansée
+Perlite
+Vermiculite
+Sable (siliceux)
+Pouzzolane
+Pumice / pierre ponce
+Gravillon / graviers
+Brique concassée / matériaux céramiques inertes
+Matériaux « terreux » et organiques structurants
+Terre végétale
+Terreau horticole générique
+Terreau spécial cannabis
+Tourbe blonde
+Tourbe brune
+Compost végétal
+Compost animal
+Lombricompost / vermicompost
+Humus de forêt (si autorisé)
+Amendements organiques (solides)
+Guano de chauve‑souris
+Guano d’oiseau marin
+Farine de sang
+Farine d’os
+Farine de poisson
+Farine de plumes
+Fumier composté (bovin)
+Fumier composté (cheval)
+Fumier composté (volaille)
+Fumier composté (ovin/caprin)
+Vinasse de betterave sèche
+Tourteaux (ricin, neem, etc.)
+Mélasse solide / sucre brut
+Amendements minéraux et rocheux
+Dolomie (carbonate de calcium/magnésium)
+Chaux agricole
+Gypse
+Poudre de basalte
+Poudre de lave
+Poudre de roche (rock dust générique)
+Zeolite
+Argile (bentonite, kaolinite, etc.)
+Sels minéraux encapsulés / à libération lente
+Autres composés possibles
+Biochar / charbon végétal
+Fibre de bois
+Écorce compostée
+Coques de riz
+Coques de coco (brutes)
 
 ### Marques (sélection + texte libre)
 

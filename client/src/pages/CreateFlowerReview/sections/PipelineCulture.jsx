@@ -138,7 +138,7 @@ export default function PipelineCulture({ formData, handleChange }) {
             defaultValue: 'Graine directement en substrat'
         },
 
-        // ========== ENVIRONNEMENT - Substrat ==========
+        // ========== SUBSTRAT ==========
         {
             name: 'substrateType',
             label: 'Type de substrat',
@@ -152,15 +152,11 @@ export default function PipelineCulture({ formData, handleChange }) {
                 'NFT (nutrient film technique)',
                 'Aéroponie haute pression',
                 'Aéroponie basse pression',
-                'Substrat inerte (coco, laine de roche, billes d\'argile, perlite, vermiculite)',
+                'Substrat inerte',
                 'Terreau « Bio »',
                 'Terreau organique vivant (living soil)',
                 'Super-soil / no-till',
-                'Mélange terre / coco',
-                'Mélange terre / perlite',
-                'Mélange coco / perlite',
-                'Mélange coco / billes d\'argile',
-                'Mélange personnalisé'
+                'Mélange personnalisé (définir composition ci-dessous)'
             ],
             defaultValue: 'Terreau « Bio »'
         },
@@ -184,11 +180,65 @@ export default function PipelineCulture({ formData, handleChange }) {
         },
         {
             name: 'substrateComposition',
-            label: 'Composition substrat',
+            label: 'Composition substrat (ingrédients élémentaires)',
             section: 'SUBSTRAT',
-            type: 'text',
-            placeholder: 'Terre végétale 50%, Perlite 20%, Compost 30%',
-            defaultValue: ''
+            type: 'composition',
+            help: 'Définissez votre mélange par % - Total doit = 100%',
+            ingredients: [
+                // Matériaux minéraux/inertes
+                'Laine de roche',
+                'Coco (fibres, chips, peat)',
+                'Billes d\'argile expansée',
+                'Perlite',
+                'Vermiculite',
+                'Sable (siliceux)',
+                'Pouzzolane',
+                'Pumice / pierre ponce',
+                'Gravillon / graviers',
+                'Brique concassée / matériaux céramiques inertes',
+                // Matériaux terreux et organiques
+                'Terre végétale',
+                'Terreau horticole générique',
+                'Terreau spécial cannabis',
+                'Tourbe blonde',
+                'Tourbe brune',
+                'Compost végétal',
+                'Compost animal',
+                'Lombricompost / vermicompost',
+                'Humus de forêt',
+                // Amendements organiques solides
+                'Guano de chauve-souris',
+                'Guano d\'oiseau marin',
+                'Farine de sang',
+                'Farine d\'os',
+                'Farine de poisson',
+                'Farine de plumes',
+                'Fumier composté (bovin)',
+                'Fumier composté (cheval)',
+                'Fumier composté (volaille)',
+                'Fumier composté (ovin/caprin)',
+                'Vinasse de betterave sèche',
+                'Tourteaux (ricin, neem, etc.)',
+                'Mélasse solide / sucre brut',
+                // Amendements minéraux et rocheux
+                'Dolomie (carbonate Ca/Mg)',
+                'Chaux agricole',
+                'Gypse',
+                'Poudre de basalte',
+                'Poudre de lave',
+                'Poudre de roche (rock dust)',
+                'Zeolite',
+                'Argile (bentonite, kaolinite)',
+                'Sels minéraux encapsulés',
+                // Autres
+                'Biochar / charbon végétal',
+                'Fibre de bois',
+                'Écorce compostée',
+                'Coques de riz',
+                'Coques de coco (brutes)'
+            ],
+            defaultValue: []
+            // Format: [{ ingredient: 'Coco', percent: 60, brand: 'Canna' }, ...]
         },
         {
             name: 'substrateBrand',
@@ -289,6 +339,14 @@ export default function PipelineCulture({ formData, handleChange }) {
                 'Volume variable'
             ],
             defaultValue: 'Volume fixe par pot'
+        },
+        {
+            name: 'irrigationBrand',
+            label: 'Marque système irrigation',
+            section: 'IRRIGATION',
+            type: 'text',
+            placeholder: 'Gardena, Blumat, AutoPot, Tropf-Blumat...',
+            defaultValue: ''
         },
 
         // ========== ENGRAIS ==========
@@ -498,6 +556,14 @@ export default function PipelineCulture({ formData, handleChange }) {
             ],
             defaultValue: 'Spectre mixte / non applicable'
         },
+        {
+            name: 'lightBrand',
+            label: 'Marque lampe / fabricant',
+            section: 'LUMIÈRE',
+            type: 'text',
+            placeholder: 'Mars Hydro, Spider Farmer, Lumatek, Samsung, Sanlight...',
+            defaultValue: ''
+        },
 
         // ========== CLIMAT ==========
         {
@@ -573,9 +639,10 @@ export default function PipelineCulture({ formData, handleChange }) {
         },
         {
             name: 'ventilationType',
-            label: 'Type de ventilation',
+            label: 'Type(s) de ventilation (sélection multiple)',
             section: 'CLIMAT',
-            type: 'select',
+            type: 'multiselect',
+            help: 'Un producteur peut combiner plusieurs équipements',
             options: [
                 'Extracteur d\'air',
                 'Intracteur d\'air',
@@ -584,10 +651,9 @@ export default function PipelineCulture({ formData, handleChange }) {
                 'Ventilation par gaines (HVACD)',
                 'Déshumidificateur',
                 'Humidificateur',
-                'Filtre à charbon',
-                'Autre'
+                'Filtre à charbon'
             ],
-            defaultValue: 'Extracteur d\'air'
+            defaultValue: []
         },
         {
             name: 'ventilationMode',
@@ -602,13 +668,22 @@ export default function PipelineCulture({ formData, handleChange }) {
             ],
             defaultValue: 'Continu'
         },
+        {
+            name: 'ventilationBrand',
+            label: 'Marque(s) équipement ventilation',
+            section: 'CLIMAT',
+            type: 'text',
+            placeholder: 'Prima Klima, Can-Fan, RVK, Honeywell, Philips...',
+            defaultValue: ''
+        },
 
         // ========== PALISSAGE ==========
         {
             name: 'trainingMethod',
-            label: 'Méthodologie LST/HST',
+            label: 'Méthodologies LST/HST (sélection multiple)',
             section: 'PALISSAGE',
-            type: 'select',
+            type: 'multiselect',
+            help: 'CDC exige sélection multiple - un producteur peut combiner plusieurs techniques',
             options: [
                 'Pas de palissage',
                 'LST (Low Stress Training)',
@@ -622,7 +697,7 @@ export default function PipelineCulture({ formData, handleChange }) {
                 'Super-cropping',
                 'Defoliation ciblée',
                 'Super-cropping + support tuteur / filet',
-                'Splitting / fente de tige',
+                'Splitting / fente de tige (avancé)',
                 'Tuteurs individuels',
                 'Filets multi-niveaux',
                 'Palissage horizontal',
@@ -631,10 +706,9 @@ export default function PipelineCulture({ formData, handleChange }) {
                 'Ligaturage en étoile',
                 'Taille apicale répétée',
                 'Taille latérale',
-                'Taille de racines',
-                'Autre'
+                'Taille de racines (rares, hydro)'
             ],
-            defaultValue: 'Pas de palissage'
+            defaultValue: []
         },
         {
             name: 'trainingComment',

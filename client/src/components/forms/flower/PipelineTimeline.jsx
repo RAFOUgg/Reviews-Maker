@@ -149,11 +149,16 @@ function ContentValueModal({ content, onSave, onClose, selectedCellsCount }) {
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden flex flex-col">
                 <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                         Définir : {content.label}
                     </h3>
+                    {content.help && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {content.help}
+                        </p>
+                    )}
                     {selectedCellsCount > 0 ? (
                         <p className="text-sm text-green-600 dark:text-green-400 mt-1">
                             ✓ Sera appliqué à {selectedCellsCount} case(s) sélectionnée(s)
@@ -165,10 +170,10 @@ function ContentValueModal({ content, onSave, onClose, selectedCellsCount }) {
                     )}
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <form onSubmit={handleSubmit} className="flex-1 overflow-auto p-6 space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Valeur
+                            Valeur {content.unit && <span className="text-xs">({content.unit})</span>}
                         </label>
                         {content.type === 'select' ? (
                             <select
@@ -182,6 +187,26 @@ function ContentValueModal({ content, onSave, onClose, selectedCellsCount }) {
                                     <option key={opt} value={opt}>{opt}</option>
                                 ))}
                             </select>
+                        ) : content.type === 'multiselect' ? (
+                            <div className="space-y-2 max-h-64 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded-lg p-3">
+                                {content.options?.map(opt => (
+                                    <label key={opt} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-2 rounded">
+                                        <input
+                                            type="checkbox"
+                                            checked={(Array.isArray(value) ? value : []).includes(opt)}
+                                            onChange={(e) => {
+                                                const currentArray = Array.isArray(value) ? value : []
+                                                const newValue = e.target.checked
+                                                    ? [...currentArray, opt]
+                                                    : currentArray.filter(v => v !== opt)
+                                                setValue(newValue)
+                                            }}
+                                            className="w-4 h-4"
+                                        />
+                                        <span className="text-sm">{opt}</span>
+                                    </label>
+                                ))}
+                            </div>
                         ) : content.type === 'number' ? (
                             <input
                                 type="number"
@@ -199,6 +224,10 @@ function ContentValueModal({ content, onSave, onClose, selectedCellsCount }) {
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                                 autoFocus
                             />
+                        ) : content.type === 'composition' ? (
+                            <div className="text-sm text-orange-600 dark:text-orange-400 p-3 bg-orange-50 dark:bg-orange-900/20 rounded">
+                                ⚠️ Type "composition" nécessite un modal dédié (à implémenter)
+                            </div>
                         ) : (
                             <input
                                 type="text"
@@ -207,6 +236,172 @@ function ContentValueModal({ content, onSave, onClose, selectedCellsCount }) {
                                 placeholder={content.placeholder}
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                                 autoFocus
+                            />
+                        )}
+                    </div>
+
+                    <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                        >
+                            Annuler
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={selectedCellsCount === 0}
+                            className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Appliquer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    )
+}
+
+// Modal menu contextuel clic droit sur contenu
+function ContextMenu({ content, position, onClose, onAssignToRange, onDefineValue }) {
+    return (
+        <>
+            {/* Overlay transparent pour fermer au clic extérieur */}
+            <div
+                className="fixed inset-0 z-40"
+                onClick={onClose}
+            />
+
+            {/* Menu contextuel */}
+            <div
+                className="fixed bg-white dark:bg-gray-800 shadow-2xl rounded-lg border border-gray-200 dark:border-gray-700 py-2 z-50 min-w-[280px]"
+                style={{ top: position.y, left: position.x }}
+            >
+                <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">
+                        {content.label}
+                    </p>
+                </div>
+
+                <button
+                    onClick={() => {
+                        onAssignToRange(content)
+                        onClose()
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                >
+                    <span>📍</span>
+                    <div>
+                        <div className="font-medium text-gray-900 dark:text-white">Assigner à la trame</div>
+                        <div className="text-xs text-gray-500">Définir plage de cases (ex: J7 à J45)</div>
+                    </div>
+                </button>
+
+                <button
+                    onClick={() => {
+                        onDefineValue(content)
+                        onClose()
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                >
+                    <span>💾</span>
+                    <div>
+                        <div className="font-medium text-gray-900 dark:text-white">Définir valeur(s)</div>
+                        <div className="text-xs text-gray-500">Enregistrer comme préréglage</div>
+                    </div>
+                </button>
+            </div>
+        </>
+    )
+}
+
+// Modal pour assigner une donnée à une plage de cases
+function AssignToRangeModal({ content, cellCount, onSave, onClose }) {
+    const [startCell, setStartCell] = useState(1)
+    const [endCell, setEndCell] = useState(cellCount)
+    const [value, setValue] = useState(content.defaultValue || '')
+
+    const handleSubmit = (e) => {
+        e.preventDefault()
+        if (startCell < 1 || endCell > cellCount || startCell > endCell) {
+            alert('Plage de cases invalide')
+            return
+        }
+        onSave(content.name, value, { start: startCell - 1, end: endCell - 1 })
+    }
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full">
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        📍 Assigner à la trame
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {content.label}
+                    </p>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Case début
+                            </label>
+                            <input
+                                type="number"
+                                min="1"
+                                max={cellCount}
+                                value={startCell}
+                                onChange={(e) => setStartCell(parseInt(e.target.value) || 1)}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Case fin
+                            </label>
+                            <input
+                                type="number"
+                                min="1"
+                                max={cellCount}
+                                value={endCell}
+                                onChange={(e) => setEndCell(parseInt(e.target.value) || cellCount)}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Valeur à appliquer {content.unit && <span className="text-xs">({content.unit})</span>}
+                        </label>
+                        {content.type === 'select' ? (
+                            <select
+                                value={value}
+                                onChange={(e) => setValue(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                            >
+                                <option value="">Sélectionner...</option>
+                                {content.options?.map(opt => (
+                                    <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                            </select>
+                        ) : content.type === 'number' ? (
+                            <input
+                                type="number"
+                                value={value}
+                                onChange={(e) => setValue(e.target.value)}
+                                placeholder={content.placeholder}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                            />
+                        ) : (
+                            <input
+                                type="text"
+                                value={value}
+                                onChange={(e) => setValue(e.target.value)}
+                                placeholder={content.placeholder}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                             />
                         )}
                     </div>
@@ -221,8 +416,7 @@ function ContentValueModal({ content, onSave, onClose, selectedCellsCount }) {
                         </button>
                         <button
                             type="submit"
-                            disabled={selectedCellsCount === 0}
-                            className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
                         >
                             Appliquer
                         </button>
@@ -265,6 +459,12 @@ export default function PipelineTimeline({
     const [draggedContent, setDraggedContent] = useState(null)
     const [showContentValueModal, setShowContentValueModal] = useState(false)
     const [contentToEdit, setContentToEdit] = useState(null)
+
+    // Nouveaux états pour menu contextuel
+    const [showContextMenu, setShowContextMenu] = useState(false)
+    const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 })
+    const [contextMenuContent, setContextMenuContent] = useState(null)
+    const [showAssignToRangeModal, setShowAssignToRangeModal] = useState(false)
 
     // Calcul du nombre de cases selon la configuration
     const getCellCount = () => {
@@ -424,11 +624,41 @@ export default function PipelineTimeline({
         }
     }
 
-    // Clic droit pour définir une valeur
+    // Clic droit pour ouvrir menu contextuel
     const handleContentRightClick = (content, e) => {
         e.preventDefault()
+        setContextMenuContent(content)
+        setContextMenuPosition({ x: e.clientX, y: e.clientY })
+        setShowContextMenu(true)
+    }
+
+    // Handler: Assigner à la trame (plage de cases)
+    const handleOpenAssignToRange = (content) => {
+        setContentToEdit(content)
+        setShowAssignToRangeModal(true)
+    }
+
+    // Handler: Définir valeur simple
+    const handleOpenDefineValue = (content) => {
         setContentToEdit(content)
         setShowContentValueModal(true)
+    }
+
+    // Appliquer une valeur à une plage de cases
+    const handleApplyToRange = (fieldName, value, range) => {
+        const newTimelineData = { ...timelineData }
+
+        for (let i = range.start; i <= range.end; i++) {
+            if (!newTimelineData[i]) {
+                newTimelineData[i] = { data: {} }
+            }
+            newTimelineData[i].data[fieldName] = value
+        }
+
+        setTimelineData(newTimelineData)
+        updateParentData({ timelineData: newTimelineData })
+        setShowAssignToRangeModal(false)
+        setContentToEdit(null)
     }
 
     // Appliquer une valeur définie aux cases sélectionnées
@@ -590,295 +820,321 @@ export default function PipelineTimeline({
                                                             setActivePresetId(null)
                                                         }
                                                         updateParentData({ presets: presets.filter(p => p.id !== preset.id) })
-                                                            >
-                                                            <Trash2 className="w-3 h-3" />
+                                                    }
+                                                }}
+                                                className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors"
+                                            >
+                                                <Trash2 className="w-3 h-3 text-red-600" />
                                             </button>
-                                    </div>
-                                    </div>
-                        ))}
-                    </div>
-                        )}
-                </div>
-
-                {/* Onglet Contenus */}
-                <div className="space-y-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                        <Info className="w-4 h-4" />
-                        Contenus
-                    </h3>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                        • Glissez vers les cases →<br />
-                        • Ctrl+clic pour sélection multiple<br />
-                        • Clic droit → Définir la valeur
-                    </p>
-
-                    {/* Compteur de sélection */}
-                    {selectedContents.length > 0 && (
-                        <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700 rounded-lg p-2">
-                            <p className="text-xs font-medium text-primary-900 dark:text-primary-100">
-                                {selectedContents.length} contenu(s) sélectionné(s)
-                            </p>
-                            <button
-                                type="button"
-                                onClick={() => setSelectedContents([])}
-                                className="text-xs text-primary-600 hover:underline mt-1"
-                            >
-                                Désélectionner tout
-                            </button>
-                        </div>
-                    )}
-
-                    {/* Liste des contenus disponibles par section */}
-                    <div className="space-y-3">
-                        {Object.entries(
-                            availableDataFields.reduce((acc, field) => {
-                                const section = field.section || 'Général'
-                                if (!acc[section]) acc[section] = []
-                                acc[section].push(field)
-                                return acc
-                            }, {})
-                        ).map(([section, fields]) => (
-                            <div key={section} className="space-y-1">
-                                <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                                    {section}
-                                </p>
-                                {fields.map(field => {
-                                    const isSelected = selectedContents.find(c => c.name === field.name)
-                                    return (
-                                        <div
-                                            key={field.name}
-                                            draggable
-                                            onDragStart={() => handleDragStart(field)}
-                                            onClick={(e) => handleContentClick(field, e)}
-                                            onContextMenu={(e) => handleContentRightClick(field, e)}
-                                            className={`px-3 py-2 border rounded cursor-move hover:shadow-sm transition-all text-xs ${isSelected
-                                                ? 'bg-primary-100 dark:bg-primary-900/30 border-primary-400 dark:border-primary-600'
-                                                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-primary-400'
-                                                }`}
-                                        >
-                                            <span className={`${isSelected ? 'font-semibold text-primary-900 dark:text-primary-100' : 'text-gray-900 dark:text-white'}`}>
-                                                {field.label}
-                                            </span>
                                         </div>
-                                    )
-                                })}
+                                    </div>
+                                ))}
                             </div>
-                        ))}
+                        )}
                     </div>
 
-                    {/* Bouton unique de création de préréglage */}
-                    <button
-                        type="button"
-                        onClick={() => setShowCreatePresetModal(true)}
-                        className="w-full mt-4 py-2 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Créer un nouveau préréglage
-                    </button>
-                </div>
-            </div>
-        </div>
-
-            {/* Zone principale: Timeline */ }
-    <div className="flex-1 overflow-auto">
-        <div className="p-4 space-y-4">
-            {/* Configuration de la timeline */}
-            <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
-                <h3 className="text-sm font-semibold text-purple-900 dark:text-purple-100 mb-3 flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    Pipeline {pipelineType.charAt(0).toUpperCase() + pipelineType.slice(1)}
-                </h3>
-
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Type d'intervalles
-                        </label>
-                        <select
-                            value={timelineConfig.intervalType}
-                            onChange={(e) => handleTimelineConfigChange('intervalType', e.target.value)}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                        >
-                            <option value="secondes">Secondes</option>
-                            <option value="minutes">Minutes</option>
-                            <option value="heures">Heures</option>
-                            <option value="jours">Jours</option>
-                            <option value="semaines">Semaines</option>
-                            <option value="mois">Mois</option>
-                            <option value="phases">Phases</option>
-                            <option value="dates">Dates</option>
-                        </select>
-                    </div>
-
-                    {timelineConfig.intervalType !== 'phases' && timelineConfig.intervalType !== 'dates' && (
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Nombre (max {maxCellsPerPage})
-                            </label>
-                            <input
-                                type="number"
-                                min="1"
-                                max={maxCellsPerPage}
-                                value={timelineConfig.totalIntervals}
-                                onChange={(e) => handleTimelineConfigChange('totalIntervals', parseInt(e.target.value) || 1)}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                            />
-                        </div>
-                    )}
-
-                    {timelineConfig.intervalType === 'dates' && (
-                        <>
-                            <div>
-                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Date de début
-                                </label>
-                                <input
-                                    type="date"
-                                    value={timelineConfig.startDate}
-                                    onChange={(e) => handleTimelineConfigChange('startDate', e.target.value)}
-                                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Date de fin
-                                </label>
-                                <input
-                                    type="date"
-                                    value={timelineConfig.endDate}
-                                    onChange={(e) => handleTimelineConfigChange('endDate', e.target.value)}
-                                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                />
-                            </div>
-                        </>
-                    )}
-                </div>
-
-                {selectedCells.length > 0 && activePresetId && (
-                    <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
-                        <p className="text-xs text-green-800 dark:text-green-200 mb-2 font-medium">
-                            ✓ Préréglage actif : {presets.find(p => p.id === activePresetId)?.name}
+                    {/* Onglet Contenus */}
+                    <div className="space-y-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <Info className="w-4 h-4" />
+                            Contenus
+                        </h3>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                            • Glissez vers les cases →<br />
+                            • Ctrl+clic pour sélection multiple<br />
+                            • Clic droit → Définir la valeur
                         </p>
+
+                        {/* Compteur de sélection */}
+                        {selectedContents.length > 0 && (
+                            <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700 rounded-lg p-2">
+                                <p className="text-xs font-medium text-primary-900 dark:text-primary-100">
+                                    {selectedContents.length} contenu(s) sélectionné(s)
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedContents([])}
+                                    className="text-xs text-primary-600 hover:underline mt-1"
+                                >
+                                    Désélectionner tout
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Liste des contenus disponibles par section */}
+                        <div className="space-y-3">
+                            {Object.entries(
+                                availableDataFields.reduce((acc, field) => {
+                                    const section = field.section || 'Général'
+                                    if (!acc[section]) acc[section] = []
+                                    acc[section].push(field)
+                                    return acc
+                                }, {})
+                            ).map(([section, fields]) => (
+                                <div key={section} className="space-y-1">
+                                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                        {section}
+                                    </p>
+                                    {fields.map(field => {
+                                        const isSelected = selectedContents.find(c => c.name === field.name)
+                                        return (
+                                            <div
+                                                key={field.name}
+                                                draggable
+                                                onDragStart={() => handleDragStart(field)}
+                                                onClick={(e) => handleContentClick(field, e)}
+                                                onContextMenu={(e) => handleContentRightClick(field, e)}
+                                                className={`px-3 py-2 border rounded cursor-move hover:shadow-sm transition-all text-xs ${isSelected
+                                                    ? 'bg-primary-100 dark:bg-primary-900/30 border-primary-400 dark:border-primary-600'
+                                                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-primary-400'
+                                                    }`}
+                                            >
+                                                <span className={`${isSelected ? 'font-semibold text-primary-900 dark:text-primary-100' : 'text-gray-900 dark:text-white'}`}>
+                                                    {field.label}
+                                                </span>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Bouton unique de création de préréglage */}
                         <button
                             type="button"
-                            onClick={() => {
-                                handleApplyPresetToCells(activePresetId, selectedCells)
-                                setSelectedCells([])
-                            }}
-                            className="w-full py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold shadow-sm"
+                            onClick={() => setShowCreatePresetModal(true)}
+                            className="w-full mt-4 py-2 px-4 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
                         >
-                            🚀 Assigner aux {selectedCells.length} case(s) sélectionnée(s)
+                            <Plus className="w-4 h-4" />
+                            Créer un nouveau préréglage
                         </button>
                     </div>
-                )}
-
-                {selectedCells.length > 0 && !activePresetId && (
-                    <div className="mt-3 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg">
-                        <p className="text-xs text-orange-800 dark:text-orange-200">
-                            ⚠️ {selectedCells.length} case(s) sélectionnée(s)<br />
-                            Cliquez sur un préréglage pour l'activer
-                        </p>
-                    </div>
-                )}
-
-                {!selectedCells.length && activePresetId && (
-                    <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
-                        <p className="text-xs text-blue-800 dark:text-blue-200">
-                            💡 Préréglage "{presets.find(p => p.id === activePresetId)?.name}" actif<br />
-                            Sélectionnez des cases pour l'appliquer
-                        </p>
-                    </div>
-                )}
-
-                <div className="mt-3 flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
-                    <span>
-                        <strong>{cellCount}</strong> {cellCount > 1 ? 'cases' : 'case'} • <strong>0/{cellCount}</strong> remplies
-                    </span>
-                    {needsPagination && (
-                        <span className="text-orange-600 dark:text-orange-400">
-                            ⚠️ Pagination requise
-                        </span>
-                    )}
                 </div>
             </div>
 
-            {/* Timeline GitHub-style */}
-            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <div className="grid gap-1" style={{
-                    gridTemplateColumns: `repeat(auto-fill, minmax(${timelineConfig.intervalType === 'phases' ? '80px' : '32px'
-                        }, 1fr))`
-                }}>
-                    {Array.from({ length: Math.min(cellCount, maxCellsPerPage) }, (_, i) => {
-                        const cellData = timelineData[i]
-                        const hasData = cellData && Object.keys(cellData.data || {}).length > 0
-                        const isSelected = selectedCells.includes(i)
+            {/* Zone principale: Timeline */}
+            <div className="flex-1 overflow-auto">
+                <div className="p-4 space-y-4">
+                    {/* Configuration de la timeline */}
+                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
+                        <h3 className="text-sm font-semibold text-purple-900 dark:text-purple-100 mb-3 flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            Pipeline {pipelineType.charAt(0).toUpperCase() + pipelineType.slice(1)}
+                        </h3>
 
-                        return (
-                            <div
-                                key={i}
-                                onClick={(e) => handleCellClick(i, e)}
-                                onDragOver={handleDragOver}
-                                onDrop={() => handleDrop(i)}
-                                className={`
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Type d'intervalles
+                                </label>
+                                <select
+                                    value={timelineConfig.intervalType}
+                                    onChange={(e) => handleTimelineConfigChange('intervalType', e.target.value)}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                >
+                                    <option value="secondes">Secondes</option>
+                                    <option value="minutes">Minutes</option>
+                                    <option value="heures">Heures</option>
+                                    <option value="jours">Jours</option>
+                                    <option value="semaines">Semaines</option>
+                                    <option value="mois">Mois</option>
+                                    <option value="phases">Phases</option>
+                                    <option value="dates">Dates</option>
+                                </select>
+                            </div>
+
+                            {timelineConfig.intervalType !== 'phases' && timelineConfig.intervalType !== 'dates' && (
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Nombre (max {maxCellsPerPage})
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max={maxCellsPerPage}
+                                        value={timelineConfig.totalIntervals}
+                                        onChange={(e) => handleTimelineConfigChange('totalIntervals', parseInt(e.target.value) || 1)}
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                    />
+                                </div>
+                            )}
+
+                            {timelineConfig.intervalType === 'dates' && (
+                                <>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Date de début
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={timelineConfig.startDate}
+                                            onChange={(e) => handleTimelineConfigChange('startDate', e.target.value)}
+                                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Date de fin
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={timelineConfig.endDate}
+                                            onChange={(e) => handleTimelineConfigChange('endDate', e.target.value)}
+                                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                        />
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {selectedCells.length > 0 && activePresetId && (
+                            <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+                                <p className="text-xs text-green-800 dark:text-green-200 mb-2 font-medium">
+                                    ✓ Préréglage actif : {presets.find(p => p.id === activePresetId)?.name}
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        handleApplyPresetToCells(activePresetId, selectedCells)
+                                        setSelectedCells([])
+                                    }}
+                                    className="w-full py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold shadow-sm"
+                                >
+                                    🚀 Assigner aux {selectedCells.length} case(s) sélectionnée(s)
+                                </button>
+                            </div>
+                        )}
+
+                        {selectedCells.length > 0 && !activePresetId && (
+                            <div className="mt-3 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg">
+                                <p className="text-xs text-orange-800 dark:text-orange-200">
+                                    ⚠️ {selectedCells.length} case(s) sélectionnée(s)<br />
+                                    Cliquez sur un préréglage pour l'activer
+                                </p>
+                            </div>
+                        )}
+
+                        {!selectedCells.length && activePresetId && (
+                            <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                                <p className="text-xs text-blue-800 dark:text-blue-200">
+                                    💡 Préréglage "{presets.find(p => p.id === activePresetId)?.name}" actif<br />
+                                    Sélectionnez des cases pour l'appliquer
+                                </p>
+                            </div>
+                        )}
+
+                        <div className="mt-3 flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+                            <span>
+                                <strong>{cellCount}</strong> {cellCount > 1 ? 'cases' : 'case'} • <strong>0/{cellCount}</strong> remplies
+                            </span>
+                            {needsPagination && (
+                                <span className="text-orange-600 dark:text-orange-400">
+                                    ⚠️ Pagination requise
+                                </span>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Timeline GitHub-style */}
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                        <div className="grid gap-1" style={{
+                            gridTemplateColumns: `repeat(auto-fill, minmax(${timelineConfig.intervalType === 'phases' ? '80px' : '32px'
+                                }, 1fr))`
+                        }}>
+                            {Array.from({ length: Math.min(cellCount, maxCellsPerPage) }, (_, i) => {
+                                const cellData = timelineData[i]
+                                const hasData = cellData && Object.keys(cellData.data || {}).length > 0
+                                const isSelected = selectedCells.includes(i)
+
+                                return (
+                                    <div
+                                        key={i}
+                                        onClick={(e) => handleCellClick(i, e)}
+                                        onDragOver={handleDragOver}
+                                        onDrop={() => handleDrop(i)}
+                                        className={`
                                             aspect-square rounded cursor-pointer transition-all
                                             ${hasData
-                                        ? 'bg-green-500 hover:bg-green-600'
-                                        : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
-                                    }
+                                                ? 'bg-green-500 hover:bg-green-600'
+                                                : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                            }
                                             ${isSelected ? 'ring-2 ring-primary-500 ring-offset-2' : ''}
                                         `}
-                                title={`${getCellLabel(i)}${hasData ? ' - Configuré' : ''}`}
+                                        title={`${getCellLabel(i)}${hasData ? ' - Configuré' : ''}`}
+                                    >
+                                        {timelineConfig.intervalType === 'phases' && (
+                                            <span className="text-[8px] text-gray-700 dark:text-gray-300 p-0.5 block truncate">
+                                                {getCellLabel(i)}
+                                            </span>
+                                        )}
+                                    </div>
+                                )
+                            })}
+                        </div>
+
+                        {/* Bouton pour ajouter plus de cases */}
+                        {!needsPagination && timelineConfig.intervalType !== 'phases' && (
+                            <button
+                                type="button"
+                                onClick={() => handleTimelineConfigChange('totalIntervals', timelineConfig.totalIntervals + 1)}
+                                className="mt-3 w-full py-2 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-400 hover:border-primary-500 hover:text-primary-500 transition-colors flex items-center justify-center gap-2 text-sm"
                             >
-                                {timelineConfig.intervalType === 'phases' && (
-                                    <span className="text-[8px] text-gray-700 dark:text-gray-300 p-0.5 block truncate">
-                                        {getCellLabel(i)}
-                                    </span>
-                                )}
-                            </div>
-                        )
-                    })}
+                                <Plus className="w-4 h-4" />
+                                Ajouter une case
+                            </button>
+                        )}
+                    </div>
                 </div>
-
-                {/* Bouton pour ajouter plus de cases */}
-                {!needsPagination && timelineConfig.intervalType !== 'phases' && (
-                    <button
-                        type="button"
-                        onClick={() => handleTimelineConfigChange('totalIntervals', timelineConfig.totalIntervals + 1)}
-                        className="mt-3 w-full py-2 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-400 hover:border-primary-500 hover:text-primary-500 transition-colors flex items-center justify-center gap-2 text-sm"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Ajouter une case
-                    </button>
-                )}
             </div>
+
+            {/* Modal unique de création de préréglage */}
+            {showCreatePresetModal && (
+                <PresetConfigModal
+                    fields={availableDataFields}
+                    onSave={handleSavePreset}
+                    onClose={() => setShowCreatePresetModal(false)}
+                />
+            )}
+
+            {/* Menu contextuel clic droit sur contenu */}
+            {showContextMenu && contextMenuContent && (
+                <ContextMenu
+                    content={contextMenuContent}
+                    position={contextMenuPosition}
+                    onClose={() => {
+                        setShowContextMenu(false)
+                        setContextMenuContent(null)
+                    }}
+                    onAssignToRange={handleOpenAssignToRange}
+                    onDefineValue={handleOpenDefineValue}
+                />
+            )}
+
+            {/* Modal assigner à la trame (plage de cases) */}
+            {showAssignToRangeModal && contentToEdit && (
+                <AssignToRangeModal
+                    content={contentToEdit}
+                    cellCount={cellCount}
+                    onSave={handleApplyToRange}
+                    onClose={() => {
+                        setShowAssignToRangeModal(false)
+                        setContentToEdit(null)
+                    }}
+                />
+            )}
+
+            {/* Modal de définition de valeur pour un contenu */}
+            {showContentValueModal && contentToEdit && (
+                <ContentValueModal
+                    content={contentToEdit}
+                    onSave={handleApplyContentValue}
+                    onClose={() => {
+                        setShowContentValueModal(false)
+                        setContentToEdit(null)
+                    }}
+                    selectedCellsCount={selectedCells.length}
+                />
+            )}
         </div>
-    </div>
-
-    {/* Modal unique de création de préréglage */ }
-    {
-        showCreatePresetModal && (
-            <PresetConfigModal
-                fields={availableDataFields}
-                onSave={handleSavePreset}
-                onClose={() => setShowCreatePresetModal(false)}
-            />
-        )
-    }
-
-    {/* Modal de définition de valeur pour un contenu */ }
-    {
-        showContentValueModal && contentToEdit && (
-            <ContentValueModal
-                content={contentToEdit}
-                onSave={handleApplyContentValue}
-                onClose={() => {
-                    setShowContentValueModal(false)
-                    setContentToEdit(null)
-                }}
-                selectedCellsCount={selectedCells.length}
-            />
-        )
-    }
-        </div >
     )
 }
