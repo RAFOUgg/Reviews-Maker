@@ -553,8 +553,9 @@ export default function PipelineCulture({ formData, handleChange }) {
             name: 'training',
             label: 'Méthodologie LST/HST',
             section: 'PALISSAGE',
-            type: 'multiselect',
+            type: 'select',
             options: [
+                'Pas de palissage',
                 'LST (Low Stress Training)',
                 'HST (High Stress Training)',
                 'Topping (étêtage)',
@@ -576,16 +577,15 @@ export default function PipelineCulture({ formData, handleChange }) {
                 'Taille apicale répétée',
                 'Taille latérale',
                 'Taille de racines',
-                'Pas de palissage',
                 'Autre'
             ],
-            defaultValue: ['Pas de palissage']
+            defaultValue: 'Pas de palissage'
         },
         {
             name: 'trainingComment',
             label: 'Description manipulation',
             section: 'PALISSAGE',
-            type: 'textarea',
+            type: 'text',
             placeholder: 'Décrivez les techniques de palissage appliquées...',
             defaultValue: ''
         },
@@ -687,17 +687,17 @@ export default function PipelineCulture({ formData, handleChange }) {
             name: 'trichomeColor',
             label: 'Couleur des trichomes',
             section: 'RÉCOLTE',
-            type: 'multiselect',
+            type: 'select',
             options: [
+                'Majorité laiteux',
+                'Majorité ambré',
                 'Transparent / translucide',
                 'Laiteux / opaque',
                 'Ambré',
                 'Mélange transparent-laiteux',
-                'Mélange laiteux-ambré',
-                'Majorité laiteux',
-                'Majorité ambré'
+                'Mélange laiteux-ambré'
             ],
-            defaultValue: ['Majorité laiteux']
+            defaultValue: 'Majorité laiteux'
         },
         {
             name: 'harvestDate',
