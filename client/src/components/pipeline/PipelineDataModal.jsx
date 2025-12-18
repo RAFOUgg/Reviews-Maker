@@ -11,7 +11,7 @@ import { X, Save, BookmarkPlus, Bookmark } from 'lucide-react';
  * - Onglet préréglages pour sauvegarder/charger des configurations
  */
 
-export default function PipelineDataModal({
+const PipelineDataModal = ({
     isOpen,
     onClose,
     cellData = {},
@@ -21,7 +21,7 @@ export default function PipelineDataModal({
     intervalLabel = '',
     droppedItem = null,
     pipelineType = 'culture' // Type de pipeline pour localStorage
-}) {
+}) => {
     const [formData, setFormData] = useState({});
     const [activeTab, setActiveTab] = useState('form'); // 'form' ou 'presets'
     const [fieldPresets, setFieldPresets] = useState([]); // Préréglages pour ce champ spécifique
@@ -469,4 +469,6 @@ export default function PipelineDataModal({
             )}
         </AnimatePresence>
     );
-}
+};
+
+export default PipelineDataModal;

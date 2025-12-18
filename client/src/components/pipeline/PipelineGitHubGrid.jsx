@@ -370,12 +370,12 @@ const CellEditModal = ({
 /**
  * Composant Principal PipelineGitHubGrid
  */
-export default function PipelineGitHubGrid({
+const PipelineGitHubGrid = ({
     value = {},
     onChange,
     type = 'curing', // 'curing', 'culture', 'extraction', 'recipe'
     productType = 'hash'
-}) {
+}) => {
     // Configuration initiale
     const defaultConfig = {
         intervalType: type === 'culture' ? 'phases' : 'days',
@@ -667,4 +667,6 @@ export default function PipelineGitHubGrid({
             </div>
         </LiquidCard>
     );
-}
+};
+
+export default PipelineGitHubGrid;

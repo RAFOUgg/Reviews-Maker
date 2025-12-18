@@ -21,7 +21,7 @@ import { INTERVAL_TYPES } from '../../types/pipelineTypes';
  * @param {function} renderCell - Fonction custom rendu cellule (optionnel)
  * @param {boolean} showEvolutionTracking - Afficher graphiques évolution notes
  */
-export default function PipelineCore({
+const PipelineCore = ({
     type = 'curing',
     productType = 'flower',
     config = {},
@@ -301,4 +301,6 @@ export default function PipelineCore({
             </AnimatePresence>
         </LiquidCard>
     );
-}
+};
+
+export default PipelineCore;

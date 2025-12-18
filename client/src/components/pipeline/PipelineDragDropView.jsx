@@ -29,7 +29,7 @@ import PipelineCellTooltip from './PipelineCellTooltip';
 import MassAssignModal from './MassAssignModal';
 import PresetSelector from './PresetSelector';
 
-export default function PipelineDragDropView({
+const PipelineDragDropView = ({
     type = 'culture',
     sidebarContent = [],
     timelineConfig = {},
@@ -42,7 +42,7 @@ export default function PipelineDragDropView({
     presets = [],
     onSavePreset = () => { },
     onLoadPreset = () => { }
-}) {
+}) => {
     const [expandedSections, setExpandedSections] = useState({});
     const [draggedContent, setDraggedContent] = useState(null);
     const [selectedCell, setSelectedCell] = useState(null);
@@ -1002,4 +1002,6 @@ export default function PipelineDragDropView({
             />
         </div>
     );
-}
+};
+
+export default PipelineDragDropView;

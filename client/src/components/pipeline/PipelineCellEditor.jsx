@@ -17,7 +17,7 @@ import { LiquidCard, LiquidButton } from '../liquid';
  * @param {function} onSave - Callback sauvegarde
  * @param {function} onDelete - Callback suppression (optionnel)
  */
-export default function PipelineCellEditor({
+const PipelineCellEditor = ({
     isOpen,
     onClose,
     cellData = {},
@@ -397,4 +397,6 @@ export default function PipelineCellEditor({
             </motion.div>
         </AnimatePresence>
     );
-}
+};
+
+export default PipelineCellEditor;

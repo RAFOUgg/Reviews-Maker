@@ -6,13 +6,13 @@ import { X, Save, BookmarkPlus, List } from 'lucide-react';
  * PresetConfigModal - Modal complète pour créer un préréglage avec TOUTES les données
  * Conforme CDC: définit les valeurs de TOUTES les données dispo pour la pipeline
  */
-export default function PresetConfigModal({
+const PresetConfigModal = ({
     isOpen,
     onClose,
     sidebarSections = [],
     onSavePreset,
     initialPreset = null
-}) {
+}) => {
     const [presetName, setPresetName] = useState('');
     const [presetDescription, setPresetDescription] = useState('');
     const [presetData, setPresetData] = useState({});
@@ -355,4 +355,6 @@ export default function PresetConfigModal({
             </motion.div>
         </AnimatePresence>
     );
-}
+};
+
+export default PresetConfigModal;

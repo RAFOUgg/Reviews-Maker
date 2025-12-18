@@ -3,7 +3,7 @@
  * Remplace PipelineCellBadge pour une représentation visuelle CDC-conforme
  * Les emojis représentent les données assignées à la cellule
  */
-export default function CellEmojiOverlay({ cellData, sidebarContent }) {
+const CellEmojiOverlay = ({ cellData, sidebarContent }) => {
     // Extraire les emojis des données assignées
     const getEmojis = () => {
         if (!cellData || !sidebarContent) return []
@@ -87,5 +87,7 @@ export default function CellEmojiOverlay({ cellData, sidebarContent }) {
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
+
+export default CellEmojiOverlay;
