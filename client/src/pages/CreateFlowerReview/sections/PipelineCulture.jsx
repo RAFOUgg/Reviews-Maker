@@ -1,13 +1,29 @@
 import React from 'react'
-import LiquidCard from '../../../components/LiquidCard'
-import PipelineTimeline from '../../../components/forms/flower/PipelineTimeline'
+import UnifiedPipeline from '../../../components/UnifiedPipeline'
 
 /**
  * Section Pipeline Culture pour CreateFlowerReview
- * Utilise le nouveau système PipelineTimeline selon CDC
+ * Utilise le nouveau système UnifiedPipeline CDC générique
+ * Configuration exhaustive : 85+ champs selon PIPELINE_DONNEE_CULTURES.md
  */
 export default function PipelineCulture({ formData, handleChange }) {
-    // Culture-specific data fields selon PIPELINE_DONNEE_CULTURES.md
+    // Handler pour mise à jour pipeline
+    const handlePipelineChange = (pipelineData) => {
+        handleChange('culturePipeline', pipelineData)
+    }
+
+    return (
+        <UnifiedPipeline
+            type="culture"
+            data={formData.culturePipeline || {}}
+            onChange={handlePipelineChange}
+        />
+    )
+}
+
+// ANCIEN CODE CONSERVÉ COMME RÉFÉRENCE (à supprimer après validation)
+/*
+export default function PipelineCultureOLD({ formData, handleChange }) {
     const cultureDataFields = [
         // ========== GÉNÉRAL ==========
         {
@@ -928,11 +944,7 @@ export default function PipelineCulture({ formData, handleChange }) {
                         <li>Drag & drop : Sélectionnez un contenu à gauche et déposez-le sur une case</li>
                         <li>Édition : Cliquez sur une case pour modifier ses données</li>
                         <li>Préréglages sauvegardés : Créez des configurations globales réutilisables</li>
-                        <li>Assignation masse : Sélectionnez plusieurs cases (Ctrl/Shift) puis assignez un préréglage</li>
-                    </ul>
-                </div>
-
-                {/* Composant Timeline */}
+            {/* Composant Timeline */}
                 <PipelineTimeline
                     pipelineType="culture"
                     data={formData.culturePipeline || {}}
@@ -943,3 +955,4 @@ export default function PipelineCulture({ formData, handleChange }) {
         </LiquidCard>
     )
 }
+*/
