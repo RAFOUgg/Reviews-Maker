@@ -27,7 +27,7 @@ export default function Layout() {
                         {/* Navigation Links */}
                         <div className="flex items-center space-x-4">
                             {/* Theme Switcher REMOVED */}
-                            
+
                             {!isAuthenticated ? (
                                 <Link
                                     to="/choose-account"

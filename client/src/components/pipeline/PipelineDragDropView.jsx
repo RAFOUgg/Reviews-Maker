@@ -75,37 +75,20 @@ const PipelineDragDropView = ({
     };
 
     const handleSavePresetConfig = (preset) => {
-        // Sauvegarder le préréglage avec toutes ses données
-        const existingPresets = presets || [];
-        const presetIndex = existingPresets.findIndex(p => p.id === preset.id);
-
-        let updatedPresets;
-        if (presetIndex >= 0) {
-            // Modifier existant
-            updatedPresets = [...existingPresets];
-            updatedPresets[presetIndex] = preset;
-        } else {
-            // Nouveau
-            updatedPresets = [...existingPresets, preset];
-        }
-
-        // Sauvegarder via le handler parent ou localStorage
+        // Sauvegarder le préréglage via le handler parent UNIQUEMENT
+        // Ne pas sauvegarder directement dans localStorage pour éviter duplications
         if (onSavePreset) {
-            onSavePreset(updatedPresets);
+            onSavePreset(preset);
         }
-        localStorage.setItem(`${type}PipelinePresets`, JSON.stringify(updatedPresets));
 
         setShowPresetConfigModal(false);
         setEditingPreset(null);
     };
 
     const handleDeletePreset = (presetId) => {
-        // Appeler le handler parent pour supprimer le preset
-        const newPresets = presets.filter(p => p.id !== presetId);
-        // Notifier le parent (via un nouveau callback à ajouter)
+        // Créer un preset avec action delete pour que le parent le gère
         if (onSavePreset) {
-            // Pour l'instant, on utilise onSavePreset pour gérer tous les presets
-            localStorage.setItem(`${type}PipelinePresets`, JSON.stringify(newPresets));
+            onSavePreset({ id: presetId, _action: 'delete' });
         }
         setSelectedPresets(prev => prev.filter(id => id !== presetId));
     };

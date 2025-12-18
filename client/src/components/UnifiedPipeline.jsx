@@ -97,16 +97,30 @@ const UnifiedPipeline = ({
         })
     }
 
-    // Handler sauvegarde préréglage
+    // Handler sauvegarde préréglage (add/update/delete)
     const handleSavePreset = (preset) => {
-        const existingIndex = presets.findIndex(p => p.id === preset.id)
         let newPresets
 
-        if (existingIndex >= 0) {
-            newPresets = [...presets]
-            newPresets[existingIndex] = preset
+        if (preset._action === 'delete') {
+            // Supprimer le preset
+            newPresets = presets.filter(p => p.id !== preset.id)
         } else {
-            newPresets = [...presets, preset]
+            // Ajouter ou modifier
+            const existingIndex = presets.findIndex(p => p.id === preset.id)
+
+            if (existingIndex >= 0) {
+                // Modifier existant
+                newPresets = [...presets]
+                newPresets[existingIndex] = preset
+            } else {
+                // Nouveau - vérifier qu'il n'existe pas déjà avec le même nom
+                const duplicateCheck = presets.find(p => p.name === preset.name && p.id !== preset.id)
+                if (duplicateCheck) {
+                    console.warn('Un préréglage avec ce nom existe déjà')
+                    return
+                }
+                newPresets = [...presets, preset]
+            }
         }
 
         setPresets(newPresets)
