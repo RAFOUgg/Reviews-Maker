@@ -356,7 +356,7 @@ export default function CreateFlowerReview() {
                         {currentSection === 12 && (
                             <CuringMaturationTimeline
                                 data={formData.curing || {}}
-                                onChange((curingData) => handleChange('curing', curingData)}
+                                onChange={(curingData) => handleChange('curing', curingData)}
                             />
                         )}
                     </motion.div>

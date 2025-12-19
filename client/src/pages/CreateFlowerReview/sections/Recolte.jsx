@@ -43,7 +43,7 @@ export default function Recolte({ formData, handleChange }) {
     const badge = getBadgeRendement(rendementM2)
 
     // Vérifier somme trichomes = 100%
-    const somm eTrichomes = (recolteData.trichomesTranslucides || 0) +
+    const sommeTrichomes = (recolteData.trichomesTranslucides || 0) +
         (recolteData.trichomesLaiteux || 0) +
         (recolteData.trichomesAmbres || 0)
 
