@@ -28,6 +28,8 @@ import CellEmojiOverlay from './CellEmojiOverlay';
 import PipelineCellTooltip from './PipelineCellTooltip';
 import MassAssignModal from './MassAssignModal';
 import PresetSelector from './PresetSelector';
+import ItemContextMenu from './ItemContextMenu';
+import PreConfigBadge from './PreConfigBadge';
 
 const PipelineDragDropView = ({
     type = 'culture',
@@ -59,6 +61,15 @@ const PipelineDragDropView = ({
     const [showPresetConfigModal, setShowPresetConfigModal] = useState(false);
     const [editingPreset, setEditingPreset] = useState(null);
     const [hoveredCell, setHoveredCell] = useState(null); // Cellule survolée pendant drag
+
+    // ✅ NOUVEAUX ÉTATS POUR CLIC DROIT PRÉ-CONFIGURATION
+    const [contextMenu, setContextMenu] = useState(null); // { item, position }
+    const [preConfiguredItems, setPreConfiguredItems] = useState(() => {
+        // Charger depuis localStorage
+        const saved = localStorage.getItem(`pipeline-preconfig-${type}`);
+        return saved ? JSON.parse(saved) : {};
+    });
+    const [showSuccessToast, setShowSuccessToast] = useState(null);
 
     // Handlers pour préréglages
     const handleTogglePreset = (presetId) => {
@@ -303,6 +314,7 @@ const PipelineDragDropView = ({
         setHoveredCell(null);
     };
 
+    // ✅ CORRIGER COMPORTEMENT DROP SELON CDC
     const handleDrop = (e, timestamp) => {
         e.preventDefault();
         e.stopPropagation();
@@ -316,17 +328,75 @@ const PipelineDragDropView = ({
             return;
         }
 
-        console.log('✓ Ouverture de la modal pour', draggedContent.label);
+        // ✅ VÉRIFIER SI L'ITEM EST PRÉ-CONFIGURÉ
+        const preConfigValue = preConfiguredItems[draggedContent.key];
 
-        // Stocker l'item droppé et ouvrir la modal pour saisir les valeurs
-        setDroppedItem({ content: draggedContent, timestamp });
-        setCurrentCellTimestamp(timestamp);
-        setIsModalOpen(true);
+        if (preConfigValue !== undefined && preConfigValue !== null) {
+            // ✅ ITEM PRÉ-CONFIGURÉ → ASSIGNMENT DIRECT SANS MODALE
+            console.log('✅ Item pré-configuré détecté, assignment direct:', preConfigValue);
+            onDataChange(timestamp, draggedContent.key, preConfigValue);
+
+            // Toast succès
+            showToast(`✓ ${draggedContent.label} : ${preConfigValue}${draggedContent.unit || ''} ajouté`);
+        } else {
+            // ✅ ITEM NORMAL → AJOUT AVEC VALEUR PAR DÉFAUT
+            console.log('➕ Item normal, ajout avec valeur par défaut:', draggedContent.defaultValue);
+            const defaultVal = draggedContent.defaultValue !== undefined ? draggedContent.defaultValue : '';
+            onDataChange(timestamp, draggedContent.key, defaultVal);
+
+            // Toast succès
+            showToast(`✓ ${draggedContent.label} ajouté`);
+        }
+
         setDraggedContent(null);
+    };
+
+    // ✅ TOAST FEEDBACK
+    const showToast = (message) => {
+        setShowSuccessToast(message);
+        setTimeout(() => setShowSuccessToast(null), 2500);
+    };
+
+    // ✅ HANDLER CLIC DROIT SUR ITEM
+    const handleItemContextMenu = (e, item) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        console.log('🖱️ Clic droit sur item:', item);
+
+        setContextMenu({
+            item,
+            position: {
+                x: e.clientX,
+                y: e.clientY
+            }
+        });
+    };
+
+    // ✅ HANDLER CONFIGURATION ITEM
+    const handleConfigureItem = (itemKey, value) => {
+        console.log('⚙️ Configuration item:', itemKey, 'Valeur:', value);
+
+        const newConfig = { ...preConfiguredItems };
+
+        if (value === null) {
+            // Retirer la configuration
+            delete newConfig[itemKey];
+        } else {
+            // Ajouter/mettre à jour
+            newConfig[itemKey] = value;
+        }
+
+        setPreConfiguredItems(newConfig);
+        // Sauvegarder dans localStorage
+        localStorage.setItem(`pipeline-preconfig-${type}`, JSON.stringify(newConfig));
+
+        showToast(value === null ? '✓ Configuration retirée' : '✓ Item pré-configuré');
     };
 
     // Générer les cases de la timeline selon le type d'intervalle
     // IMPORTANT: Utiliser des IDs stables, pas Date.now() qui change à chaque render!
+
     const generateCells = () => {
         const { type: intervalType, start, end, duration, totalSeconds, totalHours, totalDays, totalWeeks } = timelineConfig;
 
@@ -512,24 +582,46 @@ const PipelineDragDropView = ({
 
                             {expandedSections[section.id] && (
                                 <div className="p-2 bg-white dark:bg-gray-900 space-y-1">
-                                    {section.items.map((item) => (
-                                        <div
-                                            key={item.key}
-                                            draggable="true"
-                                            onDragStart={(e) => handleDragStart(e, item)}
-                                            onDragEnd={(e) => {
-                                                e.currentTarget.classList.remove('dragging');
-                                            }}
-                                            className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-grab active:cursor-grabbing border border-transparent hover:border-blue-500 transition-all group"
-                                            style={{ touchAction: 'none' }}
-                                        >
-                                            <span className="text-base">{item.icon}</span>
-                                            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex-1">
-                                                {item.label}
-                                            </span>
-                                            <span className="text-xs text-gray-400 group-hover:text-blue-500">⋮⋮</span>
-                                        </div>
-                                    ))}
+                                    {section.items.map((item) => {
+                                        const isPreConfigured = preConfiguredItems[item.key] !== undefined;
+
+                                        return (
+                                            <div
+                                                key={item.key}
+                                                draggable="true"
+                                                onDragStart={(e) => handleDragStart(e, item)}
+                                                onDragEnd={(e) => {
+                                                    e.currentTarget.classList.remove('dragging');
+                                                }}
+                                                onContextMenu={(e) => handleItemContextMenu(e, item)}
+                                                className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group ${isPreConfigured
+                                                        ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30'
+                                                        : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:border-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                    }`}
+                                                style={{ touchAction: 'none' }}
+                                                title={isPreConfigured ? `Pré-configuré: ${preConfiguredItems[item.key]}${item.unit || ''}` : 'Clic droit pour pré-configurer'}
+                                            >
+                                                {/* Badge pré-configuré */}
+                                                {isPreConfigured && (
+                                                    <PreConfigBadge
+                                                        value={preConfiguredItems[item.key]}
+                                                        unit={item.unit}
+                                                    />
+                                                )}
+
+                                                <span className="text-base">{item.icon}</span>
+                                                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex-1">
+                                                    {item.label}
+                                                </span>
+                                                <span className={`text-xs transition-colors ${isPreConfigured
+                                                        ? 'text-green-600 dark:text-green-400'
+                                                        : 'text-gray-400 group-hover:text-blue-500'
+                                                    }`}>
+                                                    {isPreConfigured ? '✓' : '⋮⋮'}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
@@ -983,6 +1075,27 @@ const PipelineDragDropView = ({
                 visible={tooltipData.visible}
                 position={tooltipData.position}
             />
+
+            {/* ✅ Menu contextuel clic droit */}
+            {contextMenu && (
+                <ItemContextMenu
+                    item={contextMenu.item}
+                    position={contextMenu.position}
+                    onClose={() => setContextMenu(null)}
+                    onConfigure={handleConfigureItem}
+                    isConfigured={preConfiguredItems[contextMenu.item.key] !== undefined}
+                />
+            )}
+
+            {/* ✅ Toast succès */}
+            {showSuccessToast && (
+                <div className="fixed bottom-4 right-4 z-[9999] bg-green-600 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-slideInFromRight">
+                    <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                        <Check className="w-4 h-4" />
+                    </div>
+                    <span className="font-medium">{showSuccessToast}</span>
+                </div>
+            )}
         </div>
     );
 };
