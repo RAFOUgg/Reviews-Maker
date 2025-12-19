@@ -104,6 +104,48 @@ const PipelineDragDropView = ({
         setSelectedPresets(prev => prev.filter(id => id !== presetId));
     };
 
+    // Appliquer les données d'un préréglage à une cellule
+    const applyPresetToTimestamp = (timestamp, preset) => {
+        if (!preset || !preset.data) return;
+        Object.entries(preset.data).forEach(([key, value]) => {
+            onDataChange(timestamp, key, value);
+        });
+        onDataChange(timestamp, '_meta', {
+            presetApplied: preset.id,
+            lastModified: new Date().toISOString()
+        });
+    };
+
+    // Handler local pour appliquer un préréglage (cellule unique ou sélection multiple)
+    const handleApplyPresetLocal = (preset) => {
+        if (!preset) return;
+
+        if (massAssignMode && selectedCells.length > 0) {
+            if (!confirm(`Appliquer le préréglage "${preset.name}" à ${selectedCells.length} cellule(s) ?`)) return;
+            selectedCells.forEach(ts => applyPresetToTimestamp(ts, preset));
+            setMassAssignMode(false);
+            setSelectedCells([]);
+            showToast(`✓ Préréglage "${preset.name}" appliqué à ${selectedCells.length} cellule(s)`);
+            return;
+        }
+
+        if (currentCellTimestamp) {
+            if (!confirm(`Appliquer le préréglage "${preset.name}" à la case ${currentCellTimestamp} ?`)) return;
+            applyPresetToTimestamp(currentCellTimestamp, preset);
+            showToast(`✓ Préréglage "${preset.name}" appliqué`);
+            return;
+        }
+
+        if (cells.length > 0) {
+            if (!confirm(`Aucune cellule sélectionnée. Appliquer le préréglage "${preset.name}" à la première case (${cells[0].timestamp}) ?`)) return;
+            applyPresetToTimestamp(cells[0].timestamp, preset);
+            showToast(`✓ Préréglage "${preset.name}" appliqué à ${cells[0].timestamp}`);
+            return;
+        }
+
+        alert('Aucune case disponible pour appliquer le préréglage');
+    };
+
     // Toggle section
     const toggleSection = (sectionId) => {
         setExpandedSections(prev => ({
@@ -392,6 +434,72 @@ const PipelineDragDropView = ({
         localStorage.setItem(`pipeline-preconfig-${type}`, JSON.stringify(newConfig));
 
         showToast(value === null ? '✓ Configuration retirée' : '✓ Item pré-configuré');
+    };
+
+    // Assigner immédiatement la valeur configurée (depuis menu clic droit)
+    const handleAssignNow = (itemKey, value) => {
+        if (value === null || value === undefined || value === '') {
+            alert('Aucune valeur fournie pour l\'assignation.');
+            return;
+        }
+
+        if (massAssignMode && selectedCells.length > 0) {
+            if (!confirm(`Assigner ${itemKey} = ${value} à ${selectedCells.length} case(s) ?`)) return;
+            selectedCells.forEach(ts => onDataChange(ts, itemKey, value));
+            setMassAssignMode(false);
+            setSelectedCells([]);
+            showToast(`✓ ${itemKey} assigné à ${selectedCells.length} case(s)`);
+            return;
+        }
+
+        if (currentCellTimestamp) {
+            onDataChange(currentCellTimestamp, itemKey, value);
+            showToast(`✓ ${itemKey} assigné à ${currentCellTimestamp}`);
+            return;
+        }
+
+        if (cells.length > 0) {
+            onDataChange(cells[0].timestamp, itemKey, value);
+            showToast(`✓ ${itemKey} assigné à ${cells[0].timestamp}`);
+            return;
+        }
+
+        alert('Aucune case disponible pour assigner la valeur.');
+    };
+
+    // Copier la valeur depuis une case source vers la sélection / case courante
+    const handleAssignFromSource = (itemKey, sourceTimestamp) => {
+        if (!sourceTimestamp) { alert('Cas source invalide'); return; }
+        const sourceData = getCellData(sourceTimestamp);
+        const sourceValue = sourceData ? (sourceData[itemKey] ?? (sourceData.data ? sourceData.data[itemKey] : undefined)) : undefined;
+
+        if (sourceValue === undefined) {
+            alert('Aucune valeur trouvée dans la case source pour ce paramètre.');
+            return;
+        }
+
+        if (massAssignMode && selectedCells.length > 0) {
+            if (!confirm(`Copier la valeur depuis ${sourceTimestamp} vers ${selectedCells.length} case(s) ?`)) return;
+            selectedCells.forEach(ts => onDataChange(ts, itemKey, sourceValue));
+            setMassAssignMode(false);
+            setSelectedCells([]);
+            showToast(`✓ Copié depuis ${sourceTimestamp} vers ${selectedCells.length} case(s)`);
+            return;
+        }
+
+        if (currentCellTimestamp) {
+            onDataChange(currentCellTimestamp, itemKey, sourceValue);
+            showToast(`✓ Copié depuis ${sourceTimestamp} vers ${currentCellTimestamp}`);
+            return;
+        }
+
+        if (cells.length > 0) {
+            onDataChange(cells[0].timestamp, itemKey, sourceValue);
+            showToast(`✓ Copié depuis ${sourceTimestamp} vers ${cells[0].timestamp}`);
+            return;
+        }
+
+        alert('Aucune case disponible pour copier la valeur.');
     };
 
     // Générer les cases de la timeline selon le type d'intervalle
@@ -1007,8 +1115,10 @@ const PipelineDragDropView = ({
                                     <button
                                         key={idx}
                                         onClick={() => {
-                                            onLoadPreset(preset);
+                                            handleApplyPresetLocal(preset);
                                             setShowPresets(false);
+                                            // Optional: notify parent load
+                                            try { onLoadPreset?.(preset) } catch (e) { /* ignore */ }
                                         }}
                                         className="w-full p-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-left transition-colors"
                                     >
@@ -1084,6 +1194,9 @@ const PipelineDragDropView = ({
                     onClose={() => setContextMenu(null)}
                     onConfigure={handleConfigureItem}
                     isConfigured={preConfiguredItems[contextMenu.item.key] !== undefined}
+                    onAssignNow={handleAssignNow}
+                    onAssignFromSource={handleAssignFromSource}
+                    cells={cells}
                 />
             )}
 
