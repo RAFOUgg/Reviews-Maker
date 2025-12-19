@@ -11,6 +11,7 @@ import { flowerReviewsService } from '../../services/apiService'
 import InfosGenerales from './sections/InfosGenerales'
 import Genetiques from './sections/Genetiques'
 import CulturePipelineSection from './sections/CulturePipelineSection'
+import Recolte from './sections/Recolte'
 import AnalyticsSection from '../../components/reviews/sections/AnalyticsSection'
 import VisualSection from '../../components/reviews/sections/VisualSection'
 import OdorSection from '../../components/reviews/sections/OdorSection'
@@ -19,6 +20,7 @@ import TasteSection from '../../components/reviews/sections/TasteSection'
 import EffectsSection from '../../components/reviews/sections/EffectsSection'
 import ExperienceUtilisation from '../../components/forms/flower/ExperienceUtilisation'
 import CuringMaturationTimeline from '../../components/forms/flower/CuringMaturationTimeline'
+import TerpeneManualInput from '../../components/analytics/TerpeneManualInput'
 
 // Import hooks
 import { useFlowerForm } from './hooks/useFlowerForm'
@@ -62,12 +64,14 @@ export default function CreateFlowerReview() {
         }
     }, [photos])
 
-    // Définition des 11 sections
+    // Définition des 13 sections (+ Récolte + Terpènes manuels)
     const sections = [
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
-        { id: 'genetics', icon: '🧬', title: 'Génétiques' },
+        { id: 'genetics', icon: '🧬', title: 'Génétiques & PhenoHunt' },
         { id: 'culture', icon: '🌱', title: 'Culture & Pipeline' },
+        { id: 'recolte', icon: '🌾', title: 'Récolte & Post-Récolte' },
         { id: 'analytics', icon: '🔬', title: 'Analytiques PDF' },
+        { id: 'terpenes', icon: '🧪', title: 'Terpènes (Manuel)' },
         { id: 'visual', icon: '👁️', title: 'Visuel & Technique' },
         { id: 'odeurs', icon: '👃', title: 'Odeurs' },
         { id: 'texture', icon: '🤚', title: 'Texture' },
@@ -295,53 +299,64 @@ export default function CreateFlowerReview() {
                             />
                         )}
                         {currentSection === 3 && (
+                            <Recolte formData={formData} handleChange={handleChange} />
+                        )}
+                        {currentSection === 4 && (
                             <AnalyticsSection
                                 productType="Fleurs"
                                 data={formData.analytics || {}}
                                 onChange={(analyticsData) => handleChange('analytics', analyticsData)}
                             />
                         )}
-                        {currentSection === 4 && (
+                        {currentSection === 5 && (
+                            <div className="space-y-6">
+                                <TerpeneManualInput
+                                    data={formData.terpenes || {}}
+                                    onChange={(terpenesData) => handleChange('terpenes', terpenesData)}
+                                />
+                            </div>
+                        )}
+                        {currentSection === 6 && (
                             <VisualSection
                                 data={formData.visual || {}}
                                 onChange={(visualData) => handleChange('visual', visualData)}
                             />
                         )}
-                        {currentSection === 5 && (
+                        {currentSection === 7 && (
                             <OdorSection
                                 data={formData.odeurs || {}}
                                 onChange={(odeursData) => handleChange('odeurs', odeursData)}
                             />
                         )}
-                        {currentSection === 6 && (
+                        {currentSection === 8 && (
                             <TextureSection
                                 productType="Fleurs"
                                 data={formData.texture || {}}
                                 onChange={(textureData) => handleChange('texture', textureData)}
                             />
                         )}
-                        {currentSection === 7 && (
+                        {currentSection === 9 && (
                             <TasteSection
                                 data={formData.gouts || {}}
                                 onChange={(goutsData) => handleChange('gouts', goutsData)}
                             />
                         )}
-                        {currentSection === 8 && (
+                        {currentSection === 10 && (
                             <EffectsSection
                                 data={formData.effets || {}}
                                 onChange={(effetsData) => handleChange('effets', effetsData)}
                             />
                         )}
-                        {currentSection === 9 && (
+                        {currentSection === 11 && (
                             <ExperienceUtilisation
                                 data={formData.experience || {}}
                                 onChange={(expData) => handleChange('experience', expData)}
                             />
                         )}
-                        {currentSection === 10 && (
+                        {currentSection === 12 && (
                             <CuringMaturationTimeline
                                 data={formData.curing || {}}
-                                onChange={(curingData) => handleChange('curing', curingData)}
+                                onChange((curingData) => handleChange('curing', curingData)}
                             />
                         )}
                     </motion.div>

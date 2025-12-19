@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Dna, Leaf, Info } from 'lucide-react'
+import { Dna, Leaf, Info, Construction } from 'lucide-react'
 import LiquidCard from '../../../components/LiquidCard'
+import PhenoCodeGenerator from '../../../components/genetics/PhenoCodeGenerator'
+import { useStore } from '../../../store/useStore'
 
 export default function Genetiques({ formData, handleChange }) {
     const [cultivarLibrary, setCultivarLibrary] = useState([])
     const genetics = formData.genetics || {}
+    const { user } = useStore()
 
     // Charger la bibliothèque de cultivars
     useEffect(() => {
@@ -157,6 +160,39 @@ export default function Genetiques({ formData, handleChange }) {
                             placeholder="Ex: Clone-2024-001"
                         />
                     </div>
+                </div>
+
+                {/* Code Phénotype Auto-Incrémenté CDC */}
+                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <PhenoCodeGenerator
+                        value={genetics.codePheno || ''}
+                        onChange={(code) => handleGeneticsChange('codePheno', code)}
+                        userId={user?.id}
+                    />
+                </div>
+
+                {/* Arbre Généalogique / Canva - COMING SOON */}
+                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <LiquidCard className="bg-gradient-to-br from-purple-100 via-pink-50 to-indigo-100 dark:from-purple-900/30 dark:via-pink-900/20 dark:to-indigo-900/30 border-2 border-dashed border-purple-300 dark:border-purple-600">
+                        <div className="text-center py-12">
+                            <Construction className="w-16 h-16 mx-auto text-purple-500 dark:text-purple-400 mb-4 animate-bounce" />
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                                🌳 Arbre Généalogique Interactive
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-400 mb-4">
+                                Fonctionnalité en cours de développement
+                            </p>
+                            <div className="max-w-md mx-auto space-y-2 text-sm text-gray-500 dark:text-gray-400">
+                                <p>✨ Canva drag & drop pour créer l'arbre</p>
+                                <p>🔗 Visualisation des relations parents/enfants</p>
+                                <p>📊 Export graphique de l'arbre</p>
+                                <p>📚 Intégration avec votre bibliothèque de cultivars</p>
+                            </div>
+                            <div className="mt-6 inline-block px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-full shadow-lg">
+                                Coming Soon 🚀
+                            </div>
+                        </div>
+                    </LiquidCard>
                 </div>
 
                 {/* Généalogie */}

@@ -13,8 +13,14 @@ export default function CulturePipelineTimeline({ data, onChange }) {
         return saved ? JSON.parse(saved) : []
     })
 
+    // État mode pipeline
+    const [pipelineMode, setPipelineMode] = useState(
+        data.cultureTimelineConfig?.mode || 'custom'
+    )
+
     // Configuration Timeline
     const timelineConfig = data.cultureTimelineConfig || {
+        mode: 'custom', // 'phases' ou 'custom'
         type: 'jour', // seconde | heure | jour | date | semaine | phase
         start: '',
         end: '',
@@ -47,8 +53,55 @@ export default function CulturePipelineTimeline({ data, onChange }) {
         localStorage.setItem('culturePipelinePresets', JSON.stringify(presets))
     }, [presets])
 
+    // Handler changement mode
+    const handleModeChange = (mode) => {
+        setPipelineMode(mode)
+        onChange('cultureTimelineConfig', {
+            ...timelineConfig,
+            mode,
+            type: mode === 'phases' ? 'phase' : 'jour'
+        })
+    }
+
     // Structure hiérarchisée du panneau latéral selon CDC
     const sidebarContent = [
+        {
+            id: 'mode',
+            label: 'MODE PIPELINE',
+            icon: '🎯',
+            special: 'mode-selector',
+            component: (
+                <div className="p-4 space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            onClick={() => handleModeChange('phases')}
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${pipelineMode === 'phases'
+                                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg'
+                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
+                                }`}
+                        >
+                            🌱 Mode Phases
+                            <div className="text-xs mt-1 opacity-80">12 étapes prédéfinies</div>
+                        </button>
+                        <button
+                            onClick={() => handleModeChange('custom')}
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${pipelineMode === 'custom'
+                                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg'
+                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
+                                }`}
+                        >
+                            ⚙️ Personnalisé
+                            <div className="text-xs mt-1 opacity-80">Configuration libre</div>
+                        </button>
+                    </div>
+                    {pipelineMode === 'phases' && (
+                        <div className="text-xs text-gray-600 dark:text-gray-400 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
+                            ✨ Les 12 phases CDC sont actives avec durées par défaut ajustables
+                        </div>
+                    )}
+                </div>
+            )
+        },
         {
             id: 'general',
             label: 'GÉNÉRAL',
