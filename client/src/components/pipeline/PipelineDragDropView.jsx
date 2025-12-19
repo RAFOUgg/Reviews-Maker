@@ -19,7 +19,7 @@
  * - onGeneralDataChange: (field, value) => void
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight, Plus, Settings, Save, Upload, CheckSquare, Square, Check } from 'lucide-react';
 import PipelineDataModal from './PipelineDataModal';
 import PresetConfigModal from './PresetConfigModal';
@@ -70,6 +70,7 @@ const PipelineDragDropView = ({
         return saved ? JSON.parse(saved) : {};
     });
     const [showSuccessToast, setShowSuccessToast] = useState(null);
+    const [isPointerDown, setIsPointerDown] = useState(false);
 
     // Handlers pour préréglages
     const handleTogglePreset = (presetId) => {
@@ -157,6 +158,11 @@ const PipelineDragDropView = ({
     // Ouvrir modal cellule
     const handleCellClick = (cellId) => {
         console.log('🖱️ Clic sur cellule:', cellId);
+        // Si on est en train de faire une sélection par glissé, ignorer le clic
+        if (isPointerDown) {
+            console.log('  → Ignorer clic car sélection en cours');
+            return;
+        }
         console.log('📊 Mode masse actif:', massAssignMode);
         console.log('📋 Cellules sélectionnées avant:', selectedCells);
 
@@ -195,6 +201,29 @@ const PipelineDragDropView = ({
             }
         }
     };
+
+    // Selection via click-glissé: start on mousedown, add on mouseenter, stop on mouseup
+    const handlePointerDown = (timestamp, e) => {
+        // Only left button
+        if (e && e.button !== 0) return;
+        setIsPointerDown(true);
+        setSelectedCells(prev => {
+            if (prev.includes(timestamp)) return prev.filter(id => id !== timestamp);
+            return [...prev, timestamp];
+        });
+    };
+
+    const handlePointerEnter = (timestamp) => {
+        if (!isPointerDown) return;
+        setSelectedCells(prev => (prev.includes(timestamp) ? prev : [...prev, timestamp]));
+    };
+
+    // global mouseup listener to end selection
+    useEffect(() => {
+        const onUp = () => setIsPointerDown(false);
+        document.addEventListener('mouseup', onUp);
+        return () => document.removeEventListener('mouseup', onUp);
+    }, []);
 
     // Appliquer des préréglages à une cellule
     const applyPresetsToCell = (timestamp, presetIds) => {
@@ -369,27 +398,33 @@ const PipelineDragDropView = ({
             console.warn('⚠️ Pas de draggedContent disponible');
             return;
         }
+        // Si plusieurs cases sont sélectionnées → assigner à toutes
+        const targets = (selectedCells && selectedCells.length > 0) ? selectedCells : [timestamp];
 
         // ✅ VÉRIFIER SI L'ITEM EST PRÉ-CONFIGURÉ
         const preConfigValue = preConfiguredItems[draggedContent.key];
 
+        targets.forEach(ts => {
+            if (preConfigValue !== undefined && preConfigValue !== null) {
+                // ITEM PRÉ-CONFIGURÉ → ASSIGNMENT DIRECT SANS MODALE
+                console.log('✅ Item pré-configuré détecté, assignment direct:', preConfigValue, '→', ts);
+                onDataChange(ts, draggedContent.key, preConfigValue);
+            } else {
+                // ITEM NORMAL → AJOUT AVEC VALEUR PAR DÉFAUT
+                const defaultVal = draggedContent.defaultValue !== undefined ? draggedContent.defaultValue : '';
+                console.log('➕ Item normal, ajout avec valeur par défaut:', defaultVal, '→', ts);
+                onDataChange(ts, draggedContent.key, defaultVal);
+            }
+        });
+
+        // Toast (unique)
         if (preConfigValue !== undefined && preConfigValue !== null) {
-            // ✅ ITEM PRÉ-CONFIGURÉ → ASSIGNMENT DIRECT SANS MODALE
-            console.log('✅ Item pré-configuré détecté, assignment direct:', preConfigValue);
-            onDataChange(timestamp, draggedContent.key, preConfigValue);
-
-            // Toast succès
-            showToast(`✓ ${draggedContent.label} : ${preConfigValue}${draggedContent.unit || ''} ajouté`);
+            showToast(`✓ ${draggedContent.label} : ${preConfigValue}${draggedContent.unit || ''} ajouté à ${targets.length} case(s)`);
         } else {
-            // ✅ ITEM NORMAL → AJOUT AVEC VALEUR PAR DÉFAUT
-            console.log('➕ Item normal, ajout avec valeur par défaut:', draggedContent.defaultValue);
-            const defaultVal = draggedContent.defaultValue !== undefined ? draggedContent.defaultValue : '';
-            onDataChange(timestamp, draggedContent.key, defaultVal);
-
-            // Toast succès
-            showToast(`✓ ${draggedContent.label} ajouté`);
+            showToast(`✓ ${draggedContent.label} ajouté à ${targets.length} case(s)`);
         }
 
+        // Si on avait une sélection active, on la conserve mais réinitialiser le drag
         setDraggedContent(null);
     };
 
@@ -702,6 +737,15 @@ const PipelineDragDropView = ({
                                                     e.currentTarget.classList.remove('dragging');
                                                 }}
                                                 onContextMenu={(e) => handleItemContextMenu(e, item)}
+                                                onMouseDown={(e) => {
+                                                    // Empêcher le drag automatique lors d'un clic droit pour permettre le menu contextuel
+                                                    if (e && e.button === 2) {
+                                                        try {
+                                                            e.currentTarget.draggable = false;
+                                                            setTimeout(() => { e.currentTarget.draggable = true; }, 150);
+                                                        } catch (err) { /* ignore */ }
+                                                    }
+                                                }}
                                                 className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group ${isPreConfigured
                                                     ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30'
                                                     : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:border-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -1014,8 +1058,10 @@ const PipelineDragDropView = ({
                                             onDragLeave={handleDragLeave}
                                             onDrop={(e) => handleDrop(e, cell.timestamp)}
                                             onClick={() => handleCellClick(cell.timestamp)}
-                                            onMouseEnter={(e) => handleCellHover(e, cell.timestamp)}
+                                            onMouseEnter={(e) => { handleCellHover(e, cell.timestamp); handlePointerEnter(cell.timestamp); }}
                                             onMouseLeave={handleCellLeave}
+                                            onMouseDown={(e) => handlePointerDown(cell.timestamp, e)}
+                                            onTouchStart={(e) => handlePointerDown(cell.timestamp, { button: 0 })}
                                             className={`
                                                 relative p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[80px]
                                                 ${hasData
