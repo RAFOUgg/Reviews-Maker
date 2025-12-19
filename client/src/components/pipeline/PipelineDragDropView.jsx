@@ -372,11 +372,14 @@ const PipelineDragDropView = ({
             return;
         }
 
-        // Si plusieurs cases sont sélectionnées -> appliquer sur la sélection (utiliser ref pour fiabilité)
+        // Si plusieurs cases sont sélectionnées -> n'appliquer à la sélection
+        // que si la case cible fait partie de la sélection ou si le
+        // mode masse est activé. Cela évite d'écraser une sélection
+        // lorsque l'utilisateur veut déposer sur une seule case.
         const sel = selectedCellsRef.current || [];
-        if (sel && sel.length > 0) {
+        const appliesToSelection = (sel && sel.length > 0) && (sel.includes(timestamp) || massAssignMode);
+        if (appliesToSelection) {
             const preConfigValue = preConfiguredItems[draggedContent.key];
-
             // Item pré-configuré -> assignation directe
             if (preConfigValue !== undefined && preConfigValue !== null) {
                 sel.forEach(ts => onDataChange(ts, draggedContent.key, preConfigValue));
