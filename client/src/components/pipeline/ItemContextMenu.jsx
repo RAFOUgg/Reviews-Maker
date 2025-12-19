@@ -9,10 +9,10 @@
  * - Drag & drop item configuré → assignment direct
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Settings, X, Check } from 'lucide-react';
 
-const ItemContextMenu = ({ item, position, onClose, onConfigure, isConfigured, cells = [], onAssignNow, onAssignFromSource, onAssignRange, onAssignAll }) => {
+const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isConfigured, cells = [], onAssignNow, onAssignFromSource, onAssignRange, onAssignAll }) => {
     const [value, setValue] = useState(item.defaultValue || '');
     const [selectedSource, setSelectedSource] = useState('');
     const menuRef = useRef(null);
@@ -27,32 +27,41 @@ const ItemContextMenu = ({ item, position, onClose, onConfigure, isConfigured, c
         };
 
         document.addEventListener('mousedown', handleClickOutside);
-
-        // Ajuster la position pour ne pas sortir de l'écran
-        const adjust = () => {
-            const el = menuRef.current;
-            if (!el) return;
-            const rect = el.getBoundingClientRect();
-            const margin = 8;
-            let x = position.x;
-            let y = position.y;
-            const winW = window.innerWidth;
-            const winH = window.innerHeight;
-
-            if (x + rect.width + margin > winW) x = Math.max(margin, winW - rect.width - margin);
-            if (y + rect.height + margin > winH) y = Math.max(margin, winH - rect.height - margin);
-
-            setAdjustedPos({ x, y });
-        };
-
-        // Call after a tick so menu has size
-        const t = setTimeout(adjust, 50);
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            clearTimeout(t);
-        };
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [onClose]);
+
+    // Positionner le menu centré sur l'anchorRect si fourni, sinon utiliser position
+    useLayoutEffect(() => {
+        const el = menuRef.current;
+        if (!el) return;
+        const menuRect = el.getBoundingClientRect();
+        const margin = 8;
+        const winW = window.innerWidth;
+        const winH = window.innerHeight;
+
+        let x = position?.x ?? 16;
+        let y = position?.y ?? 16;
+
+        if (anchorRect) {
+            // Center horizontally over the anchor element and place above if there's space, otherwise below
+            x = Math.round(anchorRect.left + anchorRect.width / 2 - menuRect.width / 2);
+            // Try to show above
+            if (anchorRect.top - menuRect.height - margin > 0) {
+                y = Math.round(anchorRect.top - menuRect.height - 8);
+            } else {
+                // Place below
+                y = Math.round(anchorRect.bottom + 8);
+            }
+        }
+
+        // Clamp
+        if (x + menuRect.width + margin > winW) x = Math.max(margin, winW - menuRect.width - margin);
+        if (x < margin) x = margin;
+        if (y + menuRect.height + margin > winH) y = Math.max(margin, winH - menuRect.height - margin);
+        if (y < margin) y = margin;
+
+        setAdjustedPos({ x, y });
+    }, [position, anchorRect]);
 
     const handleSave = () => {
         onConfigure(item.key, value);

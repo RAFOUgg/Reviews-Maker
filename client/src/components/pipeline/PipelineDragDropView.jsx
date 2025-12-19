@@ -372,14 +372,15 @@ const PipelineDragDropView = ({
             return;
         }
 
-        // Si plusieurs cases sont sélectionnées -> appliquer sur la sélection
-        if (selectedCells && selectedCells.length > 0) {
+        // Si plusieurs cases sont sélectionnées -> appliquer sur la sélection (utiliser ref pour fiabilité)
+        const sel = selectedCellsRef.current || [];
+        if (sel && sel.length > 0) {
             const preConfigValue = preConfiguredItems[draggedContent.key];
-            selectedCells.forEach(ts => {
+            sel.forEach(ts => {
                 const valueToAssign = (preConfigValue !== undefined && preConfigValue !== null) ? preConfigValue : (draggedContent.defaultValue !== undefined ? draggedContent.defaultValue : '');
                 onDataChange(ts, draggedContent.key, valueToAssign);
             });
-            showToast(`✓ ${draggedContent.label} appliqué à ${selectedCells.length} case(s)`);
+            showToast(`✓ ${draggedContent.label} appliqué à ${sel.length} case(s)`);
         } else {
             // ✅ VÉRIFIER SI L'ITEM EST PRÉ-CONFIGURÉ
             const preConfigValue = preConfiguredItems[draggedContent.key];
@@ -418,20 +419,28 @@ const PipelineDragDropView = ({
 
         console.log('🖱️ Clic droit sur item:', item);
 
+        const rect = e.currentTarget ? e.currentTarget.getBoundingClientRect() : null;
         setContextMenu({
             item,
             position: {
                 x: e.clientX,
                 y: e.clientY
-            }
+            },
+            anchorRect: rect
         });
     };
 
     // Sélection par glissé (mousedown + mouseenter + mouseup)
-    const startSelection = (startIdx, timestamp) => {
+    const selectedCellsRef = React.useRef([]);
+
+    const startSelection = (e, startIdx, timestamp) => {
+        // Prévenir la sélection native du navigateur
+        e.preventDefault();
         setIsSelecting(true);
         setSelectionStartIdx(startIdx);
-        setSelectedCells([timestamp]);
+        const initial = [timestamp];
+        setSelectedCells(initial);
+        selectedCellsRef.current = initial;
     };
 
     const updateSelectionTo = (currentIdx) => {
@@ -440,6 +449,7 @@ const PipelineDragDropView = ({
         const b = Math.max(selectionStartIdx, currentIdx);
         const range = cells.slice(a, b + 1).map(c => c.timestamp);
         setSelectedCells(range);
+        selectedCellsRef.current = range;
     };
 
     // Stop selection on mouseup anywhere
@@ -453,6 +463,11 @@ const PipelineDragDropView = ({
         window.addEventListener('mouseup', onUp);
         return () => window.removeEventListener('mouseup', onUp);
     }, [isSelecting]);
+
+    // Keep ref in sync
+    useEffect(() => {
+        selectedCellsRef.current = selectedCells;
+    }, [selectedCells]);
 
     // ✅ HANDLER CONFIGURATION ITEM
     const handleConfigureItem = (itemKey, value) => {
@@ -1026,7 +1041,7 @@ const PipelineDragDropView = ({
                                 📊 <strong>Autres cases</strong> : Drag & drop des paramètres depuis le panneau latéral
                             </p>
 
-                            <div className="grid grid-cols-7 gap-2">
+                            <div className="grid grid-cols-7 gap-2 select-none">
                                 {cells.map((cell, idx) => {
                                     const hasData = hasCellData(cell.timestamp);
                                     const cellData = getCellData(cell.timestamp);
@@ -1043,7 +1058,7 @@ const PipelineDragDropView = ({
                                             onClick={() => handleCellClick(cell.timestamp)}
                                             onMouseEnter={(e) => { handleCellHover(e, cell.timestamp); if (isSelecting) updateSelectionTo(idx); }}
                                             onMouseLeave={handleCellLeave}
-                                            onMouseDown={(e) => { if (e.button === 0) startSelection(idx, cell.timestamp); }}
+                                            onMouseDown={(e) => { if (e.button === 0) startSelection(e, idx, cell.timestamp); }}
                                             onMouseUp={(e) => { if (isSelecting) { setIsSelecting(false); setSelectionStartIdx(null); } }}
                                             className={`
                                                 relative p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[80px]
@@ -1065,6 +1080,7 @@ const PipelineDragDropView = ({
                                                 }
                                                 ${isFirst ? 'col-span-2 bg-purple-500/10 border-purple-500' : ''}
                                             `}
+                                            style={{ userSelect: 'none' }}
                                         >
                                             {/* Indicateur visuel drop */}
                                             {isHovered && draggedContent && (
