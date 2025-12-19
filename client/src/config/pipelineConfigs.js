@@ -1,6 +1,7 @@
 /**
- * CONFIGURATION CENTRALE DES PIPELINES - CDC COMPLIANT
+ * CONFIGURATION CENTRALE DES PIPELINES - CDC COMPLET
  * 
+ * Basé sur PIPELINE_DONNEE_CULTURES.md (version corrigée 19/12/2025)
  * Toutes les pipelines (Culture, Curing, Séparation, Extraction, Recette)
  * utilisent le même composant UnifiedPipeline avec des configurations différentes
  * 
@@ -8,9 +9,12 @@
  * - timelineConfig: Configuration de la timeline (type d'intervalles, phases, etc.)
  * - sidebarContent: Données disponibles organisées par sections
  * - generalFields: Champs de configuration générale (dates, mode, etc.)
+ * 
+ * PRINCIPE: Tous les champs numériques sont LIBRES (pas de validation min/max stricte)
+ * Les suggestions/catégories sont des aides UX, jamais des contraintes
  */
 
-import { CULTURE_VALUES } from '../data/formValues'
+import { CULTURE_FORM_DATA } from '../data/cultureFormData'
 
 // ============================================================================
 // CULTURE PIPELINE (Fleurs) - 85+ champs CDC
@@ -55,58 +59,35 @@ export const CULTURE_PIPELINE_CONFIG = {
                     label: 'Mode de culture',
                     icon: '🏕️',
                     type: 'select',
-                    options: [
-                        { value: 'indoor', label: 'Indoor (intérieur)' },
-                        { value: 'outdoor', label: 'Outdoor (extérieur)' },
-                        { value: 'greenhouse', label: 'Greenhouse / Serre chauffée' },
-                        { value: 'greenhouse-froide', label: 'Greenhouse froide' },
-                        { value: 'greenhouse-lumiere', label: 'Greenhouse avec lumière' },
-                        { value: 'no-till-indoor', label: 'No-till indoor' },
-                        { value: 'no-till-outdoor', label: 'No-till outdoor' },
-                        { value: 'container', label: 'Culture en container' },
-                        { value: 'verticale', label: 'Culture verticale' },
-                        { value: 'mixte', label: 'Culture mixte' }
-                    ]
+                    options: CULTURE_FORM_DATA.modes_culture
                 },
                 {
                     id: 'typeEspace',
                     label: "Type d'espace",
                     icon: '📦',
                     type: 'select',
-                    options: [
-                        { value: 'armoire', label: 'Armoire' },
-                        { value: 'tente', label: 'Tente de culture' },
-                        { value: 'serre', label: 'Serre' },
-                        { value: 'exterieur', label: 'Extérieur plein champ' },
-                        { value: 'piece-dediee', label: 'Pièce dédiée' },
-                        { value: 'container', label: 'Container maritime' },
-                        { value: 'souterrain', label: 'Souterrain' },
-                        { value: 'autre', label: 'Autre' }
-                    ]
+                    options: CULTURE_FORM_DATA.espaces_culture
                 },
-                { id: 'dimensionsL', label: 'Longueur (cm)', icon: '📏', type: 'number', min: 1, max: 10000, unit: 'cm' },
-                { id: 'dimensionsl', label: 'Largeur (cm)', icon: '📏', type: 'number', min: 1, max: 10000, unit: 'cm' },
-                { id: 'dimensionsH', label: 'Hauteur (cm)', icon: '📏', type: 'number', min: 1, max: 1000, unit: 'cm' },
-                { id: 'surfaceSol', label: 'Surface au sol (m²)', icon: '📐', type: 'number', min: 0.01, max: 10000, step: 0.01, unit: 'm²' },
-                { id: 'volumeTotal', label: 'Volume total (m³)', icon: '📦', type: 'number', min: 0.01, max: 100000, step: 0.01, unit: 'm³' },
+                {
+                    id: 'uniteDimensions',
+                    label: 'Unité de mesure',
+                    icon: '📏',
+                    type: 'select',
+                    options: CULTURE_FORM_DATA.unites_dimensions
+                },
+                { id: 'dimensionsL', label: 'Longueur', icon: '📏', type: 'number', placeholder: 'Valeur libre' },
+                { id: 'dimensionsl', label: 'Largeur', icon: '📏', type: 'number', placeholder: 'Valeur libre' },
+                { id: 'dimensionsH', label: 'Hauteur', icon: '📏', type: 'number', placeholder: 'Valeur libre' },
+                { id: 'surfaceSol', label: 'Surface au sol (m²)', icon: '📐', type: 'number', step: 0.01, placeholder: 'Calculée ou saisie', unit: 'm²' },
+                { id: 'volumeTotal', label: 'Volume total (m³)', icon: '📦', type: 'number', step: 0.01, placeholder: 'Calculé ou saisi', unit: 'm³' },
                 {
                     id: 'techniquePropagation',
                     label: 'Technique de propagation',
                     icon: '🌰',
                     type: 'select',
-                    options: [
-                        { value: 'graine', label: 'Graine' },
-                        { value: 'clone', label: 'Clone' },
-                        { value: 'bouture', label: 'Bouture' },
-                        { value: 'sopalin', label: 'Germination sopalin' },
-                        { value: 'coton', label: 'Germination coton' },
-                        { value: 'jiffy', label: 'Pastille Jiffy' },
-                        { value: 'rockwool', label: 'Laine de roche' },
-                        { value: 'direct-pot', label: 'Direct en pot' },
-                        { value: 'autre', label: 'Autre' }
-                    ]
+                    options: CULTURE_FORM_DATA.techniques_propagation
                 },
-                { id: 'nombrePlantes', label: 'Nombre de plantes', icon: '🌱', type: 'number', min: 1, max: 1000, unit: 'plante(s)' }
+                { id: 'nombrePlantes', label: 'Nombre de plantes', icon: '🌱', type: 'number', placeholder: 'Valeur libre', unit: 'plante(s)' }
             ]
         },
         {
@@ -119,30 +100,34 @@ export const CULTURE_PIPELINE_CONFIG = {
                     label: 'Type de substrat',
                     icon: '🧪',
                     type: 'select',
-                    options: [
-                        { value: 'terre', label: 'Terre' },
-                        { value: 'coco', label: 'Coco' },
-                        { value: 'hydro', label: 'Hydroponique' },
-                        { value: 'aero', label: 'Aéroponique' },
-                        { value: 'aqua', label: 'Aquaponique' },
-                        { value: 'bio', label: 'Biologique' },
-                        { value: 'organique', label: 'Organique' },
-                        { value: 'laine-roche', label: 'Laine de roche' },
-                        { value: 'perlite', label: 'Perlite pure' },
-                        { value: 'billes-argile', label: 'Billes d\'argile' },
-                        { value: 'mixte', label: 'Mélange personnalisé' }
-                    ]
+                    options: CULTURE_FORM_DATA.types_substrat
                 },
-                { id: 'volumeSubstrat', label: 'Volume pot/contenant (L)', icon: '📊', type: 'number', min: 0.1, max: 1000, step: 0.1, unit: 'L' },
-                { id: 'compositionTerre', label: '% Terre', icon: '🟤', type: 'number', min: 0, max: 100, unit: '%' },
-                { id: 'compositionCoco', label: '% Coco', icon: '🟠', type: 'number', min: 0, max: 100, unit: '%' },
-                { id: 'compositionPerlite', label: '% Perlite', icon: '⚪', type: 'number', min: 0, max: 100, unit: '%' },
-                { id: 'compositionVermiculite', label: '% Vermiculite', icon: '🟡', type: 'number', min: 0, max: 100, unit: '%' },
-                { id: 'compositionHumus', label: '% Humus/Compost', icon: '🟫', type: 'number', min: 0, max: 100, unit: '%' },
-                { id: 'compositionTourbe', label: '% Tourbe', icon: '🟤', type: 'number', min: 0, max: 100, unit: '%' },
-                { id: 'marquesSubstrat', label: 'Marques substrat', icon: '🏷️', type: 'text', placeholder: 'BioBizz, Plagron...' },
-                { id: 'phSubstrat', label: 'pH substrat', icon: '🧪', type: 'number', min: 3, max: 10, step: 0.1, unit: 'pH' },
-                { id: 'ecSubstrat', label: 'EC substrat (mS/cm)', icon: '⚡', type: 'number', min: 0, max: 10, step: 0.1, unit: 'mS/cm' }
+                {
+                    id: 'drainageSubstrat',
+                    label: 'Drainage',
+                    icon: '💧',
+                    type: 'select',
+                    options: CULTURE_FORM_DATA.drainage_substrat
+                },
+                { id: 'volumeSubstrat', label: 'Volume pot/contenant (L)', icon: '📊', type: 'number', step: 0.1, placeholder: 'Valeur libre', unit: 'L' },
+                {
+                    id: 'compositionSubstrat',
+                    label: 'Composants substrat (%)',
+                    icon: '📊',
+                    type: 'multiselect',
+                    options: CULTURE_FORM_DATA.composants_substrat,
+                    withPercentage: true
+                },
+                {
+                    id: 'marquesSubstrat',
+                    label: 'Marques substrat',
+                    icon: '🏷️',
+                    type: 'select',
+                    options: CULTURE_FORM_DATA.marques_substrat,
+                    allowCustom: true
+                },
+                { id: 'phSubstrat', label: 'pH substrat', icon: '🧪', type: 'number', step: 0.1, placeholder: 'Valeur libre (0-14)', unit: 'pH' },
+                { id: 'ecSubstrat', label: 'EC substrat (mS/cm)', icon: '⚡', type: 'number', step: 0.1, placeholder: 'Valeur libre', unit: 'mS/cm' }
             ]
         },
         {
@@ -150,41 +135,43 @@ export const CULTURE_PIPELINE_CONFIG = {
             label: 'ENVIRONNEMENT',
             icon: '🌡️',
             items: [
-                { id: 'temperatureJour', label: 'Température jour (°C)', icon: '☀️', type: 'number', min: 10, max: 50, step: 0.5, unit: '°C' },
-                { id: 'temperatureNuit', label: 'Température nuit (°C)', icon: '🌙', type: 'number', min: 5, max: 40, step: 0.5, unit: '°C' },
-                { id: 'humiditeJour', label: 'Humidité jour (%)', icon: '💧', type: 'number', min: 10, max: 100, unit: '%' },
-                { id: 'humiditeNuit', label: 'Humidité nuit (%)', icon: '🌙', type: 'number', min: 10, max: 100, unit: '%' },
-                { id: 'vpd', label: 'VPD (kPa)', icon: '📊', type: 'number', min: 0.2, max: 2.5, step: 0.05, unit: 'kPa' },
-                { id: 'co2', label: 'CO₂ (ppm)', icon: '🫧', type: 'number', min: 200, max: 2000, step: 50, unit: 'ppm' },
+                { id: 'temperatureMoyenne', label: 'Température moyenne (°C)', icon: '🌡️', type: 'number', step: 0.5, placeholder: 'Valeur libre', unit: '°C' },
+                { id: 'temperatureMin', label: 'Température MIN (°C)', icon: '❄️', type: 'number', step: 0.5, placeholder: 'Plage personnalisée', unit: '°C', helper: 'Suggestions: Végétatif jour 22-30°C, nuit 18-24°C' },
+                { id: 'temperatureMax', label: 'Température MAX (°C)', icon: '🔥', type: 'number', step: 0.5, placeholder: 'Plage personnalisée', unit: '°C', helper: 'Suggestions: Floraison jour 20-28°C, nuit 16-22°C' },
+                {
+                    id: 'modeControleTemperature',
+                    label: 'Mode contrôle température',
+                    icon: '🎛️',
+                    type: 'select',
+                    options: CULTURE_FORM_DATA.modes_controle_temperature
+                },
+                { id: 'humiditeMoyenne', label: 'Humidité relative moyenne (%)', icon: '💧', type: 'number', placeholder: 'Valeur libre', unit: '%' },
+                { id: 'humiditeMin', label: 'Humidité MIN (%)', icon: '💧', type: 'number', placeholder: 'Plage personnalisée', unit: '%', helper: 'Suggestions: Germination 70-90%, Croissance 55-80%, Floraison 40-60%' },
+                { id: 'humiditeMax', label: 'Humidité MAX (%)', icon: '💧', type: 'number', placeholder: 'Plage personnalisée', unit: '%', helper: 'Suggestions: Fin floraison 35-50%' },
+                { id: 'vpd', label: 'VPD (kPa)', icon: '📊', type: 'number', step: 0.05, placeholder: 'Calculé automatiquement ou saisi manuellement', unit: 'kPa', helper: 'Vapor Pressure Deficit - optionnel avancé' },
+                { id: 'co2Valeur', label: 'CO₂ valeur personnalisée (ppm)', icon: '🫧', type: 'number', step: 50, placeholder: 'Valeur libre', unit: 'ppm', helper: 'Suggestions: Non enrichi 400-500, Enrichi 600-1200+' },
+                {
+                    id: 'co2Mode',
+                    label: 'Mode injection CO₂',
+                    icon: '🔬',
+                    type: 'select',
+                    options: CULTURE_FORM_DATA.modes_injection_co2
+                },
                 {
                     id: 'typeVentilation',
                     label: 'Type de ventilation',
                     icon: '🌀',
-                    type: 'select',
-                    options: [
-                        { value: 'extracteur', label: 'Extracteur seul' },
-                        { value: 'extracteur-intracteur', label: 'Extracteur + Intracteur' },
-                        { value: 'brassage', label: 'Ventilateurs brassage' },
-                        { value: 'climatisation', label: 'Climatisation' },
-                        { value: 'passive', label: 'Ventilation passive' },
-                        { value: 'mecanique-controlee', label: 'VMC double flux' },
-                        { value: 'naturelle', label: 'Naturelle (outdoor)' }
-                    ]
+                    type: 'multiselect',
+                    options: CULTURE_FORM_DATA.types_ventilation
                 },
-                { id: 'debitExtraction', label: 'Débit extraction (m³/h)', icon: '💨', type: 'number', min: 10, max: 5000, unit: 'm³/h' },
+                { id: 'debitExtracteur', label: 'Débit extracteur (m³/h)', icon: '💨', type: 'number', placeholder: 'Valeur libre', unit: 'm³/h' },
+                { id: 'puissanceVentilateur', label: 'Puissance ventilateur (W)', icon: '⚡', type: 'number', placeholder: 'Valeur libre', unit: 'W' },
                 {
-                    id: 'frequenceVentilation',
-                    label: 'Fréquence ventilation',
+                    id: 'modeVentilation',
+                    label: 'Mode ventilation',
                     icon: '🔁',
                     type: 'select',
-                    options: [
-                        { value: 'continu', label: 'Continu 24h/24' },
-                        { value: 'intermittent-15-45', label: 'Intermittent 15min ON / 45min OFF' },
-                        { value: 'intermittent-30-30', label: 'Intermittent 30min / 30min' },
-                        { value: 'jour-seulement', label: 'Pendant période lumière uniquement' },
-                        { value: 'nuit-seulement', label: 'Pendant période nuit uniquement' },
-                        { value: 'variable-thermo', label: 'Variable (thermostat)' }
-                    ]
+                    options: CULTURE_FORM_DATA.modes_ventilation
                 }
             ]
         },
@@ -198,41 +185,60 @@ export const CULTURE_PIPELINE_CONFIG = {
                     label: 'Type de lampe',
                     icon: '💡',
                     type: 'select',
-                    options: [
-                        { value: 'led-full', label: 'LED full spectrum' },
-                        { value: 'led-blanche', label: 'LED blanche' },
-                        { value: 'led-cob', label: 'LED COB' },
-                        { value: 'led-quantum', label: 'LED Quantum board' },
-                        { value: 'hps', label: 'HPS (sodium haute pression)' },
-                        { value: 'mh', label: 'MH (halogénures métalliques)' },
-                        { value: 'cmh-lec', label: 'CMH / LEC (céramique)' },
-                        { value: 'cfl', label: 'CFL (néons compacts)' },
-                        { value: 'soleil', label: 'Soleil naturel' },
-                        { value: 'mixte', label: 'Mélange LED + HPS/MH' }
-                    ]
+                    options: CULTURE_FORM_DATA.types_lampe
                 },
+                {
+                    id: 'fabricantLampe',
+                    label: 'Fabricant / Marque',
+                    icon: '🏭',
+                    type: 'select',
+                    options: CULTURE_FORM_DATA.fabricants_lampe,
+                    allowCustom: true
+                },
+                { id: 'modeleLampe', label: 'Modèle', icon: '🏷️', type: 'text', placeholder: 'Ex: SF-4000, TS-1000, HLG 550...' },
                 {
                     id: 'spectreLumiere',
                     label: 'Spectre lumineux',
                     icon: '🌈',
                     type: 'select',
-                    options: [
-                        { value: 'full-spectrum', label: 'Full spectrum' },
-                        { value: 'bleu-croissance', label: 'Bleu (croissance)' },
-                        { value: 'rouge-floraison', label: 'Rouge (floraison)' },
-                        { value: 'mixte-bleu-rouge', label: 'Mixte bleu/rouge' },
-                        { value: '3500k', label: '3500K (blanc chaud)' },
-                        { value: '4000k', label: '4000K (blanc neutre)' },
-                        { value: '6500k', label: '6500K (blanc froid)' },
-                        { value: 'variable', label: 'Variable (contrôle spectre)' }
-                    ]
+                    options: CULTURE_FORM_DATA.spectres_lumiere
                 },
-                { id: 'distanceLampePlante', label: 'Distance lampe-plante (cm)', icon: '📏', type: 'number', min: 5, max: 200, unit: 'cm' },
-                { id: 'puissanceTotale', label: 'Puissance totale (W)', icon: '⚡', type: 'number', min: 10, max: 10000, unit: 'W' },
-                { id: 'dureeEclairage', label: 'Durée éclairage (h/jour)', icon: '⏰', type: 'number', min: 0, max: 24, step: 0.5, unit: 'h' },
-                { id: 'dli', label: 'DLI (mol/m²/jour)', icon: '📊', type: 'number', min: 0, max: 100, step: 0.1, unit: 'mol/m²/j' },
-                { id: 'ppfd', label: 'PPFD moyen (µmol/m²/s)', icon: '🔆', type: 'number', min: 0, max: 3000, unit: 'µmol/m²/s' },
-                { id: 'kelvin', label: 'Température couleur (K)', icon: '🌡️', type: 'number', min: 2000, max: 10000, step: 100, unit: 'K' }
+                {
+                    id: 'uniteDistanceLampe',
+                    label: 'Unité distance',
+                    icon: '📏',
+                    type: 'select',
+                    options: CULTURE_FORM_DATA.unites_distance_lampe
+                },
+                { id: 'distanceLampePlante', label: 'Distance lampe-plante', icon: '📏', type: 'number', placeholder: 'Valeur libre' },
+                {
+                    id: 'modeDistanceLampe',
+                    label: 'Mode distance',
+                    icon: '🔄',
+                    type: 'select',
+                    options: CULTURE_FORM_DATA.modes_distance_lampe
+                },
+                { id: 'puissanceTotale', label: 'Puissance totale (W)', icon: '⚡', type: 'number', placeholder: 'Valeur libre', unit: 'W', helper: 'Puissance/m² = Puissance totale / Surface au sol' },
+                { id: 'dimmable', label: 'Dimmable', icon: '🔅', type: 'select', options: [{ value: 'oui', label: 'Oui' }, { value: 'non', label: 'Non' }] },
+                {
+                    id: 'photoperiode',
+                    label: 'Photopériode',
+                    icon: '⏰',
+                    type: 'select',
+                    options: CULTURE_FORM_DATA.photoperiodes
+                },
+                { id: 'photoperiodeHeuresON', label: 'Heures ON (si personnalisée)', icon: '☀️', type: 'number', placeholder: '0-24', helper: 'Uniquement si photopériode personnalisée' },
+                { id: 'photoperiodeHeuresOFF', label: 'Heures OFF (si personnalisée)', icon: '🌙', type: 'number', placeholder: '0-24', helper: 'Uniquement si photopériode personnalisée' },
+                { id: 'dli', label: 'DLI (mol/m²/jour)', icon: '📊', type: 'number', step: 0.1, placeholder: 'Valeur libre', unit: 'mol/m²/j' },
+                { id: 'ppfd', label: 'PPFD moyen (µmol/m²/s)', icon: '🔆', type: 'number', placeholder: 'Valeur libre', unit: 'µmol/m²/s' },
+                {
+                    id: 'kelvin',
+                    label: 'Température couleur (K)',
+                    icon: '🌡️',
+                    type: 'select',
+                    options: CULTURE_FORM_DATA.temperatures_couleur_kelvin,
+                    allowCustom: true
+                }
             ]
         },
         {
@@ -245,23 +251,41 @@ export const CULTURE_PIPELINE_CONFIG = {
                     label: 'Système d\'irrigation',
                     icon: '💦',
                     type: 'select',
-                    options: [
-                        { value: 'goutte-goutte', label: 'Goutte à goutte' },
-                        { value: 'inondation-drainage', label: 'Inondation et drainage' },
-                        { value: 'manuel', label: 'Arrosage manuel' },
-                        { value: 'subirrigation', label: 'Sub-irrigation (par capillarité)' },
-                        { value: 'aspersion', label: 'Aspersion (spray)' },
-                        { value: 'dwc', label: 'DWC (Deep Water Culture)' },
-                        { value: 'nft', label: 'NFT (Nutrient Film Technique)' },
-                        { value: 'aeroponie', label: 'Aéroponie' },
-                        { value: 'automatique-timer', label: 'Automatique avec minuteur' }
-                    ]
+                    options: CULTURE_FORM_DATA.systemes_irrigation
                 },
-                { id: 'frequenceIrrigation', label: 'Fréquence (fois/jour)', icon: '🔁', type: 'number', min: 0.1, max: 24, step: 0.1, unit: 'x/jour' },
-                { id: 'volumeEauParArrosage', label: 'Volume eau par arrosage (L)', icon: '🚰', type: 'number', min: 0.01, max: 1000, step: 0.01, unit: 'L' },
-                { id: 'phEau', label: 'pH eau', icon: '🧪', type: 'number', min: 3, max: 10, step: 0.1, unit: 'pH' },
-                { id: 'ecEau', label: 'EC eau (mS/cm)', icon: '⚡', type: 'number', min: 0, max: 5, step: 0.1, unit: 'mS/cm' },
-                { id: 'tempEau', label: 'Température eau (°C)', icon: '🌡️', type: 'number', min: 10, max: 30, step: 0.5, unit: '°C' }
+                {
+                    id: 'frequenceIrrigation',
+                    label: 'Fréquence arrosage',
+                    icon: '🔁',
+                    type: 'select',
+                    options: [...CULTURE_FORM_DATA.frequences_arrosage_jour, ...CULTURE_FORM_DATA.frequences_arrosage_semaine, ...CULTURE_FORM_DATA.frequences_arrosage_speciales]
+                },
+                {
+                    id: 'uniteVolumeEau',
+                    label: 'Unité volume eau',
+                    icon: '💧',
+                    type: 'select',
+                    options: CULTURE_FORM_DATA.unites_volume_eau
+                },
+                { id: 'volumeEauParArrosage', label: 'Volume eau par arrosage', icon: '🚰', type: 'number', step: 0.01, placeholder: 'Valeur libre' },
+                {
+                    id: 'modeVolumeEau',
+                    label: 'Mode volume',
+                    icon: '📊',
+                    type: 'select',
+                    options: CULTURE_FORM_DATA.modes_volume_eau
+                },
+                {
+                    id: 'uniteDureeArrosage',
+                    label: 'Unité durée',
+                    icon: '⏱️',
+                    type: 'select',
+                    options: CULTURE_FORM_DATA.unites_duree_arrosage
+                },
+                { id: 'dureeArrosage', label: 'Durée arrosage', icon: '⏱️', type: 'number', placeholder: 'Valeur libre' },
+                { id: 'phEau', label: 'pH eau', icon: '🧪', type: 'number', step: 0.1, placeholder: 'Valeur libre (0-14)', unit: 'pH' },
+                { id: 'ecEau', label: 'EC eau (mS/cm)', icon: '⚡', type: 'number', step: 0.1, placeholder: 'Valeur libre', unit: 'mS/cm' },
+                { id: 'tempEau', label: 'Température eau (°C)', icon: '🌡️', type: 'number', step: 0.5, placeholder: 'Valeur libre', unit: '°C' }
             ]
         },
         {
@@ -274,20 +298,33 @@ export const CULTURE_PIPELINE_CONFIG = {
                     label: 'Type d\'engrais',
                     icon: '🌿',
                     type: 'select',
-                    options: [
-                        { value: 'mineral', label: 'Minéral (chimique)' },
-                        { value: 'organique', label: 'Organique' },
-                        { value: 'bio', label: 'Biologique certifié' },
-                        { value: 'mixte', label: 'Mixte minéral/organique' },
-                        { value: 'living-soil', label: 'Living soil (sans engrais)' },
-                        { value: 'compost-tea', label: 'Thé de compost' },
-                        { value: 'bokashi', label: 'Bokashi' }
-                    ]
+                    options: CULTURE_FORM_DATA.types_engrais
                 },
-                { id: 'marqueGamme', label: 'Marque et gamme', icon: '🏷️', type: 'text', placeholder: 'BioBizz, Advanced Nutrients...' },
-                { id: 'dosageNPK', label: 'Dosage NPK actuel', icon: '📊', type: 'text', placeholder: 'Ex: 10-5-7' },
-                { id: 'dosageEngrais', label: 'Dosage (ml/L ou g/L)', icon: '💧', type: 'number', min: 0, max: 50, step: 0.1, unit: 'ml/L' },
-                { id: 'frequenceEngraissage', label: 'Fréquence engraissage', icon: '🔁', type: 'text', placeholder: 'Ex: 1x/2 arrosages' },
+                {
+                    id: 'marqueEngrais',
+                    label: 'Marque / gamme',
+                    icon: '🏷️',
+                    type: 'select',
+                    options: CULTURE_FORM_DATA.marques_engrais,
+                    allowCustom: true
+                },
+                { id: 'nomProduitEngrais', label: 'Nom du produit', icon: '📦', type: 'text', placeholder: 'Ex: Bio-Bloom, Sensi Grow Part A...' },
+                {
+                    id: 'uniteDosage',
+                    label: 'Unité dosage',
+                    icon: '⚖️',
+                    type: 'select',
+                    options: CULTURE_FORM_DATA.unites_dosage
+                },
+                { id: 'dosageEngrais', label: 'Dosage', icon: '💧', type: 'number', step: 0.1, placeholder: 'Valeur libre' },
+                { id: 'phSolution', label: 'pH cible de la solution', icon: '🧪', type: 'number', step: 0.1, placeholder: 'Valeur libre (0-14)', unit: 'pH' },
+                {
+                    id: 'frequenceEngraissage',
+                    label: 'Fréquence application',
+                    icon: '🔁',
+                    type: 'select',
+                    options: CULTURE_FORM_DATA.frequences_application_engrais
+                },
                 { id: 'additifs', label: 'Additifs utilisés', icon: '🧴', type: 'text', placeholder: 'Enzymes, stimulateurs, PK...' }
             ]
         },
@@ -301,19 +338,7 @@ export const CULTURE_PIPELINE_CONFIG = {
                     label: 'Méthode de palissage',
                     icon: '🪢',
                     type: 'multiselect',
-                    options: [
-                        { value: 'scrog', label: 'SCROG (Screen of Green)' },
-                        { value: 'sog', label: 'SOG (Sea of Green)' },
-                        { value: 'lst', label: 'LST (Low Stress Training)' },
-                        { value: 'hst', label: 'HST (High Stress Training)' },
-                        { value: 'topping', label: 'Topping (étêtage)' },
-                        { value: 'fimming', label: 'FIM (étêtage partiel)' },
-                        { value: 'main-lining', label: 'Main-lining (manifold)' },
-                        { value: 'super-cropping', label: 'Super-cropping (pliage)' },
-                        { value: 'lollipopping', label: 'Lollipopping (défoliation basse)' },
-                        { value: 'schwazzing', label: 'Schwazzing (défoliation totale)' },
-                        { value: 'aucun', label: 'Aucun palissage' }
-                    ]
+                    options: CULTURE_FORM_DATA.methodologies_palissage
                 },
                 { id: 'commentairePalissage', label: 'Commentaire palissage', icon: '📝', type: 'textarea', placeholder: 'Détails des manipulations...' }
             ]
@@ -323,12 +348,20 @@ export const CULTURE_PIPELINE_CONFIG = {
             label: 'MORPHOLOGIE PLANTE',
             icon: '🌳',
             items: [
-                { id: 'taillePlante', label: 'Taille de la plante (cm)', icon: '📏', type: 'number', min: 1, max: 1000, unit: 'cm' },
-                { id: 'volumePlante', label: 'Volume estimé (L)', icon: '📦', type: 'number', min: 0.1, max: 10000, step: 0.1, unit: 'L' },
-                { id: 'poidsBrutRecolte', label: 'Poids brut récolte (g)', icon: '⚖️', type: 'number', min: 0, max: 100000, step: 0.1, unit: 'g' },
-                { id: 'nombreBranchesPrincipales', label: 'Nombre de branches principales', icon: '🌿', type: 'number', min: 1, max: 100 },
-                { id: 'nombreFeuilles', label: 'Nombre de feuilles estimé', icon: '🍃', type: 'number', min: 1, max: 10000 },
-                { id: 'nombreBuds', label: 'Nombre de buds/têtes', icon: '🌺', type: 'number', min: 1, max: 1000 }
+                { id: 'taillePlante', label: 'Taille de la plante (cm)', icon: '📏', type: 'number', placeholder: 'Valeur libre', unit: 'cm', helper: 'Catégories: <30, 30-60, 60-90, 90-120, 120-150, 150-200, >200 cm' },
+                { id: 'volumeCanopee', label: 'Volume canopée', icon: '📦', type: 'select', options: CULTURE_FORM_DATA.categories_volume_canopee },
+                { id: 'volumeCanopeeChiffre', label: 'Volume canopée chiffré (m³)', icon: '📐', type: 'number', step: 0.01, placeholder: 'Valeur libre', unit: 'm³' },
+                {
+                    id: 'unitePoidsPlante',
+                    label: 'Unité poids',
+                    icon: '⚖️',
+                    type: 'select',
+                    options: CULTURE_FORM_DATA.unites_poids_plante
+                },
+                { id: 'poidsPlanteF raiche', label: 'Poids plante fraîche (hors racines)', icon: '⚖️', type: 'number', step: 0.1, placeholder: 'Valeur libre' },
+                { id: 'nombreBranchesPrincipales', label: 'Nombre de branches principales', icon: '🌿', type: 'number', placeholder: 'Valeur libre (sans unité)', helper: 'Catégories: 1-4, 5-8, 9-12, >12' },
+                { id: 'nombreFeuilles', label: 'Nombre de feuilles estimé', icon: '🍃', type: 'number', placeholder: 'Valeur libre (sans unité)', helper: 'Catégories: <50, 50-100, 100-200, >200' },
+                { id: 'nombreBuds', label: 'Nombre de buds/têtes', icon: '🌺', type: 'number', placeholder: 'Valeur libre (sans unité)', helper: 'Catégories: <20, 20-50, 50-100, >100' }
             ]
         },
         {
@@ -341,20 +374,24 @@ export const CULTURE_PIPELINE_CONFIG = {
                     label: 'Couleur trichomes récolte',
                     icon: '💎',
                     type: 'multiselect',
-                    options: [
-                        { value: 'translucide', label: 'Translucide (immature)' },
-                        { value: 'laiteux', label: 'Laiteux (mûr)' },
-                        { value: 'ambre-10', label: 'Ambré 10%' },
-                        { value: 'ambre-30', label: 'Ambré 30%' },
-                        { value: 'ambre-50', label: 'Ambré 50%' },
-                        { value: 'ambre-70', label: 'Ambré 70%' },
-                        { value: 'ambre-90', label: 'Ambré 90%+' }
-                    ]
+                    options: CULTURE_FORM_DATA.couleurs_trichomes,
+                    withPercentage: true
                 },
                 { id: 'dateRecolte', label: 'Date de récolte', icon: '📅', type: 'date' },
-                { id: 'poidsBrutRecolte', label: 'Poids brut total (g)', icon: '⚖️', type: 'number', min: 0, max: 100000, step: 0.1, unit: 'g' },
-                { id: 'poidsNetRecolte', label: 'Poids net après trim (g)', icon: '⚖️', type: 'number', min: 0, max: 100000, step: 0.1, unit: 'g' },
-                { id: 'rendement', label: 'Rendement (g/m² ou g/plante)', icon: '📊', type: 'number', min: 0, max: 5000, step: 0.1, unit: 'g' }
+                { id: 'poidsBrutRecolte', label: 'Poids brut total (g)', icon: '⚖️', type: 'number', step: 0.1, placeholder: 'Valeur libre', unit: 'g' },
+                { id: 'poidsNetTrim', label: 'Poids net après trim (g)', icon: '⚖️', type: 'number', step: 0.1, placeholder: 'Valeur libre', unit: 'g' },
+                { id: 'poidsSecFinal', label: 'Poids sec final (g)', icon: '⚖️', type: 'number', step: 0.1, placeholder: 'Optionnel', unit: 'g' },
+                { id: 'tauxPerte', label: 'Taux de perte (%)', icon: '📉', type: 'number', step: 0.1, placeholder: 'Calculé automatiquement', unit: '%', helper: 'Formule: ((Poids brut - Poids sec) / Poids brut) × 100', calculated: true },
+                { id: 'rendementM2', label: 'Rendement (g/m²)', icon: '📊', type: 'number', step: 0.1, placeholder: 'Valeur libre', unit: 'g/m²' },
+                { id: 'rendementPlante', label: 'Rendement (g/plante)', icon: '🌱', type: 'number', step: 0.1, placeholder: 'Valeur libre', unit: 'g/plante' },
+                { id: 'rendementWatt', label: 'Rendement (g/W)', icon: '⚡', type: 'number', step: 0.01, placeholder: 'Calculé automatiquement', unit: 'g/W', helper: 'Formule: Poids sec final (g) / Puissance totale (W)', calculated: true },
+                {
+                    id: 'categorieRendement',
+                    label: 'Catégorie rendement',
+                    icon: '🏆',
+                    type: 'select',
+                    options: CULTURE_FORM_DATA.categories_rendement
+                }
             ]
         }
     ]
