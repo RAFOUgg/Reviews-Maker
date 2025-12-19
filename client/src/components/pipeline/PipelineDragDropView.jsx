@@ -19,7 +19,7 @@
  * - onGeneralDataChange: (field, value) => void
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronRight, Plus, Settings, Save, Upload, CheckSquare, Square, Check } from 'lucide-react';
 import PipelineDataModal from './PipelineDataModal';
 import PresetConfigModal from './PresetConfigModal';
@@ -431,7 +431,7 @@ const PipelineDragDropView = ({
     };
 
     // Sélection par glissé (mousedown + mouseenter + mouseup)
-    const selectedCellsRef = React.useRef([]);
+    const selectedCellsRef = useRef([]);
 
     const startSelection = (e, startIdx, timestamp) => {
         // Prévenir la sélection native du navigateur
