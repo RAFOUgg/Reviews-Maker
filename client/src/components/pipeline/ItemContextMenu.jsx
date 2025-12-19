@@ -103,7 +103,7 @@ const ItemContextMenu = ({ item, position, onClose, onConfigure, isConfigured, c
                     <select
                         value={value}
                         onChange={(e) => setValue(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
                         autoFocus
                     >
                         <option value="">-- Sélectionner --</option>
@@ -122,7 +122,7 @@ const ItemContextMenu = ({ item, position, onClose, onConfigure, isConfigured, c
                             step={item.step || 1}
                             value={value}
                             onChange={(e) => setValue(e.target.value)}
-                            className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                            className="flex-1 px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
                             placeholder={`${item.min || 0} - ${item.max || 100}`}
                             autoFocus
                         />

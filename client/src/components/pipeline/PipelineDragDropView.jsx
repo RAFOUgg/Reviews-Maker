@@ -824,13 +824,13 @@ const PipelineDragDropView = ({
                     {/* Configuration inline - Dynamique selon type d'intervalle */}
                     <div className="grid grid-cols-4 gap-3">
                         <div>
-                            <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                            <label className="text-xs font-medium text-gray-900 mb-1 block">
                                 Type d'intervalles
                             </label>
                             <select
                                 value={timelineConfig.type || 'jour'}
                                 onChange={(e) => onConfigChange('type', e.target.value)}
-                                className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
                             >
                                 <option value="seconde">⏱️ Secondes</option>
                                 <option value="heure">🕐 Heures</option>
@@ -964,9 +964,9 @@ const PipelineDragDropView = ({
                         )}
 
                         <div className="flex items-end">
-                            <div className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg text-center flex-1">
-                                <div className="text-2xl font-bold">{completionPercent}%</div>
-                                <div className="text-xs opacity-90">{filledCells}/{cells.length} cases</div>
+                            <div className="px-6 py-4 bg-white rounded-lg text-gray-900 shadow-md flex-1">
+                                <div className="text-3xl font-extrabold">{completionPercent}%</div>
+                                <div className="text-sm text-gray-600 mt-1">{filledCells}/{cells.length} cases</div>
                             </div>
                         </div>
                     </div>
