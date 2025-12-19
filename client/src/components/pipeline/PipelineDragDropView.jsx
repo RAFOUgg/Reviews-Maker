@@ -376,11 +376,25 @@ const PipelineDragDropView = ({
         const sel = selectedCellsRef.current || [];
         if (sel && sel.length > 0) {
             const preConfigValue = preConfiguredItems[draggedContent.key];
-            sel.forEach(ts => {
-                const valueToAssign = (preConfigValue !== undefined && preConfigValue !== null) ? preConfigValue : (draggedContent.defaultValue !== undefined ? draggedContent.defaultValue : '');
-                onDataChange(ts, draggedContent.key, valueToAssign);
-            });
-            showToast(`✓ ${draggedContent.label} appliqué à ${sel.length} case(s)`);
+
+            // Item pré-configuré -> assignation directe
+            if (preConfigValue !== undefined && preConfigValue !== null) {
+                sel.forEach(ts => onDataChange(ts, draggedContent.key, preConfigValue));
+                showToast(`✓ ${draggedContent.label} appliqué à ${sel.length} case(s)`);
+            } else if (draggedContent.defaultValue !== undefined) {
+                // Si l'item possède une valeur par défaut, l'appliquer
+                sel.forEach(ts => onDataChange(ts, draggedContent.key, draggedContent.defaultValue));
+                showToast(`✓ ${draggedContent.label} appliqué à ${sel.length} case(s)`);
+            } else {
+                // Aucun pré-config ni valeur par défaut -> demander une valeur à l'utilisateur puis appliquer
+                const userVal = window.prompt(`Valeur pour « ${draggedContent.label} » à appliquer à ${sel.length} case(s) :`, '');
+                if (userVal === null) {
+                    showToast('Opération annulée');
+                } else {
+                    sel.forEach(ts => onDataChange(ts, draggedContent.key, userVal));
+                    showToast(`✓ ${draggedContent.label} appliqué à ${sel.length} case(s)`);
+                }
+            }
         } else {
             // ✅ VÉRIFIER SI L'ITEM EST PRÉ-CONFIGURÉ
             const preConfigValue = preConfiguredItems[draggedContent.key];
