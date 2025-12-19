@@ -12,7 +12,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Settings, X, Check } from 'lucide-react';
 
-const ItemContextMenu = ({ item, position, onClose, onConfigure, isConfigured, cells = [], onAssignNow, onAssignFromSource }) => {
+const ItemContextMenu = ({ item, position, onClose, onConfigure, isConfigured, cells = [], onAssignNow, onAssignFromSource, onAssignRange, onAssignAll }) => {
     const [value, setValue] = useState(item.defaultValue || '');
     const [selectedSource, setSelectedSource] = useState('');
     const menuRef = useRef(null);
@@ -172,6 +172,51 @@ const ItemContextMenu = ({ item, position, onClose, onConfigure, isConfigured, c
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Assign to range / all / selected */}
+            <div className="mb-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Assigner à :</label>
+                <div className="flex items-center gap-2">
+                    <select
+                        value={selectedSource}
+                        onChange={(e) => setSelectedSource(e.target.value)}
+                        className="px-2 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm flex-1"
+                    >
+                        <option value="">-- Début (sélectionner) --</option>
+                        {cells.map((c) => (
+                            <option key={`start-${c.timestamp}`} value={c.timestamp}>{c.label || c.timestamp}</option>
+                        ))}
+                    </select>
+
+                    <select
+                        value={''}
+                        onChange={(e) => {
+                            const end = e.target.value;
+                            if (!selectedSource) { alert('Choisir d\'abord une case de début'); return; }
+                            onAssignRange?.(item.key, selectedSource, end, value || item.defaultValue || '');
+                            onClose();
+                        }}
+                        className="px-2 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm flex-1"
+                    >
+                        <option value="">-- Fin (sélectionner) --</option>
+                        {cells.map((c) => (
+                            <option key={`end-${c.timestamp}`} value={c.timestamp}>{c.label || c.timestamp}</option>
+                        ))}
+                    </select>
+
+                    <button
+                        onClick={() => {
+                            // Assign to all
+                            onAssignAll?.(item.key, value || item.defaultValue || '');
+                            onClose();
+                        }}
+                        className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm"
+                    >
+                        Tous
+                    </button>
+                </div>
+                <div className="mt-2 text-xs text-gray-500">Ou déposer directement sur une sélection de cases pour assigner.</div>
             </div>
 
             {/* Boutons actions */}

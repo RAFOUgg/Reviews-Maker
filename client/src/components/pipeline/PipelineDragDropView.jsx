@@ -19,7 +19,7 @@
  * - onGeneralDataChange: (field, value) => void
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight, Plus, Settings, Save, Upload, CheckSquare, Square, Check } from 'lucide-react';
 import PipelineDataModal from './PipelineDataModal';
 import PresetConfigModal from './PresetConfigModal';
@@ -61,6 +61,8 @@ const PipelineDragDropView = ({
     const [showPresetConfigModal, setShowPresetConfigModal] = useState(false);
     const [editingPreset, setEditingPreset] = useState(null);
     const [hoveredCell, setHoveredCell] = useState(null); // Cellule survolée pendant drag
+    const [isSelecting, setIsSelecting] = useState(false);
+    const [selectionStartIdx, setSelectionStartIdx] = useState(null);
 
     // ✅ NOUVEAUX ÉTATS POUR CLIC DROIT PRÉ-CONFIGURATION
     const [contextMenu, setContextMenu] = useState(null); // { item, position }
@@ -370,24 +372,34 @@ const PipelineDragDropView = ({
             return;
         }
 
-        // ✅ VÉRIFIER SI L'ITEM EST PRÉ-CONFIGURÉ
-        const preConfigValue = preConfiguredItems[draggedContent.key];
-
-        if (preConfigValue !== undefined && preConfigValue !== null) {
-            // ✅ ITEM PRÉ-CONFIGURÉ → ASSIGNMENT DIRECT SANS MODALE
-            console.log('✅ Item pré-configuré détecté, assignment direct:', preConfigValue);
-            onDataChange(timestamp, draggedContent.key, preConfigValue);
-
-            // Toast succès
-            showToast(`✓ ${draggedContent.label} : ${preConfigValue}${draggedContent.unit || ''} ajouté`);
+        // Si plusieurs cases sont sélectionnées -> appliquer sur la sélection
+        if (selectedCells && selectedCells.length > 0) {
+            const preConfigValue = preConfiguredItems[draggedContent.key];
+            selectedCells.forEach(ts => {
+                const valueToAssign = (preConfigValue !== undefined && preConfigValue !== null) ? preConfigValue : (draggedContent.defaultValue !== undefined ? draggedContent.defaultValue : '');
+                onDataChange(ts, draggedContent.key, valueToAssign);
+            });
+            showToast(`✓ ${draggedContent.label} appliqué à ${selectedCells.length} case(s)`);
         } else {
-            // ✅ ITEM NORMAL → AJOUT AVEC VALEUR PAR DÉFAUT
-            console.log('➕ Item normal, ajout avec valeur par défaut:', draggedContent.defaultValue);
-            const defaultVal = draggedContent.defaultValue !== undefined ? draggedContent.defaultValue : '';
-            onDataChange(timestamp, draggedContent.key, defaultVal);
+            // ✅ VÉRIFIER SI L'ITEM EST PRÉ-CONFIGURÉ
+            const preConfigValue = preConfiguredItems[draggedContent.key];
 
-            // Toast succès
-            showToast(`✓ ${draggedContent.label} ajouté`);
+            if (preConfigValue !== undefined && preConfigValue !== null) {
+                // ✅ ITEM PRÉ-CONFIGURÉ → ASSIGNMENT DIRECT SANS MODALE
+                console.log('✅ Item pré-configuré détecté, assignment direct:', preConfigValue);
+                onDataChange(timestamp, draggedContent.key, preConfigValue);
+
+                // Toast succès
+                showToast(`✓ ${draggedContent.label} : ${preConfigValue}${draggedContent.unit || ''} ajouté`);
+            } else {
+                // ✅ ITEM NORMAL → AJOUT AVEC VALEUR PAR DÉFAUT
+                console.log('➕ Item normal, ajout avec valeur par défaut:', draggedContent.defaultValue);
+                const defaultVal = draggedContent.defaultValue !== undefined ? draggedContent.defaultValue : '';
+                onDataChange(timestamp, draggedContent.key, defaultVal);
+
+                // Toast succès
+                showToast(`✓ ${draggedContent.label} ajouté`);
+            }
         }
 
         setDraggedContent(null);
@@ -414,6 +426,33 @@ const PipelineDragDropView = ({
             }
         });
     };
+
+    // Sélection par glissé (mousedown + mouseenter + mouseup)
+    const startSelection = (startIdx, timestamp) => {
+        setIsSelecting(true);
+        setSelectionStartIdx(startIdx);
+        setSelectedCells([timestamp]);
+    };
+
+    const updateSelectionTo = (currentIdx) => {
+        if (selectionStartIdx === null) return;
+        const a = Math.min(selectionStartIdx, currentIdx);
+        const b = Math.max(selectionStartIdx, currentIdx);
+        const range = cells.slice(a, b + 1).map(c => c.timestamp);
+        setSelectedCells(range);
+    };
+
+    // Stop selection on mouseup anywhere
+    useEffect(() => {
+        const onUp = () => {
+            if (isSelecting) {
+                setIsSelecting(false);
+                setSelectionStartIdx(null);
+            }
+        };
+        window.addEventListener('mouseup', onUp);
+        return () => window.removeEventListener('mouseup', onUp);
+    }, [isSelecting]);
 
     // ✅ HANDLER CONFIGURATION ITEM
     const handleConfigureItem = (itemKey, value) => {
@@ -500,6 +539,28 @@ const PipelineDragDropView = ({
         }
 
         alert('Aucune case disponible pour copier la valeur.');
+    };
+
+    // Assigner une valeur à une plage (de startTimestamp à endTimestamp inclus)
+    const handleAssignRange = (itemKey, startTimestamp, endTimestamp, value) => {
+        if (!startTimestamp || !endTimestamp) { alert('Plage invalide'); return; }
+        const startIdx = cells.findIndex(c => c.timestamp === startTimestamp);
+        const endIdx = cells.findIndex(c => c.timestamp === endTimestamp);
+        if (startIdx === -1 || endIdx === -1) { alert('Cases introuvables'); return; }
+        const a = Math.min(startIdx, endIdx);
+        const b = Math.max(startIdx, endIdx);
+        const range = cells.slice(a, b + 1).map(c => c.timestamp);
+
+        if (!confirm(`Assigner ${itemKey} = ${value} à ${range.length} case(s) ?`)) return;
+        range.forEach(ts => onDataChange(ts, itemKey, value));
+        showToast(`✓ ${itemKey} assigné à ${range.length} case(s)`);
+    };
+
+    // Assigner la valeur à toutes les cases
+    const handleAssignAll = (itemKey, value) => {
+        if (!confirm(`Assigner ${itemKey} = ${value} à TOUTES les cases (${cells.length}) ?`)) return;
+        cells.forEach(c => onDataChange(c.timestamp, itemKey, value));
+        showToast(`✓ ${itemKey} assigné à toutes les cases`);
     };
 
     // Générer les cases de la timeline selon le type d'intervalle
@@ -1014,8 +1075,10 @@ const PipelineDragDropView = ({
                                             onDragLeave={handleDragLeave}
                                             onDrop={(e) => handleDrop(e, cell.timestamp)}
                                             onClick={() => handleCellClick(cell.timestamp)}
-                                            onMouseEnter={(e) => handleCellHover(e, cell.timestamp)}
+                                            onMouseEnter={(e) => { handleCellHover(e, cell.timestamp); if (isSelecting) updateSelectionTo(idx); }}
                                             onMouseLeave={handleCellLeave}
+                                            onMouseDown={(e) => { if (e.button === 0) startSelection(idx, cell.timestamp); }}
+                                            onMouseUp={(e) => { if (isSelecting) { setIsSelecting(false); setSelectionStartIdx(null); } }}
                                             className={`
                                                 relative p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[80px]
                                                 ${hasData
@@ -1196,6 +1259,8 @@ const PipelineDragDropView = ({
                     isConfigured={preConfiguredItems[contextMenu.item.key] !== undefined}
                     onAssignNow={handleAssignNow}
                     onAssignFromSource={handleAssignFromSource}
+                    onAssignRange={handleAssignRange}
+                    onAssignAll={handleAssignAll}
                     cells={cells}
                 />
             )}
