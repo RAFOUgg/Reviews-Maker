@@ -155,7 +155,7 @@ const PipelineDataModal = ({
         const value = formData[item.key] || '';
         const { key, label, icon, type = 'text' } = item;
 
-        // SELECT avec options
+        // SELECT avec options (options peuvent être des strings ou des objets {value,label})
         if (type === 'select' && Array.isArray(item.options)) {
             return (
                 <div key={key} className="space-y-2">
@@ -170,10 +170,79 @@ const PipelineDataModal = ({
                         required={droppedItem !== null}
                     >
                         <option value="">Sélectionner...</option>
-                        {item.options.map((opt, idx) => (
-                            <option key={`${key}-${idx}-${opt}`} value={opt}>{opt}</option>
-                        ))}
+                        {item.options.map((opt, idx) => {
+                            const val = typeof opt === 'string' ? opt : (opt.value ?? opt);
+                            const labelOpt = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
+                            return <option key={`${key}-${idx}-${val}`} value={val}>{labelOpt}</option>;
+                        })}
                     </select>
+                </div>
+            );
+        }
+
+        // MULTISELECT - cases where options is an array of option objects
+        if (type === 'multiselect' && Array.isArray(item.options)) {
+            const selected = Array.isArray(formData[key]) ? formData[key] : [];
+            return (
+                <div key={key} className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {icon && <span className="mr-2">{icon}</span>}
+                        {label}
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                        {item.options.map((opt, idx) => {
+                            const val = typeof opt === 'string' ? opt : (opt.value ?? opt);
+                            const lab = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
+                            const checked = selected.includes(val);
+                            return (
+                                <label key={`${key}-ms-${idx}`} className="flex items-center gap-2 p-2 border rounded-lg">
+                                    <input
+                                        type="checkbox"
+                                        checked={checked}
+                                        onChange={(e) => {
+                                            const next = e.target.checked ? [...selected, val] : selected.filter(s => s !== val);
+                                            handleChange(key, next);
+                                        }}
+                                        className="w-4 h-4"
+                                    />
+                                    <span className="text-sm">{lab}</span>
+                                    {item.withPercentage && (
+                                        <input
+                                            type="number"
+                                            value={item._percentages?.[val] ?? ''}
+                                            onChange={(e) => {
+                                                const percent = e.target.value === '' ? '' : parseFloat(e.target.value);
+                                                const pctObj = { ...item._percentages, [val]: percent };
+                                                // store companion percentages into formData under a dedicated key
+                                                handleChange(`${key}__percentages`, pctObj);
+                                            }}
+                                            placeholder="%"
+                                            className="ml-auto w-20 px-2 py-1 border rounded text-sm"
+                                        />
+                                    )}
+                                </label>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        }
+
+        // DATE
+        if (type === 'date') {
+            return (
+                <div key={key} className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {icon && <span className="mr-2">{icon}</span>}
+                        {label}
+                    </label>
+                    <input
+                        type="date"
+                        value={value || ''}
+                        onChange={(e) => handleChange(key, e.target.value)}
+                        className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                        required={droppedItem !== null}
+                    />
                 </div>
             );
         }

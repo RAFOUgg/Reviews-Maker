@@ -20,7 +20,7 @@
  */
 
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Plus, Settings, Save, Upload, CheckSquare, Square } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Settings, Save, Upload, CheckSquare, Square, Check } from 'lucide-react';
 import PipelineDataModal from './PipelineDataModal';
 import PresetConfigModal from './PresetConfigModal';
 import PipelineCellBadge from './PipelineCellBadge';
@@ -561,7 +561,7 @@ const PipelineDragDropView = ({
                 </div>
 
                 <div className="p-3 space-y-2">
-                    {sidebarContent.map((section) => (
+                    {(sidebarContent || []).map((section) => (
                         <div key={section.id} className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                             <button
                                 onClick={() => toggleSection(section.id)}
@@ -582,7 +582,7 @@ const PipelineDragDropView = ({
 
                             {expandedSections[section.id] && (
                                 <div className="p-2 bg-white dark:bg-gray-900 space-y-1">
-                                    {section.items.map((item) => {
+                                    {section.items?.map((item) => {
                                         const isPreConfigured = preConfiguredItems[item.key] !== undefined;
 
                                         return (
@@ -595,8 +595,8 @@ const PipelineDragDropView = ({
                                                 }}
                                                 onContextMenu={(e) => handleItemContextMenu(e, item)}
                                                 className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group ${isPreConfigured
-                                                        ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30'
-                                                        : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:border-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30'
+                                                    : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:border-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700'
                                                     }`}
                                                 style={{ touchAction: 'none' }}
                                                 title={isPreConfigured ? `Pré-configuré: ${preConfiguredItems[item.key]}${item.unit || ''}` : 'Clic droit pour pré-configurer'}
@@ -614,8 +614,8 @@ const PipelineDragDropView = ({
                                                     {item.label}
                                                 </span>
                                                 <span className={`text-xs transition-colors ${isPreConfigured
-                                                        ? 'text-green-600 dark:text-green-400'
-                                                        : 'text-gray-400 group-hover:text-blue-500'
+                                                    ? 'text-green-600 dark:text-green-400'
+                                                    : 'text-gray-400 group-hover:text-blue-500'
                                                     }`}>
                                                     {isPreConfigured ? '✓' : '⋮⋮'}
                                                 </span>
