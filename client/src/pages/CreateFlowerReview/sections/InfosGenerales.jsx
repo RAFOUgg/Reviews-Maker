@@ -2,8 +2,14 @@ import React from 'react'
 import { Camera } from 'lucide-react'
 import LiquidCard from '../../../components/LiquidCard'
 import LiquidButton from '../../../components/LiquidButton'
+import SegmentedControl from '../../../components/ui/SegmentedControl'
+import { INFOS_GENERALES_CONFIG } from '../../../config/flowerReviewConfig'
 
 export default function InfosGenerales({ formData, handleChange, photos, handlePhotoUpload, removePhoto }) {
+    // Récupérer les options du type génétique depuis la config
+    const typeGenetiqueField = INFOS_GENERALES_CONFIG.fields.find(f => f.id === 'typeGenetique')
+    const typeOptions = typeGenetiqueField?.options || []
+
     return (
         <div className="space-y-6">
             <LiquidCard title="📋 Informations générales" bordered>
@@ -12,26 +18,33 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Nom commercial *
+                            <span className="ml-2 text-xs text-purple-600 dark:text-purple-400">
+                                (Seul champ texte libre obligatoire)
+                            </span>
                         </label>
                         <input
                             type="text"
                             value={formData.nomCommercial || ''}
                             onChange={(e) => handleChange('nomCommercial', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                            placeholder="Nom du produit"
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                            placeholder="Ex: Marque – Cultivar – Batch #"
+                            maxLength={100}
                         />
                     </div>
 
-                    {/* Cultivar(s) */}
+                    {/* Cultivar(s) - Multi-select pills (à implémenter avec bibliothèque) */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Cultivar(s)
+                            <span className="ml-2 text-xs text-gray-500">
+                                (Multi-sélection depuis bibliothèque)
+                            </span>
                         </label>
                         <input
                             type="text"
                             value={formData.cultivars || ''}
                             onChange={(e) => handleChange('cultivars', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
                             placeholder="Nom des cultivars"
                         />
                     </div>
@@ -40,33 +53,31 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Farm / Producteur
+                            <span className="ml-2 text-xs text-gray-500">
+                                (Auto-complete depuis base de données)
+                            </span>
                         </label>
                         <input
                             type="text"
                             value={formData.farm || ''}
                             onChange={(e) => handleChange('farm', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
                             placeholder="Nom du producteur"
                         />
                     </div>
 
-                    {/* Type */}
+                    {/* Type génétique - NOUVEAU: SegmentedControl */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Type de génétique
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                            Type de génétique *
                         </label>
-                        <select
+                        <SegmentedControl
+                            options={typeOptions}
                             value={formData.type || ''}
-                            onChange={(e) => handleChange('type', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                        >
-                            <option value="">Sélectionner...</option>
-                            <option value="indica">Indica</option>
-                            <option value="sativa">Sativa</option>
-                            <option value="hybride-indica">Hybride Indica-dominant</option>
-                            <option value="hybride-sativa">Hybride Sativa-dominant</option>
-                            <option value="cbd">CBD-dominant</option>
-                        </select>
+                            onChange={(value) => handleChange('type', value)}
+                            fullWidth
+                            size="md"
+                        />
                     </div>
 
                     {/* Photos */}
