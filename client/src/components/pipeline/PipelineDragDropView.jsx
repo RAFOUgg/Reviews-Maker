@@ -809,41 +809,7 @@ const PipelineDragDropView = ({
                         </h3>
                         <div className="flex items-center gap-2">
                             {/* Mode sélection multiple */}
-                            {massAssignMode && (
-                                <div className="flex items-center gap-2 mr-2 px-3 py-1.5 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                                    <span className="text-xs font-medium text-purple-800 dark:text-purple-300">
-                                        {selectedCells.length} cellule(s) sélectionnée(s)
-                                    </span>
-                                    {selectedCells.length > 0 && selectedPresets.length > 0 && (
-                                        <button
-                                            onClick={() => {
-                                                selectedCells.forEach(timestamp => {
-                                                    applyPresetsToCell(timestamp, selectedPresets);
-                                                });
-                                                setMassAssignMode(false);
-                                                setSelectedCells([]);
-                                                alert(`✓ Préréglage(s) appliqué(s) à ${selectedCells.length} cellule(s) !`);
-                                            }}
-                                            className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium"
-                                            title="Appliquer les préréglages sélectionnés"
-                                        >
-                                            ✓ Appliquer
-                                        </button>
-                                    )}
-                                </div>
-                            )}
-
-                            <button
-                                onClick={toggleMassAssignMode}
-                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${massAssignMode
-                                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                                    : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100'
-                                    }`}
-                                title="Mode sélection multiple pour assigner en masse"
-                            >
-                                <CheckSquare className="w-4 h-4" />
-                                {massAssignMode ? 'Mode masse ON' : 'Assignation masse'}
-                            </button>
+                            {/* Multi-selection via click-drag is enabled; explicit "Assignation masse" button removed for CDC-compliance */}
 
                             <button
                                 onClick={() => setShowPresets(!showPresets)}

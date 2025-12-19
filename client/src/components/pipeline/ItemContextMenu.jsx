@@ -16,6 +16,7 @@ const ItemContextMenu = ({ item, position, onClose, onConfigure, isConfigured, c
     const [value, setValue] = useState(item.defaultValue || '');
     const [selectedSource, setSelectedSource] = useState('');
     const menuRef = useRef(null);
+    const [adjustedPos, setAdjustedPos] = useState({ x: position.x, y: position.y });
 
     useEffect(() => {
         // Fermer au clic extérieur
@@ -26,7 +27,31 @@ const ItemContextMenu = ({ item, position, onClose, onConfigure, isConfigured, c
         };
 
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+
+        // Ajuster la position pour ne pas sortir de l'écran
+        const adjust = () => {
+            const el = menuRef.current;
+            if (!el) return;
+            const rect = el.getBoundingClientRect();
+            const margin = 8;
+            let x = position.x;
+            let y = position.y;
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+
+            if (x + rect.width + margin > winW) x = Math.max(margin, winW - rect.width - margin);
+            if (y + rect.height + margin > winH) y = Math.max(margin, winH - rect.height - margin);
+
+            setAdjustedPos({ x, y });
+        };
+
+        // Call after a tick so menu has size
+        const t = setTimeout(adjust, 50);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            clearTimeout(t);
+        };
     }, [onClose]);
 
     const handleSave = () => {
@@ -42,11 +67,12 @@ const ItemContextMenu = ({ item, position, onClose, onConfigure, isConfigured, c
     return (
         <div
             ref={menuRef}
-            className="fixed z-[9999] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border-2 border-purple-500 p-4 min-w-[280px]"
+            className="fixed z-[9999] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border-2 border-purple-700 p-4 min-w-[320px] text-gray-900 dark:text-white"
             style={{
-                left: `${position.x}px`,
-                top: `${position.y}px`,
-                animation: 'fadeIn 0.15s ease-out'
+                left: `${adjustedPos.x}px`,
+                top: `${adjustedPos.y}px`,
+                animation: 'fadeIn 0.15s ease-out',
+                maxWidth: 'calc(100vw - 24px)'
             }}
         >
             <div className="flex items-center justify-between mb-3">
