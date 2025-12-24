@@ -279,7 +279,10 @@ const PipelineDragDropView = ({
         const sel = selectedCellsRef.current || [];
         const appliesToSelection = (sel && sel.length > 0) && (sel.includes(timestamp) || massAssignMode);
         if (appliesToSelection) {
-            sel.forEach(ts => onDataChange(ts, draggedContent.key, draggedContent.defaultValue ?? ''));
+            // Assigner la donnée à toutes les cases sélectionnées
+            sel.forEach(ts => {
+                onDataChange(ts, draggedContent.key, draggedContent.defaultValue ?? '');
+            });
         } else {
             onDataChange(timestamp, draggedContent.key, draggedContent.defaultValue ?? '');
         }
