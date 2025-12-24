@@ -56,6 +56,12 @@ const PipelineDragDropView = ({
     const [draggedContent, setDraggedContent] = useState(null);
     const [selectedCell, setSelectedCell] = useState(null);
 
+    // Empêcher la sélection automatique de la première case
+    useEffect(() => {
+        // Si aucune sélection n'a été faite, ne rien sélectionner
+        // (on laisse selectedCells vide par défaut)
+    }, []);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentCellTimestamp, setCurrentCellTimestamp] = useState(null);
     const [tooltipData, setTooltipData] = useState({ visible: false, cellData: null, position: { x: 0, y: 0 }, section: '' });
