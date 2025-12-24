@@ -189,6 +189,11 @@ const PipelineDragDropView = ({
         setSelectedCells([]); // Clear selection on mount
     }, []);
 
+    // Clear selection on timelineConfig change (reset)
+    useEffect(() => {
+        setSelectedCells([]);
+    }, [timelineConfig]);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentCellTimestamp, setCurrentCellTimestamp] = useState(null);
     const [tooltipData, setTooltipData] = useState({ visible: false, cellData: null, position: { x: 0, y: 0 }, section: '' });
@@ -215,6 +220,8 @@ const PipelineDragDropView = ({
     });
     const [showGroupedPresetModal, setShowGroupedPresetModal] = useState(false);
     const [contextMenu, setContextMenu] = useState(null); // { item, position }
+    // Multi-select sidebar state (global)
+    const [multiSelectedItems, setMultiSelectedItems] = useState([]);
 
     // Suppression des handlers préréglages
 
@@ -756,13 +763,13 @@ const PipelineDragDropView = ({
                                 <div className="p-2 bg-white dark:bg-gray-900 space-y-1">
                                     {section.items?.map((item) => {
                                         const isPreConfigured = preConfiguredItems[item.key] !== undefined;
-                                        // Multi-select logic
-                                        const [multiSelectedItems, setMultiSelectedItems] = useState([]);
                                         const handleSidebarItemClick = (e, item) => {
                                             if (e.ctrlKey || e.metaKey) {
                                                 setMultiSelectedItems(prev => prev.includes(item.key)
                                                     ? prev.filter(k => k !== item.key)
                                                     : [...prev, item.key]);
+                                            } else {
+                                                setMultiSelectedItems([item.key]);
                                             }
                                         };
                                         return (
@@ -770,7 +777,7 @@ const PipelineDragDropView = ({
                                                 key={item.key}
                                                 draggable="true"
                                                 onDragStart={(e) => {
-                                                    if (multiSelectedItems.length > 0) {
+                                                    if (multiSelectedItems.length > 1) {
                                                         e.dataTransfer.setData('application/multi-items', JSON.stringify(multiSelectedItems.map(k => section.items.find(i => i.key === k))));
                                                         setDraggedContent({ type: 'multi', items: multiSelectedItems.map(k => section.items.find(i => i.key === k)) });
                                                     } else {
@@ -779,6 +786,7 @@ const PipelineDragDropView = ({
                                                 }}
                                                 onDragEnd={(e) => {
                                                     e.currentTarget.classList.remove('dragging');
+                                                    setMultiSelectedItems([]);
                                                 }}
                                                 onClick={(e) => handleSidebarItemClick(e, item)}
                                                 onContextMenu={(e) => {
@@ -1054,21 +1062,29 @@ const PipelineDragDropView = ({
                             <div className="grid grid-cols-7 gap-2 select-none relative">
                                 {/* Visual selection frame overlay */}
                                 {selectedCells.length > 1 && (() => {
-                                    // Find bounding box of selected cells
-                                    const firstIdx = cells.findIndex(c => c.timestamp === selectedCells[0]);
-                                    const lastIdx = cells.findIndex(c => c.timestamp === selectedCells[selectedCells.length - 1]);
-                                    const minIdx = Math.min(firstIdx, lastIdx);
-                                    const maxIdx = Math.max(firstIdx, lastIdx);
-                                    // Compute row/col for grid (7 cols)
+                                    // Find all selected cell indices
+                                    const indices = selectedCells.map(ts => cells.findIndex(c => c.timestamp === ts)).filter(i => i !== -1);
+                                    if (indices.length === 0) return null;
+                                    const minIdx = Math.min(...indices);
+                                    const maxIdx = Math.max(...indices);
                                     const startRow = Math.floor(minIdx / 7);
                                     const startCol = minIdx % 7;
                                     const endRow = Math.floor(maxIdx / 7);
                                     const endCol = maxIdx % 7;
-                                    // Style for overlay box
-                                    const top = `${startRow * 90}px`;
-                                    const left = `${startCol * 90}px`;
-                                    const width = `${((endCol - startCol + 1) * 90)}px`;
-                                    const height = `${((endRow - startRow + 1) * 90)}px`;
+                                    // Compute bounding box for all selected cells
+                                    let minRow = 99, minCol = 99, maxRow = 0, maxCol = 0;
+                                    indices.forEach(idx => {
+                                        const row = Math.floor(idx / 7);
+                                        const col = idx % 7;
+                                        if (row < minRow) minRow = row;
+                                        if (col < minCol) minCol = col;
+                                        if (row > maxRow) maxRow = row;
+                                        if (col > maxCol) maxCol = col;
+                                    });
+                                    const top = `${minRow * 90}px`;
+                                    const left = `${minCol * 90}px`;
+                                    const width = `${((maxCol - minCol + 1) * 90)}px`;
+                                    const height = `${((maxRow - minRow + 1) * 90)}px`;
                                     return (
                                         <div
                                             className="absolute pointer-events-none z-30 border-4 border-blue-400 rounded-xl"
@@ -1078,7 +1094,7 @@ const PipelineDragDropView = ({
                                                 width,
                                                 height,
                                                 boxSizing: 'border-box',
-                                                transition: 'all 0.2s',
+                                                transition: 'all 0.1s',
                                             }}
                                         />
                                     );
