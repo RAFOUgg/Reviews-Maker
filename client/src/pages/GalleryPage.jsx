@@ -82,14 +82,14 @@ const ReviewCard = ({ review, onLike, onView }) => {
           </div>
 
           {/* Rating */}
-          <div className={`absolute top-3 right-3 w-12 h-12 rounded-full bg-gradient-to-br ${getRatingColor(review.rating)} flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
+          <div className={`absolute top-3 right-3 w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
             {review.rating?.toFixed(1) || '-'}
           </div>
 
           {/* Hover overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <div className="absolute bottom-4 left-4 right-4">
-              <button className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors">
+              <button className="w-full py-2 liquid-btn liquid-btn--primary">
                 Voir la review
               </button>
             </div>
@@ -194,9 +194,8 @@ export default function GalleryPage() {
   const handleLike = (id, liked) => console.log('Like:', id, liked);
 
   return (
-    <div className="min-h-screen bg-slate-900 relative">
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 via-violet-700/20 to-purple-800/20 pointer-events-none" />
-      <div className="max-w-7xl mx-auto px-4 py-8 relative z-10">
+    <div className="min-h-screen bg-transparent relative">
+      <div className="container-glass mx-auto px-4 py-8 relative z-10">
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-black text-white mb-4 drop-shadow-lg">
             🌿 Galerie Publique
@@ -215,7 +214,7 @@ export default function GalleryPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher une review..."
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-gray-500"
               />
             </div>
             <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
@@ -223,7 +222,7 @@ export default function GalleryPage() {
                 <button
                   key={type.id}
                   onClick={() => setSelectedType(type.id)}
-                  className={`px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${selectedType === type.id ? 'bg-white text-purple-600' : 'bg-white/10 text-white hover:bg-white/20'
+                  className={`px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${selectedType === type.id ? 'bg-white/5 text-white' : 'bg-white/10 text-white hover:bg-white/20'
                     }`}
                 >
                   {type.icon} {type.name}
@@ -234,7 +233,7 @@ export default function GalleryPage() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none"
+                className="px-4 py-2 rounded-xl bg-transparent border border-white/10 text-white focus:outline-none"
               >
                 {SORT_OPTIONS.map((opt) => (
                   <option key={opt.id} value={opt.id} className="bg-gray-800">{opt.name}</option>

@@ -16,8 +16,8 @@ export default function PreferencesPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-            <div className="container mx-auto px-4 py-8">
+        <div className="min-h-screen bg-transparent">
+            <div className="container-glass mx-auto px-4 py-8">
                 {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
@@ -42,8 +42,8 @@ export default function PreferencesPage() {
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
                                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === tab.id
-                                            ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
-                                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                            ? 'bg-white/5 text-white shadow-lg'
+                                            : 'text-gray-300 hover:bg-gray-800/50'
                                             }`}
                                     >
                                         <span className="text-xl">{tab.icon}</span>
@@ -63,7 +63,7 @@ export default function PreferencesPage() {
                             key={activeTab}
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700"
+                            className="bg-transparent rounded-2xl p-6"
                         >
                             {activeTab === 'general' && <GeneralPreferences />}
                             {activeTab === 'saved-data' && <SavedDataPreferences />}
@@ -91,7 +91,7 @@ function GeneralPreferences() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Langue
                     </label>
-                    <select className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <select className="w-full px-4 py-2 rounded-lg border border-gray-700 bg-transparent text-white">
                         <option value="fr">Français</option>
                         <option value="en">English</option>
                         <option value="es">Español</option>
@@ -111,7 +111,7 @@ function GeneralPreferences() {
                     </label>
                 </div>
 
-                <button className="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all">
+                <button className="w-full px-6 py-3 liquid-btn liquid-btn--primary">
                     Sauvegarder les modifications
                 </button>
             </div>
@@ -131,7 +131,7 @@ function SavedDataPreferences() {
 
             <div className="space-y-6">
                 {/* Substrats favoris */}
-                <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl">
+                <div className="p-4 border border-gray-700 rounded-xl bg-transparent">
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                         <span>🌱</span>
                         <span>Substrats favoris</span>
@@ -142,13 +142,13 @@ function SavedDataPreferences() {
                             <button className="text-red-500 hover:text-red-600">🗑️</button>
                         </div>
                     </div>
-                    <button className="w-full px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-purple-500 hover:text-purple-500 transition-all">
+                    <button className="w-full px-4 py-2 border-2 border-dashed border-gray-700 rounded-lg text-gray-300 hover:border-white/20 hover:text-white transition-all">
                         + Ajouter un substrat
                     </button>
                 </div>
 
                 {/* Engrais favoris */}
-                <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl">
+                <div className="p-4 border border-gray-700 rounded-xl bg-transparent">
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                         <span>🧪</span>
                         <span>Engrais favoris</span>
@@ -159,13 +159,13 @@ function SavedDataPreferences() {
                             <button className="text-red-500 hover:text-red-600">🗑️</button>
                         </div>
                     </div>
-                    <button className="w-full px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-purple-500 hover:text-purple-500 transition-all">
+                    <button className="w-full px-4 py-2 border-2 border-dashed border-gray-700 rounded-lg text-gray-300 hover:border-white/20 hover:text-white transition-all">
                         + Ajouter un engrais
                     </button>
                 </div>
 
                 {/* Matériel favori */}
-                <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl">
+                <div className="p-4 border border-gray-700 rounded-xl bg-transparent">
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                         <span>🔧</span>
                         <span>Matériel favori</span>
@@ -176,7 +176,7 @@ function SavedDataPreferences() {
                             <button className="text-red-500 hover:text-red-600">🗑️</button>
                         </div>
                     </div>
-                    <button className="w-full px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-purple-500 hover:text-purple-500 transition-all">
+                    <button className="w-full px-4 py-2 border-2 border-dashed border-gray-700 rounded-lg text-gray-300 hover:border-white/20 hover:text-white transition-all">
                         + Ajouter du matériel
                     </button>
                 </div>
@@ -197,7 +197,7 @@ function TemplatesPreferences() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Template card example */}
-                <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:shadow-lg transition-all">
+                <div className="p-4 border border-gray-700 rounded-xl transition-all">
                     <div className="flex items-start justify-between mb-3">
                         <div>
                             <h3 className="font-semibold text-gray-900 dark:text-white">Template Instagram</h3>
@@ -206,7 +206,7 @@ function TemplatesPreferences() {
                         <button className="text-yellow-500 text-xl">⭐</button>
                     </div>
                     <div className="flex gap-2">
-                        <button className="flex-1 px-3 py-2 bg-purple-500 text-white rounded-lg text-sm hover:bg-purple-600">
+                        <button className="flex-1 px-3 py-2 liquid-btn liquid-btn--primary text-sm">
                             Utiliser
                         </button>
                         <button className="px-3 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700">
