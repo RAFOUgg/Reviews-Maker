@@ -22,13 +22,13 @@ export default function WheelSelector({
     // Palette de couleurs pour chaque catégorie
     const categoryThemes = {
         citrus: { gradient: 'from-yellow-500 to-amber-500', icon: '🍋', color: 'yellow' },
-        fruity: { gradient: 'from-pink-500 to-purple-500', icon: '🍇', color: 'pink' },
+        fruity: { gradient: ' ', icon: '🍇', color: 'pink' },
         earthy: { gradient: 'from-amber-700 to-stone-600', icon: '🌱', color: 'amber' },
         woody: { gradient: 'from-orange-800 to-yellow-900', icon: '🌲', color: 'orange' },
         spicy: { gradient: 'from-red-600 to-orange-500', icon: '🌶️', color: 'red' },
-        floral: { gradient: 'from-purple-500 to-pink-400', icon: '🌸', color: 'purple' },
-        sweet: { gradient: 'from-pink-400 to-fuchsia-400', icon: '🍬', color: 'pink' },
-        chemical: { gradient: 'from-cyan-600 to-emerald-500', icon: '⚗️', color: 'cyan' },
+        floral: { gradient: ' ', icon: '🌸', color: 'purple' },
+        sweet: { gradient: ' to-fuchsia-400', icon: '🍬', color: 'pink' },
+        chemical: { gradient: ' to-emerald-500', icon: '⚗️', color: 'cyan' },
         other: { gradient: 'from-gray-600 to-slate-600', icon: '🔮', color: 'gray' }
     }
 
@@ -94,8 +94,7 @@ export default function WheelSelector({
                 </div>
 
                 {/* Compteur */}
-                <div className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-all ${selectedItems.length >= maxSelections ? 'bg-transparent border-amber-400/40 text-amber-400 glow-text-subtle' : 'bg-transparent border-white/30 text-white glow-text-subtle'
-                    }`}>
+                <div className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-all ${selectedItems.length >= maxSelections ? 'bg-transparent border-amber-400/40 text-amber-400 glow-text-subtle' : 'bg-transparent border-white/30 text-white glow-text-subtle' }`}>
                     {selectedItems.length}/{maxSelections}
                 </div>
 
@@ -138,8 +137,7 @@ export default function WheelSelector({
                     return (
                         <div
                             key={categoryKey}
-                            className={`flex items-center gap-3 p-3 rounded-xl bg-theme-surface border transition-all ${categoryHasSelection ? 'border-theme-accent shadow-[0_0_15px_rgba(var(--color-accent),0.2)]' : 'border-theme'
-                                }`}
+                            className={`flex items-center gap-3 p-3 rounded-xl bg-theme-surface border transition-all ${categoryHasSelection ? 'border-theme-accent shadow-[0_0_15px_rgba(var(--color-accent),0.2)]' : 'border-theme' }`}
                         >
                             {/* Label fixe - TEXTE SOLIDE SANS GRADIENT pour lisibilité */}
                             <div className="flex-shrink-0 w-32 flex items-center gap-2">
@@ -159,10 +157,7 @@ export default function WheelSelector({
                                                 key={item}
                                                 type="button"
                                                 onClick={() => toggleItem(item)}
-                                                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                                    ? 'bg-[rgb(var(--color-accent))] text-white shadow-lg shadow-[rgba(var(--color-accent),0.4)]'
-                                                    : 'bg-theme-secondary text-[rgb(var(--text-primary))] hover:bg-theme-tertiary border border-theme'
-                                                    }`}
+                                                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected ? 'bg-[rgb(var(--color-accent))] text-white shadow-lg shadow-[rgba(var(--color-accent),0.4)]' : 'bg-theme-secondary text-[rgb(var(--text-primary))] hover:bg-theme-tertiary border border-theme' }`}
                                             >
                                                 {item}
                                             </button>

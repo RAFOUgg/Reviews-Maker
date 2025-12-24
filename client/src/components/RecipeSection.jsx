@@ -204,20 +204,14 @@ const RecipeSection = ({ value = {}, onChange }) => {
                         <button
                             type="button"
                             onClick={() => setIngredientType('standard')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${ingredientType === 'standard'
-                                ? 'bg-green-600 text-white'
-                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                }`}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${ingredientType === 'standard' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' }`}
                         >
                             Ingrédient Standard
                         </button>
                         <button
                             type="button"
                             onClick={() => setIngredientType('cannabis')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${ingredientType === 'cannabis'
-                                ? 'bg-green-600 text-white'
-                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                }`}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${ingredientType === 'cannabis' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' }`}
                         >
                             🌿 Produit Cannabinique
                         </button>
@@ -265,20 +259,14 @@ const RecipeSection = ({ value = {}, onChange }) => {
                                 <button
                                     type="button"
                                     onClick={() => setCannabisSource('new')}
-                                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${cannabisSource === 'new'
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                        }`}
+                                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${cannabisSource === 'new' ? ' text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' }`}
                                 >
                                     Nouveau produit
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setCannabisSource('library')}
-                                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${cannabisSource === 'library'
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                        }`}
+                                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${cannabisSource === 'library' ? ' text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' }`}
                                 >
                                     📚 Bibliothèque
                                 </button>
@@ -333,10 +321,7 @@ const RecipeSection = ({ value = {}, onChange }) => {
                                                 key={review.id}
                                                 type="button"
                                                 onClick={() => setSelectedReview(review)}
-                                                className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${selectedReview?.id === review.id
-                                                    ? 'bg-green-600 text-white'
-                                                    : 'bg-gray-700/30 text-gray-300 hover:bg-gray-700'
-                                                    }`}
+                                                className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${selectedReview?.id === review.id ? 'bg-green-600 text-white' : 'bg-gray-700/30 text-gray-300 hover:bg-gray-700' }`}
                                             >
                                                 <div className="flex items-center justify-between">
                                                     <div>
@@ -419,7 +404,7 @@ const RecipeSection = ({ value = {}, onChange }) => {
                                         {ing.type === 'cannabis' && <span className="text-green-400">🌿</span>}
                                         <span className="text-white text-sm font-medium">{ing.name}</span>
                                         {ing.type === 'cannabis' && ing.source === 'library' && (
-                                            <span className="text-xs text-blue-400">📚</span>
+                                            <span className="text-xs">📚</span>
                                         )}
                                     </div>
                                     <div className="text-xs text-gray-400">
@@ -460,10 +445,7 @@ const RecipeSection = ({ value = {}, onChange }) => {
                                         if (action.defaultTemp) setActionTemp(action.defaultTemp);
                                         if (action.defaultDuration) setActionDuration(action.defaultDuration);
                                     }}
-                                    className={`px-3 py-2 rounded-lg text-xs font-medium text-left transition-colors ${selectedActionIndex === index
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                        }`}
+                                    className={`px-3 py-2 rounded-lg text-xs font-medium text-left transition-colors ${selectedActionIndex === index ? ' text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' }`}
                                 >
                                     {action.name}
                                     {action.category === 'cannabis' && ' 🌿'}
@@ -540,7 +522,7 @@ const RecipeSection = ({ value = {}, onChange }) => {
                                     max={selectedActionData.durationRange[1]}
                                     value={actionDuration || selectedActionData.defaultDuration}
                                     onChange={(e) => setActionDuration(e.target.value)}
-                                    className="w-20 px-2 py-1 bg-gray-700/50 border border-gray-600 rounded text-white text-sm text-center focus:outline-none focus:border-blue-500"
+                                    className="w-20 px-2 py-1 bg-gray-700/50 border border-gray-600 rounded text-white text-sm text-center focus:outline-none focus:"
                                 />
                             </div>
                             <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -560,10 +542,7 @@ const RecipeSection = ({ value = {}, onChange }) => {
                                         key={idx}
                                         type="button"
                                         onClick={() => togglePrecisionInStep(precision)}
-                                        className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${selectedPrecisions.includes(precision)
-                                            ? 'bg-purple-600 text-white'
-                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                            }`}
+                                        className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${selectedPrecisions.includes(precision) ? ' text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' }`}
                                     >
                                         {precision}
                                     </button>
@@ -584,10 +563,7 @@ const RecipeSection = ({ value = {}, onChange }) => {
                                         key={ing.id}
                                         type="button"
                                         onClick={() => toggleIngredientInStep(ing.id)}
-                                        className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${selectedIngredients.includes(ing.id)
-                                            ? 'bg-green-600 text-white'
-                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                            }`}
+                                        className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${selectedIngredients.includes(ing.id) ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' }`}
                                     >
                                         {ing.type === 'cannabis' && '🌿 '}
                                         {ing.name}
@@ -602,7 +578,7 @@ const RecipeSection = ({ value = {}, onChange }) => {
                         type="button"
                         onClick={addProtocolStep}
                         disabled={!selectedActionData && !customAction}
-                        className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
+                        className="w-full px-4 py-2 hover: disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
                     >
                         ➕ Ajouter l'étape
                     </button>
@@ -623,13 +599,7 @@ const RecipeSection = ({ value = {}, onChange }) => {
                                             <span className="text-lg font-bold text-green-400">{index + 1}.</span>
                                             <span className="text-white text-sm font-medium">{step.action}</span>
                                             {step.category && (
-                                                <span className={`text-xs px-2 py-0.5 rounded ${step.category === 'cannabis' ? 'bg-green-600/30 text-green-300' :
-                                                    step.category === 'temperature' ? 'bg-orange-600/30 text-orange-300' :
-                                                        step.category === 'cuisson' ? 'bg-red-600/30 text-red-300' :
-                                                            step.category === 'melange' ? 'bg-blue-600/30 text-blue-300' :
-                                                                step.category === 'refroidissement' ? 'bg-cyan-600/30 text-cyan-300' :
-                                                                    'bg-gray-600/30 text-gray-300'
-                                                    }`}>
+                                                <span className={`text-xs px-2 py-0.5 rounded ${step.category === 'cannabis' ? 'bg-green-600/30 text-green-300' : step.category === 'temperature' ? 'bg-orange-600/30 text-orange-300' : step.category === 'cuisson' ? 'bg-red-600/30 text-red-300' : step.category === 'melange' ? ' ' : step.category === 'refroidissement' ? ' ' : 'bg-gray-600/30 text-gray-300' }`}>
                                                     {step.category}
                                                 </span>
                                             )}
@@ -645,15 +615,15 @@ const RecipeSection = ({ value = {}, onChange }) => {
                                             )}
                                             {step.duration && (
                                                 <div className="flex items-center gap-2 text-xs">
-                                                    <span className="text-blue-400">⏱️</span>
+                                                    <span className="">⏱️</span>
                                                     <span className="text-white font-medium">{step.duration} minutes</span>
                                                 </div>
                                             )}
                                             {step.precisions && step.precisions.length > 0 && (
                                                 <div className="flex flex-wrap items-center gap-1">
-                                                    <span className="text-purple-400 text-xs">ℹ️</span>
+                                                    <span className="text-xs">ℹ️</span>
                                                     {step.precisions.map((prec, idx) => (
-                                                        <span key={idx} className="text-xs px-2 py-0.5 bg-purple-600/20 text-purple-300 rounded">
+                                                        <span key={idx} className="text-xs px-2 py-0.5 rounded">
                                                             {prec}
                                                         </span>
                                                     ))}

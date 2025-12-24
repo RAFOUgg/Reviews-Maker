@@ -160,7 +160,7 @@ export default function PipelineToolbar({
     }
 
     return (
-        <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-xl border-2 border-purple-200 shadow-lg mb-6">
+        <div className="bg-gradient-to-r p-4 rounded-xl border-2 shadow-lg mb-6">
             <div className="flex flex-wrap items-center gap-3">
                 {/* Bouton Sauvegarder Preset */}
                 <button
@@ -182,7 +182,7 @@ export default function PipelineToolbar({
                         setShowApplyMenu(!showApplyMenu)
                         setShowPresets(false)
                     }}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-md"
+                    className="flex items-center gap-2 px-4 py-2 text-white rounded-lg font-medium hover: transition-colors shadow-md"
                 >
                     <Upload className="w-4 h-4" />
                     Appliquer aux cases
@@ -190,7 +190,7 @@ export default function PipelineToolbar({
 
                 <div className="text-sm text-gray-600">
                     {selectedFields.length > 0 && (
-                        <span className="bg-white px-3 py-1 rounded-full border-2 border-purple-300 font-medium">
+                        <span className="bg-white px-3 py-1 rounded-full border-2 font-medium">
                             {selectedFields.length} champ(s) sélectionné(s)
                         </span>
                     )}
@@ -206,7 +206,7 @@ export default function PipelineToolbar({
                             <button
                                 type="button"
                                 onClick={selectAllFields}
-                                className="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200"
+                                className="text-xs px-3 py-1 rounded-lg hover:"
                             >
                                 Tout sélectionner
                             </button>
@@ -236,7 +236,7 @@ export default function PipelineToolbar({
                                                 <button
                                                     type="button"
                                                     onClick={() => toggleField(field.key)}
-                                                    className="text-purple-600"
+                                                    className=""
                                                 >
                                                     {selectedFields.includes(field.key) ? (
                                                         <CheckSquare className="w-4 h-4" />
@@ -292,7 +292,7 @@ export default function PipelineToolbar({
                                         <button
                                             type="button"
                                             onClick={() => handleLoadPreset(preset)}
-                                            className="flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+                                            className="flex items-center gap-2 px-3 py-1 text-white rounded-lg text-sm hover:"
                                         >
                                             <Download className="w-4 h-4" />
                                             Charger
@@ -307,14 +307,14 @@ export default function PipelineToolbar({
 
             {/* Panel Application */}
             {showApplyMenu && (
-                <div className="mt-4 bg-white p-4 rounded-xl border-2 border-blue-200">
+                <div className="mt-4 bg-white p-4 rounded-xl border-2">
                     <h3 className="text-lg font-bold text-gray-800 mb-4">🎯 Appliquer les données</h3>
 
                     <div className="flex gap-2 mb-4">
                         <button
                             type="button"
                             onClick={selectAllFields}
-                            className="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200"
+                            className="text-xs px-3 py-1 rounded-lg hover:"
                         >
                             Tout sélectionner
                         </button>
@@ -343,7 +343,7 @@ export default function PipelineToolbar({
                                                 <button
                                                     type="button"
                                                     onClick={() => toggleField(field.key)}
-                                                    className="text-blue-600"
+                                                    className=""
                                                 >
                                                     {selectedFields.includes(field.key) ? (
                                                         <CheckSquare className="w-4 h-4" />
@@ -353,7 +353,7 @@ export default function PipelineToolbar({
                                                 </button>
                                                 <span className="text-sm text-gray-700">{field.label}</span>
                                                 {currentCellData[field.key] && (
-                                                    <span className="ml-auto text-xs bg-blue-100 px-2 py-0.5 rounded">
+                                                    <span className="ml-auto text-xs px-2 py-0.5 rounded">
                                                         {currentCellData[field.key]}
                                                     </span>
                                                 )}
@@ -378,7 +378,7 @@ export default function PipelineToolbar({
                         <button
                             type="button"
                             onClick={handleApplyToSelection}
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-md"
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg font-medium hover: transition-colors shadow-md"
                         >
                             <Square className="w-5 h-5" />
                             Appliquer à une sélection

@@ -465,7 +465,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="fixed z-50 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col border-2 border-purple-300 dark:border-purple-700"
+                className="fixed z-50 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col border-2 dark:"
                 style={
                     showPreview
                         ? { left: '3%', right: '3%', top: '3%', bottom: '3%' }
@@ -473,9 +473,9 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                 }
             >
                 {/* Header - STICKY POUR TOUJOURS VISIBLE */}
-                <div className="flex items-center justify-between px-4 py-3 border-b-2 border-purple-200 dark:border-purple-700 bg-white dark:bg-gray-800 sticky top-0 z-10 flex-shrink-0 shadow-md">
+                <div className="flex items-center justify-between px-4 py-3 border-b-2 dark: bg-white dark:bg-gray-800 sticky top-0 z-10 flex-shrink-0 shadow-md">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center shadow-lg">
                             <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
@@ -499,10 +499,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                                 console.log('📄 Toggle pages mode:', !pagesEnabled, 'Current ratio:', config.ratio);
                                 togglePagesMode();
                             }}
-                            className={`px-3 py-2 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition-all border-2 ${pagesEnabled
-                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg border-indigo-400 dark:border-indigo-500'
-                                : 'bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-300 dark:border-gray-600'
-                                }`}
+                            className={`px-3 py-2 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition-all border-2 ${pagesEnabled ? 'bg-gradient-to-r text-white shadow-lg border-indigo-400 dark:border-indigo-500' : 'bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-300 dark:border-gray-600' }`}
                             title={pagesEnabled ? 'Désactiver le mode pages' : 'Activer le mode pages'}
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -523,10 +520,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                                 console.log('🔄 Toggle mode:', !isCustomMode ? 'CUSTOM' : 'TEMPLATE');
                                 setIsCustomMode(!isCustomMode);
                             }}
-                            className={`px-3 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all border-2 ${isCustomMode
-                                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg border-purple-400 dark:border-purple-500'
-                                : 'bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-600'
-                                }`}
+                            className={`px-3 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all border-2 ${isCustomMode ? 'bg-gradient-to-r text-white shadow-lg dark:' : 'bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-600' }`}
                             title={isCustomMode ? 'Mode Template' : 'Mode Personnalisé (Drag & Drop)'}
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -559,7 +553,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={handleExport}
-                            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all flex items-center gap-2 text-sm"
+                            className="px-4 py-2 bg-gradient-to-r text-white rounded-lg font-medium shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all flex items-center gap-2 text-sm"
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -572,10 +566,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => setShowPreview(!showPreview)}
-                            className={`p-2 rounded-lg transition-colors ${showPreview
-                                ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
-                                }`}
+                            className={`p-2 rounded-lg transition-colors ${showPreview ? ' dark: dark:' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300' }`}
                             title={showPreview ? 'Masquer l\'aperçu' : 'Afficher l\'aperçu'}
                         >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -697,8 +688,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                                 className="flex h-full"
                             >
                                 {/* Configuration Pane - Left - Responsive width */}
-                                <div className={`border-r border-gray-200 dark:border-gray-800 overflow-y-auto flex-shrink-0 ${pagesEnabled ? 'w-72 xl:w-80' : 'w-96 xl:w-[28rem]'
-                                    }`}>
+                                <div className={`border-r border-gray-200 dark:border-gray-800 overflow-y-auto flex-shrink-0 ${pagesEnabled ? 'w-72 xl:w-80' : 'w-96 xl:w-[28rem]' }`}>
                                     <ConfigPane />
                                 </div>
 
@@ -729,7 +719,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
             {/* Drag Overlay - Affiche l'élément en cours de drag */}
             <DragOverlay>
                 {activeDragId ? (
-                    <div className="bg-purple-600 text-white px-3 py-2 rounded-lg shadow-2xl text-sm font-medium opacity-90">
+                    <div className="text-white px-3 py-2 rounded-lg shadow-2xl text-sm font-medium opacity-90">
                         📦 {activeDragId}
                     </div>
                 ) : null}

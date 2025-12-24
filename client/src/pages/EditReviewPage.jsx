@@ -666,10 +666,7 @@ export default function EditReviewPage() {
                                         : [...selected, choice];
                                     handleInputChange(field.key, newVal);
                                 }}
-                                className={`px-3 py-1.5 rounded-lg text-sm transition-all ${selected.includes(choice)
-                                    ? 'bg-[rgb(var(--color-accent))] text-white shadow-[0_0_15px_rgba(var(--color-accent),0.4)]'
-                                    : 'bg-theme-secondary text-[rgb(var(--text-primary))] hover:bg-theme-tertiary'
-                                    }`}
+                                className={`px-3 py-1.5 rounded-lg text-sm transition-all ${selected.includes(choice) ? 'bg-[rgb(var(--color-accent))] text-white shadow-[0_0_15px_rgba(var(--color-accent),0.4)]' : 'bg-theme-secondary text-[rgb(var(--text-primary))] hover:bg-theme-tertiary' }`}
                             >
                                 {choice}
                             </button>
@@ -902,10 +899,7 @@ export default function EditReviewPage() {
                         </div>
                         <button
                             onClick={() => setShowOrchardStudio(true)}
-                            className={`px-4 py-2 rounded-xl font-medium shadow-lg transition-all flex items-center gap-2 ${formData.orchardPreset
-                                ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500'
-                                : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500'
-                                } text-white`}
+                            className={`px-4 py-2 rounded-xl font-medium shadow-lg transition-all flex items-center gap-2 ${formData.orchardPreset ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500' : 'bg-gradient-to-r hover: hover:' } text-white`}
                         >
                             {formData.orchardPreset ? '✅ Aperçu défini' : '🎨 Définir aperçu'}
                         </button>
@@ -949,10 +943,7 @@ export default function EditReviewPage() {
                             <button
                                 key={idx}
                                 onClick={() => goToSection(idx)}
-                                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${idx === currentSectionIndex
-                                    ? 'bg-[rgb(var(--color-accent))] text-white shadow-[0_0_20px_rgba(var(--color-accent),0.5)]'
-                                    : 'bg-theme-secondary text-[rgb(var(--text-secondary))] hover:bg-theme-tertiary hover:text-[rgb(var(--text-primary))]'
-                                    }`}
+                                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${idx === currentSectionIndex ? 'bg-[rgb(var(--color-accent))] text-white shadow-[0_0_20px_rgba(var(--color-accent),0.5)]' : 'bg-theme-secondary text-[rgb(var(--text-secondary))] hover:bg-theme-tertiary hover:text-[rgb(var(--text-primary))]' }`}
                             >
                                 {section.title}
                             </button>

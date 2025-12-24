@@ -530,7 +530,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                     else if (typeof value === 'string' && value.length > 30) displayValue = value.slice(0, 30) + '...';
                                     return (
                                         <div key={key} className={`p-1 rounded ${value && value !== '' ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
-                                            <span className="text-purple-300">{key}:</span> {String(displayValue)}
+                                            <span className="">{key}:</span> {String(displayValue)}
                                         </div>
                                     );
                                 })}

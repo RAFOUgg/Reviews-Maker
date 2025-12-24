@@ -42,15 +42,15 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
     const getEffectBadgeColor = (effect) => {
         if (effect.category === 'mental') {
             return effect.sentiment === 'positive'
-                ? 'from-purple-400 to-indigo-400'
-                : 'from-red-400 to-pink-400';
+                ? ' '
+                : 'from-red-400 ';
         }
         if (effect.category === 'physical') {
             return effect.sentiment === 'positive'
                 ? 'from-green-400 to-emerald-400'
                 : 'from-orange-400 to-red-400';
         }
-        return 'from-blue-400 to-cyan-400'; // therapeutic
+        return ' '; // therapeutic
     };
 
     const getCategoryIcon = (categoryId) => {
@@ -62,7 +62,7 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
 
             {/* En-tête */}
             <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
+                <div className="p-3 bg-gradient-to-br rounded-xl">
                     <Zap className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -73,7 +73,7 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
 
             {/* Montée, Intensité, Durée */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-xl">
+                <div className="p-4 bg-gradient-to-br dark:/20 dark:/20 rounded-xl">
                     <LiquidSlider
                         label="Montée (rapidité)"
                         min={1}
@@ -86,7 +86,7 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                     />
                 </div>
 
-                <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl">
+                <div className="p-4 bg-gradient-to-br dark:/20 dark:/20 rounded-xl">
                     <LiquidSlider
                         label="Intensité"
                         min={1}
@@ -111,10 +111,7 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                         <button
                             key={option.id}
                             onClick={() => setDuration(option.id)}
-                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${duration === option.id
-                                ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                                }`}
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${duration === option.id ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
                         >
                             {option.label}
                         </button>
@@ -133,10 +130,7 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                 <div className="flex flex-wrap gap-2">
                     <button
                         onClick={() => setCategoryFilter(null)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${categoryFilter === null
-                            ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                            }`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${categoryFilter === null ? 'bg-gradient-to-br text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
                     >
                         Toutes catégories
                     </button>
@@ -144,10 +138,7 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                         <button
                             key={category.id}
                             onClick={() => setCategoryFilter(category.id)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${categoryFilter === category.id
-                                ? 'text-white shadow-lg'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                                }`}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${categoryFilter === category.id ? 'text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
                             style={categoryFilter === category.id ? { background: category.color } : {}}
                         >
                             <span>{category.icon}</span>
@@ -160,37 +151,25 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                 <div className="flex flex-wrap gap-2">
                     <button
                         onClick={() => setSentimentFilter(null)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === null
-                            ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                            }`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === null ? 'bg-gradient-to-br text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
                     >
                         Tous
                     </button>
                     <button
                         onClick={() => setSentimentFilter('positive')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === 'positive'
-                            ? 'bg-green-500 text-white shadow-lg'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                            }`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === 'positive' ? 'bg-green-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
                     >
                         ✅ Positifs
                     </button>
                     <button
                         onClick={() => setSentimentFilter('negative')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === 'negative'
-                            ? 'bg-red-500 text-white shadow-lg'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                            }`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === 'negative' ? 'bg-red-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
                     >
                         ⚠️ Négatifs
                     </button>
                     <button
                         onClick={() => setSentimentFilter('neutral')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === 'neutral'
-                            ? 'bg-blue-500 text-white shadow-lg'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                            }`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === 'neutral' ? ' text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
                     >
                         ⚕️ Thérapeutiques
                     </button>
@@ -201,20 +180,17 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
             <div className="space-y-3">
                 <div className="flex justify-between items-center">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-purple-500" />
+                        <Sparkles className="w-4 h-4" />
                         Effets sélectionnés
                     </label>
-                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${selectedEffects.length >= 8
-                        ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
-                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                        }`}>
+                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${selectedEffects.length >= 8 ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : ' dark: dark:' }`}>
                         {selectedEffects.length}/8
                     </span>
                 </div>
 
                 {/* Badges sélectionnés */}
                 {selectedEffects.length > 0 && (
-                    <div className="flex flex-wrap gap-2 p-3 bg-indigo-50 dark:bg-indigo-900/10 rounded-lg">
+                    <div className="flex flex-wrap gap-2 p-3 dark: rounded-lg">
                         {selectedEffects.map(effectId => {
                             const effect = getAllEffects().find(e => e.id === effectId);
                             if (!effect) return null;
@@ -222,8 +198,7 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                                 <button
                                     key={effectId}
                                     onClick={() => toggleEffect(effectId)}
-                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all
-                           bg-gradient-to-br text-white hover:shadow-lg`}
+                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all bg-gradient-to-br text-white hover:shadow-lg`}
                                     style={{
                                         backgroundImage: `linear-gradient(to bottom right, var(--tw-gradient-stops))`
                                     }}
@@ -251,8 +226,7 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                                 key={effect.id}
                                 onClick={() => !isDisabled && toggleEffect(effect.id)}
                                 disabled={isDisabled}
-                                className={`p-3 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isSelected
-                                    ? `bg-gradient-to-br ${badgeColor} text-white shadow-lg transform scale-105`
+                                className={`p-3 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isSelected ?`}bg-gradient-to-br ${badgeColor} text-white shadow-lg transform scale-105`
                                     : isDisabled
                                         ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
                                         : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:shadow-md border border-gray-200 dark:border-gray-700'
@@ -268,9 +242,9 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
             </div>
 
             {/* Résumé */}
-            <div className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl space-y-2">
+            <div className="p-4 bg-gradient-to-br dark:/20 dark:/20 rounded-xl space-y-2">
                 <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-purple-500" />
+                    <Sparkles className="w-4 h-4" />
                     Résumé des effets
                 </h4>
                 <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">

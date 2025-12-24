@@ -21,7 +21,7 @@ export default function VisuelTechnique({ formData, handleChange }) {
                             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                 {field.label}
                             </label>
-                            <span className="text-sm font-bold text-cyan-600 dark:text-cyan-400">
+                            <span className="text-sm font-bold dark:">
                                 {formData[field.key] || 0}/{field.max}
                             </span>
                         </div>

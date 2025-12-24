@@ -60,7 +60,7 @@ export default function LoginPage() {
                 onVerified={handleAgeVerified}
             />
 
-            <div className="min-h-screen bg-gradient-to-br from-purple-600 via-violet-700 to-purple-800 text-white flex items-center justify-center px-4 py-8">
+            <div className="min-h-screen bg-gradient-to-br text-white flex items-center justify-center px-4 py-8">
                 <div className="w-full max-w-md">
                     {/* Header */}
                     <div className="text-center mb-8 space-y-4 animate-fade-in">
@@ -149,7 +149,7 @@ export default function LoginPage() {
                                 <button
                                     type="button"
                                     onClick={() => navigate('/forgot-password')}
-                                    className="text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors"
+                                    className="text-sm hover: font-medium transition-colors"
                                 >
                                     Mot de passe oublié ?
                                 </button>

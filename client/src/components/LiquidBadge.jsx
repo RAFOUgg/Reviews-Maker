@@ -18,11 +18,11 @@ const LiquidBadge = ({
 }) => {
     const variants = {
         default: 'bg-gradient-to-r from-gray-500/20 to-gray-600/20 text-gray-700 dark:text-gray-300',
-        primary: 'bg-gradient-to-r from-purple-500/20 to-violet-600/20 text-purple-700 dark:text-purple-300',
+        primary: 'bg-gradient-to-r /20 /20  dark:',
         success: 'bg-gradient-to-r from-green-500/20 to-emerald-600/20 text-green-700 dark:text-green-300',
         warning: 'bg-gradient-to-r from-orange-500/20 to-amber-600/20 text-orange-700 dark:text-orange-300',
         error: 'bg-gradient-to-r from-red-500/20 to-rose-600/20 text-red-700 dark:text-red-300',
-        info: 'bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-cyan-700 dark:text-cyan-300',
+        info: 'bg-gradient-to-r /20 /20  dark:',
     };
 
     const sizes = {
@@ -33,11 +33,11 @@ const LiquidBadge = ({
 
     const dotColors = {
         default: 'bg-gray-500',
-        primary: 'bg-purple-500',
+        primary: '',
         success: 'bg-green-500',
         warning: 'bg-orange-500',
         error: 'bg-red-500',
-        info: 'bg-cyan-500',
+        info: '',
     };
 
     return (
@@ -45,12 +45,7 @@ const LiquidBadge = ({
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             whileHover={{ scale: 1.05 }}
-            className={`
-        liquid-glass inline-flex items-center gap-1.5 rounded-full font-medium
-        ${variants[variant]}
-        ${sizes[size]}
-        ${className}
-      `}
+            className={`liquid-glass inline-flex items-center gap-1.5 rounded-full font-medium ${variants[variant]} ${sizes[size]} ${className}`}
             {...props}
         >
             {dot && (

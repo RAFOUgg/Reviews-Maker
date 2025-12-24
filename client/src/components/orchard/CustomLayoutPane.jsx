@@ -80,11 +80,7 @@ function PlacedField({ field, value, onRemove, position, width = 25, height = 20
         >
             <div
                 ref={combinedRef}
-                className={`
-                    relative bg-gray-800/90 backdrop-blur-sm p-3 rounded-lg border shadow-xl
-                    ${isZone ? 'border-dashed border-2 border-blue-500/50' : 'border-purple-500/50'}
-                    ${isOver ? 'border-green-500 bg-green-500/20' : ''}
-                `}
+                className={`relative bg-gray-800/90 backdrop-blur-sm p-3 rounded-lg border shadow-xl ${isZone ? 'border-dashed border-2 /50' : '/50'} ${isOver ? 'border-green-500 bg-green-500/20' : ''}`}
                 style={{
                     minHeight: `${Math.max(height * 2, 60)}px`,
                     transform: `rotate(${rotation}deg)`
@@ -103,7 +99,7 @@ function PlacedField({ field, value, onRemove, position, width = 25, height = 20
 
                 {isZone ? (
                     <div className="w-full h-full flex flex-col items-center justify-center min-h-[80px]">
-                        <div className="text-sm text-blue-300 font-medium mb-2">{field.label || 'Zone personnalisée'}</div>
+                        <div className="text-sm font-medium mb-2">{field.label || 'Zone personnalisée'}</div>
 
                         {/* Section selector for zone */}
                         <div className="mb-3">
@@ -209,10 +205,7 @@ function DropCanvas({ children, isOver }) {
     return (
         <div
             ref={setNodeRef}
-            className={`orchard-canvas-resize-parent
-                relative w-full h-full overflow-hidden
-                ${isOver ? 'ring-4 ring-green-500/50' : 'ring-2 ring-purple-500/30'}
-            `}
+            className={`orchard-canvas-resize-parent relative w-full h-full overflow-hidden ${isOver ? 'ring-4 ring-green-500/50' : 'ring-2 /30'}`}
         >
             {/* Grille d'aide au positionnement */}
             <div className="absolute inset-0 pointer-events-none opacity-10">
@@ -284,7 +277,7 @@ export default function CustomLayoutPane({ reviewData, layout, onLayoutChange, i
     }, [reviewData]);
 
     return (
-        <div ref={canvasRef} className="w-full h-full bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
+        <div ref={canvasRef} className="w-full h-full bg-gradient-to-br from-gray-900 /20 to-gray-900">
             <DropCanvas isOver={isCanvasOver}>
                 <AnimatePresence>
                     {placedFields.length === 0 && (

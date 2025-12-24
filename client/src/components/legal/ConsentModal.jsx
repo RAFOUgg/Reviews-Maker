@@ -48,7 +48,7 @@ const ConsentModal = ({ isOpen, onAccept, onDecline }) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm p-4">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-violet-600 to-purple-700 text-white p-6">
+                <div className="bg-gradient-to-r text-white p-6">
                     <h2 className="text-2xl font-bold flex items-center gap-3">
                         <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
@@ -128,8 +128,8 @@ const ConsentModal = ({ isOpen, onAccept, onDecline }) => {
                         </p>
                     </section>
 
-                    <section className="bg-violet-50 dark:bg-violet-900/20 p-4 rounded-lg border border-violet-200 dark:border-violet-800">
-                        <p className="font-semibold text-violet-900 dark:text-violet-200">
+                    <section className="dark: p-4 rounded-lg border border-violet-200 dark:border-violet-800">
+                        <p className="font-semibold dark:">
                             {t('consent.finalNote', '📌 En acceptant ce consentement, vous confirmez avoir lu et compris l\'ensemble de ces informations et vous engagez à utiliser la plateforme de manière responsable.')}
                         </p>
                     </section>
@@ -143,7 +143,7 @@ const ConsentModal = ({ isOpen, onAccept, onDecline }) => {
                             id="hasRead"
                             checked={hasRead}
                             onChange={(e) => setHasRead(e.target.checked)}
-                            className="w-4 h-4 text-violet-600 border-gray-300 rounded focus:ring-violet-500"
+                            className="w-4 h-4 border-gray-300 rounded focus:ring-violet-500"
                         />
                         <label htmlFor="hasRead" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                             {t('consent.confirmRead', 'J\'ai lu et je comprends l\'intégralité du texte')}
@@ -161,7 +161,7 @@ const ConsentModal = ({ isOpen, onAccept, onDecline }) => {
                         <button
                             onClick={handleAccept}
                             disabled={!hasRead || loading}
-                            className="flex-1 bg-violet-600 hover:bg-violet-700 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 hover: text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading
                                 ? t('consent.accepting', 'Enregistrement...')

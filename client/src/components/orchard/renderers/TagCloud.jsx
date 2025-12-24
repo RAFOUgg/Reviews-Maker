@@ -7,24 +7,24 @@ import { motion } from 'framer-motion';
 
 // Couleurs pour les tags (cycle)
 const TAG_COLORS = [
-    { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-300', border: 'border-purple-200 dark:border-purple-800' },
-    { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-200 dark:border-blue-800' },
+    { bg: ' dark:', text: ' dark:', border: ' dark:' },
+    { bg: ' dark:', text: ' dark:', border: ' dark:' },
     { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-300', border: 'border-green-200 dark:border-green-800' },
-    { bg: 'bg-pink-100 dark:bg-pink-900/30', text: 'text-pink-700 dark:text-pink-300', border: 'border-pink-200 dark:border-pink-800' },
+    { bg: ' dark:', text: ' dark:', border: 'border-pink-200 dark:border-pink-800' },
     { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-300', border: 'border-yellow-200 dark:border-yellow-800' },
-    { bg: 'bg-cyan-100 dark:bg-cyan-900/30', text: 'text-cyan-700 dark:text-cyan-300', border: 'border-cyan-200 dark:border-cyan-800' },
+    { bg: ' dark:', text: ' dark:', border: 'border-cyan-200 dark:border-cyan-800' },
     { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-700 dark:text-orange-300', border: 'border-orange-200 dark:border-orange-800' },
-    { bg: 'bg-rose-100 dark:bg-rose-900/30', text: 'text-rose-700 dark:text-rose-300', border: 'border-rose-200 dark:border-rose-800' },
+    { bg: ' dark:', text: ' dark:', border: 'border-rose-200 dark:border-rose-800' },
 ];
 
 // Gradients pour variante gradient
 const GRADIENT_COLORS = [
-    'from-purple-500 to-pink-500',
-    'from-blue-500 to-cyan-500',
+    ' ',
+    ' ',
     'from-green-500 to-emerald-500',
     'from-orange-500 to-yellow-500',
-    'from-pink-500 to-rose-500',
-    'from-indigo-500 to-purple-500',
+    ' to-rose-500',
+    ' ',
     'from-teal-500 to-green-500',
     'from-amber-500 to-orange-500',
 ];
@@ -92,10 +92,7 @@ export default function TagCloud({
                             initial={animated ? { opacity: 0, scale: 0.8 } : false}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: index * 0.03 }}
-                            className={`
-                                inline-flex items-center rounded-full font-medium
-                                ${s} ${color.bg} ${color.text}
-                            `}
+                            className={`inline-flex items-center rounded-full font-medium ${s} ${color.bg} ${color.text}`}
                         >
                             {icon && <span className="mr-1">{icon}</span>}
                             {tag}
@@ -121,10 +118,7 @@ export default function TagCloud({
                             initial={animated ? { opacity: 0, y: 10 } : false}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05 }}
-                            className={`
-                                inline-flex items-center rounded-full font-medium text-white shadow-sm
-                                bg-gradient-to-r ${gradient} ${s}
-                            `}
+                            className={`inline-flex items-center rounded-full font-medium text-white shadow-sm bg-gradient-to-r ${gradient} ${s}`}
                         >
                             {icon && <span className="mr-1">{icon}</span>}
                             {tag}
@@ -150,10 +144,7 @@ export default function TagCloud({
                             initial={animated ? { opacity: 0, scale: 0.9 } : false}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: index * 0.03 }}
-                            className={`
-                                inline-flex items-center rounded-full font-medium border-2
-                                ${s} ${color.text} ${color.border} bg-transparent
-                            `}
+                            className={`inline-flex items-center rounded-full font-medium border-2 ${s} ${color.text} ${color.border} bg-transparent`}
                         >
                             {icon && <span className="mr-1">{icon}</span>}
                             {tag}
@@ -176,10 +167,7 @@ export default function TagCloud({
                         initial={animated ? { opacity: 0 } : false}
                         animate={{ opacity: 1 }}
                         transition={{ delay: index * 0.02 }}
-                        className={`
-                            inline-flex items-center rounded font-medium
-                            ${s} bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300
-                        `}
+                        className={`inline-flex items-center rounded font-medium ${s} bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300`}
                     >
                         {icon && <span className="mr-1">{icon}</span>}
                         {tag}
@@ -204,10 +192,7 @@ export default function TagCloud({
                             initial={animated ? { opacity: 0, x: -5 } : false}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.04 }}
-                            className={`
-                                inline-flex items-center font-semibold ${color.text}
-                                ${sizes[size]?.split(' ')[0] || 'text-sm'}
-                            `}
+                            className={`inline-flex items-center font-semibold ${color.text} ${sizes[size]?.split(' ')[0] || 'text-sm'}`}
                         >
                             <span className="opacity-70">#</span>
                             {tag.replace(/\s+/g, '')}

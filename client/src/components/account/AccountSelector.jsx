@@ -16,7 +16,7 @@ const ACCOUNT_TIERS = [
         description: 'Accès complet à toutes les fonctionnalités pendant la bêta',
         features: ['Créer des reviews', 'Exporter en HD/4K', 'Galerie privée', 'Analytics complets'],
         badge: 'Actif',
-        badgeColor: 'bg-violet-500',
+        badgeColor: '',
         disabled: false
     },
     {
@@ -46,7 +46,7 @@ const ACCOUNT_TIERS = [
         description: 'Compte professionnel pour producteurs et distributeurs',
         features: ['Gestion inventaire', 'Interactions B2B', 'Analytics avancés', 'Support dédié'],
         badge: 'Bientôt',
-        badgeColor: 'bg-rose-500',
+        badgeColor: '',
         disabled: true
     }
 ]
@@ -146,12 +146,7 @@ export default function AccountSelector({ onAccountSelected, isOpen = true }) {
                                 key={tier.id}
                                 onClick={() => handleSelectAccount(tier.id)}
                                 disabled={isDisabled}
-                                className={`relative p-6 rounded-2xl border-2 transition-all duration-300 transform hover:scale-105 ${isDisabled
-                                    ? 'opacity-50 cursor-not-allowed border-gray-600 bg-gray-900'
-                                    : isSelected
-                                        ? 'border-violet-500 bg-gradient-to-br from-violet-950 to-violet-900 shadow-lg shadow-violet-500/50'
-                                        : 'border-gray-600 bg-gray-900/50 hover:border-violet-400'
-                                    }`}
+                                className={`relative p-6 rounded-2xl border-2 transition-all duration-300 transform hover:scale-105 ${isDisabled ? 'opacity-50 cursor-not-allowed border-gray-600 bg-gray-900' : isSelected ? 'border-violet-500 bg-gradient-to-br shadow-lg shadow-violet-500/50' : 'border-gray-600 bg-gray-900/50 hover:border-violet-400' }`}
                             >
                                 {/* Badge */}
                                 <div className="absolute -top-3 -right-3">
@@ -180,7 +175,7 @@ export default function AccountSelector({ onAccountSelected, isOpen = true }) {
                                 <ul className="space-y-2 text-xs text-gray-400">
                                     {tier.features.map((feature, idx) => (
                                         <li key={idx} className="flex items-start gap-2">
-                                            <span className="text-violet-400 mt-1">•</span>
+                                            <span className="mt-1">•</span>
                                             <span>{feature}</span>
                                         </li>
                                     ))}
@@ -191,7 +186,7 @@ export default function AccountSelector({ onAccountSelected, isOpen = true }) {
                 </div>
 
                 {/* Selection Details */}
-                <div className="bg-gradient-to-r from-violet-950 to-violet-900 rounded-2xl p-6 border border-violet-500/30 mb-8">
+                <div className="bg-gradient-to-r rounded-2xl p-6 border border-violet-500/30 mb-8">
                     <div className="flex items-start gap-4">
                         <div className="text-5xl">{selectedTier?.icon}</div>
                         <div className="flex-1">
@@ -215,7 +210,7 @@ export default function AccountSelector({ onAccountSelected, isOpen = true }) {
                     <button
                         onClick={handleConfirm}
                         disabled={loading}
-                        className="px-8 py-3 rounded-lg bg-gradient-to-r from-violet-600 to-violet-500 text-white font-semibold hover:from-violet-700 hover:to-violet-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+                        className="px-8 py-3 rounded-lg bg-gradient-to-r text-white font-semibold hover: hover: disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
                     >
                         {loading ? 'Chargement...' : `Continuer en tant que ${selectedTier?.label}`}
                     </button>
@@ -224,9 +219,9 @@ export default function AccountSelector({ onAccountSelected, isOpen = true }) {
                 {/* Footer Info */}
                 <p className="text-center text-xs text-gray-500 mt-8">
                     En continuant, vous acceptez nos{' '}
-                    <button className="text-violet-400 hover:underline">Conditions d'utilisation</button>
+                    <button className="hover:underline">Conditions d'utilisation</button>
                     {' '}et notre{' '}
-                    <button className="text-violet-400 hover:underline">Politique de confidentialité</button>
+                    <button className="hover:underline">Politique de confidentialité</button>
                 </p>
             </div>
         </div>

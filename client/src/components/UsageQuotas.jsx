@@ -62,9 +62,9 @@ export default function UsageQuotas({ compact = false }) {
 
     const getTextColor = (color) => {
         const colors = {
-            blue: 'text-blue-600 dark:text-blue-400',
+            blue: ' dark:',
             green: 'text-green-600 dark:text-green-400',
-            purple: 'text-purple-600 dark:text-purple-400',
+            purple: ' dark:',
             red: 'text-red-600 dark:text-red-400',
             orange: 'text-orange-600 dark:text-orange-400'
         };
@@ -98,7 +98,7 @@ export default function UsageQuotas({ compact = false }) {
                 </h3>
                 <Link
                     to="/choose-account"
-                    className="text-sm text-purple-600 dark:text-purple-400 hover:underline font-medium"
+                    className="text-sm dark: hover:underline font-medium"
                 >
                     Voir les plans
                 </Link>
@@ -141,13 +141,13 @@ export default function UsageQuotas({ compact = false }) {
 
             {/* Upgrade suggestion si limitations */}
             {permissions.accountType === 'consumer' && (
-                <div className="mt-6 p-4 bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                <div className="mt-6 p-4 bg-gradient-to-r dark:/20 dark:/20 rounded-lg border dark:">
                     <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                        <strong className="text-purple-700 dark:text-purple-300">✨ Passez à un compte premium</strong> pour des quotas illimités et plus de fonctionnalités !
+                        <strong className="dark:">✨ Passez à un compte premium</strong> pour des quotas illimités et plus de fonctionnalités !
                     </p>
                     <Link
                         to="/choose-account"
-                        className="inline-flex items-center gap-2 text-sm text-purple-700 dark:text-purple-300 font-semibold hover:underline"
+                        className="inline-flex items-center gap-2 text-sm dark: font-semibold hover:underline"
                     >
                         <span>Découvrir les plans</span>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

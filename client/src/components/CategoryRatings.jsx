@@ -54,8 +54,8 @@ export default function CategoryRatings({ value, onChange, categories, formData 
     return (
         <div className="space-y-6">
             {/* Notes par catégorie - Calculées automatiquement */}
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mb-6">
-                <p className="text-sm text-blue-300 flex items-center gap-2">
+            <div className="border /30 rounded-xl p-4 mb-6">
+                <p className="text-sm flex items-center gap-2">
                     <span>ℹ️</span>
                     <span>Les notes par catégorie sont calculées automatiquement à partir des notes détaillées des sections suivantes.</span>
                 </p>

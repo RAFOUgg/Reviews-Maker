@@ -75,27 +75,21 @@ export default function CulturePipelineTimeline({ data, onChange }) {
                     <div className="grid grid-cols-2 gap-2">
                         <button
                             onClick={() => handleModeChange('phases')}
-                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${pipelineMode === 'phases'
-                                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
-                                }`}
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${pipelineMode === 'phases' ? 'bg-gradient-to-r text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200' }`}
                         >
                             🌱 Mode Phases
                             <div className="text-xs mt-1 opacity-80">12 étapes prédéfinies</div>
                         </button>
                         <button
                             onClick={() => handleModeChange('custom')}
-                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${pipelineMode === 'custom'
-                                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
-                                }`}
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${pipelineMode === 'custom' ? 'bg-gradient-to-r text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200' }`}
                         >
                             ⚙️ Personnalisé
                             <div className="text-xs mt-1 opacity-80">Configuration libre</div>
                         </button>
                     </div>
                     {pipelineMode === 'phases' && (
-                        <div className="text-xs text-gray-600 dark:text-gray-400 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
+                        <div className="text-xs text-gray-600 dark:text-gray-400 dark: rounded-lg p-3">
                             ✨ Les 12 phases CDC sont actives avec durées par défaut ajustables
                         </div>
                     )}
@@ -380,11 +374,11 @@ export default function CulturePipelineTimeline({ data, onChange }) {
 
     return (
         <div className="space-y-6">
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl">
-                <h3 className="font-bold text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
+            <div className="p-4 dark: border dark: rounded-xl">
+                <h3 className="font-bold dark: mb-2 flex items-center gap-2">
                     <span>🌱</span> Pipeline de culture : Timeline interactive CDC
                 </h3>
-                <p className="text-sm text-blue-800 dark:text-blue-200">
+                <p className="text-sm dark:">
                     📝 Glissez les contenus depuis le panneau latéral vers les cases de la timeline.
                     <br />
                     🎯 <strong>Drag & drop</strong> : Sélectionnez un contenu à gauche et déposez-le sur une case.

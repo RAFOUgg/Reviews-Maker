@@ -114,13 +114,7 @@ export default function MultiSelectPills({
                                             <div
                                                 ref={provided.innerRef}
                                                 {...provided.draggableProps}
-                                                className={`
-                                                    flex items-center gap-2 px-3 py-2 
-                                                    bg-gradient-to-r from-purple-500 to-indigo-500 
-                                                    text-white rounded-full text-sm font-medium
-                                                    shadow-md hover:shadow-lg transition-all
-                                                    ${snapshot.isDragging ? 'opacity-70 rotate-2' : ''}
-                                                `}
+                                                className={`flex items-center gap-2 px-3 py-2 bg-gradient-to-r text-white rounded-full text-sm font-medium shadow-md hover:shadow-lg transition-all ${snapshot.isDragging ? 'opacity-70 rotate-2' : ''}`}
                                             >
                                                 <div
                                                     {...provided.dragHandleProps}
@@ -161,19 +155,13 @@ export default function MultiSelectPills({
                         }}
                         onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                         placeholder={placeholder}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 
-                                   rounded-lg bg-white dark:bg-gray-800 
-                                   text-gray-900 dark:text-gray-100 
-                                   focus:ring-2 focus:ring-purple-500 focus:border-transparent
-                                   transition-all"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus: focus:border-transparent transition-all"
                     />
                 </div>
 
                 {/* Dropdown suggestions */}
                 {showDropdown && (
-                    <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 
-                                    border border-gray-200 dark:border-gray-700 
-                                    rounded-lg shadow-xl max-h-64 overflow-y-auto">
+                    <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-64 overflow-y-auto">
                         {loading && (
                             <div className="px-4 py-3 text-center text-gray-500">
                                 Chargement...
@@ -190,9 +178,7 @@ export default function MultiSelectPills({
                             <button
                                 key={idx}
                                 onClick={() => handleSelect(item)}
-                                className="w-full px-4 py-3 text-left hover:bg-purple-50 
-                                           dark:hover:bg-purple-900/20 transition-colors
-                                           text-gray-900 dark:text-gray-100"
+                                className="w-full px-4 py-3 text-left hover: dark:hover: transition-colors text-gray-900 dark:text-gray-100"
                             >
                                 {getItemLabel(item)}
                             </button>
@@ -202,11 +188,7 @@ export default function MultiSelectPills({
                         {addNewButton && (
                             <button
                                 onClick={handleAddNew}
-                                className="w-full px-4 py-3 text-left border-t 
-                                           border-gray-200 dark:border-gray-700
-                                           hover:bg-green-50 dark:hover:bg-green-900/20 
-                                           transition-colors flex items-center gap-2
-                                           text-green-600 dark:text-green-400 font-medium"
+                                className="w-full px-4 py-3 text-left border-t border-gray-200 dark:border-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors flex items-center gap-2 text-green-600 dark:text-green-400 font-medium"
                             >
                                 <Plus className="w-4 h-4" />
                                 {addNewLabel}

@@ -57,9 +57,9 @@ export default function AnalyticsPDF({ data, onChange, errors = {} }) {
     }
 
     const cannabinoids = [
-        { key: 'thcPercent', label: 'THC', color: 'text-purple-600' },
+        { key: 'thcPercent', label: 'THC', color: '' },
         { key: 'cbdPercent', label: 'CBD', color: 'text-green-600' },
-        { key: 'cbgPercent', label: 'CBG', color: 'text-blue-600' },
+        { key: 'cbgPercent', label: 'CBG', color: '' },
         { key: 'cbcPercent', label: 'CBC', color: 'text-yellow-600' },
         { key: 'cbnPercent', label: 'CBN', color: 'text-orange-600' },
         { key: 'thcvPercent', label: 'THCV', color: 'text-red-600' }

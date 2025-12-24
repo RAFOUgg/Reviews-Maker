@@ -232,12 +232,7 @@ export default function CreateFlowerReview() {
                             <button
                                 key={section.id}
                                 onClick={() => setCurrentSection(idx)}
-                                className={`w-3 h-3 rounded-full transition-all ${idx === currentSection
-                                    ? 'bg-white w-8'
-                                    : idx < currentSection
-                                        ? 'bg-green-400'
-                                        : 'bg-white/30'
-                                    }`}
+                                className={`w-3 h-3 rounded-full transition-all ${idx === currentSection ? 'bg-white w-8' : idx < currentSection ? 'bg-green-400' : 'bg-white/30' }`}
                                 title={section.title}
                             />
                         ))}
@@ -273,7 +268,7 @@ export default function CreateFlowerReview() {
                         transition={{ duration: 0.4 }}
                         className="bg-white/98 backdrop-blur-2xl rounded-3xl shadow-2xl p-10"
                     >
-                        <h2 className="text-2xl font-semibold text-purple-900 mb-6 flex items-center gap-3">
+                        <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
                             <span className="text-4xl">{currentSectionData.icon}</span>
                             {currentSectionData.title}
                             {currentSectionData.required && <span className="text-red-500">*</span>}

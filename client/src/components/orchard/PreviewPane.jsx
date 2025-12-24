@@ -14,7 +14,7 @@ export default function PreviewPane() {
         return (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
                 <div className="text-center space-y-4">
-                    <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br flex items-center justify-center">
                         <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -35,10 +35,7 @@ export default function PreviewPane() {
 
     return (
         <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-auto">
-            <div className={`
-                w-full h-full flex items-center justify-center p-8
-                ${isPreviewFullscreen ? 'p-12' : 'p-8'}
-            `}>
+            <div className={`w-full h-full flex items-center justify-center p-8 ${isPreviewFullscreen ? 'p-12' : 'p-8'}`}>
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}

@@ -331,7 +331,7 @@ const PipelineWithSidebar = ({
                         <Info className="w-4 h-4" />
                         <span>{totalCells} cases au total</span>
                         {selectedCells.length > 0 && (
-                            <span className="ml-4 text-blue-400">
+                            <span className="ml-4">
                                 {selectedCells.length} sélectionnée(s)
                             </span>
                         )}

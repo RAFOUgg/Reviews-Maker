@@ -43,7 +43,7 @@ export default function Gouts({ formData, handleChange }) {
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             Intensité
                         </label>
-                        <span className="text-sm font-bold text-cyan-600 dark:text-cyan-400">
+                        <span className="text-sm font-bold dark:">
                             {formData.intensiteGout || 0}/10
                         </span>
                     </div>
@@ -63,7 +63,7 @@ export default function Gouts({ formData, handleChange }) {
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             Agressivité/piquant
                         </label>
-                        <span className="text-sm font-bold text-cyan-600 dark:text-cyan-400">
+                        <span className="text-sm font-bold dark:">
                             {formData.agressivite || 0}/10
                         </span>
                     </div>

@@ -70,7 +70,7 @@ const CuringPipelineForm = ({ onSave }) => {
       <LiquidCard padding="md">
         <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
           {config.curingType === 'cold' ? (
-            <Snowflake size={24} className="text-blue-500" />
+            <Snowflake size={24} className="" />
           ) : (
             <Flame size={24} className="text-orange-500" />
           )}

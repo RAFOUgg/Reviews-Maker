@@ -46,7 +46,7 @@ export default function ReviewDetailPage() {
                                 return `Par ${authorName}`
                             })()}
                         </span>
-                        <span className="text-lg text-purple-500 font-semibold">
+                        <span className="text-lg font-semibold">
                             ⭐ {reviewData.rating}/5
                         </span>
                     </div>
@@ -65,15 +65,15 @@ export default function ReviewDetailPage() {
                     </p>
 
                     <div className="grid grid-cols-2 gap-4 mb-6">
-                        <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+                        <div className="p-4 dark: rounded-xl">
                             <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">THC</div>
-                            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                            <div className="text-2xl font-bold dark:">
                                 {reviewData.thcLevel}%
                             </div>
                         </div>
-                        <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+                        <div className="p-4 dark: rounded-xl">
                             <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">CBD</div>
-                            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                            <div className="text-2xl font-bold dark:">
                                 {reviewData.cbdLevel}%
                             </div>
                         </div>
@@ -88,7 +88,7 @@ export default function ReviewDetailPage() {
                             {reviewData.effects.map((effect, i) => (
                                 <span
                                     key={i}
-                                    className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm font-medium"
+                                    className="px-3 py-1 dark: dark: rounded-full text-sm font-medium"
                                 >
                                     {effect}
                                 </span>
@@ -118,7 +118,7 @@ export default function ReviewDetailPage() {
                 <div className="flex gap-4">
                     <button
                         onClick={() => setShowOrchard(true)}
-                        className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-purple-500/50 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                        className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-purple-500/50 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                     >
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -134,18 +134,18 @@ export default function ReviewDetailPage() {
                 </div>
 
                 {/* Informations sur Orchard */}
-                <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
+                <div className="mt-6 p-4 bg-gradient-to-r dark:/20 dark:/20 rounded-xl border dark:">
                     <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 bg-gradient-to-br rounded-lg flex items-center justify-center flex-shrink-0">
                             <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
                         </div>
                         <div>
-                            <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-1">
+                            <h4 className="font-semibold dark: mb-1">
                                 Nouveau : Orchard Studio 🎨
                             </h4>
-                            <p className="text-sm text-purple-700 dark:text-purple-300">
+                            <p className="text-sm dark:">
                                 Personnalisez entièrement l'apparence de vos reviews et exportez-les en PNG, JPEG, PDF ou Markdown !
                                 Choisissez parmi plusieurs templates, personnalisez les couleurs, la typographie et plus encore.
                             </p>

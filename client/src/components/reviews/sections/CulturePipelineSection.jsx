@@ -185,10 +185,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                         <button
                             key={mode.id}
                             onClick={() => setConfig({ ...config, mode: mode.id })}
-                            className={`p-4 rounded-xl text-center transition-all ${config.mode === mode.id
-                                ? 'bg-green-500 text-white shadow-lg scale-105'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
+                            className={`p-4 rounded-xl text-center transition-all ${config.mode === mode.id ? 'bg-green-500 text-white shadow-lg scale-105' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }`}
                         >
                             <div className="text-3xl mb-2">{mode.icon}</div>
                             <div className="font-medium text-sm">{mode.label}</div>
@@ -204,7 +201,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
             {/* Dates et phases */}
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-gray-200/50 shadow-lg">
                 <div className="flex items-center gap-2 mb-4">
-                    <Calendar className="w-5 h-5 text-purple-500" />
+                    <Calendar className="w-5 h-5" />
                     <h4 className="font-semibold text-gray-900">Période de culture</h4>
                 </div>
 
@@ -215,7 +212,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                             type="date"
                             value={config.startDate}
                             onChange={(e) => setConfig({ ...config, startDate: e.target.value })}
-                            className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-500"
+                            className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:"
                         />
                     </div>
 
@@ -227,21 +224,21 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                             type="date"
                             value={config.endDate}
                             onChange={(e) => setConfig({ ...config, endDate: e.target.value })}
-                            className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-500"
+                            className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:"
                         />
                     </div>
                 </div>
 
-                <div className="mt-4 p-4 bg-purple-50 rounded-xl">
+                <div className="mt-4 p-4 rounded-xl">
                     <div className="text-sm text-gray-600 mb-2">Durée totale estimée</div>
-                    <div className="text-2xl font-bold text-purple-600">{totalDuration} jours</div>
+                    <div className="text-2xl font-bold">{totalDuration} jours</div>
                 </div>
             </div>
 
             {/* Espace de culture */}
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-gray-200/50 shadow-lg">
                 <div className="flex items-center gap-2 mb-4">
-                    <Ruler className="w-5 h-5 text-blue-500" />
+                    <Ruler className="w-5 h-5" />
                     <h4 className="font-semibold text-gray-900">Espace de culture</h4>
                 </div>
 
@@ -253,10 +250,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                                 <button
                                     key={type.id}
                                     onClick={() => setSpace({ ...space, type: type.id })}
-                                    className={`p-3 rounded-xl transition-all ${space.type === type.id
-                                        ? 'bg-blue-500 text-white shadow-lg'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                        }`}
+                                    className={`p-3 rounded-xl transition-all ${space.type === type.id ? ' text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }`}
                                 >
                                     <div className="text-xl mb-1">{type.icon}</div>
                                     <div className="text-xs font-medium">{type.label}</div>
@@ -273,7 +267,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                                 min="10"
                                 value={space.width}
                                 onChange={(e) => setSpace({ ...space, width: parseInt(e.target.value) })}
-                                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:"
                             />
                         </div>
                         <div>
@@ -283,7 +277,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                                 min="10"
                                 value={space.length}
                                 onChange={(e) => setSpace({ ...space, length: parseInt(e.target.value) })}
-                                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:"
                             />
                         </div>
                         <div>
@@ -293,7 +287,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                                 min="10"
                                 value={space.height}
                                 onChange={(e) => setSpace({ ...space, height: parseInt(e.target.value) })}
-                                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:"
                             />
                         </div>
                         <div>
@@ -303,14 +297,14 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                                 min="1"
                                 value={space.plantCount}
                                 onChange={(e) => setSpace({ ...space, plantCount: parseInt(e.target.value) })}
-                                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:"
                             />
                         </div>
                     </div>
 
-                    <div className="p-4 bg-blue-50 rounded-xl">
+                    <div className="p-4 rounded-xl">
                         <div className="text-sm text-gray-600">Volume total</div>
-                        <div className="text-xl font-bold text-blue-600">
+                        <div className="text-xl font-bold">
                             {((space.width * space.length * space.height) / 1000000).toFixed(2)} m³
                         </div>
                     </div>
@@ -332,10 +326,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                                 <button
                                     key={method.id}
                                     onClick={() => setPropagation({ ...propagation, method: method.id })}
-                                    className={`p-3 rounded-xl transition-all ${propagation.method === method.id
-                                        ? 'bg-emerald-500 text-white shadow-lg'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                        }`}
+                                    className={`p-3 rounded-xl transition-all ${propagation.method === method.id ? 'bg-emerald-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }`}
                                 >
                                     <div className="text-2xl mb-1">{method.icon}</div>
                                     <div className="text-xs font-medium">{method.label}</div>
@@ -366,7 +357,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
             {/* Environnement */}
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-gray-200/50 shadow-lg">
                 <div className="flex items-center gap-2 mb-4">
-                    <Settings className="w-5 h-5 text-cyan-500" />
+                    <Settings className="w-5 h-5" />
                     <h4 className="font-semibold text-gray-900">Environnement</h4>
                 </div>
 
@@ -379,10 +370,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                                 <button
                                     key={substrate.id}
                                     onClick={() => setEnvironment({ ...environment, substrate: substrate.id })}
-                                    className={`p-3 rounded-xl transition-all ${environment.substrate === substrate.id
-                                        ? 'bg-cyan-500 text-white shadow-lg'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                        }`}
+                                    className={`p-3 rounded-xl transition-all ${environment.substrate === substrate.id ? ' text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }`}
                                 >
                                     <div className="text-xl mb-1">{substrate.icon}</div>
                                     <div className="text-xs font-medium">{substrate.label}</div>
@@ -403,10 +391,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                                 <button
                                     key={system.id}
                                     onClick={() => setEnvironment({ ...environment, irrigation: system.id })}
-                                    className={`p-3 rounded-xl transition-all ${environment.irrigation === system.id
-                                        ? 'bg-blue-500 text-white shadow-lg'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                        }`}
+                                    className={`p-3 rounded-xl transition-all ${environment.irrigation === system.id ? ' text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }`}
                                 >
                                     <div className="text-xl mb-1">{system.icon}</div>
                                     <div className="text-xs font-medium">{system.label}</div>
@@ -572,10 +557,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                         <button
                             key={method.id}
                             onClick={() => toggleTraining(method.id)}
-                            className={`p-4 rounded-xl text-left transition-all ${training.includes(method.id)
-                                ? 'bg-amber-500 text-white shadow-lg'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
+                            className={`p-4 rounded-xl text-left transition-all ${training.includes(method.id) ? 'bg-amber-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }`}
                         >
                             <div className="flex items-center gap-2 mb-2">
                                 <span className="text-2xl">{method.icon}</span>
@@ -593,7 +575,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
             {/* Récolte */}
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-gray-200/50 shadow-lg">
                 <div className="flex items-center gap-2 mb-4">
-                    <Weight className="w-5 h-5 text-purple-500" />
+                    <Weight className="w-5 h-5" />
                     <h4 className="font-semibold text-gray-900">Récolte</h4>
                 </div>
 
@@ -607,10 +589,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                                 <button
                                     key={color.id}
                                     onClick={() => setHarvest({ ...harvest, trichomeColor: color.id })}
-                                    className={`p-3 rounded-xl transition-all ${harvest.trichomeColor === color.id
-                                        ? 'bg-purple-500 text-white shadow-lg'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                        }`}
+                                    className={`p-3 rounded-xl transition-all ${harvest.trichomeColor === color.id ? ' text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }`}
                                 >
                                     <div className="text-2xl mb-1">{color.icon}</div>
                                     <div className="text-xs font-medium">{color.label}</div>
@@ -627,7 +606,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                                 type="date"
                                 value={harvest.date}
                                 onChange={(e) => setHarvest({ ...harvest, date: e.target.value })}
-                                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-500"
+                                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:"
                             />
                         </div>
 
@@ -638,7 +617,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                                 min="0"
                                 value={harvest.wetWeight}
                                 onChange={(e) => setHarvest({ ...harvest, wetWeight: parseFloat(e.target.value) })}
-                                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-500"
+                                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:"
                             />
                         </div>
 
@@ -649,7 +628,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                                 min="0"
                                 value={harvest.dryWeight}
                                 onChange={(e) => setHarvest({ ...harvest, dryWeight: parseFloat(e.target.value) })}
-                                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-500"
+                                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:"
                             />
                         </div>
                     </div>
@@ -682,9 +661,9 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
             />
 
             {/* Info message pour futures fonctionnalités */}
-            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+            <div className="rounded-xl p-4 border">
                 <div className="flex gap-3">
-                    <AlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-gray-700">
                         <p className="font-medium mb-1">🌱 Nouveau : Tracabilité GitHub-style disponible</p>
                         <p>

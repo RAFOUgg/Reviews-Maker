@@ -444,7 +444,7 @@ export default function CreateReviewPage() {
                         <div className="text-center"><h1 className="text-xl font-bold text-white">{isEditing ? `Modifier ${formData.type}` : formData.type}</h1><p className="text-xs text-gray-400">Section {currentSectionIndex + 1}/{sections.length}</p></div>
                         <button
                             onClick={() => setShowOrchardStudio(true)}
-                            className="liquid-glass--button bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium shadow-lg transition-all flex items-center gap-2"
+                            className="liquid-glass--button bg-gradient-to-r text-white rounded-xl font-medium shadow-lg transition-all flex items-center gap-2"
                         >
                             🎨 Aperçu
                         </button>
@@ -469,7 +469,7 @@ export default function CreateReviewPage() {
             <div className="fixed bottom-0 left-0 right-0 bg-transparent py-4 z-50">
                 <div className="max-w-4xl mx-auto px-4 flex gap-4 glass p-3 rounded-xl">
                     <button type="button" onClick={prevSection} disabled={currentSectionIndex === 0} className="px-6 py-3 bg-transparent rounded-xl font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-gray-200 border border-white/10">← Précédent</button>
-                    {currentSectionIndex === sections.length - 1 ? <button onClick={handleSubmit} disabled={isSubmitting || (images.length === 0 && !isEditing)} className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-violet-600 text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all">{isSubmitting ? '⏳ Enregistrement...' : isEditing ? '💾 Mettre à jour' : '💾 Enregistrer la Review'}</button> : <button type="button" onClick={nextSection} className="flex-1 py-3 bg-white/5 text-white rounded-xl font-bold transition-all">Suivant →</button>}</div>
+                    {currentSectionIndex === sections.length - 1 ? <button onClick={handleSubmit} disabled={isSubmitting || (images.length === 0 && !isEditing)} className="flex-1 py-3 bg-gradient-to-r text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all">{isSubmitting ? '⏳ Enregistrement...' : isEditing ? '💾 Mettre à jour' : '💾 Enregistrer la Review'}</button> : <button type="button" onClick={nextSection} className="flex-1 py-3 bg-white/5 text-white rounded-xl font-bold transition-all">Suivant →</button>}</div>
             </div>
             <div className="h-24"></div>
 

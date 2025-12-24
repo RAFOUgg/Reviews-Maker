@@ -46,7 +46,7 @@ export default function TypographyControls() {
                 <select
                     value={config.typography.fontFamily}
                     onChange={(e) => updateTypography({ fontFamily: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus: focus:border-transparent transition-all"
                     style={{ fontFamily: config.typography.fontFamily }}
                 >
                     {FONT_FAMILIES.map((font) => (
@@ -68,7 +68,7 @@ export default function TypographyControls() {
                     max="72"
                     value={config.typography.titleSize}
                     onChange={(e) => updateTypography({ titleSize: parseInt(e.target.value) })}
-                    className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-purple-500 to-purple-300 dark:from-purple-600 dark:to-purple-400 shadow-inner"
+                    className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r dark: dark: shadow-inner"
                 />
             </div>
 
@@ -82,13 +82,7 @@ export default function TypographyControls() {
                         <button
                             key={weight.value}
                             onClick={() => updateTypography({ titleWeight: weight.value })}
-                            className={`
-                                px-3 py-2 rounded-lg text-sm transition-all
-                                ${config.typography.titleWeight === weight.value
-                                    ? 'bg-purple-500 text-white shadow-lg'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                                }
-                            `}
+                            className={`px-3 py-2 rounded-lg text-sm transition-all ${config.typography.titleWeight === weight.value ? ' text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
                             style={{ fontWeight: weight.value }}
                         >
                             {weight.label}
@@ -108,7 +102,7 @@ export default function TypographyControls() {
                     max="32"
                     value={config.typography.textSize}
                     onChange={(e) => updateTypography({ textSize: parseInt(e.target.value) })}
-                    className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-purple-500 to-purple-300 dark:from-purple-600 dark:to-purple-400 shadow-inner"
+                    className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r dark: dark: shadow-inner"
                 />
             </div>
 
@@ -122,13 +116,7 @@ export default function TypographyControls() {
                         <button
                             key={weight.value}
                             onClick={() => updateTypography({ textWeight: weight.value })}
-                            className={`
-                                px-3 py-2 rounded-lg text-sm transition-all
-                                ${config.typography.textWeight === weight.value
-                                    ? 'bg-purple-500 text-white shadow-lg'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                                }
-                            `}
+                            className={`px-3 py-2 rounded-lg text-sm transition-all ${config.typography.textWeight === weight.value ? ' text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
                             style={{ fontWeight: weight.value }}
                         >
                             {weight.label}

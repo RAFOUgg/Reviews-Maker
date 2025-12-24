@@ -248,17 +248,7 @@ function DraggableField({ field, isPlaced, hasValue, valuePreview }) {
             style={style}
             {...listeners}
             {...attributes}
-            className={`
-                p-2.5 rounded-lg cursor-grab active:cursor-grabbing transition-all select-none
-                ${isDragging ? 'scale-105 shadow-xl z-50' : 'scale-100'}
-                ${isPlaced
-                    ? 'bg-green-500/20 border-green-500 border-2'
-                    : hasValue
-                        ? 'bg-purple-500/20 border-purple-500/50 border hover:border-purple-500 hover:bg-purple-500/30'
-                        : 'bg-gray-700/30 border-gray-600/50 border border-dashed opacity-50'
-                }
-                hover:shadow-lg
-            `}
+            className={`p-2.5 rounded-lg cursor-grab active:cursor-grabbing transition-all select-none ${isDragging ? 'scale-105 shadow-xl z-50' : 'scale-100'} ${isPlaced ? 'bg-green-500/20 border-green-500 border-2' : hasValue ? ' /50 border hover: hover:' : 'bg-gray-700/30 border-gray-600/50 border border-dashed opacity-50' } hover:shadow-lg`}
             title={hasValue ? `Valeur: ${valuePreview}` : 'Aucune donnée'}
         >
             <div className="flex items-center gap-2">
@@ -270,7 +260,7 @@ function DraggableField({ field, isPlaced, hasValue, valuePreview }) {
                     )}
                 </div>
                 {isPlaced && <span className="text-xs text-green-400 flex-shrink-0">✓</span>}
-                {hasValue && !isPlaced && <span className="text-[10px] text-purple-400 flex-shrink-0">●</span>}
+                {hasValue && !isPlaced && <span className="text-[10px] flex-shrink-0">●</span>}
             </div>
         </div>
     );
@@ -303,7 +293,7 @@ function FieldSection({ title, sectionKey, fields, placedFieldIds, reviewData, i
                 onClick={onToggle}
                 className="w-full flex items-center justify-between p-2 rounded-lg bg-gray-800/50 hover:bg-gray-800 transition-colors"
             >
-                <span className="text-xs font-bold text-purple-300 uppercase tracking-wide">
+                <span className="text-xs font-bold uppercase tracking-wide">
                     {title}
                 </span>
                 <div className="flex items-center gap-2">
@@ -437,9 +427,9 @@ export default function ContentPanel({ reviewData, placedFields, onFieldSelect }
     ];
 
     return (
-        <div className="h-full bg-gray-900/95 backdrop-blur-sm flex flex-col border-r border-purple-500/30">
+        <div className="h-full bg-gray-900/95 backdrop-blur-sm flex flex-col border-r /30">
             {/* Header sticky */}
-            <div className="sticky top-0 bg-gray-900 p-3 border-b border-purple-500/30 z-20">
+            <div className="sticky top-0 bg-gray-900 p-3 border-b /30 z-20">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-2">
                     <span>📦</span>
                     <span>Contenu Disponible</span>
@@ -452,7 +442,7 @@ export default function ContentPanel({ reviewData, placedFields, onFieldSelect }
                 <div className="flex gap-2 flex-wrap">
                     <button
                         onClick={() => toggleAll(true)}
-                        className="px-2 py-1 text-[10px] rounded bg-purple-600/50 hover:bg-purple-600 text-white transition-colors"
+                        className="px-2 py-1 text-[10px] rounded hover: text-white transition-colors"
                     >
                         Tout afficher
                     </button>
@@ -494,14 +484,14 @@ export default function ContentPanel({ reviewData, placedFields, onFieldSelect }
             </div>
 
             {/* Footer avec actions */}
-            <div className="p-3 border-t border-purple-500/30 bg-gray-900">
+            <div className="p-3 border-t /30 bg-gray-900">
                 <div className="text-[10px] text-gray-500 mb-2 flex items-center gap-2">
-                    <span className="text-purple-400">●</span> = Données
+                    <span className="">●</span> = Données
                     <span className="text-green-400">✓</span> = Placé
                 </div>
                 <button
                     onClick={() => onFieldSelect?.({ type: 'zone' })}
-                    className="w-full px-3 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-medium hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg"
+                    className="w-full px-3 py-2 rounded-lg bg-gradient-to-r text-white text-xs font-medium hover: hover: transition-all shadow-lg"
                 >
                     ➕ Ajouter une zone libre
                 </button>

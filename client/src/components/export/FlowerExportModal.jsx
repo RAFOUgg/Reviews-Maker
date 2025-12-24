@@ -83,14 +83,7 @@ export default function FlowerExportModal({ review, onClose, isDark = false }) {
                                     setSelectedTemplate(tpl.id)
                                     setCustomModules(null)
                                 }}
-                                className={`p-4 rounded-lg border-2 transition text-center ${selectedTemplate === tpl.id
-                                        ? isDark
-                                            ? 'border-purple-500 bg-purple-500/10'
-                                            : 'border-purple-500 bg-purple-50'
-                                        : isDark
-                                            ? 'border-gray-700 hover:border-gray-600'
-                                            : 'border-gray-200 hover:border-gray-300'
-                                    }`}
+                                className={`p-4 rounded-lg border-2 transition text-center ${selectedTemplate === tpl.id ? isDark ? ' ' : ' ' : isDark ? 'border-gray-700 hover:border-gray-600' : 'border-gray-200 hover:border-gray-300' }`}
                             >
                                 <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                     {tpl.label}
@@ -105,10 +98,10 @@ export default function FlowerExportModal({ review, onClose, isDark = false }) {
 
                 {/* Module Builder Toggle */}
                 {selectedTemplate === 'detailed' && (
-                    <div className="mb-6 p-4 border-2 border-dashed border-purple-300 rounded-lg">
+                    <div className="mb-6 p-4 border-2 border-dashed rounded-lg">
                         <button
                             onClick={() => setCustomModules(customModules ? null : {})}
-                            className="text-sm font-semibold text-purple-600 hover:text-purple-700"
+                            className="text-sm font-semibold hover:"
                         >
                             {customModules ? '✕ Utiliser template standard' : '+ Personnaliser avec éditeur de modules'}
                         </button>
@@ -140,17 +133,14 @@ export default function FlowerExportModal({ review, onClose, isDark = false }) {
                 <div className="flex items-center gap-3 justify-end">
                     <button
                         onClick={onClose}
-                        className={`px-6 py-2 rounded-lg font-semibold transition ${isDark
-                                ? 'bg-gray-800 hover:bg-gray-700 text-white'
-                                : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
-                            }`}
+                        className={`px-6 py-2 rounded-lg font-semibold transition ${isDark ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-900' }`}
                     >
                         {t('common.cancel')}
                     </button>
                     {navigator.share && (
                         <button
                             onClick={handleShare}
-                            className="px-6 py-2 rounded-lg font-semibold bg-blue-500 hover:bg-blue-600 text-white transition flex items-center gap-2"
+                            className="px-6 py-2 rounded-lg font-semibold hover: text-white transition flex items-center gap-2"
                         >
                             <Share2 className="w-4 h-4" />
                             {t('export.share')}
@@ -158,7 +148,7 @@ export default function FlowerExportModal({ review, onClose, isDark = false }) {
                     )}
                     <button
                         onClick={handleDownload}
-                        className="px-6 py-2 rounded-lg font-semibold bg-purple-600 hover:bg-purple-700 text-white transition flex items-center gap-2"
+                        className="px-6 py-2 rounded-lg font-semibold hover: text-white transition flex items-center gap-2"
                     >
                         <Download className="w-4 h-4" />
                         {t('export.download')}

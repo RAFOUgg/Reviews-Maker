@@ -281,7 +281,7 @@ const PipelineDataModal = ({
                         type="checkbox"
                         checked={Boolean(value)}
                         onChange={(e) => handleChange(key, e.target.checked)}
-                        className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                        className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 focus:ring-2 focus:"
                     />
                     <label className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         {icon && <span className="mr-2">{icon}</span>}
@@ -305,7 +305,7 @@ const PipelineDataModal = ({
                         onChange={(e) => handleChange(key, e.target.value)}
                         rows={3}
                         maxLength={item.maxLength || 500}
-                        className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 resize-none"
+                        className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus: resize-none"
                         placeholder={item.placeholder || ''}
                     />
                     {item.maxLength && (
@@ -382,19 +382,13 @@ const PipelineDataModal = ({
                             <div className="flex border-b border-gray-200 dark:border-gray-700">
                                 <button
                                     onClick={() => setActiveTab('form')}
-                                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'form'
-                                        ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
-                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                                        }`}
+                                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'form' ? 'border-b-2 dark:' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200' }`}
                                 >
                                     📝 Formulaire
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('presets')}
-                                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'presets'
-                                        ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
-                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                                        }`}
+                                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'presets' ? 'border-b-2 dark:' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200' }`}
                                 >
                                     <Bookmark className="w-4 h-4 inline mr-1" />
                                     Préréglages ({fieldPresets.length})
@@ -526,7 +520,7 @@ const PipelineDataModal = ({
                                     type="submit"
                                     onClick={handleSubmit}
                                     disabled={itemsToDisplay.length === 0}
-                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors flex items-center gap-2"
+                                    className="px-4 py-2 hover: disabled:bg-gray-400 text-white rounded-lg transition-colors flex items-center gap-2"
                                 >
                                     <Save className="w-4 h-4" />
                                     Enregistrer

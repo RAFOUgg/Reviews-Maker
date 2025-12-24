@@ -109,11 +109,11 @@ const DisclaimerRDRModal = () => {
                             <p className="text-sm leading-relaxed">
                                 <strong className="text-gray-900 dark:text-white block mb-1">Conditions d'utilisation :</strong>
                                 En continuant, vous confirmez avoir lu et accepté nos{' '}
-                                <a href="/cgu" className="text-purple-600 hover:text-purple-700 underline font-medium">
+                                <a href="/cgu" className="hover: underline font-medium">
                                     CGU
                                 </a>
                                 {' '}et notre{' '}
-                                <a href="/privacy" className="text-purple-600 hover:text-purple-700 underline font-medium">
+                                <a href="/privacy" className="hover: underline font-medium">
                                     Politique de Confidentialité
                                 </a>.
                             </p>
@@ -123,7 +123,7 @@ const DisclaimerRDRModal = () => {
                     {/* Accept Button */}
                     <button
                         onClick={handleAccept}
-                        className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl text-white text-lg font-bold hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        className="w-full py-4 bg-gradient-to-r rounded-xl text-white text-lg font-bold hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
                     >
                         J'ai compris et j'accepte
                     </button>

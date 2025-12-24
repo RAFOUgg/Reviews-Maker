@@ -801,10 +801,7 @@ const PipelineDragDropView = ({
                                                         anchorRect: e.currentTarget.getBoundingClientRect()
                                                     });
                                                 }}
-                                                className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group ${isPreConfigured
-                                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30'
-                                                    : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:border-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                                    } ${multiSelectedItems.includes(item.key) ? 'ring-2 ring-blue-500' : ''}`}
+                                                className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group ${isPreConfigured ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30' : 'bg-gray-50 dark:bg-gray-800 border-transparent hover: hover:bg-gray-100 dark:hover:bg-gray-700' } ${multiSelectedItems.includes(item.key) ? 'ring-2 ' : ''}`}
                                                 style={{ touchAction: 'none' }}
                                                 title={isPreConfigured ? `Pré-configuré: ${preConfiguredItems[item.key]}${item.unit || ''}` : 'Clic droit pour pré-configurer'}
                                             >
@@ -816,10 +813,7 @@ const PipelineDragDropView = ({
                                                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex-1">
                                                     {item.label}
                                                 </span>
-                                                <span className={`text-xs transition-colors ${isPreConfigured
-                                                    ? 'text-green-600 dark:text-green-400'
-                                                    : 'text-gray-400 group-hover:text-blue-500'
-                                                    }`}>
+                                                <span className={`text-xs transition-colors ${isPreConfigured ? 'text-green-600 dark:text-green-400' : 'text-gray-400 group-hover:' }`}>
                                                     {isPreConfigured ? '✓' : '⋮⋮'}
                                                 </span>
                                             </div>
@@ -864,7 +858,7 @@ const PipelineDragDropView = ({
                             <select
                                 value={timelineConfig.type || 'jour'}
                                 onChange={(e) => onConfigChange('type', e.target.value)}
-                                className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:"
                             >
                                 <option value="seconde">⏱️ Secondes</option>
                                 <option value="heure">🕐 Heures</option>
@@ -887,7 +881,7 @@ const PipelineDragDropView = ({
                                     max="900"
                                     value={timelineConfig.totalSeconds || ''}
                                     onChange={(e) => onConfigChange('totalSeconds', parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
                                     placeholder="Ex: 300"
                                 />
                             </div>
@@ -905,7 +899,7 @@ const PipelineDragDropView = ({
                                     max="336"
                                     value={timelineConfig.totalHours || ''}
                                     onChange={(e) => onConfigChange('totalHours', parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
                                     placeholder="Ex: 72"
                                 />
                             </div>
@@ -923,7 +917,7 @@ const PipelineDragDropView = ({
                                     max="365"
                                     value={timelineConfig.totalDays || ''}
                                     onChange={(e) => onConfigChange('totalDays', parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
                                     placeholder="Ex: 90"
                                 />
                             </div>
@@ -940,7 +934,7 @@ const PipelineDragDropView = ({
                                         type="date"
                                         value={timelineConfig.start || ''}
                                         onChange={(e) => onConfigChange('start', e.target.value)}
-                                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
                                     />
                                 </div>
                                 <div>
@@ -951,7 +945,7 @@ const PipelineDragDropView = ({
                                         type="date"
                                         value={timelineConfig.end || ''}
                                         onChange={(e) => onConfigChange('end', e.target.value)}
-                                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
                                     />
                                 </div>
                                 {timelineConfig.start && timelineConfig.end && (
@@ -979,7 +973,7 @@ const PipelineDragDropView = ({
                                     max="52"
                                     value={timelineConfig.totalWeeks || ''}
                                     onChange={(e) => onConfigChange('totalWeeks', parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
                                     placeholder="Ex: 12"
                                 />
                             </div>
@@ -1084,7 +1078,7 @@ const PipelineDragDropView = ({
                                     const height = `${((maxRow - minRow + 1) * 90)}px`;
                                     return (
                                         <div
-                                            className="absolute pointer-events-none z-40 border-4 border-blue-500 rounded-2xl shadow-lg animate-fade-in"
+                                            className="absolute pointer-events-none z-40 border-4 rounded-2xl shadow-lg animate-fade-in"
                                             style={{
                                                 top,
                                                 left,
@@ -1108,12 +1102,12 @@ const PipelineDragDropView = ({
                                     // Only apply purple border to first cell if selected
                                     let cellClass = `relative p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[80px]`;
                                     cellClass += hasData ? ' border-green-500 bg-green-500/10' : ' border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800';
-                                    cellClass += selectedCell === cell.timestamp ? ' ring-2 ring-blue-500 shadow-lg' : ' hover:border-blue-400 hover:shadow-md';
-                                    cellClass += isSelected ? ' ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-900/20' : '';
-                                    cellClass += isHovered && draggedContent ? ' ring-4 ring-blue-500 bg-blue-100 dark:bg-blue-900/30 scale-105 shadow-2xl border-blue-500 animate-pulse' : '';
-                                    if (isFirst) cellClass += ' col-span-2 bg-purple-500/10 border-purple-500';
+                                    cellClass += selectedCell === cell.timestamp ? ' ring-2  shadow-lg' : ' hover: hover:shadow-md';
+                                    cellClass += isSelected ? ' ring-2   dark:' : '';
+                                    cellClass += isHovered && draggedContent ? ' ring-4   dark: scale-105 shadow-2xl  animate-pulse' : '';
+                                    if (isFirst) cellClass += ' col-span-2  ';
                                     // Remove purple border if not selected
-                                    if (isFirst && !isSelected) cellClass = cellClass.replace('ring-2 ring-purple-500', '');
+                                    if (isFirst && !isSelected) cellClass = cellClass.replace('ring-2 ', '');
 
                                     return (
                                         <div
@@ -1131,8 +1125,8 @@ const PipelineDragDropView = ({
                                         >
                                             {/* Indicateur visuel drop */}
                                             {isHovered && draggedContent && (
-                                                <div className="absolute inset-0 bg-blue-500/20 rounded-lg flex items-center justify-center z-20 pointer-events-none">
-                                                    <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                                                <div className="absolute inset-0 rounded-lg flex items-center justify-center z-20 pointer-events-none">
+                                                    <div className="text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
                                                         📌 Déposer ici
                                                     </div>
                                                 </div>
@@ -1156,7 +1150,7 @@ const PipelineDragDropView = ({
                                                     {cell.date || cell.week || (cell.phase ? `(${cell.duration || 7}j)` : '')}
                                                 </div>
                                                 {isFirst && (
-                                                    <div className="mt-1 text-[10px] text-purple-700 dark:text-purple-300 font-semibold">
+                                                    <div className="mt-1 text-[10px] dark: font-semibold">
                                                         Config générale
                                                     </div>
                                                 )}
@@ -1168,7 +1162,7 @@ const PipelineDragDropView = ({
                                 {/* Bouton + pour ajouter des cellules */}
                                 {cells.length > 0 && (timelineConfig.type === 'jour' || timelineConfig.type === 'date') && (
                                     <div
-                                        className="p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all cursor-pointer flex items-center justify-center min-h-[80px]"
+                                        className="p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover: hover: dark:hover: transition-all cursor-pointer flex items-center justify-center min-h-[80px]"
                                         onClick={() => {
                                             // Ajouter un jour à la timeline
                                             if (timelineConfig.type === 'jour') {
@@ -1274,7 +1268,7 @@ const PipelineDragDropView = ({
                         </div>
                         <div className="flex gap-2 mb-2">
                             <button
-                                className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-all"
+                                className="flex-1 px-4 py-2 hover: text-white rounded-xl font-medium transition-all"
                                 onClick={() => {
                                     const val = document.getElementById('preconfig-value-input').value;
                                     handleConfigureItem(contextMenu.item.key, val);
@@ -1290,7 +1284,7 @@ const PipelineDragDropView = ({
                             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Assigner à&nbsp;:</label>
                             <div className="flex gap-2">
                                 <button
-                                    className="flex-1 px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-xs font-semibold"
+                                    className="flex-1 px-3 py-2 hover: text-white rounded-lg text-xs font-semibold"
                                     onClick={() => {
                                         // Assignation à toutes les cases sélectionnées
                                         selectedCells.forEach(ts => onDataChange(ts, contextMenu.item.key, document.getElementById('preconfig-value-input').value));
@@ -1299,7 +1293,7 @@ const PipelineDragDropView = ({
                                     disabled={selectedCells.length === 0}
                                 >{selectedCells.length > 0 ? `Sélection (${selectedCells.length})` : 'Sélectionner des cases'}</button>
                                 <button
-                                    className="flex-1 px-3 py-2 bg-blue-400 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold"
+                                    className="flex-1 px-3 py-2 hover: text-white rounded-lg text-xs font-semibold"
                                     onClick={() => {
                                         // Assignation à toutes les cases
                                         cells.forEach(cell => onDataChange(cell.timestamp, contextMenu.item.key, document.getElementById('preconfig-value-input').value));

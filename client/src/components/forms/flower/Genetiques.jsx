@@ -194,7 +194,7 @@ export default function Genetiques({ data, onChange, errors = {} }) {
                         step="5"
                         value={data.indicaRatio || 50}
                         onChange={(e) => handleInputChange('indicaRatio', parseInt(e.target.value))}
-                        className="flex-1 h-2 bg-gradient-to-r from-green-400 via-yellow-400 to-purple-500 rounded-lg appearance-none cursor-pointer"
+                        className="flex-1 h-2 bg-gradient-to-r from-green-400 via-yellow-400 rounded-lg appearance-none cursor-pointer"
                         style={{
                             background: `linear-gradient(to right, #10b981 0%, #10b981 ${100 - (data.indicaRatio || 50)}%, #a855f7 ${100 - (data.indicaRatio || 50)}%, #a855f7 100%)`
                         }}

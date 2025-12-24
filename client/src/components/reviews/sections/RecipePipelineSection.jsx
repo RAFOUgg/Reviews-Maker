@@ -49,7 +49,7 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
         <div className="space-y-6">
             <LiquidGlass variant="card" className="p-6">
                 <div className="flex items-center gap-2 mb-4">
-                    <ChefHat className="w-6 h-6 text-pink-500" />
+                    <ChefHat className="w-6 h-6" />
                     <h3 className="text-xl font-bold dark:text-white">Pipeline Recette</h3>
                 </div>
 
@@ -62,10 +62,7 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
                                 <button
                                     key={m.id}
                                     onClick={() => handleProcessChange('method', m.id)}
-                                    className={`flex-1 p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${processData.method === m.id
-                                            ? 'bg-pink-600/20 border-pink-500 text-pink-400'
-                                            : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
-                                        }`}
+                                    className={`flex-1 p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${processData.method === m.id ? ' border-pink-500 ' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10' }`}
                                 >
                                     <m.icon className="w-5 h-5" />
                                     <span className="text-xs font-medium text-center">{m.name}</span>

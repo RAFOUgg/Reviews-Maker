@@ -156,7 +156,7 @@ export default function Genetiques({ formData, handleChange }) {
                             type="text"
                             value={genetics.cloneCode || ''}
                             onChange={(e) => handleGeneticsChange('cloneCode', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
                             placeholder="Ex: Clone-2024-001"
                         />
                     </div>
@@ -215,7 +215,7 @@ export default function Genetiques({ formData, handleChange }) {
                                 type="text"
                                 value={genetics.parentage?.mother || ''}
                                 onChange={(e) => handleParentageChange('mother', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
                                 placeholder="Ex: Purple Haze"
                                 list="cultivar-suggestions"
                             />
@@ -230,7 +230,7 @@ export default function Genetiques({ formData, handleChange }) {
                                 type="text"
                                 value={genetics.parentage?.father || ''}
                                 onChange={(e) => handleParentageChange('father', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
                                 placeholder="Ex: OG Kush"
                                 list="cultivar-suggestions"
                             />
@@ -245,7 +245,7 @@ export default function Genetiques({ formData, handleChange }) {
                             <textarea
                                 value={genetics.parentage?.lineage || ''}
                                 onChange={(e) => handleParentageChange('lineage', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 resize-none"
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus: resize-none"
                                 placeholder="Ex: (Purple Haze x OG Kush) F2..."
                                 rows={2}
                             />

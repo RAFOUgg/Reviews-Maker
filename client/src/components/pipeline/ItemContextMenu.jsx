@@ -76,7 +76,7 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
     return (
         <div
             ref={menuRef}
-            className="fixed z-[9999] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border-2 border-purple-700 p-4 min-w-[320px] text-gray-900 dark:text-white"
+            className="fixed z-[9999] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border-2 p-4 min-w-[320px] text-gray-900 dark:text-white"
             style={{
                 left: `${adjustedPos.x}px`,
                 top: `${adjustedPos.y}px`,
@@ -86,7 +86,7 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
         >
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                    <Settings className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    <Settings className="w-4 h-4 dark:" />
                     <h3 className="font-bold text-sm text-gray-900 dark:text-white">
                         Pré-configurer
                     </h3>
@@ -112,7 +112,7 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
                     <select
                         value={value}
                         onChange={(e) => setValue(e.target.value)}
-                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:"
                         autoFocus
                     >
                         <option value="">-- Sélectionner --</option>
@@ -131,7 +131,7 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
                             step={item.step || 1}
                             value={value}
                             onChange={(e) => setValue(e.target.value)}
-                            className="flex-1 px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                            className="flex-1 px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:"
                             placeholder={`${item.min || 0} - ${item.max || 100}`}
                             autoFocus
                         />
@@ -146,7 +146,7 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
                         type="text"
                         value={value}
                         onChange={(e) => setValue(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:"
                         placeholder={item.placeholder || 'Entrer une valeur...'}
                         autoFocus
                     />
@@ -154,8 +154,8 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
             </div>
 
             {/* Aide visuelle */}
-            <div className="mb-3 p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                <p className="text-xs text-purple-800 dark:text-purple-300">
+            <div className="mb-3 p-2 dark: rounded-lg">
+                <p className="text-xs dark:">
                     💡 Cette valeur sera assignée directement lors du drag & drop
                 </p>
             </div>
@@ -173,10 +173,7 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
                             onAssignNow?.(item.key, value);
                             onClose();
                         }}
-                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${!value && value !== 0
-                            ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
-                            : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                            }`}
+                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${!value && value !== 0 ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed' : ' hover: text-white' }`}
                     >
                         Assigner maintenant
                     </button>
@@ -268,10 +265,7 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
                 <button
                     onClick={handleSave}
                     disabled={!value && value !== 0}
-                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${!value && value !== 0
-                        ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white shadow-lg hover:shadow-xl'
-                        }`}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${!value && value !== 0 ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-gradient-to-r hover: hover: text-white shadow-lg hover:shadow-xl' }`}
                 >
                     <Check className="w-3 h-3" />
                     {isConfigured ? 'Mettre à jour' : 'Pré-configurer'}

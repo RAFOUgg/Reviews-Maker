@@ -140,7 +140,7 @@ export default function RegisterPage() {
     ];
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 px-4">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 dark:from-gray-900 dark:to-gray-800 px-4">
             <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
                 {/* Header */}
                 <div className="text-center mb-8">
@@ -193,10 +193,7 @@ export default function RegisterPage() {
                             name="email"
                             value={formData.email}
                             onChange={handleChange}
-                            className={`w-full px-4 py-2 rounded-lg border ${errors.email
-                                ? 'border-red-500 focus:ring-red-500'
-                                : 'border-gray-300 dark:border-gray-600 focus:ring-green-500'
-                                } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
+                            className={`w-full px-4 py-2 rounded-lg border ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-green-500' } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
                             placeholder="votre@email.com"
                             required
                         />
@@ -216,10 +213,7 @@ export default function RegisterPage() {
                             name="pseudo"
                             value={formData.pseudo}
                             onChange={handleChange}
-                            className={`w-full px-4 py-2 rounded-lg border ${errors.pseudo
-                                ? 'border-red-500 focus:ring-red-500'
-                                : 'border-gray-300 dark:border-gray-600 focus:ring-green-500'
-                                } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
+                            className={`w-full px-4 py-2 rounded-lg border ${errors.pseudo ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-green-500' } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
                             placeholder="MonPseudo"
                             required
                         />
@@ -239,10 +233,7 @@ export default function RegisterPage() {
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
-                            className={`w-full px-4 py-2 rounded-lg border ${errors.password
-                                ? 'border-red-500 focus:ring-red-500'
-                                : 'border-gray-300 dark:border-gray-600 focus:ring-green-500'
-                                } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
+                            className={`w-full px-4 py-2 rounded-lg border ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-green-500' } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
                             placeholder="••••••••"
                             required
                         />
@@ -262,10 +253,7 @@ export default function RegisterPage() {
                             name="confirmPassword"
                             value={formData.confirmPassword}
                             onChange={handleChange}
-                            className={`w-full px-4 py-2 rounded-lg border ${errors.confirmPassword
-                                ? 'border-red-500 focus:ring-red-500'
-                                : 'border-gray-300 dark:border-gray-600 focus:ring-green-500'
-                                } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
+                            className={`w-full px-4 py-2 rounded-lg border ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-green-500' } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
                             placeholder="••••••••"
                             required
                         />

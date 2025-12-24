@@ -64,17 +64,17 @@ export default function QuickStatsSection({ userId }) {
             icon: FileText,
             label: 'Reviews Créées',
             value: displayStats.totalReviews,
-            color: 'from-violet-500 to-purple-600',
-            iconBg: 'bg-violet-500/20',
-            iconColor: 'text-violet-400'
+            color: ' ',
+            iconBg: '',
+            iconColor: ''
         },
         {
             icon: Download,
             label: 'Exports Réalisés',
             value: displayStats.totalExports,
-            color: 'from-blue-500 to-cyan-600',
-            iconBg: 'bg-blue-500/20',
-            iconColor: 'text-blue-400'
+            color: ' ',
+            iconBg: '',
+            iconColor: ''
         },
         {
             icon: Star,
@@ -92,9 +92,9 @@ export default function QuickStatsSection({ userId }) {
             icon: Heart,
             label: 'Likes Reçus',
             value: displayStats.totalLikes,
-            color: 'from-pink-500 to-rose-600',
-            iconBg: 'bg-pink-500/20',
-            iconColor: 'text-pink-400'
+            color: ' to-rose-600',
+            iconBg: '',
+            iconColor: ''
         }
     ]
 

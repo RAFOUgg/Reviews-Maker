@@ -10,7 +10,7 @@ export default function FlowerCompactTemplate({ review, customModules, isDark = 
     const data = review.extraData || {}
 
     return (
-        <div className={`w-80 aspect-square rounded-lg overflow-hidden shadow-lg ${isDark ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-purple-500 to-pink-500'}`}>
+        <div className={`w-80 aspect-square rounded-lg overflow-hidden shadow-lg ${isDark ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br '}`}>
             <div className="h-full flex flex-col items-center justify-center p-6 text-white text-center">
                 {/* Main Image or Placeholder */}
                 {review.mainImageUrl ? (

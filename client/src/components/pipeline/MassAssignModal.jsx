@@ -131,8 +131,8 @@ const MassAssignModal = ({
                 </div>
 
                 {/* Info */}
-                <div className="px-6 py-3 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
-                    <div className="flex items-start gap-2 text-sm text-blue-800 dark:text-blue-300">
+                <div className="px-6 py-3 dark: border-b dark:">
+                    <div className="flex items-start gap-2 text-sm dark:">
                         <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                         <p>
                             Sélectionnez les champs à copier depuis la cellule source vers toutes les cellules sélectionnées.
@@ -146,10 +146,7 @@ const MassAssignModal = ({
                     <label className="flex items-center gap-3 cursor-pointer">
                         <div
                             onClick={handleSelectAll}
-                            className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${selectAll
-                                ? 'bg-white/5 border-white/10'
-                                : 'border-gray-300 dark:border-gray-600'
-                                }`}
+                            className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${selectAll ? 'bg-white/5 border-white/10' : 'border-gray-300 dark:border-gray-600' }`}
                         >
                             {selectAll && <CheckSquare className="w-4 h-4 text-white" />}
                         </div>
@@ -181,10 +178,7 @@ const MassAssignModal = ({
                                             >
                                                 <div
                                                     onClick={() => handleToggleField(field.key)}
-                                                    className={`w-5 h-5 mt-0.5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${selectedFields[field.key]
-                                                        ? 'bg-white/5 border-white/10'
-                                                        : 'border-gray-300 dark:border-gray-600'
-                                                        }`}
+                                                    className={`w-5 h-5 mt-0.5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${selectedFields[field.key] ? 'bg-white/5 border-white/10' : 'border-gray-300 dark:border-gray-600' }`}
                                                 >
                                                     {selectedFields[field.key] && (
                                                         <CheckSquare className="w-4 h-4 text-white" />
@@ -222,10 +216,7 @@ const MassAssignModal = ({
                         <button
                             onClick={handleApply}
                             disabled={selectedCount === 0}
-                            className={`px-6 py-2 rounded-lg font-semibold flex items-center gap-2 transition-all ${selectedCount === 0
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : 'liquid-btn liquid-btn--primary'
-                                }`}
+                            className={`px-6 py-2 rounded-lg font-semibold flex items-center gap-2 transition-all ${selectedCount === 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'liquid-btn liquid-btn--primary' }`}
                         >
                             <Copy className="w-4 h-4" />
                             Appliquer à {selectedCellsCount} cellule{selectedCellsCount > 1 ? 's' : ''}

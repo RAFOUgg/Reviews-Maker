@@ -9,13 +9,13 @@ import { motion } from 'framer-motion';
 const TERPENE_DATA = {
     myrcene: { color: '#22c55e', gradient: 'from-green-400 to-green-600', icon: '🥭', desc: 'Terreux, musqué' },
     limonene: { color: '#fbbf24', gradient: 'from-yellow-400 to-orange-500', icon: '🍋', desc: 'Agrumes' },
-    caryophyllene: { color: '#a855f7', gradient: 'from-purple-400 to-purple-600', icon: '🌶️', desc: 'Épicé, poivré' },
+    caryophyllene: { color: '#a855f7', gradient: ' ', icon: '🌶️', desc: 'Épicé, poivré' },
     pinene: { color: '#10b981', gradient: 'from-emerald-400 to-teal-600', icon: '🌲', desc: 'Pin, forêt' },
-    linalool: { color: '#ec4899', gradient: 'from-pink-400 to-pink-600', icon: '💐', desc: 'Floral, lavande' },
+    linalool: { color: '#ec4899', gradient: ' ', icon: '💐', desc: 'Floral, lavande' },
     humulene: { color: '#f97316', gradient: 'from-orange-400 to-amber-600', icon: '🍺', desc: 'Houblon, boisé' },
-    terpinolene: { color: '#06b6d4', gradient: 'from-cyan-400 to-blue-500', icon: '🌿', desc: 'Frais, herbacé' },
+    terpinolene: { color: '#06b6d4', gradient: ' ', icon: '🌿', desc: 'Frais, herbacé' },
     ocimene: { color: '#84cc16', gradient: 'from-lime-400 to-green-500', icon: '🌸', desc: 'Sucré, floral' },
-    bisabolol: { color: '#f472b6', gradient: 'from-rose-300 to-pink-500', icon: '🌼', desc: 'Camomille' },
+    bisabolol: { color: '#f472b6', gradient: 'from-rose-300 ', icon: '🌼', desc: 'Camomille' },
     eucalyptol: { color: '#14b8a6', gradient: 'from-teal-400 to-emerald-500', icon: '🌿', desc: 'Mentholé' },
     geraniol: { color: '#fb7185', gradient: 'from-rose-400 to-red-500', icon: '🌹', desc: 'Rose, géranium' },
     valencene: { color: '#fb923c', gradient: 'from-orange-300 to-orange-500', icon: '🍊', desc: 'Orange douce' },
@@ -173,11 +173,7 @@ export default function TerpeneBar({
                             initial={animated ? { opacity: 0, scale: 0.8 } : false}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: index * 0.05 }}
-                            className={`
-                                inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                                bg-gradient-to-r ${info.gradient} text-white shadow-sm
-                                ${s.text}
-                            `}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r ${info.gradient} text-white shadow-sm ${s.text}`}
                             title={info.desc}
                         >
                             <span>{info.icon}</span>

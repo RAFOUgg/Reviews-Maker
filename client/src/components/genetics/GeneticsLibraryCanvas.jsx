@@ -104,19 +104,13 @@ export default function GeneticsLibraryCanvas({ userId, accountType }) {
                     <div className="flex gap-2 mt-3">
                         <button
                             onClick={() => setActiveTab('library')}
-                            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'library'
-                                    ? 'bg-green-500 text-white'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                                }`}
+                            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'library' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
                         >
                             📚 Bibliothèque
                         </button>
                         <button
                             onClick={() => setActiveTab('phenohunt')}
-                            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'phenohunt'
-                                    ? 'bg-purple-500 text-white'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                                }`}
+                            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'phenohunt' ? ' text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
                         >
                             🔬 PhenoHunt
                         </button>
@@ -182,7 +176,7 @@ export default function GeneticsLibraryCanvas({ userId, accountType }) {
                             <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
                                 Gérez vos cultivars en cours de développement
                             </p>
-                            <button className="mt-4 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-sm font-medium transition-colors">
+                            <button className="mt-4 px-4 py-2 hover: text-white rounded-lg text-sm font-medium transition-colors">
                                 Créer un projet
                             </button>
                         </div>

@@ -91,7 +91,7 @@ export default function ToastContainer() {
             case 'warning':
                 return 'bg-amber-500/20 border-amber-500/50 text-amber-50'
             case 'info':
-                return 'bg-blue-500/20 border-blue-500/50 text-blue-50'
+                return ' /50 '
             case 'loading':
                 return 'bg-gray-500/20 border-gray-500/50 text-gray-50'
             default:

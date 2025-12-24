@@ -189,7 +189,7 @@ export default function KYCUploader({ userId, accountType }) {
             <div className="bg-white rounded-2xl p-6 border-2 border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                        <Shield className="w-6 h-6 text-purple-700" />
+                        <Shield className="w-6 h-6" />
                         Vérification d'identité (eKYC)
                     </h3>
                     <span className={`${statusInfo.color} text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2`}>
@@ -222,7 +222,7 @@ export default function KYCUploader({ userId, accountType }) {
                     <select
                         value={selectedType}
                         onChange={(e) => setSelectedType(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 transition-all text-gray-900"
+                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus: focus:ring-2 focus: transition-all text-gray-900"
                     >
                         {documentTypes
                             .filter(type => !type.producerOnly || accountType === 'producer')
@@ -237,10 +237,7 @@ export default function KYCUploader({ userId, accountType }) {
 
                 {/* Drag & Drop Zone */}
                 <div
-                    className={`relative border-3 border-dashed rounded-2xl p-8 text-center transition-all ${dragActive
-                            ? 'border-purple-600 bg-purple-50'
-                            : 'border-gray-300 hover:border-purple-400 hover:bg-gray-50'
-                        }`}
+                    className={`relative border-3 border-dashed rounded-2xl p-8 text-center transition-all ${dragActive ? ' ' : 'border-gray-300 hover: hover:bg-gray-50' }`}
                     onDragEnter={handleDrag}
                     onDragLeave={handleDrag}
                     onDragOver={handleDrag}
@@ -255,7 +252,7 @@ export default function KYCUploader({ userId, accountType }) {
                         disabled={uploading}
                     />
 
-                    <Upload className={`w-12 h-12 mx-auto mb-4 ${dragActive ? 'text-purple-600' : 'text-gray-400'}`} />
+                    <Upload className={`w-12 h-12 mx-auto mb-4 ${dragActive ? '' : 'text-gray-400'}`} />
 
                     <p className="text-gray-900 font-medium mb-2">
                         {uploading ? 'Upload en cours...' : 'Glissez-déposez votre fichier ici'}
@@ -265,10 +262,7 @@ export default function KYCUploader({ userId, accountType }) {
 
                     <label
                         htmlFor="file-upload"
-                        className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${uploading
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-purple-600 to-violet-700 text-white hover:shadow-lg cursor-pointer'
-                            }`}
+                        className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${uploading ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-gradient-to-r text-white hover:shadow-lg cursor-pointer' }`}
                     >
                         <FileText className="w-5 h-5" />
                         Choisir un fichier
@@ -301,11 +295,11 @@ export default function KYCUploader({ userId, accountType }) {
                         {documents.map((doc) => (
                             <div
                                 key={doc.id}
-                                className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all"
+                                className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border-2 border-gray-200 hover: transition-all"
                             >
                                 <div className="flex items-center gap-4 flex-1">
-                                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                                        <FileText className="w-6 h-6 text-purple-700" />
+                                    <div className="w-12 h-12 rounded-lg flex items-center justify-center">
+                                        <FileText className="w-6 h-6" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="font-bold text-gray-900 truncate">{doc.originalName}</p>
@@ -339,7 +333,7 @@ export default function KYCUploader({ userId, accountType }) {
                                 <div className="flex items-center gap-2 ml-4">
                                     <button
                                         onClick={() => handleView(doc.id)}
-                                        className="p-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all"
+                                        className="p-2 rounded-lg hover: transition-all"
                                         title="Voir le document"
                                     >
                                         <Eye className="w-5 h-5" />

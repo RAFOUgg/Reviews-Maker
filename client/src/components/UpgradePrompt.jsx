@@ -29,9 +29,9 @@ export default function UpgradePrompt({ feature, message, inline = false }) {
     }
 
     return (
-        <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-2 border-purple-200 dark:border-purple-800 rounded-2xl p-6">
+        <div className="bg-gradient-to-br dark:/20 dark:/20 border-2 dark: rounded-2xl p-6">
             <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
+                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br rounded-xl flex items-center justify-center">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
@@ -52,7 +52,7 @@ export default function UpgradePrompt({ feature, message, inline = false }) {
                                 <Link
                                     key={planType}
                                     to={`/settings/subscription?upgrade=${planType}`}
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg font-semibold transition-all hover:scale-105 shadow-lg"
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r hover: hover: text-white rounded-lg font-semibold transition-all hover:scale-105 shadow-lg"
                                 >
                                     <span>Passer à {plan.name}</span>
                                     <span className="text-sm opacity-90">{plan.price}€/mois</span>
@@ -62,7 +62,7 @@ export default function UpgradePrompt({ feature, message, inline = false }) {
 
                         <Link
                             to="/choose-account"
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border-2 border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 rounded-lg font-semibold hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-all"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border-2 dark: dark: rounded-lg font-semibold hover: dark:hover: transition-all"
                         >
                             <span>Comparer les plans</span>
                         </Link>

@@ -42,8 +42,8 @@ export default function VisualSection({ productType, data, onChange }) {
     return (
         <div className="space-y-6 bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
             <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center">
-                    <svg className="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
@@ -74,13 +74,7 @@ export default function VisualSection({ productType, data, onChange }) {
                                             setSelectedColor(shade.id);
                                             setColorRating(Math.min(10, Math.ceil(shade.value / 2.3)));
                                         }}
-                                        className={`
-                      relative p-3 rounded-xl border-2 transition-all duration-200
-                      hover:scale-105 hover:shadow-md
-                      ${selectedColor === shade.id
-                                                ? 'border-violet-600 ring-2 ring-violet-200 shadow-lg'
-                                                : 'border-gray-200 hover:border-gray-300'}
-                    `}
+                                        className={`relative p-3 rounded-xl border-2 transition-all duration-200 hover:scale-105 hover:shadow-md ${selectedColor === shade.id ? 'border-violet-600 ring-2 ring-violet-200 shadow-lg' : 'border-gray-200 hover:border-gray-300'}`}
                                         style={{ backgroundColor: shade.hex }}
                                         title={shade.name}
                                     >
@@ -98,8 +92,8 @@ export default function VisualSection({ productType, data, onChange }) {
                     ))}
                 </div>
                 {selectedColor && (
-                    <div className="mt-3 p-3 bg-violet-50 rounded-lg">
-                        <p className="text-sm text-violet-800">
+                    <div className="mt-3 p-3 rounded-lg">
+                        <p className="text-sm">
                             <span className="font-semibold">Couleur sélectionnée :</span>{' '}
                             {allColors.find(c => c.id === selectedColor)?.name}
                         </p>
@@ -177,27 +171,27 @@ export default function VisualSection({ productType, data, onChange }) {
             />
 
             {/* Résumé visuel */}
-            <div className="mt-6 p-4 bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl border border-violet-200">
-                <h4 className="text-sm font-semibold text-violet-900 mb-3">📊 Résumé Visuel</h4>
+            <div className="mt-6 p-4 bg-gradient-to-br rounded-xl border border-violet-200">
+                <h4 className="text-sm font-semibold mb-3">📊 Résumé Visuel</h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
                         <span className="text-gray-600">Note couleur :</span>
-                        <span className="ml-2 font-bold text-violet-700">{colorRating}/10</span>
+                        <span className="ml-2 font-bold">{colorRating}/10</span>
                     </div>
                     <div>
                         <span className="text-gray-600">Densité :</span>
-                        <span className="ml-2 font-bold text-violet-700">{density}/10</span>
+                        <span className="ml-2 font-bold">{density}/10</span>
                     </div>
                     {productType === 'Fleur' && (
                         <div>
                             <span className="text-gray-600">Trichomes :</span>
-                            <span className="ml-2 font-bold text-violet-700">{trichomes}/10</span>
+                            <span className="ml-2 font-bold">{trichomes}/10</span>
                         </div>
                     )}
                     {isHashOrConcentrate && (
                         <div>
                             <span className="text-gray-600">Transparence :</span>
-                            <span className="ml-2 font-bold text-violet-700">{transparency}/10</span>
+                            <span className="ml-2 font-bold">{transparency}/10</span>
                         </div>
                     )}
                     <div>

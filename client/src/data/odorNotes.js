@@ -243,12 +243,12 @@ export const getNotesByFamily = (familyId) => {
 export const AROMA_INTENSITY_LEVELS = [
     { value: 1, label: 'Très faible', color: 'text-gray-400' },
     { value: 2, label: 'Faible', color: 'text-gray-500' },
-    { value: 3, label: 'Légère', color: 'text-blue-400' },
-    { value: 4, label: 'Modérée faible', color: 'text-blue-500' },
+    { value: 3, label: 'Légère', color: '' },
+    { value: 4, label: 'Modérée faible', color: '' },
     { value: 5, label: 'Modérée', color: 'text-green-500' },
     { value: 6, label: 'Modérée forte', color: 'text-green-600' },
     { value: 7, label: 'Forte', color: 'text-yellow-500' },
     { value: 8, label: 'Très forte', color: 'text-orange-500' },
     { value: 9, label: 'Puissante', color: 'text-red-500' },
-    { value: 10, label: 'Exceptionnelle', color: 'text-purple-600' }
+    { value: 10, label: 'Exceptionnelle', color: '' }
 ];

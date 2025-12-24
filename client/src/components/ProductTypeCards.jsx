@@ -22,13 +22,13 @@ export default function ProductTypeCards({ isAuthenticated, onCreateReview }) {
         {
             name: 'Concentré',
             icon: '🔮',
-            gradient: 'from-purple-500 via-violet-500 to-indigo-500',
+            gradient: '  ',
             color: 'purple'
         },
         {
             name: 'Comestible',
             icon: '🍰',
-            gradient: 'from-pink-500 via-rose-500 to-red-500',
+            gradient: ' via-rose-500 to-red-500',
             color: 'pink'
         }
     ]
@@ -50,10 +50,7 @@ export default function ProductTypeCards({ isAuthenticated, onCreateReview }) {
                         key={type.name}
                         onClick={() => onCreateReview(type.name)}
                         disabled={!isAuthenticated}
-                        className={`group relative overflow-hidden rounded-3xl p-8 transition-all duration-500 transform ptc-${type.color} ${isAuthenticated
-                            ? 'hover:scale-110 hover:rotate-2 cursor-pointer shadow-2xl'
-                            : 'opacity-40 cursor-not-allowed'
-                            }`}
+                        className={`group relative overflow-hidden rounded-3xl p-8 transition-all duration-500 transform ptc-${type.color} ${isAuthenticated ? 'hover:scale-110 hover:rotate-2 cursor-pointer shadow-2xl' : 'opacity-40 cursor-not-allowed' }`}
                     >
                         {/* Gradient Background avec animation - use ptc-gradient so global neutralization won't remove it */}
                         <div className={`absolute inset-0 ptc-gradient opacity-90 group-hover:opacity-100 transition-opacity`} />

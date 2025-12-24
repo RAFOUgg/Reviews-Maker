@@ -377,10 +377,7 @@ const PipelineCellModal = ({
                                         <button
                                             key={idx}
                                             onClick={() => setActiveTab(idx)}
-                                            className={`
-                        flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors
-                        ${activeTab === idx ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}
-                      `}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${activeTab === idx ? ' text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
                                         >
                                             <span>{content.icon || '📍'}</span>
                                             <span className="text-sm font-medium">{content.label}</span>

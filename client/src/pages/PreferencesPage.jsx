@@ -41,10 +41,7 @@ export default function PreferencesPage() {
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === tab.id
-                                            ? 'bg-white/5 text-white shadow-lg'
-                                            : 'text-gray-300 hover:bg-gray-800/50'
-                                            }`}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === tab.id ? 'bg-white/5 text-white shadow-lg' : 'text-gray-300 hover:bg-gray-800/50' }`}
                                     >
                                         <span className="text-xl">{tab.icon}</span>
                                         <span className="font-medium">{tab.label}</span>
@@ -230,7 +227,7 @@ function WatermarksPreferences() {
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button className="p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl text-gray-600 dark:text-gray-400 hover:border-purple-500 hover:text-purple-500 transition-all">
+                <button className="p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl text-gray-600 dark:text-gray-400 hover: hover: transition-all">
                     <div className="text-4xl mb-2">+</div>
                     <div className="font-semibold">Créer un filigrane</div>
                 </button>
@@ -284,7 +281,7 @@ function ExportPreferences() {
                     </select>
                 </div>
 
-                <button className="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all">
+                <button className="w-full px-6 py-3 bg-gradient-to-r text-white rounded-xl font-semibold hover:shadow-lg transition-all">
                     Sauvegarder les modifications
                 </button>
             </div>

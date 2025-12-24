@@ -80,7 +80,7 @@ const PipelineGridView = ({
 
     // Obtenir la couleur selon l'intensité
     const getIntensityColor = (intensity, isSelected, isHovered, isDragOver) => {
-        if (isSelected) return 'bg-blue-500 border-blue-400 ring-2 ring-blue-400';
+        if (isSelected) return '  ring-2 ';
         if (isDragOver) return 'bg-green-500/30 border-green-400 ring-2 ring-green-400';
         if (isHovered) return 'bg-gray-600 border-gray-400 ring-2 ring-gray-400';
 
@@ -200,13 +200,7 @@ const PipelineGridView = ({
                             onDragOver={(e) => handleDragOver(e, cellIndex)}
                             onDragLeave={handleDragLeave}
                             onDrop={(e) => handleDrop(e, cellIndex)}
-                            className={`
-                relative cursor-pointer
-                ${config.intervalType === 'phases' ? 'w-16 h-16 md:w-20 md:h-20' : 'w-3 h-3 md:w-4 md:h-4'}
-                rounded-sm border transition-all duration-200
-                ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)}
-                ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}
-              `}
+                            className={`relative cursor-pointer ${config.intervalType === 'phases' ? 'w-16 h-16 md:w-20 md:h-20' : 'w-3 h-3 md:w-4 md:h-4'} rounded-sm border transition-all duration-200 ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
                             title={getTooltipContent(cellIndex, cellData)}
                         >
                             {/* Mode phases: afficher icône de phase + mini-icônes */}
@@ -236,7 +230,7 @@ const PipelineGridView = ({
 
                             {/* Indicateur de sélection */}
                             {isSelected && (
-                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></div>
+                                <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white"></div>
                             )}
                         </motion.div>
                     );
@@ -248,13 +242,7 @@ const PipelineGridView = ({
                         whileHover={{ scale: 1.15 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => onAddCells(10)}
-                        className={`
-              ${config.intervalType === 'phases' ? 'w-16 h-16 md:w-20 md:h-20' : 'w-3 h-3 md:w-4 md:h-4'}
-              rounded-sm border-2 border-dashed border-gray-600
-              hover:border-blue-500 hover:bg-blue-500/10
-              flex items-center justify-center
-              transition-all duration-200
-            `}
+                        className={`${config.intervalType === 'phases' ? 'w-16 h-16 md:w-20 md:h-20' : 'w-3 h-3 md:w-4 md:h-4'} rounded-sm border-2 border-dashed border-gray-600 hover: hover: flex items-center justify-center transition-all duration-200`}
                         title="Ajouter 10 étapes"
                     >
                         <Plus className={config.intervalType === 'phases' ? 'w-8 h-8' : 'w-2 h-2'} />

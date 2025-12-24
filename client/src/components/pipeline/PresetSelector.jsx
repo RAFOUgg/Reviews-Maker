@@ -32,7 +32,7 @@ const PresetSelector = ({ presets = [], selectedPresets = [], onTogglePreset, on
                 </h4>
                 <button
                     onClick={() => setShowSaveModal(true)}
-                    className="text-xs px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors flex items-center gap-1"
+                    className="text-xs px-2 py-1 hover: text-white rounded transition-colors flex items-center gap-1"
                     title="Créer un nouveau préréglage"
                 >
                     <span>+</span> Nouveau
@@ -55,7 +55,7 @@ const PresetSelector = ({ presets = [], selectedPresets = [], onTogglePreset, on
                                 type="checkbox"
                                 checked={selectedPresets.includes(preset.id)}
                                 onChange={() => onTogglePreset?.(preset.id)}
-                                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                className="w-4 h-4 rounded border-gray-300 focus:"
                             />
                             <div className="flex-1 min-w-0">
                                 <div className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">
@@ -108,7 +108,7 @@ const PresetSelector = ({ presets = [], selectedPresets = [], onTogglePreset, on
                                     value={newPresetName}
                                     onChange={(e) => setNewPresetName(e.target.value)}
                                     placeholder="Ex: Configuration été"
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
                                     autoFocus
                                 />
                             </div>
@@ -121,7 +121,7 @@ const PresetSelector = ({ presets = [], selectedPresets = [], onTogglePreset, on
                                     value={newPresetDesc}
                                     onChange={(e) => setNewPresetDesc(e.target.value)}
                                     placeholder="Configuration optimisée pour les températures estivales..."
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 resize-none"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus: resize-none"
                                     rows={3}
                                 />
                             </div>
@@ -137,7 +137,7 @@ const PresetSelector = ({ presets = [], selectedPresets = [], onTogglePreset, on
                             <button
                                 onClick={handleSaveNewPreset}
                                 disabled={!newPresetName.trim()}
-                                className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
+                                className="flex-1 px-4 py-2 hover: disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
                             >
                                 Sauvegarder
                             </button>

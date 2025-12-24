@@ -157,8 +157,8 @@ export default function TimelineGrid({
     return (
         <div className="space-y-4 sm:space-y-6">
             {/* Configuration de la trame */}
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 sm:p-6 rounded-2xl border-2 border-purple-200">
-                <h3 className="text-base sm:text-lg font-bold text-purple-800 mb-3 sm:mb-4 flex items-center gap-2">
+            <div className="bg-gradient-to-r p-4 sm:p-6 rounded-2xl border-2">
+                <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2">
                     <span>⚙️</span> Configuration de la timeline
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -169,7 +169,7 @@ export default function TimelineGrid({
                         <select
                             value={config?.type || 'jour'}
                             onChange={(e) => onConfigChange && onConfigChange('type', e.target.value)}
-                            className="w-full px-3 py-2 border-2 border-purple-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
+                            className="w-full px-3 py-2 border-2 rounded-lg outline-none focus:ring-2 focus:"
                         >
                             <option value="jour">Jours (J+0, J+1...)</option>
                             <option value="semaine">Semaines (S1, S2...)</option>
@@ -190,7 +190,7 @@ export default function TimelineGrid({
                                     value={config?.start || ''}
                                     onChange={(e) => onConfigChange && onConfigChange('start', e.target.value)}
                                     required={config?.type === 'jour' || config?.type === 'semaine'}
-                                    className="w-full px-3 py-2 border-2 border-purple-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
+                                    className="w-full px-3 py-2 border-2 rounded-lg outline-none focus:ring-2 focus:"
                                 />
                             </div>
                             <div>
@@ -203,18 +203,18 @@ export default function TimelineGrid({
                                     value={config?.end || ''}
                                     onChange={(e) => onConfigChange && onConfigChange('end', e.target.value)}
                                     required={config?.type === 'jour'}
-                                    className="w-full px-3 py-2 border-2 border-purple-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
+                                    className="w-full px-3 py-2 border-2 rounded-lg outline-none focus:ring-2 focus:"
                                 />
                             </div>
                         </>
                     )}
 
                     {config?.type === 'phase' && (
-                        <div className="md:col-span-2 p-4 bg-purple-100 rounded-lg">
-                            <p className="text-sm text-purple-800 font-medium">
+                        <div className="md:col-span-2 p-4 rounded-lg">
+                            <p className="text-sm font-medium">
                                 📋 Mode Phases : 12 phases prédéfinies (Graine → Fin floraison)
                             </p>
-                            <p className="text-xs text-purple-600 mt-1">
+                            <p className="text-xs mt-1">
                                 Chaque phase aura sa propre case dans la timeline
                             </p>
                         </div>
@@ -259,8 +259,7 @@ export default function TimelineGrid({
                                     onClick={() => handleCellClick(cell.timestamp, index)}
                                     onMouseEnter={() => setHoveredCell(cell)}
                                     onMouseLeave={() => setHoveredCell(null)}
-                                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 rounded-sm cursor-pointer transition-all hover:ring-1 sm:hover:ring-2 hover:ring-purple-500 hover:scale-110 sm:hover:scale-125 ${getCellColor(cell.timestamp)} ${selectedCell === cell.timestamp ? 'ring-1 sm:ring-2 ring-blue-600 scale-110 sm:scale-125' : ''
-                                        }`}
+                                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 rounded-sm cursor-pointer transition-all hover:ring-1 sm:hover:ring-2 hover: hover:scale-110 sm:hover:scale-125 ${getCellColor(cell.timestamp)} ${selectedCell === cell.timestamp ? 'ring-1 sm:ring-2 scale-110 sm:scale-125' : '' }`}
                                     title={`${cell.label} - ${cell.date}`}
                                 />
                             ))}
@@ -288,11 +287,11 @@ export default function TimelineGrid({
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 sm:p-6 sm:rounded-t-2xl">
+                        <div className="sticky top-0 bg-gradient-to-r text-white p-4 sm:p-6 sm:rounded-t-2xl">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <h2 className="text-lg sm:text-2xl font-bold">{selectedCellInfo.label}</h2>
-                                    <p className="text-purple-100 text-xs sm:text-sm">{selectedCellInfo.date}</p>
+                                    <p className="text-xs sm:text-sm">{selectedCellInfo.date}</p>
                                 </div>
                                 <button
                                     onClick={closeModal}
@@ -311,11 +310,11 @@ export default function TimelineGrid({
 
                             {/* Configuration générale (uniquement cellule #0) */}
                             {selectedCellIndex === 0 && generalConfigFields.length > 0 && (
-                                <div className="border-l-2 sm:border-l-4 border-purple-500 pl-2 sm:pl-4 bg-purple-50/50 p-3 sm:p-4 rounded-lg space-y-3 sm:space-y-4">
-                                    <h3 className="text-base sm:text-lg font-bold text-purple-800 flex items-center gap-2">
+                                <div className="border-l-2 sm:border-l-4 pl-2 sm:pl-4 p-3 sm:p-4 rounded-lg space-y-3 sm:space-y-4">
+                                    <h3 className="text-base sm:text-lg font-bold flex items-center gap-2">
                                         <span>⚙️</span> <span className="hidden sm:inline">Configuration générale (point de départ)</span><span className="sm:hidden">Config initiale</span>
                                     </h3>
-                                    <p className="text-xs text-purple-700 italic mb-2 sm:mb-3">
+                                    <p className="text-xs italic mb-2 sm:mb-3">
                                         Ces informations représentent la configuration initiale de votre culture
                                     </p>
 
@@ -331,7 +330,7 @@ export default function TimelineGrid({
                                                 <select
                                                     value={generalConfigData?.[field.key] || ''}
                                                     onChange={(e) => onGeneralConfigChange && onGeneralConfigChange(field.key, e.target.value)}
-                                                    className="w-full px-3 py-2 border-2 border-purple-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
+                                                    className="w-full px-3 py-2 border-2 rounded-lg outline-none focus:ring-2 focus:"
                                                 >
                                                     <option value="">Sélectionner...</option>
                                                     {field.options?.map(opt => (
@@ -351,7 +350,7 @@ export default function TimelineGrid({
                                                     value={generalConfigData?.[field.key] || ''}
                                                     onChange={(e) => onGeneralConfigChange && onGeneralConfigChange(field.key, e.target.value)}
                                                     placeholder={field.placeholder}
-                                                    className="w-full px-3 py-2 border-2 border-purple-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
+                                                    className="w-full px-3 py-2 border-2 rounded-lg outline-none focus:ring-2 focus:"
                                                 />
                                             )}
 
@@ -361,7 +360,7 @@ export default function TimelineGrid({
                                                     value={generalConfigData?.[field.key] || ''}
                                                     onChange={(e) => onGeneralConfigChange && onGeneralConfigChange(field.key, e.target.value)}
                                                     placeholder={field.placeholder}
-                                                    className="w-full px-3 py-2 border-2 border-purple-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
+                                                    className="w-full px-3 py-2 border-2 rounded-lg outline-none focus:ring-2 focus:"
                                                 />
                                             )}
 
@@ -375,7 +374,7 @@ export default function TimelineGrid({
                                                     }}
                                                     placeholder={field.placeholder}
                                                     rows={field.rows || 3}
-                                                    className="w-full px-3 py-2 border-2 border-purple-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
+                                                    className="w-full px-3 py-2 border-2 rounded-lg outline-none focus:ring-2 focus:"
                                                 />
                                             )}
                                         </div>
@@ -404,7 +403,7 @@ export default function TimelineGrid({
                                         <select
                                             value={selectedCellData?.[field.key] || ''}
                                             onChange={(e) => handleFieldChange(field.key, e.target.value)}
-                                            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg outline-none focus:ring-2 focus:"
                                         >
                                             <option value="">Sélectionner...</option>
                                             {field.options?.map(opt => (
@@ -424,7 +423,7 @@ export default function TimelineGrid({
                                             value={selectedCellData?.[field.key] || ''}
                                             onChange={(e) => handleFieldChange(field.key, e.target.value)}
                                             placeholder={field.placeholder}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:"
                                         />
                                     )}
 
@@ -434,7 +433,7 @@ export default function TimelineGrid({
                                             value={selectedCellData?.[field.key] || ''}
                                             onChange={(e) => handleFieldChange(field.key, e.target.value)}
                                             placeholder={field.placeholder}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:"
                                         />
                                     )}
 
@@ -448,7 +447,7 @@ export default function TimelineGrid({
                                             }}
                                             placeholder={field.placeholder}
                                             rows={field.rows || 3}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:"
                                         />
                                     )}
 
@@ -461,11 +460,11 @@ export default function TimelineGrid({
                                                 step={field.step || 1}
                                                 value={selectedCellData?.[field.key] || field.min || 0}
                                                 onChange={(e) => handleFieldChange(field.key, parseInt(e.target.value))}
-                                                className="w-full h-2 bg-gradient-to-r from-purple-400 to-pink-600 rounded-full appearance-none cursor-pointer"
+                                                className="w-full h-2 bg-gradient-to-r rounded-full appearance-none cursor-pointer"
                                             />
                                             <div className="flex justify-between text-xs text-gray-500">
                                                 <span>{field.min || 0}</span>
-                                                <span className="font-bold text-purple-600">{selectedCellData?.[field.key] || field.min || 0}</span>
+                                                <span className="font-bold">{selectedCellData?.[field.key] || field.min || 0}</span>
                                                 <span>{field.max || 100}</span>
                                             </div>
                                         </div>
@@ -487,7 +486,7 @@ export default function TimelineGrid({
                                     }}
                                     placeholder="Observations, événements, paramètres..."
                                     rows="4"
-                                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
+                                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg outline-none focus:ring-2 focus:"
                                 />
                                 <p className="text-xs text-gray-500 mt-1 text-right">
                                     {(selectedCellData?.notes || '').length}/500
@@ -499,7 +498,7 @@ export default function TimelineGrid({
                         <div className="sticky bottom-0 bg-gray-50 p-4 rounded-b-2xl border-t border-gray-200">
                             <button
                                 onClick={closeModal}
-                                className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg"
+                                className="w-full px-6 py-3 bg-gradient-to-r text-white rounded-xl font-semibold hover: hover: transition-all shadow-lg"
                             >
                                 ✓ Enregistrer et fermer
                             </button>

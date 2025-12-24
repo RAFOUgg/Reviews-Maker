@@ -278,13 +278,7 @@ const PipelineContentsSidebar = ({
                                             draggable={!readonly}
                                             onDragStart={(e) => handleDragStart(e, item, category.category)}
                                             onDragEnd={handleDragEnd}
-                                            className={`
-                        flex items-center justify-between p-2 rounded-lg
-                        ${readonly ? 'opacity-50' : 'cursor-grab active:cursor-grabbing hover:bg-gray-800'}
-                        ${draggedItem?.type === item.type ? 'opacity-50' : ''}
-                        transition-all duration-200 border border-transparent
-                        hover:border-blue-500/50
-                      `}
+                                            className={`flex items-center justify-between p-2 rounded-lg ${readonly ? 'opacity-50' : 'cursor-grab active:cursor-grabbing hover:bg-gray-800'} ${draggedItem?.type === item.type ? 'opacity-50' : ''} transition-all duration-200 border border-transparent hover:/50`}
                                         >
                                             <div className="flex items-center gap-2 text-sm text-gray-300">
                                                 <span className="text-lg">{item.icon}</span>
@@ -292,12 +286,7 @@ const PipelineContentsSidebar = ({
                                             </div>
 
                                             {/* Badge */}
-                                            <span className={`
-                                                text-xs px-2 py-0.5 rounded-full font-medium
-                                                ${item.badge === 'Config' ? 'bg-white/5 text-gray-200' : ''}
-                                                ${item.badge === 'Évolutif' ? 'bg-green-500/20 text-green-300' : ''}
-                                                ${item.badge === 'Fixe' ? 'bg-blue-500/20 text-blue-300' : ''}
-                                            `}>
+                                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${item.badge === 'Config' ? 'bg-white/5 text-gray-200' : ''} ${item.badge === 'Évolutif' ? 'bg-green-500/20 text-green-300' : ''} ${item.badge === 'Fixe' ? ' ' : ''}`}>
                                                 {item.badge}
                                             </span>
                                         </div>
@@ -321,7 +310,7 @@ const PipelineContentsSidebar = ({
                         <span>Évolutif: Peut varier dans le temps</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                        <span className="w-2 h-2 rounded-full"></span>
                         <span>Fixe: Valeur unique finale</span>
                     </div>
                 </div>

@@ -119,7 +119,7 @@ const LegalWelcomeModal = ({ onAccept, onDeny }) => {
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
                 <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl border border-gray-700">
                     <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2"></div>
                     </div>
                 </div>
             </div>
@@ -147,9 +147,9 @@ const LegalWelcomeModal = ({ onAccept, onDeny }) => {
                 </div>
 
                 {/* Language selector - prominent on first visit */}
-                <div className={`mb-6 ${isFirstVisit ? 'bg-purple-900/20 border-2 border-purple-500/50 rounded-lg p-4' : ''}`}>
+                <div className={`mb-6 ${isFirstVisit ? ' border-2 /50 rounded-lg p-4' : ''}`}>
                     {isFirstVisit && (
-                        <p className="text-purple-200 text-sm mb-3 font-medium">
+                        <p className="text-sm mb-3 font-medium">
                             🌍 {t.welcome?.selectLanguage || 'Choisissez votre langue / Choose your language'}
                         </p>
                     )}
@@ -158,10 +158,7 @@ const LegalWelcomeModal = ({ onAccept, onDeny }) => {
                             <button
                                 key={lang.code}
                                 onClick={() => handleLanguageChange(lang.i18nCode)}
-                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${language === lang.i18nCode
-                                        ? 'bg-purple-600 text-white border-2 border-purple-400'
-                                        : 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600'
-                                    }`}
+                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${language === lang.i18nCode ? ' text-white border-2 ' : 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600' }`}
                             >
                                 <span className="mr-2">{lang.flag}</span>
                                 {lang.label}
@@ -186,7 +183,7 @@ const LegalWelcomeModal = ({ onAccept, onDeny }) => {
                                 type="checkbox"
                                 checked={ageConfirmed}
                                 onChange={(e) => setAgeConfirmed(e.target.checked)}
-                                className="mt-1 h-5 w-5 rounded border-gray-600 text-purple-600 focus:ring-purple-500 focus:ring-offset-gray-900"
+                                className="mt-1 h-5 w-5 rounded border-gray-600 focus: focus:ring-offset-gray-900"
                             />
                             <span className="text-gray-300 text-sm group-hover:text-white transition">
                                 {t.consent?.ageConfirm || 'Je confirme avoir 18 ans ou plus et être majeur dans mon pays de résidence.'}
@@ -214,7 +211,7 @@ const LegalWelcomeModal = ({ onAccept, onDeny }) => {
                             type="checkbox"
                             checked={consentGiven}
                             onChange={(e) => setConsentGiven(e.target.checked)}
-                            className="mt-1 h-5 w-5 rounded border-gray-600 text-purple-600 focus:ring-purple-500 focus:ring-offset-gray-900"
+                            className="mt-1 h-5 w-5 rounded border-gray-600 focus: focus:ring-offset-gray-900"
                         />
                         <span className="text-gray-300 text-sm group-hover:text-white transition">
                             {t.consent?.legalConsent || 'J\'ai lu et j\'accepte la charte légale et les règles de ce site.'}
@@ -240,7 +237,7 @@ const LegalWelcomeModal = ({ onAccept, onDeny }) => {
                     <button
                         onClick={handleAccept}
                         disabled={!ageConfirmed || !consentGiven}
-                        className="flex-1 px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white rounded-lg font-medium transition"
+                        className="flex-1 px-6 py-3 hover: disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white rounded-lg font-medium transition"
                     >
                         {t.actions?.continue || 'Continuer'}
                     </button>

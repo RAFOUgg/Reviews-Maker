@@ -56,7 +56,7 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
         <div className="space-y-6">
             <LiquidGlass variant="card" className="p-6">
                 <div className="flex items-center gap-2 mb-4">
-                    <FlaskConical className="w-6 h-6 text-purple-500" />
+                    <FlaskConical className="w-6 h-6" />
                     <h3 className="text-xl font-bold dark:text-white">Pipeline de Séparation</h3>
                 </div>
 
@@ -69,10 +69,7 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
                                 <button
                                     key={m.id}
                                     onClick={() => handleProcessChange('method', m.id)}
-                                    className={`flex-1 p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${processData.method === m.id
-                                            ? 'bg-purple-600/20 border-purple-500 text-purple-400'
-                                            : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
-                                        }`}
+                                    className={`flex-1 p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${processData.method === m.id ? ' ' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10' }`}
                                 >
                                     <m.icon className="w-5 h-5" />
                                     <span className="text-xs font-medium text-center">{m.name}</span>

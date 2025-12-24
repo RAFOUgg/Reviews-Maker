@@ -230,10 +230,10 @@ export default function DisclaimerRDR() {
                                 type="checkbox"
                                 checked={accepted}
                                 onChange={(e) => setAccepted(e.target.checked)}
-                                className="mt-1 w-5 h-5 rounded border-gray-300 text-violet-600 focus:ring-2 focus:ring-violet-500 cursor-pointer"
+                                className="mt-1 w-5 h-5 rounded border-gray-300 focus:ring-2 focus:ring-violet-500 cursor-pointer"
                             />
                             <div className="flex-1">
-                                <p className="text-gray-900 dark:text-white font-semibold mb-2 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition">
+                                <p className="text-gray-900 dark:text-white font-semibold mb-2 group-hover: dark:group-hover: transition">
                                     Je confirme avoir lu et compris
                                 </p>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">

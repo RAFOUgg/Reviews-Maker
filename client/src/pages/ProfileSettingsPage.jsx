@@ -131,8 +131,8 @@ export default function ProfileSettingsPage() {
         const type = profile?.accountType || 'consumer'
         const badges = {
             consumer: { label: 'Amateur', color: 'bg-green-500', icon: '🌱' },
-            influencer: { label: 'Influenceur', color: 'bg-purple-500', icon: '⭐' },
-            producer: { label: 'Producteur', color: 'bg-blue-500', icon: '🏢' }
+            influencer: { label: 'Influenceur', color: '', icon: '⭐' },
+            producer: { label: 'Producteur', color: '', icon: '🏢' }
         }
         return badges[type] || badges.consumer
     }
@@ -192,15 +192,15 @@ export default function ProfileSettingsPage() {
                             {/* Stats Row */}
                             <div className="flex gap-6 flex-wrap">
                                 <div className="text-center">
-                                    <div className="text-2xl font-bold text-purple-700">{profile?.reviewCount || 0}</div>
+                                    <div className="text-2xl font-bold">{profile?.reviewCount || 0}</div>
                                     <div className="text-sm text-gray-600">Reviews</div>
                                 </div>
                                 <div className="text-center">
-                                    <div className="text-2xl font-bold text-purple-700">{profile?.exportCount || 0}</div>
+                                    <div className="text-2xl font-bold">{profile?.exportCount || 0}</div>
                                     <div className="text-sm text-gray-600">Exports</div>
                                 </div>
                                 <div className="text-center">
-                                    <div className="text-2xl font-bold text-purple-700">{profile?.likes || 0}</div>
+                                    <div className="text-2xl font-bold">{profile?.likes || 0}</div>
                                     <div className="text-sm text-gray-600">J'aime</div>
                                 </div>
                             </div>
@@ -249,10 +249,7 @@ export default function ProfileSettingsPage() {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold whitespace-nowrap transition-all ${isActive
-                                        ? 'liquid-btn liquid-btn--accent'
-                                        : 'text-gray-700 hover:bg-white/5'
-                                        }`}>
+                                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold whitespace-nowrap transition-all ${isActive ? 'liquid-btn liquid-btn--accent' : 'text-gray-700 hover:bg-white/5' }`}>
                                     <Icon className="w-5 h-5" />
                                     {tab.label}
                                 </button>
@@ -279,7 +276,7 @@ export default function ProfileSettingsPage() {
                                         value={formData.username}
                                         onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                                         disabled={!editing}
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 transition-all disabled:bg-gray-100 disabled:text-gray-600 text-gray-900"
+                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus: focus:ring-2 focus: transition-all disabled:bg-gray-100 disabled:text-gray-600 text-gray-900"
                                     />
                                 </div>
 
@@ -293,7 +290,7 @@ export default function ProfileSettingsPage() {
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                         disabled={!editing}
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 transition-all disabled:bg-gray-100 disabled:text-gray-600 text-gray-900"
+                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus: focus:ring-2 focus: transition-all disabled:bg-gray-100 disabled:text-gray-600 text-gray-900"
                                     />
                                 </div>
                             </div>
@@ -308,7 +305,7 @@ export default function ProfileSettingsPage() {
                                     onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                                     disabled={!editing}
                                     rows={4}
-                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 transition-all disabled:bg-gray-100 disabled:text-gray-600 text-gray-900 resize-none"
+                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus: focus:ring-2 focus: transition-all disabled:bg-gray-100 disabled:text-gray-600 text-gray-900 resize-none"
                                     placeholder="Parlez-nous de vous..."
                                 />
                             </div>
@@ -323,16 +320,16 @@ export default function ProfileSettingsPage() {
                                     value={formData.website}
                                     onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                                     disabled={!editing}
-                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 transition-all disabled:bg-gray-100 disabled:text-gray-600 text-gray-900"
+                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus: focus:ring-2 focus: transition-all disabled:bg-gray-100 disabled:text-gray-600 text-gray-900"
                                     placeholder="https://..."
                                 />
                             </div>
 
                             {/* Social Links (Influencer/Producer) */}
                             {(profile?.accountType === 'influencer' || profile?.accountType === 'producer') && (
-                                <div className="bg-purple-50 rounded-2xl p-6 border-2 border-purple-200">
+                                <div className="rounded-2xl p-6 border-2">
                                     <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                        <TrendingUp className="w-5 h-5 text-purple-700" />
+                                        <TrendingUp className="w-5 h-5" />
                                         Réseaux Sociaux
                                     </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -345,7 +342,7 @@ export default function ProfileSettingsPage() {
                                             })}
                                             disabled={!editing}
                                             placeholder="Instagram"
-                                            className="px-4 py-2 rounded-lg border-2 border-purple-300 focus:border-purple-600 disabled:bg-purple-100 text-gray-900"
+                                            className="px-4 py-2 rounded-lg border-2 focus: disabled: text-gray-900"
                                         />
                                         <input
                                             type="text"
@@ -356,7 +353,7 @@ export default function ProfileSettingsPage() {
                                             })}
                                             disabled={!editing}
                                             placeholder="TikTok"
-                                            className="px-4 py-2 rounded-lg border-2 border-purple-300 focus:border-purple-600 disabled:bg-purple-100 text-gray-900"
+                                            className="px-4 py-2 rounded-lg border-2 focus: disabled: text-gray-900"
                                         />
                                         <input
                                             type="text"
@@ -367,7 +364,7 @@ export default function ProfileSettingsPage() {
                                             })}
                                             disabled={!editing}
                                             placeholder="YouTube"
-                                            className="px-4 py-2 rounded-lg border-2 border-purple-300 focus:border-purple-600 disabled:bg-purple-100 text-gray-900"
+                                            className="px-4 py-2 rounded-lg border-2 focus: disabled: text-gray-900"
                                         />
                                     </div>
                                 </div>
@@ -375,9 +372,9 @@ export default function ProfileSettingsPage() {
 
                             {/* Producer Info */}
                             {profile?.accountType === 'producer' && (
-                                <div className="bg-blue-50 rounded-2xl p-6 border-2 border-blue-200">
+                                <div className="rounded-2xl p-6 border-2">
                                     <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                        <Building2 className="w-5 h-5 text-blue-700" />
+                                        <Building2 className="w-5 h-5" />
                                         Informations Entreprise
                                     </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -385,25 +382,25 @@ export default function ProfileSettingsPage() {
                                             type="text"
                                             placeholder="Nom de l'entreprise"
                                             disabled={!editing}
-                                            className="px-4 py-2 rounded-lg border-2 border-blue-300 focus:border-blue-600 disabled:bg-blue-100 text-gray-900"
+                                            className="px-4 py-2 rounded-lg border-2 focus: disabled: text-gray-900"
                                         />
                                         <input
                                             type="text"
                                             placeholder="SIRET"
                                             disabled={!editing}
-                                            className="px-4 py-2 rounded-lg border-2 border-blue-300 focus:border-blue-600 disabled:bg-blue-100 text-gray-900"
+                                            className="px-4 py-2 rounded-lg border-2 focus: disabled: text-gray-900"
                                         />
                                         <input
                                             type="text"
                                             placeholder="Numéro de TVA"
                                             disabled={!editing}
-                                            className="px-4 py-2 rounded-lg border-2 border-blue-300 focus:border-blue-600 disabled:bg-blue-100 text-gray-900"
+                                            className="px-4 py-2 rounded-lg border-2 focus: disabled: text-gray-900"
                                         />
                                         <input
                                             type="text"
                                             placeholder="Forme juridique"
                                             disabled={!editing}
-                                            className="px-4 py-2 rounded-lg border-2 border-blue-300 focus:border-blue-600 disabled:bg-blue-100 text-gray-900"
+                                            className="px-4 py-2 rounded-lg border-2 focus: disabled: text-gray-900"
                                         />
                                     </div>
                                 </div>
@@ -437,15 +434,15 @@ export default function ProfileSettingsPage() {
                                 <h3 className="text-lg font-bold text-gray-900 mb-4">Documents et Consentements</h3>
                                 <div className="space-y-3">
                                     <label className="flex items-center gap-3 cursor-pointer group">
-                                        <input type="checkbox" checked={profile?.consentRDR} disabled className="w-5 h-5 text-purple-600" />
+                                        <input type="checkbox" checked={profile?.consentRDR} disabled className="w-5 h-5" />
                                         <span className="text-gray-900">Disclaimer RDR accepté</span>
                                     </label>
                                     <label className="flex items-center gap-3 cursor-pointer group">
-                                        <input type="checkbox" checked disabled className="w-5 h-5 text-purple-600" />
+                                        <input type="checkbox" checked disabled className="w-5 h-5" />
                                         <span className="text-gray-900">CGU acceptées</span>
                                     </label>
                                     <label className="flex items-center gap-3 cursor-pointer group">
-                                        <input type="checkbox" checked disabled className="w-5 h-5 text-purple-600" />
+                                        <input type="checkbox" checked disabled className="w-5 h-5" />
                                         <span className="text-gray-900">Politique de confidentialité acceptée</span>
                                     </label>
                                 </div>
@@ -468,21 +465,21 @@ export default function ProfileSettingsPage() {
                                 </button>
                             </div>
 
-                            <div className="bg-blue-50 rounded-2xl p-6 border-2 border-blue-200">
+                            <div className="rounded-2xl p-6 border-2">
                                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Smartphone className="w-5 h-5 text-blue-700" />
+                                    <Smartphone className="w-5 h-5" />
                                     Authentification à deux facteurs (2FA)
                                 </h3>
                                 <p className="text-gray-700 mb-4">Statut : {profile?.totpEnabled ? '✅ Activée' : '❌ Désactivée'}</p>
-                                <button className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-bold">
+                                <button className="px-6 py-3 text-white rounded-xl hover: transition-all font-bold">
                                     {profile?.totpEnabled ? 'Désactiver 2FA' : 'Activer 2FA'}
                                 </button>
                             </div>
 
-                            <div className="bg-purple-50 rounded-2xl p-6 border-2 border-purple-200">
+                            <div className="rounded-2xl p-6 border-2">
                                 <h3 className="text-lg font-bold text-gray-900 mb-4">Sessions Actives</h3>
                                 <p className="text-gray-700 mb-4">Gérez les appareils connectés à votre compte</p>
-                                <button className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all font-bold">
+                                <button className="px-6 py-3 text-white rounded-xl hover: transition-all font-bold">
                                     Voir les sessions
                                 </button>
                             </div>
@@ -506,7 +503,7 @@ export default function ProfileSettingsPage() {
                             {/* Language */}
                             <div>
                                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Globe className="w-5 h-5 text-purple-700" />
+                                    <Globe className="w-5 h-5" />
                                     Langue
                                 </h3>
                                 <select
@@ -515,7 +512,7 @@ export default function ProfileSettingsPage() {
                                         setLanguage(e.target.value)
                                         changeLanguage(e.target.value)
                                     }}
-                                    className="w-full md:w-1/2 px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 transition-all text-gray-900 font-medium"
+                                    className="w-full md:w-1/2 px-4 py-3 rounded-xl border-2 border-gray-300 focus: focus:ring-2 focus: transition-all text-gray-900 font-medium"
                                 >
                                     {SUPPORTED_LANGUAGES.map((lang) => (
                                         <option key={lang.code} value={lang.code}>
@@ -528,21 +525,21 @@ export default function ProfileSettingsPage() {
                             {/* Notifications */}
                             <div>
                                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Bell className="w-5 h-5 text-purple-700" />
+                                    <Bell className="w-5 h-5" />
                                     Notifications
                                 </h3>
                                 <div className="space-y-3">
-                                    <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all cursor-pointer">
+                                    <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover: transition-all cursor-pointer">
                                         <span className="text-gray-900 font-medium">Notifications par email</span>
-                                        <input type="checkbox" className="w-6 h-6 text-purple-600" defaultChecked />
+                                        <input type="checkbox" className="w-6 h-6" defaultChecked />
                                     </label>
-                                    <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all cursor-pointer">
+                                    <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover: transition-all cursor-pointer">
                                         <span className="text-gray-900 font-medium">Nouveaux likes sur mes reviews</span>
-                                        <input type="checkbox" className="w-6 h-6 text-purple-600" defaultChecked />
+                                        <input type="checkbox" className="w-6 h-6" defaultChecked />
                                     </label>
-                                    <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all cursor-pointer">
+                                    <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover: transition-all cursor-pointer">
                                         <span className="text-gray-900 font-medium">Nouveaux commentaires</span>
-                                        <input type="checkbox" className="w-6 h-6 text-purple-600" />
+                                        <input type="checkbox" className="w-6 h-6" />
                                     </label>
                                 </div>
                             </div>

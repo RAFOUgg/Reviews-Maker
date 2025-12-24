@@ -59,7 +59,7 @@ export default function RecentReviewsSection({ userId }) {
                     </p>
                     <button
                         onClick={() => navigate('/create/flower')}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-semibold hover:scale-105 transition-transform"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r text-white rounded-xl font-semibold hover:scale-105 transition-transform"
                     >
                         Créer ma première review
                         <ArrowRight className="w-5 h-5" />
@@ -118,16 +118,13 @@ export default function RecentReviewsSection({ userId }) {
                                     </div>
                                     {/* Badge visibilité */}
                                     <div className="absolute top-3 right-3">
-                                        <span className={`px-3 py-1 backdrop-blur-sm text-white text-xs font-bold rounded-full border ${review.visibility === 'public'
-                                                ? 'bg-green-500/60 border-green-300/40'
-                                                : 'bg-gray-500/60 border-gray-300/40'
-                                            }`}>
+                                        <span className={`px-3 py-1 backdrop-blur-sm text-white text-xs font-bold rounded-full border ${review.visibility === 'public' ? 'bg-green-500/60 border-green-300/40' : 'bg-gray-500/60 border-gray-300/40' }`}>
                                             {review.visibility === 'public' ? '🌐 Public' : '🔒 Privé'}
                                         </span>
                                     </div>
                                 </div>
                             ) : (
-                                <div className="aspect-video bg-gradient-to-br from-violet-600 to-purple-700 flex items-center justify-center">
+                                <div className="aspect-video bg-gradient-to-br flex items-center justify-center">
                                     <div className="text-6xl opacity-30">
                                         {review.productType === 'Fleur' && '🌿'}
                                         {review.productType === 'Hash' && '🧊'}

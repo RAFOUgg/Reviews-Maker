@@ -36,7 +36,7 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
 
     if (!config || !reviewData) {
         return (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-900 to-pink-900 p-8">
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br p-8">
                 <p className="text-white/70 text-lg">📱 Données manquantes</p>
             </div>
         );
