@@ -22,12 +22,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronRight, Plus, Settings, Save, Upload, CheckSquare, Square, Check } from 'lucide-react';
 import PipelineDataModal from './PipelineDataModal';
-import PresetConfigModal from './PresetConfigModal';
 import PipelineCellBadge from './PipelineCellBadge';
 import CellEmojiOverlay from './CellEmojiOverlay';
 import PipelineCellTooltip from './PipelineCellTooltip';
 import MassAssignModal from './MassAssignModal';
-import PresetSelector from './PresetSelector';
 import ItemContextMenu from './ItemContextMenu';
 import PreConfigBadge from './PreConfigBadge';
 
@@ -41,14 +39,12 @@ const PipelineDragDropView = ({
     generalFields = [],
     generalData = {},
     onGeneralDataChange = () => { },
-    presets = [],
-    onSavePreset = () => { },
-    onLoadPreset = () => { }
+    // Préréglages retirés
 }) => {
     const [expandedSections, setExpandedSections] = useState({});
     const [draggedContent, setDraggedContent] = useState(null);
     const [selectedCell, setSelectedCell] = useState(null);
-    const [showPresets, setShowPresets] = useState(false);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentCellTimestamp, setCurrentCellTimestamp] = useState(null);
     const [tooltipData, setTooltipData] = useState({ visible: false, cellData: null, position: { x: 0, y: 0 }, section: '' });
@@ -56,97 +52,16 @@ const PipelineDragDropView = ({
     const [selectedCells, setSelectedCells] = useState([]);
     const [showMassAssignModal, setShowMassAssignModal] = useState(false);
     const [sourceCellForMassAssign, setSourceCellForMassAssign] = useState(null);
-    const [selectedPresets, setSelectedPresets] = useState([]);
     const [droppedItem, setDroppedItem] = useState(null); // Item droppé en attente de saisie
-    const [showPresetConfigModal, setShowPresetConfigModal] = useState(false);
-    const [editingPreset, setEditingPreset] = useState(null);
     const [hoveredCell, setHoveredCell] = useState(null); // Cellule survolée pendant drag
     const [isSelecting, setIsSelecting] = useState(false);
     const [selectionStartIdx, setSelectionStartIdx] = useState(null);
 
-    // ✅ NOUVEAUX ÉTATS POUR CLIC DROIT PRÉ-CONFIGURATION
+    // Suppression des états liés aux préréglages
     const [contextMenu, setContextMenu] = useState(null); // { item, position }
-    const [preConfiguredItems, setPreConfiguredItems] = useState(() => {
-        // Charger depuis localStorage
-        const saved = localStorage.getItem(`pipeline-preconfig-${type}`);
-        return saved ? JSON.parse(saved) : {};
-    });
-    const [showSuccessToast, setShowSuccessToast] = useState(null);
 
-    // Handlers pour préréglages
-    const handleTogglePreset = (presetId) => {
-        setSelectedPresets(prev =>
-            prev.includes(presetId)
-                ? prev.filter(id => id !== presetId)
-                : [...prev, presetId]
-        );
-    };
+    // Suppression des handlers préréglages
 
-    const handleOpenPresetConfig = (initialData = null) => {
-        setEditingPreset(initialData);
-        setShowPresetConfigModal(true);
-    };
-
-    const handleSavePresetConfig = (preset) => {
-        // Sauvegarder le préréglage via le handler parent UNIQUEMENT
-        // Ne pas sauvegarder directement dans localStorage pour éviter duplications
-        if (onSavePreset) {
-            onSavePreset(preset);
-        }
-
-        setShowPresetConfigModal(false);
-        setEditingPreset(null);
-    };
-
-    const handleDeletePreset = (presetId) => {
-        // Créer un preset avec action delete pour que le parent le gère
-        if (onSavePreset) {
-            onSavePreset({ id: presetId, _action: 'delete' });
-        }
-        setSelectedPresets(prev => prev.filter(id => id !== presetId));
-    };
-
-    // Appliquer les données d'un préréglage à une cellule
-    const applyPresetToTimestamp = (timestamp, preset) => {
-        if (!preset || !preset.data) return;
-        Object.entries(preset.data).forEach(([key, value]) => {
-            onDataChange(timestamp, key, value);
-        });
-        onDataChange(timestamp, '_meta', {
-            presetApplied: preset.id,
-            lastModified: new Date().toISOString()
-        });
-    };
-
-    // Handler local pour appliquer un préréglage (cellule unique ou sélection multiple)
-    const handleApplyPresetLocal = (preset) => {
-        if (!preset) return;
-
-        if (massAssignMode && selectedCells.length > 0) {
-            if (!confirm(`Appliquer le préréglage "${preset.name}" à ${selectedCells.length} cellule(s) ?`)) return;
-            selectedCells.forEach(ts => applyPresetToTimestamp(ts, preset));
-            setMassAssignMode(false);
-            setSelectedCells([]);
-            showToast(`✓ Préréglage "${preset.name}" appliqué à ${selectedCells.length} cellule(s)`);
-            return;
-        }
-
-        if (currentCellTimestamp) {
-            if (!confirm(`Appliquer le préréglage "${preset.name}" à la case ${currentCellTimestamp} ?`)) return;
-            applyPresetToTimestamp(currentCellTimestamp, preset);
-            showToast(`✓ Préréglage "${preset.name}" appliqué`);
-            return;
-        }
-
-        if (cells.length > 0) {
-            if (!confirm(`Aucune cellule sélectionnée. Appliquer le préréglage "${preset.name}" à la première case (${cells[0].timestamp}) ?`)) return;
-            applyPresetToTimestamp(cells[0].timestamp, preset);
-            showToast(`✓ Préréglage "${preset.name}" appliqué à ${cells[0].timestamp}`);
-            return;
-        }
-
-        alert('Aucune case disponible pour appliquer le préréglage');
-    };
 
     // Toggle section
     const toggleSection = (sectionId) => {
@@ -186,30 +101,12 @@ const PipelineDragDropView = ({
             setCurrentCellTimestamp(cellId);
             setIsModalOpen(true);
 
-            // Si des préréglages sont sélectionnés, proposer de les appliquer
-            if (selectedPresets.length > 0) {
-                const shouldApply = window.confirm(
-                    `Voulez-vous appliquer les ${selectedPresets.length} préréglage(s) sélectionné(s) à cette cellule ?`
-                );
-                if (shouldApply) {
-                    applyPresetsToCell(cellId, selectedPresets);
-                }
-            }
+            // Aucun système de préréglages dans cette vue (désactivé pour CDC)
         }
     };
 
-    // Appliquer des préréglages à une cellule
-    const applyPresetsToCell = (timestamp, presetIds) => {
-        presetIds.forEach(presetId => {
-            const preset = presets.find(p => p.id === presetId);
-            if (preset && preset.data) {
-                // Appliquer toutes les données du préréglage
-                Object.entries(preset.data).forEach(([key, value]) => {
-                    onDataChange(timestamp, key, value);
-                });
-            }
-        });
-    };
+    // Suppression logique préréglages
+
 
     // Sauvegarder données depuis modal
     const handleModalSave = (data) => {
@@ -358,92 +255,35 @@ const PipelineDragDropView = ({
         setHoveredCell(null);
     };
 
-    // ✅ CORRIGER COMPORTEMENT DROP SELON CDC
+    // Nouvelle version CDC : handleDrop sans préréglages
     const handleDrop = (e, timestamp) => {
         e.preventDefault();
         e.stopPropagation();
         setHoveredCell(null);
-
-        console.log('💧 Drop détecté sur timestamp:', timestamp);
-        console.log('📦 draggedContent:', draggedContent);
-
-        if (!draggedContent) {
-            console.warn('⚠️ Pas de draggedContent disponible');
-            return;
-        }
-
-        // Si plusieurs cases sont sélectionnées -> n'appliquer à la sélection
-        // que si la case cible fait partie de la sélection ou si le
-        // mode masse est activé. Cela évite d'écraser une sélection
-        // lorsque l'utilisateur veut déposer sur une seule case.
+        if (!draggedContent) return;
         const sel = selectedCellsRef.current || [];
         const appliesToSelection = (sel && sel.length > 0) && (sel.includes(timestamp) || massAssignMode);
         if (appliesToSelection) {
-            const preConfigValue = preConfiguredItems[draggedContent.key];
-            // Item pré-configuré -> assignation directe
-            if (preConfigValue !== undefined && preConfigValue !== null) {
-                sel.forEach(ts => onDataChange(ts, draggedContent.key, preConfigValue));
-                showToast(`✓ ${draggedContent.label} appliqué à ${sel.length} case(s)`);
-            } else if (draggedContent.defaultValue !== undefined) {
-                // Si l'item possède une valeur par défaut, l'appliquer
-                sel.forEach(ts => onDataChange(ts, draggedContent.key, draggedContent.defaultValue));
-                showToast(`✓ ${draggedContent.label} appliqué à ${sel.length} case(s)`);
-            } else {
-                // Aucun pré-config ni valeur par défaut -> demander une valeur à l'utilisateur puis appliquer
-                const userVal = window.prompt(`Valeur pour « ${draggedContent.label} » à appliquer à ${sel.length} case(s) :`, '');
-                if (userVal === null) {
-                    showToast('Opération annulée');
-                } else {
-                    sel.forEach(ts => onDataChange(ts, draggedContent.key, userVal));
-                    showToast(`✓ ${draggedContent.label} appliqué à ${sel.length} case(s)`);
-                }
-            }
+            sel.forEach(ts => onDataChange(ts, draggedContent.key, draggedContent.defaultValue ?? ''));
         } else {
-            // ✅ VÉRIFIER SI L'ITEM EST PRÉ-CONFIGURÉ
-            const preConfigValue = preConfiguredItems[draggedContent.key];
-
-            if (preConfigValue !== undefined && preConfigValue !== null) {
-                // ✅ ITEM PRÉ-CONFIGURÉ → ASSIGNMENT DIRECT SANS MODALE
-                console.log('✅ Item pré-configuré détecté, assignment direct:', preConfigValue);
-                onDataChange(timestamp, draggedContent.key, preConfigValue);
-
-                // Toast succès
-                showToast(`✓ ${draggedContent.label} : ${preConfigValue}${draggedContent.unit || ''} ajouté`);
-            } else {
-                // ✅ ITEM NORMAL → AJOUT AVEC VALEUR PAR DÉFAUT
-                console.log('➕ Item normal, ajout avec valeur par défaut:', draggedContent.defaultValue);
-                const defaultVal = draggedContent.defaultValue !== undefined ? draggedContent.defaultValue : '';
-                onDataChange(timestamp, draggedContent.key, defaultVal);
-
-                // Toast succès
-                showToast(`✓ ${draggedContent.label} ajouté`);
-            }
+            onDataChange(timestamp, draggedContent.key, draggedContent.defaultValue ?? '');
         }
-
         setDraggedContent(null);
     };
 
-    // ✅ TOAST FEEDBACK
-    const showToast = (message) => {
-        setShowSuccessToast(message);
-        setTimeout(() => setShowSuccessToast(null), 2500);
-    };
+    // Toast feedback retiré (préréglages supprimés)
 
-    // ✅ HANDLER CLIC DROIT SUR ITEM
+    // Handler context menu simplifié (centré, CDC)
     const handleItemContextMenu = (e, item) => {
         e.preventDefault();
         e.stopPropagation();
-
-        console.log('🖱️ Clic droit sur item:', item);
-
-        const rect = e.currentTarget ? e.currentTarget.getBoundingClientRect() : null;
         setContextMenu({
             item,
             position: {
-                x: e.clientX,
-                y: e.clientY
+                x: window.innerWidth / 2,
+                y: window.innerHeight / 2
             },
-            anchorRect: rect
+            anchorRect: null
         });
     };
 
@@ -486,57 +326,7 @@ const PipelineDragDropView = ({
         selectedCellsRef.current = selectedCells;
     }, [selectedCells]);
 
-    // ✅ HANDLER CONFIGURATION ITEM
-    const handleConfigureItem = (itemKey, value) => {
-        console.log('⚙️ Configuration item:', itemKey, 'Valeur:', value);
-
-        const newConfig = { ...preConfiguredItems };
-
-        if (value === null) {
-            // Retirer la configuration
-            delete newConfig[itemKey];
-        } else {
-            // Ajouter/mettre à jour
-            newConfig[itemKey] = value;
-        }
-
-        setPreConfiguredItems(newConfig);
-        // Sauvegarder dans localStorage
-        localStorage.setItem(`pipeline-preconfig-${type}`, JSON.stringify(newConfig));
-
-        showToast(value === null ? '✓ Configuration retirée' : '✓ Item pré-configuré');
-    };
-
-    // Assigner immédiatement la valeur configurée (depuis menu clic droit)
-    const handleAssignNow = (itemKey, value) => {
-        if (value === null || value === undefined || value === '') {
-            alert('Aucune valeur fournie pour l\'assignation.');
-            return;
-        }
-
-        if (massAssignMode && selectedCells.length > 0) {
-            if (!confirm(`Assigner ${itemKey} = ${value} à ${selectedCells.length} case(s) ?`)) return;
-            selectedCells.forEach(ts => onDataChange(ts, itemKey, value));
-            setMassAssignMode(false);
-            setSelectedCells([]);
-            showToast(`✓ ${itemKey} assigné à ${selectedCells.length} case(s)`);
-            return;
-        }
-
-        if (currentCellTimestamp) {
-            onDataChange(currentCellTimestamp, itemKey, value);
-            showToast(`✓ ${itemKey} assigné à ${currentCellTimestamp}`);
-            return;
-        }
-
-        if (cells.length > 0) {
-            onDataChange(cells[0].timestamp, itemKey, value);
-            showToast(`✓ ${itemKey} assigné à ${cells[0].timestamp}`);
-            return;
-        }
-
-        alert('Aucune case disponible pour assigner la valeur.');
-    };
+    // Handlers configuration retirés (préréglages supprimés)
 
     // Copier la valeur depuis une case source vers la sélection / case courante
     const handleAssignFromSource = (itemKey, sourceTimestamp) => {
@@ -735,14 +525,7 @@ const PipelineDragDropView = ({
             {/* PANNEAU LATÉRAL HIÉRARCHISÉ */}
             <div className="w-80 flex-shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-y-auto">
                 {/* Section Préréglages en haut */}
-                <PresetSelector
-                    presets={presets}
-                    selectedPresets={selectedPresets}
-                    onTogglePreset={handleTogglePreset}
-                    onSaveNew={onSavePreset}
-                    onDelete={handleDeletePreset}
-                    onOpenConfigModal={handleOpenPresetConfig}
-                />
+                {/* Préréglages retirés pour conformité CDC */}
 
                 {/* Header Contenus */}
                 <div className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm p-4 border-b border-gray-200 dark:border-gray-700 z-10">
@@ -752,13 +535,7 @@ const PipelineDragDropView = ({
                     </p>
 
                     {/* Bouton créer préréglage global */}
-                    <button
-                        onClick={() => handleOpenPresetConfig()}
-                        className="mt-3 w-full px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Créer un préréglage global
-                    </button>
+                    {/* Préréglages désactivés — bouton supprimé */}
                 </div>
 
                 <div className="p-3 space-y-2">
@@ -1164,43 +941,7 @@ const PipelineDragDropView = ({
                 </div>
             </div>
 
-            {/* Modal préréglages (simplifié) */}
-            {showPresets && (
-                <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-50" onClick={() => setShowPresets(false)}>
-                    <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-3xl p-6 max-w-md w-full shadow-2xl border border-gray-200/50 dark:border-gray-700/50" onClick={(e) => e.stopPropagation()}>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">📦 Préréglages</h3>
-                        {presets.length === 0 ? (
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Aucun préréglage sauvegardé</p>
-                        ) : (
-                            <div className="space-y-2">
-                                {presets.map((preset, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => {
-                                            handleApplyPresetLocal(preset);
-                                            setShowPresets(false);
-                                            // Optional: notify parent load
-                                            try { onLoadPreset?.(preset) } catch (e) { /* ignore */ }
-                                        }}
-                                        className="w-full p-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-left transition-colors"
-                                    >
-                                        <div className="font-medium text-gray-900 dark:text-white">{preset.name}</div>
-                                        <div className="text-xs text-gray-600 dark:text-gray-400">
-                                            {Object.keys(preset.data || {}).length} paramètres
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                        <button
-                            onClick={() => setShowPresets(false)}
-                            className="mt-4 w-full px-4 py-2 bg-gray-200/80 dark:bg-gray-700/80 hover:bg-gray-300/80 dark:hover:bg-gray-600/80 rounded-xl font-medium transition-all hover:scale-[1.02]"
-                        >
-                            Fermer
-                        </button>
-                    </div>
-                </div>
-            )}
+            {/* Modal préréglages retiré pour CDC */}
 
             {/* Modal d'édition de cellule */}
             <PipelineDataModal
@@ -1248,31 +989,18 @@ const PipelineDragDropView = ({
                 position={tooltipData.position}
             />
 
-            {/* ✅ Menu contextuel clic droit */}
+            {/* Menu contextuel CDC : centré, simple */}
             {contextMenu && (
-                <ItemContextMenu
-                    item={contextMenu.item}
-                    position={contextMenu.position}
-                    onClose={() => setContextMenu(null)}
-                    onConfigure={handleConfigureItem}
-                    isConfigured={preConfiguredItems[contextMenu.item.key] !== undefined}
-                    onAssignNow={handleAssignNow}
-                    onAssignFromSource={handleAssignFromSource}
-                    onAssignRange={handleAssignRange}
-                    onAssignAll={handleAssignAll}
-                    cells={cells}
-                />
-            )}
-
-            {/* ✅ Toast succès */}
-            {showSuccessToast && (
-                <div className="fixed bottom-4 right-4 z-[9999] bg-green-600 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-slideInFromRight">
-                    <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                        <Check className="w-4 h-4" />
+                <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setContextMenu(null)}>
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 min-w-[260px] max-w-[90vw]" style={{ left: contextMenu.position.x, top: contextMenu.position.y, position: 'absolute', transform: 'translate(-50%, -50%)' }} onClick={e => e.stopPropagation()}>
+                        <h4 className="font-bold text-lg mb-2">Paramètre : {contextMenu.item.label}</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Drag & drop pour assigner ce paramètre à une case.</p>
+                        <button className="mt-2 w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-all" onClick={() => setContextMenu(null)}>Fermer</button>
                     </div>
-                    <span className="font-medium">{showSuccessToast}</span>
                 </div>
             )}
+
+            {/* Toast succès retiré (CDC) */}
         </div>
     );
 };
