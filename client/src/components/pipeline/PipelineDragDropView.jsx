@@ -969,17 +969,7 @@ const PipelineDragDropView = ({
                 onApply={handleMassAssignApply}
             />
 
-            {/* Modal configuration préréglage complet CDC */}
-            <PresetConfigModal
-                isOpen={showPresetConfigModal}
-                onClose={() => {
-                    setShowPresetConfigModal(false);
-                    setEditingPreset(null);
-                }}
-                sidebarSections={sidebarContent}
-                onSavePreset={handleSavePresetConfig}
-                initialPreset={editingPreset}
-            />
+            {/* Modal configuration préréglage complet retirée (CDC) */}
 
             {/* Tooltip au survol */}
             <PipelineCellTooltip
