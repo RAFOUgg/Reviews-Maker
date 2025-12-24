@@ -2,6 +2,7 @@
 @import './assets/themes-v2.css';
 @import './assets/orchard.css';
 @import './assets/liquid-glass.css';
+@import './assets/theme-tokens.css';
 
 @tailwind base;
 @tailwind components;
@@ -99,6 +100,7 @@
         body {
             background: radial-gradient(1200px 600px at 50% 30%, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.6) 40%, rgba(0, 0, 0, 0.9) 100%);
             background-color: var(--bg-primary);
+            /* Fallback for older browsers */
         }
 
         /* Container width tweak to avoid huge side gutters */
@@ -211,6 +213,13 @@ h3,
 h4,
 h5,
 h6 {
+
+    /* ensure app background uses semantic token */
+    body.bg-app-fallback {
+        background: var(--app-bg) !important;
+        color: var(--text-primary);
+    }
+
     color: var(--text-primary);
 }
 

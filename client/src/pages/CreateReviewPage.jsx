@@ -436,12 +436,12 @@ export default function CreateReviewPage() {
     const categoryRatings = calculateCategoryRatings();
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
-            <div className="sticky top-[73px] z-40 glass liquid-glass--card border-b border-white/10">
+        <div className="min-h-screen bg-app">
+            <div className="sticky top-[73px] z-40 glass liquid-glass--card bg-panel">
                 <div className="max-w-4xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between mb-3">
                         <button onClick={() => navigate('/')} className="transition-colors text-gray-300">← Retour</button>
-                        <div className="text-center"><h1 className="text-xl font-bold text-white">{isEditing ? `Modifier ${formData.type}` : formData.type}</h1><p className="text-xs text-gray-400">Section {currentSectionIndex + 1}/{sections.length}</p></div>
+                        <div className="text-center"><h1 className="text-xl font-bold text-title">{isEditing ? `Modifier ${formData.type}` : formData.type}</h1><p className="text-xs text-subtitle">Section {currentSectionIndex + 1}/{sections.length}</p></div>
                         <button
                             onClick={() => setShowOrchardStudio(true)}
                             className="liquid-glass--button bg-gradient-to-r text-white rounded-xl font-medium shadow-lg transition-all flex items-center gap-2"
@@ -461,15 +461,15 @@ export default function CreateReviewPage() {
             </div>
             {error && <div className="max-w-4xl mx-auto px-4 mt-4"><div className="p-4 bg-red-500/10 border border-red-500/50 rounded-xl text-red-400">{error}</div></div>}
             <div className="max-w-4xl mx-auto px-4 py-8">
-                <div className="glass liquid-glass--card p-8">
-                    <h2 className="text-2xl font-bold text-white mb-6">{currentSection.title}</h2>
+                <div className="glass liquid-glass--card p-8 bg-card">
+                    <h2 className="text-2xl font-bold text-title mb-6">{currentSection.title}</h2>
                     <div className="space-y-6">{currentSection.fields.map((field, idx) => <div key={idx} className="space-y-2">{field.type !== 'checkbox' && field.type !== 'images' && <label className="block text-sm font-semibold text-gray-200">{field.label}{field.required && <span className="ml-1 text-red-400">*</span>}{field.max && field.type === 'slider' && <span className="ml-1 opacity-60">/{field.max}</span>}</label>}{renderField(field)}</div>)}</div>
                 </div>
             </div>
             <div className="fixed bottom-0 left-0 right-0 bg-transparent py-4 z-50">
-                <div className="max-w-4xl mx-auto px-4 flex gap-4 glass p-3 rounded-xl">
-                    <button type="button" onClick={prevSection} disabled={currentSectionIndex === 0} className="px-6 py-3 bg-transparent rounded-xl font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-gray-200 border border-white/10">← Précédent</button>
-                    {currentSectionIndex === sections.length - 1 ? <button onClick={handleSubmit} disabled={isSubmitting || (images.length === 0 && !isEditing)} className="flex-1 py-3 bg-gradient-to-r text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all">{isSubmitting ? '⏳ Enregistrement...' : isEditing ? '💾 Mettre à jour' : '💾 Enregistrer la Review'}</button> : <button type="button" onClick={nextSection} className="flex-1 py-3 bg-white/5 text-white rounded-xl font-bold transition-all">Suivant →</button>}</div>
+                <div className="max-w-4xl mx-auto px-4 flex gap-4 glass p-3 rounded-xl bg-panel">
+                    <button type="button" onClick={prevSection} disabled={currentSectionIndex === 0} className="px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-muted border" aria-disabled={currentSectionIndex === 0}>← Précédent</button>
+                    {currentSectionIndex === sections.length - 1 ? <button onClick={handleSubmit} disabled={isSubmitting || (images.length === 0 && !isEditing)} className="flex-1 py-3 btn-primary rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all">{isSubmitting ? '⏳ Enregistrement...' : isEditing ? '💾 Mettre à jour' : '💾 Enregistrer la Review'}</button> : <button type="button" onClick={nextSection} className="flex-1 py-3 bg-panel text-title rounded-xl font-bold transition-all">Suivant →</button>}</div>
             </div>
             <div className="h-24"></div>
 

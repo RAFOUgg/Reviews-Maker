@@ -99,8 +99,8 @@ export default function ReviewDetailPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-transparent flex items-center justify-center">
-                <div className="text-gray-400 text-xl">Chargement...</div>
+            <div className="min-h-screen bg-app flex items-center justify-center">
+                <div className="text-subtitle text-xl">Chargement...</div>
             </div>
         )
     }
@@ -108,13 +108,13 @@ export default function ReviewDetailPage() {
     if (!review) return null
 
     return (
-        <div className="min-h-screen bg-transparent py-12 px-4">
+        <div className="min-h-screen bg-app py-12 px-4">
             <div className="container-glass mx-auto">
                 {/* Header with Back & Edit Buttons */}
                 <div className="flex items-center justify-between mb-6">
                     <button
                         onClick={() => navigate('/')}
-                        className="text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+                        className="text-subtitle hover:text-title transition-colors flex items-center gap-2"
                     >
                         <span>←</span>
                         <span>Retour à la galerie</span>
@@ -123,7 +123,7 @@ export default function ReviewDetailPage() {
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setShowExportModal(true)}
-                            className="flex items-center gap-2 liquid-btn liquid-btn--primary"
+                            className="flex items-center gap-2 btn-primary"
                         >
                             <Download className="w-5 h-5" />
                             <span>Exporter</span>
@@ -132,7 +132,7 @@ export default function ReviewDetailPage() {
                         {isAuthenticated && user?.id === review?.authorId && (
                             <button
                                 onClick={() => navigate(`/edit/${id}`)}
-                                className="flex items-center gap-2 liquid-btn liquid-btn--accent"
+                                className="flex items-center gap-2 btn-primary"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -149,8 +149,8 @@ export default function ReviewDetailPage() {
                         <button
                             onClick={() => setViewMode('full')}
                             className={`px-4 py-2 rounded-xl font-medium transition-all ${viewMode === 'full'
-                                ? 'bg-white/5 text-white'
-                                : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+                                ? 'bg-panel text-title'
+                                : 'bg-card text-subtitle hover:bg-card/80'
                                 }`}
                         >
                             📋 Vue Détaillée
@@ -158,8 +158,8 @@ export default function ReviewDetailPage() {
                         <button
                             onClick={() => setViewMode('orchard')}
                             className={`px-4 py-2 rounded-xl font-medium transition-all ${viewMode === 'orchard'
-                                ? 'bg-white/5 text-white'
-                                : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+                                ? 'bg-panel text-title'
+                                : 'bg-card text-subtitle hover:bg-card/80'
                                 }`}
                         >
                             🎨 Aperçu Orchard
@@ -169,7 +169,7 @@ export default function ReviewDetailPage() {
 
                 {/* Orchard Template Preview */}
                 {viewMode === 'orchard' && review.orchardConfig ? (
-                    <div className="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-6 border border-gray-700">
+                    <div className="glass liquid-glass--card p-6 bg-panel rounded-2xl border border-white/5">
                         <TemplateRenderer
                             config={typeof review.orchardConfig === 'string' ? (() => {
                                 try { return JSON.parse(review.orchardConfig) } catch { return review.orchardConfig }
