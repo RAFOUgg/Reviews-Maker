@@ -26,8 +26,8 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
             <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 min-w-[340px] max-w-[95vw] border border-gray-200 dark:border-gray-700">
                 <div className="flex gap-4 mb-4">
-                    <button className={`px-4 py-2 rounded-lg font-bold ${activeTab === 'data' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'}`} onClick={() => setActiveTab('data')}>Toutes les données</button>
-                    <button className={`px-4 py-2 rounded-lg font-bold ${activeTab === 'group' ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-900'}`} onClick={() => setActiveTab('group')}>Groupes</button>
+                    <button className={`liquid-btn ${activeTab === 'data' ? 'liquid-btn--primary' : ''}`} onClick={() => setActiveTab('data')}>Toutes les données</button>
+                    <button className={`liquid-btn ${activeTab === 'group' ? 'liquid-btn--primary' : ''}`} onClick={() => setActiveTab('group')}>Groupes</button>
                 </div>
                 {activeTab === 'data' && (
                     <div className="max-h-80 overflow-y-auto">
@@ -60,8 +60,8 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
                     <div className="p-4 text-sm text-gray-600">Gestion des groupes à venir…</div>
                 )}
                 <div className="flex gap-2 mt-6">
-                    <button className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium" onClick={() => onApply(values)}>Appliquer à {selectedCells.length > 0 ? `${selectedCells.length} cases` : 'la case'}</button>
-                    <button className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-xl font-medium" onClick={onClose}>Annuler</button>
+                    <button className="flex-1 liquid-btn liquid-btn--accent" onClick={() => onApply(values)}>Appliquer à {selectedCells.length > 0 ? `${selectedCells.length} cases` : 'la case'}</button>
+                    <button className="flex-1 liquid-btn" onClick={onClose}>Annuler</button>
                 </div>
             </div>
         </div>
@@ -153,8 +153,8 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                     ))}
                 </div>
                 <div className="flex gap-2 mt-4">
-                    <button className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium" onClick={handleSave} disabled={!groupName.trim() || selectedFields.length === 0}>Enregistrer</button>
-                    <button className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-xl font-medium" onClick={onClose}>Annuler</button>
+                    <button className="flex-1 liquid-btn liquid-btn--accent" onClick={handleSave} disabled={!groupName.trim() || selectedFields.length === 0}>Enregistrer</button>
+                    <button className="flex-1 liquid-btn" onClick={onClose}>Annuler</button>
                 </div>
             </div>
         </div>

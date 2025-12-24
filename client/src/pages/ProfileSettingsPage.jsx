@@ -139,8 +139,8 @@ export default function ProfileSettingsPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-purple-600 via-violet-700 to-purple-800 flex items-center justify-center">
-                <div className="glass rounded-2xl p-8">
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="glass rounded-2xl p-8 container-glass">
                     <div className="text-white text-xl">Chargement...</div>
                 </div>
             </div>
@@ -150,8 +150,8 @@ export default function ProfileSettingsPage() {
     const badge = getAccountTypeBadge()
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-600 via-violet-700 to-purple-800 py-8 px-4">
-            <div className="max-w-6xl mx-auto">
+        <div className="min-h-screen py-8 px-4">
+            <div className="max-w-6xl mx-auto container-glass">
                 {/* Header */}
                 <div className="mb-6">
                     <button
@@ -211,7 +211,7 @@ export default function ProfileSettingsPage() {
                             {!editing ? (
                                 <button
                                     onClick={() => setEditing(true)}
-                                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-violet-700 text-white rounded-xl hover:shadow-lg transition-all font-bold"
+                                    className="flex items-center gap-2 liquid-btn liquid-btn--accent"
                                 >
                                     <Edit2 className="w-5 h-5" />
                                     Modifier
@@ -250,9 +250,9 @@ export default function ProfileSettingsPage() {
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold whitespace-nowrap transition-all ${isActive
-                                        ? 'bg-gradient-to-r from-purple-600 to-violet-700 text-white shadow-lg'
-                                        : 'text-gray-700 hover:bg-white/50'
-                                        }`}
+                                        ? 'liquid-btn liquid-btn--accent'
+                                        : 'text-gray-700 hover:bg-white/5'
+                                        }`}>
                                 >
                                     <Icon className="w-5 h-5" />
                                     {tab.label}

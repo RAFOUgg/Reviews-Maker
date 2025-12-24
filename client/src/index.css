@@ -11,6 +11,172 @@
     .glass {
         position: relative;
         backdrop-filter: blur(var(--glass-blur));
+        /* ===== Overrides to remove strong violet/blue accents and style selects/modals ===== */
+
+        /* Neutralize common purple/blue gradient utilities to subtle dark glass */
+        .from-purple-600,
+        .via-violet-700,
+        .to-purple-800,
+        .from-purple-500,
+        .bg-purple-500,
+        .bg-blue-500,
+        .from-purple-600\:to-violet-700 {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)) !important;
+            color: var(--text-primary) !important;
+        }
+
+        /* Generic gradient utilities used in some pages */
+        .bg-gradient-to-br,
+        .bg-gradient-to-r,
+        .bg-gradient-to-l {
+            /* keep gradients subtle and dark */
+            background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.15)) !important;
+        }
+
+        /* Liquid-styled buttons to replace bright utility classes */
+        .liquid-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .5rem 1rem;
+            border-radius: .75rem;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            color: var(--text-primary);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+        }
+
+        .liquid-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65);
+        }
+
+        .liquid-btn--primary {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.02));
+            color: var(--text-primary);
+        }
+
+        .liquid-btn--accent {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: #fff;
+            border: none;
+        }
+
+        /* Style native selects and react-select controls to match Liquid Glass */
+        select,
+        .react-select__control {
+            background: var(--glass-bg) !important;
+            color: var(--text-primary) !important;
+            border: 1px solid rgba(255, 255, 255, 0.04) !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6) !important;
+            backdrop-filter: blur(var(--glass-blur)) !important;
+            -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+            border-radius: .6rem !important;
+        }
+
+        .react-select__menu,
+        .react-select__menu-list,
+        .react-select__option {
+            background: var(--glass-bg) !important;
+            color: var(--text-primary) !important;
+            border-radius: .6rem !important;
+        }
+
+        /* Modals/dialogs: apply glass look on the modal container */
+        [role="dialog"],
+        .modal,
+        .dialog,
+        .fixed.inset-0.z-50>div {
+            background: var(--glass-bg) !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7) !important;
+            color: var(--text-primary) !important;
+        }
+
+        /* Reduce large empty side background to make app denser and immersive */
+        body {
+            background: radial-gradient(1200px 600px at 50% 30%, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.6) 40%, rgba(0, 0, 0, 0.9) 100%);
+            background-color: var(--bg-primary);
+        }
+
+        /* Container width tweak to avoid huge side gutters */
+        .container-glass {
+            max-width: 1200px;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        /* Neutralize direct purple utility text and input focus styles */
+        .text-purple-700 {
+            color: var(--text-primary) !important;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.06) !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+        }
+
+        /* Broad neutralization for purple utility classes used across the app */
+        .text-purple-600,
+        .text-purple-500,
+        .text-purple-900,
+        .text-purple-800 {
+            color: var(--text-primary) !important;
+        }
+
+        .bg-purple-50,
+        .bg-purple-100,
+        .bg-purple-200,
+        .bg-purple-500,
+        .bg-purple-600,
+        .bg-purple-900,
+        .bg-purple-500\/10,
+        .bg-purple-500\/20 {
+            background: rgba(255, 255, 255, 0.02) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .border-purple-300,
+        .border-purple-500,
+        .border-purple-700,
+        .border-purple-900 {
+            border-color: rgba(255, 255, 255, 0.04) !important;
+        }
+
+        .ring-purple-500,
+        .hover\:ring-purple-500,
+        .focus\:ring-purple-500 {
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.02) !important;
+        }
+
+        .hover\:bg-purple-50,
+        .hover\:bg-purple-200,
+        .dark\:hover\:bg-purple-900\/20 {
+            background: rgba(255, 255, 255, 0.02) !important;
+        }
+
+        /* Neutralize blue utilities */
+        .bg-blue-500,
+        .bg-blue-600,
+        .text-blue-700,
+        .from-blue-500,
+        .to-blue-500 {
+            background: rgba(255, 255, 255, 0.02) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .border-blue-300,
+        .border-blue-500 {
+            border-color: rgba(255, 255, 255, 0.04) !important;
+        }
+
+
+
         -webkit-backdrop-filter: blur(var(--glass-blur));
         background: var(--glass-bg-dark, rgba(15, 23, 42, 0.85));
         border: 1px solid rgba(255, 255, 255, 0.04);
