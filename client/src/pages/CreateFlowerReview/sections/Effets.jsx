@@ -102,10 +102,8 @@ export default function Effets({ formData, handleChange }) {
                                 key={effect.name}
                                 type="button"
                                 onClick={() => toggleEffect(effect.name)}
-                                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedEffects.includes(effect.name)
-                                        ? 'bg-cyan-600 text-white shadow-lg scale-105'
-                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                                    }`}
+                                aria-pressed={selectedEffects.includes(effect.name)}
+                                className={`effect-tile ${selectedEffects.includes(effect.name) ? 'effect-tile--selected px-5 py-3 font-semibold' : ''}`}
                                 disabled={!selectedEffects.includes(effect.name) && selectedEffects.length >= 8}
                             >
                                 {effect.name}
