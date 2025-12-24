@@ -31,6 +31,66 @@ const handleConfigureItem = (itemKey, value) => {
  */
 
 import { useState, useEffect, useRef } from 'react';
+
+// Grouped preset modal (inline for now)
+function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sidebarContent }) {
+    const [groupName, setGroupName] = useState('');
+    const [selectedFields, setSelectedFields] = useState([]);
+    const [fieldValues, setFieldValues] = useState({});
+
+    if (!isOpen) return null;
+    const allFields = sidebarContent.flatMap(section => section.items.map(item => ({
+        key: item.key,
+        label: item.label,
+        icon: item.icon,
+        unit: item.unit
+    })));
+
+    const handleToggleField = (key) => {
+        setSelectedFields(f => f.includes(key) ? f.filter(k => k !== key) : [...f, key]);
+    };
+    const handleValueChange = (key, value) => {
+        setFieldValues(fv => ({ ...fv, [key]: value }));
+    };
+    const handleSave = () => {
+        if (!groupName.trim() || selectedFields.length === 0) return;
+        const group = {
+            name: groupName.trim(),
+            fields: selectedFields.map(key => ({ key, value: fieldValues[key] || '' }))
+        };
+        const newGroups = [...groups, group];
+        setGroups(newGroups);
+        localStorage.setItem('pipeline-grouped-presets', JSON.stringify(newGroups));
+        setGroupName(''); setSelectedFields([]); setFieldValues({});
+        onSave && onSave(newGroups);
+        onClose();
+    };
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 min-w-[340px] max-w-[95vw] border border-gray-200 dark:border-gray-700">
+                <h3 className="font-bold text-lg mb-4">Créer un préréglage groupé</h3>
+                <input className="w-full mb-3 px-3 py-2 border rounded-lg" placeholder="Nom du groupe" value={groupName} onChange={e => setGroupName(e.target.value)} />
+                <div className="max-h-40 overflow-y-auto mb-3">
+                    {allFields.map(f => (
+                        <div key={f.key} className="flex items-center gap-2 mb-1">
+                            <input type="checkbox" checked={selectedFields.includes(f.key)} onChange={() => handleToggleField(f.key)} />
+                            <span className="text-base">{f.icon}</span>
+                            <span className="text-xs">{f.label}</span>
+                            {selectedFields.includes(f.key) && (
+                                <input className="ml-2 px-2 py-1 border rounded w-24 text-xs" placeholder="Valeur" value={fieldValues[f.key] || ''} onChange={e => handleValueChange(f.key, e.target.value)} />
+                            )}
+                            {f.unit && <span className="text-xs text-gray-400 ml-1">{f.unit}</span>}
+                        </div>
+                    ))}
+                </div>
+                <div className="flex gap-2 mt-4">
+                    <button className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium" onClick={handleSave} disabled={!groupName.trim() || selectedFields.length === 0}>Enregistrer</button>
+                    <button className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-xl font-medium" onClick={onClose}>Annuler</button>
+                </div>
+            </div>
+        </div>
+    );
+}
 import { ChevronDown, ChevronRight, Plus, Settings, Save, Upload, CheckSquare, Square, Check } from 'lucide-react';
 import PipelineDataModal from './PipelineDataModal';
 import PipelineCellBadge from './PipelineCellBadge';
@@ -79,6 +139,12 @@ const PipelineDragDropView = ({
         const saved = localStorage.getItem('pipeline-preconfig-items');
         return saved ? JSON.parse(saved) : {};
     });
+    // Grouped presets state
+    const [groupedPresets, setGroupedPresets] = useState(() => {
+        const saved = localStorage.getItem('pipeline-grouped-presets');
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [showGroupedPresetModal, setShowGroupedPresetModal] = useState(false);
     const [contextMenu, setContextMenu] = useState(null); // { item, position }
 
     // Suppression des handlers préréglages
@@ -284,13 +350,22 @@ const PipelineDragDropView = ({
         if (!draggedContent) return;
         const sel = selectedCellsRef.current || [];
         const appliesToSelection = (sel && sel.length > 0) && (sel.includes(timestamp) || massAssignMode);
-        if (appliesToSelection) {
-            // Assigner la donnée à toutes les cases sélectionnées
-            sel.forEach(ts => {
-                onDataChange(ts, draggedContent.key, draggedContent.defaultValue ?? '');
+        // Grouped preset drop
+        if (draggedContent.type === 'grouped' && draggedContent.group) {
+            const targets = appliesToSelection ? sel : [timestamp];
+            targets.forEach(ts => {
+                draggedContent.group.fields.forEach(f => {
+                    onDataChange(ts, f.key, f.value);
+                });
             });
         } else {
-            onDataChange(timestamp, draggedContent.key, draggedContent.defaultValue ?? '');
+            if (appliesToSelection) {
+                sel.forEach(ts => {
+                    onDataChange(ts, draggedContent.key, draggedContent.defaultValue ?? '');
+                });
+            } else {
+                onDataChange(timestamp, draggedContent.key, draggedContent.defaultValue ?? '');
+            }
         }
         setDraggedContent(null);
     };
@@ -555,14 +630,41 @@ const PipelineDragDropView = ({
                 <div className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm p-4 border-b border-gray-200 dark:border-gray-700 z-10">
                     <h3 className="font-bold text-gray-900 dark:text-white text-lg">📦 Contenus</h3>
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                        Glissez les éléments vers les cases →
+                        Glissez les éléments ou groupes vers les cases →
                     </p>
-
-                    {/* Bouton créer préréglage global */}
-                    {/* Préréglages désactivés — bouton supprimé */}
+                    <button
+                        className="mt-2 px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                        onClick={() => setShowGroupedPresetModal(true)}
+                    >
+                        <Plus className="w-4 h-4" /> Groupe de préréglages
+                    </button>
                 </div>
 
                 <div className="p-3 space-y-2">
+                    {/* Grouped presets display */}
+                    {groupedPresets.length > 0 && (
+                        <div className="mb-3">
+                            <div className="font-semibold text-xs text-purple-700 dark:text-purple-300 mb-1">Groupes de préréglages</div>
+                            <div className="flex flex-wrap gap-2">
+                                {groupedPresets.map((group, idx) => (
+                                    <div
+                                        key={group.name + idx}
+                                        draggable="true"
+                                        onDragStart={e => {
+                                            e.dataTransfer.setData('application/grouped-preset', JSON.stringify(group));
+                                            e.dataTransfer.effectAllowed = 'copy';
+                                            setDraggedContent({ type: 'grouped', group });
+                                        }}
+                                        onDragEnd={() => setDraggedContent(null)}
+                                        className="px-3 py-2 rounded-lg bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 text-xs font-bold cursor-grab hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-all"
+                                        title={group.fields.map(f => `${f.key}: ${f.value}`).join(', ')}
+                                    >
+                                        <span className="mr-1">👥</span>{group.name}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                     {(sidebarContent || []).map((section) => (
                         <div key={section.id} className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                             <button
@@ -970,7 +1072,16 @@ const PipelineDragDropView = ({
                 </div>
             </div>
 
-            {/* Modal préréglages retiré pour CDC */}
+
+            {/* Modal grouped preset */}
+            <GroupedPresetModal
+                isOpen={showGroupedPresetModal}
+                onClose={() => setShowGroupedPresetModal(false)}
+                onSave={setGroupedPresets}
+                groups={groupedPresets}
+                setGroups={setGroupedPresets}
+                sidebarContent={sidebarContent}
+            />
 
             {/* Modal d'édition de cellule */}
             <PipelineDataModal
