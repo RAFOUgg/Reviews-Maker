@@ -358,14 +358,20 @@ const PipelineDragDropView = ({
                     onDataChange(ts, f.key, f.value);
                 });
             });
+            setDraggedContent(null);
+            return;
+        }
+        // For single data field, open modal for value definition
+        if (appliesToSelection) {
+            // Open modal for each selected cell (could be improved for batch edit)
+            // For now, open for the first cell in selection
+            setCurrentCellTimestamp(sel[0]);
+            setDroppedItem({ timestamp: sel[0], content: draggedContent });
+            setIsModalOpen(true);
         } else {
-            if (appliesToSelection) {
-                sel.forEach(ts => {
-                    onDataChange(ts, draggedContent.key, draggedContent.defaultValue ?? '');
-                });
-            } else {
-                onDataChange(timestamp, draggedContent.key, draggedContent.defaultValue ?? '');
-            }
+            setCurrentCellTimestamp(timestamp);
+            setDroppedItem({ timestamp, content: draggedContent });
+            setIsModalOpen(true);
         }
         setDraggedContent(null);
     };
@@ -641,10 +647,16 @@ const PipelineDragDropView = ({
                 </div>
 
                 <div className="p-3 space-y-2">
-                    {/* Grouped presets display */}
-                    {groupedPresets.length > 0 && (
-                        <div className="mb-3">
-                            <div className="font-semibold text-xs text-purple-700 dark:text-purple-300 mb-1">Groupes de préréglages</div>
+                    {/* Pré-configuration section (was MODE PIPELINE) */}
+                    <div className="mb-3">
+                        <div className="font-semibold text-xs text-purple-700 dark:text-purple-300 mb-1">Pré-configuration</div>
+                        <button
+                            className="mt-1 mb-2 px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                            onClick={() => setShowGroupedPresetModal(true)}
+                        >
+                            <Plus className="w-4 h-4" /> Groupe de préréglages
+                        </button>
+                        {groupedPresets.length > 0 && (
                             <div className="flex flex-wrap gap-2">
                                 {groupedPresets.map((group, idx) => (
                                     <div
@@ -663,8 +675,8 @@ const PipelineDragDropView = ({
                                     </div>
                                 ))}
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                     {(sidebarContent || []).map((section) => (
                         <div key={section.id} className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                             <button
@@ -674,7 +686,7 @@ const PipelineDragDropView = ({
                                 <div className="flex items-center gap-2">
                                     <span className="text-lg">{section.icon}</span>
                                     <span className="font-semibold text-sm text-gray-900 dark:text-white">
-                                        {section.label}
+                                        {section.label === 'MODE PIPELINE' ? 'Pré-configuration' : section.label}
                                     </span>
                                 </div>
                                 {expandedSections[section.id] ? (
@@ -966,13 +978,54 @@ const PipelineDragDropView = ({
                                 📊 <strong>Autres cases</strong> : Drag & drop des paramètres depuis le panneau latéral
                             </p>
 
-                            <div className="grid grid-cols-7 gap-2 select-none">
+                            <div className="grid grid-cols-7 gap-2 select-none relative">
+                                {/* Visual selection frame overlay */}
+                                {selectedCells.length > 1 && (() => {
+                                    // Find bounding box of selected cells
+                                    const firstIdx = cells.findIndex(c => c.timestamp === selectedCells[0]);
+                                    const lastIdx = cells.findIndex(c => c.timestamp === selectedCells[selectedCells.length - 1]);
+                                    const minIdx = Math.min(firstIdx, lastIdx);
+                                    const maxIdx = Math.max(firstIdx, lastIdx);
+                                    // Compute row/col for grid (7 cols)
+                                    const startRow = Math.floor(minIdx / 7);
+                                    const startCol = minIdx % 7;
+                                    const endRow = Math.floor(maxIdx / 7);
+                                    const endCol = maxIdx % 7;
+                                    // Style for overlay box
+                                    const top = `${startRow * 90}px`;
+                                    const left = `${startCol * 90}px`;
+                                    const width = `${((endCol - startCol + 1) * 90)}px`;
+                                    const height = `${((endRow - startRow + 1) * 90)}px`;
+                                    return (
+                                        <div
+                                            className="absolute pointer-events-none z-30 border-4 border-blue-400 rounded-xl"
+                                            style={{
+                                                top,
+                                                left,
+                                                width,
+                                                height,
+                                                boxSizing: 'border-box',
+                                                transition: 'all 0.2s',
+                                            }}
+                                        />
+                                    );
+                                })()}
                                 {cells.map((cell, idx) => {
                                     const hasData = hasCellData(cell.timestamp);
                                     const cellData = getCellData(cell.timestamp);
                                     const isFirst = idx === 0;
                                     const isSelected = selectedCells.includes(cell.timestamp);
                                     const isHovered = hoveredCell === cell.timestamp;
+
+                                    // Only apply purple border to first cell if selected
+                                    let cellClass = `relative p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[80px]`;
+                                    cellClass += hasData ? ' border-green-500 bg-green-500/10' : ' border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800';
+                                    cellClass += selectedCell === cell.timestamp ? ' ring-2 ring-blue-500 shadow-lg' : ' hover:border-blue-400 hover:shadow-md';
+                                    cellClass += isSelected ? ' ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-900/20' : '';
+                                    cellClass += isHovered && draggedContent ? ' ring-4 ring-blue-500 bg-blue-100 dark:bg-blue-900/30 scale-105 shadow-2xl border-blue-500 animate-pulse' : '';
+                                    if (isFirst) cellClass += ' col-span-2 bg-purple-500/10 border-purple-500';
+                                    // Remove purple border if not selected
+                                    if (isFirst && !isSelected) cellClass = cellClass.replace('ring-2 ring-purple-500', '');
 
                                     return (
                                         <div
@@ -985,26 +1038,7 @@ const PipelineDragDropView = ({
                                             onMouseLeave={handleCellLeave}
                                             onMouseDown={(e) => { if (e.button === 0) startSelection(e, idx, cell.timestamp); }}
                                             onMouseUp={(e) => { if (isSelecting) { setIsSelecting(false); setSelectionStartIdx(null); } }}
-                                            className={`
-                                                relative p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[80px]
-                                                ${hasData
-                                                    ? 'border-green-500 bg-green-500/10'
-                                                    : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800'
-                                                }
-                                                ${selectedCell === cell.timestamp
-                                                    ? 'ring-2 ring-blue-500 shadow-lg'
-                                                    : 'hover:border-blue-400 hover:shadow-md'
-                                                }
-                                                ${isSelected
-                                                    ? 'ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-900/20'
-                                                    : ''
-                                                }
-                                                ${isHovered && draggedContent
-                                                    ? 'ring-4 ring-blue-500 bg-blue-100 dark:bg-blue-900/30 scale-105 shadow-2xl border-blue-500 animate-pulse'
-                                                    : ''
-                                                }
-                                                ${isFirst ? 'col-span-2 bg-purple-500/10 border-purple-500' : ''}
-                                            `}
+                                            className={cellClass}
                                             style={{ userSelect: 'none' }}
                                         >
                                             {/* Indicateur visuel drop */}
