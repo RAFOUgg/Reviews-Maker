@@ -82,8 +82,8 @@ export default function Effets({ formData, handleChange }) {
                             type="button"
                             onClick={() => setFilter(type)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === type
-                                    ? 'bg-cyan-600 text-white'
-                                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                ? 'bg-cyan-600 text-white'
+                                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                                 }`}
                         >
                             {type.charAt(0).toUpperCase() + type.slice(1)}

@@ -263,99 +263,105 @@ body {
     background-position: center top;
 }
 
-    /* Tiles, pills and selectable cards (effect/tag tiles) */
-    .tag-tile,
-    .effect-tile,
-    .selectable-tile,
-    .pill,
-    .chip {
-        background: rgba(255,255,255,0.02) !important;
-        border: 1px solid rgba(255,255,255,0.04) !important;
-        color: var(--text-primary) !important;
-        border-radius: .5rem !important;
-        padding: .6rem .75rem !important;
-        box-shadow: none !important;
-        transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
-    }
+/* Tiles, pills and selectable cards (effect/tag tiles) */
+.tag-tile,
+.effect-tile,
+.selectable-tile,
+.pill,
+.chip {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.04) !important;
+    color: var(--text-primary) !important;
+    border-radius: .5rem !important;
+    padding: .6rem .75rem !important;
+    box-shadow: none !important;
+    transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+}
 
-    .tag-tile:hover,
-    .effect-tile:hover,
-    .selectable-tile:hover {
-        background: rgba(255,255,255,0.04) !important;
-        transform: translateY(-2px);
-    }
+.tag-tile:hover,
+.effect-tile:hover,
+.selectable-tile:hover {
+    background: rgba(255, 255, 255, 0.04) !important;
+    transform: translateY(-2px);
+}
 
-    /* Selected state for effect/tag tiles */
-    .effect-tile--selected,
-    .tag-tile--selected {
-        background: linear-gradient(135deg, var(--accent-primary, rgba(16,185,129,0.12)), var(--accent-secondary, rgba(6,182,164,0.12))) !important;
-        color: #ffffff !important;
-        border-color: transparent !important;
-        box-shadow: 0 12px 40px rgba(6,182,164,0.12) !important;
-        transform: translateY(-2px) !important;
-    }
+/* Selected state for effect/tag tiles */
+.effect-tile--selected,
+.tag-tile--selected {
+    background: linear-gradient(135deg, var(--accent-primary, rgba(16, 185, 129, 0.12)), var(--accent-secondary, rgba(6, 182, 164, 0.12))) !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+    box-shadow: 0 12px 40px rgba(6, 182, 164, 0.12) !important;
+    transform: translateY(-2px) !important;
+}
 
-    /* Make the large white option cards (like effect tiles grid) subtle */
-    .effects-grid .card,
-    .effects-grid .tile,
-    .tile-card {
-        background: rgba(255,255,255,0.02) !important;
-        border: 1px solid rgba(255,255,255,0.04) !important;
-        color: var(--text-primary) !important;
-    }
+/* Make the large white option cards (like effect tiles grid) subtle */
+.effects-grid .card,
+.effects-grid .tile,
+.tile-card {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.04) !important;
+    color: var(--text-primary) !important;
+}
 
-    /* Checkboxes/radios: subtle accent for dark mode */
-    input[type="checkbox"],
-    input[type="radio"] {
-        accent-color: rgba(255,255,255,0.14);
-        width: 1.1rem;
-        height: 1.1rem;
-    }
+/* Checkboxes/radios: subtle accent for dark mode */
+input[type="checkbox"],
+input[type="radio"] {
+    accent-color: rgba(255, 255, 255, 0.14);
+    width: 1.1rem;
+    height: 1.1rem;
+}
 
-    /* React-select focused state fine tuning */
-    .react-select__control--is-focused {
-        box-shadow: 0 8px 28px rgba(0,0,0,0.6) !important;
-        border-color: rgba(255,255,255,0.06) !important;
-        background: var(--glass-bg) !important;
-    }
+/* React-select focused state fine tuning */
+.react-select__control--is-focused {
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6) !important;
+    border-color: rgba(255, 255, 255, 0.06) !important;
+    background: var(--glass-bg) !important;
+}
 
-    .react-select__option--is-focused,
-    .react-select__option--is-selected {
-        background: rgba(255,255,255,0.03) !important;
-        color: var(--text-primary) !important;
-    }
+.react-select__option--is-focused,
+.react-select__option--is-selected {
+    background: rgba(255, 255, 255, 0.03) !important;
+    color: var(--text-primary) !important;
+}
 
-    /* Replace bright purple scrollbars with subtle glass thumb */
-    *::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
-    }
+/* Replace bright purple scrollbars with subtle glass thumb */
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
 
-    *::-webkit-scrollbar-track {
-        background: transparent;
-    }
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
 
-    *::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
-        border-radius: 999px;
-        border: 2px solid rgba(0,0,0,0.35);
-    }
+*::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+    border-radius: 999px;
+    border: 2px solid rgba(0, 0, 0, 0.35);
+}
 
-    /* Ensure overflow containers used in tiles use subtle thumb too */
-    .effects-grid, .tags-grid, .modal .scrollable, .dropdown-panel {
-        scrollbar-color: rgba(255,255,255,0.06) transparent;
-    }
+/* Ensure overflow containers used in tiles use subtle thumb too */
+.effects-grid,
+.tags-grid,
+.modal .scrollable,
+.dropdown-panel {
+    scrollbar-color: rgba(255, 255, 255, 0.06) transparent;
+}
 
-    /* Small helpers for form inputs used in review forms */
-    .review-input, input.review-input, textarea.review-input {
-        background: rgba(255,255,255,0.02) !important;
-        border: 1px solid rgba(255,255,255,0.04) !important;
-        color: var(--text-primary) !important;
-        border-radius: .5rem !important;
-        padding: .5rem .75rem !important;
-    }
+/* Small helpers for form inputs used in review forms */
+.review-input,
+input.review-input,
+textarea.review-input {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.04) !important;
+    color: var(--text-primary) !important;
+    border-radius: .5rem !important;
+    padding: .5rem .75rem !important;
+}
 
-    /* Make select placeholders more subtle */
-    select::-ms-value, select::placeholder {
-        color: rgba(255,255,255,0.5) !important;
-    }
+/* Make select placeholders more subtle */
+select::-ms-value,
+select::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
