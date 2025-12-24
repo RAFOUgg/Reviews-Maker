@@ -1,3 +1,71 @@
+// Modal d'attribution multi-données avec onglets
+import { useState as useModalState } from 'react';
+function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, onApply, selectedCells }) {
+    const [activeTab, setActiveTab] = useModalState('data');
+    const [values, setValues] = useModalState({});
+    if (!isOpen || !droppedContent) return null;
+    // Regroupement par section
+    let items = [];
+    if (droppedContent.type === 'multi') {
+        items = droppedContent.items;
+    } else if (droppedContent.type === 'grouped' && droppedContent.group) {
+        items = droppedContent.group.fields.map(f => ({ ...f }));
+    } else if (droppedContent.content) {
+        items = [droppedContent.content];
+    }
+    // Regroup by section
+    const sectionMap = {};
+    sidebarSections.forEach(section => {
+        sectionMap[section.id] = [];
+    });
+    items.forEach(item => {
+        const section = sidebarSections.find(sec => sec.items.some(i => i.key === item.key));
+        if (section) sectionMap[section.id].push(item);
+    });
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 min-w-[340px] max-w-[95vw] border border-gray-200 dark:border-gray-700">
+                <div className="flex gap-4 mb-4">
+                    <button className={`px-4 py-2 rounded-lg font-bold ${activeTab === 'data' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'}`} onClick={() => setActiveTab('data')}>Toutes les données</button>
+                    <button className={`px-4 py-2 rounded-lg font-bold ${activeTab === 'group' ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-900'}`} onClick={() => setActiveTab('group')}>Groupes</button>
+                </div>
+                {activeTab === 'data' && (
+                    <div className="max-h-80 overflow-y-auto">
+                        {Object.entries(sectionMap).map(([sectionId, sectionItems]) => {
+                            if (sectionItems.length === 0) return null;
+                            const section = sidebarSections.find(sec => sec.id === sectionId);
+                            return (
+                                <div key={sectionId} className="mb-4">
+                                    <div className="font-semibold text-sm mb-2">{section.label}</div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {sectionItems.map(item => (
+                                            <div key={item.key} className="flex flex-col gap-1">
+                                                <label className="text-xs font-medium">{item.label}</label>
+                                                <input
+                                                    className="px-2 py-1 border rounded text-xs"
+                                                    value={values[item.key] || ''}
+                                                    onChange={e => setValues(v => ({ ...v, [item.key]: e.target.value }))}
+                                                    placeholder={item.unit || ''}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+                {activeTab === 'group' && (
+                    <div className="p-4 text-sm text-gray-600">Gestion des groupes à venir…</div>
+                )}
+                <div className="flex gap-2 mt-6">
+                    <button className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium" onClick={() => onApply(values)}>Appliquer à {selectedCells.length > 0 ? `${selectedCells.length} cases` : 'la case'}</button>
+                    <button className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-xl font-medium" onClick={onClose}>Annuler</button>
+                </div>
+            </div>
+        </div>
+    );
+}
 // Handler pour configurer un item individuellement
 const handleConfigureItem = (itemKey, value) => {
     const newConfig = { ...preConfiguredItems };
@@ -118,8 +186,7 @@ const PipelineDragDropView = ({
 
     // Empêcher la sélection automatique de la première case
     useEffect(() => {
-        // Si aucune sélection n'a été faite, ne rien sélectionner
-        // (on laisse selectedCells vide par défaut)
+        setSelectedCells([]); // Clear selection on mount
     }, []);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -130,6 +197,8 @@ const PipelineDragDropView = ({
     const [showMassAssignModal, setShowMassAssignModal] = useState(false);
     const [sourceCellForMassAssign, setSourceCellForMassAssign] = useState(null);
     const [droppedItem, setDroppedItem] = useState(null); // Item droppé en attente de saisie
+    const [showMultiAssignModal, setShowMultiAssignModal] = useState(false);
+    const [multiAssignContent, setMultiAssignContent] = useState(null);
     const [hoveredCell, setHoveredCell] = useState(null); // Cellule survolée pendant drag
     const [isSelecting, setIsSelecting] = useState(false);
     const [selectionStartIdx, setSelectionStartIdx] = useState(null);
@@ -350,21 +419,15 @@ const PipelineDragDropView = ({
         if (!draggedContent) return;
         const sel = selectedCellsRef.current || [];
         const appliesToSelection = (sel && sel.length > 0) && (sel.includes(timestamp) || massAssignMode);
-        // Grouped preset drop
-        if (draggedContent.type === 'grouped' && draggedContent.group) {
-            const targets = appliesToSelection ? sel : [timestamp];
-            targets.forEach(ts => {
-                draggedContent.group.fields.forEach(f => {
-                    onDataChange(ts, f.key, f.value);
-                });
-            });
+        // Grouped preset or multi-data drop: open multi-assign modal
+        if ((draggedContent.type === 'grouped' && draggedContent.group) || (draggedContent.type === 'multi' && Array.isArray(draggedContent.items))) {
+            setMultiAssignContent(draggedContent);
+            setShowMultiAssignModal(true);
             setDraggedContent(null);
             return;
         }
         // For single data field, open modal for value definition
         if (appliesToSelection) {
-            // Open modal for each selected cell (could be improved for batch edit)
-            // For now, open for the first cell in selection
             setCurrentCellTimestamp(sel[0]);
             setDroppedItem({ timestamp: sel[0], content: draggedContent });
             setIsModalOpen(true);
@@ -396,13 +459,11 @@ const PipelineDragDropView = ({
     const selectedCellsRef = useRef([]);
 
     const startSelection = (e, startIdx, timestamp) => {
-        // Prévenir la sélection native du navigateur
         e.preventDefault();
         setIsSelecting(true);
         setSelectionStartIdx(startIdx);
-        const initial = [timestamp];
-        setSelectedCells(initial);
-        selectedCellsRef.current = initial;
+        setSelectedCells([timestamp]);
+        selectedCellsRef.current = [timestamp];
     };
 
     const updateSelectionTo = (currentIdx) => {
@@ -420,6 +481,7 @@ const PipelineDragDropView = ({
             if (isSelecting) {
                 setIsSelecting(false);
                 setSelectionStartIdx(null);
+                setSelectedCells([]); // Clear selection when mouse released
             }
         };
         window.addEventListener('mouseup', onUp);
@@ -636,14 +698,8 @@ const PipelineDragDropView = ({
                 <div className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm p-4 border-b border-gray-200 dark:border-gray-700 z-10">
                     <h3 className="font-bold text-gray-900 dark:text-white text-lg">📦 Contenus</h3>
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                        Glissez les éléments ou groupes vers les cases →
+                        Glissez les éléments vers les cases →
                     </p>
-                    <button
-                        className="mt-2 px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
-                        onClick={() => setShowGroupedPresetModal(true)}
-                    >
-                        <Plus className="w-4 h-4" /> Groupe de préréglages
-                    </button>
                 </div>
 
                 <div className="p-3 space-y-2">
@@ -700,14 +756,31 @@ const PipelineDragDropView = ({
                                 <div className="p-2 bg-white dark:bg-gray-900 space-y-1">
                                     {section.items?.map((item) => {
                                         const isPreConfigured = preConfiguredItems[item.key] !== undefined;
+                                        // Multi-select logic
+                                        const [multiSelectedItems, setMultiSelectedItems] = useState([]);
+                                        const handleSidebarItemClick = (e, item) => {
+                                            if (e.ctrlKey || e.metaKey) {
+                                                setMultiSelectedItems(prev => prev.includes(item.key)
+                                                    ? prev.filter(k => k !== item.key)
+                                                    : [...prev, item.key]);
+                                            }
+                                        };
                                         return (
                                             <div
                                                 key={item.key}
                                                 draggable="true"
-                                                onDragStart={(e) => handleDragStart(e, item)}
+                                                onDragStart={(e) => {
+                                                    if (multiSelectedItems.length > 0) {
+                                                        e.dataTransfer.setData('application/multi-items', JSON.stringify(multiSelectedItems.map(k => section.items.find(i => i.key === k))));
+                                                        setDraggedContent({ type: 'multi', items: multiSelectedItems.map(k => section.items.find(i => i.key === k)) });
+                                                    } else {
+                                                        handleDragStart(e, item);
+                                                    }
+                                                }}
                                                 onDragEnd={(e) => {
                                                     e.currentTarget.classList.remove('dragging');
                                                 }}
+                                                onClick={(e) => handleSidebarItemClick(e, item)}
                                                 onContextMenu={(e) => {
                                                     e.preventDefault();
                                                     setContextMenu({
@@ -722,7 +795,7 @@ const PipelineDragDropView = ({
                                                 className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group ${isPreConfigured
                                                     ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30'
                                                     : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:border-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                                    }`}
+                                                    } ${multiSelectedItems.includes(item.key) ? 'ring-2 ring-blue-500' : ''}`}
                                                 style={{ touchAction: 'none' }}
                                                 title={isPreConfigured ? `Pré-configuré: ${preConfiguredItems[item.key]}${item.unit || ''}` : 'Clic droit pour pré-configurer'}
                                             >
@@ -1133,14 +1206,23 @@ const PipelineDragDropView = ({
                 pipelineType={type} // Passer le type de pipeline pour localStorage
             />
 
-            {/* Modal attribution en masse */}
-            <MassAssignModal
-                isOpen={showMassAssignModal}
-                onClose={() => setShowMassAssignModal(false)}
-                sourceCellData={sourceCellForMassAssign?.data}
-                selectedCellsCount={selectedCells.length}
+            {/* Modal multi-assign (onglets) */}
+            <MultiAssignModal
+                isOpen={showMultiAssignModal}
+                onClose={() => { setShowMultiAssignModal(false); setMultiAssignContent(null); }}
+                droppedContent={multiAssignContent}
                 sidebarSections={sidebarContent}
-                onApply={handleMassAssignApply}
+                selectedCells={selectedCells}
+                onApply={(values) => {
+                    const targets = selectedCells.length > 0 ? selectedCells : [currentCellTimestamp];
+                    targets.forEach(ts => {
+                        Object.entries(values).forEach(([key, value]) => {
+                            onDataChange(ts, key, value);
+                        });
+                    });
+                    setShowMultiAssignModal(false);
+                    setMultiAssignContent(null);
+                }}
             />
 
             {/* Modal configuration préréglage complet retirée (CDC) */}
