@@ -6,10 +6,10 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
     if (!isOpen || !droppedContent) return null;
     // Regroupement par section
     let items = [];
-    if (droppedContent.type === 'multi') {
-        items = droppedContent.items;
-    } else if (droppedContent.type === 'grouped' && droppedContent.group) {
-        items = droppedContent.group.fields.map(f => ({ ...f }));
+    if (droppedContent.type === 'multi' && Array.isArray(droppedContent.items)) {
+        items = droppedContent.items.filter(Boolean);
+    } else if (droppedContent.type === 'grouped' && droppedContent.group && Array.isArray(droppedContent.group.fields)) {
+        items = droppedContent.group.fields.filter(Boolean).map(f => ({ ...f }));
     } else if (droppedContent.content) {
         items = [droppedContent.content];
     }
@@ -19,7 +19,7 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
         sectionMap[section.id] = [];
     });
     items.forEach(item => {
-        const section = sidebarSections.find(sec => sec.items.some(i => i.key === item.key));
+        const section = sidebarSections.find(sec => Array.isArray(sec.items) && sec.items.some(i => i.key === item.key));
         if (section) sectionMap[section.id].push(item);
     });
     return (
@@ -39,15 +39,16 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
                                     <div className="font-semibold text-sm mb-2">{section.label}</div>
                                     <div className="grid grid-cols-2 gap-2">
                                         {sectionItems.map(item => (
-                                            <div key={item.key} className="flex flex-col gap-1">
-                                                <label className="text-xs font-medium">{item.label}</label>
-                                                <input
-                                                    className="px-2 py-1 border rounded text-xs"
-                                                    value={values[item.key] || ''}
-                                                    onChange={e => setValues(v => ({ ...v, [item.key]: e.target.value }))}
-                                                    placeholder={item.unit || ''}
-                                                />
-                                            </div>
+                                            item && (
+                                                <div key={item.key} className="flex flex-col gap-1">
+                                                    <label className="text-xs font-medium">{item.label}</label>
+                                                    <input
+                                                        className="px-2 py-1 border rounded text-xs"
+                                                        value={values[item.key] || ''}
+                                                        onChange={e => setValues(v => ({ ...v, [item.key]: e.target.value }))}
+                                                        placeholder={item.unit || ''}
+                                                    />
+                                                </div>)
                                         ))}
                                     </div>
                                 </div>
@@ -427,7 +428,7 @@ const PipelineDragDropView = ({
         const sel = selectedCellsRef.current || [];
         const appliesToSelection = (sel && sel.length > 0) && (sel.includes(timestamp) || massAssignMode);
         // Grouped preset or multi-data drop: open multi-assign modal
-        if ((draggedContent.type === 'grouped' && draggedContent.group) || (draggedContent.type === 'multi' && Array.isArray(draggedContent.items))) {
+        if ((draggedContent.type === 'grouped' && draggedContent.group && Array.isArray(draggedContent.group.fields)) || (draggedContent.type === 'multi' && Array.isArray(draggedContent.items))) {
             setMultiAssignContent(draggedContent);
             setShowMultiAssignModal(true);
             setDraggedContent(null);
@@ -1061,16 +1062,12 @@ const PipelineDragDropView = ({
 
                             <div className="grid grid-cols-7 gap-2 select-none relative">
                                 {/* Visual selection frame overlay */}
-                                {selectedCells.length > 1 && (() => {
+                                {selectedCells.length > 1 && !isSelecting && (() => {
                                     // Find all selected cell indices
                                     const indices = selectedCells.map(ts => cells.findIndex(c => c.timestamp === ts)).filter(i => i !== -1);
                                     if (indices.length === 0) return null;
                                     const minIdx = Math.min(...indices);
                                     const maxIdx = Math.max(...indices);
-                                    const startRow = Math.floor(minIdx / 7);
-                                    const startCol = minIdx % 7;
-                                    const endRow = Math.floor(maxIdx / 7);
-                                    const endCol = maxIdx % 7;
                                     // Compute bounding box for all selected cells
                                     let minRow = 99, minCol = 99, maxRow = 0, maxCol = 0;
                                     indices.forEach(idx => {
@@ -1087,7 +1084,7 @@ const PipelineDragDropView = ({
                                     const height = `${((maxRow - minRow + 1) * 90)}px`;
                                     return (
                                         <div
-                                            className="absolute pointer-events-none z-30 border-4 border-blue-400 rounded-xl"
+                                            className="absolute pointer-events-none z-40 border-4 border-blue-500 rounded-2xl shadow-lg animate-fade-in"
                                             style={{
                                                 top,
                                                 left,
@@ -1095,6 +1092,8 @@ const PipelineDragDropView = ({
                                                 height,
                                                 boxSizing: 'border-box',
                                                 transition: 'all 0.1s',
+                                                borderStyle: 'dashed',
+                                                background: 'rgba(80,180,255,0.07)'
                                             }}
                                         />
                                     );
@@ -1225,7 +1224,7 @@ const PipelineDragDropView = ({
             {/* Modal multi-assign (onglets) */}
             <MultiAssignModal
                 isOpen={showMultiAssignModal}
-                onClose={() => { setShowMultiAssignModal(false); setMultiAssignContent(null); }}
+                onClose={() => { setShowMultiAssignModal(false); setMultiAssignContent(null); setSelectedCells([]); }}
                 droppedContent={multiAssignContent}
                 sidebarSections={sidebarContent}
                 selectedCells={selectedCells}
@@ -1238,6 +1237,7 @@ const PipelineDragDropView = ({
                     });
                     setShowMultiAssignModal(false);
                     setMultiAssignContent(null);
+                    setSelectedCells([]); // Clear selection frame after assignment
                 }}
             />
 
