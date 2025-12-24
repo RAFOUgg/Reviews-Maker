@@ -587,8 +587,14 @@ const PipelineDragDropView = ({
                                                 }}
                                                 onContextMenu={(e) => {
                                                     e.preventDefault();
-                                                    const val = window.prompt(`Définir valeur par défaut pour «${item.label}»`, preConfiguredItems[item.key] || '');
-                                                    handleConfigureItem(item.key, val);
+                                                    setContextMenu({
+                                                        item,
+                                                        position: {
+                                                            x: e.clientX,
+                                                            y: e.clientY
+                                                        },
+                                                        anchorRect: e.currentTarget.getBoundingClientRect()
+                                                    });
                                                 }}
                                                 className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group ${isPreConfigured
                                                     ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30'
@@ -993,13 +999,63 @@ const PipelineDragDropView = ({
                 position={tooltipData.position}
             />
 
-            {/* Menu contextuel CDC : centré, simple */}
+            {/* Menu contextuel stylisé pour config individuelle et assignation rapide */}
             {contextMenu && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setContextMenu(null)}>
-                    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 min-w-[260px] max-w-[90vw]" style={{ left: contextMenu.position.x, top: contextMenu.position.y, position: 'absolute', transform: 'translate(-50%, -50%)' }} onClick={e => e.stopPropagation()}>
-                        <h4 className="font-bold text-lg mb-2">Paramètre : {contextMenu.item.label}</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Drag & drop pour assigner ce paramètre à une case.</p>
-                        <button className="mt-2 w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-all" onClick={() => setContextMenu(null)}>Fermer</button>
+                <div className="fixed inset-0 z-50" onClick={() => setContextMenu(null)}>
+                    <div
+                        className="absolute bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 min-w-[320px] max-w-[90vw] border border-gray-200 dark:border-gray-700"
+                        style={{ left: contextMenu.position.x, top: contextMenu.position.y, transform: 'translate(-10%, 0)', zIndex: 10000 }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <h4 className="font-bold text-lg mb-2 flex items-center gap-2">
+                            <span className="text-base">{contextMenu.item.icon}</span>
+                            {contextMenu.item.label}
+                        </h4>
+                        <div className="mb-4">
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Valeur par défaut</label>
+                            <input
+                                type="text"
+                                className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+                                defaultValue={preConfiguredItems[contextMenu.item.key] || ''}
+                                id="preconfig-value-input"
+                            />
+                        </div>
+                        <div className="flex gap-2 mb-2">
+                            <button
+                                className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-all"
+                                onClick={() => {
+                                    const val = document.getElementById('preconfig-value-input').value;
+                                    handleConfigureItem(contextMenu.item.key, val);
+                                    setContextMenu(null);
+                                }}
+                            >Enregistrer</button>
+                            <button
+                                className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-xl font-medium transition-all"
+                                onClick={() => setContextMenu(null)}
+                            >Annuler</button>
+                        </div>
+                        <div className="mt-4">
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Assigner à&nbsp;:</label>
+                            <div className="flex gap-2">
+                                <button
+                                    className="flex-1 px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-xs font-semibold"
+                                    onClick={() => {
+                                        // Assignation à toutes les cases sélectionnées
+                                        selectedCells.forEach(ts => onDataChange(ts, contextMenu.item.key, document.getElementById('preconfig-value-input').value));
+                                        setContextMenu(null);
+                                    }}
+                                    disabled={selectedCells.length === 0}
+                                >{selectedCells.length > 0 ? `Sélection (${selectedCells.length})` : 'Sélectionner des cases'}</button>
+                                <button
+                                    className="flex-1 px-3 py-2 bg-blue-400 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold"
+                                    onClick={() => {
+                                        // Assignation à toutes les cases
+                                        cells.forEach(cell => onDataChange(cell.timestamp, contextMenu.item.key, document.getElementById('preconfig-value-input').value));
+                                        setContextMenu(null);
+                                    }}
+                                >Toutes les cases</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
