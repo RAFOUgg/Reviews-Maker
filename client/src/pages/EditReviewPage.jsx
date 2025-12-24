@@ -666,7 +666,7 @@ export default function EditReviewPage() {
                                         : [...selected, choice];
                                     handleInputChange(field.key, newVal);
                                 }}
-                                className={`px-3 py-1.5 rounded-lg text-sm transition-all ${selected.includes(choice) ? 'bg-[rgb(var(--color-accent))] text-white shadow-[0_0_15px_rgba(var(--color-accent),0.4)]' : 'bg-theme-secondary text-[rgb(var(--text-primary))] hover:bg-theme-tertiary' }`}
+                                className={`px-3 py-1.5 rounded-lg text-sm transition-all ${selected.includes(choice) ? 'bg-[rgb(var(--color-accent))] text-white shadow-[0_0_15px_rgba(var(--color-accent),0.4)]' : 'bg-theme-secondary text-[rgb(var(--text-primary))] hover:bg-theme-tertiary'}`}
                             >
                                 {choice}
                             </button>
@@ -881,7 +881,7 @@ export default function EditReviewPage() {
         <div className="min-h-screen">
             {/* Header */}
             <div className="sticky top-0 z-50 bg-theme-primary backdrop-blur-xl border-b border-theme">
-                <div className="max-w-4xl mx-auto px-4 py-4">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex items-center justify-between mb-3">
                         <button
                             onClick={() => navigate(`/review/${id}`)}
@@ -899,7 +899,7 @@ export default function EditReviewPage() {
                         </div>
                         <button
                             onClick={() => setShowOrchardStudio(true)}
-                            className={`px-4 py-2 rounded-xl font-medium shadow-lg transition-all flex items-center gap-2 ${formData.orchardPreset ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500' : 'bg-gradient-to-r hover: hover:' } text-white`}
+                            className={`px-4 py-2 rounded-xl font-medium shadow-lg transition-all flex items-center gap-2 ${formData.orchardPreset ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500' : 'bg-gradient-to-r hover: hover:'} text-white`}
                         >
                             {formData.orchardPreset ? '✅ Aperçu défini' : '🎨 Définir aperçu'}
                         </button>
@@ -937,13 +937,13 @@ export default function EditReviewPage() {
 
             {/* Section Navigation */}
             <div className="sticky top-[88px] z-40 bg-theme-primary backdrop-blur-xl border-b border-theme overflow-x-auto">
-                <div className="max-w-4xl mx-auto px-4">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex gap-2 py-3">
                         {sections.map((section, idx) => (
                             <button
                                 key={idx}
                                 onClick={() => goToSection(idx)}
-                                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${idx === currentSectionIndex ? 'bg-[rgb(var(--color-accent))] text-white shadow-[0_0_20px_rgba(var(--color-accent),0.5)]' : 'bg-theme-secondary text-[rgb(var(--text-secondary))] hover:bg-theme-tertiary hover:text-[rgb(var(--text-primary))]' }`}
+                                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${idx === currentSectionIndex ? 'bg-[rgb(var(--color-accent))] text-white shadow-[0_0_20px_rgba(var(--color-accent),0.5)]' : 'bg-theme-secondary text-[rgb(var(--text-secondary))] hover:bg-theme-tertiary hover:text-[rgb(var(--text-primary))]'}`}
                             >
                                 {section.title}
                             </button>
@@ -954,7 +954,7 @@ export default function EditReviewPage() {
 
             {/* Error Display */}
             {error && (
-                <div className="max-w-4xl mx-auto px-4 mt-4">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
                     <div className="p-4 bg-theme-danger-light border border-theme-danger rounded-xl text-theme-danger">
                         {error}
                     </div>
@@ -962,7 +962,7 @@ export default function EditReviewPage() {
             )}
 
             {/* Form Content */}
-            <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
                 <div className="bg-theme-input backdrop-blur-xl rounded-2xl p-8 border border-theme">
                     <h2 className="text-2xl font-bold text-[rgb(var(--text-primary))] mb-6">
                         {currentSection?.title}
@@ -988,7 +988,7 @@ export default function EditReviewPage() {
 
             {/* Navigation Buttons */}
             <div className="fixed bottom-0 left-0 right-0 bg-theme-primary backdrop-blur-xl border-t border-theme py-4 z-50">
-                <div className="max-w-4xl mx-auto px-4 flex gap-4">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-4">
                     <button
                         type="button"
                         onClick={prevSection}

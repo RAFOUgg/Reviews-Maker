@@ -212,7 +212,7 @@ const PresetConfigModal = ({
                     exit={{ scale: 0.95, opacity: 0, y: 20 }}
                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
                     onClick={(e) => e.stopPropagation()}
-                    className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-gray-200/50 dark:border-gray-700/50"
+                    className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden border border-gray-200/50 dark:border-gray-700/50"
                 >
                     {/* Header */}
                     <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r dark:from-gray-800 dark:to-gray-850">
@@ -281,7 +281,7 @@ const PresetConfigModal = ({
                                 <button
                                     key={idx}
                                     onClick={() => setActiveSection(idx)}
-                                    className={`flex-shrink-0 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${activeSection === idx ? ' dark: bg-white dark:bg-gray-900' : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200' }`}
+                                    className={`flex-shrink-0 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${activeSection === idx ? ' dark: bg-white dark:bg-gray-900' : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'}`}
                                 >
                                     {section.label}
                                     <span className="ml-2 text-xs bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded">

@@ -144,7 +144,7 @@ export default function ProfilePage() {
     return (
         <div className="min-h-screen bg-slate-900 relative">
             <div className="absolute inset-0 bg-gradient-to-br /20 /20 /20 pointer-events-none" />
-            <div className="max-w-4xl mx-auto px-4 py-12 relative z-10 relative z-10">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10 relative z-10">
                 {/* Header */}
                 <LiquidCard padding="lg" className="mb-8">
                     <button
@@ -237,7 +237,7 @@ export default function ProfilePage() {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`pb-4 px-4 font-semibold transition-colors border-b-2 flex items-center gap-2 ${activeTab === tab.id ? 'text-white border-violet-500' : 'text-white/60 hover:text-white border-transparent' }`}
+                            className={`pb-4 px-4 font-semibold transition-colors border-b-2 flex items-center gap-2 ${activeTab === tab.id ? 'text-white border-violet-500' : 'text-white/60 hover:text-white border-transparent'}`}
                         >
                             <tab.icon className="w-4 h-4" />
                             {tab.label}

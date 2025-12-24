@@ -86,7 +86,7 @@ export default function SettingsPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-8">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -135,7 +135,7 @@ export default function SettingsPage() {
                             <button
                                 key={lang.code}
                                 onClick={() => handleLanguageChange(lang.i18nCode)}
-                                className={`relative p-4 rounded-lg border-2 transition-all text-left ${language === lang.i18nCode ? 'border-indigo-500 dark:' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600' }`}
+                                className={`relative p-4 rounded-lg border-2 transition-all text-left ${language === lang.i18nCode ? 'border-indigo-500 dark:' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
                             >
                                 {language === lang.i18nCode && (
                                     <div className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center">
@@ -211,10 +211,10 @@ export default function SettingsPage() {
                             </div>
                             <button
                                 onClick={() => handlePreferenceChange('compactView', !preferences.compactView)}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences.compactView ? '' : 'bg-gray-300 dark:bg-gray-600' }`}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences.compactView ? '' : 'bg-gray-300 dark:bg-gray-600'}`}
                             >
                                 <span
-                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.compactView ? 'translate-x-6' : 'translate-x-1' }`}
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.compactView ? 'translate-x-6' : 'translate-x-1'}`}
                                 />
                             </button>
                         </div>
@@ -227,10 +227,10 @@ export default function SettingsPage() {
                             </div>
                             <button
                                 onClick={() => handlePreferenceChange('showNotifications', !preferences.showNotifications)}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences.showNotifications ? '' : 'bg-gray-300 dark:bg-gray-600' }`}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences.showNotifications ? '' : 'bg-gray-300 dark:bg-gray-600'}`}
                             >
                                 <span
-                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.showNotifications ? 'translate-x-6' : 'translate-x-1' }`}
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.showNotifications ? 'translate-x-6' : 'translate-x-1'}`}
                                 />
                             </button>
                         </div>

@@ -382,7 +382,7 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                     onClick={closePreview}
                 >
                     <div
-                        className="bg-white dark:bg-gray-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-auto relative"
+                        className="bg-white dark:bg-gray-900 rounded-2xl max-w-7xl w-full max-h-[90vh] overflow-auto relative"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header modal */}

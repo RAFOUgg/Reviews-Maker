@@ -74,7 +74,7 @@ const AccountTypeSelector = ({ isOpen, onComplete, currentType = 'consumer', ini
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-hidden flex flex-col">
                 {/* Header */}
                 <div className="bg-gradient-to-r text-white p-6">
                     <h2 className="text-2xl font-bold flex items-center gap-3">
@@ -100,7 +100,7 @@ const AccountTypeSelector = ({ isOpen, onComplete, currentType = 'consumer', ini
                                     key={type.type}
                                     onClick={() => setSelectedType(type.type)}
                                     disabled={type.disabled || (type.requiresSubscription && type.type !== 'consumer')}
-                                    className={`relative p-6 rounded-lg border-2 text-left transition-all ${isSelected ? 'border-violet-600 dark:' : 'border-gray-300 dark:border-gray-600 hover:border-violet-400' } ${type.disabled || (type.requiresSubscription && type.type !== 'consumer') ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer' }`}
+                                    className={`relative p-6 rounded-lg border-2 text-left transition-all ${isSelected ? 'border-violet-600 dark:' : 'border-gray-300 dark:border-gray-600 hover:border-violet-400'} ${type.disabled || (type.requiresSubscription && type.type !== 'consumer') ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                                 >
                                     {isCurrent && (
                                         <span className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">

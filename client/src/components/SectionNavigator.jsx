@@ -12,7 +12,7 @@ export default function SectionNavigator({
 }) {
     return (
         <div className="bg-theme-primary backdrop-blur-xl border-t border-theme overflow-x-auto">
-            <div className="max-w-4xl mx-auto px-4">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex gap-1.5 py-2 justify-center flex-wrap">
                     {sections.map((section, idx) => (
                         <button

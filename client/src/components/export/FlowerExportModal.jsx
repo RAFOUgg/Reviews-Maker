@@ -83,7 +83,7 @@ export default function FlowerExportModal({ review, onClose, isDark = false }) {
                                     setSelectedTemplate(tpl.id)
                                     setCustomModules(null)
                                 }}
-                                className={`p-4 rounded-lg border-2 transition text-center ${selectedTemplate === tpl.id ? isDark ? ' ' : ' ' : isDark ? 'border-gray-700 hover:border-gray-600' : 'border-gray-200 hover:border-gray-300' }`}
+                                className={`p-4 rounded-lg border-2 transition text-center ${selectedTemplate === tpl.id ? isDark ? ' ' : ' ' : isDark ? 'border-gray-700 hover:border-gray-600' : 'border-gray-200 hover:border-gray-300'}`}
                             >
                                 <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                     {tpl.label}
@@ -133,7 +133,7 @@ export default function FlowerExportModal({ review, onClose, isDark = false }) {
                 <div className="flex items-center gap-3 justify-end">
                     <button
                         onClick={onClose}
-                        className={`px-6 py-2 rounded-lg font-semibold transition ${isDark ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-900' }`}
+                        className={`px-6 py-2 rounded-lg font-semibold transition ${isDark ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-900'}`}
                     >
                         {t('common.cancel')}
                     </button>

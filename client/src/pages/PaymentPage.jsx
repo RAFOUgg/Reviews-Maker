@@ -75,7 +75,7 @@ export default function PaymentPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 dark:from-gray-900 dark:to-gray-800 px-4 py-12">
-            <div className="max-w-4xl w-full">
+            <div className="max-w-7xl w-full">
                 <div className="text-center mb-8">
                     <Link
                         to="/choose-account"
