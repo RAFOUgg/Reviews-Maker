@@ -32,79 +32,48 @@ const detectSystemTheme = () => {
     : THEMES.LIGHT;
 };
 
-export const useThemeStore = create(
-  persist(
-    (set, get) => ({
-      // État
-      currentTheme: THEMES.VIOLET_LEAN, // Thème par défaut
-      autoDetect: false, // Détection automatique du thème système
+// Minimalized theme store: force dark mode and neutralize theme switching.
+export const useThemeStore = create((set, get) => ({
+  // Expose some constants for compatibility but keep dark-only behavior
+  themes: THEMES,
+  themeLabels: THEME_LABELS,
+  availableThemes: [THEMES.DARK],
 
-      // Getters
-      themes: THEMES,
-      themeLabels: THEME_LABELS,
-      availableThemes: Object.values(THEMES),
+  // State (fixed)
+  currentTheme: THEMES.DARK,
+  autoDetect: false,
 
-      // Actions
-      setTheme: (theme) => {
-        if (!Object.values(THEMES).includes(theme)) {
-          console.warn(`Theme "${theme}" not found. Available themes:`, Object.values(THEMES));
-          return;
-        }
+  // Actions are inert or forced to dark to remove runtime theme switching
+  setTheme: (theme) => {
+    // Ignore requested theme, always enforce dark
+    set({ currentTheme: THEMES.DARK, autoDetect: false });
+    try {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.classList.add('dark');
+    } catch (e) { /* ignore in non-browser env */ }
+  },
 
-        set({ currentTheme: theme, autoDetect: false });
-        document.documentElement.setAttribute('data-theme', theme);
-      },
+  toggleAutoDetect: () => {
+    // No-op: keep autoDetect false
+    set({ autoDetect: false });
+  },
 
-      toggleAutoDetect: () => {
-        const newAutoDetect = !get().autoDetect;
-        set({ autoDetect: newAutoDetect });
+  cycleTheme: () => {
+    // No-op: keep dark
+    get().setTheme(THEMES.DARK);
+  },
 
-        if (newAutoDetect) {
-          const systemTheme = detectSystemTheme();
-          get().setTheme(systemTheme);
+  getThemeLabel: (theme) => THEME_LABELS[THEMES.DARK] || THEMES.DARK,
 
-          // Écouter les changements du système
-          if (typeof window !== 'undefined') {
-            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-            mediaQuery.addEventListener('change', (e) => {
-              if (get().autoDetect) {
-                get().setTheme(e.matches ? THEMES.DARK : THEMES.LIGHT);
-              }
-            });
-          }
-        }
-      },
-
-      cycleTheme: () => {
-        const themes = Object.values(THEMES);
-        const currentIndex = themes.indexOf(get().currentTheme);
-        const nextIndex = (currentIndex + 1) % themes.length;
-        get().setTheme(themes[nextIndex]);
-      },
-
-      getThemeLabel: (theme) => {
-        return THEME_LABELS[theme] || theme;
-      },
-
-      // Initialisation
-      initTheme: () => {
-        const { currentTheme, autoDetect } = get();
-
-        if (autoDetect) {
-          const systemTheme = detectSystemTheme();
-          set({ currentTheme: systemTheme });
-          document.documentElement.setAttribute('data-theme', systemTheme);
-        } else {
-          document.documentElement.setAttribute('data-theme', currentTheme);
-        }
-      },
-    }),
-    {
-      name: 'reviews-maker-theme',
-      version: 2,
-    }
-  )
-);
+  // Initialization: enforce dark immediately
+  initTheme: () => {
+    try {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.classList.add('dark');
+    } catch (e) { /* ignore in non-browser env */ }
+    set({ currentTheme: THEMES.DARK, autoDetect: false });
+  }
+}));
 
 // Hook d'initialisation à appeler au démarrage de l'app
 export const initializeTheme = () => {

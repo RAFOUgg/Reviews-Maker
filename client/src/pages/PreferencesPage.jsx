@@ -42,8 +42,8 @@ export default function PreferencesPage() {
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
                                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === tab.id
-                                                ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
-                                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                            ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg'
+                                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                             }`}
                                     >
                                         <span className="text-xl">{tab.icon}</span>
@@ -99,17 +99,7 @@ function GeneralPreferences() {
                     </select>
                 </div>
 
-                {/* Thème */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Thème
-                    </label>
-                    <select className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                        <option value="light">Clair</option>
-                        <option value="dark">Sombre</option>
-                        <option value="auto">Automatique</option>
-                    </select>
-                </div>
+                {/* Theme removed — application is dark-only */}
 
                 {/* Notifications */}
                 <div>

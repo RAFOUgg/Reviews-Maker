@@ -41,7 +41,8 @@ export default function ProfileSettingsPage() {
         }
     })
 
-    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'violet-lean')
+    // Theme is forced to dark only; remove runtime theme switching
+    const [theme, setTheme] = useState('dark')
     const [language, setLanguage] = useState(i18n.language || 'fr')
 
     // Producteur-specific data
@@ -105,44 +106,19 @@ export default function ProfileSettingsPage() {
         }
     }
 
-    // Apply theme
+    // Enforce dark theme globally (no user-selectable themes)
     useEffect(() => {
-        const root = document.documentElement
-        const applyTheme = (t) => {
-            root.removeAttribute('data-theme')
-            root.classList.remove('dark')
-
-            switch (t) {
-                case 'dark':
-                    root.setAttribute('data-theme', 'dark')
-                    root.classList.add('dark')
-                    break
-                case 'auto':
-                    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-                    if (isDark) {
-                        root.setAttribute('data-theme', 'dark')
-                        root.classList.add('dark')
-                    } else {
-                        root.setAttribute('data-theme', 'violet-lean')
-                    }
-                    break
-                default:
-                    root.setAttribute('data-theme', t)
-            }
+        try {
+            const root = document.documentElement
+            root.setAttribute('data-theme', 'dark')
+            root.classList.add('dark')
+            localStorage.setItem('theme', 'dark')
+        } catch (e) {
+            // ignore in non-browser env
         }
+    }, [])
 
-        applyTheme(theme)
-        localStorage.setItem('theme', theme)
-    }, [theme])
-
-    const themeOptions = [
-        { value: 'violet-lean', label: 'Violet Lean', gradient: 'from-purple-500 to-violet-600' },
-        { value: 'emerald', label: 'Vert Émeraude', gradient: 'from-emerald-500 to-green-600' },
-        { value: 'tahiti', label: 'Bleu Tahiti', gradient: 'from-cyan-500 to-blue-600' },
-        { value: 'sakura', label: 'Sakura', gradient: 'from-pink-500 to-rose-600' },
-        { value: 'dark', label: 'Mode Sombre', gradient: 'from-gray-800 to-gray-900' },
-        { value: 'auto', label: 'Automatique', gradient: 'from-slate-500 to-gray-600' }
-    ]
+    // themeOptions removed — app is dark-only
 
     const tabs = [
         { id: 'profile', label: 'Mon Profil', icon: User },
@@ -519,34 +495,13 @@ export default function ProfileSettingsPage() {
                         <div className="space-y-6">
                             <h2 className="text-2xl font-black text-gray-900 mb-6">Préférences & Apparence</h2>
 
-                            {/* Theme Selection */}
-                            <div>
-                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <Palette className="w-5 h-5 text-purple-700" />
+                            {/* Theme removed — application enforced to dark-only */}
+                            <div className="p-4 rounded-xl bg-gray-800 border border-gray-700">
+                                <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                                    <Palette className="w-5 h-5 text-white/80" />
                                     Thème de l'application
                                 </h3>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                    {themeOptions.map((option) => (
-                                        <button
-                                            key={option.value}
-                                            onClick={() => setTheme(option.value)}
-                                            className={`relative p-4 rounded-xl border-3 transition-all ${theme === option.value
-                                                ? 'border-purple-600 shadow-lg scale-105'
-                                                : 'border-gray-300 hover:border-purple-400'
-                                                }`}
-                                        >
-                                            <div className={`h-16 rounded-lg bg-gradient-to-br ${option.gradient} mb-3`}></div>
-                                            <div className="text-sm font-bold text-gray-900">{option.label}</div>
-                                            {theme === option.value && (
-                                                <div className="absolute top-2 right-2 bg-purple-600 text-white rounded-full p-1">
-                                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
-                                                    </svg>
-                                                </div>
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
+                                <p className="text-sm text-gray-300">L'application utilise maintenant exclusivement le mode sombre (dark). Les options de thème ont été supprimées pour garantir une UI cohérente.</p>
                             </div>
 
                             {/* Language */}

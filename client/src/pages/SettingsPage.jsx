@@ -9,10 +9,8 @@ export default function SettingsPage() {
     const { user } = useStore()
     const { i18n } = useTranslation()
 
-    // Theme settings
-    const [theme, setTheme] = useState(() => {
-        return localStorage.getItem('theme') || 'violet-lean'
-    })
+    // Theme is enforced to dark-only; disable local theme switching
+    const [theme, setTheme] = useState('dark')
 
     // Language setting
     const [language, setLanguage] = useState(() => {
@@ -39,61 +37,15 @@ export default function SettingsPage() {
         }
     }, [user, navigate])
 
-    // Apply theme
+    // Enforce dark theme globally (no user-selectable themes)
     useEffect(() => {
-        const root = window.document.documentElement
-
-        const applyTheme = (themeValue) => {
-            // Remove all theme data attributes
-            root.removeAttribute('data-theme')
-
-            switch (themeValue) {
-                case 'violet-lean':
-                    root.setAttribute('data-theme', 'violet-lean')
-                    root.classList.remove('dark')
-                    break
-                case 'emerald':
-                    root.setAttribute('data-theme', 'emerald')
-                    root.classList.remove('dark')
-                    break
-                case 'tahiti':
-                    root.setAttribute('data-theme', 'tahiti')
-                    root.classList.remove('dark')
-                    break
-                case 'sakura':
-                    root.setAttribute('data-theme', 'sakura')
-                    root.classList.remove('dark')
-                    break
-                case 'dark':
-                    root.setAttribute('data-theme', 'dark')
-                    root.classList.add('dark')
-                    break
-                case 'auto':
-                    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-                    if (isDark) {
-                        root.setAttribute('data-theme', 'dark')
-                        root.classList.add('dark')
-                    } else {
-                        root.setAttribute('data-theme', 'violet-lean')
-                        root.classList.remove('dark')
-                    }
-                    break
-                default:
-                    root.setAttribute('data-theme', 'violet-lean')
-            }
-        }
-
-        applyTheme(theme)
-        localStorage.setItem('theme', theme)
-
-        // Listen for system theme changes if auto
-        if (theme === 'auto') {
-            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-            const handler = () => applyTheme('auto')
-            mediaQuery.addEventListener('change', handler)
-            return () => mediaQuery.removeEventListener('change', handler)
-        }
-    }, [theme])
+        try {
+            const root = window.document.documentElement
+            root.setAttribute('data-theme', 'dark')
+            root.classList.add('dark')
+            localStorage.setItem('theme', 'dark')
+        } catch (e) { /* ignore */ }
+    }, [])
 
     const handleThemeChange = (newTheme) => {
         setTheme(newTheme)
@@ -155,46 +107,15 @@ export default function SettingsPage() {
                     </div>
                 )}
 
-                {/* Theme Section */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {/* Theme removed — application enforced to dark-only */}
+                <div className="bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-700 mb-6">
+                    <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                        <svg className="w-6 h-6 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
                         </svg>
                         Thème de l'application
                     </h2>
-                    <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
-                        Choisissez le thème qui vous convient le mieux
-                    </p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {[
-                            { value: 'violet-lean', label: 'Violet Lean', icon: '🟣', desc: 'Par défaut', colors: 'from-purple-400 to-pink-400' },
-                            { value: 'emerald', label: 'Vert Émeraude', icon: '💚', desc: 'Vert profond', colors: 'from-emerald-400 to-green-300' },
-                            { value: 'tahiti', label: 'Bleu Tahiti', icon: '🔵', desc: 'Bleu océan', colors: 'from-cyan-400 to-blue-400' },
-                            { value: 'sakura', label: 'Sakura', icon: '🌸', desc: 'Rose Sakura doux', colors: 'from-pink-400 to-pink-300' },
-                            { value: 'dark', label: 'Sombre', icon: '⚫', desc: 'Indigo sombre', colors: 'from-indigo-900 to-purple-900' },
-                            { value: 'auto', label: 'Selon système', icon: '🔄', desc: 'Automatique', colors: 'from-gray-600 to-gray-700' }
-                        ].map((option) => (
-                            <button
-                                key={option.value}
-                                onClick={() => handleThemeChange(option.value)}
-                                className={`relative p-5 rounded-xl border-2 transition-all ${theme === option.value ? 'theme-selected' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
-                            >
-                                {theme === option.value && (
-                                    <div className="absolute top-2 right-2 theme-dot flex items-center justify-center">
-                                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                )}
-                                <div className="text-4xl mb-2">{option.icon}</div>
-                                <div className="theme-gradient-bar mb-3" style={{ background: 'linear-gradient(90deg, rgb(var(--primary)), rgb(var(--accent)))' }}></div>
-                                <div className="font-bold text-gray-900 dark:text-white mb-1">{option.label}</div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">{option.desc}</div>
-                            </button>
-                        ))}
-                    </div>
+                    <p className="text-sm text-gray-300">L'application utilise maintenant exclusivement le mode sombre (dark). Les options de thème ont été supprimées pour garantir une UI cohérente.</p>
                 </div>
 
                 {/* Language Section */}
@@ -215,8 +136,8 @@ export default function SettingsPage() {
                                 key={lang.code}
                                 onClick={() => handleLanguageChange(lang.i18nCode)}
                                 className={`relative p-4 rounded-lg border-2 transition-all text-left ${language === lang.i18nCode
-                                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
-                                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                                     }`}
                             >
                                 {language === lang.i18nCode && (
