@@ -1,3 +1,14 @@
+// Handler pour configurer un item individuellement
+const handleConfigureItem = (itemKey, value) => {
+    const newConfig = { ...preConfiguredItems };
+    if (value === null || value === '') {
+        delete newConfig[itemKey];
+    } else {
+        newConfig[itemKey] = value;
+    }
+    setPreConfiguredItems(newConfig);
+    localStorage.setItem('pipeline-preconfig-items', JSON.stringify(newConfig));
+};
 /**
  * PipelineDragDropView - Composant pipeline conforme CDC
  * 
@@ -57,7 +68,11 @@ const PipelineDragDropView = ({
     const [isSelecting, setIsSelecting] = useState(false);
     const [selectionStartIdx, setSelectionStartIdx] = useState(null);
 
-    // Suppression des états liés aux préréglages
+    // Préréglages individuels, section et global
+    const [preConfiguredItems, setPreConfiguredItems] = useState(() => {
+        const saved = localStorage.getItem('pipeline-preconfig-items');
+        return saved ? JSON.parse(saved) : {};
+    });
     const [contextMenu, setContextMenu] = useState(null); // { item, position }
 
     // Suppression des handlers préréglages
@@ -562,7 +577,6 @@ const PipelineDragDropView = ({
                                 <div className="p-2 bg-white dark:bg-gray-900 space-y-1">
                                     {section.items?.map((item) => {
                                         const isPreConfigured = preConfiguredItems[item.key] !== undefined;
-
                                         return (
                                             <div
                                                 key={item.key}
@@ -571,7 +585,11 @@ const PipelineDragDropView = ({
                                                 onDragEnd={(e) => {
                                                     e.currentTarget.classList.remove('dragging');
                                                 }}
-                                                onContextMenu={(e) => handleItemContextMenu(e, item)}
+                                                onContextMenu={(e) => {
+                                                    e.preventDefault();
+                                                    const val = window.prompt(`Définir valeur par défaut pour «${item.label}»`, preConfiguredItems[item.key] || '');
+                                                    handleConfigureItem(item.key, val);
+                                                }}
                                                 className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group ${isPreConfigured
                                                     ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30'
                                                     : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:border-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -581,12 +599,8 @@ const PipelineDragDropView = ({
                                             >
                                                 {/* Badge pré-configuré */}
                                                 {isPreConfigured && (
-                                                    <PreConfigBadge
-                                                        value={preConfiguredItems[item.key]}
-                                                        unit={item.unit}
-                                                    />
+                                                    <span className="px-2 py-1 bg-green-200 text-green-800 rounded text-xs mr-1">{preConfiguredItems[item.key]}{item.unit || ''}</span>
                                                 )}
-
                                                 <span className="text-base">{item.icon}</span>
                                                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex-1">
                                                     {item.label}
