@@ -213,3 +213,52 @@ h5,
 h6 {
     color: var(--text-primary);
 }
+
+/* Product type cards: restore colored gradients using explicit classes */
+.ptc-gradient {
+    background-size: cover;
+    transition: opacity .35s ease, transform .35s ease;
+}
+
+.ptc-green .ptc-gradient {
+    background: linear-gradient(135deg, #10B981 0%, #059669 50%, #06B6D4 100%);
+}
+
+.ptc-amber .ptc-gradient {
+    background: linear-gradient(135deg, #F59E0B 0%, #F97316 50%, #FB923C 100%);
+}
+
+.ptc-purple .ptc-gradient {
+    background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 50%, #4338CA 100%);
+}
+
+.ptc-pink .ptc-gradient {
+    background: linear-gradient(135deg, #EC4899 0%, #F43F5E 50%, #FB7185 100%);
+}
+
+.ptc-green:hover {
+    box-shadow: 0 18px 60px rgba(6, 182, 164, 0.14);
+}
+
+.ptc-amber:hover {
+    box-shadow: 0 18px 60px rgba(245, 158, 11, 0.14);
+}
+
+.ptc-purple:hover {
+    box-shadow: 0 18px 60px rgba(124, 58, 237, 0.14);
+}
+
+.ptc-pink:hover {
+    box-shadow: 0 18px 60px rgba(236, 72, 153, 0.14);
+}
+
+/* Reduce central highlight width to make side gutters darker (less orange/bright) */
+.container-glass {
+    max-width: 1000px;
+}
+
+body {
+    background: radial-gradient(700px 420px at 50% 28%, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.5) 38%, rgba(0, 0, 0, 0.95) 100%);
+    background-attachment: fixed;
+    background-position: center top;
+}
