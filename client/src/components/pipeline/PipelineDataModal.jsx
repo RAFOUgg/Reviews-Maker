@@ -166,7 +166,7 @@ const PipelineDataModal = ({
                     <select
                         value={value}
                         onChange={(e) => handleChange(key, e.target.value)}
-                        className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
                         required={droppedItem !== null}
                     >
                         <option value="">Sélectionner...</option>
@@ -240,7 +240,7 @@ const PipelineDataModal = ({
                         type="date"
                         value={value || ''}
                         onChange={(e) => handleChange(key, e.target.value)}
-                        className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
                         required={droppedItem !== null}
                     />
                 </div>
@@ -265,7 +265,7 @@ const PipelineDataModal = ({
                         step={item.step || '0.1'}
                         min={item.min}
                         max={item.max}
-                        className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
                         placeholder={item.placeholder || `Ex: ${item.defaultValue || ''}`}
                         required={droppedItem !== null}
                     />
@@ -328,7 +328,7 @@ const PipelineDataModal = ({
                     type="text"
                     value={value || ''}
                     onChange={(e) => handleChange(key, e.target.value)}
-                    className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
                     placeholder={item.placeholder || ''}
                     required={droppedItem !== null}
                 />
@@ -415,14 +415,14 @@ const PipelineDataModal = ({
                                 )}
 
                                 {droppedItem && (
-                                    <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                                        <p className="text-sm text-blue-800 dark:text-blue-300">
+                                    <div className="mt-4 p-4 bg-white/5 dark:bg-gray-800/30 rounded-lg border border-white/5">
+                                        <p className="text-sm text-gray-200">
                                             💡 <strong>Conformité CDC:</strong> Vous devez renseigner une valeur avant d'ajouter ce champ à la cellule.
                                         </p>
                                         <button
                                             type="button"
                                             onClick={() => setActiveTab('presets')}
-                                            className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                                            className="mt-2 text-xs text-gray-300 hover:underline"
                                         >
                                             → Utiliser un préréglage sauvegardé
                                         </button>
@@ -477,21 +477,21 @@ const PipelineDataModal = ({
                                             {fieldPresets.map(preset => (
                                                 <div
                                                     key={preset.id}
-                                                    className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-500 transition-colors"
+                                                    className="p-3 bg-white/5 dark:bg-gray-800 border border-white/5 rounded-lg transition-colors"
                                                 >
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex-1">
-                                                            <p className="font-medium text-sm text-gray-900 dark:text-white">
+                                                            <p className="font-medium text-sm text-gray-200">
                                                                 {preset.name}
                                                             </p>
-                                                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                                            <p className="text-xs text-gray-400 mt-1">
                                                                 {preset.fieldLabel}: <strong>{String(preset.value)}</strong>
                                                             </p>
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <button
                                                                 onClick={() => handleLoadPreset(preset)}
-                                                                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs"
+                                                                className="liquid-btn liquid-btn--primary text-xs"
                                                             >
                                                                 Charger
                                                             </button>

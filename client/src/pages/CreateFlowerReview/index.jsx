@@ -206,7 +206,7 @@ export default function CreateFlowerReview() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-600 mx-auto mb-4"></div>
                     <p className="text-gray-400">Chargement...</p>
                 </div>
             </div>
@@ -214,7 +214,7 @@ export default function CreateFlowerReview() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 pb-20">
+        <div className="min-h-screen bg-slate-900 relative pb-20">
             {/* Header Navigation */}
             <div className="sticky top-0 z-50 backdrop-blur-xl bg-white/5 border-b border-white/10 shadow-xl">
                 <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -253,7 +253,7 @@ export default function CreateFlowerReview() {
                         </button>
                         <button
                             onClick={() => setShowOrchard(!showOrchard)}
-                            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all"
+                            className="flex items-center gap-2 px-4 py-2 liquid-btn liquid-btn--accent"
                         >
                             <Eye className="w-5 h-5" />
                             <span>Aperçu</span>
@@ -382,7 +382,7 @@ export default function CreateFlowerReview() {
                     ) : (
                         <button
                             onClick={handleNext}
-                            className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all flex items-center gap-2"
+                            className="px-6 py-3 liquid-btn liquid-btn--primary rounded-xl transition-all flex items-center gap-2"
                         >
                             Suivant
                             <ChevronRight className="w-5 h-5" />

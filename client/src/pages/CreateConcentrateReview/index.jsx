@@ -192,7 +192,7 @@ export default function CreateConcentrateReview() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-600 mx-auto mb-4"></div>
                     <p className="text-gray-400">Chargement...</p>
                 </div>
             </div>
@@ -201,7 +201,7 @@ export default function CreateConcentrateReview() {
 
     return (
         <div className="min-h-screen bg-slate-900 relative pb-20">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-indigo-900/20 to-blue-900/20 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
 
             {/* Header Navigation */}
             <div className="sticky top-0 z-50 liquid-glass border-b border-white/10 shadow-xl">

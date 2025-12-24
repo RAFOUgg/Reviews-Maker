@@ -253,7 +253,6 @@ export default function ProfileSettingsPage() {
                                         ? 'liquid-btn liquid-btn--accent'
                                         : 'text-gray-700 hover:bg-white/5'
                                         }`}>
-                                >
                                     <Icon className="w-5 h-5" />
                                     {tab.label}
                                 </button>

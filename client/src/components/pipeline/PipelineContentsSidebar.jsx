@@ -293,11 +293,11 @@ const PipelineContentsSidebar = ({
 
                                             {/* Badge */}
                                             <span className={`
-                        text-xs px-2 py-0.5 rounded-full font-medium
-                        ${item.badge === 'Config' ? 'bg-purple-500/20 text-purple-300' : ''}
-                        ${item.badge === 'Évolutif' ? 'bg-green-500/20 text-green-300' : ''}
-                        ${item.badge === 'Fixe' ? 'bg-blue-500/20 text-blue-300' : ''}
-                      `}>
+                                                text-xs px-2 py-0.5 rounded-full font-medium
+                                                ${item.badge === 'Config' ? 'bg-white/5 text-gray-200' : ''}
+                                                ${item.badge === 'Évolutif' ? 'bg-green-500/20 text-green-300' : ''}
+                                                ${item.badge === 'Fixe' ? 'bg-blue-500/20 text-blue-300' : ''}
+                                            `}>
                                                 {item.badge}
                                             </span>
                                         </div>
@@ -313,7 +313,7 @@ const PipelineContentsSidebar = ({
             <div className="p-4 border-t border-gray-700 bg-gray-900 text-xs text-gray-400">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                        <span className="w-2 h-2 rounded-full bg-white/5"></span>
                         <span>Config: Défini une seule fois</span>
                     </div>
                     <div className="flex items-center gap-2">

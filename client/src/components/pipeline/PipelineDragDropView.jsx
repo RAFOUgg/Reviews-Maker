@@ -713,9 +713,9 @@ const PipelineDragDropView = ({
                 <div className="p-3 space-y-2">
                     {/* Pré-configuration section (was MODE PIPELINE) */}
                     <div className="mb-3">
-                        <div className="font-semibold text-xs text-purple-700 dark:text-purple-300 mb-1">Pré-configuration</div>
+                        <div className="font-semibold text-xs text-gray-400 dark:text-gray-300 mb-1">Pré-configuration</div>
                         <button
-                            className="mt-1 mb-2 px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                            className="mt-1 mb-2 liquid-btn liquid-btn--primary"
                             onClick={() => setShowGroupedPresetModal(true)}
                         >
                             <Plus className="w-4 h-4" /> Groupe de préréglages
@@ -732,7 +732,7 @@ const PipelineDragDropView = ({
                                             setDraggedContent({ type: 'grouped', group });
                                         }}
                                         onDragEnd={() => setDraggedContent(null)}
-                                        className="px-3 py-2 rounded-lg bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 text-xs font-bold cursor-grab hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-all"
+                                        className="px-3 py-2 rounded-lg bg-white/3 dark:bg-gray-800/30 border border-gray-700 text-xs font-bold cursor-grab hover:bg-white/5 dark:hover:bg-gray-800/50 transition-all"
                                         title={group.fields.map(f => `${f.key}: ${f.value}`).join(', ')}
                                     >
                                         <span className="mr-1">👥</span>{group.name}
@@ -835,7 +835,7 @@ const PipelineDragDropView = ({
             {/* TIMELINE PRINCIPALE */}
             <div className="flex-1 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden flex flex-col">
                 {/* HEADER CONFIGURATION */}
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-transparent dark:bg-transparent">
                     <div className="flex items-center justify-between mb-3">
                         <h3 className="font-bold text-gray-900 dark:text-white text-lg flex items-center gap-2">
                             <span>📊</span>
@@ -847,7 +847,7 @@ const PipelineDragDropView = ({
 
                             <button
                                 onClick={() => setShowPresets(!showPresets)}
-                                className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                                className="liquid-btn liquid-btn--primary"
                             >
                                 <Settings className="w-4 h-4" />
                                 Préréglages

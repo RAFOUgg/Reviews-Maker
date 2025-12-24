@@ -90,8 +90,8 @@ const PipelineCell = ({
         rounded-sm
         ${getIntensityColor(intensity)}
         border transition-all duration-200
-        hover:border-blue-400 hover:shadow-lg hover:shadow-blue-400/50
-        hover:ring-2 hover:ring-blue-400/50
+        hover:border-white/10 hover:shadow-lg hover:shadow-black/40
+        hover:ring-2 hover:ring-white/6
       `}
             style={isPhaseMode && intensity > 0 ? {
                 backgroundColor: phaseColor + '80',
@@ -460,7 +460,7 @@ const PipelineGitHubGrid = ({
             {/* En-tête */}
             <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-3">
-                    <Activity className="w-6 h-6 text-blue-400" />
+                    <Activity className="w-6 h-6 text-gray-200" />
                     <div>
                         <h3 className="text-xl font-bold text-white">
                             Pipeline {type === 'curing' ? 'Curing/Maturation' : type === 'culture' ? 'Culture' : 'Process'}
@@ -472,7 +472,7 @@ const PipelineGitHubGrid = ({
                 <div className="flex items-center gap-4">
                     {/* Statistiques */}
                     <div className="text-right">
-                        <div className="text-2xl font-bold text-blue-400">{completionPercent}%</div>
+                        <div className="text-2xl font-bold text-gray-200">{completionPercent}%</div>
                         <div className="text-xs text-gray-400">{filledCellsCount}/{totalCells} cases</div>
                     </div>
                 </div>
@@ -489,7 +489,7 @@ const PipelineGitHubGrid = ({
                     <select
                         value={config.intervalType}
                         onChange={(e) => handleConfigChange('intervalType', e.target.value)}
-                        className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                        className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:border-gray-500 focus:ring-2 focus:ring-gray-500/20 outline-none transition-all"
                     >
                         {INTERVAL_TYPES.map(type => (
                             <option key={type.id} value={type.id}>
@@ -510,7 +510,7 @@ const PipelineGitHubGrid = ({
                             type="date"
                             value={config.startDate}
                             onChange={(e) => handleConfigChange('startDate', e.target.value)}
-                            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:border-gray-500 focus:ring-2 focus:ring-gray-500/20 outline-none transition-all"
                         />
                     </div>
                 )}
@@ -526,7 +526,7 @@ const PipelineGitHubGrid = ({
                                 type="date"
                                 value={config.endDate}
                                 onChange={(e) => handleConfigChange('endDate', e.target.value)}
-                                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:border-gray-500 focus:ring-2 focus:ring-gray-500/20 outline-none transition-all"
                             />
                         ) : (
                             <input
@@ -575,7 +575,7 @@ const PipelineGitHubGrid = ({
                             <motion.div
                                 key={phase.id}
                                 whileHover={{ scale: 1.02 }}
-                                className="relative p-4 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 transition-all cursor-pointer group border-2 border-gray-700 hover:border-blue-500"
+                                className="relative p-4 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 transition-all cursor-pointer group border-2 border-gray-700 hover:border-white/10"
                                 onClick={() => handleCellClick(idx, cellsData[idx])}
                                 style={cellsData[idx] ? {
                                     borderColor: phase.color,
@@ -587,7 +587,7 @@ const PipelineGitHubGrid = ({
                                     <div className="font-semibold text-white text-sm">{phase.name}</div>
                                     <div className="text-xs text-gray-400 mt-1">{phase.duration}j</div>
                                     {cellsData[idx] && (
-                                        <div className="mt-2 text-xs text-blue-400 font-medium">
+                                        <div className="mt-2 text-xs text-gray-200 font-medium">
                                             ✓ Renseigné
                                         </div>
                                     )}
