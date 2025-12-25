@@ -169,6 +169,8 @@ const PipelineDragDropView = ({
     generalFields = [],
     generalData = {},
     onGeneralDataChange = () => { },
+    // Marquee selection threshold in pixels
+    marqueeThreshold = 6,
     // Préréglages retirés
 }) => {
     const [expandedSections, setExpandedSections] = useState({});
@@ -499,7 +501,7 @@ const PipelineDragDropView = ({
 
     // Mouse move/up handlers for rectangle selection
     useEffect(() => {
-        const MOVE_THRESHOLD = 6; // px before showing rectangle
+        const MOVE_THRESHOLD = marqueeThreshold || 6; // px before showing rectangle (configurable prop)
         const onMove = (e) => {
             if (!isSelecting) return;
             const { startX, startY, visible } = selectionRect;
@@ -1157,21 +1159,22 @@ const PipelineDragDropView = ({
                                     );
                                 })()}
                                 {/* Selection rectangle (live) */}
-                                {selectionRect.visible && (
-                                    <div
-                                        className="fixed z-50 pointer-events-none border-4 rounded-2xl shadow-lg animate-fade-in"
-                                        style={{
-                                            top: selectionRect.y,
-                                            left: selectionRect.x,
-                                            width: selectionRect.width,
-                                            height: selectionRect.height,
-                                            boxSizing: 'border-box',
-                                            transition: 'none',
-                                            borderStyle: 'dashed',
-                                            background: 'rgba(80,180,255,0.06)'
-                                        }}
-                                    />
-                                )}
+                                {/* Selection marquee (rendered always, animated via opacity/transform) */}
+                                <div
+                                    className="fixed z-50 pointer-events-none border-4 rounded-2xl shadow-lg"
+                                    style={{
+                                        top: selectionRect.y,
+                                        left: selectionRect.x,
+                                        width: selectionRect.width,
+                                        height: selectionRect.height,
+                                        boxSizing: 'border-box',
+                                        borderStyle: 'dashed',
+                                        background: 'rgba(80,180,255,0.06)',
+                                        opacity: selectionRect.visible ? 1 : 0,
+                                        transform: selectionRect.visible ? 'scale(1)' : 'scale(0.98)',
+                                        transition: 'opacity 150ms ease-out, transform 150ms ease-out'
+                                    }}
+                                />
 
                                 {cells.map((cell, idx) => {
                                     const hasData = hasCellData(cell.timestamp);

@@ -34,9 +34,9 @@ const DisclaimerRDRModal = () => {
 
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 sm:p-4 animate-fade-in">
-            <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-3xl shadow-2xl max-w-2xl w-full relative overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-3xl shadow-2xl max-w-2xl w-full relative max-h-[92vh] flex flex-col">
                 {/* Header avec dégradé */}
-                <div className="bg-gradient-to-r from-yellow-500 to-orange-500 p-4 sm:p-6 text-center relative">
+                <div className="bg-gradient-to-r from-yellow-500 to-orange-500 p-4 sm:p-6 text-center relative flex-shrink-0">
                     <button
                         onClick={handleAccept}
                         className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors z-10 bg-white/20 rounded-full p-2"
@@ -56,9 +56,10 @@ const DisclaimerRDRModal = () => {
                     </p>
                 </div>
 
-                {/* Content avec fond blanc */}
-                <div className="p-4 sm:p-8 bg-white dark:bg-gray-800">
-                    <div className="space-y-5 text-gray-800 dark:text-gray-200 mb-8">
+                {/* Content scrollable */}
+                <div className="overflow-y-auto p-0 flex-1">
+                    <div className="p-4 sm:p-8 bg-white dark:bg-gray-800">
+                        <div className="space-y-5 text-gray-800 dark:text-gray-200 mb-8">
                         <div className="flex gap-3">
                             <span className="text-xl sm:text-2xl flex-shrink-0">🔒</span>
                             <p className="text-sm sm:text-base leading-relaxed">
@@ -120,7 +121,11 @@ const DisclaimerRDRModal = () => {
                         </div>
                     </div>
 
-                    {/* Accept Button */}
+                    </div>
+                </div>
+
+                {/* Footer with sticky action - stays visible on small screens */}
+                <div className="p-4 sm:p-6 bg-white dark:bg-gray-800 flex-shrink-0">
                     <button
                         onClick={handleAccept}
                         className="w-full py-3 sm:py-4 bg-gradient-to-r rounded-xl text-white text-base sm:text-lg font-bold hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
@@ -128,7 +133,7 @@ const DisclaimerRDRModal = () => {
                         J'ai compris et j'accepte
                     </button>
 
-                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-center mt-4">
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-center mt-3">
                         Ce message s'affiche quotidiennement pour rappeler les conditions d'utilisation.
                     </p>
                 </div>
