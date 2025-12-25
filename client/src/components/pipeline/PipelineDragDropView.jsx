@@ -67,6 +67,87 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
         </div>
     );
 }
+
+// Save / Load entire pipeline presets (inline modal)
+function SavePipelineModal({ isOpen, onClose, timelineConfig, timelineData, onSavePreset, onLoadPreset }) {
+    const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
+    const [includeData, setIncludeData] = useState(true);
+    const [saved, setSaved] = useState(() => {
+        try {
+            return JSON.parse(localStorage.getItem('pipeline-presets') || '[]');
+        } catch (e) { return []; }
+    });
+
+    if (!isOpen) return null;
+
+    const handleSave = () => {
+        if (!name.trim()) return alert('Veuillez donner un nom au préréglage');
+        const preset = {
+            id: Date.now(),
+            name: name.trim(),
+            description: description.trim(),
+            createdAt: new Date().toISOString(),
+            config: timelineConfig || {},
+            data: includeData ? (timelineData || []) : []
+        };
+        const next = [...saved, preset];
+        localStorage.setItem('pipeline-presets', JSON.stringify(next));
+        setSaved(next);
+        onSavePreset && onSavePreset(preset);
+        onClose();
+    };
+
+    const handleLoad = (preset) => {
+        if (!confirm(`Charger le préréglage "${preset.name}" et remplacer la configuration actuelle ?`)) return;
+        onLoadPreset && onLoadPreset(preset);
+        onClose();
+    };
+
+    const handleDelete = (id) => {
+        if (!confirm('Supprimer ce préréglage ?')) return;
+        const next = saved.filter(s => s.id !== id);
+        localStorage.setItem('pipeline-presets', JSON.stringify(next));
+        setSaved(next);
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 min-w-[360px] max-w-[95vw] border border-gray-200 dark:border-gray-700">
+                <h3 className="font-bold text-lg mb-3">Sauvegarder / Charger un préréglage de pipeline</h3>
+                <div className="mb-2">
+                    <input className="w-full px-3 py-2 border rounded mb-2" placeholder="Nom du préréglage" value={name} onChange={e => setName(e.target.value)} />
+                    <input className="w-full px-3 py-2 border rounded mb-2" placeholder="Description (optionnel)" value={description} onChange={e => setDescription(e.target.value)} />
+                    <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={includeData} onChange={e => setIncludeData(e.target.checked)} /> Inclure les données des cases</label>
+                </div>
+                <div className="flex gap-2 mt-4">
+                    <button className="liquid-btn liquid-btn--accent flex-1" onClick={handleSave}>Enregistrer</button>
+                    <button className="liquid-btn flex-1" onClick={onClose}>Fermer</button>
+                </div>
+
+                {saved.length > 0 && (
+                    <div className="mt-4 max-h-40 overflow-y-auto">
+                        <div className="font-semibold mb-2">Préréglages enregistrés</div>
+                        <div className="space-y-2">
+                            {saved.map(p => (
+                                <div key={p.id} className="flex items-center justify-between p-2 border rounded">
+                                    <div>
+                                        <div className="font-medium">{p.name}</div>
+                                        <div className="text-xs text-gray-500">{p.description}</div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button className="liquid-btn" onClick={() => handleLoad(p)}>Charger</button>
+                                        <button className="liquid-btn liquid-btn--danger" onClick={() => handleDelete(p.id)}>Suppr.</button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
 // (handleConfigureItem is declared inside the component where state is available)
 /**
  * PipelineDragDropView - Composant pipeline conforme CDC
@@ -171,6 +252,8 @@ const PipelineDragDropView = ({
     onGeneralDataChange = () => { },
     // Marquee selection threshold in pixels
     marqueeThreshold = 6,
+    presets = [],
+    onSavePreset = () => {},
     // Préréglages retirés
 }) => {
     const [expandedSections, setExpandedSections] = useState({});
@@ -199,6 +282,7 @@ const PipelineDragDropView = ({
     const [multiAssignContent, setMultiAssignContent] = useState(null);
     const [hoveredCell, setHoveredCell] = useState(null); // Cellule survolée pendant drag
     const [showPresets, setShowPresets] = useState(false);
+    const [showSavePipelineModal, setShowSavePipelineModal] = useState(false);
     const [isSelecting, setIsSelecting] = useState(false);
     const [selectionStartIdx, setSelectionStartIdx] = useState(null);
 
@@ -762,6 +846,37 @@ const PipelineDragDropView = ({
         showToast(`✓ ${itemKey} assigné à toutes les cases`);
     };
 
+    // Appliquer un préréglage de pipeline (chargement) - remplace config et (optionnel) données
+    const applyPipelinePreset = (preset) => {
+        if (!preset) return;
+        // Apply config keys
+        try {
+            const cfg = preset.config || {};
+            Object.entries(cfg).forEach(([k, v]) => {
+                try { onConfigChange(k, v); } catch (e) { console.warn('applyPipelinePreset config error', e); }
+            });
+
+            // Apply data (record previous values for undo)
+            const allChanges = [];
+            (preset.data || []).forEach(cell => {
+                const ts = cell.timestamp;
+                if (!ts) return;
+                const prev = getCellData(ts) || {};
+                Object.entries(cell).forEach(([field, value]) => {
+                    if (field === 'timestamp') return;
+                    const prevValue = prev && prev[field] !== undefined ? prev[field] : (prev.data ? prev.data[field] : undefined);
+                    allChanges.push({ timestamp: ts, field, previousValue: prevValue });
+                    onDataChange(ts, field, value);
+                });
+            });
+
+            if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'load-preset', changes: allChanges });
+            showToast(`✓ Préréglage "${preset.name}" chargé`);
+        } catch (e) {
+            console.error('Erreur lors du chargement du préréglage', e);
+        }
+    };
+
     // Générer les cases de la timeline selon le type d'intervalle
     // IMPORTANT: Utiliser des IDs stables, pas Date.now() qui change à chaque render!
 
@@ -1056,7 +1171,7 @@ const PipelineDragDropView = ({
                             </button>
 
                             <button
-                                onClick={() => setShowPresets(!showPresets)}
+                                onClick={() => setShowSavePipelineModal(true)}
                                 className="liquid-btn liquid-btn--primary"
                             >
                                 <Settings className="w-4 h-4" />
@@ -1437,6 +1552,16 @@ const PipelineDragDropView = ({
                 groups={groupedPresets}
                 setGroups={setGroupedPresets}
                 sidebarContent={sidebarContent}
+            />
+
+            {/* Modal save/load pipeline presets */}
+            <SavePipelineModal
+                isOpen={showSavePipelineModal}
+                onClose={() => setShowSavePipelineModal(false)}
+                timelineConfig={timelineConfig}
+                timelineData={timelineData}
+                onSavePreset={(p) => { /* noop - preserved for external hooks */ }}
+                onLoadPreset={(p) => applyPipelinePreset(p)}
             />
 
             {/* Modal d'édition de cellule */}

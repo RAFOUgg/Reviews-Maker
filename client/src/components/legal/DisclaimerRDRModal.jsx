@@ -92,27 +92,14 @@ const DisclaimerRDRModal = () => {
     };
 
     const handleClose = () => {
-        // User closed modal via X: redirect away so the only way to use site is accept
-        const candidates = [
-            'about:home',
-            'about:newtab',
-            'chrome-search://local-ntp/local-ntp.html',
-            'edge://newtab',
-            'about:blank',
-            'https://www.google.com'
-        ];
-
-        for (const url of candidates) {
-            try {
-                window.location.href = url;
-                return;
-            } catch (err) {
-                // ignore and try next
-            }
+        // Redirect to a safe search engine query for the current site host
+        try {
+            const host = window.location.hostname || 'web';
+            const query = encodeURIComponent(host);
+            window.location.href = `https://www.google.com/search?q=${query}`;
+        } catch (err) {
+            window.location.href = 'https://www.google.com';
         }
-
-        // Fallback
-        window.location.href = 'https://www.google.com';
     };
 
     if (!isVisible) return null;

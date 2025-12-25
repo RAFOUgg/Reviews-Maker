@@ -21,6 +21,7 @@ const PipelineDataModal = ({
     intervalLabel = '',
     droppedItem = null,
     pipelineType = 'culture' // Type de pipeline pour localStorage
+    , onFieldDelete
 }) => {
     const [formData, setFormData] = useState({});
     const [activeTab, setActiveTab] = useState('form'); // 'form' ou 'presets'
@@ -92,6 +93,28 @@ const PipelineDataModal = ({
         });
         onClose();
     };
+
+    const FieldWrapper = ({ item, children }) => (
+        <div className="relative">
+            {children}
+            <button
+                type="button"
+                title="Supprimer ce champ"
+                onClick={() => {
+                    if (!item || !item.key) return;
+                    if (!confirm('Effacer ce champ de la cellule ?')) return;
+                    if (onFieldDelete) {
+                        onFieldDelete(timestamp, item.key);
+                    } else {
+                        handleChange(item.key, null);
+                    }
+                }}
+                className="absolute top-1 right-1 text-red-600 hover:text-red-700 p-1 rounded"
+            >
+                ✖
+            </button>
+        </div>
+    );
 
     // Sauvegarder un nouveau préréglage
     const handleSavePreset = () => {
