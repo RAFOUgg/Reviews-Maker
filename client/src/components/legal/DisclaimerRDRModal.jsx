@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 
 /**
@@ -8,6 +8,8 @@ import { AlertTriangle, X } from 'lucide-react';
  */
 const DisclaimerRDRModal = () => {
     const [isVisible, setIsVisible] = useState(false);
+    const modalRef = useRef(null);
+    const previousActiveElement = useRef(null);
 
     useEffect(() => {
         // Vérifier dernière acceptation dans localStorage
@@ -25,6 +27,65 @@ const DisclaimerRDRModal = () => {
         }
     }, []);
 
+    // Manage focus trap and prevent background scrolling/interactions
+    useEffect(() => {
+        if (!isVisible) return;
+
+        // Save active element to restore focus later
+        previousActiveElement.current = document.activeElement;
+
+        // Prevent background scroll
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+
+        // Focus first focusable element inside modal
+        const focusableSelectors = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
+        const node = modalRef.current;
+        const focusable = node ? node.querySelectorAll(focusableSelectors) : [];
+        if (focusable.length > 0) focusable[0].focus();
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'Tab') {
+                if (!node) return;
+                const elements = Array.from(node.querySelectorAll(focusableSelectors));
+                if (elements.length === 0) {
+                    e.preventDefault();
+                    return;
+                }
+                const first = elements[0];
+                const last = elements[elements.length - 1];
+
+                if (e.shiftKey) {
+                    if (document.activeElement === first) {
+                        e.preventDefault();
+                        last.focus();
+                    }
+                } else {
+                    if (document.activeElement === last) {
+                        e.preventDefault();
+                        first.focus();
+                    }
+                }
+            }
+
+            // Prevent ESC from closing modal to ensure explicit accept
+            if (e.key === 'Escape') {
+                e.preventDefault();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = previousOverflow || '';
+            // restore focus
+            try {
+                previousActiveElement.current?.focus?.();
+            } catch (err) { }
+        };
+    }, [isVisible]);
+
     const handleAccept = () => {
         localStorage.setItem('rdr_last_accepted', Date.now().toString());
         setIsVisible(false);
@@ -33,8 +94,18 @@ const DisclaimerRDRModal = () => {
     if (!isVisible) return null;
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 sm:p-4 animate-fade-in">
-            <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-3xl shadow-2xl max-w-2xl w-full relative max-h-[92vh] flex flex-col">
+        <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 sm:p-4 animate-fade-in"
+            role="presentation"
+            onMouseDown={(e) => e.preventDefault()}
+        >
+            <div
+                ref={modalRef}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Rappel RDR"
+                className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-3xl shadow-2xl max-w-2xl w-full relative max-h-[92vh] flex flex-col"
+            >
                 {/* Header avec dégradé */}
                 <div className="bg-gradient-to-r from-yellow-500 to-orange-500 p-4 sm:p-6 text-center relative flex-shrink-0">
                     <button
@@ -57,7 +128,7 @@ const DisclaimerRDRModal = () => {
                 </div>
 
                 {/* Content scrollable */}
-                <div className="overflow-y-auto p-0 flex-1">
+                <div className="overflow-y-auto p-0 flex-1" tabIndex={-1}>
                     <div className="p-4 sm:p-8 bg-white dark:bg-gray-800">
                         <div className="space-y-5 text-gray-800 dark:text-gray-200 mb-8">
                             <div className="flex gap-3">

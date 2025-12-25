@@ -198,6 +198,7 @@ const PipelineDragDropView = ({
     const [showMultiAssignModal, setShowMultiAssignModal] = useState(false);
     const [multiAssignContent, setMultiAssignContent] = useState(null);
     const [hoveredCell, setHoveredCell] = useState(null); // Cellule survolée pendant drag
+    const [showPresets, setShowPresets] = useState(false);
     const [isSelecting, setIsSelecting] = useState(false);
     const [selectionStartIdx, setSelectionStartIdx] = useState(null);
 
@@ -226,6 +227,60 @@ const PipelineDragDropView = ({
     const [contextMenu, setContextMenu] = useState(null); // { item, position }
     // Multi-select sidebar state (global)
     const [multiSelectedItems, setMultiSelectedItems] = useState([]);
+
+    // Action history for undo (simple stack)
+    const [actionsHistory, setActionsHistory] = useState([]);
+
+    const pushAction = (action) => {
+        setActionsHistory(prev => {
+            const next = [...prev, action];
+            // limit history length
+            if (next.length > 50) next.shift();
+            return next;
+        });
+    };
+
+    const undoLastAction = () => {
+        setActionsHistory(prev => {
+            if (!prev || prev.length === 0) return prev;
+            const last = prev[prev.length - 1];
+            // apply reverse changes
+            if (last && last.changes) {
+                last.changes.forEach(ch => {
+                    // previousValue may be undefined -> clear
+                    onDataChange(ch.timestamp, ch.field, ch.previousValue === undefined ? null : ch.previousValue);
+                });
+            }
+            return prev.slice(0, -1);
+        });
+    };
+
+    const handleClearSelectedData = () => {
+        const targets = (selectedCells && selectedCells.length > 0) ? selectedCells : (currentCellTimestamp ? [currentCellTimestamp] : []);
+        if (!targets || targets.length === 0) {
+            alert('Aucune case sélectionnée à effacer');
+            return;
+        }
+        if (!confirm(`Effacer toutes les données de ${targets.length} case(s) ? Cette action est annulable.`)) return;
+
+        const allChanges = [];
+        targets.forEach(ts => {
+            const prev = getCellData(ts) || {};
+            const keys = Object.keys(prev).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k));
+            keys.forEach(k => {
+                allChanges.push({ timestamp: ts, field: k, previousValue: prev[k] });
+                onDataChange(ts, k, null);
+            });
+            // Also clear _meta if needed
+            if (prev._meta) {
+                allChanges.push({ timestamp: ts, field: '_meta', previousValue: prev._meta });
+                onDataChange(ts, '_meta', null);
+            }
+        });
+
+        if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'clear', changes: allChanges });
+        setSelectedCells([]);
+    };
 
     // Suppression des handlers préréglages
 
@@ -284,10 +339,15 @@ const PipelineDragDropView = ({
             return;
         }
 
+        // Build history of previous values
+        const changes = [];
+        const prevData = getCellData(data.timestamp) || {};
+
         // Si c'est un drop, sauvegarder uniquement le champ droppé
         if (droppedItem && droppedItem.timestamp === data.timestamp) {
             const fieldKey = droppedItem.content.key;
             if (data.data && data.data[fieldKey] !== undefined) {
+                changes.push({ timestamp: data.timestamp, field: fieldKey, previousValue: prevData[fieldKey] });
                 console.log('✓ Sauvegarde champ droppé:', fieldKey, '=', data.data[fieldKey]);
                 onDataChange(data.timestamp, fieldKey, data.data[fieldKey]);
             }
@@ -297,10 +357,15 @@ const PipelineDragDropView = ({
             console.log('✓ Sauvegarde de tous les champs:', Object.keys(data.data || {}));
             Object.entries(data.data || {}).forEach(([key, value]) => {
                 if (value !== undefined && value !== null && value !== '') {
+                    changes.push({ timestamp: data.timestamp, field: key, previousValue: prevData[key] });
                     console.log('  → Sauvegarde:', key, '=', value);
                     onDataChange(data.timestamp, key, value);
                 }
             });
+        }
+
+        if (changes.length > 0) {
+            pushAction({ id: Date.now(), type: 'edit', changes });
         }
 
         // Sauvegarder métadonnées si présentes
@@ -470,6 +535,7 @@ const PipelineDragDropView = ({
     const selectedCellsRef = useRef([]);
     const gridRef = useRef(null);
     const cellRefs = useRef({});
+    const selectionStartClientRef = useRef({ x: 0, y: 0 });
     const selectionStartTimestampRef = useRef(null);
 
     const [selectionRect, setSelectionRect] = useState({ visible: false, x: 0, y: 0, width: 0, height: 0, startX: 0, startY: 0 });
@@ -478,13 +544,21 @@ const PipelineDragDropView = ({
         // Begin potential drag-selection. We wait for small threshold movement
         if (e.button !== 0) return;
         e.preventDefault();
-        const startX = e.clientX;
-        const startY = e.clientY;
+        const clientX = e.clientX;
+        const clientY = e.clientY;
+        // store client start for movement threshold calculations
+        selectionStartClientRef.current = { x: clientX, y: clientY };
+
+        // compute grid-relative start coordinates
+        const gridBox = gridRef.current && gridRef.current.getBoundingClientRect();
+        const relX = gridBox ? clientX - gridBox.left + gridRef.current.scrollLeft : clientX;
+        const relY = gridBox ? clientY - gridBox.top + gridRef.current.scrollTop : clientY;
+
         setIsSelecting(true);
         setSelectionStartIdx(startIdx);
         selectionStartTimestampRef.current = timestamp;
         // initialize rect but keep it hidden until movement threshold
-        setSelectionRect({ visible: false, x: startX, y: startY, width: 0, height: 0, startX, startY });
+        setSelectionRect({ visible: false, x: relX, y: relY, width: 0, height: 0, startX: relX, startY: relY });
         setSelectedCells([]);
         selectedCellsRef.current = [];
     };
@@ -504,37 +578,56 @@ const PipelineDragDropView = ({
         const MOVE_THRESHOLD = marqueeThreshold || 6; // px before showing rectangle (configurable prop)
         const onMove = (e) => {
             if (!isSelecting) return;
-            const { startX, startY, visible } = selectionRect;
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
+            const gridBox = gridRef.current && gridRef.current.getBoundingClientRect();
+            const clientX = e.clientX;
+            const clientY = e.clientY;
+
+            const relX = gridBox ? clientX - gridBox.left + gridRef.current.scrollLeft : clientX;
+            const relY = gridBox ? clientY - gridBox.top + gridRef.current.scrollTop : clientY;
+
+            const { startX: relStartX, startY: relStartY, visible } = selectionRect;
+            const dx = relX - relStartX;
+            const dy = relY - relStartY;
             const absdx = Math.abs(dx);
             const absdy = Math.abs(dy);
-            const x = Math.min(startX, e.clientX);
-            const y = Math.min(startY, e.clientY);
+            const x = Math.min(relStartX, relX);
+            const y = Math.min(relStartY, relY);
             const width = Math.abs(dx);
             const height = Math.abs(dy);
-            // Only show rectangle after threshold to avoid clicks turning into drags
-            if (!visible && (absdx > MOVE_THRESHOLD || absdy > MOVE_THRESHOLD)) {
+
+            // Only show rectangle after threshold to avoid clicks turning into drags.
+            // Use client distance for threshold to remain consistent even if grid is scrolled.
+            const clientStart = selectionStartClientRef.current || { x: 0, y: 0 };
+            const movedClient = Math.hypot(clientX - clientStart.x, clientY - clientStart.y);
+            if (!visible && movedClient > MOVE_THRESHOLD) {
                 setSelectionRect(prev => ({ ...prev, visible: true, x, y, width, height }));
             } else if (visible) {
-                // update coordinates smoothly
                 setSelectionRect(prev => ({ ...prev, x, y, width, height }));
             } else {
-                // update start coords in case selectionRect not yet visible
-                setSelectionRect(prev => ({ ...prev, startX, startY }));
+                // keep storing start if not visible yet
+                setSelectionRect(prev => ({ ...prev, startX: relStartX, startY: relStartY }));
             }
         };
 
         const onUp = (e) => {
             if (!isSelecting) return;
+            const gridBox = gridRef.current && gridRef.current.getBoundingClientRect();
+            const clientX = e.clientX;
+            const clientY = e.clientY;
+            const relX = gridBox ? clientX - gridBox.left + gridRef.current.scrollLeft : clientX;
+            const relY = gridBox ? clientY - gridBox.top + gridRef.current.scrollTop : clientY;
+
             const rect = selectionRect;
             const sel = [];
             if (rect.visible && rect.width > 0 && rect.height > 0) {
-                // compute selected cells intersecting selectionRect
+                // compute selected cells intersecting selectionRect using grid-relative coordinates
                 Object.entries(cellRefs.current).forEach(([ts, el]) => {
                     if (!el) return;
                     const r = el.getBoundingClientRect();
-                    const intersects = !(r.right < rect.x || r.left > rect.x + rect.width || r.bottom < rect.y || r.top > rect.y + rect.height);
+                    const cellLeft = r.left - (gridBox ? gridBox.left : 0) + (gridRef.current ? gridRef.current.scrollLeft : 0);
+                    const cellTop = r.top - (gridBox ? gridBox.top : 0) + (gridRef.current ? gridRef.current.scrollTop : 0);
+                    const cellRect = { left: cellLeft, top: cellTop, right: cellLeft + r.width, bottom: cellTop + r.height };
+                    const intersects = !(cellRect.right < rect.x || cellRect.left > rect.x + rect.width || cellRect.bottom < rect.y || cellRect.top > rect.y + rect.height);
                     if (intersects) sel.push(ts);
                 });
                 setSelectedCells(sel);
@@ -547,11 +640,13 @@ const PipelineDragDropView = ({
                     selectedCellsRef.current = [ts];
                 }
             }
+
             // cleanup
             setIsSelecting(false);
             setSelectionStartIdx(null);
             selectionStartTimestampRef.current = null;
             setSelectionRect({ visible: false, x: 0, y: 0, width: 0, height: 0, startX: 0, startY: 0 });
+            selectionStartClientRef.current = { x: 0, y: 0 };
         };
 
         window.addEventListener('mousemove', onMove);
@@ -902,8 +997,22 @@ const PipelineDragDropView = ({
                             Pipeline {type === 'culture' ? 'Culture' : 'Curing/Maturation'}
                         </h3>
                         <div className="flex items-center gap-2">
-                            {/* Mode sélection multiple */}
-                            {/* Multi-selection via click-drag is enabled; explicit "Assignation masse" button removed for CDC-compliance */}
+                            {/* Undo and Clear actions */}
+                            <button
+                                onClick={() => undoLastAction()}
+                                className="liquid-btn"
+                                title="Annuler la dernière action"
+                            >
+                                ⎌ Undo
+                            </button>
+
+                            <button
+                                onClick={() => handleClearSelectedData()}
+                                className="liquid-btn liquid-btn--danger"
+                                title="Effacer les données des cases sélectionnées"
+                            >
+                                🗑️ Effacer
+                            </button>
 
                             <button
                                 onClick={() => setShowPresets(!showPresets)}
@@ -1120,7 +1229,7 @@ const PipelineDragDropView = ({
                                 📊 <strong>Autres cases</strong> : Drag & drop des paramètres depuis le panneau latéral
                             </p>
 
-                            <div className="grid grid-cols-7 gap-2 select-none relative">
+                            <div ref={gridRef} className="grid grid-cols-7 gap-2 select-none relative">
                                 {/* Visual selection frame overlay */}
                                 {selectedCells.length > 1 && !isSelecting && (() => {
                                     // Find all selected cell indices
@@ -1161,7 +1270,7 @@ const PipelineDragDropView = ({
                                 {/* Selection rectangle (live) */}
                                 {/* Selection marquee (rendered always, animated via opacity/transform) */}
                                 <div
-                                    className="fixed z-50 pointer-events-none border-4 rounded-2xl shadow-lg"
+                                    className="absolute z-50 pointer-events-none border-4 rounded-2xl shadow-lg"
                                     style={{
                                         top: selectionRect.y,
                                         left: selectionRect.x,
