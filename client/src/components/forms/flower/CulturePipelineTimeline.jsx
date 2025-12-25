@@ -343,19 +343,35 @@ export default function CulturePipelineTimeline({ data, onChange }) {
             const newData = [...timelineData]
             const entry = { ...newData[existingIndex] }
 
-            if (value === null || value === undefined) {
-                // Supprimer la clé réellement
-                delete entry[field]
-            } else {
-                entry[field] = value
-            }
+            // Support nested shape { timestamp, data: { ... } } and flat shape
+            if (entry.data && typeof entry.data === 'object') {
+                const newNested = { ...(entry.data || {}) }
+                if (value === null || value === undefined) {
+                    delete newNested[field]
+                } else {
+                    newNested[field] = value
+                }
 
-            // Si plus aucune donnée utile (hors timestamp/date), supprimer l'entrée entière
-            const usefulKeys = Object.keys(entry).filter(k => k !== 'timestamp' && k !== 'date')
-            if (usefulKeys.length === 0) {
-                newData.splice(existingIndex, 1)
+                // If nested data is empty, remove whole entry
+                if (Object.keys(newNested).length === 0) {
+                    newData.splice(existingIndex, 1)
+                } else {
+                    newData[existingIndex] = { ...entry, data: newNested }
+                }
             } else {
-                newData[existingIndex] = entry
+                // flat entry
+                if (value === null || value === undefined) {
+                    delete entry[field]
+                } else {
+                    entry[field] = value
+                }
+
+                const usefulKeys = Object.keys(entry).filter(k => k !== 'timestamp' && k !== 'date')
+                if (usefulKeys.length === 0) {
+                    newData.splice(existingIndex, 1)
+                } else {
+                    newData[existingIndex] = entry
+                }
             }
 
             onChange('cultureTimelineData', newData)
@@ -363,6 +379,9 @@ export default function CulturePipelineTimeline({ data, onChange }) {
             // Créer nouvelle entrée
             // Ne créer une nouvelle entrée que si la valeur est non nulle
             if (value === null || value === undefined || value === '') return
+
+            // Decide shape: if existing timelineData entries use nested 'data', follow that
+            const prefersNested = timelineData.some(d => d && d.hasOwnProperty('data'))
 
             // Compute a safe date string only when timestamp encodes a real date
             let dateStr = undefined
@@ -381,7 +400,7 @@ export default function CulturePipelineTimeline({ data, onChange }) {
                 dateStr = undefined
             }
 
-            const newEntry = { timestamp, [field]: value }
+            const newEntry = prefersNested ? { timestamp, data: { [field]: value } } : { timestamp, [field]: value }
             if (dateStr) newEntry.date = dateStr
             onChange('cultureTimelineData', [...timelineData, newEntry])
         }

@@ -464,7 +464,12 @@ const PipelineDragDropView = ({
             // Sauvegarder toutes les données (cas modal normale)
             console.log('✓ Sauvegarde de tous les champs:', Object.keys(data.data || {}));
             Object.entries(data.data || {}).forEach(([key, value]) => {
-                if (value !== undefined && value !== null && value !== '') {
+                // Treat empty string/null/undefined as deletion
+                if (value === undefined || value === null || value === '') {
+                    changes.push({ timestamp: data.timestamp, field: key, previousValue: prevData[key] });
+                    console.log('  → Suppression:', key);
+                    onDataChange(data.timestamp, key, null);
+                } else {
                     changes.push({ timestamp: data.timestamp, field: key, previousValue: prevData[key] });
                     console.log('  → Sauvegarde:', key, '=', value);
                     onDataChange(data.timestamp, key, value);
@@ -1025,15 +1030,38 @@ const PipelineDragDropView = ({
 
     const cells = generateCells();
 
-    // Vérifier si une case a des données (définir AVANT utilisation)
-    const getCellData = (timestamp) => {
-        return timelineData.find(d => d.timestamp === timestamp) || {};
+    // Normaliser et récupérer les champs utiles d'une case (supporte deux shapes: {timestamp, data:{...}} et {timestamp, field:...})
+    const getCellEntry = (timestamp) => timelineData.find(d => d.timestamp === timestamp) || null;
+
+    const getCellFields = (timestamp) => {
+        const entry = getCellEntry(timestamp);
+        if (!entry) return {};
+        let fields = {};
+        if (entry.data && typeof entry.data === 'object') {
+            fields = { ...entry.data };
+        }
+        // copy root-level fields (excluding structural/meta keys)
+        Object.keys(entry).forEach(k => {
+            if (!['timestamp', 'date', 'label', 'phase', 'data', '_meta'].includes(k)) {
+                fields[k] = entry[k];
+            }
+        });
+        // attach meta/date/timestamp for display
+        if (entry.timestamp) fields.timestamp = entry.timestamp;
+        if (entry.date) fields.date = entry.date;
+        if (entry._meta) fields._meta = entry._meta;
+        return fields;
     };
 
     const hasCellData = (timestamp) => {
-        const data = getCellData(timestamp);
-        return Object.keys(data).length > 1; // Plus que juste timestamp
+        const fields = getCellFields(timestamp);
+        // Exclude only structural keys
+        const dataKeys = Object.keys(fields).filter(k => !['_meta', 'timestamp', 'date'].includes(k));
+        return dataKeys.length > 0;
     };
+
+    // Backwards-compatible alias used throughout the file
+    const getCellData = (timestamp) => getCellFields(timestamp);
 
     // Compter les cases avec au moins une donnée (hors timestamp, date, label, etc.)
     const filledCells = cells.filter(cell => {
@@ -1358,7 +1386,7 @@ const PipelineDragDropView = ({
                             </div>
                         )}
 
-                        <div className="flex items-end">
+                        <div className="col-span-3 flex items-end">
                             <div className="flex-1">
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="text-sm font-medium text-gray-700">Progression</div>
