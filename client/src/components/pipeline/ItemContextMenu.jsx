@@ -12,8 +12,11 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Settings, X, Check } from 'lucide-react';
 
-const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isConfigured, cells = [], onAssignNow, onAssignFromSource, onAssignRange, onAssignAll }) => {
-    const [value, setValue] = useState(item.defaultValue || '');
+const ItemContextMenu = ({ item, items = [], position, anchorRect, onClose, onConfigure, isConfigured, cells = [], onAssignNow, onAssignFromSource, onAssignRange, onAssignAll }) => {
+    // Support single item (`item`) or multiple selected items (`items`)
+    const targets = (items && items.length > 0) ? items : (item ? [item] : []);
+    const primary = targets[0] || {};
+    const [value, setValue] = useState(primary.defaultValue || '');
     const [selectedSource, setSelectedSource] = useState('');
     const menuRef = useRef(null);
     const [adjustedPos, setAdjustedPos] = useState({ x: position.x, y: position.y });
@@ -61,15 +64,18 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
         if (y < margin) y = margin;
 
         setAdjustedPos({ x, y });
-    }, [position, anchorRect]);
+    }, [position, anchorRect, primary]);
 
     const handleSave = () => {
-        onConfigure(item.key, value);
+        // Apply same value to all targets
+        targets.forEach((t) => {
+            onConfigure?.(t.key, value);
+        });
         onClose();
     };
 
     const handleClear = () => {
-        onConfigure(item.key, null); // Supprimer la config
+        targets.forEach((t) => onConfigure?.(t.key, null));
         onClose();
     };
 
@@ -101,14 +107,28 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
 
             <div className="mb-3">
                 <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg">{item.icon}</span>
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {item.label}
-                    </span>
+                    <span className="text-lg">{primary.icon}</span>
+                    <div>
+                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {targets.length > 1 ? `Sélection (${targets.length} éléments)` : primary.label}
+                        </div>
+                        {targets.length > 1 && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Applique la même valeur à tous les éléments sélectionnés</div>
+                        )}
+                    </div>
                 </div>
 
-                {/* Formulaire selon type */}
-                {item.type === 'select' ? (
+                {/* If multiple targets are selected, prefer a unified input. Otherwise show type-specific form. */}
+                {targets.length > 1 ? (
+                    <input
+                        type="text"
+                        value={value}
+                        onChange={(e) => setValue(e.target.value)}
+                        className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                        placeholder={'Entrer une valeur à appliquer à tous...'}
+                        autoFocus
+                    />
+                ) : primary.type === 'select' ? (
                     <select
                         value={value}
                         onChange={(e) => setValue(e.target.value)}
@@ -116,28 +136,28 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
                         autoFocus
                     >
                         <option value="">-- Sélectionner --</option>
-                        {item.options?.map((opt) => (
+                        {primary.options?.map((opt) => (
                             <option key={opt.value} value={opt.value}>
                                 {opt.label}
                             </option>
                         ))}
                     </select>
-                ) : item.type === 'number' ? (
+                ) : primary.type === 'number' ? (
                     <div className="flex items-center gap-2">
                         <input
                             type="number"
-                            min={item.min}
-                            max={item.max}
-                            step={item.step || 1}
+                            min={primary.min}
+                            max={primary.max}
+                            step={primary.step || 1}
                             value={value}
                             onChange={(e) => setValue(e.target.value)}
                             className="flex-1 px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
-                            placeholder={`${item.min || 0} - ${item.max || 100}`}
+                            placeholder={`${primary.min || 0} - ${primary.max || 100}`}
                             autoFocus
                         />
-                        {item.unit && (
+                        {primary.unit && (
                             <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                                {item.unit}
+                                {primary.unit}
                             </span>
                         )}
                     </div>
@@ -147,7 +167,7 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
                         value={value}
                         onChange={(e) => setValue(e.target.value)}
                         className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
-                        placeholder={item.placeholder || 'Entrer une valeur...'}
+                        placeholder={primary.placeholder || 'Entrer une valeur...'}
                         autoFocus
                     />
                 )}
@@ -170,7 +190,8 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
                                 alert('Veuillez saisir une valeur avant d\'assigner.');
                                 return;
                             }
-                            onAssignNow?.(item.key, value);
+                            // For multiple targets, call assign for each
+                            targets.forEach((t) => onAssignNow?.(t.key, value));
                             onClose();
                         }}
                         className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${!value && value !== 0
@@ -196,10 +217,11 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
                             </select>
                             <button
                                 onClick={() => {
-                                    if (!selectedSource) { alert('Choisir une case source'); return; }
-                                    onAssignFromSource?.(item.key, selectedSource);
-                                    onClose();
-                                }}
+                                        if (!selectedSource) { alert('Choisir une case source'); return; }
+                                        // Copy for all targets from same source
+                                        targets.forEach((t) => onAssignFromSource?.(t.key, selectedSource));
+                                        onClose();
+                                    }}
                                 className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
                             >
                                 Copier
@@ -229,7 +251,8 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
                         onChange={(e) => {
                             const end = e.target.value;
                             if (!selectedSource) { alert('Choisir d\'abord une case de début'); return; }
-                            onAssignRange?.(item.key, selectedSource, end, value || item.defaultValue || '');
+                            // Apply range assign for all targets
+                            targets.forEach((t) => onAssignRange?.(t.key, selectedSource, end, value || t.defaultValue || ''));
                             onClose();
                         }}
                         className="px-2 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm flex-1"
@@ -242,8 +265,8 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
 
                     <button
                         onClick={() => {
-                            // Assign to all
-                            onAssignAll?.(item.key, value || item.defaultValue || '');
+                            // Assign to all selected targets
+                            targets.forEach((t) => onAssignAll?.(t.key, value || t.defaultValue || ''));
                             onClose();
                         }}
                         className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm"
