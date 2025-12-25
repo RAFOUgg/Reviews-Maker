@@ -151,23 +151,24 @@ const PipelineGridView = ({
     };
 
     // Layout de la grille selon le type d'intervalle
-    // Use responsive gridTemplateColumns to let cells expand and fill available width
-    const computeGridColumns = () => {
-        let cols = 1;
+    const gridLayout = () => {
         if (config.intervalType === 'phases') {
-            cols = Math.min(Math.max(cellIndices.length, 1), 12);
-        } else if (config.intervalType === 'days' || config.intervalType === 'dates') {
-            cols = 7;
-        } else {
-            cols = Math.min(Math.max(cellIndices.length, 1), 10);
+            // Mode phases: disposition horizontale ou grille 4x3
+            return cellIndices.length <= 12 ? 'grid grid-cols-12 gap-2' : 'grid grid-cols-4 gap-2';
         }
 
-        return `repeat(${cols}, minmax(${config.intervalType === 'phases' ? 56 : 24}px, 1fr))`;
+        // Mode jours/semaines: style GitHub (7 colonnes = 7 jours de la semaine)
+        if (config.intervalType === 'days' || config.intervalType === 'dates') {
+            return 'grid grid-cols-7 gap-1';
+        }
+
+        // Autres: grille adaptative
+        return 'grid gap-1' + (cellIndices.length <= 12 ? ' grid-cols-12' : ' grid-cols-10');
     };
 
     return (
         <div className="flex-1 p-4 overflow-y-auto bg-gray-900/30">
-            <div className={`grid gap-1`} style={{ gridTemplateColumns: computeGridColumns() }}>
+            <div className={gridLayout()}>
                 {cellIndices.map((cellIndex) => {
                     const cellData = cells[cellIndex];
                     const intensity = getCellIntensity(cellData);
@@ -199,13 +200,12 @@ const PipelineGridView = ({
                             onDragOver={(e) => handleDragOver(e, cellIndex)}
                             onDragLeave={handleDragLeave}
                             onDrop={(e) => handleDrop(e, cellIndex)}
-                            className={`relative cursor-pointer rounded-sm border transition-all duration-200 ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'} flex items-center justify-center`}
-                            style={{ aspectRatio: config.intervalType === 'phases' ? '1 / 1' : '1 / 1' }}
+                            className={`relative cursor-pointer ${config.intervalType === 'phases' ? 'w-16 h-16 md:w-20 md:h-20' : 'w-3 h-3 md:w-4 md:h-4'} rounded-sm border transition-all duration-200 ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
                             title={getTooltipContent(cellIndex, cellData)}
                         >
                             {/* Mode phases: afficher icône de phase + mini-icônes */}
                             {config.intervalType === 'phases' && (
-                                <div className="flex flex-col items-center justify-center text-center">
+                                <div className="absolute inset-0 flex flex-col items-center justify-center">
                                     <span className="text-2xl">{phaseIcon}</span>
                                     {miniIcons.length > 0 && (
                                         <div className="flex gap-0.5 mt-1">
@@ -219,8 +219,8 @@ const PipelineGridView = ({
 
                             {/* Autres modes: mini-icônes seulement (si assez grand) */}
                             {config.intervalType !== 'phases' && miniIcons.length > 0 && (
-                                <div className="opacity-80">
-                                    <div className="text-sm flex gap-1 items-center justify-center">
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                    <div className="text-[6px] flex gap-0.5">
                                         {miniIcons.map((icon, idx) => (
                                             <span key={idx}>{icon}</span>
                                         ))}
