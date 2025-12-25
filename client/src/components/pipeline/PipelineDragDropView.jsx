@@ -173,6 +173,7 @@ function SavePipelineModal({ isOpen, onClose, timelineConfig, timelineData, onSa
 
 import { useState, useEffect, useRef } from 'react';
 import ConfirmModal from '../ui/ConfirmModal';
+import { useToast } from '../ToastContainer';
 
 // Grouped preset modal (inline for now)
 function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sidebarContent }) {
@@ -258,6 +259,18 @@ const PipelineDragDropView = ({
     onSavePreset = () => { },
     // Préréglages retirés
 }) => {
+    // toast helper
+    const toast = useToast();
+    const showToast = (msg, type = 'success') => {
+        try {
+            if (!toast) return;
+            if (type === 'error') return toast.error(msg);
+            if (type === 'warning') return toast.warning ? toast.warning(msg) : toast.info(msg);
+            return toast.success(msg);
+        } catch (e) {
+            console.warn('Toast error', e);
+        }
+    };
     const [expandedSections, setExpandedSections] = useState({});
     const [draggedContent, setDraggedContent] = useState(null);
     const [selectedCell, setSelectedCell] = useState(null);
