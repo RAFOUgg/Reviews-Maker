@@ -69,7 +69,7 @@ const PipelineDragDropView = ({
 
     // Refs utilisés par les handlers de drag/selection (déclarés tôt pour éviter TDZ)
     const selectedCellsRef = useRef([]);
-    const multiAssignTargetsRef = useRef([]);
+    
 
     // ✅ NOUVEAUX ÉTATS POUR CLIC DROIT PRÉ-CONFIGURATION
     const [contextMenu, setContextMenu] = useState(null); // { item, position }
@@ -377,12 +377,12 @@ const PipelineDragDropView = ({
         // If draggedContent is an array (multiple contents selected), open multi-assign modal
         if (Array.isArray(draggedContent) && draggedContent.length > 0) {
             // Determine target cells (selectedCells or single timestamp)
-            const sel = selectedCellsRef.current || [];
+            const sel = (typeof selectedCellsRef !== 'undefined' && selectedCellsRef.current) ? selectedCellsRef.current : [];
             const target = (sel && sel.length > 0) ? sel : [timestamp];
             setMultiAssignContents(draggedContent);
             setShowMultiAssignModal(true);
-            // Store the intended targets in a ref so modal can call onApply
-            multiAssignTargetsRef.current = target;
+            // Store the intended targets in a ref so modal can call onApply (guarded)
+            if (typeof multiAssignTargetsRef !== 'undefined' && multiAssignTargetsRef) multiAssignTargetsRef.current = target;
             return;
         }
 
@@ -395,7 +395,7 @@ const PipelineDragDropView = ({
         // que si la case cible fait partie de la sélection ou si le
         // mode masse est activé. Cela évite d'écraser une sélection
         // lorsque l'utilisateur veut déposer sur une seule case.
-        const sel = selectedCellsRef.current || [];
+        const sel = (typeof selectedCellsRef !== 'undefined' && selectedCellsRef.current) ? selectedCellsRef.current : [];
         const appliesToSelection = (sel && sel.length > 0) && (sel.includes(timestamp) || massAssignMode);
         if (appliesToSelection) {
             const preConfigValue = preConfiguredItems[draggedContent.key];
@@ -485,7 +485,6 @@ const PipelineDragDropView = ({
     };
 
     // Sélection par glissé (mousedown + mouseenter + mouseup)
-    const selectedCellsRef = useRef([]);
 
     const startSelection = (e, startIdx, timestamp) => {
         // Prévenir la sélection native du navigateur
