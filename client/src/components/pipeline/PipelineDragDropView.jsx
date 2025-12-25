@@ -67,6 +67,10 @@ const PipelineDragDropView = ({
     const [isSelecting, setIsSelecting] = useState(false);
     const [selectionStartIdx, setSelectionStartIdx] = useState(null);
 
+    // Refs utilisés par les handlers de drag/selection (déclarés tôt pour éviter TDZ)
+    const selectedCellsRef = useRef([]);
+    const multiAssignTargetsRef = useRef([]);
+
     // ✅ NOUVEAUX ÉTATS POUR CLIC DROIT PRÉ-CONFIGURATION
     const [contextMenu, setContextMenu] = useState(null); // { item, position }
     const [preConfiguredItems, setPreConfiguredItems] = useState(() => {
@@ -1077,8 +1081,8 @@ const PipelineDragDropView = ({
                 </div>
 
                 {/* Progression globale (barre full-width) */}
-                <div className="w-full">
-                    <div className="w-full bg-gray-200 dark:bg-gray-800 h-3 rounded-b-none rounded-t-md overflow-hidden">
+                <div className="w-full -mx-4">
+                    <div className="w-full bg-gray-200 dark:bg-gray-800 h-3 rounded-t-2xl overflow-hidden">
                         <div
                             className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-500"
                             style={{ width: `${completionPercent}%` }}
