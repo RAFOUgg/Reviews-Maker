@@ -1359,17 +1359,12 @@ const PipelineDragDropView = ({
                         )}
 
                         <div className="flex items-end">
-                            <div className="w-64">
+                            <div className="flex-1">
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="text-sm font-medium text-gray-700">Progression</div>
-                                    <div className="flex items-center gap-2" title={`${filledCells}/${cells.length} cases`}>
-                                        <div className="text-xs text-gray-500 sr-only">{filledCells}/{cells.length} cases</div>
-                                        <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden border border-gray-200 dark:border-gray-700">
-                                            <div
-                                                className="h-2 bg-gradient-to-r from-purple-400 to-purple-600"
-                                                style={{ width: `${Math.max(0, Math.min(100, completionPercent))}%` }}
-                                            />
-                                        </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-xs text-gray-400" title={`${filledCells}/${cells.length} cases`}>{filledCells}/{cells.length}</div>
+                                        <div className="text-xs font-semibold text-gray-700 dark:text-gray-200">{Math.round(completionPercent)}%</div>
                                     </div>
                                 </div>
                                 <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3 overflow-hidden border border-gray-200 dark:border-gray-700">
