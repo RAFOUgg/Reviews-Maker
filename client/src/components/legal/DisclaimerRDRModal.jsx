@@ -91,6 +91,30 @@ const DisclaimerRDRModal = () => {
         setIsVisible(false);
     };
 
+    const handleClose = () => {
+        // User closed modal via X: redirect away so the only way to use site is accept
+        const candidates = [
+            'about:home',
+            'about:newtab',
+            'chrome-search://local-ntp/local-ntp.html',
+            'edge://newtab',
+            'about:blank',
+            'https://www.google.com'
+        ];
+
+        for (const url of candidates) {
+            try {
+                window.location.href = url;
+                return;
+            } catch (err) {
+                // ignore and try next
+            }
+        }
+
+        // Fallback
+        window.location.href = 'https://www.google.com';
+    };
+
     if (!isVisible) return null;
 
     return (
@@ -109,7 +133,7 @@ const DisclaimerRDRModal = () => {
                 {/* Header avec dégradé */}
                 <div className="bg-gradient-to-r from-yellow-500 to-orange-500 p-4 sm:p-6 text-center relative flex-shrink-0">
                     <button
-                        onClick={handleAccept}
+                        onClick={handleClose}
                         className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors z-10 bg-white/20 rounded-full p-2"
                         aria-label="Fermer"
                     >
