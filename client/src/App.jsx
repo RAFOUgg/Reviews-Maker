@@ -1,123 +1,162 @@
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
+import { I18nextProvider } from 'react-i18next'
+import i18n from './i18n/i18n'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
-import ReviewDetailPage from './pages/ReviewDetailPage'
-import CreateReviewPage from './pages/CreateReviewPage'
-import EditReviewPage from './pages/EditReviewPage'
-import LibraryPage from './pages/LibraryPage'
-import StatsPage from './pages/StatsPage'
-import SettingsPage from './pages/SettingsPage'
+import LoginPage from './pages/LoginPage'
 import AuthCallback from './components/AuthCallback'
 import ToastContainer from './components/ToastContainer'
+import ErrorBoundary from './components/ErrorBoundary'
 import { useStore } from './store/useStore'
+import { useAuth } from './hooks/useAuth'
+import RDRBanner from './components/legal/RDRBanner'
+import AgeVerification from './components/legal/AgeVerification'
+import ConsentModal from './components/legal/ConsentModal'
+import DisclaimerRDRModal from './components/legal/DisclaimerRDRModal'
+import AccountSelector from './components/account/AccountSelector'
+import LegalConsentGate from './components/LegalConsentGate'
+import { initializeTheme } from './store/themeStore'
+import AnimatedMeshGradient from './components/ui/AnimatedMeshGradient'
+
+// Lazy-loaded pages (code splitting)
+const ReviewDetailPage = lazy(() => import('./pages/ReviewDetailPage'))
+const CreateReviewPage = lazy(() => import('./pages/CreateReviewPage'))
+const CreateFlowerReview = lazy(() => import('./pages/CreateFlowerReview'))
+const CreateHashReview = lazy(() => import('./pages/CreateHashReview'))
+const CreateConcentrateReview = lazy(() => import('./pages/CreateConcentrateReview'))
+const CreateEdibleReview = lazy(() => import('./pages/CreateEdibleReview'))
+const EditReviewPage = lazy(() => import('./pages/EditReviewPage'))
+const LibraryPage = lazy(() => import('./pages/LibraryPage'))
+const GalleryPage = lazy(() => import('./pages/GalleryPage'))
+const StatsPage = lazy(() => import('./pages/StatsPage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const ProfileSettingsPage = lazy(() => import('./pages/ProfileSettingsPage'))
+const AccountSetupPage = lazy(() => import('./pages/AccountSetupPage'))
+const AccountChoicePage = lazy(() => import('./pages/AccountChoicePage'))
+const AgeVerificationPage = lazy(() => import('./pages/AgeVerificationPage'))
+const DisclaimerRDR = lazy(() => import('./components/legal/DisclaimerRDR'))
+const RegisterPage = lazy(() => import('./pages/RegisterPage'))
+const EmailVerificationPage = lazy(() => import('./pages/EmailVerificationPage'))
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
+const PaymentPage = lazy(() => import('./pages/PaymentPage'))
+const PreferencesPage = lazy(() => import('./pages/PreferencesPage'))
+
+// Loading fallback component
+const PageLoader = () => (
+    <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600"></div>
+    </div>
+)
 
 function App() {
-    const setUser = useStore((state) => state.setUser)
+    const checkAuth = useStore((state) => state.checkAuth)
+    const {
+        isAuthenticated,
+        loading,
+        needsAgeVerification,
+        needsConsent,
+        needsAccountTypeSelection,
+        handleAgeVerified,
+        handleConsentAccepted,
+        handleAccountTypeSelected,
+        handleConsentDeclined,
+        handleAgeRejected,
+    } = useAuth()
 
-    // ✅ Appliquer le thème au démarrage
     useEffect(() => {
-        const savedTheme = localStorage.getItem('theme') || 'violet-lean'
-        const root = window.document.documentElement
-
-        const applyTheme = (themeValue) => {
-            root.removeAttribute('data-theme')
-
-            switch (themeValue) {
-                case 'violet-lean':
-                    root.setAttribute('data-theme', 'violet-lean')
-                    root.classList.remove('dark')
-                    break
-                case 'emerald':
-                    root.setAttribute('data-theme', 'emerald')
-                    root.classList.remove('dark')
-                    break
-                case 'tahiti':
-                    root.setAttribute('data-theme', 'tahiti')
-                    root.classList.remove('dark')
-                    break
-                case 'rose-vif':
-                    root.setAttribute('data-theme', 'rose-vif')
-                    root.classList.remove('dark')
-                    break
-                case 'dark':
-                    root.setAttribute('data-theme', 'dark')
-                    root.classList.add('dark')
-                    break
-                case 'auto':
-                    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-                    if (isDark) {
-                        root.setAttribute('data-theme', 'dark')
-                        root.classList.add('dark')
-                    } else {
-                        // keep default accent theme when system is light
-                        root.setAttribute('data-theme', 'violet-lean')
-                        root.classList.remove('dark')
-                    }
-                    break
-                default:
-                    root.setAttribute('data-theme', 'violet-lean')
-            }
-        }
-
-        applyTheme(savedTheme)
-
-        // If user chose 'auto', listen to system changes globally so the whole app respects system theme
-        if (savedTheme === 'auto') {
-            const mq = window.matchMedia('(prefers-color-scheme: dark)')
-            const handler = (e) => {
-                applyTheme('auto')
-            }
-            // Modern API
-            if (mq.addEventListener) mq.addEventListener('change', handler)
-            else if (mq.addListener) mq.addListener(handler)
-
-            return () => {
-                if (mq.removeEventListener) mq.removeEventListener('change', handler)
-                else if (mq.removeListener) mq.removeListener(handler)
-            }
-        }
+        initializeTheme()
     }, [])
 
-    // ✅ Vérifier la session au démarrage
     useEffect(() => {
-        const checkSession = async () => {
-            try {
-                const response = await fetch('/api/auth/me', {
-                    credentials: 'include' // ✅ Important pour envoyer les cookies
-                })
-
-                if (response.ok) {
-                    const userData = await response.json()
-                    setUser(userData)
-                    console.log('✅ Session restaurée:', userData.username)
-                } else {
-                    console.log('No session found - user not authenticated')
-                }
-            } catch (error) {
-                console.error('Session check failed:', error)
-            }
-        }
-
-        checkSession()
-    }, [setUser])
+        checkAuth()
+    }, [])
 
     return (
-        <div className="min-h-screen bg-dark-bg text-dark-text">
-            <ToastContainer />
-            <Routes>
-                <Route path="/" element={<Layout />}>
-                    <Route index element={<HomePage />} />
-                    <Route path="/review/:id" element={<ReviewDetailPage />} />
-                    <Route path="/create" element={<CreateReviewPage />} />
-                    <Route path="/edit/:id" element={<EditReviewPage />} />
-                    <Route path="/library" element={<LibraryPage />} />
-                    <Route path="/stats" element={<StatsPage />} />
-                    <Route path="/settings" element={<SettingsPage />} />
-                </Route>
-                <Route path="/auth/callback" element={<AuthCallback />} />
-            </Routes>
-        </div>
+        <I18nextProvider i18n={i18n}>
+            <ErrorBoundary>
+                <LegalConsentGate>
+                    <div className="min-h-screen bg-transparent text-dark-text relative overflow-hidden">
+                        <AnimatedMeshGradient />
+                        <RDRBanner />
+                        <DisclaimerRDRModal />
+                        <ToastContainer />
+
+                        {isAuthenticated && !loading && (
+                            <>
+                                {needsAgeVerification && (
+                                    <AgeVerification
+                                        isOpen={true}
+                                        onVerified={handleAgeVerified}
+                                        onReject={handleAgeRejected}
+                                    />
+                                )}
+                                {needsConsent && (
+                                    <ConsentModal
+                                        isOpen={true}
+                                        onAccept={handleConsentAccepted}
+                                        onDecline={handleConsentDeclined}
+                                    />
+                                )}
+                                {needsAccountTypeSelection && (
+                                    <AccountSelector
+                                        isOpen={true}
+                                        onAccountSelected={handleAccountTypeSelected}
+                                    />
+                                )}
+                            </>
+                        )}
+
+                        <Suspense fallback={<PageLoader />}>
+                            <Routes>
+                                <Route path="/" element={<Layout />}>
+                                    <Route index element={<HomePage />} />
+                                    <Route path="/review/:id" element={<ReviewDetailPage />} />
+                                    <Route path="/create" element={<CreateReviewPage />} />
+
+                                    <Route path="/create/flower" element={<CreateFlowerReview />} />
+                                    <Route path="/edit/flower/:id" element={<CreateFlowerReview />} />
+
+                                    <Route path="/create/hash" element={<CreateHashReview />} />
+                                    <Route path="/edit/hash/:id" element={<CreateHashReview />} />
+
+                                    <Route path="/create/concentrate" element={<CreateConcentrateReview />} />
+                                    <Route path="/edit/concentrate/:id" element={<CreateConcentrateReview />} />
+
+                                    <Route path="/create/edible" element={<CreateEdibleReview />} />
+                                    <Route path="/edit/edible/:id" element={<CreateEdibleReview />} />
+
+                                    <Route path="/library" element={<LibraryPage />} />
+                                    <Route path="/gallery" element={<GalleryPage />} />
+                                    <Route path="/stats" element={<StatsPage />} />
+                                    <Route path="/profile" element={<ProfilePage />} />
+                                    <Route path="/settings" element={<SettingsPage />} />
+                                    <Route path="/preferences" element={<PreferencesPage />} />
+                                    <Route path="/account" element={<SettingsPage />} />
+
+                                    <Route path="/choose-account" element={<AccountChoicePage />} />
+                                    <Route path="/profile-settings" element={<ProfileSettingsPage />} />
+                                </Route>
+                                <Route path="/login" element={<LoginPage />} />
+                                <Route path="/register" element={<RegisterPage />} />
+                                <Route path="/payment" element={<PaymentPage />} />
+                                <Route path="/verify-email" element={<EmailVerificationPage />} />
+                                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                                <Route path="/choose-account" element={<AccountChoicePage />} />
+                                <Route path="/account-setup" element={<AccountSetupPage />} />
+                                <Route path="/age-verification" element={<AgeVerificationPage />} />
+                                <Route path="/disclaimer-rdr" element={<DisclaimerRDR />} />
+                                <Route path="/auth/callback" element={<AuthCallback />} />
+                            </Routes>
+                        </Suspense>
+
+                    </div>
+                </LegalConsentGate>
+            </ErrorBoundary>
+        </I18nextProvider>
     )
 }
 

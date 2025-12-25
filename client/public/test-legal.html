@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Pop-up Légale - Reviews Maker</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #a855f7;
+            margin-bottom: 2rem;
+        }
+
+        .section {
+            background: #334155;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .code {
+            background: #1e293b;
+            padding: 1rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 0.5rem 0;
+        }
+
+        .btn {
+            background: #a855f7;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0.5rem;
+        }
+
+        .btn:hover {
+            background: #9333ea;
+        }
+
+        .success {
+            color: #10b981;
+        }
+
+        .error {
+            color: #ef4444;
+        }
+
+        .warning {
+            color: #f59e0b;
+        }
+
+        #status {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #1e293b;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔧 Diagnostic Pop-up Légale</h1>
+
+    <div class="section">
+        <h2>1. Vérification localStorage</h2>
+        <button class="btn" onclick="checkLocalStorage()">Vérifier localStorage</button>
+        <button class="btn" onclick="clearConsent()">Effacer consentement</button>
+        <button class="btn" onclick="simulateExpired()">Simuler expiration</button>
+        <div id="status"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. Actions rapides</h2>
+        <button class="btn" onclick="openApp()">Ouvrir l'application</button>
+        <button class="btn" onclick="openAppPrivate()">Ouvrir en mode privé (simulé)</button>
+        <button class="btn" onclick="window.location.reload()">Recharger cette page</button>
+    </div>
+
+    <div class="section">
+        <h2>3. Code à copier dans la console</h2>
+        <p>Ouvrez la console du navigateur sur <code>localhost:5173</code> et exécutez :</p>
+        <div class="code" onclick="copyToClipboard(this.textContent)">
+            localStorage.removeItem('terpologie_legal_consent');
+            location.reload();
+        </div>
+        <p><small>Cliquez pour copier</small></p>
+    </div>
+
+    <div class="section">
+        <h2>4. Diagnostic système</h2>
+        <div id="diagnostic"></div>
+        <button class="btn" onclick="runDiagnostic()">Lancer diagnostic complet</button>
+    </div>
+
+    <script>
+        function checkLocalStorage() {
+            const status = document.getElementById('status');
+            const consent = localStorage.getItem('terpologie_legal_consent');
+
+            if (!consent) {
+                status.innerHTML = '<span class="warning">⚠️ Aucun consentement trouvé</span><br>' +
+                    'La pop-up DEVRAIT s\'afficher sur l\'application.';
+            } else {
+                try {
+                    const data = JSON.parse(consent);
+                    const date = new Date(data.timestamp);
+                    const now = new Date();
+                    const daysSince = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+
+                    status.innerHTML = '<span class="success">✅ Consentement trouvé</span><br>' +
+                        '<pre>' + JSON.stringify(data, null, 2) + '</pre>' +
+                        `<p>Accepté il y a ${daysSince} jours (expire dans ${30 - daysSince} jours)</p>`;
+                } catch (e) {
+                    status.innerHTML = '<span class="error">❌ Consentement corrompu: ' + e.message + '</span>';
+                }
+            }
+        }
+
+        function clearConsent() {
+            localStorage.removeItem('terpologie_legal_consent');
+            document.getElementById('status').innerHTML =
+                '<span class="success">✅ Consentement effacé</span><br>' +
+                'Ouvrez maintenant l\'application pour voir la pop-up.';
+        }
+
+        function simulateExpired() {
+            const consent = localStorage.getItem('terpologie_legal_consent');
+            if (!consent) {
+                document.getElementById('status').innerHTML =
+                    '<span class="error">❌ Aucun consentement à expirer</span>';
+                return;
+            }
+
+            try {
+                const data = JSON.parse(consent);
+                const oldDate = new Date();
+                oldDate.setDate(oldDate.getDate() - 31);
+                data.timestamp = oldDate.toISOString();
+                localStorage.setItem('terpologie_legal_consent', JSON.stringify(data));
+
+                document.getElementById('status').innerHTML =
+                    '<span class="success">✅ Consentement expiré artificiellement</span><br>' +
+                    'Rechargez l\'application pour voir la pop-up.';
+            } catch (e) {
+                document.getElementById('status').innerHTML =
+                    '<span class="error">❌ Erreur: ' + e.message + '</span>';
+            }
+        }
+
+        function openApp() {
+            window.open('http://localhost:5173', '_blank');
+        }
+
+        function openAppPrivate() {
+            alert('Utilisez Ctrl+Shift+N (Edge) pour ouvrir en mode navigation privée,\n' +
+                'puis allez sur http://localhost:5173');
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text.trim());
+            alert('Code copié dans le presse-papier !');
+        }
+
+        function runDiagnostic() {
+            const diag = document.getElementById('diagnostic');
+            let html = '<h3>Résultats du diagnostic :</h3>';
+
+            // Check localStorage
+            const consent = localStorage.getItem('terpologie_legal_consent');
+            html += consent ?
+                '<p class="warning">⚠️  Consentement présent (la pop-up ne s\'affichera PAS)</p>' :
+                '<p class="success">✅ Pas de consentement (la pop-up devrait s\'afficher)</p>';
+
+            // Check URL
+            html += '<p>URL actuelle : ' + window.location.href + '</p>';
+
+            // Check navigator
+            html += '<p>Navigateur : ' + navigator.userAgent + '</p>';
+
+            // Check date/heure
+            html += '<p>Date/heure système : ' + new Date().toLocaleString('fr-FR') + '</p>';
+
+            diag.innerHTML = html;
+        }
+
+        // Auto-run on load
+        window.onload = function () {
+            checkLocalStorage();
+            runDiagnostic();
+        };
+    </script>
+</body>
+
+</html>

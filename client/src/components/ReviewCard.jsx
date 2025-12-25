@@ -16,6 +16,45 @@ export default function ReviewCard({ review }) {
         CBD: '💊',
     }
 
+    // Parse categoryRatings si c'est une string
+    let categoryRatings = {}
+    try {
+        if (typeof review.categoryRatings === 'string') {
+            categoryRatings = JSON.parse(review.categoryRatings)
+        } else if (typeof review.categoryRatings === 'object' && review.categoryRatings !== null) {
+            categoryRatings = review.categoryRatings
+        }
+    } catch (e) {
+        // Ignore parsing errors
+    }
+
+    // Calculer moyennes des catégories
+    const categories = [
+        { key: 'visual', label: 'Visuel', icon: '👁️' },
+        { key: 'smell', label: 'Odeur', icon: '👃' },
+        { key: 'texture', label: 'Texture', icon: '✋' },
+        { key: 'taste', label: 'Goût', icon: '👅' },
+        { key: 'effects', label: 'Effets', icon: '⚡' },
+    ]
+
+    const topCategories = categories
+        .map(cat => {
+            const value = categoryRatings[cat.key]
+            let avg = 0
+            if (typeof value === 'number') {
+                avg = value
+            } else if (typeof value === 'object' && value !== null) {
+                const vals = Object.values(value).filter(v => typeof v === 'number')
+                if (vals.length > 0) {
+                    avg = vals.reduce((sum, v) => sum + v, 0) / vals.length
+                }
+            }
+            return { ...cat, avg: Math.round(avg * 10) / 10 }
+        })
+        .filter(cat => cat.avg > 0)
+        .sort((a, b) => b.avg - a.avg)
+        .slice(0, 3)
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -30,6 +69,8 @@ export default function ReviewCard({ review }) {
                         <img
                             src={review.mainImageUrl}
                             alt={review.holderName}
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                     ) : (
@@ -53,22 +94,43 @@ export default function ReviewCard({ review }) {
                         {review.holderName}
                     </h3>
 
+                    {/* Breeder/Hashmaker/Farm */}
+                    {(review.breeder || review.hashmaker || review.farm) && (
+                        <div className="text-sm text-dark-muted flex items-center gap-2">
+                            <span className="text-primary-400">🧑‍🌾</span>
+                            <span>{review.breeder || review.hashmaker || review.farm}</span>
+                        </div>
+                    )}
+
                     {/* Rating */}
-                    {review.note && (
-                        <div className="flex items-center gap-2">
-                            <div className="flex">
-                                {[...Array(5)].map((_, i) => (
-                                    <span
-                                        key={i}
-                                        className={i < Math.round(review.note / 2) ? 'text-amber-400' : 'text-gray-600'}
-                                    >
-                                        ⭐
-                                    </span>
-                                ))}
+                    {(() => {
+                        const displayScore = review.computedOverall || review.overallRating || review.note || 0
+                        const stars = Math.round(displayScore / 2)
+                        return (
+                            <div className="flex items-center gap-2">
+                                <div className="flex">
+                                    {[...Array(5)].map((_, i) => (
+                                        <span key={i} className={i < stars ? 'text-amber-400' : 'text-gray-600'}>⭐</span>
+                                    ))}
+                                </div>
+                                <span className="text-sm font-bold text-dark-text">{displayScore}/10</span>
                             </div>
-                            <span className="text-sm text-dark-muted">
-                                {review.note}/10
-                            </span>
+                        )
+                    })()}
+
+                    {/* Top Category Ratings */}
+                    {topCategories.length > 0 && (
+                        <div className="flex gap-2 flex-wrap">
+                            {topCategories.map(cat => (
+                                <span
+                                    key={cat.key}
+                                    className="px-2 py-1 text-xs rounded-lg bg-dark-surface border border-dark-border flex items-center gap-1"
+                                    title={`${cat.label}: ${cat.avg}/10`}
+                                >
+                                    <span>{cat.icon}</span>
+                                    <span className="font-semibold text-primary-300">{cat.avg}</span>
+                                </span>
+                            ))}
                         </div>
                     )}
 

@@ -10,22 +10,97 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Modèle User (utilisateurs Discord)
+// Modèle User (utilisateurs multi-OAuth)
 model User {
   id            String   @id @default(uuid())
-  discordId     String   @unique
+  
+  // OAuth Providers (au moins un requis)
+  discordId     String?  @unique
+  googleId      String?  @unique
+  appleId       String?  @unique
+  amazonId      String?  @unique
+  facebookId    String?  @unique
+  
+  // Infos de base
   username      String
-  discriminator String?
+  discriminator String?  // Discord uniquement
   avatar        String?
   email         String?
+
+  // Auth locale (email/mot de passe)
+  passwordHash  String?
+  
+  // Email backup authentication
+  emailBackup   String?  @unique
+  emailVerified Boolean  @default(false)
+  
+  // TOTP 2FA (optionnel)
+  totpSecret    String?
+  totpEnabled   Boolean  @default(false)
+  
+  // Conformité légale
+  birthdate     DateTime?
+  country       String?  // Code ISO (FR, US, CA, etc.)
+  region        String?  // État/Province (pour US, CA)
+  legalAge      Boolean  @default(false)
+  consentRDR    Boolean  @default(false)
+  consentDate   DateTime?
+  
+  // Rôles & permissions (JSON array: ["consumer", "influencer", "producer", "admin"])
+  roles         String   @default("{\"roles\":[\"consumer\"]}")
+  
+  // Type de compte (Amateur, Influenceur, Producteur)
+  accountType   String   @default("consumer") // consumer | influencer | producer
+  isBanned      Boolean  @default(false)
+  bannedAt      DateTime?
+  banReason     String?
+  
+  // Préférences utilisateur
+  locale        String   @default("fr")  // "fr", "en", "es", "de"
+  theme         String   @default("violet-lean")
+  defaultExportTemplate String?  // ID du template préféré
+  
+  // Abonnement & restrictions
+  subscriptionType    String?  // "influencer", "producer", null pour amateur
+  subscriptionStart   DateTime?
+  subscriptionEnd     DateTime?
+  subscriptionStatus  String   @default("inactive")  // "active", "cancelled", "expired", "inactive"
+  dailyExportsUsed    Int      @default(0)
+  dailyExportsReset   DateTime @default(now())
+  
+  // eKYC (vérification identité pour Producer/Influencer)
+  kycStatus           String?  // "none", "pending", "verified", "rejected"
+  kycDocuments        String?  // JSON array des documents uploadés
+  kycVerifiedAt       DateTime?
+  kycRejectionReason  String?
+  
+  // Timestamps
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   // Relations
-  reviews  Review[]
-  sessions Session[]
-  likes    ReviewLike[]
+  reviews             Review[]
+  sessions            Session[]
+  likes               ReviewLike[]
+  subscription        Subscription?
+  influencerProfile   InfluencerProfile?
+  producerProfile     ProducerProfile?
+  reportsSubmitted    Report[] @relation("Reporter")
+  reportsReceived     Report[] @relation("ReportedUser")
+  cultivars           Cultivar[]
+  savedTemplates      SavedTemplate[]
+  watermarks          Watermark[]
+  savedData           SavedData[]
+  stats               UserStats?
+  comments            ReviewComment[]
+  exports             Export[]
+  exportTemplates     ExportTemplate[]
 
+  @@index([email])
+  @@index([discordId])
+  @@index([googleId])
+  @@index([appleId])
+  @@index([emailBackup])
   @@map("users")
 }
 
@@ -53,6 +128,7 @@ model Review {
   // Notation
   note        Float?
   ratings     String? // JSON: {apparence: 8, odeur: 9, gout: 7, effets: 8.5}
+  categoryRatings String? // JSON: {visual, smell, texture, taste, effects, overall}
   
   // Profil terpénique et tags
   terpenes    String? // JSON: ["Myrcène", "Limonène", "Pinène"]
@@ -75,6 +151,96 @@ model Review {
   cultivars            String? // Nom du/des cultivar(s)
   extraData            String? // JSON: Autres données dynamiques
   
+  // Section Touché - Fleur
+  toucheDensite        Float? // Densité /10
+  toucheFriabilite     Float? // Friabilité /10
+  toucheElasticite     Float? // Élasticité /10
+  toucheHumidite       Float? // Humidité /10
+  
+  // Section Touché - Hash
+  toucheTexture        String? // Texture (Poudreuse, Sableuse, etc.)
+  toucheMalleabilite   Float? // Malléabilité /10
+  toucheCollant        Float? // Collant /10
+  toucheFragilite      Float? // Fragilité /10
+  
+  // Section Touché - Concentré
+  toucheViscosite      Float? // Viscosité /10
+  toucheStabilite      Float? // Stabilité /10
+  
+  // Notes d'intensité/piquant
+  aromasPiquant        Float? // Piquant des odeurs /10
+  aromasIntensity      Float? // Intensité des odeurs /10
+  tastesIntensity      Float? // Intensité des goûts /10
+  goutIntensity        Float? // Intensité gustative (Comestible) /10
+  effectsIntensity     Float? // Intensité des effets /10
+  
+  // --- NOUVEAUX CHAMPS LEGACY ---
+  
+  // Plan cultural (Fleur)
+  typeCulture          String? // Type de culture (Indoor, Outdoor, etc.)
+  spectre              String? // Spectre lumineux (HPS, LED, etc.)
+  substratSysteme      String? // Substrat & système cultural
+  techniquesPropagation String? // Techniques de propagation
+  engraisOrganiques    String? // Engrais organiques utilisés
+  engraisMineraux      String? // Engrais minéraux utilisés
+  additifsStimulants   String? // Additifs & stimulants
+  
+  // Visuel avancé
+  densite              Float? // Densité visuelle /10
+  trichome             Float? // Trichomes /10
+  pistil               Float? // Pistils /10
+  manucure             Float? // Manucure /10
+  moisissure           Float? // Moisissure (10=aucune) /10
+  graines              Float? // Graines (10=aucune) /10
+  couleurTransparence  Float? // Couleur/transparence (Hash/Concentré) /10
+  pureteVisuelle       Float? // Pureté visuelle (Hash/Concentré) /10
+  couleur              Float? // Couleur (Concentré) /10
+  viscosite            Float? // Viscosité (Concentré) /10
+  melting              Float? // Melting (Concentré) /10
+  residus              Float? // Résidus (Concentré) /10
+  
+  // Odeurs détaillées
+  intensiteAromatique  Float? // Intensité aromatique /10
+  notesDominantesOdeur String? // JSON: Notes dominantes (max 7)
+  notesSecondairesOdeur String? // JSON: Notes secondaires (max 7)
+  fideliteCultivars    Float? // Fidélité au cultivars (Hash/Concentré) /10
+  
+  // Texture détaillée
+  durete               Float? // Dureté /10
+  densiteTexture       Float? // Densité texture /10
+  elasticite           Float? // Élasticité (Fleur) /10
+  collant              Float? // Collant /10
+  friabiliteViscosite  Float? // Friabilité/Viscosité (Hash) /10
+  meltingResidus       Float? // Melting/Résidus (Hash) /10
+  aspectCollantGras    Float? // Aspect collant/gras (Hash) /10
+  viscositeTexture     Float? // Viscosité texture (Concentré) /10
+  
+  // Goûts & Expérience fumée
+  dryPuff              String? // JSON: Notes dry puff (max 7)
+  inhalation           String? // JSON: Notes inhalation (max 7)
+  expiration           String? // JSON: Notes expiration/arrière-goût (max 7)
+  intensiteFumee       Float? // Intensité fumée /10
+  agressivite          Float? // Agressivité/piquant /10
+  cendre               Float? // Cendre /10
+  textureBouche        Float? // Texture en bouche (Concentré) /10
+  douceur              Float? // Douceur/Agressivité (Concentré) /10
+  intensite            Float? // Intensité générale (Concentré) /10
+  
+  // Effets détaillés
+  montee               Float? // Montée (rapidité) /10
+  intensiteEffet       Float? // Intensité des effets /10
+  intensiteEffets      Float? // Alias pour Concentré /10
+  typeEffet            String? // Type d'effet (textarea)
+  dureeEffet           String? // Durée des effets (select)
+  
+  // Pipelines
+  purificationPipeline  String? // JSON: [{id, name, details}, ...] (Hash & Concentré)
+  fertilizationPipeline String? // JSON: [{id, name, phase, dose, frequency}, ...] (Fleur)
+  substratMix           String? // JSON: [{id, substrat, percentage}, ...] (Fleur)
+  
+  // Recette (Comestible) - Structure unifiée
+  recipe                String? // JSON: {ingredients: [{id, type: 'standard'|'cannabis', name, quantity, unit, ...}], protocol: [{id, action, details, ingredients: [ids]}]} (Comestible)
+  
   // Images
   images      String? // JSON: ["image1.jpg", "image2.jpg", ...]
   mainImage   String? // Image principale
@@ -89,12 +255,20 @@ model Review {
   authorId    String
   author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   
-  // Likes
+  // Relations
   likes       ReviewLike[]
+  reports     Report[]
+  flowerData  FlowerReview? // Données spécifiques Fleurs (1-to-1)
+  hashData    HashReview? // Données spécifiques Hash (1-to-1)
+  concentrateData ConcentrateReview? // Données spécifiques Concentré (1-to-1)
+  edibleData  EdibleReview? // Données spécifiques Comestible (1-to-1)
+  views       ReviewView[]
+  comments    ReviewComment[]
 
   @@index([authorId])
   @@index([type])
   @@index([createdAt])
+  @@index([isPublic])
   @@map("reviews")
 }
 
@@ -114,4 +288,934 @@ model ReviewLike {
   @@index([reviewId])
   @@index([userId])
   @@map("review_likes")
+}
+
+// Template model for Orchard templates and custom layouts
+model Template {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  ownerId     String
+  isPublic    Boolean  @default(false)
+  isPremium   Boolean  @default(false)  // Template réservé aux comptes premium (Influencer/Producer)
+  
+  // Catégorisation
+  category    String   @default("custom")  // "predefined", "custom", "shared"
+  templateType String  @default("standard") // "compact", "detailed", "complete", "custom"
+  
+  // Format et configuration
+  format      String   @default("1:1")     // "1:1", "16:9", "9:16", "A4"
+  maxPages    Int      @default(1)         // Nombre max de pages (pagination)
+  
+  // Store template configuration as JSON string to remain compatible with sqlite
+  // Structure: { pages: [{ zones: [{ source, x, y, w, h, style }] }], theme, colors, fonts }
+  config      String
+  
+  // Preview
+  thumbnail   String?  // optional path to a generated thumbnail image
+  
+  // Permissions par type de compte
+  // Format JSON: { "consumer": true, "influencer_basic": true, "influencer_pro": true, "producer": true }
+  allowedAccountTypes String @default("{\"consumer\":true,\"influencer_basic\":true,\"influencer_pro\":true,\"producer\":true}")
+  
+  // Export capabilities
+  // Format JSON: { "png": true, "jpeg": true, "pdf": false, "svg": false, "maxQuality": 150 }
+  exportOptions String @default("{\"png\":true,\"jpeg\":true,\"pdf\":false,\"svg\":false,\"maxQuality\":150}")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([category])
+  @@index([isPublic])
+  @@index([isPremium])
+  @@map("templates")
+}
+
+// Partage de templates via code unique
+model TemplateShare {
+  id          String   @id @default(uuid())
+  templateId  String
+  shareCode   String   @unique  // Code unique de partage (ex: "ABCD1234")
+  createdBy   String   // ID de l'utilisateur qui partage
+  
+  // Statistiques
+  usedCount   Int      @default(0)
+  maxUses     Int?     // Limite d'utilisations (null = illimité)
+  
+  // Validité
+  expiresAt   DateTime?
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+
+  @@index([shareCode])
+  @@index([templateId])
+  @@index([createdBy])
+  @@map("template_shares")
+}
+
+// ====================
+// NOUVEAUX MODÈLES MVP
+// ====================
+
+// Abonnements Stripe
+model Subscription {
+  id                   String    @id @default(uuid())
+  userId               String    @unique
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Stripe IDs
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  stripePriceId        String?
+  
+  // Plan & Status
+  plan                 String    // "free", "influencer_basic", "influencer_pro", "producer", "merchant"
+  status               String    // "active", "canceled", "past_due", "trialing"
+  
+  // Billing
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+  canceledAt           DateTime?
+  
+  // Timestamps
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  
+  @@index([userId])
+  @@index([stripeCustomerId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+// Profils Influenceur (mode Orchard)
+model InfluencerProfile {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Branding
+  brandName     String?  // Nom de marque pour exports
+  brandLogo     String?  // URL logo
+  brandColors   String?  // JSON: {"primary": "#hex", "secondary": "#hex"}
+  
+  // Vérification
+  isVerified    Boolean  @default(false)
+  verifiedAt    DateTime?
+  
+  // Stats publiques
+  followerCount Int?     // Compteur followers (externe)
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@map("influencer_profiles")
+}
+
+// Profils Producteur (phase 2, structure préparée)
+model ProducerProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Informations légales
+  companyName     String
+  siret           String?  // France
+  ein             String?  // USA
+  country         String
+  
+  // Vérification
+  isVerified      Boolean  @default(false)
+  verifiedAt      DateTime?
+  verificationDoc String?  // URL document justificatif
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("producer_profiles")
+}
+
+// Signalements (modération)
+model Report {
+  id             String   @id @default(uuid())
+  
+  // Cible du signalement
+  reviewId       String?
+  userId         String?  // User signalé (si report de profil)
+  
+  // Auteur du signalement
+  reporterId     String
+  
+  // Relations
+  review         Review?  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reportedUser   User?    @relation("ReportedUser", fields: [userId], references: [id], onDelete: Cascade)
+  reporter       User     @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  
+  // Détails
+  reason         String   // "spam", "inappropriate", "copyright", "illegal", "other"
+  details        String?  // Description optionnelle
+  status         String   @default("pending")  // "pending", "reviewed", "resolved", "dismissed"
+  
+  // Modération
+  moderatedBy    String?  // ID admin qui a traité
+  moderatedAt    DateTime?
+  moderationNote String?  // Note interne
+  
+  // Timestamps
+  createdAt      DateTime @default(now())
+  
+  @@index([reviewId])
+  @@index([userId])
+  @@index([reporterId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("reports")
+}
+
+// Journal d'audit (traçabilité actions critiques)
+model AuditLog {
+  id          String   @id @default(uuid())
+  
+  // Acteur (null si action système)
+  userId      String?
+  
+  // Action
+  action      String   // "review.delete", "user.ban", "report.resolve", "subscription.created"
+  entityType  String?  // "review", "user", "report", "subscription"
+  entityId    String?  // ID de l'entité concernée
+  
+  // Détails (JSON)
+  metadata    String?  // JSON: détails action (ex: {"reason": "spam", "oldValue": "...", "newValue": "..."})
+  
+  // Contexte technique
+  ipAddress   String?
+  userAgent   String?
+  
+  // Timestamp
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([entityType])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ============================================
+// SYSTÈME REVIEWS FLEURS - Architecture MVP
+// ============================================
+
+// Bibliothèque de cultivars de l'utilisateur
+model Cultivar {
+  id          String   @id @default(uuid())
+  userId      String   // Propriétaire du cultivar
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Informations cultivar
+  name        String   // Nom du cultivar (ex: "Gorilla Glue #4")
+  breeder     String?  // Breeder de la graine
+  type        String?  // "Indica", "Sativa", "Hybride"
+  indicaRatio Int?     // 0-100 (0 = Sativa pur, 100 = Indica pur)
+  
+  // Génétique
+  parentage   String?  // JSON: ["Parent1", "Parent2"] ou texte libre
+  phenotype   String?  // Code phénotype (ex: "Pheno #3", "Clone A")
+  
+  // Notes personnelles
+  notes       String?  // Notes privées de l'utilisateur
+  
+  // Statistiques d'utilisation
+  useCount    Int      @default(0) // Nombre de reviews utilisant ce cultivar
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([userId, name]) // Un cultivar unique par nom et utilisateur
+  @@index([userId])
+  @@index([name])
+  @@map("cultivars")
+}
+
+// Étape d'un pipeline (culture, curing, etc.)
+model PipelineStep {
+  id              String   @id @default(uuid())
+  pipelineId      String   // ID du pipeline parent
+  pipelineType    String   // "culture", "curing", "separation", "extraction", "purification", "recipe"
+  
+  // Configuration de l'étape
+  stepIndex       Int      // Ordre de l'étape
+  stepName        String   // Nom de l'étape (ex: "Semaine 3", "Jour 14", "Phase Floraison")
+  
+  // Timing
+  intervalType    String   // "seconds", "minutes", "hours", "days", "weeks", "months", "phase"
+  intervalValue   Float?   // Valeur numérique (ex: 14 pour "Jour 14")
+  
+  // Données de l'étape (JSON flexible)
+  // Structure varie selon pipelineType:
+  // - culture: {mode, substrate, irrigation, fertilizers, light, environment, training, etc.}
+  // - curing: {temperature, humidity, container, packaging, opacity, volume}
+  // - extraction: {method, parameters}
+  // - etc.
+  data            String   // JSON
+  
+  // Notes custom
+  notes           String?  // Commentaire libre (max 500 car)
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([pipelineId, stepIndex])
+  @@map("pipeline_steps")
+}
+
+// Pipeline GitHub-style (nouvelle structure pour grilles 365 cases)
+model PipelineGithub {
+  id              String   @id @default(uuid())
+  
+  // Lien avec review
+  reviewId        String   
+  reviewType      String   // "flower", "hash", "concentrate", "edible"
+  pipelineType    String   // "culture", "curing", "extraction", "recipe", "separation"
+  
+  // Configuration de la trame
+  intervalType    String   // "seconds", "minutes", "hours", "days", "weeks", "months", "phase"
+  startDate       DateTime? // Date de début (si mode jours/semaines/mois)
+  endDate         DateTime? // Date de fin (si mode jours/semaines/mois)
+  
+  // Configuration curing (si pipelineType="curing")
+  curingType      String?  // "froid" (<5°C) ou "chaud" (>5°C)
+  curingDuration  Int?     // Durée totale
+  
+  // Cells data (grille complète JSON)
+  // Structure: { "0": {intensity: 0-3, temp, humidity, container, packaging, notes}, "1": {...}, ... }
+  cells           String   // JSON: Map<cellIndex, CellData>
+  
+  // Statistiques calculées
+  totalCells      Int      @default(0)    // Nombre total de cases
+  filledCells     Int      @default(0)    // Nombre de cases remplies
+  completionRate  Float    @default(0.0)  // % de complétion
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([reviewId, pipelineType])
+  @@index([reviewType])
+  @@map("pipeline_github")
+}
+
+// Review complète avec données spécifiques Fleurs
+model FlowerReview {
+  id          String   @id @default(uuid())
+  
+  // Lien avec la review parente
+  reviewId    String   @unique
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  
+  // ===== INFORMATIONS GÉNÉRALES =====
+  nomCommercial   String   // Nom commercial* (requis)
+  farm            String?  // Farm productrice
+  
+  // Type de variété
+  varietyType     String?  // "indica", "sativa", "hybride indica-dominant", "sativa-dominant", "CBD-dominant"
+  
+  // Photos (1-4) - stockées dans Review.images
+  
+  // ===== GÉNÉTIQUES =====
+  breeder         String?  // Breeder de la graine
+  variety         String?  // Nom de la variété (auto-complete depuis cultivars)
+  geneticType     String?  // "Indica", "Sativa", "Hybride"
+  indicaPercent   Int?     // 0-100
+  sativaPercent   Int?     // 0-100
+  parentage       String?  // JSON: Généalogie (parents, lignée)
+  phenotypeCode   String?  // Code phénotype (ex: "Pheno #2")
+  
+  // ===== PIPELINE CULTURE (Producteurs) =====
+  // Stocké comme JSON dans une table séparée PipelineStep
+  // Référencé par: culturePipelineId
+  culturePipelineId String? // ID du premier step de la pipeline culture (OLD)
+  
+  // NEW: GitHub-style pipeline culture
+  culturePipelineGithubId String? // ID PipelineGithub pour culture
+  
+  // Configuration globale culture
+  cultureStartDate  DateTime? // Début de culture
+  cultureEndDate    DateTime? // Fin de culture
+  cultureDuration   Int?      // Durée en jours
+  cultureSeason     String?   // JSON: ["Printemps", "Été"] ou null
+  
+  // ===== DONNÉES ANALYTIQUES =====
+  thcPercent      Float?   // Taux THC (%)
+  cbdPercent      Float?   // Taux CBD (%)
+  otherCannabinoids String? // JSON: {CBG: 1.2, CBC: 0.5} (mg/g ou %)
+  terpeneProfile  String?  // JSON: Profil terpénique complet (depuis PDF/image)
+  labReportUrl    String?  // URL du certificat d'analyse
+  
+  // ===== EXPÉRIENCE D'UTILISATION =====
+  consumptionMethod String? // "Combustion", "Vapeur", "Infusion"
+  dosage            Float?  // Dosage estimé (grammes/mg)
+  effectDuration    String? // HH:MM format
+  effectProfiles    String? // JSON: ["anxiolytique", "relaxant", "énergisant"]
+  sideEffects       String? // JSON: ["yeux secs", "faim"]
+  effectOnset       String? // "immédiat", "différé"
+  effectLength      String? // "courte", "moyenne", "longue"
+  preferredUse      String? // JSON: ["soir", "journée", "seul", "social", "médical"]
+  
+  // ===== VISUEL & TECHNIQUE =====
+  couleurScore        Float?  // Couleur/10 (avec nuancier)
+  couleurNuancier     String? // JSON: ["vert", "violet", "jaune"]
+  densiteVisuelle     Float?  // Densité visuelle/10
+  trichomesScore      Float?  // Trichomes/10
+  pistilsScore        Float?  // Pistils/10
+  manucureScore       Float?  // Manucure/10
+  moisissureScore     Float?  // Moisissure (10=aucune)/10
+  grainesScore        Float?  // Graines (10=aucune)/10
+  
+  // ===== ODEURS =====
+  notesOdeursDominantes   String? // JSON: max 7 parmi liste prédéfinie
+  notesOdeursSecondaires  String? // JSON: max 7
+  aromesInhalation        String? // JSON: primaire/secondaire
+  saveurBouche            String? // Rétro-olfaction
+  intensiteAromeScore     Float?  // Intensité arôme/10
+  
+  // ===== TEXTURE =====
+  dureteScore         Float?  // Dureté/10
+  densiteTactileScore Float?  // Densité tactile/10
+  elasticiteScore     Float?  // Élasticité/10
+  collantScore        Float?  // Collant/10
+  
+  // ===== GOÛTS =====
+  intensiteGoutScore  Float?  // Intensité/10
+  agressiviteScore    Float?  // Agressivité/piquant/10
+  dryPuffNotes        String? // JSON: max 7
+  inhalationNotes     String? // JSON: max 7
+  expirationNotes     String? // JSON: max 7 (arrière-goût)
+  
+  // ===== EFFETS RESSENTIS =====
+  monteeScore         Float?  // Montée (rapidité)/10
+  intensiteEffetScore Float?  // Intensité/10
+  effetsChoisis       String? // JSON: max 8 (mentaux, physiques, thérapeutiques)
+  effetsFiltre        String? // "tous", "neutre", "positif", "negatif"
+  
+  // ===== PIPELINE CURING / MATURATION =====
+  curingPipelineId    String? // ID du premier step de la pipeline curing (OLD)
+  
+  // NEW: GitHub-style pipeline curing
+  curingPipelineGithubId String? // ID PipelineGithub pour curing
+  
+  // Configuration globale curing
+  curingDuration      Int?    // Durée (jours/semaines/mois selon trame)
+  curingType          String? // "froid" (<5°C) ou "chaud" (>5°C)
+  curingInterval      String? // "seconds", "minutes", "hours", "days", "weeks", "months"
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([reviewId])
+  @@index([nomCommercial])
+  @@index([variety])
+  @@map("flower_reviews")
+}
+
+// Review Hash (Kief, Ice-O-Lator, Dry-Sift)
+model HashReview {
+  id          String   @id @default(uuid())
+  
+  // Lien avec la review parente
+  reviewId    String   @unique
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  
+  // ===== INFORMATIONS GÉNÉRALES =====
+  nomCommercial   String   // Nom commercial* (requis)
+  hashmaker       String?  // Hashmaker
+  laboratoire     String?  // Laboratoire de production
+  cultivarsUtilises String? // JSON ou texte: cultivars utilisés
+  photos          String?  // JSON: ["/images/hash-xxx.jpg"]
+  
+  // ===== PIPELINE SÉPARATION =====
+  separationPipelineId String? // ID pipeline séparation (OLD)
+  
+  // NEW: GitHub-style pipeline separation
+  separationPipelineGithubId String? // ID PipelineGithub pour séparation
+  
+  methodeSeparation   String?  // "manuelle", "tamisage à sec", "eau/glace", "autre"
+  nombrePasses        Int?     // Nombre de passes (si eau/glace)
+  temperatureEau      Float?   // Température eau (°C, si eau/glace)
+  tailleMailles       String?  // Taille mailles (si tamisage à sec)
+  typeMatierePremiere String?  // "trim", "buds", "sugar leaves", etc.
+  qualiteMatierePremiere Float? // Qualité matière première /10
+  rendementEstime     Float?   // Rendement estimé (%)
+  tempsTotalSeparation Int?    // Temps total séparation (minutes)
+  
+  // ===== PIPELINE PURIFICATION =====
+  purificationPipelineId String? // ID pipeline purification (OLD)
+  
+  // NEW: GitHub-style pipeline purification
+  purificationPipelineGithubId String? // ID PipelineGithub pour purification
+  
+  // ===== VISUEL & TECHNIQUE =====
+  couleurTransparence Float?   // Couleur/transparence /10 (nuancier noir->blanc)
+  pureteVisuelle      Float?   // Pureté visuelle /10
+  densiteVisuelle     Float?   // Densité visuelle /10
+  pistils             Float?   // Pistils /10
+  moisissure          Float?   // Moisissure (10=aucune) /10
+  graines             Float?   // Graines (10=aucune) /10
+  
+  // ===== ODEURS =====
+  fideliteCultivars      Float?  // Fidélité cultivars /10
+  intensiteAromatique    Float?  // Intensité aromatique /10
+  notesDominantes        String? // JSON: max 7
+  notesSecondaires       String? // JSON: max 7
+  
+  // ===== TEXTURE =====
+  durete                 Float?  // Dureté /10
+  densiteTactile         Float?  // Densité tactile /10
+  friabiliteViscositeMelting Float? // Friabilité/Viscosité /10
+  meltingResidus         Float?  // Melting/Résidus /10
+  
+  // ===== GOÛTS =====
+  intensite          Float?  // Intensité /10
+  agressivitePiquant Float?  // Agressivité/piquant /10
+  dryPuff            String? // JSON: max 7
+  inhalation         String? // JSON: max 7
+  expiration         String? // JSON: max 7
+  
+  // ===== EFFETS =====
+  monteeRapidite     Float?  // Montée /10
+  intensiteEffets    Float?  // Intensité /10
+  effetsChoisis      String? // JSON: max 8
+  effetsFiltre       String? // "tous", "neutre", "positif", "negatif"
+  methodeConsommation String? // "Combustion", "Vapeur", "Infusion"
+  dosageUtilise       String? // Dosage estimé
+  dureeEffets         String? // Durée effets
+  
+  // ===== CURING =====
+  curingPipelineId   String? // ID pipeline curing (OLD)
+  
+  // NEW: GitHub-style pipeline curing
+  curingPipelineGithubId String? // ID PipelineGithub pour curing
+  
+  curingDuration     Int?    // Durée curing
+  curingType         String? // "froid", "chaud"
+  curingInterval     String? // Intervalle
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([reviewId])
+  @@index([nomCommercial])
+  @@map("hash_reviews")
+}
+
+// Review Concentré (Rosin, BHO, etc.)
+model ConcentrateReview {
+  id          String   @id @default(uuid())
+  
+  // Lien avec la review parente
+  reviewId    String   @unique
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  
+  // ===== INFORMATIONS GÉNÉRALES =====
+  nomCommercial      String   // Nom commercial* (requis)
+  hashmaker          String?  // Hashmaker
+  laboratoire        String?  // Laboratoire de production
+  cultivarsUtilises  String?  // JSON ou texte: cultivars utilisés
+  photos             String?  // JSON: ["/images/concentrate-xxx.jpg"]
+  
+  // ===== PIPELINE EXTRACTION =====
+  extractionPipelineId String? // ID pipeline extraction (OLD)
+  
+  // NEW: GitHub-style pipeline extraction
+  extractionPipelineGithubId String? // ID PipelineGithub pour extraction
+  
+  methodeExtraction    String? // Méthode d'extraction
+  
+  // ===== PIPELINE PURIFICATION =====
+  purificationPipelineId String? // ID pipeline purification (OLD)
+  
+  // NEW: GitHub-style pipeline purification
+  purificationPipelineGithubId String? // ID PipelineGithub pour purification
+  
+  // ===== VISUEL & TECHNIQUE =====
+  couleurTransparence Float?   // Couleur/Transparence /10
+  viscosite           Float?   // Viscosité /10
+  pureteVisuelle      Float?   // Pureté visuelle /10
+  melting             Float?   // Melting (10=FullMelt) /10
+  residus             Float?   // Résidus (10=aucune) /10
+  pistils             Float?   // Pistils (10=aucune) /10
+  moisissure          Float?   // Moisissure (10=aucune) /10
+  
+  // ===== ODEURS =====
+  fideliteCultivars      Float?  // Fidélité cultivars /10
+  intensiteAromatique    Float?  // Intensité aromatique /10
+  notesDominantes        String? // JSON: max 7
+  notesSecondaires       String? // JSON: max 7
+  
+  // ===== TEXTURE =====
+  durete                 Float?  // Dureté /10
+  densiteTactile         Float?  // Densité tactile /10
+  friabiliteViscositeMelting Float? // Friabilité/Viscosité/Melting /10
+  meltingResidus         Float?  // Melting/Résidus /10
+  
+  // ===== GOÛTS =====
+  intensite          Float?  // Intensité /10
+  agressivitePiquant Float?  // Agressivité/piquant /10
+  dryPuff            String? // JSON: max 7
+  inhalation         String? // JSON: max 7
+  expiration         String? // JSON: max 7
+  
+  // ===== EFFETS =====
+  monteeRapidite     Float?  // Montée /10
+  intensiteEffets    Float?  // Intensité /10
+  effetsChoisis      String? // JSON: max 8
+  effetsFiltre       String? // "tous", "neutre", "positif", "negatif"
+  methodeConsommation String? // "Combustion", "Vapeur", "Infusion"
+  dosageUtilise       String? // Dosage estimé
+  dureeEffets         String? // Durée effets
+  
+  // ===== CURING =====
+  curingPipelineId   String? // ID pipeline curing (OLD)
+  
+  // NEW: GitHub-style pipeline curing (concentrate)
+  curingPipelineGithubIdConcentrate String? // ID PipelineGithub pour curing concentré
+  
+  curingDuration     Int?    // Durée curing
+  curingType         String? // "froid", "chaud"
+  curingInterval     String? // Intervalle
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([reviewId])
+  @@index([nomCommercial])
+  @@map("concentrate_reviews")
+}
+
+// Review Comestible
+model EdibleReview {
+  id          String   @id @default(uuid())
+  
+  // Lien avec la review parente
+  reviewId    String   @unique
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  
+  // ===== INFORMATIONS GÉNÉRALES =====
+  nomProduit      String   // Nom du produit* (requis)
+  typeComestible  String?  // Type de comestible
+  fabricant       String?  // Fabricant
+  typeGenetiques  String?  // Type de génétiques (OLD)
+  
+  // NEW: GitHub-style pipeline recette
+  recipePipelineGithubId String? // ID PipelineGithub pour recette
+  
+  photos          String?  // JSON: ["/images/edible-xxx.jpg"]
+  
+  // ===== PIPELINE RECETTE =====
+  recipePipelineId    String? // ID pipeline recette
+  ingredients         String? // JSON: [{ type, nom, quantite, unite }]
+  etapesPreparation   String? // JSON: [{ action, ingredientIds, duree, temperature }]
+  
+  // ===== GOÛTS =====
+  intensite          Float?  // Intensité /10
+  agressivitePiquant Float?  // Agressivité/piquant /10
+  saveursDominantes  String? // JSON: max 7
+  
+  // ===== EFFETS =====
+  monteeRapidite     Float?  // Montée /10
+  intensiteEffets    Float?  // Intensité /10
+  effetsChoisis      String? // JSON: max 8
+  effetsFiltre       String? // "tous", "neutre", "positif", "negatif"
+  dureeEffets        String? // "5-15min", "15-30min", etc.
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([reviewId])
+  @@index([nomProduit])
+  @@map("edible_reviews")
+}
+
+// ====================
+// BIBLIOTHÈQUE PERSONNELLE
+// ====================
+
+// Templates sauvegardés par l'utilisateur
+model SavedTemplate {
+  id            String   @id @default(uuid())
+  userId        String   // Propriétaire
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Informations du template
+  name          String   // Nom personnalisé
+  description   String?  // Description
+  templateType  String   // "compact", "detailed", "complete", "custom"
+  format        String   // "1:1", "16:9", "9:16", "A4"
+  
+  // Configuration (même structure que Template.config)
+  config        String   // JSON: { pages, theme, colors, fonts, zones }
+  
+  // Prévisualisation
+  thumbnail     String?  // URL de la miniature générée
+  
+  // Utilisation
+  useCount      Int      @default(0) // Nombre d'utilisations
+  lastUsedAt    DateTime?
+  
+  // Tags personnalisés
+  tags          String?  // JSON: ["portrait", "minimaliste", "pro"]
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([templateType])
+  @@index([format])
+  @@index([useCount])
+  @@map("saved_templates")
+}
+
+// Filigranes (watermarks) personnalisés
+model Watermark {
+  id            String   @id @default(uuid())
+  userId        String   // Propriétaire
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Informations
+  name          String   // Nom du filigrane
+  description   String?
+  
+  // Type
+  type          String   // "text", "image", "logo"
+  
+  // Contenu
+  content       String?  // Texte du filigrane (si type=text)
+  imageUrl      String?  // URL de l'image (si type=image ou logo)
+  
+  // Style
+  style         String   // JSON: { font, size, color, opacity, position, rotation }
+  
+  // Statut
+  isDefault     Boolean  @default(false) // Filigrane par défaut
+  
+  // Utilisation
+  useCount      Int      @default(0)
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([type])
+  @@index([isDefault])
+  @@map("watermarks")
+}
+
+// Données sauvegardées pour réutilisation rapide
+model SavedData {
+  id            String   @id @default(uuid())
+  userId        String   // Propriétaire
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Type de données
+  dataType      String   // "cultivar", "pipeline", "recipe", "effect_profile", "custom"
+  
+  // Informations
+  name          String   // Nom de la donnée sauvegardée
+  description   String?  // Description
+  
+  // Contenu
+  data          String   // JSON: données complètes
+  
+  // Catégorie
+  category      String?  // Pour organiser (ex: "mes_cultivars", "pipelines_culture", etc.)
+  
+  // Tags
+  tags          String?  // JSON: ["bio", "indoor", "pheno_hunt"]
+  
+  // Utilisation
+  useCount      Int      @default(0)
+  lastUsedAt    DateTime?
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([dataType])
+  @@index([category])
+  @@map("saved_data")
+}
+
+// ====================
+// STATISTIQUES UTILISATEUR
+// ====================
+
+// Statistiques globales utilisateur
+model UserStats {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Statistiques reviews
+  totalReviews    Int      @default(0) // Total reviews créées
+  publicReviews   Int      @default(0) // Reviews publiques
+  privateReviews  Int      @default(0) // Reviews privées
+  
+  // Répartition par type
+  flowerReviews   Int      @default(0)
+  hashReviews     Int      @default(0)
+  concentrateReviews Int   @default(0)
+  edibleReviews   Int      @default(0)
+  
+  // Exports
+  totalExports    Int      @default(0) // Nombre d'exports réalisés
+  exportsPNG      Int      @default(0)
+  exportsJPEG     Int      @default(0)
+  exportsPDF      Int      @default(0)
+  exportsSVG      Int      @default(0)
+  exportsCSV      Int      @default(0)
+  exportsJSON     Int      @default(0)
+  exportsHTML     Int      @default(0)
+  
+  // Engagement (reviews publiques uniquement)
+  totalLikes      Int      @default(0) // Likes reçus
+  totalViews      Int      @default(0) // Vues
+  totalShares     Int      @default(0) // Partages
+  totalComments   Int      @default(0) // Commentaires
+  
+  // Activité
+  lastReviewDate  DateTime? // Date dernière review
+  lastExportDate  DateTime? // Date dernier export
+  
+  // Producteurs : statistiques cultures
+  totalCultures   Int?     @default(0) // Nombre de cultures
+  totalYield      Float?   // Rendement total (g)
+  avgYield        Float?   // Rendement moyen par culture
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("user_stats")
+}
+
+// Vues des reviews (tracking anonyme)
+model ReviewView {
+  id          String   @id @default(uuid())
+  reviewId    String
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  
+  // Optionnel: userId si connecté
+  userId      String?
+  
+  // Tracking
+  ipAddress   String?  // Hash de l'IP pour analytics
+  userAgent   String?
+  referer     String?  // D'où vient le visiteur
+  
+  // Géolocalisation (optionnel)
+  country     String?
+  region      String?
+  
+  // Timestamp
+  viewedAt    DateTime @default(now())
+  
+  @@index([reviewId])
+  @@index([userId])
+  @@index([viewedAt])
+  @@map("review_views")
+}
+
+// Commentaires sur les reviews publiques
+model ReviewComment {
+  id          String   @id @default(uuid())
+  reviewId    String
+  userId      String
+  
+  // Contenu
+  content     String   // Texte du commentaire (max 1000 caractères)
+  
+  // Modération
+  isEdited    Boolean  @default(false)
+  editedAt    DateTime?
+  isDeleted   Boolean  @default(false)
+  deletedAt   DateTime?
+  deleteReason String?
+  
+  // Relations
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  author      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([reviewId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("review_comments")
+}
+
+// Modèle VerificationCode (codes email 6 chiffres)
+model VerificationCode {
+  id         String   @id @default(uuid())
+  email      String   // Email destinataire
+  code       String   // Code 6 chiffres (ex: "A3B7K9")
+  type       String   // "login" | "register" | "reset_password"
+  expiresAt  DateTime // Expiration 10 minutes
+  attempts   Int      @default(0) // Nombre de tentatives (max 5)
+  verified   Boolean  @default(false) // Marqué vérifié après validation
+  createdAt  DateTime @default(now())
+  
+  @@index([email, type])
+  @@index([code])
+  @@index([expiresAt])
+  @@map("verification_codes")
+}
+
+// Modèle Export (suivi des exports)
+model Export {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewId  String?  // Optionnel: review exportée
+  format    String   // "png", "jpeg", "pdf", "svg", "gif", "csv", "json", "html"
+  quality   String   // "standard", "high", "ultra"
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@map("exports")
+}
+
+// Modèle ExportTemplate (templates d'export personnalisés)
+model ExportTemplate {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String   // Nom du template
+  description String?
+  isCustom    Boolean  @default(true)  // true pour templates personnalisés
+  isDefault   Boolean  @default(false) // template par défaut pour l'utilisateur
+  config      String   // JSON: configuration complète du template
+  useCount    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([isCustom])
+  @@index([isDefault])
+  @@map("export_templates")
 }

@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orchard Studio - Guide d'utilisation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 60px;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.95;
+            font-weight: 500;
+        }
+
+        .section {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .section h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section h3 {
+            font-size: 1.5rem;
+            margin: 30px 0 15px 0;
+            color: #764ba2;
+        }
+
+        .section p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .step {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 16px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 5px solid #667eea;
+        }
+
+        .step-header {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .step-content {
+            font-size: 1.05rem;
+            color: #444;
+            line-height: 1.7;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-radius: 16px;
+            padding: 25px;
+            border: 2px solid #667eea30;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .feature-desc {
+            font-size: 1rem;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .button-example {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);
+            color: white;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-decoration: none;
+            box-shadow: 0 10px 30px rgba(147, 51, 234, 0.3);
+            transition: all 0.3s ease;
+            margin: 10px 0;
+        }
+
+        .button-example:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(147, 51, 234, 0.4);
+        }
+
+        .screenshot-placeholder {
+            background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
+            border: 2px dashed #667eea;
+            border-radius: 16px;
+            padding: 60px;
+            text-align: center;
+            color: #667eea;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 25px 0;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .code-block code {
+            color: #68d391;
+        }
+
+        .tip {
+            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+            border-left: 5px solid #f59e0b;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .tip-title {
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .tip-content {
+            color: #78350f;
+            line-height: 1.6;
+        }
+
+        .workflow {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .workflow-step {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .workflow-step:hover {
+            border-color: #667eea;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+        }
+
+        .workflow-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .workflow-text {
+            flex: 1;
+            font-size: 1.05rem;
+            color: #444;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 60px;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .section {
+                padding: 25px;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 Orchard Studio</h1>
+            <p>Guide d'utilisation complet</p>
+        </div>
+
+        <div class="section">
+            <h2>🚀 Introduction</h2>
+            <p>
+                <strong>Orchard Studio</strong> est votre outil de prévisualisation et d'export professionnel intégré
+                directement
+                dans les pages de création et d'édition de reviews. En un clic, transformez vos reviews en visuels
+                élégants
+                prêts à être partagés sur les réseaux sociaux, exportés en PDF, ou sauvegardés en haute résolution.
+            </p>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎭</div>
+                    <div class="feature-title">4 Templates</div>
+                    <div class="feature-desc">Modern Compact, Detailed Card, Blog Article, Social Story</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <div class="feature-title">Personnalisation</div>
+                    <div class="feature-desc">Couleurs, typographies, modules de contenu configurables</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📐</div>
+                    <div class="feature-title">5 Ratios</div>
+                    <div class="feature-desc">1:1, 16:9, 9:16, 4:3, A4 pour tous vos besoins</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💾</div>
+                    <div class="feature-title">4 Formats</div>
+                    <div class="feature-desc">PNG, JPEG, PDF, Markdown pour export universel</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📍 Accès à Orchard Studio</h2>
+
+            <h3>Depuis la page de création</h3>
+            <div class="step">
+                <div class="step-header">
+                    <span>1️⃣</span>
+                    <span>Accédez à la création de review</span>
+                </div>
+                <div class="step-content">
+                    Cliquez sur "Créer une review" depuis la page d'accueil, sélectionnez le type de produit (Fleur,
+                    Concentré, etc.).
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-header">
+                    <span>2️⃣</span>
+                    <span>Remplissez les informations</span>
+                </div>
+                <div class="step-content">
+                    Complétez les sections du formulaire : informations générales, composition, images, description,
+                    etc.
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-header">
+                    <span>3️⃣</span>
+                    <span>Cliquez sur "🎨 Aperçu"</span>
+                </div>
+                <div class="step-content">
+                    Le bouton est situé dans le header, en haut à droite. Un clic ouvre Orchard Studio en modal plein
+                    écran.
+                </div>
+            </div>
+
+            <div class="screenshot-placeholder">
+                📸 Le bouton "🎨 Aperçu" apparaît ici dans le header
+            </div>
+
+            <a href="#" class="button-example">🎨 Aperçu</a>
+            <p style="margin-top: 10px; color: #666; font-size: 0.95rem;">
+                ↑ Exemple du bouton d'accès à Orchard Studio
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Workflow complet</h2>
+
+            <div class="workflow">
+                <div class="workflow-step">
+                    <div class="workflow-number">1</div>
+                    <div class="workflow-text">
+                        <strong>Créer/Éditer une review</strong><br>
+                        Remplissez le formulaire avec toutes les informations nécessaires
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <div class="workflow-number">2</div>
+                    <div class="workflow-text">
+                        <strong>Ouvrir Orchard Studio</strong><br>
+                        Cliquez sur "🎨 Aperçu" dans le header à tout moment
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <div class="workflow-number">3</div>
+                    <div class="workflow-text">
+                        <strong>Sélectionner un template</strong><br>
+                        Choisissez parmi 4 templates professionnels adaptés à différents usages
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <div class="workflow-number">4</div>
+                    <div class="workflow-text">
+                        <strong>Configurer le ratio</strong><br>
+                        1:1 (Instagram), 16:9 (YouTube), 9:16 (Stories), 4:3, A4 (impression)
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <div class="workflow-number">5</div>
+                    <div class="workflow-text">
+                        <strong>Personnaliser le style</strong><br>
+                        Typographies, couleurs (6 palettes), modules de contenu, images
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <div class="workflow-number">6</div>
+                    <div class="workflow-text">
+                        <strong>Exporter</strong><br>
+                        PNG (1x/2x/3x), JPEG (qualité ajustable), PDF (formats multiples), Markdown
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <div class="workflow-number">7</div>
+                    <div class="workflow-text">
+                        <strong>Fermer et continuer</strong><br>
+                        Fermez Orchard pour retourner à l'édition de la review
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎛️ Panneau de configuration</h2>
+
+            <h3>📋 Onglet: Templates</h3>
+            <p>
+                Sélectionnez votre template parmi 4 designs professionnels. Chaque template a ses propres ratios
+                supportés
+                et son style visuel unique. La prévisualisation se met à jour instantanément.
+            </p>
+
+            <h3>✍️ Onglet: Typographie</h3>
+            <p>
+                Configurez les polices (10 choix), les tailles de titre et texte (sliders), et le poids des caractères
+                (300 à 800). Une prévisualisation en direct vous montre le résultat.
+            </p>
+
+            <h3>🎨 Onglet: Couleurs</h3>
+            <p>
+                Choisissez parmi 6 palettes prédéfinies (Modern, Nature, Ocean, Sunset, Elegant, Minimal) ou activez
+                le mode personnalisé pour définir chaque couleur individuellement (background, textes, accent, titre).
+            </p>
+
+            <h3>📦 Onglet: Contenu</h3>
+            <p>
+                Contrôlez quels modules afficher (titre, rating, auteur, image, tags, description, date, catégorie,
+                THC/CBD, effets, arômes, cultivar). Réorganisez l'ordre par drag & drop.
+            </p>
+
+            <h3>🖼️ Onglet: Image & Branding</h3>
+            <p>
+                Ajustez le border-radius, l'opacité, appliquez des filtres (sepia, grayscale, blur). Ajoutez un logo
+                ou watermark avec positionnement (5 positions) et taille configurable.
+            </p>
+
+            <h3>💾 Onglet: Presets</h3>
+            <p>
+                Sauvegardez vos configurations favorites pour les réutiliser. Nommez vos presets, ajoutez une
+                description,
+                et retrouvez-les facilement avec aperçu des couleurs.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>💾 Export des visuels</h2>
+
+            <div class="step">
+                <div class="step-header">
+                    <span>📸</span>
+                    <span>PNG - Images haute résolution</span>
+                </div>
+                <div class="step-content">
+                    Exportez en 3 résolutions : 1x (standard), 2x (retina), 3x (ultra haute définition).
+                    Option de fond transparent disponible.
+                    <br><br>
+                    <strong>Usage:</strong> Réseaux sociaux, impression, web
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-header">
+                    <span>🖼️</span>
+                    <span>JPEG - Images optimisées</span>
+                </div>
+                <div class="step-content">
+                    Format compressé avec slider de qualité (50% à 100%). Poids de fichier réduit pour partage rapide.
+                    <br><br>
+                    <strong>Usage:</strong> Email, partage rapide, web
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-header">
+                    <span>📄</span>
+                    <span>PDF - Documents imprimables</span>
+                </div>
+                <div class="step-content">
+                    Orientation portrait/paysage. Formats A4, Letter, A3. Export vectoriel haute qualité.
+                    <br><br>
+                    <strong>Usage:</strong> Impression, archivage, présentation
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-header">
+                    <span>📝</span>
+                    <span>Markdown - Texte structuré</span>
+                </div>
+                <div class="step-content">
+                    Export en format Markdown avec structure complète (titre, rating, composition, description, effets,
+                    arômes, tags).
+                    <br><br>
+                    <strong>Usage:</strong> Blog, documentation, backup texte
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>💡 Astuces et bonnes pratiques</h2>
+
+            <div class="tip">
+                <div class="tip-title">🎯 Astuce #1: Remplir d'abord les infos essentielles</div>
+                <div class="tip-content">
+                    Avant d'ouvrir Orchard Studio, assurez-vous d'avoir au minimum rempli: nom commercial, type de
+                    produit,
+                    et uploadé au moins une image. Cela garantit un aperçu complet.
+                </div>
+            </div>
+
+            <div class="tip">
+                <div class="tip-title">🎨 Astuce #2: Tester plusieurs templates</div>
+                <div class="tip-content">
+                    Chaque template a son propre style. Modern Compact est parfait pour Instagram, Detailed Card pour
+                    des fiches techniques, Blog Article pour du contenu long, et Social Story pour les stories
+                    verticales.
+                </div>
+            </div>
+
+            <div class="tip">
+                <div class="tip-title">💾 Astuce #3: Créer des presets par type</div>
+                <div class="tip-content">
+                    Créez un preset "Instagram" (1:1, Modern Compact, palette Ocean), un preset "YouTube" (16:9,
+                    Detailed Card),
+                    etc. Vous gagnerez du temps sur les prochaines reviews!
+                </div>
+            </div>
+
+            <div class="tip">
+                <div class="tip-title">📸 Astuce #4: Export en haute résolution</div>
+                <div class="tip-content">
+                    Pour les réseaux sociaux, exportez en PNG 2x ou 3x. Instagram et Twitter compressent les images,
+                    partir d'une haute résolution garantit une qualité optimale après compression.
+                </div>
+            </div>
+
+            <div class="tip">
+                <div class="tip-title">🔄 Astuce #5: Workflow itératif</div>
+                <div class="tip-content">
+                    Ouvrez Orchard Studio plusieurs fois pendant la création de votre review. Voyez l'évolution du rendu
+                    au fur et à mesure que vous ajoutez du contenu. Fermez et continuez, rouvrez et exportez!
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>⌨️ Raccourcis clavier</h2>
+
+            <div class="code-block">
+                <strong>Depuis Orchard Studio:</strong>
+
+                ESC → Fermer Orchard Studio
+                Ctrl/Cmd + S → Exporter (ouvre le modal d'export)
+                F → Basculer en plein écran
+                Tab → Naviguer entre les onglets
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎓 Exemples d'utilisation</h2>
+
+            <h3>Cas d'usage 1: Review pour Instagram</h3>
+            <div class="workflow">
+                <div class="workflow-step">
+                    <div class="workflow-number">✓</div>
+                    <div class="workflow-text">Template: <strong>Modern Compact</strong></div>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-number">✓</div>
+                    <div class="workflow-text">Ratio: <strong>1:1 (Carré)</strong></div>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-number">✓</div>
+                    <div class="workflow-text">Palette: <strong>Ocean ou Nature</strong></div>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-number">✓</div>
+                    <div class="workflow-text">Export: <strong>PNG 3x</strong></div>
+                </div>
+            </div>
+
+            <h3>Cas d'usage 2: Fiche technique PDF</h3>
+            <div class="workflow">
+                <div class="workflow-step">
+                    <div class="workflow-number">✓</div>
+                    <div class="workflow-text">Template: <strong>Detailed Card</strong></div>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-number">✓</div>
+                    <div class="workflow-text">Ratio: <strong>A4 (Portrait)</strong></div>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-number">✓</div>
+                    <div class="workflow-text">Palette: <strong>Elegant</strong></div>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-number">✓</div>
+                    <div class="workflow-text">Export: <strong>PDF A4 Portrait</strong></div>
+                </div>
+            </div>
+
+            <h3>Cas d'usage 3: Story Instagram/Snapchat</h3>
+            <div class="workflow">
+                <div class="workflow-step">
+                    <div class="workflow-number">✓</div>
+                    <div class="workflow-text">Template: <strong>Social Story</strong></div>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-number">✓</div>
+                    <div class="workflow-text">Ratio: <strong>9:16 (Vertical)</strong></div>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-number">✓</div>
+                    <div class="workflow-text">Palette: <strong>Sunset</strong></div>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-number">✓</div>
+                    <div class="workflow-text">Export: <strong>PNG 2x</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>❓ Questions fréquentes</h2>
+
+            <h3>Puis-je modifier la review après avoir exporté?</h3>
+            <p>
+                Oui! Orchard Studio est totalement indépendant de l'édition de la review. Vous pouvez fermer Orchard,
+                modifier des champs, rouvrir Orchard et exporter à nouveau.
+            </p>
+
+            <h3>Les presets sont-ils partagés entre les reviews?</h3>
+            <p>
+                Oui! Les presets sont sauvegardés dans votre navigateur (localStorage) et disponibles pour toutes vos
+                reviews.
+            </p>
+
+            <h3>Puis-je utiliser mes propres couleurs?</h3>
+            <p>
+                Absolument! Activez le mode "Personnalisé" dans l'onglet Couleurs et définissez chaque couleur
+                individuellement.
+                Vous pouvez même utiliser des gradients CSS pour le background.
+            </p>
+
+            <h3>Quel format pour les réseaux sociaux?</h3>
+            <p>
+                <strong>Instagram:</strong> PNG 2x ou 3x en 1:1 (post) ou 9:16 (story)<br>
+                <strong>Twitter:</strong> PNG 2x en 16:9<br>
+                <strong>Facebook:</strong> PNG 2x en 1:1 ou 16:9<br>
+                <strong>LinkedIn:</strong> PNG 1x ou 2x en 16:9 ou 4:3
+            </p>
+
+            <h3>La review doit-elle être sauvegardée avant d'utiliser Orchard?</h3>
+            <p>
+                Non! Orchard Studio fonctionne avec les données actuelles du formulaire, même si la review n'est pas
+                encore enregistrée. Parfait pour prévisualiser avant publication.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>🎨 <strong>Orchard Studio</strong> - Intégré dans Reviews-Maker</p>
+            <p style="margin-top: 15px; opacity: 0.8;">
+                Documentation complète disponible dans ORCHARD_README.md
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

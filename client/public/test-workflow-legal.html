@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Workflow Légal - Reviews Maker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .section p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        .status.deployed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.missing {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.partial {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 10px 10px 10px 0;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn.success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .code {
+            background: #2d3748;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .card p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .alert {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .alert h3 {
+            color: #856404;
+            margin-bottom: 8px;
+        }
+
+        .alert p {
+            color: #856404;
+            margin: 0;
+        }
+
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+
+        .checklist li {
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+        }
+
+        .checklist li::before {
+            content: "✓";
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #48bb78;
+            color: white;
+            text-align: center;
+            line-height: 24px;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .checklist li.pending::before {
+            content: "○";
+            background: #cbd5e0;
+            color: #4a5568;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧪 Test Workflow Légal CDC</h1>
+        <p class="subtitle">Interface de test pour les fonctionnalités de conformité déployées</p>
+
+        <div class="alert">
+            <h3>⚠️ État Actuel</h3>
+            <p>Les composants sont déployés mais NON VISIBLES car les utilisateurs existants ont legalAge/consentRDR =
+                null (au lieu de false). Les modals ne se déclenchent pas.</p>
+        </div>
+
+        <div class="section">
+            <h2>📊 Composants Déployés</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>Types de Comptes</h3>
+                    <span class="status deployed">Déployé</span>
+                    <p>Amateur, Producteur, Influenceur</p>
+                </div>
+                <div class="card">
+                    <h3>Vérification Âge</h3>
+                    <span class="status deployed">Déployé</span>
+                    <p>13 pays supportés</p>
+                </div>
+                <div class="card">
+                    <h3>Disclaimer RDR</h3>
+                    <span class="status deployed">Déployé</span>
+                    <p>12 langues disponibles</p>
+                </div>
+                <div class="card">
+                    <h3>Modals Légales</h3>
+                    <span class="status partial">Câblé</span>
+                    <p>Non visible (null !== false)</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔗 Pages Disponibles</h2>
+            <p>Toutes ces pages existent et sont déployées sur le VPS :</p>
+
+            <a href="/age-verification" class="btn">📅 Vérification d'Âge</a>
+            <a href="/disclaimer-rdr" class="btn secondary">⚠️ Disclaimer RDR</a>
+            <a href="/choose-account" class="btn success">🎯 Choix Type de Compte</a>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Problème Identifié</h2>
+            <div class="code">
+                // useAuth.js ligne 31-33
+                if (!data.legalAge) { // ❌ null !== false
+                setNeedsAgeVerification(true)
+                }
+
+                // ✅ Solution :
+                if (!data.legalAge || data.legalAge === null) {
+                setNeedsAgeVerification(true)
+                }</div>
+        </div>
+
+        <div class="section">
+            <h2>✅ Prochaines Étapes</h2>
+            <ul class="checklist">
+                <li>Corriger useAuth.js pour traiter null comme false</li>
+                <li>Reset legalAge et consentRDR à false en base</li>
+                <li>Rebuild frontend sur VPS</li>
+                <li>Redémarrage PM2</li>
+                <li class="pending">Tester le workflow complet en production</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>📋 Workflow Attendu</h2>
+            <p><strong>1. Inscription/Login</strong> → L'utilisateur se connecte via OAuth ou email</p>
+            <p><strong>2. Modal Âge</strong> → Sélection pays + date de naissance (validation 18/21 ans)</p>
+            <p><strong>3. Modal RDR</strong> → Acceptation disclaimer réduction des risques</p>
+            <p><strong>4. Type de Compte</strong> → Choix Amateur/Producteur/Influenceur (si nouveau)</p>
+            <p><strong>5. Accès App</strong> → Redirection vers /home</p>
+        </div>
+
+        <div class="section">
+            <h2>🗄️ Base de Données (4 utilisateurs)</h2>
+            <div class="code">
+                User 1: consumer (migrated to amateur)
+                - legalAge: null ❌
+                - consentRDR: null ❌
+                - birthdate: null
+
+                User 2-4: idem...
+
+                Après fix:
+                - legalAge: false ✅
+                - consentRDR: false ✅
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center; color: #666;">
+            <p>🚀 <strong>Conformité CDC: 75%</strong></p>
+            <p>Deployment ID: 74869b3 | Branch: feat/templates-backend</p>
+            <p>Generated: 14 Décembre 2025</p>
+        </div>
+    </div>
+
+    <script>
+        // Log info pour debugging
+        console.log('🧪 Test Workflow Légal - Reviews Maker');
+        console.log('📦 Composants déployés:');
+        console.log('  ✅ AgeVerificationPage.jsx');
+        console.log('  ✅ DisclaimerRDR.jsx');
+        console.log('  ✅ AccountChoicePage.jsx');
+        console.log('  ✅ useAuth.js (hook)');
+        console.log('  ⚠️  Modals non visibles (null !== false)');
+    </script>
+</body>
+
+</html>

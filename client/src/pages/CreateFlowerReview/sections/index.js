@@ -1,0 +1,12 @@
+// Re-export all sections
+export { default as InfosGenerales } from './InfosGenerales'
+export { default as Genetiques } from './Genetiques'
+export { default as VisuelTechnique } from './VisuelTechnique'
+export { default as Odeurs } from './Odeurs'
+export { default as Texture } from './Texture'
+export { default as Gouts } from './Gouts'
+export { default as Effets } from './Effets'
+export { default as Experience } from './Experience'
+export { default as PipelineCulture } from './PipelineCulture'
+export { default as PipelineCuring } from './PipelineCuring'
+export { default as Validation } from './Validation'

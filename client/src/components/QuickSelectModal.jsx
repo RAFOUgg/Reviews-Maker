@@ -48,7 +48,7 @@ export default function QuickSelectModal({ open, onClose, items = [], onApply, m
                     {filtered.map(item => {
                         const active = selected.find(s => s.id === item.id)
                         return (
-                            <button key={item.id} onClick={() => toggleSelect(item)} className={`text-left p-2 rounded-md border ${active ? 'bg-green-600 text-white border-green-600' : 'bg-gray-800 text-gray-200 border-gray-700'} transition-colors`}>
+                            <button key={item.id} onClick={() => toggleSelect(item)} className={`text-left p-2 rounded-md border ${active ? 'bg-transparent text-white border-white/40 glow-text-subtle' : 'bg-transparent text-white/70 border-white/20'} transition-colors`}>
                                 <div className="font-semibold text-sm">{item.label}</div>
                                 {item.category && <div className="text-xs text-gray-400">{item.category}</div>}
                             </button>
@@ -58,7 +58,7 @@ export default function QuickSelectModal({ open, onClose, items = [], onApply, m
 
                 <div className="flex items-center justify-end gap-2">
                     <button onClick={onClose} className="px-4 py-2 rounded-md bg-gray-800 text-gray-300">Annuler</button>
-                    <button onClick={apply} className="px-4 py-2 rounded-md bg-green-600 text-white">Appliquer ({selected.length})</button>
+                    <button onClick={apply} className="px-4 py-2 rounded-md bg-transparent border border-white/40 text-white glow-container-subtle hover:glow-text">Appliquer ({selected.length})</button>
                 </div>
             </div>
         </div>

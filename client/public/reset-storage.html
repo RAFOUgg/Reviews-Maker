@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Orchard Storage</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+
+        button:hover {
+            background: #059669;
+        }
+
+        .warning {
+            background: #f59e0b;
+        }
+
+        .warning:hover {
+            background: #d97706;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔧 Reset Orchard Storage</h1>
+        <p>Cette page permet de réinitialiser le localStorage d'Orchard Studio pour forcer la migration vers la version
+            3 avec 80+ modules.</p>
+
+        <h3>État actuel :</h3>
+        <div id="currentState"></div>
+
+        <div style="margin: 20px 0;">
+            <button onclick="inspectStorage()">🔍 Inspecter le Storage</button>
+            <button onclick="resetStorage()" class="warning">🗑️ Réinitialiser Orchard Storage</button>
+            <button onclick="resetAll()" class="warning">⚠️ Tout Réinitialiser (localStorage complet)</button>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function inspectStorage() {
+            const orchardData = localStorage.getItem('orchard-storage');
+            const result = document.getElementById('result');
+
+            if (!orchardData) {
+                result.innerHTML = '<p>❌ Aucune donnée Orchard trouvée dans localStorage</p>';
+                return;
+            }
+
+            try {
+                const parsed = JSON.parse(orchardData);
+                const modulesCount = Object.keys(parsed.state?.config?.contentModules || {}).length;
+                const version = parsed.version || 'unknown';
+
+                result.innerHTML = `
+                    <h4>📊 Données actuelles :</h4>
+                    <ul>
+                        <li>Version: <strong>${version}</strong></li>
+                        <li>Modules actifs: <strong>${modulesCount}</strong></li>
+                        <li>Presets: <strong>${parsed.state?.presets?.length || 0}</strong></li>
+                    </ul>
+                    <pre>${JSON.stringify(parsed, null, 2)}</pre>
+                `;
+            } catch (e) {
+                result.innerHTML = `<p>❌ Erreur de parsing: ${e.message}</p>`;
+            }
+        }
+
+        function resetStorage() {
+            const result = document.getElementById('result');
+
+            try {
+                localStorage.removeItem('orchard-storage');
+                result.innerHTML = `
+                    <h4>✅ Storage Orchard réinitialisé !</h4>
+                    <p>La prochaine fois que vous ouvrirez Orchard Studio, la migration vers v3 sera forcée avec 80+ modules.</p>
+                    <button onclick="location.href='/reviews/client/'">🔄 Retour à l'application</button>
+                `;
+            } catch (e) {
+                result.innerHTML = `<p>❌ Erreur: ${e.message}</p>`;
+            }
+        }
+
+        function resetAll() {
+            if (!confirm('⚠️ Cela supprimera TOUTES les données du localStorage. Continuer ?')) {
+                return;
+            }
+
+            const result = document.getElementById('result');
+
+            try {
+                localStorage.clear();
+                result.innerHTML = `
+                    <h4>✅ localStorage entièrement vidé !</h4>
+                    <p>Toutes les données locales ont été supprimées.</p>
+                    <button onclick="location.href='/reviews/client/'">🔄 Retour à l'application</button>
+                `;
+            } catch (e) {
+                result.innerHTML = `<p>❌ Erreur: ${e.message}</p>`;
+            }
+        }
+
+        function updateCurrentState() {
+            const orchardData = localStorage.getItem('orchard-storage');
+            const stateDiv = document.getElementById('currentState');
+
+            if (!orchardData) {
+                stateDiv.innerHTML = '<p style="color: #ef4444;">❌ Aucune donnée Orchard</p>';
+                return;
+            }
+
+            try {
+                const parsed = JSON.parse(orchardData);
+                const modulesCount = Object.keys(parsed.state?.config?.contentModules || {}).length;
+                const version = parsed.version || 'unknown';
+
+                stateDiv.innerHTML = `
+                    <p>Version: <strong>${version}</strong> | Modules: <strong>${modulesCount}</strong></p>
+                `;
+            } catch (e) {
+                stateDiv.innerHTML = `<p style="color: #ef4444;">❌ Erreur</p>`;
+            }
+        }
+
+        // Update on load
+        updateCurrentState();
+    </script>
+</body>
+
+</html>

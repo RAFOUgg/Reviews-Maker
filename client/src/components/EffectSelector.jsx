@@ -14,24 +14,11 @@ export default function EffectSelector({
     const [selectedItems, setSelectedItems] = useState([])
     const [filterType, setFilterType] = useState('all') // 'all', 'positive', 'negative'
 
+    // Icônes pour les catégories d'effets
     const categoryThemes = {
-        mental: {
-            gradient: 'from-purple-500 to-pink-500',
-            icon: '🧠',
-            positiveColor: 'bg-purple-500',
-            negativeColor: 'bg-pink-600'
-        },
-        physical: {
-            gradient: 'from-blue-500 to-cyan-500',
-            icon: '💪',
-            positiveColor: 'bg-blue-500',
-            negativeColor: 'bg-cyan-600'
-        },
-        therapeutic: {
-            gradient: 'from-green-500 to-emerald-500',
-            icon: '🌿',
-            color: 'bg-green-500'
-        }
+        mental: { icon: '🧠' },
+        physical: { icon: '💪' },
+        therapeutic: { icon: '🌿' }
     }
 
     useEffect(() => {
@@ -75,36 +62,54 @@ export default function EffectSelector({
             {/* Header avec filtres et compteur */}
             <div className="flex items-center gap-3 flex-wrap">
                 {/* Filtres */}
-                <div className="flex gap-2 bg-gray-900/50 rounded-lg p-1">
+                <div className="flex gap-2 rounded-lg p-1" style={{ backgroundColor: 'var(--bg-secondary)' }}>
                     <button
                         type="button"
                         onClick={() => setFilterType('all')}
-                        className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${filterType === 'all' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
-                            }`}
+                        className="px-3 py-1.5 rounded text-sm font-medium transition-all border"
+                        style={{
+                            backgroundColor: 'transparent',
+                            borderColor: filterType === 'all' ? 'var(--border)' : 'transparent',
+                            color: filterType === 'all' ? 'var(--text-primary)' : 'var(--text-secondary)'
+                        }}
                     >
                         Tous
                     </button>
                     <button
                         type="button"
                         onClick={() => setFilterType('positive')}
-                        className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${filterType === 'positive' ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
-                            }`}
+                        className="px-3 py-1.5 rounded text-sm font-medium transition-all border"
+                        style={{
+                            backgroundColor: 'transparent',
+                            borderColor: filterType === 'positive' ? 'var(--border)' : 'transparent',
+                            color: filterType === 'positive' ? 'var(--text-primary)' : 'var(--text-secondary)'
+                        }}
                     >
                         ✓ Positifs
                     </button>
                     <button
                         type="button"
                         onClick={() => setFilterType('negative')}
-                        className={`px-3 py-1.5 rounded text-sm font-medium transition-all ${filterType === 'negative' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'
-                            }`}
+                        className="px-3 py-1.5 rounded text-sm font-medium transition-all border"
+                        style={{
+                            backgroundColor: 'transparent',
+                            borderColor: filterType === 'negative' ? 'var(--border)' : 'transparent',
+                            color: filterType === 'negative' ? 'var(--text-primary)' : 'var(--text-secondary)'
+                        }}
                     >
                         ✗ Négatifs
                     </button>
                 </div>
 
                 {/* Compteur */}
-                <div className={`ml-auto px-4 py-1.5 rounded-lg text-sm font-semibold ${selectedItems.length >= maxSelections ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'
-                    }`}>
+                <div
+                    className="ml-auto px-4 py-1.5 rounded-lg text-sm font-semibold border transition-all"
+                    style={{
+                        backgroundColor: 'transparent',
+                        borderColor: selectedItems.length >= maxSelections ? 'var(--accent)' : 'var(--border)',
+                        color: selectedItems.length >= maxSelections ? 'var(--accent)' : 'var(--text-primary)'
+                    }}
+                >
                     {selectedItems.length}/{maxSelections}
                 </div>
 
@@ -112,7 +117,7 @@ export default function EffectSelector({
                     <button
                         type="button"
                         onClick={clearAll}
-                        className="px-3 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                        className="px-3 py-1.5 text-sm bg-[rgba(220,38,38,0.15)] hover:bg-[rgba(220,38,38,0.3)] text-[rgb(220,38,38)] rounded-lg transition-colors border border-[rgba(220,38,38,0.3)]"
                     >
                         × Effacer
                     </button>
@@ -121,13 +126,17 @@ export default function EffectSelector({
 
             {/* Sélections actives */}
             {selectedItems.length > 0 && (
-                <div className="flex flex-wrap gap-2 p-3 bg-green-500/10 rounded-lg border border-green-500/30">
+                <div className="flex flex-wrap gap-2 p-3 bg-transparent rounded-lg border" style={{ borderColor: 'var(--border)' }}>
                     {selectedItems.map((item, idx) => (
                         <button
                             key={idx}
                             type="button"
                             onClick={() => toggleItem(item)}
-                            className="group px-3 py-1.5 bg-green-600 hover:bg-green-500 rounded-lg text-white text-sm font-medium transition-all shadow-lg shadow-green-600/20"
+                            className="group px-3 py-1.5 bg-transparent border rounded-lg text-sm font-medium transition-all"
+                            style={{
+                                borderColor: 'var(--border)',
+                                color: 'var(--text-primary)'
+                            }}
                         >
                             {item}
                             <span className="ml-2 opacity-60 group-hover:opacity-100">×</span>
@@ -140,9 +149,9 @@ export default function EffectSelector({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Mental */}
                 <div className="space-y-3">
-                    <div className="flex items-center gap-2 pb-2 border-b border-gray-700">
+                    <div className="flex items-center gap-2 pb-2 border-b border-theme">
                         <span className="text-2xl">{categoryThemes.mental.icon}</span>
-                        <h3 className={`font-semibold bg-gradient-to-r ${categoryThemes.mental.gradient} bg-clip-text text-transparent`}>
+                        <h3 className="font-bold text-[rgb(var(--color-primary))]">
                             {effectsData.mental.label}
                         </h3>
                     </div>
@@ -150,7 +159,7 @@ export default function EffectSelector({
                     {/* Effets positifs */}
                     {(filterType === 'all' || filterType === 'positive') && (
                         <div className="space-y-2">
-                            <div className="text-xs text-gray-400 uppercase tracking-wide">Positifs</div>
+                            <div className="text-xs text-[rgb(var(--text-secondary))] opacity-70 uppercase tracking-wide">Positifs</div>
                             <div className="flex flex-wrap gap-2">
                                 {effectsData.mental.positive.map(effect => {
                                     const isSelected = selectedItems.includes(effect)
@@ -160,8 +169,8 @@ export default function EffectSelector({
                                             type="button"
                                             onClick={() => toggleItem(effect)}
                                             className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                                    ? `${categoryThemes.mental.positiveColor} text-white shadow-md`
-                                                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
+                                                ? 'bg-[rgb(var(--color-accent))] text-white shadow-lg shadow-[rgba(var(--color-accent),0.4)]'
+                                                : 'bg-theme-secondary text-[rgb(var(--text-primary))] hover:bg-theme-tertiary border border-theme'
                                                 }`}
                                         >
                                             {effect}
@@ -175,7 +184,7 @@ export default function EffectSelector({
                     {/* Effets négatifs */}
                     {(filterType === 'all' || filterType === 'negative') && (
                         <div className="space-y-2">
-                            <div className="text-xs text-gray-400 uppercase tracking-wide">Négatifs</div>
+                            <div className="text-xs uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>Négatifs</div>
                             <div className="flex flex-wrap gap-2">
                                 {effectsData.mental.negative.map(effect => {
                                     const isSelected = selectedItems.includes(effect)
@@ -184,10 +193,13 @@ export default function EffectSelector({
                                             key={effect}
                                             type="button"
                                             onClick={() => toggleItem(effect)}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                                    ? `${categoryThemes.mental.negativeColor} text-white shadow-md`
-                                                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
-                                                }`}
+                                            className="px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
+                                            style={{
+                                                backgroundColor: isSelected ? 'var(--primary)' : 'var(--bg-tertiary)',
+                                                color: isSelected ? '#FFFFFF' : 'var(--text-secondary)',
+                                                border: '1px solid',
+                                                borderColor: isSelected ? 'var(--primary)' : 'var(--border)'
+                                            }}
                                         >
                                             {effect}
                                         </button>
@@ -200,16 +212,16 @@ export default function EffectSelector({
 
                 {/* Physical */}
                 <div className="space-y-3">
-                    <div className="flex items-center gap-2 pb-2 border-b border-gray-700">
+                    <div className="flex items-center gap-2 pb-2 border-b border-theme">
                         <span className="text-2xl">{categoryThemes.physical.icon}</span>
-                        <h3 className={`font-semibold bg-gradient-to-r ${categoryThemes.physical.gradient} bg-clip-text text-transparent`}>
+                        <h3 className="font-bold text-[rgb(var(--color-primary))]">
                             {effectsData.physical.label}
                         </h3>
                     </div>
 
                     {(filterType === 'all' || filterType === 'positive') && (
                         <div className="space-y-2">
-                            <div className="text-xs text-gray-400 uppercase tracking-wide">Positifs</div>
+                            <div className="text-xs uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>Positifs</div>
                             <div className="flex flex-wrap gap-2">
                                 {effectsData.physical.positive.map(effect => {
                                     const isSelected = selectedItems.includes(effect)
@@ -218,10 +230,13 @@ export default function EffectSelector({
                                             key={effect}
                                             type="button"
                                             onClick={() => toggleItem(effect)}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                                    ? `${categoryThemes.physical.positiveColor} text-white shadow-md`
-                                                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
-                                                }`}
+                                            className="px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
+                                            style={{
+                                                backgroundColor: isSelected ? 'var(--primary)' : 'var(--bg-tertiary)',
+                                                color: isSelected ? '#FFFFFF' : 'var(--text-secondary)',
+                                                border: '1px solid',
+                                                borderColor: isSelected ? 'var(--primary)' : 'var(--border)'
+                                            }}
                                         >
                                             {effect}
                                         </button>
@@ -233,7 +248,7 @@ export default function EffectSelector({
 
                     {(filterType === 'all' || filterType === 'negative') && (
                         <div className="space-y-2">
-                            <div className="text-xs text-gray-400 uppercase tracking-wide">Négatifs</div>
+                            <div className="text-xs uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>Négatifs</div>
                             <div className="flex flex-wrap gap-2">
                                 {effectsData.physical.negative.map(effect => {
                                     const isSelected = selectedItems.includes(effect)
@@ -242,10 +257,13 @@ export default function EffectSelector({
                                             key={effect}
                                             type="button"
                                             onClick={() => toggleItem(effect)}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                                    ? `${categoryThemes.physical.negativeColor} text-white shadow-md`
-                                                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
-                                                }`}
+                                            className="px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
+                                            style={{
+                                                backgroundColor: isSelected ? 'var(--primary)' : 'var(--bg-tertiary)',
+                                                color: isSelected ? '#FFFFFF' : 'var(--text-secondary)',
+                                                border: '1px solid',
+                                                borderColor: isSelected ? 'var(--primary)' : 'var(--border)'
+                                            }}
                                         >
                                             {effect}
                                         </button>
@@ -258,9 +276,9 @@ export default function EffectSelector({
 
                 {/* Therapeutic */}
                 <div className="space-y-3">
-                    <div className="flex items-center gap-2 pb-2 border-b border-gray-700">
+                    <div className="flex items-center gap-2 pb-2 border-b border-theme">
                         <span className="text-2xl">{categoryThemes.therapeutic.icon}</span>
-                        <h3 className={`font-semibold bg-gradient-to-r ${categoryThemes.therapeutic.gradient} bg-clip-text text-transparent`}>
+                        <h3 className="font-bold text-[rgb(var(--color-primary))]">
                             {effectsData.therapeutic.label}
                         </h3>
                     </div>
@@ -273,10 +291,13 @@ export default function EffectSelector({
                                     key={effect}
                                     type="button"
                                     onClick={() => toggleItem(effect)}
-                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                            ? `${categoryThemes.therapeutic.color} text-white shadow-md`
-                                            : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
-                                        }`}
+                                    className="px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
+                                    style={{
+                                        backgroundColor: isSelected ? 'var(--accent)' : 'var(--bg-tertiary)',
+                                        color: isSelected ? '#FFFFFF' : 'var(--text-secondary)',
+                                        border: '1px solid',
+                                        borderColor: isSelected ? 'var(--accent)' : 'var(--border)'
+                                    }}
                                 >
                                     {effect}
                                 </button>

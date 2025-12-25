@@ -7,7 +7,7 @@ const prisma = new PrismaClient()
  * Utilise passport et express-session pour les sessions persistantes
  */
 export const requireAuth = (req, res, next) => {
-    if (!req.isAuthenticated()) {
+    if (typeof req.isAuthenticated !== 'function' || !req.isAuthenticated()) {
         return res.status(401).json({
             error: 'unauthorized',
             message: 'Authentication required'
@@ -29,13 +29,13 @@ export const optionalAuth = (req, res, next) => {
  */
 export const checkOwnershipOrAdmin = async (req, res, next) => {
     try {
-        if (!req.isAuthenticated()) {
+        // Ensure req.isAuthenticated exists and can be called
+        if (typeof req.isAuthenticated !== 'function' || !req.isAuthenticated()) {
             return res.status(401).json({
                 error: 'unauthorized',
                 message: 'Authentication required'
             })
         }
-
         const { id } = req.params // ID de la ressource (review, etc.)
         const { resourceType = 'review' } = req.body // Type de ressource
 
@@ -75,8 +75,15 @@ export const checkOwnershipOrAdmin = async (req, res, next) => {
  * Middleware pour logger les requêtes authentifiées
  */
 export const logAuthRequest = (req, res, next) => {
-    if (req.isAuthenticated()) {
-        console.log(`[AUTH] ${req.method} ${req.path} - User: ${req.user.username} (${req.user.discordId})`)
+    try {
+        // Guard in case Passport hasn't been applied yet
+        const isAuth = typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : false
+        if (isAuth && req.user) {
+            console.log(`[AUTH] ${req.method} ${req.path} - User: ${req.user.username} (${req.user.discordId})`)
+        }
+    } catch (err) {
+        // Do not let logging break requests
+        console.warn('logAuthRequest: unable to read auth state', err.message)
     }
     next()
 }

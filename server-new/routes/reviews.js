@@ -4,6 +4,11 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import fs from 'fs/promises'
 import { prisma } from '../server.js'
+import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } from '../utils/errorHandler.js'
+import { formatReview, formatReviews, prepareReviewData, buildReviewFilters, extractImageFilenames, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
+import { validateReviewData, validateReviewId } from '../utils/validation.js'
+import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js'
+import { EXPORT_LIMITS } from '../middleware/permissions.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -38,654 +43,722 @@ const upload = multer({
 
 // Middleware pour vérifier l'authentification
 const requireAuth = (req, res, next) => {
-    if (!req.isAuthenticated()) {
+    const _isAuthFunc = typeof req.isAuthenticated === 'function'
+    if (!_isAuthFunc || !req.isAuthenticated()) {
         return res.status(401).json({ error: 'Authentication required' })
     }
     next()
 }
 
 // GET /api/reviews - Liste toutes les reviews (publiques + privées de l'user)
-router.get('/', async (req, res) => {
-    try {
-        const { type, search, sortBy = 'createdAt', order = 'desc' } = req.query
+router.get('/', asyncHandler(async (req, res) => {
+    const { type, search, sortBy = 'createdAt', order = 'desc', publicOnly, hasOrchard, userId } = req.query
 
-        const where = {
-            OR: [
-                { isPublic: true },
-                ...(req.isAuthenticated() ? [{ authorId: req.user.id }] : [])
-            ],
-            ...(type && type !== 'all' ? { type } : {}),
-            ...(search ? {
-                OR: [
-                    { holderName: { contains: search, mode: 'insensitive' } },
-                    { description: { contains: search, mode: 'insensitive' } }
-                ]
-            } : {})
-        }
+    // Valider les paramètres de tri
+    const validSortFields = ['createdAt', 'updatedAt', 'note', 'holderName']
+    const validOrders = ['asc', 'desc']
 
-        const reviews = await prisma.review.findMany({
-            where,
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatar: true,
-                        discordId: true
-                    }
-                },
-                likes: true // Inclure tous les likes pour calculer les stats
-            },
-            orderBy: { [sortBy]: order }
-        })
+    const safeSortBy = validSortFields.includes(sortBy) ? sortBy : 'createdAt'
+    const safeOrder = validOrders.includes(order) ? order : 'desc'
 
-        // Parser les champs JSON et formater les données
-        const formattedReviews = reviews.map(review => {
-            // Calculer les likes et dislikes
-            const likesCount = review.likes.filter(like => like.isLike).length
-            const dislikesCount = review.likes.filter(like => !like.isLike).length
+    // Construire les filtres de recherche
+    const currentUser = (typeof req.isAuthenticated === 'function' && req.isAuthenticated()) ? req.user : null
+    const where = buildReviewFilters(
+        { type, search, publicOnly, hasOrchard, userId },
+        currentUser
+    )
 
-            // Vérifier si l'utilisateur a liké/disliké cette review
-            let userLikeState = null
-            if (req.isAuthenticated()) {
-                const userLike = review.likes.find(like => like.userId === req.user.id)
-                userLikeState = userLike ? (userLike.isLike ? 'like' : 'dislike') : null
-            }
-
-            return {
-                ...review,
-                terpenes: review.terpenes ? JSON.parse(review.terpenes) : [],
-                tastes: review.tastes ? JSON.parse(review.tastes) : [],
-                aromas: review.aromas ? JSON.parse(review.aromas) : [],
-                effects: review.effects ? JSON.parse(review.effects) : [],
-                images: review.images ? JSON.parse(review.images) : [],
-                ratings: review.ratings ? JSON.parse(review.ratings) : null,
-                mainImageUrl: review.mainImage ? `/images/${review.mainImage}` : null,
-                likesCount,
-                dislikesCount,
-                userLikeState,
-                likes: undefined, // Retirer le tableau de likes pour ne pas exposer les IDs users
-                author: {
-                    ...review.author,
-                    avatar: review.author.avatar
-                        ? `https://cdn.discordapp.com/avatars/${review.author.discordId}/${review.author.avatar}.png`
-                        : null
+    const reviews = await prisma.review.findMany({
+        where,
+        include: {
+            author: {
+                select: {
+                    id: true,
+                    username: true,
+                    avatar: true,
+                    discordId: true
                 }
-            }
-        })
+            },
+            likes: true // Inclure tous les likes pour calculer les stats
+        },
+        orderBy: { [safeSortBy]: safeOrder }
+    })
 
-        res.json(formattedReviews)
-    } catch (error) {
-        console.error('Error fetching reviews:', error)
-        res.status(500).json({ error: 'Failed to fetch reviews' })
-    }
-})
+    // Formater les reviews avec le helper centralisé
+    let formattedReviews = formatReviews(reviews, currentUser)
+    // Exposer orchardConfig/preset si présents
+    formattedReviews = formattedReviews.map(r => liftOrchardFromExtra(r))
+
+    res.json(formattedReviews)
+}))
 
 // GET /api/reviews/my - Récupérer les reviews de l'utilisateur connecté
-router.get('/my', requireAuth, async (req, res) => {
-    try {
-        const reviews = await prisma.review.findMany({
-            where: { authorId: req.user.id },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatar: true,
-                        discordId: true
-                    }
+router.get('/my', requireAuth, asyncHandler(async (req, res) => {
+    const reviews = await prisma.review.findMany({
+        where: { authorId: req.user.id },
+        include: {
+            author: {
+                select: {
+                    id: true,
+                    username: true,
+                    avatar: true,
+                    discordId: true
                 }
-            },
-            orderBy: { createdAt: 'desc' }
-        })
+            }
+        },
+        orderBy: { createdAt: 'desc' }
+    })
 
-        const formattedReviews = reviews.map(review => ({
-            ...review,
-            terpenes: review.terpenes ? JSON.parse(review.terpenes) : [],
-            tastes: review.tastes ? JSON.parse(review.tastes) : [],
-            aromas: review.aromas ? JSON.parse(review.aromas) : [],
-            effects: review.effects ? JSON.parse(review.effects) : [],
-            images: review.images ? JSON.parse(review.images) : [],
-            ratings: review.ratings ? JSON.parse(review.ratings) : null,
-            mainImageUrl: review.mainImage ? `/images/${review.mainImage}` : null,
-            ownerName: review.author.username,
-            ownerId: review.author.id
-        }))
+    const formattedReviews = formatReviews(reviews, req.user)
 
-        res.json(formattedReviews)
-    } catch (error) {
-        console.error('Error fetching user reviews:', error)
-        res.status(500).json({ error: 'Failed to fetch reviews' })
-    }
-})
+    // Ajouter les métadonnées spécifiques pour "mes reviews"
+    const reviewsWithMeta = formattedReviews.map(review => ({
+        ...review,
+        ownerName: review.author.username,
+        ownerId: review.author.id
+    }))
+
+    res.json(reviewsWithMeta)
+}))
 
 // GET /api/reviews/:id - Récupérer une review spécifique
-router.get('/:id', async (req, res) => {
-    try {
-        const review = await prisma.review.findUnique({
-            where: { id: req.params.id },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatar: true,
-                        discordId: true
-                    }
+router.get('/:id', asyncHandler(async (req, res) => {
+    console.log(`🔍 GET /api/reviews/${req.params.id}`)
+    console.log('👤 Authenticated:', typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : false)
+    console.log('👤 User:', req.user ? { id: req.user.id, username: req.user.username } : null)
+
+    // Valider l'ID
+    if (!validateReviewId(req.params.id)) {
+        console.error('❌ Invalid review ID format:', req.params.id)
+        throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
+    }
+
+    const review = await prisma.review.findUnique({
+        where: { id: req.params.id },
+        include: {
+            author: {
+                select: {
+                    id: true,
+                    username: true,
+                    avatar: true,
+                    discordId: true
                 }
             }
-        })
-
-        if (!review) {
-            return res.status(404).json({ error: 'Review not found' })
         }
+    })
 
-        // Vérifier les permissions
-        if (!review.isPublic && (!req.isAuthenticated() || review.authorId !== req.user.id)) {
-            return res.status(403).json({ error: 'Access denied' })
-        }
-
-        // Parser les champs JSON
-        const formattedReview = {
-            ...review,
-            terpenes: review.terpenes ? JSON.parse(review.terpenes) : [],
-            tastes: review.tastes ? JSON.parse(review.tastes) : [],
-            aromas: review.aromas ? JSON.parse(review.aromas) : [],
-            effects: review.effects ? JSON.parse(review.effects) : [],
-            images: review.images ? JSON.parse(review.images) : [],
-            ratings: review.ratings ? JSON.parse(review.ratings) : null,
-            mainImageUrl: review.mainImage ? `/images/${review.mainImage}` : null,
-            author: {
-                ...review.author,
-                avatar: review.author.avatar
-                    ? `https://cdn.discordapp.com/avatars/${review.author.discordId}/${review.author.avatar}.png`
-                    : null
-            }
-        }
-
-        res.json(formattedReview)
-    } catch (error) {
-        console.error('Error fetching review:', error)
-        res.status(500).json({ error: 'Failed to fetch review' })
+    if (!review) {
+        console.error('❌ Review not found:', req.params.id)
+        throw Errors.REVIEW_NOT_FOUND()
     }
-})
+
+    console.log('📄 Review found:', { id: review.id, authorId: review.authorId, isPublic: review.isPublic })
+
+    // Vérifier les permissions pour les reviews privées
+    const isAuthenticated = typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : false
+    const currentUser = isAuthenticated ? req.user : null
+
+    if (!review.isPublic && (!isAuthenticated || !currentUser || review.authorId !== currentUser.id)) {
+        console.error('🚫 Access forbidden:', {
+            isPublic: review.isPublic,
+            isAuthenticated,
+            reviewAuthorId: review.authorId,
+            currentUserId: currentUser?.id
+        })
+        throw Errors.FORBIDDEN()
+    }
+
+    // Formater la review
+    let formattedReview = formatReview(review, currentUser)
+
+    formattedReview = liftOrchardFromExtra(formattedReview)
+
+    // ✅ S'assurer que authorId est toujours présent
+    if (!formattedReview.authorId) {
+        formattedReview.authorId = review.authorId
+    }
+
+    console.log('✅ Sending review:', { id: formattedReview.id, authorId: formattedReview.authorId })
+
+    res.json(formattedReview)
+}))
 
 // POST /api/reviews - Créer une nouvelle review
-router.post('/', requireAuth, upload.array('images', 10), async (req, res) => {
-    try {
-        console.log('📝 Creating review with data:', JSON.stringify(req.body, null, 2));
-        console.log('📎 Files uploaded:', req.files?.length || 0);
+router.post('/', requireAuth, upload.array('images', 10), asyncHandler(async (req, res) => {
+    console.log('📝 Creating review with data:', JSON.stringify(req.body, null, 2))
+    console.log('📎 Files uploaded:', req.files?.length || 0)
 
-        const {
-            holderName,
-            type,
-            description,
-            note,
-            overallRating,
-            ratings,
-            terpenes,
-            tastes,
-            aromas,
-            effects,
-            strainType,
-            indicaRatio,
-            isPublic = true,
-            isPrivate = false,
-            // Nouveaux champs pour Hash/Concentré
-            cultivarsList,
-            pipelineExtraction,
-            pipelineSeparation,
-            purgevide,
-            hashmaker,
-            breeder,
-            farm,
-            cultivars,
-            // Autres champs possibles
-            ...otherFields
-        } = req.body
+    // Vérifier les limites de reviews pour les comptes consumer
+    const accountType = getUserAccountType(req.user);
+    const limits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.CONSUMER];
+    const visibility = req.body.visibility || 'private';
 
-        if (!holderName || !type) {
-            return res.status(400).json({ error: 'holderName and type are required' })
-        }
-
-        // Traiter les images uploadées
-        const imageFilenames = req.files?.map(file => file.filename) || []
-        const mainImage = imageFilenames[0] || null
-
-        // Préparer les données à stocker
-        const reviewData = {
-            holderName,
-            type,
-            description,
-            note: overallRating ? parseFloat(overallRating) : (note ? parseFloat(note) : null),
-            ratings: ratings ? (typeof ratings === 'string' ? ratings : JSON.stringify(ratings)) : null,
-            terpenes: terpenes ? (typeof terpenes === 'string' ? terpenes : JSON.stringify(terpenes)) : null,
-            tastes: tastes ? (typeof tastes === 'string' ? tastes : JSON.stringify(tastes)) : null,
-            aromas: aromas ? (typeof aromas === 'string' ? aromas : JSON.stringify(aromas)) : null,
-            effects: effects ? (typeof effects === 'string' ? effects : JSON.stringify(effects)) : null,
-            strainType,
-            indicaRatio: indicaRatio ? parseInt(indicaRatio) : null,
-            images: JSON.stringify(imageFilenames),
-            mainImage,
-            isPublic: isPublic === 'true' || isPublic === true,
-            isPrivate: isPrivate === 'true' || isPrivate === true,
-            authorId: req.user.id
-        };
-
-        // Ajouter les champs spécifiques Hash/Concentré s'ils existent
-        if (cultivarsList) {
-            reviewData.cultivarsList = typeof cultivarsList === 'string' ? cultivarsList : JSON.stringify(cultivarsList);
-        }
-        if (pipelineExtraction) {
-            reviewData.pipelineExtraction = typeof pipelineExtraction === 'string' ? pipelineExtraction : JSON.stringify(pipelineExtraction);
-        }
-        if (pipelineSeparation) {
-            reviewData.pipelineSeparation = typeof pipelineSeparation === 'string' ? pipelineSeparation : JSON.stringify(pipelineSeparation);
-        }
-        if (purgevide !== undefined) {
-            reviewData.purgevide = purgevide === 'true' || purgevide === true;
-        }
-        if (hashmaker) reviewData.hashmaker = hashmaker;
-        if (breeder) reviewData.breeder = breeder;
-        if (farm) reviewData.farm = farm;
-        if (cultivars) reviewData.cultivars = cultivars;
-
-        // Stocker tous les autres champs dans un JSON "extraData"
-        const extraData = {};
-        for (const [key, value] of Object.entries(otherFields)) {
-            if (value !== undefined && value !== null && value !== '') {
-                extraData[key] = value;
+    // Vérifier limite reviews privées
+    if (visibility === 'private' && limits.reviews !== -1) {
+        const privateCount = await prisma.review.count({
+            where: {
+                authorId: req.user.id,
+                visibility: 'private'
             }
-        }
-        if (Object.keys(extraData).length > 0) {
-            reviewData.extraData = JSON.stringify(extraData);
-        }
+        });
 
-        console.log('💾 Data to save:', JSON.stringify(reviewData, null, 2));
+        if (privateCount >= limits.reviews) {
+            return res.status(403).json({
+                error: 'review_limit_reached',
+                message: `Vous avez atteint la limite de ${limits.reviews} reviews privées.`,
+                limit: limits.reviews,
+                current: privateCount,
+                upgradeRequired: true,
+                upgradeType: 'influencer'
+            });
+        }
+    }
 
-        const review = await prisma.review.create({
-            data: reviewData,
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatar: true,
-                        discordId: true
-                    }
+    // Vérifier limite reviews publiques
+    if (visibility === 'public' && limits.publicReviews !== -1) {
+        const publicCount = await prisma.review.count({
+            where: {
+                authorId: req.user.id,
+                visibility: 'public'
+            }
+        });
+
+        if (publicCount >= limits.publicReviews) {
+            return res.status(403).json({
+                error: 'public_review_limit_reached',
+                message: `Vous avez atteint la limite de ${limits.publicReviews} reviews publiques.`,
+                limit: limits.publicReviews,
+                current: publicCount,
+                upgradeRequired: true,
+                upgradeType: 'influencer'
+            });
+        }
+    }
+
+    // Valider les données de la review
+    const validation = validateReviewData(req.body)
+
+    if (!validation.valid) {
+        throw Errors.VALIDATION_ERROR(validation.errors)
+    }
+
+    // Traiter les images uploadées
+    const imageFilenames = req.files?.map(file => file.filename) || []
+
+    // Au moins une image est requise (selon les specs métier)
+    if (imageFilenames.length === 0) {
+        throw Errors.MISSING_FIELD('images')
+    }
+
+    const mainImage = imageFilenames[0]
+
+    // Collecter les champs supplémentaires (extraData) pour persister orchardConfig/orchardPreset etc.
+    const extraData = {}
+    for (const [key, value] of Object.entries(req.body)) {
+        // Ne pas recopier les champs déjà nettoyés par la validation
+        if (Object.prototype.hasOwnProperty.call(validation.cleaned, key)) continue
+        if (key === 'images' || key === 'existingImages') continue
+        if (value !== undefined && value !== null && value !== '') {
+            extraData[key] = value
+        }
+    }
+
+    // Préparer les données pour Prisma en incluant les champs validés + images + extraData
+    const reviewDataRaw = {
+        ...validation.cleaned,
+        images: imageFilenames,
+        mainImage,
+        authorId: req.user.id
+    }
+
+    if (Object.keys(extraData).length > 0) {
+        reviewDataRaw.extraData = JSON.stringify(extraData)
+    }
+
+    const reviewData = prepareReviewData(reviewDataRaw)
+
+    console.log('💾 Data to save:', JSON.stringify(reviewData, null, 2))
+
+    // Créer la review en base
+    const review = await prisma.review.create({
+        data: reviewData,
+        include: {
+            author: {
+                select: {
+                    id: true,
+                    username: true,
+                    avatar: true,
+                    discordId: true
                 }
             }
-        })
+        }
+    })
 
-        res.status(201).json({
-            ...review,
-            terpenes: review.terpenes ? JSON.parse(review.terpenes) : [],
-            tastes: review.tastes ? JSON.parse(review.tastes) : [],
-            aromas: review.aromas ? JSON.parse(review.aromas) : [],
-            effects: review.effects ? JSON.parse(review.effects) : [],
-            images: review.images ? JSON.parse(review.images) : [],
-            ratings: review.ratings ? JSON.parse(review.ratings) : null,
-            mainImageUrl: review.mainImage ? `/images/${review.mainImage}` : null
-        })
-    } catch (error) {
-        console.error('Error creating review:', error)
-        res.status(500).json({ error: 'Failed to create review' })
-    }
-})
+    // Formater et retourner
+    let formattedReview = formatReview(review, req.user)
+    formattedReview = liftOrchardFromExtra(formattedReview)
+
+    res.status(201).json(formattedReview)
+}))
 
 // PUT /api/reviews/:id - Mettre à jour une review
-router.put('/:id', requireAuth, upload.array('images', 10), async (req, res) => {
+router.put('/:id', requireAuth, upload.array('images', 10), asyncHandler(async (req, res) => {
+    console.log(`🔁 PUT /api/reviews/${req.params.id} by user: ${req.user?.id || 'unknown'}`, 'body keys:', Object.keys(req.body))
+    // Valider l'ID
+    if (!validateReviewId(req.params.id)) {
+        throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
+    }
+
+    // Récupérer la review existante
+    const review = await prisma.review.findUnique({
+        where: { id: req.params.id }
+    })
+
+    if (!review) {
+        throw Errors.REVIEW_NOT_FOUND()
+    }
+
+    // Vérifier ownership du review (utilisateur courant doit être l'auteur)
+    await requireOwnershipOrThrow(review.authorId, req, 'review')
+
+    const {
+        holderName,
+        type,
+        description,
+        note,
+        overallRating,
+        categoryRatings,
+        ratings,
+        terpenes,
+        tastes,
+        aromas,
+        effects,
+        strainType,
+        indicaRatio,
+        isPublic,
+        isPrivate,
+        cultivarsList,
+        pipelineExtraction,
+        pipelineSeparation,
+        purgevide,
+        hashmaker,
+        breeder,
+        farm,
+        cultivars,
+        dureeEffet,
+        existingImages,
+        ...otherFields
+    } = req.body
+
+    // Gérer les images: nouvelles + conserver les existantes sélectionnées
+    const newImages = req.files?.map(file => file.filename) || []
+    // existingImages peut être un JSON stringifié ou déjà un tableau.
+    let keepImages = []
     try {
-        const review = await prisma.review.findUnique({
-            where: { id: req.params.id }
-        })
-
-        if (!review) {
-            return res.status(404).json({ error: 'Review not found' })
-        }
-
-        if (review.authorId !== req.user.id) {
-            return res.status(403).json({ error: 'Access denied' })
-        }
-
-        const {
-            holderName,
-            type,
-            description,
-            note,
-            overallRating,
-            categoryRatings,
-            ratings,
-            terpenes,
-            tastes,
-            aromas,
-            effects,
-            strainType,
-            indicaRatio,
-            isPublic,
-            isPrivate,
-            cultivarsList,
-            pipelineExtraction,
-            pipelineSeparation,
-            purgevide,
-            hashmaker,
-            breeder,
-            farm,
-            cultivars,
-            dureeEffet,
-            existingImages,
-            ...otherFields
-        } = req.body
-
-        // Gérer les images: nouvelles + conserver les existantes sélectionnées
-        const newImages = req.files?.map(file => file.filename) || []
-        const keepImages = existingImages ? JSON.parse(existingImages) : []
-        const allImages = [...keepImages, ...newImages]
-
-        // Supprimer les images qui ne sont plus dans la liste
-        const oldImages = review.images ? JSON.parse(review.images) : []
-        const imagesToDelete = oldImages.filter(img => !keepImages.includes(`/images/${img}`) && !keepImages.includes(img))
-
-        for (const image of imagesToDelete) {
-            try {
-                const filename = image.replace('/images/', '')
-                await fs.unlink(path.join(__dirname, '../../db/review_images', filename))
-                console.log(`Deleted image: ${filename}`)
-            } catch (err) {
-                console.error(`Failed to delete image ${image}:`, err)
+        if (existingImages) {
+            if (typeof existingImages === 'string') {
+                keepImages = JSON.parse(existingImages)
+            } else if (Array.isArray(existingImages)) {
+                keepImages = existingImages
+            } else {
+                // fallback: coerce to array if possible
+                keepImages = Array.isArray(JSON.parse(JSON.stringify(existingImages))) ? JSON.parse(JSON.stringify(existingImages)) : []
             }
         }
+    } catch (err) {
+        console.warn('Failed to parse existingImages from request, falling back to empty array', err)
+        keepImages = []
+    }
 
-        // Préparer les données de mise à jour
-        const updateData = {
-            ...(holderName && { holderName }),
-            ...(type && { type }),
-            ...(description !== undefined && { description }),
-            ...(overallRating && { note: parseFloat(overallRating) }),
-            ...(note && { note: parseFloat(note) }),
-            ...(categoryRatings && { categoryRatings: typeof categoryRatings === 'string' ? categoryRatings : JSON.stringify(categoryRatings) }),
-            ...(ratings && { ratings: typeof ratings === 'string' ? ratings : JSON.stringify(ratings) }),
-            ...(terpenes && { terpenes: typeof terpenes === 'string' ? terpenes : JSON.stringify(terpenes) }),
-            ...(tastes && { tastes: typeof tastes === 'string' ? tastes : JSON.stringify(tastes) }),
-            ...(aromas && { aromas: typeof aromas === 'string' ? aromas : JSON.stringify(aromas) }),
-            ...(effects && { effects: typeof effects === 'string' ? effects : JSON.stringify(effects) }),
-            ...(strainType && { strainType }),
-            ...(indicaRatio !== undefined && { indicaRatio: parseInt(indicaRatio) }),
-            ...(allImages.length > 0 && {
-                images: JSON.stringify(allImages.map(img => img.replace('/images/', ''))),
-                mainImage: allImages[0].replace('/images/', '')
-            }),
-            ...(isPublic !== undefined && { isPublic: isPublic === 'true' || isPublic === true }),
-            ...(isPrivate !== undefined && { isPrivate: isPrivate === 'true' || isPrivate === true }),
-            ...(cultivarsList && { cultivarsList: typeof cultivarsList === 'string' ? cultivarsList : JSON.stringify(cultivarsList) }),
-            ...(pipelineExtraction && { pipelineExtraction: typeof pipelineExtraction === 'string' ? pipelineExtraction : JSON.stringify(pipelineExtraction) }),
-            ...(pipelineSeparation && { pipelineSeparation: typeof pipelineSeparation === 'string' ? pipelineSeparation : JSON.stringify(pipelineSeparation) }),
-            ...(purgevide !== undefined && { purgevide: purgevide === 'true' || purgevide === true }),
-            ...(hashmaker && { hashmaker }),
-            ...(breeder && { breeder }),
-            ...(farm && { farm }),
-            ...(cultivars && { cultivars }),
-            ...(dureeEffet && { dureeEffet })
-        }
-
-        // Stocker autres champs dans extraData
-        const extraData = {};
-        for (const [key, value] of Object.entries(otherFields)) {
-            if (value !== undefined && value !== null && value !== '') {
-                extraData[key] = value;
-            }
-        }
-        if (Object.keys(extraData).length > 0) {
-            updateData.extraData = JSON.stringify(extraData);
-        }
-
-        console.log('💾 Updating review with data:', JSON.stringify(updateData, null, 2));
-
-        const updated = await prisma.review.update({
-            where: { id: req.params.id },
-            data: updateData,
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatar: true,
-                        discordId: true
+    // Respect preferredMain if provided (client can specify a promoted new image or existing image)
+    const preferredMain = req.body.preferredMain;
+    let allImages = [];
+    if (preferredMain) {
+        try {
+            if (String(preferredMain).startsWith('new:')) {
+                const idx = parseInt(String(preferredMain).split(':')[1], 10);
+                if (!Number.isNaN(idx) && idx >= 0 && idx < newImages.length) {
+                    const selectedNew = newImages.splice(idx, 1)[0];
+                    // Place selected new as absolute first so it becomes mainImage even if keepImages exist
+                    if (keepImages.length > 0) {
+                        allImages = [selectedNew, ...keepImages, ...newImages];
+                    } else {
+                        allImages = [selectedNew, ...newImages];
                     }
+                } else {
+                    allImages = [...keepImages, ...newImages];
+                }
+            } else {
+                // preferredMain may reference an existing image (filename or /images/filename)
+                const pref = String(preferredMain).replace(/^\/images\//, '');
+                if (keepImages.length > 0) {
+                    const idx = keepImages.findIndex(k => k.endsWith(pref) || k === (`/images/${pref}`) || k === pref);
+                    if (idx > -1) {
+                        const clone = [...keepImages];
+                        const [item] = clone.splice(idx, 1);
+                        clone.unshift(item);
+                        allImages = [...clone, ...newImages];
+                    } else {
+                        allImages = [...keepImages, ...newImages];
+                    }
+                } else {
+                    allImages = [...keepImages, ...newImages];
                 }
             }
-        })
-
-        res.json({
-            ...updated,
-            terpenes: updated.terpenes ? JSON.parse(updated.terpenes) : [],
-            tastes: updated.tastes ? JSON.parse(updated.tastes) : [],
-            aromas: updated.aromas ? JSON.parse(updated.aromas) : [],
-            effects: updated.effects ? JSON.parse(updated.effects) : [],
-            images: updated.images ? JSON.parse(updated.images) : [],
-            ratings: updated.ratings ? JSON.parse(updated.ratings) : null,
-            categoryRatings: updated.categoryRatings ? JSON.parse(updated.categoryRatings) : null,
-            cultivarsList: updated.cultivarsList ? JSON.parse(updated.cultivarsList) : [],
-            pipelineExtraction: updated.pipelineExtraction ? JSON.parse(updated.pipelineExtraction) : null,
-            pipelineSeparation: updated.pipelineSeparation ? JSON.parse(updated.pipelineSeparation) : null
-        })
-    } catch (error) {
-        console.error('Error updating review:', error)
-        res.status(500).json({ error: 'Failed to update review' })
+        } catch (err) {
+            console.warn('Failed to apply preferredMain ordering', err)
+            allImages = [...keepImages, ...newImages];
+        }
+    } else {
+        allImages = [...keepImages, ...newImages]
     }
-})
+
+    // Supprimer les images qui ne sont plus dans la liste
+    let oldImages = []
+    try {
+        oldImages = typeof review.images === 'string' ? JSON.parse(review.images) : (Array.isArray(review.images) ? review.images : [])
+    } catch (err) {
+        console.warn('Failed to parse review.images for deletion logic; falling back to empty array', err)
+        oldImages = []
+    }
+    const imagesToDelete = oldImages.filter(img => !keepImages.includes(`/images/${img}`) && !keepImages.includes(img))
+
+    for (const image of imagesToDelete) {
+        try {
+            const filename = image.replace('/images/', '')
+            await fs.unlink(path.join(__dirname, '../../db/review_images', filename))
+        } catch (err) {
+            console.error(`Failed to delete image ${image}:`, err)
+        }
+    }
+
+    // Préparer les données de mise à jour
+    // IMPORTANT: utiliser hasOwnProperty pour inclure les valeurs falsy (0, false, "", [])
+    const updateData = {}
+
+    const setIfPresent = (key, value) => {
+        if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+            updateData[key] = value
+        }
+    }
+
+    // Champs simples
+    setIfPresent('holderName', holderName)
+    setIfPresent('type', type)
+    // description peut être vide string => accepter explicitement
+    if (Object.prototype.hasOwnProperty.call(req.body, 'description')) {
+        updateData.description = description
+    }
+
+    // Note globale : overallRating a priorité si présent
+    if (Object.prototype.hasOwnProperty.call(req.body, 'overallRating') || Object.prototype.hasOwnProperty.call(req.body, 'note')) {
+        const rawNote = Object.prototype.hasOwnProperty.call(req.body, 'overallRating') ? overallRating : note
+        if (rawNote !== undefined && rawNote !== null && rawNote !== '') {
+            updateData.note = parseFloat(rawNote)
+        } else {
+            // si la valeur est fournie mais vide, définir à null pour effacer si besoin
+            updateData.note = null
+        }
+    }
+
+    // Champs JSON / tableaux : conserver même si tableau vide
+    const jsonFields = ['categoryRatings', 'ratings', 'terpenes', 'tastes', 'aromas', 'effects', 'cultivarsList', 'pipelineExtraction', 'pipelineSeparation', 'substratMix']
+    for (const fieldName of jsonFields) {
+        if (Object.prototype.hasOwnProperty.call(req.body, fieldName)) {
+            const raw = req.body[fieldName]
+            if (typeof raw === 'string') {
+                updateData[fieldName] = raw
+            } else {
+                try {
+                    updateData[fieldName] = JSON.stringify(raw)
+                } catch (err) {
+                    updateData[fieldName] = JSON.stringify(String(raw))
+                }
+            }
+        }
+    }
+
+    // Champs textes simples
+    setIfPresent('strainType', strainType)
+    setIfPresent('hashmaker', hashmaker)
+    setIfPresent('breeder', breeder)
+    setIfPresent('farm', farm)
+    setIfPresent('cultivars', cultivars)
+    setIfPresent('dureeEffet', dureeEffet)
+
+    // Indica ratio: accepter 0
+    if (Object.prototype.hasOwnProperty.call(req.body, 'indicaRatio')) {
+        updateData.indicaRatio = indicaRatio === '' || indicaRatio === null ? null : parseInt(indicaRatio)
+    }
+
+    // Images
+    if (allImages.length > 0) {
+        updateData.images = JSON.stringify(allImages.map(img => img.replace('/images/', '')))
+        updateData.mainImage = allImages[0].replace('/images/', '')
+    }
+
+    // Booléens
+    if (Object.prototype.hasOwnProperty.call(req.body, 'isPublic')) {
+        updateData.isPublic = (isPublic === 'true' || isPublic === true)
+    }
+    if (Object.prototype.hasOwnProperty.call(req.body, 'isPrivate')) {
+        updateData.isPrivate = (isPrivate === 'true' || isPrivate === true)
+    }
+    if (Object.prototype.hasOwnProperty.call(req.body, 'purgevide')) {
+        updateData.purgevide = (purgevide === 'true' || purgevide === true)
+    }
+
+    // Stocker autres champs dans extraData
+    const extraData = {}
+    for (const [key, value] of Object.entries(otherFields)) {
+        if (value !== undefined && value !== null && value !== '') {
+            extraData[key] = value
+        }
+    }
+    if (Object.keys(extraData).length > 0) {
+        // Merge with existing extraData on the review to avoid wiping unrelated values
+        let parsedExisting = {}
+        try {
+            parsedExisting = review.extraData ? JSON.parse(review.extraData) : {}
+        } catch (err) {
+            parsedExisting = {}
+        }
+
+        const merged = { ...parsedExisting, ...extraData }
+        updateData.extraData = JSON.stringify(merged)
+    }
+
+    console.log('💾 Update payload:', JSON.stringify(updateData, null, 2))
+
+    const updated = await prisma.review.update({
+        where: { id: req.params.id },
+        data: updateData,
+        include: {
+            author: {
+                select: {
+                    id: true,
+                    username: true,
+                    avatar: true,
+                    discordId: true
+                }
+            }
+        }
+    })
+
+    // Formater et retourner
+    let formattedReview = formatReview(updated, req.user)
+    formattedReview = liftOrchardFromExtra(formattedReview)
+    res.json(formattedReview)
+}))
 
 // DELETE /api/reviews/:id - Supprimer une review
-router.delete('/:id', requireAuth, async (req, res) => {
-    try {
-        const review = await prisma.review.findUnique({
-            where: { id: req.params.id }
-        })
-
-        if (!review) {
-            return res.status(404).json({ error: 'Review not found' })
-        }
-
-        if (review.authorId !== req.user.id) {
-            return res.status(403).json({ error: 'Access denied' })
-        }
-
-        // Supprimer les images associées
-        if (review.images) {
-            const images = JSON.parse(review.images)
-            for (const image of images) {
-                try {
-                    await fs.unlink(path.join(__dirname, '../../db/review_images', image))
-                } catch (err) {
-                    console.error(`Failed to delete image ${image}:`, err)
-                }
-            }
-        }
-
-        await prisma.review.delete({
-            where: { id: req.params.id }
-        })
-
-        res.json({ message: 'Review deleted successfully' })
-    } catch (error) {
-        console.error('Error deleting review:', error)
-        res.status(500).json({ error: 'Failed to delete review' })
+router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
+    // Valider l'ID
+    if (!validateReviewId(req.params.id)) {
+        throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
     }
-})
+
+    // Récupérer la review existante
+    const review = await prisma.review.findUnique({ where: { id: req.params.id } })
+
+    if (!review) {
+        throw Errors.REVIEW_NOT_FOUND()
+    }
+
+    // Vérifier ownership du review
+    await requireOwnershipOrThrow(review.authorId, req, 'review')
+
+    // Supprimer les images associées
+    const imageFilenames = extractImageFilenames(review)
+    for (const filename of imageFilenames) {
+        try {
+            await fs.unlink(path.join(__dirname, '../../db/review_images', filename))
+        } catch (err) {
+            console.error(`Failed to delete image ${filename}:`, err)
+        }
+    }
+
+    await prisma.review.delete({
+        where: { id: req.params.id }
+    })
+
+    res.json({ message: 'Review deleted successfully' })
+}))
 
 // PATCH /api/reviews/:id/visibility - Changer la visibilité d'une review
-router.patch('/:id/visibility', requireAuth, async (req, res) => {
-    try {
-        const { id } = req.params
-        const { isPublic } = req.body
+router.patch('/:id/visibility', requireAuth, asyncHandler(async (req, res) => {
+    const { id } = req.params
+    const { isPublic } = req.body
 
-        // Vérifier que la review appartient à l'utilisateur
-        const review = await prisma.review.findUnique({
-            where: { id }
-        })
-
-        if (!review) {
-            return res.status(404).json({ error: 'Review not found' })
-        }
-
-        if (review.authorId !== req.user.id) {
-            return res.status(403).json({ error: 'You can only modify your own reviews' })
-        }
-
-        // Mettre à jour la visibilité
-        const updatedReview = await prisma.review.update({
-            where: { id },
-            data: { isPublic: Boolean(isPublic) }
-        })
-
-        res.json({
-            ...updatedReview,
-            terpenes: updatedReview.terpenes ? JSON.parse(updatedReview.terpenes) : [],
-            tastes: updatedReview.tastes ? JSON.parse(updatedReview.tastes) : [],
-            aromas: updatedReview.aromas ? JSON.parse(updatedReview.aromas) : [],
-            effects: updatedReview.effects ? JSON.parse(updatedReview.effects) : [],
-            images: updatedReview.images ? JSON.parse(updatedReview.images) : [],
-            ratings: updatedReview.ratings ? JSON.parse(updatedReview.ratings) : null
-        })
-    } catch (error) {
-        console.error('Error updating visibility:', error)
-        res.status(500).json({ error: 'Failed to update visibility' })
+    // Valider l'ID
+    if (!validateReviewId(id)) {
+        throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
     }
-})
+
+    // Récupérer la review existante
+    const review = await prisma.review.findUnique({ where: { id } })
+    if (!review) {
+        throw Errors.REVIEW_NOT_FOUND()
+    }
+
+    // Vérifier ownership du review
+    await requireOwnershipOrThrow(review.authorId, req, 'review')
+
+    // Mettre à jour la visibilité
+    const updatedReview = await prisma.review.update({
+        where: { id },
+        data: { isPublic: Boolean(isPublic) },
+        include: {
+            author: {
+                select: {
+                    id: true,
+                    username: true,
+                    avatar: true,
+                    discordId: true
+                }
+            }
+        }
+    })
+
+    // Formater et retourner
+    let formattedReview = formatReview(updatedReview, req.user)
+    formattedReview = liftOrchardFromExtra(formattedReview)
+    res.json(formattedReview)
+}))
 
 // POST /api/reviews/:id/like - Ajouter un like à une review
-router.post('/:id/like', requireAuth, async (req, res) => {
-    try {
-        const { id } = req.params
-        const userId = req.user.id
+router.post('/:id/like', requireAuth, asyncHandler(async (req, res) => {
+    const { id } = req.params
+    const userId = req.user.id
 
-        // Vérifier si la review existe
-        const review = await prisma.review.findUnique({
-            where: { id }
-        })
+    // Valider l'ID
+    if (!validateReviewId(id)) {
+        throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
+    }
 
-        if (!review) {
-            return res.status(404).json({ error: 'Review not found' })
+    // Vérifier si la review existe
+    const review = await prisma.review.findUnique({
+        where: { id }
+    })
+
+    if (!review) {
+        throw Errors.REVIEW_NOT_FOUND()
+    }
+
+    // Vérifier si l'utilisateur a déjà liké/disliké cette review
+    const existingLike = await prisma.reviewLike.findUnique({
+        where: {
+            reviewId_userId: {
+                reviewId: id,
+                userId: userId
+            }
         }
+    })
 
-        // Vérifier si l'utilisateur a déjà liké/disliké cette review
-        const existingLike = await prisma.reviewLike.findUnique({
-            where: {
-                reviewId_userId: {
-                    reviewId: id,
-                    userId: userId
-                }
-            }
-        })
-
-        if (existingLike) {
-            if (existingLike.isLike) {
-                // L'utilisateur avait déjà liké, on retire le like
-                await prisma.reviewLike.delete({
-                    where: {
-                        reviewId_userId: {
-                            reviewId: id,
-                            userId: userId
-                        }
+    if (existingLike) {
+        if (existingLike.isLike) {
+            // L'utilisateur avait déjà liké, on retire le like
+            await prisma.reviewLike.delete({
+                where: {
+                    reviewId_userId: {
+                        reviewId: id,
+                        userId: userId
                     }
-                })
-                return res.json({ action: 'removed', type: 'like' })
-            } else {
-                // L'utilisateur avait disliké, on change en like
-                await prisma.reviewLike.update({
-                    where: {
-                        reviewId_userId: {
-                            reviewId: id,
-                            userId: userId
-                        }
-                    },
-                    data: { isLike: true }
-                })
-                return res.json({ action: 'updated', type: 'like' })
-            }
-        } else {
-            // Nouveau like
-            await prisma.reviewLike.create({
-                data: {
-                    reviewId: id,
-                    userId: userId,
-                    isLike: true
                 }
             })
-            return res.json({ action: 'added', type: 'like' })
+            return res.json({ action: 'removed', type: 'like' })
+        } else {
+            // L'utilisateur avait disliké, on change en like
+            await prisma.reviewLike.update({
+                where: {
+                    reviewId_userId: {
+                        reviewId: id,
+                        userId: userId
+                    }
+                },
+                data: { isLike: true }
+            })
+            return res.json({ action: 'updated', type: 'like' })
         }
-    } catch (error) {
-        console.error('Error liking review:', error)
-        res.status(500).json({ error: 'Failed to like review' })
+    } else {
+        // Nouveau like
+        await prisma.reviewLike.create({
+            data: {
+                reviewId: id,
+                userId: userId,
+                isLike: true
+            }
+        })
+        return res.json({ action: 'added', type: 'like' })
     }
-})
+}))
 
 // POST /api/reviews/:id/dislike - Ajouter un dislike à une review
-router.post('/:id/dislike', requireAuth, async (req, res) => {
-    try {
-        const { id } = req.params
-        const userId = req.user.id
+router.post('/:id/dislike', requireAuth, asyncHandler(async (req, res) => {
+    const { id } = req.params
+    const userId = req.user.id
 
-        // Vérifier si la review existe
-        const review = await prisma.review.findUnique({
-            where: { id }
-        })
+    // Valider l'ID
+    if (!validateReviewId(id)) {
+        throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
+    }
 
-        if (!review) {
-            return res.status(404).json({ error: 'Review not found' })
+    // Vérifier si la review existe
+    const review = await prisma.review.findUnique({
+        where: { id }
+    })
+
+    if (!review) {
+        throw Errors.REVIEW_NOT_FOUND()
+    }
+
+    // Vérifier si l'utilisateur a déjà liké/disliké cette review
+    const existingLike = await prisma.reviewLike.findUnique({
+        where: {
+            reviewId_userId: {
+                reviewId: id,
+                userId: userId
+            }
         }
+    })
 
-        // Vérifier si l'utilisateur a déjà liké/disliké cette review
-        const existingLike = await prisma.reviewLike.findUnique({
-            where: {
-                reviewId_userId: {
-                    reviewId: id,
-                    userId: userId
-                }
-            }
-        })
-
-        if (existingLike) {
-            if (!existingLike.isLike) {
-                // L'utilisateur avait déjà disliké, on retire le dislike
-                await prisma.reviewLike.delete({
-                    where: {
-                        reviewId_userId: {
-                            reviewId: id,
-                            userId: userId
-                        }
+    if (existingLike) {
+        if (!existingLike.isLike) {
+            // L'utilisateur avait déjà disliké, on retire le dislike
+            await prisma.reviewLike.delete({
+                where: {
+                    reviewId_userId: {
+                        reviewId: id,
+                        userId: userId
                     }
-                })
-                return res.json({ action: 'removed', type: 'dislike' })
-            } else {
-                // L'utilisateur avait liké, on change en dislike
-                await prisma.reviewLike.update({
-                    where: {
-                        reviewId_userId: {
-                            reviewId: id,
-                            userId: userId
-                        }
-                    },
-                    data: { isLike: false }
-                })
-                return res.json({ action: 'updated', type: 'dislike' })
-            }
-        } else {
-            // Nouveau dislike
-            await prisma.reviewLike.create({
-                data: {
-                    reviewId: id,
-                    userId: userId,
-                    isLike: false
                 }
             })
-            return res.json({ action: 'added', type: 'dislike' })
+            return res.json({ action: 'removed', type: 'dislike' })
+        } else {
+            // L'utilisateur avait liké, on change en dislike
+            await prisma.reviewLike.update({
+                where: {
+                    reviewId_userId: {
+                        reviewId: id,
+                        userId: userId
+                    }
+                },
+                data: { isLike: false }
+            })
+            return res.json({ action: 'updated', type: 'dislike' })
         }
-    } catch (error) {
-        console.error('Error disliking review:', error)
-        res.status(500).json({ error: 'Failed to dislike review' })
+    } else {
+        // Nouveau dislike
+        await prisma.reviewLike.create({
+            data: {
+                reviewId: id,
+                userId: userId,
+                isLike: false
+            }
+        })
+        return res.json({ action: 'added', type: 'dislike' })
     }
-})
+}))
 
 // GET /api/reviews/:id/likes - Obtenir les stats de likes/dislikes d'une review
 router.get('/:id/likes', async (req, res) => {
@@ -702,7 +775,7 @@ router.get('/:id/likes', async (req, res) => {
 
         // Si l'utilisateur est authentifié, vérifier son état de like/dislike
         let userLikeState = null
-        if (req.isAuthenticated()) {
+        if (typeof req.isAuthenticated === 'function' && req.isAuthenticated()) {
             const userLike = await prisma.reviewLike.findUnique({
                 where: {
                     reviewId_userId: {
