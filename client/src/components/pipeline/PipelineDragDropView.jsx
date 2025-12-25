@@ -98,7 +98,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
     const [fieldValues, setFieldValues] = useState({});
 
     if (!isOpen) return null;
-    const allFields = sidebarContent.flatMap(section => section.items.map(item => ({
+    const allFields = (sidebarContent || []).flatMap(section => (section.items || []).map(item => ({
         key: item.key,
         label: item.label,
         icon: item.icon,
@@ -437,22 +437,31 @@ const PipelineDragDropView = ({
         if (!sourceCellForMassAssign || selectedCells.length === 0) return;
 
         // Copier les champs sélectionnés vers toutes les cellules sélectionnées
+        const allChanges = [];
+        selectedFields = selectedFields || [];
         selectedCells.forEach(timestamp => {
             selectedFields.forEach(fieldKey => {
-                const value = sourceCellForMassAssign.data.data[fieldKey];
+                const prevCell = getCellData(timestamp) || {};
+                const prevValue = prevCell && prevCell.data ? prevCell.data[fieldKey] : undefined;
+                const value = sourceCellForMassAssign && sourceCellForMassAssign.data && sourceCellForMassAssign.data.data ? sourceCellForMassAssign.data.data[fieldKey] : undefined;
+                allChanges.push({ timestamp, field: fieldKey, previousValue: prevValue });
                 onDataChange(timestamp, fieldKey, value);
             });
 
             // Mettre à jour les métadonnées
-            const totalFields = sidebarContent.reduce((acc, section) => acc + (section.items?.length || 0), 0);
+            const totalFields = (sidebarContent || []).reduce((acc, section) => acc + (section.items?.length || 0), 0);
             const filledFields = selectedFields.length;
-            const completionPercentage = Math.round((filledFields / totalFields) * 100);
+            const completionPercentage = Math.round((filledFields / (totalFields || 1)) * 100);
 
+            const prevMeta = (getCellData(timestamp) || {})._meta;
+            allChanges.push({ timestamp, field: '_meta', previousValue: prevMeta });
             onDataChange(timestamp, '_meta', {
                 completionPercentage,
                 lastModified: new Date().toISOString()
             });
         });
+
+        if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'mass-assign', changes: allChanges });
 
         // Réinitialiser
         setShowMassAssignModal(false);
@@ -688,7 +697,14 @@ const PipelineDragDropView = ({
 
         if (massAssignMode && selectedCells.length > 0) {
             if (!confirm(`Copier la valeur depuis ${sourceTimestamp} vers ${selectedCells.length} case(s) ?`)) return;
-            selectedCells.forEach(ts => onDataChange(ts, itemKey, sourceValue));
+            const allChanges = [];
+            selectedCells.forEach(ts => {
+                const prev = getCellData(ts) || {};
+                const prevValue = prev && prev.data ? prev.data[itemKey] : undefined;
+                allChanges.push({ timestamp: ts, field: itemKey, previousValue: prevValue });
+                onDataChange(ts, itemKey, sourceValue);
+            });
+            if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'mass-assign-from-source', changes: allChanges });
             setMassAssignMode(false);
             setSelectedCells([]);
             showToast(`✓ Copié depuis ${sourceTimestamp} vers ${selectedCells.length} case(s)`);
@@ -721,14 +737,28 @@ const PipelineDragDropView = ({
         const range = cells.slice(a, b + 1).map(c => c.timestamp);
 
         if (!confirm(`Assigner ${itemKey} = ${value} à ${range.length} case(s) ?`)) return;
-        range.forEach(ts => onDataChange(ts, itemKey, value));
+        const allChanges = [];
+        range.forEach(ts => {
+            const prev = getCellData(ts) || {};
+            const prevValue = prev && prev.data ? prev.data[itemKey] : undefined;
+            allChanges.push({ timestamp: ts, field: itemKey, previousValue: prevValue });
+            onDataChange(ts, itemKey, value);
+        });
+        if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'assign-range', changes: allChanges });
         showToast(`✓ ${itemKey} assigné à ${range.length} case(s)`);
     };
 
     // Assigner la valeur à toutes les cases
     const handleAssignAll = (itemKey, value) => {
         if (!confirm(`Assigner ${itemKey} = ${value} à TOUTES les cases (${cells.length}) ?`)) return;
-        cells.forEach(c => onDataChange(c.timestamp, itemKey, value));
+        const allChanges = [];
+        cells.forEach(c => {
+            const prev = getCellData(c.timestamp) || {};
+            const prevValue = prev && prev.data ? prev.data[itemKey] : undefined;
+            allChanges.push({ timestamp: c.timestamp, field: itemKey, previousValue: prevValue });
+            onDataChange(c.timestamp, itemKey, value);
+        });
+        if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'assign-all', changes: allChanges });
         showToast(`✓ ${itemKey} assigné à toutes les cases`);
     };
 
@@ -1434,11 +1464,16 @@ const PipelineDragDropView = ({
                 selectedCells={selectedCells}
                 onApply={(values) => {
                     const targets = selectedCells.length > 0 ? selectedCells : [currentCellTimestamp];
+                    const allChanges = [];
                     targets.forEach(ts => {
                         Object.entries(values).forEach(([key, value]) => {
+                            const prev = getCellData(ts) || {};
+                            const prevValue = prev && prev.data ? prev.data[key] : undefined;
+                            allChanges.push({ timestamp: ts, field: key, previousValue: prevValue });
                             onDataChange(ts, key, value);
                         });
                     });
+                    if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'multi-assign', changes: allChanges });
                     setShowMultiAssignModal(false);
                     setMultiAssignContent(null);
                     setSelectedCells([]); // Clear selection frame after assignment
@@ -1497,7 +1532,15 @@ const PipelineDragDropView = ({
                                     className="flex-1 px-3 py-2 hover: text-white rounded-lg text-xs font-semibold"
                                     onClick={() => {
                                         // Assignation à toutes les cases sélectionnées
-                                        selectedCells.forEach(ts => onDataChange(ts, contextMenu.item.key, document.getElementById('preconfig-value-input').value));
+                                        const val = document.getElementById('preconfig-value-input').value;
+                                        const changes = [];
+                                        selectedCells.forEach(ts => {
+                                            const prev = getCellData(ts) || {};
+                                            const prevValue = prev && prev.data ? prev.data[contextMenu.item.key] : undefined;
+                                            changes.push({ timestamp: ts, field: contextMenu.item.key, previousValue: prevValue });
+                                            onDataChange(ts, contextMenu.item.key, val);
+                                        });
+                                        if (changes.length > 0) pushAction({ id: Date.now(), type: 'preconfig-assign-selection', changes });
                                         setContextMenu(null);
                                     }}
                                     disabled={selectedCells.length === 0}
@@ -1506,7 +1549,15 @@ const PipelineDragDropView = ({
                                     className="flex-1 px-3 py-2 hover: text-white rounded-lg text-xs font-semibold"
                                     onClick={() => {
                                         // Assignation à toutes les cases
-                                        cells.forEach(cell => onDataChange(cell.timestamp, contextMenu.item.key, document.getElementById('preconfig-value-input').value));
+                                        const val = document.getElementById('preconfig-value-input').value;
+                                        const changes = [];
+                                        cells.forEach(cell => {
+                                            const prev = getCellData(cell.timestamp) || {};
+                                            const prevValue = prev && prev.data ? prev.data[contextMenu.item.key] : undefined;
+                                            changes.push({ timestamp: cell.timestamp, field: contextMenu.item.key, previousValue: prevValue });
+                                            onDataChange(cell.timestamp, contextMenu.item.key, val);
+                                        });
+                                        if (changes.length > 0) pushAction({ id: Date.now(), type: 'preconfig-assign-all', changes });
                                         setContextMenu(null);
                                     }}
                                 >Toutes les cases</button>
