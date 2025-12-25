@@ -1003,6 +1003,20 @@ const PipelineDragDropView = ({
                         </div>
                     </div>
 
+                    {/* Barre de progression visuelle (plein largeur) */}
+                    <div className="col-span-4 mt-3">
+                        <div className="w-full bg-gray-200 dark:bg-gray-800 h-3 rounded-full overflow-hidden">
+                            <div
+                                className={`h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-500`}
+                                style={{ width: `${completionPercent}%` }}
+                            />
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mt-2">
+                            <div>{filledCells}/{cells.length} cases</div>
+                            <div className="font-semibold">{completionPercent}%</div>
+                        </div>
+                    </div>
+
                     {/* Messages d'aide selon type d'intervalle */}
                     {timelineConfig.type === 'date' && (!timelineConfig.start || !timelineConfig.end) && (
                         <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
