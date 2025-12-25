@@ -501,6 +501,28 @@ const PipelineDragDropView = ({
         selectedCellsRef.current = selectedCells;
     }, [selectedCells]);
 
+    // Refs for responsive selection overlay
+    const gridRef = useRef(null);
+    const cellRefs = useRef({});
+    const [selectionOverlay, setSelectionOverlay] = useState(null);
+
+    useEffect(() => {
+        if (!gridRef.current) return;
+        if (!selectedCells || selectedCells.length <= 1) {
+            setSelectionOverlay(null);
+            return;
+        }
+        // Get DOM rects for selected cells
+        const rects = selectedCells.map(ts => cellRefs.current[ts]).map(el => el && el.getBoundingClientRect()).filter(Boolean);
+        if (rects.length === 0) { setSelectionOverlay(null); return; }
+        const gridRect = gridRef.current.getBoundingClientRect();
+        const left = Math.min(...rects.map(r => r.left)) - gridRect.left;
+        const top = Math.min(...rects.map(r => r.top)) - gridRect.top;
+        const right = Math.max(...rects.map(r => r.right)) - gridRect.left;
+        const bottom = Math.max(...rects.map(r => r.bottom)) - gridRect.top;
+        setSelectionOverlay({ left, top, width: right - left, height: bottom - top });
+    }, [selectedCells, cells]);
+
     // Handlers configuration retirés (préréglages supprimés)
 
     // Copier la valeur depuis une case source vers la sélection / case courante
@@ -696,9 +718,9 @@ const PipelineDragDropView = ({
     const completionPercent = cells.length > 0 ? Math.round((filledCells / cells.length) * 100) : 0;
 
     return (
-        <div className="flex gap-6 h-[600px]">
+        <div className="flex flex-col lg:flex-row gap-6 min-h-[400px]">
             {/* PANNEAU LATÉRAL HIÉRARCHISÉ */}
-            <div className="w-80 flex-shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-y-auto">
+            <div className="w-72 lg:w-80 flex-shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-y-auto">
                 {/* Section Préréglages en haut */}
                 {/* Préréglages retirés pour conformité CDC */}
 
@@ -801,7 +823,7 @@ const PipelineDragDropView = ({
                                                         anchorRect: e.currentTarget.getBoundingClientRect()
                                                     });
                                                 }}
-                                                className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group ${isPreConfigured ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30' : 'bg-gray-50 dark:bg-gray-800 border-transparent hover: hover:bg-gray-100 dark:hover:bg-gray-700' } ${multiSelectedItems.includes(item.key) ? 'ring-2 ' : ''}`}
+                                                className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group ${isPreConfigured ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30' : 'bg-gray-50 dark:bg-gray-800 border-transparent hover: hover:bg-gray-100 dark:hover:bg-gray-700'} ${multiSelectedItems.includes(item.key) ? 'ring-2 ' : ''}`}
                                                 style={{ touchAction: 'none' }}
                                                 title={isPreConfigured ? `Pré-configuré: ${preConfiguredItems[item.key]}${item.unit || ''}` : 'Clic droit pour pré-configurer'}
                                             >
@@ -813,7 +835,7 @@ const PipelineDragDropView = ({
                                                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex-1">
                                                     {item.label}
                                                 </span>
-                                                <span className={`text-xs transition-colors ${isPreConfigured ? 'text-green-600 dark:text-green-400' : 'text-gray-400 group-hover:' }`}>
+                                                <span className={`text-xs transition-colors ${isPreConfigured ? 'text-green-600 dark:text-green-400' : 'text-gray-400 group-hover:'}`}>
                                                     {isPreConfigured ? '✓' : '⋮⋮'}
                                                 </span>
                                             </div>
@@ -1054,44 +1076,23 @@ const PipelineDragDropView = ({
                                 📊 <strong>Autres cases</strong> : Drag & drop des paramètres depuis le panneau latéral
                             </p>
 
-                            <div className="grid grid-cols-7 gap-2 select-none relative">
-                                {/* Visual selection frame overlay */}
-                                {selectedCells.length > 1 && !isSelecting && (() => {
-                                    // Find all selected cell indices
-                                    const indices = selectedCells.map(ts => cells.findIndex(c => c.timestamp === ts)).filter(i => i !== -1);
-                                    if (indices.length === 0) return null;
-                                    const minIdx = Math.min(...indices);
-                                    const maxIdx = Math.max(...indices);
-                                    // Compute bounding box for all selected cells
-                                    let minRow = 99, minCol = 99, maxRow = 0, maxCol = 0;
-                                    indices.forEach(idx => {
-                                        const row = Math.floor(idx / 7);
-                                        const col = idx % 7;
-                                        if (row < minRow) minRow = row;
-                                        if (col < minCol) minCol = col;
-                                        if (row > maxRow) maxRow = row;
-                                        if (col > maxCol) maxCol = col;
-                                    });
-                                    const top = `${minRow * 90}px`;
-                                    const left = `${minCol * 90}px`;
-                                    const width = `${((maxCol - minCol + 1) * 90)}px`;
-                                    const height = `${((maxRow - minRow + 1) * 90)}px`;
-                                    return (
-                                        <div
-                                            className="absolute pointer-events-none z-40 border-4 rounded-2xl shadow-lg animate-fade-in"
-                                            style={{
-                                                top,
-                                                left,
-                                                width,
-                                                height,
-                                                boxSizing: 'border-box',
-                                                transition: 'all 0.1s',
-                                                borderStyle: 'dashed',
-                                                background: 'rgba(80,180,255,0.07)'
-                                            }}
-                                        />
-                                    );
-                                })()}
+                            <div ref={gridRef} className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-2 select-none relative auto-rows-[minmax(80px,auto)]">
+                                {/* Visual selection frame overlay (computed from DOM refs) */}
+                                {selectionOverlay && !isSelecting && (
+                                    <div
+                                        className="absolute pointer-events-none z-40 border-4 rounded-2xl shadow-lg animate-fade-in"
+                                        style={{
+                                            top: `${selectionOverlay.top}px`,
+                                            left: `${selectionOverlay.left}px`,
+                                            width: `${selectionOverlay.width}px`,
+                                            height: `${selectionOverlay.height}px`,
+                                            boxSizing: 'border-box',
+                                            transition: 'all 0.1s',
+                                            borderStyle: 'dashed',
+                                            background: 'rgba(80,180,255,0.07)'
+                                        }}
+                                    />
+                                )}
                                 {cells.map((cell, idx) => {
                                     const hasData = hasCellData(cell.timestamp);
                                     const cellData = getCellData(cell.timestamp);
@@ -1112,6 +1113,7 @@ const PipelineDragDropView = ({
                                     return (
                                         <div
                                             key={cell.timestamp}
+                                            ref={el => { cellRefs.current[cell.timestamp] = el; }}
                                             onDragOver={(e) => handleDragOver(e, cell.timestamp)}
                                             onDragLeave={handleDragLeave}
                                             onDrop={(e) => handleDrop(e, cell.timestamp)}
