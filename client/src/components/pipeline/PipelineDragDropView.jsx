@@ -1277,6 +1277,16 @@ const PipelineDragDropView = ({
                 onApply={handleMassAssignApply}
             />
 
+            {/* Modal multi-contenus pour drop multiple */}
+            <MultiContentAssignModal
+                isOpen={showMultiAssignModal}
+                onClose={() => setShowMultiAssignModal(false)}
+                contents={multiAssignContents}
+                targetCells={multiAssignTargetsRef.current || []}
+                preConfigured={preConfiguredItems}
+                onApply={handleMultiAssignApply}
+            />
+
             {/* Modal configuration préréglage complet CDC */}
             <PresetConfigModal
                 isOpen={showPresetConfigModal}
