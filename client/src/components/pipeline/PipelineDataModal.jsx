@@ -181,25 +181,27 @@ const PipelineDataModal = ({
         // SELECT avec options (options peuvent être des strings ou des objets {value,label})
         if (type === 'select' && Array.isArray(item.options)) {
             return (
-                <div key={key} className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {icon && <span className="mr-2">{icon}</span>}
-                        {label}
-                    </label>
-                    <select
-                        value={value}
-                        onChange={(e) => handleChange(key, e.target.value)}
-                        className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
-                        required={droppedItem !== null}
-                    >
-                        <option value="">Sélectionner...</option>
-                        {item.options.map((opt, idx) => {
-                            const val = typeof opt === 'string' ? opt : (opt.value ?? opt);
-                            const labelOpt = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
-                            return <option key={`${key}-${idx}-${val}`} value={val}>{labelOpt}</option>;
-                        })}
-                    </select>
-                </div>
+                <FieldWrapper item={item} key={key}>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {icon && <span className="mr-2">{icon}</span>}
+                            {label}
+                        </label>
+                        <select
+                            value={value}
+                            onChange={(e) => handleChange(key, e.target.value)}
+                            className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
+                            required={droppedItem !== null}
+                        >
+                            <option value="">Sélectionner...</option>
+                            {item.options.map((opt, idx) => {
+                                const val = typeof opt === 'string' ? opt : (opt.value ?? opt);
+                                const labelOpt = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
+                                return <option key={`${key}-${idx}-${val}`} value={val}>{labelOpt}</option>;
+                            })}
+                        </select>
+                    </div>
+                </FieldWrapper>
             );
         }
 
@@ -207,110 +209,118 @@ const PipelineDataModal = ({
         if (type === 'multiselect' && Array.isArray(item.options)) {
             const selected = Array.isArray(formData[key]) ? formData[key] : [];
             return (
-                <div key={key} className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {icon && <span className="mr-2">{icon}</span>}
-                        {label}
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                        {item.options.map((opt, idx) => {
-                            const val = typeof opt === 'string' ? opt : (opt.value ?? opt);
-                            const lab = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
-                            const checked = selected.includes(val);
-                            return (
-                                <label key={`${key}-ms-${idx}`} className="flex items-center gap-2 p-2 border rounded-lg">
-                                    <input
-                                        type="checkbox"
-                                        checked={checked}
-                                        onChange={(e) => {
-                                            const next = e.target.checked ? [...selected, val] : selected.filter(s => s !== val);
-                                            handleChange(key, next);
-                                        }}
-                                        className="w-4 h-4"
-                                    />
-                                    <span className="text-sm">{lab}</span>
-                                    {item.withPercentage && (
+                <FieldWrapper item={item} key={key}>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {icon && <span className="mr-2">{icon}</span>}
+                            {label}
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                            {item.options.map((opt, idx) => {
+                                const val = typeof opt === 'string' ? opt : (opt.value ?? opt);
+                                const lab = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
+                                const checked = selected.includes(val);
+                                return (
+                                    <label key={`${key}-ms-${idx}`} className="flex items-center gap-2 p-2 border rounded-lg">
                                         <input
-                                            type="number"
-                                            value={item._percentages?.[val] ?? ''}
+                                            type="checkbox"
+                                            checked={checked}
                                             onChange={(e) => {
-                                                const percent = e.target.value === '' ? '' : parseFloat(e.target.value);
-                                                const pctObj = { ...item._percentages, [val]: percent };
-                                                // store companion percentages into formData under a dedicated key
-                                                handleChange(`${key}__percentages`, pctObj);
+                                                const next = e.target.checked ? [...selected, val] : selected.filter(s => s !== val);
+                                                handleChange(key, next);
                                             }}
-                                            placeholder="%"
-                                            className="ml-auto w-20 px-2 py-1 border rounded text-sm"
+                                            className="w-4 h-4"
                                         />
-                                    )}
-                                </label>
-                            );
-                        })}
+                                        <span className="text-sm">{lab}</span>
+                                        {item.withPercentage && (
+                                            <input
+                                                type="number"
+                                                value={item._percentages?.[val] ?? ''}
+                                                onChange={(e) => {
+                                                    const percent = e.target.value === '' ? '' : parseFloat(e.target.value);
+                                                    const pctObj = { ...item._percentages, [val]: percent };
+                                                    // store companion percentages into formData under a dedicated key
+                                                    handleChange(`${key}__percentages`, pctObj);
+                                                }}
+                                                placeholder="%"
+                                                className="ml-auto w-20 px-2 py-1 border rounded text-sm"
+                                            />
+                                        )}
+                                    </label>
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
+                </FieldWrapper>
             );
         }
 
         // DATE
         if (type === 'date') {
             return (
-                <div key={key} className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {icon && <span className="mr-2">{icon}</span>}
-                        {label}
-                    </label>
-                    <input
-                        type="date"
-                        value={value || ''}
-                        onChange={(e) => handleChange(key, e.target.value)}
-                        className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
-                        required={droppedItem !== null}
-                    />
-                </div>
+                <FieldWrapper item={item} key={key}>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {icon && <span className="mr-2">{icon}</span>}
+                            {label}
+                        </label>
+                        <input
+                            type="date"
+                            value={value || ''}
+                            onChange={(e) => handleChange(key, e.target.value)}
+                            className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
+                            required={droppedItem !== null}
+                        />
+                    </div>
+                </FieldWrapper>
             );
         }
 
         // NUMBER
         if (type === 'number') {
             return (
-                <div key={key} className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {icon && <span className="mr-2">{icon}</span>}
-                        {label}
-                    </label>
-                    <input
-                        type="number"
-                        value={value || ''}
-                        onChange={(e) => {
-                            const val = e.target.value === '' ? '' : parseFloat(e.target.value);
-                            handleChange(key, val);
-                        }}
-                        step={item.step || '0.1'}
-                        min={item.min}
-                        max={item.max}
-                        className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
-                        placeholder={item.placeholder || `Ex: ${item.defaultValue || ''}`}
-                        required={droppedItem !== null}
-                    />
-                </div>
+                <FieldWrapper item={item} key={key}>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {icon && <span className="mr-2">{icon}</span>}
+                            {label}
+                        </label>
+                        <input
+                            type="number"
+                            value={value || ''}
+                            onChange={(e) => {
+                                const val = e.target.value === '' ? '' : parseFloat(e.target.value);
+                                handleChange(key, val);
+                            }}
+                            step={item.step || '0.1'}
+                            min={item.min}
+                            max={item.max}
+                            className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
+                            placeholder={item.placeholder || `Ex: ${item.defaultValue || ''}`}
+                            required={droppedItem !== null}
+                        />
+                    </div>
+                </FieldWrapper>
             );
         }
 
         // CHECKBOX
         if (type === 'checkbox') {
             return (
-                <div key={key} className="flex items-center gap-3">
-                    <input
-                        type="checkbox"
-                        checked={Boolean(value)}
-                        onChange={(e) => handleChange(key, e.target.checked)}
-                        className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 focus:ring-2 focus:"
-                    />
-                    <label className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {icon && <span className="mr-2">{icon}</span>}
-                        {label}
-                    </label>
-                </div>
+                <FieldWrapper item={item} key={key}>
+                    <div className="flex items-center gap-3">
+                        <input
+                            type="checkbox"
+                            checked={Boolean(value)}
+                            onChange={(e) => handleChange(key, e.target.checked)}
+                            className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 focus:ring-2 focus:"
+                        />
+                        <label className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {icon && <span className="mr-2">{icon}</span>}
+                            {label}
+                        </label>
+                    </div>
+                </FieldWrapper>
             );
         }
 
@@ -318,44 +328,48 @@ const PipelineDataModal = ({
         if (type === 'textarea') {
             const textValue = String(value || '');
             return (
-                <div key={key} className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {icon && <span className="mr-2">{icon}</span>}
-                        {label}
-                    </label>
-                    <textarea
-                        value={textValue}
-                        onChange={(e) => handleChange(key, e.target.value)}
-                        rows={3}
-                        maxLength={item.maxLength || 500}
-                        className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus: resize-none"
-                        placeholder={item.placeholder || ''}
-                    />
-                    {item.maxLength && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {textValue.length} / {item.maxLength} caractères
-                        </p>
-                    )}
-                </div>
+                <FieldWrapper item={item} key={key}>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {icon && <span className="mr-2">{icon}</span>}
+                            {label}
+                        </label>
+                        <textarea
+                            value={textValue}
+                            onChange={(e) => handleChange(key, e.target.value)}
+                            rows={3}
+                            maxLength={item.maxLength || 500}
+                            className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus: resize-none"
+                            placeholder={item.placeholder || ''}
+                        />
+                        {item.maxLength && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {textValue.length} / {item.maxLength} caractères
+                            </p>
+                        )}
+                    </div>
+                </FieldWrapper>
             );
         }
 
         // TEXT par défaut
         return (
-            <div key={key} className="space-y-2">
-                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {icon && <span className="mr-2">{icon}</span>}
-                    {label}
-                </label>
-                <input
-                    type="text"
-                    value={value || ''}
-                    onChange={(e) => handleChange(key, e.target.value)}
-                    className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
-                    placeholder={item.placeholder || ''}
-                    required={droppedItem !== null}
-                />
-            </div>
+            <FieldWrapper item={item} key={key}>
+                <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {icon && <span className="mr-2">{icon}</span>}
+                        {label}
+                    </label>
+                    <input
+                        type="text"
+                        value={value || ''}
+                        onChange={(e) => handleChange(key, e.target.value)}
+                        className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
+                        placeholder={item.placeholder || ''}
+                        required={droppedItem !== null}
+                    />
+                </div>
+            </FieldWrapper>
         );
     };
 
@@ -405,13 +419,13 @@ const PipelineDataModal = ({
                             <div className="flex border-b border-gray-200 dark:border-gray-700">
                                 <button
                                     onClick={() => setActiveTab('form')}
-                                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'form' ? 'border-b-2 dark:' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200' }`}
+                                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'form' ? 'border-b-2 dark:' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'}`}
                                 >
                                     📝 Formulaire
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('presets')}
-                                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'presets' ? 'border-b-2 dark:' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200' }`}
+                                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'presets' ? 'border-b-2 dark:' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'}`}
                                 >
                                     <Bookmark className="w-4 h-4 inline mr-1" />
                                     Préréglages ({fieldPresets.length})

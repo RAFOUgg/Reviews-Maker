@@ -253,7 +253,7 @@ const PipelineDragDropView = ({
     // Marquee selection threshold in pixels
     marqueeThreshold = 6,
     presets = [],
-    onSavePreset = () => {},
+    onSavePreset = () => { },
     // Préréglages retirés
 }) => {
     const [expandedSections, setExpandedSections] = useState({});
@@ -875,6 +875,17 @@ const PipelineDragDropView = ({
         } catch (e) {
             console.error('Erreur lors du chargement du préréglage', e);
         }
+    };
+
+    // Supprimer un champ d'une case (utilisé par PipelineDataModal)
+    const handleFieldDelete = (ts, fieldKey) => {
+        if (!ts || !fieldKey) return;
+        if (!confirm('Effacer ce champ de la case sélectionnée ?')) return;
+        const prev = getCellData(ts) || {};
+        const prevValue = prev && prev[fieldKey] !== undefined ? prev[fieldKey] : (prev.data ? prev.data[fieldKey] : undefined);
+        onDataChange(ts, fieldKey, null);
+        pushAction({ id: Date.now(), type: 'field-delete', changes: [{ timestamp: ts, field: fieldKey, previousValue: prevValue }] });
+        showToast('Champ effacé');
     };
 
     // Générer les cases de la timeline selon le type d'intervalle
@@ -1578,6 +1589,7 @@ const PipelineDragDropView = ({
                 intervalLabel={cells.find(c => c.timestamp === currentCellTimestamp)?.label || ''}
                 droppedItem={droppedItem} // Passer l'item droppé à la modal
                 pipelineType={type} // Passer le type de pipeline pour localStorage
+                onFieldDelete={handleFieldDelete}
             />
 
             {/* Modal multi-assign (onglets) */}

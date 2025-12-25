@@ -44,7 +44,7 @@ export default function ProductTypeCards({ isAuthenticated, onCreateReview }) {
                 </p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
                 {productTypes.map((type) => (
                     <button
                         key={type.name}
