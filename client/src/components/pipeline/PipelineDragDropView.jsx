@@ -123,7 +123,7 @@ const PipelineDragDropView = ({
         if (!preset) return;
 
         if (massAssignMode && selectedCells.length > 0) {
-            if (!confirm(`Appliquer le préréglage "${preset.name}" à ${selectedCells.length} cellule(s) ?`)) return;
+            if (!window.confirm(`Appliquer le préréglage "${preset.name}" à ${selectedCells.length} cellule(s) ?`)) return;
             selectedCells.forEach(ts => applyPresetToTimestamp(ts, preset));
             setMassAssignMode(false);
             setSelectedCells([]);
@@ -132,14 +132,14 @@ const PipelineDragDropView = ({
         }
 
         if (currentCellTimestamp) {
-            if (!confirm(`Appliquer le préréglage "${preset.name}" à la case ${currentCellTimestamp} ?`)) return;
+            if (!window.confirm(`Appliquer le préréglage "${preset.name}" à la case ${currentCellTimestamp} ?`)) return;
             applyPresetToTimestamp(currentCellTimestamp, preset);
             showToast(`✓ Préréglage "${preset.name}" appliqué`);
             return;
         }
 
         if (cells.length > 0) {
-            if (!confirm(`Aucune cellule sélectionnée. Appliquer le préréglage "${preset.name}" à la première case (${cells[0].timestamp}) ?`)) return;
+            if (!window.confirm(`Aucune cellule sélectionnée. Appliquer le préréglage "${preset.name}" à la première case (${cells[0].timestamp}) ?`)) return;
             applyPresetToTimestamp(cells[0].timestamp, preset);
             showToast(`✓ Préréglage "${preset.name}" appliqué à ${cells[0].timestamp}`);
             return;
@@ -515,7 +515,7 @@ const PipelineDragDropView = ({
         }
 
         if (massAssignMode && selectedCells.length > 0) {
-            if (!confirm(`Assigner ${itemKey} = ${value} à ${selectedCells.length} case(s) ?`)) return;
+            if (!window.confirm(`Assigner ${itemKey} = ${value} à ${selectedCells.length} case(s) ?`)) return;
             selectedCells.forEach(ts => onDataChange(ts, itemKey, value));
             setMassAssignMode(false);
             setSelectedCells([]);
@@ -550,7 +550,7 @@ const PipelineDragDropView = ({
         }
 
         if (massAssignMode && selectedCells.length > 0) {
-            if (!confirm(`Copier la valeur depuis ${sourceTimestamp} vers ${selectedCells.length} case(s) ?`)) return;
+            if (!window.confirm(`Copier la valeur depuis ${sourceTimestamp} vers ${selectedCells.length} case(s) ?`)) return;
             selectedCells.forEach(ts => onDataChange(ts, itemKey, sourceValue));
             setMassAssignMode(false);
             setSelectedCells([]);
@@ -583,14 +583,14 @@ const PipelineDragDropView = ({
         const b = Math.max(startIdx, endIdx);
         const range = cells.slice(a, b + 1).map(c => c.timestamp);
 
-        if (!confirm(`Assigner ${itemKey} = ${value} à ${range.length} case(s) ?`)) return;
+        if (!window.confirm(`Assigner ${itemKey} = ${value} à ${range.length} case(s) ?`)) return;
         range.forEach(ts => onDataChange(ts, itemKey, value));
         showToast(`✓ ${itemKey} assigné à ${range.length} case(s)`);
     };
 
     // Assigner la valeur à toutes les cases
     const handleAssignAll = (itemKey, value) => {
-        if (!confirm(`Assigner ${itemKey} = ${value} à TOUTES les cases (${cells.length}) ?`)) return;
+        if (!window.confirm(`Assigner ${itemKey} = ${value} à TOUTES les cases (${cells.length}) ?`)) return;
         cells.forEach(c => onDataChange(c.timestamp, itemKey, value));
         showToast(`✓ ${itemKey} assigné à toutes les cases`);
     };
