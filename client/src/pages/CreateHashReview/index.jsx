@@ -254,7 +254,7 @@ export default function CreateHashReview() {
             </div>
 
             {/* Section Content */}
-            <div className="max-w-6xl mx-auto px-6 py-8 relative z-10">
+            <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentSection}

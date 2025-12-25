@@ -258,7 +258,7 @@ export default function CreateFlowerReview() {
             </div>
 
             {/* Section Content */}
-            <div className="max-w-6xl mx-auto px-6 py-8">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentSection}
