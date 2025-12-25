@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ConfirmModal from '../../ui/ConfirmModal';
 import { X, Save, BookmarkPlus, List } from 'lucide-react';
 
 /**
@@ -196,10 +197,19 @@ const PresetConfigModal = ({
         setActiveTab('groups');
     };
 
+    const [confirmState, setConfirmState] = useState({ open: false, title: '', message: '', onConfirm: null });
+
     const deleteGroup = (id) => {
-        if (!window.confirm('Supprimer ce groupe ?')) return;
-        setGroups(prev => prev.filter(g => g.id !== id));
-        if (editingGroupId === id) setEditingGroupId(null);
+        setConfirmState({
+            open: true,
+            title: 'Supprimer le groupe',
+            message: 'Confirmez-vous la suppression de ce groupe ? Cette action est irréversible.',
+            onConfirm: () => {
+                setGroups(prev => prev.filter(g => g.id !== id));
+                if (editingGroupId === id) setEditingGroupId(null);
+                setConfirmState({ ...confirmState, open: false });
+            }
+        });
     };
 
     const updateGroupName = (id, name) => {
@@ -477,6 +487,8 @@ const PresetConfigModal = ({
                             </div>
                         </div>
                     )}
+
+                    <ConfirmModal open={confirmState.open} title={confirmState.title} message={confirmState.message} onCancel={() => setConfirmState({ ...confirmState, open: false })} onConfirm={() => { confirmState.onConfirm?.(); }} />
 
                     {/* Footer */}
                     <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">

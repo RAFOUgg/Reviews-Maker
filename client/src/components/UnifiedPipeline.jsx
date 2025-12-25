@@ -76,19 +76,30 @@ const UnifiedPipeline = ({
 
         if (existingIndex >= 0) {
             // Mettre à jour cellule existante
-            newTimelineData[existingIndex] = {
-                ...newTimelineData[existingIndex],
-                data: {
-                    ...newTimelineData[existingIndex].data,
-                    [field]: value
-                }
+            const cell = { ...newTimelineData[existingIndex] };
+            const newData = { ...(cell.data || {}) };
+
+            if (value === null || value === undefined) {
+                // Supprimer la clé réellement
+                delete newData[field];
+            } else {
+                newData[field] = value;
+            }
+
+            // Si plus de données, supprimer la cellule entière
+            if (Object.keys(newData).length === 0) {
+                newTimelineData.splice(existingIndex, 1);
+            } else {
+                newTimelineData[existingIndex] = { ...cell, data: newData };
             }
         } else {
-            // Créer nouvelle cellule
-            newTimelineData.push({
-                timestamp,
-                data: { [field]: value }
-            })
+            // Créer nouvelle cellule uniquement si value non-null
+            if (value !== null && value !== undefined) {
+                newTimelineData.push({
+                    timestamp,
+                    data: { [field]: value }
+                });
+            }
         }
 
         onChange?.({

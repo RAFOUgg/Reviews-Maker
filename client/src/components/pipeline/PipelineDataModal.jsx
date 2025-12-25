@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, BookmarkPlus, Bookmark } from 'lucide-react';
+import ConfirmModal from '../ui/ConfirmModal';
 
 /**
  * PipelineDataModal - Modal pour saisir les valeurs lors d'un drop
@@ -27,6 +28,7 @@ const PipelineDataModal = ({
     const [activeTab, setActiveTab] = useState('form'); // 'form' ou 'presets'
     const [fieldPresets, setFieldPresets] = useState([]); // Préréglages pour ce champ spécifique
     const [newPresetName, setNewPresetName] = useState('');
+    const [confirmState, setConfirmState] = useState({ open: false, title: '', message: '', onConfirm: null });
 
     useEffect(() => {
         // Initialiser avec les données existantes
@@ -102,12 +104,19 @@ const PipelineDataModal = ({
                 title="Supprimer ce champ"
                 onClick={() => {
                     if (!item || !item.key) return;
-                    if (!confirm('Effacer ce champ de la cellule ?')) return;
-                    if (onFieldDelete) {
-                        onFieldDelete(timestamp, item.key);
-                    } else {
-                        handleChange(item.key, null);
-                    }
+                    setConfirmState({
+                        open: true,
+                        title: 'Effacer le champ',
+                        message: 'Effacer ce champ de la cellule ?',
+                        onConfirm: () => {
+                            if (onFieldDelete) {
+                                onFieldDelete(timestamp, item.key);
+                            } else {
+                                handleChange(item.key, null);
+                            }
+                            setConfirmState({ ...confirmState, open: false });
+                        }
+                    });
                 }}
                 className="absolute top-1 right-1 text-red-600 hover:text-red-700 p-1 rounded"
             >
@@ -254,6 +263,8 @@ const PipelineDataModal = ({
                 </FieldWrapper>
             );
         }
+
+        // continue - no early return here
 
         // DATE
         if (type === 'date') {
@@ -567,6 +578,7 @@ const PipelineDataModal = ({
                     </motion.div>
                 </motion.div>
             )}
+            <ConfirmModal open={confirmState.open} title={confirmState.title} message={confirmState.message} onCancel={() => setConfirmState({ ...confirmState, open: false })} onConfirm={() => { confirmState.onConfirm?.(); }} />
         </AnimatePresence>
     );
 };

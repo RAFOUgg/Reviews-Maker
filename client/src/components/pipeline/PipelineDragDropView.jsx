@@ -63,6 +63,7 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
                     <button className="flex-1 liquid-btn liquid-btn--accent" onClick={() => onApply(values)}>Appliquer à {selectedCells.length > 0 ? `${selectedCells.length} cases` : 'la case'}</button>
                     <button className="flex-1 liquid-btn" onClick={onClose}>Annuler</button>
                 </div>
+                <ConfirmModal open={confirmState.open} title={confirmState.title} message={confirmState.message} onCancel={() => setConfirmState({ ...confirmState, open: false })} onConfirm={() => { confirmState.onConfirm?.(); }} />
             </div>
         </div>
     );
@@ -171,6 +172,7 @@ function SavePipelineModal({ isOpen, onClose, timelineConfig, timelineData, onSa
  */
 
 import { useState, useEffect, useRef } from 'react';
+import ConfirmModal from '../ui/ConfirmModal';
 
 // Grouped preset modal (inline for now)
 function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sidebarContent }) {
@@ -339,31 +341,40 @@ const PipelineDragDropView = ({
         });
     };
 
+    const [confirmState, setConfirmState] = useState({ open: false, title: '', message: '', onConfirm: null });
+
     const handleClearSelectedData = () => {
         const targets = (selectedCells && selectedCells.length > 0) ? selectedCells : (currentCellTimestamp ? [currentCellTimestamp] : []);
         if (!targets || targets.length === 0) {
             alert('Aucune case sélectionnée à effacer');
             return;
         }
-        if (!confirm(`Effacer toutes les données de ${targets.length} case(s) ? Cette action est annulable.`)) return;
 
-        const allChanges = [];
-        targets.forEach(ts => {
-            const prev = getCellData(ts) || {};
-            const keys = Object.keys(prev).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k));
-            keys.forEach(k => {
-                allChanges.push({ timestamp: ts, field: k, previousValue: prev[k] });
-                onDataChange(ts, k, null);
-            });
-            // Also clear _meta if needed
-            if (prev._meta) {
-                allChanges.push({ timestamp: ts, field: '_meta', previousValue: prev._meta });
-                onDataChange(ts, '_meta', null);
+        setConfirmState({
+            open: true,
+            title: 'Effacer les données',
+            message: `Effacer toutes les données de ${targets.length} case(s) ? Cette action est annulable.`,
+            onConfirm: () => {
+                const allChanges = [];
+                targets.forEach(ts => {
+                    const prev = getCellData(ts) || {};
+                    const keys = Object.keys(prev).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k));
+                    keys.forEach(k => {
+                        allChanges.push({ timestamp: ts, field: k, previousValue: prev[k] });
+                        onDataChange(ts, k, null);
+                    });
+                    // Also clear _meta if needed
+                    if (prev._meta) {
+                        allChanges.push({ timestamp: ts, field: '_meta', previousValue: prev._meta });
+                        onDataChange(ts, '_meta', null);
+                    }
+                });
+
+                if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'clear', changes: allChanges });
+                setSelectedCells([]);
+                setConfirmState({ ...confirmState, open: false });
             }
         });
-
-        if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'clear', changes: allChanges });
-        setSelectedCells([]);
     };
 
     // Suppression des handlers préréglages
@@ -880,7 +891,6 @@ const PipelineDragDropView = ({
     // Supprimer un champ d'une case (utilisé par PipelineDataModal)
     const handleFieldDelete = (ts, fieldKey) => {
         if (!ts || !fieldKey) return;
-        if (!confirm('Effacer ce champ de la case sélectionnée ?')) return;
         const prev = getCellData(ts) || {};
         const prevValue = prev && prev[fieldKey] !== undefined ? prev[fieldKey] : (prev.data ? prev.data[fieldKey] : undefined);
         onDataChange(ts, fieldKey, null);
