@@ -17,16 +17,22 @@ const PresetConfigModal = ({
     const [presetDescription, setPresetDescription] = useState('');
     const [presetData, setPresetData] = useState({});
     const [activeSection, setActiveSection] = useState(0);
+    // Grouped presets support
+    const [groups, setGroups] = useState([]); // { id, name, fieldKeys: [], values: { key: value } }
+    const [activeTab, setActiveTab] = useState('fields'); // 'fields' | 'groups'
+    const [editingGroupId, setEditingGroupId] = useState(null);
 
     useEffect(() => {
         if (initialPreset) {
             setPresetName(initialPreset.name || '');
             setPresetDescription(initialPreset.description || '');
             setPresetData(initialPreset.data || {});
+            setGroups(initialPreset.groups || []);
         } else {
             setPresetName('');
             setPresetDescription('');
             setPresetData({});
+            setGroups([]);
         }
     }, [initialPreset, isOpen]);
 
@@ -65,6 +71,7 @@ const PresetConfigModal = ({
             name: presetName.trim(),
             description: presetDescription.trim(),
             data: presetData,
+            groups,
             dataCount: Object.keys(presetData).filter(k => presetData[k] !== '' && presetData[k] !== null && presetData[k] !== undefined).length,
             createdAt: initialPreset?.createdAt || new Date().toISOString(),
             updatedAt: new Date().toISOString()
@@ -180,6 +187,92 @@ const PresetConfigModal = ({
         );
     };
 
+    // --- Group helpers ---
+    const createGroup = () => {
+        const id = `g_${Date.now()}`;
+        const newGroup = { id, name: `Groupe ${groups.length + 1}`, fieldKeys: [], values: {} };
+        setGroups(prev => [...prev, newGroup]);
+        setEditingGroupId(id);
+        setActiveTab('groups');
+    };
+
+    const deleteGroup = (id) => {
+        if (!window.confirm('Supprimer ce groupe ?')) return;
+        setGroups(prev => prev.filter(g => g.id !== id));
+        if (editingGroupId === id) setEditingGroupId(null);
+    };
+
+    const updateGroupName = (id, name) => {
+        setGroups(prev => prev.map(g => g.id === id ? { ...g, name } : g));
+    };
+
+    const toggleGroupField = (groupId, key) => {
+        setGroups(prev => prev.map(g => {
+            if (g.id !== groupId) return g;
+            const exists = g.fieldKeys.includes(key);
+            const fieldKeys = exists ? g.fieldKeys.filter(k => k !== key) : [...g.fieldKeys, key];
+            const values = { ...g.values };
+            if (!exists && presetData[key] !== undefined) values[key] = presetData[key];
+            if (exists) delete values[key];
+            return { ...g, fieldKeys, values };
+        }));
+    };
+
+    const setGroupFieldValue = (groupId, key, value) => {
+        setGroups(prev => prev.map(g => {
+            if (g.id !== groupId) return g;
+            return { ...g, values: { ...g.values, [key]: value } };
+        }));
+    };
+
+    const renderFieldForGroup = (item, group) => {
+        const value = (group.values && (group.values[item.key] ?? '')) || '';
+        const { key, label, icon, type = 'text' } = item;
+
+        // reuse same input types but write into group values
+        if (type === 'select' && Array.isArray(item.options)) {
+            return (
+                <div key={key} className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">{icon && <span className="mr-2">{icon}</span>}{label}</label>
+                    <select value={value} onChange={(e) => setGroupFieldValue(group.id, key, e.target.value)} className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100">
+                        <option value="">-- Non défini --</option>
+                        {item.options.map((opt, idx) => (<option key={`${key}-${idx}-${opt}`} value={opt}>{opt}</option>))}
+                    </select>
+                </div>
+            );
+        }
+        if (type === 'number') {
+            return (
+                <div key={key} className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">{icon && <span className="mr-2">{icon}</span>}{label}</label>
+                    <input type="number" value={value || ''} onChange={(e) => setGroupFieldValue(group.id, key, e.target.value === '' ? '' : parseFloat(e.target.value))} step={item.step || '0.1'} min={item.min} max={item.max} className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100" placeholder={item.placeholder || ''} />
+                </div>
+            );
+        }
+        if (type === 'checkbox') {
+            return (
+                <div key={key} className="flex items-center gap-3">
+                    <input type="checkbox" checked={Boolean(value)} onChange={(e) => setGroupFieldValue(group.id, key, e.target.checked)} className="w-5 h-5 rounded border-gray-300" />
+                    <label className="text-sm font-medium text-gray-900 dark:text-gray-100">{icon && <span className="mr-2">{icon}</span>}{label}</label>
+                </div>
+            );
+        }
+        if (type === 'textarea') {
+            return (
+                <div key={key} className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">{icon && <span className="mr-2">{icon}</span>}{label}</label>
+                    <textarea value={value || ''} onChange={(e) => setGroupFieldValue(group.id, key, e.target.value)} rows={3} className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 resize-none" placeholder={item.placeholder || ''} />
+                </div>
+            );
+        }
+        return (
+            <div key={key} className="space-y-2">
+                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">{icon && <span className="mr-2">{icon}</span>}{label}</label>
+                <input type="text" value={value || ''} onChange={(e) => setGroupFieldValue(group.id, key, e.target.value)} className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100" placeholder={item.placeholder || ''} />
+            </div>
+        );
+    };
+
     // Grouper par section
     const itemsBySection = {};
     allItems.forEach(item => {
@@ -270,38 +363,120 @@ const PresetConfigModal = ({
                         </div>
                     </div>
 
-                    {/* Navigation sections */}
-                    <div className="flex overflow-x-auto bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                        {sections.map((section, idx) => {
-                            const sectionItemCount = section.items.filter(item =>
-                                presetData[item.key] !== '' && presetData[item.key] !== null && presetData[item.key] !== undefined
-                            ).length;
-
-                            return (
-                                <button
-                                    key={idx}
-                                    onClick={() => setActiveSection(idx)}
-                                    className={`flex-shrink-0 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${activeSection === idx ? ' dark: bg-white dark:bg-gray-900' : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'}`}
-                                >
-                                    {section.label}
-                                    <span className="ml-2 text-xs bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded">
-                                        {sectionItemCount}/{section.items.length}
-                                    </span>
-                                </button>
-                            );
-                        })}
+                    {/* Tabs: Fields | Groups */}
+                    <div className="px-6 pt-4">
+                        <div className="flex items-center gap-3">
+                            <button onClick={() => setActiveTab('fields')} className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === 'fields' ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}>Champs</button>
+                            <button onClick={() => setActiveTab('groups')} className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === 'groups' ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}>Groupes</button>
+                            <div className="ml-auto text-sm text-gray-500">{definedCount}/{allItems.length} définis</div>
+                        </div>
                     </div>
 
-                    {/* Contenu section active */}
-                    <div className="p-6 overflow-y-auto max-h-[50vh] space-y-4">
-                        {currentSection.items.length > 0 ? (
-                            currentSection.items.map(item => renderField(item))
-                        ) : (
-                            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                                Aucun champ disponible dans cette section
+                    {activeTab === 'fields' ? (
+                        <>
+                            {/* Navigation sections */}
+                            <div className="flex overflow-x-auto bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                                {sections.map((section, idx) => {
+                                    const sectionItemCount = section.items.filter(item =>
+                                        presetData[item.key] !== '' && presetData[item.key] !== null && presetData[item.key] !== undefined
+                                    ).length;
+
+                                    return (
+                                        <button
+                                            key={idx}
+                                            onClick={() => setActiveSection(idx)}
+                                            className={`flex-shrink-0 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${activeSection === idx ? ' dark: bg-white dark:bg-gray-900' : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'}`}
+                                        >
+                                            {section.label}
+                                            <span className="ml-2 text-xs bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded">
+                                                {sectionItemCount}/{section.items.length}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
                             </div>
-                        )}
-                    </div>
+
+                            {/* Contenu section active */}
+                            <div className="p-6 overflow-y-auto max-h-[50vh] space-y-4">
+                                {currentSection.items.length > 0 ? (
+                                    currentSection.items.map(item => renderField(item))
+                                ) : (
+                                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">Aucun champ disponible dans cette section</div>
+                                )}
+                            </div>
+                        </>
+                    ) : (
+                        /* Groups editor */
+                        <div className="p-6 overflow-y-auto max-h-[50vh]">
+                            <div className="flex gap-6">
+                                <div className="w-64 bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <strong>Groupes</strong>
+                                        <button onClick={createGroup} className="px-2 py-1 bg-blue-600 text-white rounded text-xs">Nouveau</button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {groups.length === 0 && <div className="text-sm text-gray-500">Aucun groupe</div>}
+                                        {groups.map(g => (
+                                            <div key={g.id} className={`p-2 rounded-md cursor-pointer flex items-center justify-between ${editingGroupId === g.id ? 'bg-white dark:bg-gray-900' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`} onClick={() => setEditingGroupId(g.id)}>
+                                                <div className="flex-1 text-sm truncate">{g.name}</div>
+                                                <div className="flex items-center gap-2">
+                                                    <button onClick={(e) => { e.stopPropagation(); deleteGroup(g.id); }} className="text-xs text-red-500">Suppr</button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                                    {editingGroupId ? (
+                                        (() => {
+                                            const group = groups.find(x => x.id === editingGroupId) || null;
+                                            if (!group) return <div className="text-sm text-gray-500">Groupe introuvable</div>;
+                                            return (
+                                                <div>
+                                                    <div className="mb-3 flex items-center gap-3">
+                                                        <input value={group.name} onChange={(e) => updateGroupName(group.id, e.target.value)} className="flex-1 px-3 py-2 rounded border bg-gray-50 dark:bg-gray-800" />
+                                                        <div className="text-sm text-gray-500">{group.fieldKeys.length} champs</div>
+                                                    </div>
+
+                                                    <div className="mb-4 text-sm text-gray-600">Sélectionnez les champs à inclure dans ce groupe :</div>
+                                                    <div className="grid grid-cols-2 gap-3 max-h-[40vh] overflow-y-auto">
+                                                        {allItems.map(item => (
+                                                            <label key={item.key} className="flex items-start gap-2 p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
+                                                                <input type="checkbox" checked={group.fieldKeys.includes(item.key)} onChange={() => toggleGroupField(group.id, item.key)} className="mt-1" />
+                                                                <div className="flex-1">
+                                                                    <div className="text-sm font-medium">{item.label}</div>
+                                                                    <div className="text-xs text-gray-500 truncate">{item.sectionLabel}</div>
+                                                                </div>
+                                                            </label>
+                                                        ))}
+                                                    </div>
+
+                                                    {/* If any fields selected, allow editing their values */}
+                                                    <div className="mt-4">
+                                                        <h4 className="text-sm font-semibold mb-2">Valeurs du groupe</h4>
+                                                        {group.fieldKeys.length === 0 ? (
+                                                            <div className="text-sm text-gray-500">Aucun champ sélectionné</div>
+                                                        ) : (
+                                                            <div className="space-y-4">
+                                                                {group.fieldKeys.map(k => {
+                                                                    const item = allItems.find(i => i.key === k);
+                                                                    if (!item) return null;
+                                                                    return renderFieldForGroup(item, group);
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()
+                                    ) : (
+                                        <div className="text-sm text-gray-500">Sélectionnez un groupe pour l'éditer</div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Footer */}
                     <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
