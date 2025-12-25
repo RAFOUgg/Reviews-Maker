@@ -466,16 +466,27 @@ const PipelineDragDropView = ({
 
     // Sélection par glissé (mousedown + mouseenter + mouseup)
     const selectedCellsRef = useRef([]);
+    const gridRef = useRef(null);
+    const cellRefs = useRef({});
+
+    const [selectionRect, setSelectionRect] = useState({ visible: false, x: 0, y: 0, width: 0, height: 0, startX: 0, startY: 0 });
 
     const startSelection = (e, startIdx, timestamp) => {
+        // Begin drag-selection rectangle.
+        if (e.button !== 0) return;
         e.preventDefault();
+        const startX = e.clientX;
+        const startY = e.clientY;
         setIsSelecting(true);
         setSelectionStartIdx(startIdx);
-        setSelectedCells([timestamp]);
-        selectedCellsRef.current = [timestamp];
+        // initialize visible rect
+        setSelectionRect({ visible: true, x: startX, y: startY, width: 0, height: 0, startX, startY });
+        setSelectedCells([]);
+        selectedCellsRef.current = [];
     };
 
     const updateSelectionTo = (currentIdx) => {
+        // kept for compatibility but not used for rectangle selection
         if (selectionStartIdx === null) return;
         const a = Math.min(selectionStartIdx, currentIdx);
         const b = Math.max(selectionStartIdx, currentIdx);
@@ -484,18 +495,45 @@ const PipelineDragDropView = ({
         selectedCellsRef.current = range;
     };
 
-    // Stop selection on mouseup anywhere
+    // Mouse move/up handlers for rectangle selection
     useEffect(() => {
-        const onUp = () => {
-            if (isSelecting) {
-                setIsSelecting(false);
-                setSelectionStartIdx(null);
-                setSelectedCells([]); // Clear selection when mouse released
-            }
+        const onMove = (e) => {
+            if (!isSelecting) return;
+            const { startX, startY } = selectionRect;
+            const x = Math.min(startX, e.clientX);
+            const y = Math.min(startY, e.clientY);
+            const width = Math.abs(e.clientX - startX);
+            const height = Math.abs(e.clientY - startY);
+            setSelectionRect(prev => ({ ...prev, x, y, width, height }));
         };
+
+        const onUp = (e) => {
+            if (!isSelecting) return;
+            // compute selected cells intersecting selectionRect
+            const rect = selectionRect;
+            const sel = [];
+            Object.entries(cellRefs.current).forEach(([ts, el]) => {
+                if (!el) return;
+                const r = el.getBoundingClientRect();
+                // check intersection
+                const intersects = !(r.right < rect.x || r.left > rect.x + rect.width || r.bottom < rect.y || r.top > rect.y + rect.height);
+                if (intersects) sel.push(ts);
+            });
+            setSelectedCells(sel);
+            selectedCellsRef.current = sel;
+            // cleanup
+            setIsSelecting(false);
+            setSelectionStartIdx(null);
+            setSelectionRect({ visible: false, x: 0, y: 0, width: 0, height: 0, startX: 0, startY: 0 });
+        };
+
+        window.addEventListener('mousemove', onMove);
         window.addEventListener('mouseup', onUp);
-        return () => window.removeEventListener('mouseup', onUp);
-    }, [isSelecting]);
+        return () => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+        };
+    }, [isSelecting, selectionRect]);
 
     // Keep ref in sync
     useEffect(() => {
@@ -1093,6 +1131,23 @@ const PipelineDragDropView = ({
                                         />
                                     );
                                 })()}
+                                {/* Selection rectangle (live) */}
+                                {selectionRect.visible && (
+                                    <div
+                                        className="fixed z-50 pointer-events-none border-4 rounded-2xl shadow-lg animate-fade-in"
+                                        style={{
+                                            top: selectionRect.y,
+                                            left: selectionRect.x,
+                                            width: selectionRect.width,
+                                            height: selectionRect.height,
+                                            boxSizing: 'border-box',
+                                            transition: 'none',
+                                            borderStyle: 'dashed',
+                                            background: 'rgba(80,180,255,0.06)'
+                                        }}
+                                    />
+                                )}
+
                                 {cells.map((cell, idx) => {
                                     const hasData = hasCellData(cell.timestamp);
                                     const cellData = getCellData(cell.timestamp);
@@ -1117,10 +1172,11 @@ const PipelineDragDropView = ({
                                             onDragLeave={handleDragLeave}
                                             onDrop={(e) => handleDrop(e, cell.timestamp)}
                                             onClick={() => handleCellClick(cell.timestamp)}
-                                            onMouseEnter={(e) => { handleCellHover(e, cell.timestamp); if (isSelecting) updateSelectionTo(idx); }}
+                                            onMouseEnter={(e) => { handleCellHover(e, cell.timestamp); }}
                                             onMouseLeave={handleCellLeave}
                                             onMouseDown={(e) => { if (e.button === 0) startSelection(e, idx, cell.timestamp); }}
-                                            onMouseUp={(e) => { if (isSelecting) { setIsSelecting(false); setSelectionStartIdx(null); } }}
+                                            onMouseUp={(e) => { /* handled globally to compute rectangle on mouseup */ }}
+                                            ref={(el) => { cellRefs.current[cell.timestamp] = el; }}
                                             className={cellClass}
                                             style={{ userSelect: 'none' }}
                                         >
