@@ -226,7 +226,7 @@ export default function CreateHashReview() {
                             <button
                                 key={section.id}
                                 onClick={() => setCurrentSection(idx)}
-                                className={`w-3 h-3 rounded-full transition-all ${idx === currentSection ? 'bg-white w-8' : idx < currentSection ? 'bg-green-400' : 'bg-white/30' }`}
+                                className={`w-3 h-3 rounded-full transition-all ${idx === currentSection ? 'bg-white w-8' : idx < currentSection ? 'bg-green-400' : 'bg-white/30'}`}
                                 title={section.title}
                             />
                         ))}
