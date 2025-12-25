@@ -56,6 +56,7 @@ export default function TimelineGrid({
 
                 const start = new Date(config.start)
                 const end = new Date(config.end)
+                if (isNaN(start) || isNaN(end)) return []
 
                 for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
                     const daysSinceStart = Math.floor((d - start) / (1000 * 60 * 60 * 24))
@@ -73,6 +74,7 @@ export default function TimelineGrid({
                 if (!config.start) return []
 
                 const weekStart = new Date(config.start)
+                if (isNaN(weekStart)) return []
                 const maxWeeks = config.end ?
                     Math.ceil((new Date(config.end) - weekStart) / (1000 * 60 * 60 * 24 * 7)) :
                     52 // Max 52 semaines si pas de fin
@@ -259,7 +261,7 @@ export default function TimelineGrid({
                                     onClick={() => handleCellClick(cell.timestamp, index)}
                                     onMouseEnter={() => setHoveredCell(cell)}
                                     onMouseLeave={() => setHoveredCell(null)}
-                                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 rounded-sm cursor-pointer transition-all hover:ring-1 sm:hover:ring-2 hover: hover:scale-110 sm:hover:scale-125 ${getCellColor(cell.timestamp)} ${selectedCell === cell.timestamp ? 'ring-1 sm:ring-2 scale-110 sm:scale-125' : '' }`}
+                                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 rounded-sm cursor-pointer transition-all hover:ring-1 sm:hover:ring-2 hover: hover:scale-110 sm:hover:scale-125 ${getCellColor(cell.timestamp)} ${selectedCell === cell.timestamp ? 'ring-1 sm:ring-2 scale-110 sm:scale-125' : ''}`}
                                     title={`${cell.label} - ${cell.date}`}
                                 />
                             ))}

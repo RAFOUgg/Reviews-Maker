@@ -75,14 +75,14 @@ export default function CulturePipelineTimeline({ data, onChange }) {
                     <div className="grid grid-cols-2 gap-2">
                         <button
                             onClick={() => handleModeChange('phases')}
-                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${pipelineMode === 'phases' ? 'bg-gradient-to-r text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200' }`}
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${pipelineMode === 'phases' ? 'bg-gradient-to-r text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'}`}
                         >
                             🌱 Mode Phases
                             <div className="text-xs mt-1 opacity-80">12 étapes prédéfinies</div>
                         </button>
                         <button
                             onClick={() => handleModeChange('custom')}
-                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${pipelineMode === 'custom' ? 'bg-gradient-to-r text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200' }`}
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${pipelineMode === 'custom' ? 'bg-gradient-to-r text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'}`}
                         >
                             ⚙️ Personnalisé
                             <div className="text-xs mt-1 opacity-80">Configuration libre</div>
@@ -348,12 +348,27 @@ export default function CulturePipelineTimeline({ data, onChange }) {
             onChange('cultureTimelineData', newData)
         } else {
             // Créer nouvelle entrée
-            const cellDate = new Date(timestamp)
-            const newEntry = {
-                timestamp,
-                date: cellDate.toISOString().split('T')[0],
-                [field]: value
+            // Compute a safe date string only when timestamp encodes a real date
+            let dateStr = undefined;
+            try {
+                if (typeof timestamp === 'string') {
+                    // If timestamp is like 'date-YYYY-MM-DD' extract the date
+                    if (timestamp.startsWith('date-')) {
+                        const candidate = timestamp.replace(/^date-/, '');
+                        const parsed = new Date(candidate);
+                        if (!isNaN(parsed)) dateStr = parsed.toISOString().split('T')[0];
+                    } else {
+                        // If timestamp itself looks like an ISO date, try parsing
+                        const parsed = new Date(timestamp);
+                        if (!isNaN(parsed)) dateStr = parsed.toISOString().split('T')[0];
+                    }
+                }
+            } catch (e) {
+                dateStr = undefined;
             }
+
+            const newEntry = { timestamp, [field]: value };
+            if (dateStr) newEntry.date = dateStr;
             onChange('cultureTimelineData', [...timelineData, newEntry])
         }
     }

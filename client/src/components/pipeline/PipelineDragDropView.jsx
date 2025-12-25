@@ -954,6 +954,8 @@ const PipelineDragDropView = ({
         if (intervalType === 'date' && start && end) {
             const startDate = new Date(start);
             const endDate = new Date(end);
+            // Validate parsed dates
+            if (isNaN(startDate) || isNaN(endDate)) return [];
             const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
             const count = Math.min(days, 365); // Pagination si > 365 jours
 
@@ -1357,9 +1359,20 @@ const PipelineDragDropView = ({
                         )}
 
                         <div className="flex items-end">
-                            <div className="px-6 py-4 bg-white rounded-lg text-gray-900 shadow-md flex-1">
-                                <div className="text-3xl font-extrabold">{completionPercent}%</div>
-                                <div className="text-sm text-gray-600 mt-1">{filledCells}/{cells.length} cases</div>
+                            <div className="w-64">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="text-sm font-medium text-gray-700">Progression</div>
+                                    <div className="text-xs text-gray-500">{filledCells}/{cells.length} cases</div>
+                                </div>
+                                <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3 overflow-hidden border border-gray-200 dark:border-gray-700">
+                                    <div
+                                        className="h-3 rounded-full bg-gradient-to-r from-purple-400 to-purple-600 shadow-inner"
+                                        style={{ width: `${Math.max(0, Math.min(100, completionPercent))}%` }}
+                                        aria-valuenow={completionPercent}
+                                        aria-valuemin={0}
+                                        aria-valuemax={100}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1562,6 +1575,7 @@ const PipelineDragDropView = ({
                                             } else if (timelineConfig.type === 'date' && timelineConfig.end) {
                                                 // Ajouter 1 jour à la date de fin
                                                 const endDate = new Date(timelineConfig.end);
+                                                if (isNaN(endDate)) return;
                                                 endDate.setDate(endDate.getDate() + 1);
                                                 onConfigChange('end', endDate.toISOString().split('T')[0]);
                                             }
