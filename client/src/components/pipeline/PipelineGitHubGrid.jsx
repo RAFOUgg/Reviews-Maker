@@ -462,10 +462,21 @@ const PipelineGitHubGrid = ({
                 </div>
 
                 <div className="flex items-center gap-4">
-                    {/* Statistiques */}
-                    <div className="text-right">
-                        <div className="text-2xl font-bold text-gray-200">{completionPercent}%</div>
-                        <div className="text-xs text-gray-400">{filledCellsCount}/{totalCells} cases</div>
+                    {/* Statistiques compactes: barre de progression aplatie */}
+                    <div className="w-56">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="text-sm text-gray-300 font-medium">Progression</div>
+                            <div className="text-xs text-gray-400">{filledCellsCount}/{totalCells} cases</div>
+                        </div>
+                        <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden border border-gray-700">
+                            <div
+                                className="h-3 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 shadow-inner"
+                                style={{ width: `${Math.max(0, Math.min(100, completionPercent))}%` }}
+                                aria-valuenow={completionPercent}
+                                aria-valuemin={0}
+                                aria-valuemax={100}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
