@@ -1055,44 +1055,7 @@ const PipelineDragDropView = ({
                                 📊 <strong>Autres cases</strong> : Drag & drop des paramètres depuis le panneau latéral
                             </p>
 
-                            <div className="grid grid-cols-7 gap-2 select-none relative">
-                                {/* Visual selection frame overlay */}
-                                {selectedCells.length > 1 && !isSelecting && (() => {
-                                    // Find all selected cell indices
-                                    const indices = selectedCells.map(ts => cells.findIndex(c => c.timestamp === ts)).filter(i => i !== -1);
-                                    if (indices.length === 0) return null;
-                                    const minIdx = Math.min(...indices);
-                                    const maxIdx = Math.max(...indices);
-                                    // Compute bounding box for all selected cells
-                                    let minRow = 99, minCol = 99, maxRow = 0, maxCol = 0;
-                                    indices.forEach(idx => {
-                                        const row = Math.floor(idx / 7);
-                                        const col = idx % 7;
-                                        if (row < minRow) minRow = row;
-                                        if (col < minCol) minCol = col;
-                                        if (row > maxRow) maxRow = row;
-                                        if (col > maxCol) maxCol = col;
-                                    });
-                                    const top = `${minRow * 90}px`;
-                                    const left = `${minCol * 90}px`;
-                                    const width = `${((maxCol - minCol + 1) * 90)}px`;
-                                    const height = `${((maxRow - minRow + 1) * 90)}px`;
-                                    return (
-                                        <div
-                                            className="absolute pointer-events-none z-40 border-4 rounded-2xl shadow-lg animate-fade-in"
-                                            style={{
-                                                top,
-                                                left,
-                                                width,
-                                                height,
-                                                boxSizing: 'border-box',
-                                                transition: 'all 0.1s',
-                                                borderStyle: 'dashed',
-                                                background: 'rgba(80,180,255,0.07)'
-                                            }}
-                                        />
-                                    );
-                                })()}
+                            <div className="grid gap-2 select-none relative" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
                                 {cells.map((cell, idx) => {
                                     const hasData = hasCellData(cell.timestamp);
                                     const cellData = getCellData(cell.timestamp);
@@ -1106,7 +1069,7 @@ const PipelineDragDropView = ({
                                     cellClass += selectedCell === cell.timestamp ? ' ring-2  shadow-lg' : ' hover: hover:shadow-md';
                                     cellClass += isSelected ? ' ring-2   dark:' : '';
                                     cellClass += isHovered && draggedContent ? ' ring-4   dark: scale-105 shadow-2xl  animate-pulse' : '';
-                                    if (isFirst) cellClass += ' col-span-2  ';
+                                    if (isFirst) cellClass += ' md:col-span-2  ';
                                     // Remove purple border if not selected
                                     if (isFirst && !isSelected) cellClass = cellClass.replace('ring-2 ', '');
 
