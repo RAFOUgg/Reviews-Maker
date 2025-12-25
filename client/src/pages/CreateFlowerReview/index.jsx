@@ -266,7 +266,7 @@ export default function CreateFlowerReview() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.4 }}
-                        className="bg-white/98 backdrop-blur-2xl rounded-3xl shadow-2xl w-full max-w-[min(100px,100%)] mx-auto p-6 sm:p-8 lg:p-10 overflow-hidden"
+                        className="bg-white/98 backdrop-blur-2xl rounded-3xl shadow-2xl w-full max-w-[min(1100px,100%)] mx-auto p-6 sm:p-6 lg:p-10 overflow-hidden"
                     >
                         <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
                             <span className="text-4xl">{currentSectionData.icon}</span>
