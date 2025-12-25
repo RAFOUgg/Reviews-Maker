@@ -232,7 +232,7 @@ export default function CreateFlowerReview() {
                             <button
                                 key={section.id}
                                 onClick={() => setCurrentSection(idx)}
-                                className={`w-3 h-3 rounded-full transition-all ${idx === currentSection ? 'bg-white w-8' : idx < currentSection ? 'bg-green-400' : 'bg-white/30' }`}
+                                className={`w-3 h-3 rounded-full transition-all ${idx === currentSection ? 'bg-white w-8' : idx < currentSection ? 'bg-green-400' : 'bg-white/30'}`}
                                 title={section.title}
                             />
                         ))}
@@ -266,7 +266,7 @@ export default function CreateFlowerReview() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.4 }}
-                        className="bg-white/98 backdrop-blur-2xl rounded-3xl shadow-2xl p-10"
+                        className="bg-white/98 backdrop-blur-2xl rounded-3xl shadow-2xl w-full max-w-[min(1100px,100%)] mx-auto p-6 sm:p-8 lg:p-10 overflow-hidden"
                     >
                         <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
                             <span className="text-4xl">{currentSectionData.icon}</span>
