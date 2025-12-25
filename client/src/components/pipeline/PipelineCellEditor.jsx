@@ -83,7 +83,7 @@ const PipelineCellEditor = ({
     };
 
     const handleDeleteCell = () => {
-        if (confirm('Supprimer toutes les données de cette cellule ?')) {
+        if (window.confirm('Supprimer toutes les données de cette cellule ?')) {
             onDelete?.(cellIndex);
             onClose?.();
         }

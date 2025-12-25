@@ -67,7 +67,7 @@ export default function LibraryPage() {
     }
 
     const deleteReview = async (reviewId) => {
-        if (!confirm('Êtes-vous sûr de vouloir supprimer cette review ?')) return
+        if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette review ?')) return
 
         try {
             const response = await fetch(`/api/reviews/${reviewId}`, {

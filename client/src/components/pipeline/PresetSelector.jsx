@@ -75,9 +75,9 @@ const PresetSelector = ({ presets = [], selectedPresets = [], onTogglePreset, on
                                     onClick={(e) => {
                                         e.preventDefault()
                                         e.stopPropagation()
-                                        if (confirm(`Supprimer le préréglage "${preset.name}" ?`)) {
-                                            onDelete?.(preset.id)
-                                        }
+                                                if (window.confirm(`Supprimer le préréglage "${preset.name}" ?`)) {
+                                                    onDelete?.(preset.id)
+                                                }
                                     }}
                                     className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 p-1 transition-opacity"
                                     title="Supprimer"

@@ -110,7 +110,7 @@ export default function KYCUploader({ userId, accountType }) {
     }
 
     const handleDelete = async (documentId) => {
-        if (!confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) return
+        if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) return
 
         try {
             const response = await fetch(`/api/kyc/document/${documentId}`, {
