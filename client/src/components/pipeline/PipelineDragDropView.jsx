@@ -468,19 +468,21 @@ const PipelineDragDropView = ({
     const selectedCellsRef = useRef([]);
     const gridRef = useRef(null);
     const cellRefs = useRef({});
+    const selectionStartTimestampRef = useRef(null);
 
     const [selectionRect, setSelectionRect] = useState({ visible: false, x: 0, y: 0, width: 0, height: 0, startX: 0, startY: 0 });
 
     const startSelection = (e, startIdx, timestamp) => {
-        // Begin drag-selection rectangle.
+        // Begin potential drag-selection. We wait for small threshold movement
         if (e.button !== 0) return;
         e.preventDefault();
         const startX = e.clientX;
         const startY = e.clientY;
         setIsSelecting(true);
         setSelectionStartIdx(startIdx);
-        // initialize visible rect
-        setSelectionRect({ visible: true, x: startX, y: startY, width: 0, height: 0, startX, startY });
+        selectionStartTimestampRef.current = timestamp;
+        // initialize rect but keep it hidden until movement threshold
+        setSelectionRect({ visible: false, x: startX, y: startY, width: 0, height: 0, startX, startY });
         setSelectedCells([]);
         selectedCellsRef.current = [];
     };
@@ -497,33 +499,56 @@ const PipelineDragDropView = ({
 
     // Mouse move/up handlers for rectangle selection
     useEffect(() => {
+        const MOVE_THRESHOLD = 6; // px before showing rectangle
         const onMove = (e) => {
             if (!isSelecting) return;
-            const { startX, startY } = selectionRect;
+            const { startX, startY, visible } = selectionRect;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            const absdx = Math.abs(dx);
+            const absdy = Math.abs(dy);
             const x = Math.min(startX, e.clientX);
             const y = Math.min(startY, e.clientY);
-            const width = Math.abs(e.clientX - startX);
-            const height = Math.abs(e.clientY - startY);
-            setSelectionRect(prev => ({ ...prev, x, y, width, height }));
+            const width = Math.abs(dx);
+            const height = Math.abs(dy);
+            // Only show rectangle after threshold to avoid clicks turning into drags
+            if (!visible && (absdx > MOVE_THRESHOLD || absdy > MOVE_THRESHOLD)) {
+                setSelectionRect(prev => ({ ...prev, visible: true, x, y, width, height }));
+            } else if (visible) {
+                // update coordinates smoothly
+                setSelectionRect(prev => ({ ...prev, x, y, width, height }));
+            } else {
+                // update start coords in case selectionRect not yet visible
+                setSelectionRect(prev => ({ ...prev, startX, startY }));
+            }
         };
 
         const onUp = (e) => {
             if (!isSelecting) return;
-            // compute selected cells intersecting selectionRect
             const rect = selectionRect;
             const sel = [];
-            Object.entries(cellRefs.current).forEach(([ts, el]) => {
-                if (!el) return;
-                const r = el.getBoundingClientRect();
-                // check intersection
-                const intersects = !(r.right < rect.x || r.left > rect.x + rect.width || r.bottom < rect.y || r.top > rect.y + rect.height);
-                if (intersects) sel.push(ts);
-            });
-            setSelectedCells(sel);
-            selectedCellsRef.current = sel;
+            if (rect.visible && rect.width > 0 && rect.height > 0) {
+                // compute selected cells intersecting selectionRect
+                Object.entries(cellRefs.current).forEach(([ts, el]) => {
+                    if (!el) return;
+                    const r = el.getBoundingClientRect();
+                    const intersects = !(r.right < rect.x || r.left > rect.x + rect.width || r.bottom < rect.y || r.top > rect.y + rect.height);
+                    if (intersects) sel.push(ts);
+                });
+                setSelectedCells(sel);
+                selectedCellsRef.current = sel;
+            } else {
+                // treat as click (no significant drag) - select single start cell
+                const ts = selectionStartTimestampRef.current;
+                if (ts) {
+                    setSelectedCells([ts]);
+                    selectedCellsRef.current = [ts];
+                }
+            }
             // cleanup
             setIsSelecting(false);
             setSelectionStartIdx(null);
+            selectionStartTimestampRef.current = null;
             setSelectionRect({ visible: false, x: 0, y: 0, width: 0, height: 0, startX: 0, startY: 0 });
         };
 
