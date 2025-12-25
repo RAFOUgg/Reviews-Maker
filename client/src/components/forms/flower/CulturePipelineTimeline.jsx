@@ -341,34 +341,48 @@ export default function CulturePipelineTimeline({ data, onChange }) {
         if (existingIndex >= 0) {
             // Modifier l'entrée existante
             const newData = [...timelineData]
-            newData[existingIndex] = {
-                ...newData[existingIndex],
-                [field]: value
+            const entry = { ...newData[existingIndex] }
+
+            if (value === null || value === undefined) {
+                // Supprimer la clé réellement
+                delete entry[field]
+            } else {
+                entry[field] = value
             }
+
+            // Si plus aucune donnée utile (hors timestamp/date), supprimer l'entrée entière
+            const usefulKeys = Object.keys(entry).filter(k => k !== 'timestamp' && k !== 'date')
+            if (usefulKeys.length === 0) {
+                newData.splice(existingIndex, 1)
+            } else {
+                newData[existingIndex] = entry
+            }
+
             onChange('cultureTimelineData', newData)
         } else {
             // Créer nouvelle entrée
+            // Ne créer une nouvelle entrée que si la valeur est non nulle
+            if (value === null || value === undefined || value === '') return
+
             // Compute a safe date string only when timestamp encodes a real date
-            let dateStr = undefined;
+            let dateStr = undefined
             try {
                 if (typeof timestamp === 'string') {
-                    // If timestamp is like 'date-YYYY-MM-DD' extract the date
                     if (timestamp.startsWith('date-')) {
-                        const candidate = timestamp.replace(/^date-/, '');
-                        const parsed = new Date(candidate);
-                        if (!isNaN(parsed)) dateStr = parsed.toISOString().split('T')[0];
+                        const candidate = timestamp.replace(/^date-/, '')
+                        const parsed = new Date(candidate)
+                        if (!isNaN(parsed)) dateStr = parsed.toISOString().split('T')[0]
                     } else {
-                        // If timestamp itself looks like an ISO date, try parsing
-                        const parsed = new Date(timestamp);
-                        if (!isNaN(parsed)) dateStr = parsed.toISOString().split('T')[0];
+                        const parsed = new Date(timestamp)
+                        if (!isNaN(parsed)) dateStr = parsed.toISOString().split('T')[0]
                     }
                 }
             } catch (e) {
-                dateStr = undefined;
+                dateStr = undefined
             }
 
-            const newEntry = { timestamp, [field]: value };
-            if (dateStr) newEntry.date = dateStr;
+            const newEntry = { timestamp, [field]: value }
+            if (dateStr) newEntry.date = dateStr
             onChange('cultureTimelineData', [...timelineData, newEntry])
         }
     }
