@@ -30,6 +30,7 @@ import MassAssignModal from './MassAssignModal';
 import PresetSelector from './PresetSelector';
 import ItemContextMenu from './ItemContextMenu';
 import PreConfigBadge from './PreConfigBadge';
+import MultiContentAssignModal from './MultiContentAssignModal';
 
 const PipelineDragDropView = ({
     type = 'culture',
@@ -60,6 +61,8 @@ const PipelineDragDropView = ({
     const [droppedItem, setDroppedItem] = useState(null); // Item droppé en attente de saisie
     const [showPresetConfigModal, setShowPresetConfigModal] = useState(false);
     const [editingPreset, setEditingPreset] = useState(null);
+    const [showMultiAssignModal, setShowMultiAssignModal] = useState(false);
+    const [multiAssignContents, setMultiAssignContents] = useState([]);
     const [hoveredCell, setHoveredCell] = useState(null); // Cellule survolée pendant drag
     const [isSelecting, setIsSelecting] = useState(false);
     const [selectionStartIdx, setSelectionStartIdx] = useState(null);
@@ -367,6 +370,18 @@ const PipelineDragDropView = ({
         console.log('💧 Drop détecté sur timestamp:', timestamp);
         console.log('📦 draggedContent:', draggedContent);
 
+        // If draggedContent is an array (multiple contents selected), open multi-assign modal
+        if (Array.isArray(draggedContent) && draggedContent.length > 0) {
+            // Determine target cells (selectedCells or single timestamp)
+            const sel = selectedCellsRef.current || [];
+            const target = (sel && sel.length > 0) ? sel : [timestamp];
+            setMultiAssignContents(draggedContent);
+            setShowMultiAssignModal(true);
+            // Store the intended targets in a ref so modal can call onApply
+            multiAssignTargetsRef.current = target;
+            return;
+        }
+
         if (!draggedContent) {
             console.warn('⚠️ Pas de draggedContent disponible');
             return;
@@ -421,6 +436,24 @@ const PipelineDragDropView = ({
         }
 
         setDraggedContent(null);
+    };
+
+    const multiAssignTargetsRef = useRef([]);
+
+    const handleMultiAssignApply = (valuesMap, targets) => {
+        const t = targets && targets.length > 0 ? targets : (multiAssignTargetsRef.current || []);
+        if (!t || t.length === 0) return;
+        // valuesMap: { key: value }
+        t.forEach(ts => {
+            Object.entries(valuesMap).forEach(([k, v]) => {
+                onDataChange(ts, k, v);
+            });
+        });
+        showToast(`✓ ${Object.keys(valuesMap).length} contenu(s) appliqué(s) à ${t.length} case(s)`);
+        // reset
+        setShowMultiAssignModal(false);
+        setMultiAssignContents([]);
+        multiAssignTargetsRef.current = [];
     };
 
     // ✅ TOAST FEEDBACK
@@ -1003,19 +1036,7 @@ const PipelineDragDropView = ({
                         </div>
                     </div>
 
-                    {/* Barre de progression visuelle (plein largeur) */}
-                    <div className="col-span-4 mt-3">
-                        <div className="w-full bg-gray-200 dark:bg-gray-800 h-3 rounded-full overflow-hidden">
-                            <div
-                                className={`h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-500`}
-                                style={{ width: `${completionPercent}%` }}
-                            />
-                        </div>
-                        <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mt-2">
-                            <div>{filledCells}/{cells.length} cases</div>
-                            <div className="font-semibold">{completionPercent}%</div>
-                        </div>
-                    </div>
+                    
 
                     {/* Messages d'aide selon type d'intervalle */}
                     {timelineConfig.type === 'date' && (!timelineConfig.start || !timelineConfig.end) && (
@@ -1053,6 +1074,20 @@ const PipelineDragDropView = ({
                             </p>
                         </div>
                     )}
+                </div>
+
+                {/* Progression globale (barre full-width) */}
+                <div className="w-full">
+                    <div className="w-full bg-gray-200 dark:bg-gray-800 h-3 rounded-b-none rounded-t-md overflow-hidden">
+                        <div
+                            className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-500"
+                            style={{ width: `${completionPercent}%` }}
+                        />
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mt-2 px-4">
+                        <div>{filledCells}/{cells.length} cases</div>
+                        <div className="font-semibold">{completionPercent}%</div>
+                    </div>
                 </div>
 
                 {/* TIMELINE GRID */}
