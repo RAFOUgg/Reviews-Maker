@@ -1243,35 +1243,40 @@ const PipelineDragDropView = ({
                             <div ref={gridRef} className="grid grid-cols-7 gap-2 select-none relative">
                                 {/* Visual selection frame overlay */}
                                 {selectedCells.length > 1 && !isSelecting && (() => {
-                                    // Find all selected cell indices
-                                    const indices = selectedCells.map(ts => cells.findIndex(c => c.timestamp === ts)).filter(i => i !== -1);
-                                    if (indices.length === 0) return null;
-                                    const minIdx = Math.min(...indices);
-                                    const maxIdx = Math.max(...indices);
-                                    // Compute bounding box for all selected cells
-                                    let minRow = 99, minCol = 99, maxRow = 0, maxCol = 0;
-                                    indices.forEach(idx => {
-                                        const row = Math.floor(idx / 7);
-                                        const col = idx % 7;
-                                        if (row < minRow) minRow = row;
-                                        if (col < minCol) minCol = col;
-                                        if (row > maxRow) maxRow = row;
-                                        if (col > maxCol) maxCol = col;
+                                    // Compute aggregate bounding box of selected cells using DOM measurements
+                                    const refs = selectedCells.map(ts => cellRefs.current[ts]).filter(Boolean);
+                                    if (!refs || refs.length === 0) return null;
+                                    const gridBox = gridRef.current && gridRef.current.getBoundingClientRect();
+                                    if (!gridBox) return null;
+
+                                    const boxes = refs.map(el => {
+                                        const r = el.getBoundingClientRect();
+                                        return {
+                                            left: r.left,
+                                            top: r.top,
+                                            right: r.right,
+                                            bottom: r.bottom
+                                        };
                                     });
-                                    const top = `${minRow * 90}px`;
-                                    const left = `${minCol * 90}px`;
-                                    const width = `${((maxCol - minCol + 1) * 90)}px`;
-                                    const height = `${((maxRow - minRow + 1) * 90)}px`;
+
+                                    const leftPx = Math.min(...boxes.map(b => b.left)) - gridBox.left + (gridRef.current ? gridRef.current.scrollLeft : 0);
+                                    const topPx = Math.min(...boxes.map(b => b.top)) - gridBox.top + (gridRef.current ? gridRef.current.scrollTop : 0);
+                                    const rightPx = Math.max(...boxes.map(b => b.right)) - gridBox.left + (gridRef.current ? gridRef.current.scrollLeft : 0);
+                                    const bottomPx = Math.max(...boxes.map(b => b.bottom)) - gridBox.top + (gridRef.current ? gridRef.current.scrollTop : 0);
+
+                                    const widthPx = rightPx - leftPx;
+                                    const heightPx = bottomPx - topPx;
+
                                     return (
                                         <div
                                             className="absolute pointer-events-none z-40 border-4 rounded-2xl shadow-lg animate-fade-in"
                                             style={{
-                                                top,
-                                                left,
-                                                width,
-                                                height,
+                                                top: `${topPx}px`,
+                                                left: `${leftPx}px`,
+                                                width: `${widthPx}px`,
+                                                height: `${heightPx}px`,
                                                 boxSizing: 'border-box',
-                                                transition: 'all 0.1s',
+                                                transition: 'all 0.08s',
                                                 borderStyle: 'dashed',
                                                 background: 'rgba(80,180,255,0.07)'
                                             }}
