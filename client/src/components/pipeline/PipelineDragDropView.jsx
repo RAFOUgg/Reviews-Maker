@@ -614,12 +614,23 @@ const PipelineDragDropView = ({
             const gridBox = gridRef.current && gridRef.current.getBoundingClientRect();
             const clientX = e.clientX;
             const clientY = e.clientY;
-            const relX = gridBox ? clientX - gridBox.left + gridRef.current.scrollLeft : clientX;
-            const relY = gridBox ? clientY - gridBox.top + gridRef.current.scrollTop : clientY;
 
-            const rect = selectionRect;
+            // compute current and start positions in grid-relative coordinates using stored client start
+            const relCurrentX = gridBox ? clientX - gridBox.left + gridRef.current.scrollLeft : clientX;
+            const relCurrentY = gridBox ? clientY - gridBox.top + gridRef.current.scrollTop : clientY;
+            const clientStart = selectionStartClientRef.current || { x: clientX, y: clientY };
+            const relStartX = gridBox ? clientStart.x - gridBox.left + gridRef.current.scrollLeft : clientStart.x;
+            const relStartY = gridBox ? clientStart.y - gridBox.top + gridRef.current.scrollTop : clientStart.y;
+
+            const x = Math.min(relStartX, relCurrentX);
+            const y = Math.min(relStartY, relCurrentY);
+            const width = Math.abs(relCurrentX - relStartX);
+            const height = Math.abs(relCurrentY - relStartY);
+
+            const rect = { left: x, top: y, right: x + width, bottom: y + height, width, height };
             const sel = [];
-            if (rect.visible && rect.width > 0 && rect.height > 0) {
+
+            if (rect.width > 0 && rect.height > 0) {
                 // compute selected cells intersecting selectionRect using grid-relative coordinates
                 Object.entries(cellRefs.current).forEach(([ts, el]) => {
                     if (!el) return;
@@ -627,7 +638,7 @@ const PipelineDragDropView = ({
                     const cellLeft = r.left - (gridBox ? gridBox.left : 0) + (gridRef.current ? gridRef.current.scrollLeft : 0);
                     const cellTop = r.top - (gridBox ? gridBox.top : 0) + (gridRef.current ? gridRef.current.scrollTop : 0);
                     const cellRect = { left: cellLeft, top: cellTop, right: cellLeft + r.width, bottom: cellTop + r.height };
-                    const intersects = !(cellRect.right < rect.x || cellRect.left > rect.x + rect.width || cellRect.bottom < rect.y || cellRect.top > rect.y + rect.height);
+                    const intersects = !(cellRect.right < rect.left || cellRect.left > rect.right || cellRect.bottom < rect.top || cellRect.top > rect.bottom);
                     if (intersects) sel.push(ts);
                 });
                 setSelectedCells(sel);
