@@ -3,6 +3,7 @@ import { useState as useModalState } from 'react';
 function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, onApply, selectedCells }) {
     const [activeTab, setActiveTab] = useModalState('data');
     const [values, setValues] = useModalState({});
+    const [confirmState, setConfirmState] = useModalState({ open: false, title: '', message: '', onConfirm: null });
     if (!isOpen || !droppedContent) return null;
     // Regroupement par section
     let items = [];
