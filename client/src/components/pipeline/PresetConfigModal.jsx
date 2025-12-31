@@ -207,7 +207,7 @@ const PresetConfigModal = ({
             onConfirm: () => {
                 setGroups(prev => prev.filter(g => g.id !== id));
                 if (editingGroupId === id) setEditingGroupId(null);
-                setConfirmState({ ...confirmState, open: false });
+                setConfirmState(prev => ({ ...prev, open: false }));
             }
         });
     };
@@ -488,7 +488,7 @@ const PresetConfigModal = ({
                         </div>
                     )}
 
-                    <ConfirmModal open={confirmState.open} title={confirmState.title} message={confirmState.message} onCancel={() => setConfirmState({ ...confirmState, open: false })} onConfirm={() => { confirmState.onConfirm?.(); }} />
+                    <ConfirmModal open={confirmState.open} title={confirmState.title} message={confirmState.message} onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))} onConfirm={() => setConfirmState(prev => { const cb = prev && prev.onConfirm; if (typeof cb === 'function') cb(); return { ...prev, open: false }; })} />
 
                     {/* Footer */}
                     <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">

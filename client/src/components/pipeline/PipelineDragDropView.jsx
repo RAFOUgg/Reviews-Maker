@@ -64,7 +64,13 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
                     <button className="flex-1 liquid-btn liquid-btn--accent" onClick={() => onApply(values)}>Appliquer à {selectedCells.length > 0 ? `${selectedCells.length} cases` : 'la case'}</button>
                     <button className="flex-1 liquid-btn" onClick={onClose}>Annuler</button>
                 </div>
-                <ConfirmModal open={confirmState.open} title={confirmState.title} message={confirmState.message} onCancel={() => setConfirmState({ ...confirmState, open: false })} onConfirm={() => { confirmState.onConfirm?.(); }} />
+                <ConfirmModal
+                    open={confirmState.open}
+                    title={confirmState.title}
+                    message={confirmState.message}
+                    onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))}
+                    onConfirm={() => setConfirmState(prev => { const cb = prev && prev.onConfirm; if (typeof cb === 'function') cb(); return { ...prev, open: false }; })}
+                />
             </div>
         </div>
     );
@@ -386,7 +392,7 @@ const PipelineDragDropView = ({
 
                 if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'clear', changes: allChanges });
                 setSelectedCells([]);
-                setConfirmState({ ...confirmState, open: false });
+                setConfirmState(prev => ({ ...prev, open: false }));
             }
         });
     };

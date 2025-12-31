@@ -114,7 +114,7 @@ const PipelineDataModal = ({
                             } else {
                                 handleChange(item.key, null);
                             }
-                            setConfirmState({ ...confirmState, open: false });
+                            setConfirmState(prev => ({ ...prev, open: false }));
                         }
                     });
                 }}
@@ -578,7 +578,7 @@ const PipelineDataModal = ({
                     </motion.div>
                 </motion.div>
             )}
-            <ConfirmModal open={confirmState.open} title={confirmState.title} message={confirmState.message} onCancel={() => setConfirmState({ ...confirmState, open: false })} onConfirm={() => { confirmState.onConfirm?.(); }} />
+            <ConfirmModal open={confirmState.open} title={confirmState.title} message={confirmState.message} onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))} onConfirm={() => setConfirmState(prev => { const cb = prev && prev.onConfirm; if (typeof cb === 'function') cb(); return { ...prev, open: false }; })} />
         </AnimatePresence>
     );
 };
