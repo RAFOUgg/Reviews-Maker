@@ -163,45 +163,50 @@ const CuringPipelineDragDrop = ({
             visual: cellData.visual?.overall || 0,
             odor: cellData.odor?.overall || 0,
             taste: cellData.taste?.overall || 0,
+            effects: cellData.effects?.overall || 0,
+            moisture: cellData.moisture || 0,
+            weight: cellData.weight || 0
+        }
+    }
 
+    // Handler export GIF
+    const handleExportGIF = async () => {
+        if (timelineData.length === 0) {
+            alert('❌ Aucune donnée à exporter')
+            return
+        }
 
-            // Handler export GIF
-            const handleExportGIF = async () => {
-                if (timelineData.length === 0) {
-                    alert('❌ Aucune donnée à exporter')
-                    return
+        setIsExportingGIF(true)
+        setExportProgress(0)
+
+        try {
+            const blob = await exportCuringEvolutionToGIF(evolutionData, {
+                delay: 300,
+                quality: 10,
+                width: 1200,
+                height: 800,
+                onProgress: (percent) => {
+                    setExportProgress(percent)
                 }
+            })
 
-                setIsExportingGIF(true)
-                setExportProgress(0)
+            const filename = `curing-evolution-${Date.now()}.gif`
+            downloadCuringGIF(blob, filename)
 
-                try {
-                    const blob = await exportCuringEvolutionToGIF(evolutionData, {
-                        delay: 300,
-                        quality: 10,
-                        width: 1200,
-                        height: 800,
-                        onProgress: (percent) => {
-                            setExportProgress(percent)
-                        }
-                    })
+            alert('✅ Export GIF réussi !')
+        } catch (error) {
+            console.error('Export GIF error:', error)
+            alert('❌ Erreur lors de l\'export GIF')
+        } finally {
+            setIsExportingGIF(false)
+            setExportProgress(0)
+        }
+    }
 
-                    const filename = `curing-evolution-${Date.now()}.gif`
-                    downloadCuringGIF(blob, filename)
-
-                    alert('✅ Export GIF réussi !')
-                } catch (error) {
-                    console.error('Export GIF error:', error)
-                    alert('❌ Erreur lors de l\'export GIF')
-                } finally {
-                    setIsExporti < button
-                    onClick = { handleExportGIF }
-                    className = "flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled = { timelineData.length === 0 || isExportingGIF }
-                        >
-                        <Download className="w-4 h-4" />
-                    { isExportingGIF ? `Export... ${exportProgress}%` : 'Export GIF' }
-                        </button >
+    return (
+        <div className="w-full h-full flex flex-col bg-gray-900 text-white">
+            {/* Header */}
+            /* Header */}
             <div className="px-6 py-4 border-b border-gray-700 bg-gray-900/50">
                 <div className="flex items-center justify-between">
                     <div>
@@ -226,16 +231,14 @@ const CuringPipelineDragDrop = ({
                         </button>
 
                         {/* Bouton export GIF */}
-                        {onExportGIF && (
-                            <button
-                                onClick={() => onExportGIF(evolutionData)}
-                                className="flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition text-sm"
-                                disabled={timelineData.length === 0}
-                            >
-                                <Download className="w-4 h-4" />
-                                Export GIF
-                            </button>
-                        )}
+                        <button
+                            onClick={handleExportGIF}
+                            className="flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={timelineData.length === 0 || isExportingGIF}
+                        >
+                            <Download className="w-4 h-4" />
+                            {isExportingGIF ? `Export... ${exportProgress}%` : 'Export GIF'}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -292,9 +295,9 @@ const CuringPipelineDragDrop = ({
                                                     const shouldShow = shouldShowField(item, curingData)
                                                     if (!shouldShow) return null
 
-                                                    const hasValue = curingData[item.id] !== null && 
-                                                                   curingData[item.id] !== undefined && 
-                                                                   curingData[item.id] !== ''
+                                                    const hasValue = curingData[item.id] !== null &&
+                                                        curingData[item.id] !== undefined &&
+                                                        curingData[item.id] !== ''
 
                                                     return (
                                                         <div
@@ -312,11 +315,11 @@ const CuringPipelineDragDrop = ({
                                                                 flex items-center gap-2 px-3 py-2 rounded-md
                                                                 transition-all
                                                                 ${item.type !== 'info' ? 'cursor-move' : ''}
-                                                                ${hasValue 
-                                                                    ? 'bg-green-900/20 border border-green-700/50' 
+                                                                ${hasValue
+                                                                    ? 'bg-green-900/20 border border-green-700/50'
                                                                     : item.type === 'info'
-                                                                    ? 'bg-blue-900/20 border border-blue-700/50'
-                                                                    : 'bg-gray-800/50 hover:bg-gray-700 border border-transparent'
+                                                                        ? 'bg-blue-900/20 border border-blue-700/50'
+                                                                        : 'bg-gray-800/50 hover:bg-gray-700 border border-transparent'
                                                                 }
                                                             `}
                                                             title={item.tooltip}
