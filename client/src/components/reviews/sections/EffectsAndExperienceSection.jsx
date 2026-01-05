@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import LiquidSlider from '../../liquid/LiquidSlider';
-import { EFFECTS_LIST } from '../../../data/effectsData';
+import { EFFECTS } from '../../../data/effects';
 
 /**
  * Section unifiée : Effets Ressentis + Expérience d'Utilisation
@@ -77,11 +77,11 @@ export default function EffectsAndExperienceSection({ data, onChange }) {
     }, [intensityRating, onsetRating, selectedEffects, consumptionMethod, dosage, duration, onsetTime, usageContext, onChange]);
 
     // Filtrer les effets selon le filtre actif
-    const filteredEffects = EFFECTS_LIST.filter(effect => {
+    const filteredEffects = EFFECTS.filter(effect => {
         if (effectsFilter === 'all') return true;
-        if (effectsFilter === 'positive') return effect.type === 'positive';
-        if (effectsFilter === 'negative') return effect.type === 'negative';
-        if (effectsFilter === 'neutral') return effect.type === 'neutral';
+        if (effectsFilter === 'positive') return effect.tag === 'positif';
+        if (effectsFilter === 'negative') return effect.tag === 'négatif';
+        if (effectsFilter === 'neutral') return effect.tag === 'neutre';
         return effect.category === effectsFilter;
     });
 
