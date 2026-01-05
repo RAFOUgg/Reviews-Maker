@@ -90,7 +90,7 @@ export default function CulturePipelineTimeline({ data, onChange }) {
                     </div>
                     {pipelineMode === 'phases' && (
                         <div className="text-xs text-gray-600 dark:text-gray-400 dark: rounded-lg p-3">
-                            ✨ Les 12 phases CDC sont actives avec durées par défaut ajustables
+                            ✨ Les 12 phases sont actives avec durées par défaut ajustables
                         </div>
                     )}
                 </div>
@@ -424,7 +424,7 @@ export default function CulturePipelineTimeline({ data, onChange }) {
         <div className="space-y-6">
             <div className="p-4 dark: border dark: rounded-xl">
                 <h3 className="font-bold dark: mb-2 flex items-center gap-2">
-                    <span>🌱</span> Pipeline de culture : Timeline interactive CDC
+                    <span>🌱</span> Pipeline de culture : Timeline interactive
                 </h3>
                 <p className="text-sm dark:">
                     📝 Glissez les contenus depuis le panneau latéral vers les cases de la timeline.

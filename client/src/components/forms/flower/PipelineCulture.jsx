@@ -319,7 +319,7 @@ export default function PipelineCulture({ data, onChange }) {
             {/* Instructions d'utilisation */}
             <div className="bg-gradient-to-r dark:/20 dark:/20 border dark: rounded-xl p-4">
                 <h4 className="text-sm font-semibold dark: mb-2 flex items-center gap-2">
-                    📋 Pipeline de culture : Timeline interactive CDC
+                    📋 Pipeline de culture : Timeline interactive
                 </h4>
                 <ul className="text-xs dark: space-y-1 list-disc list-inside">
                     <li>Glissez les contenus depuis le panneau latéral vers les cases de la timeline</li>

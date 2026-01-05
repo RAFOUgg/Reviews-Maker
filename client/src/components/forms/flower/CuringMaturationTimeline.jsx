@@ -199,7 +199,7 @@ export default function CuringMaturationTimeline({ data, onChange }) {
         <div className="space-y-6">
             <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
                 <h3 className="font-bold text-amber-900 dark:text-amber-100 mb-2 flex items-center gap-2">
-                    <span>🔥</span> Pipeline de curing : Timeline interactive CDC
+                    <span>🔥</span> Pipeline de curing : Timeline interactive
                 </h3>
                 <p className="text-sm text-amber-800 dark:text-amber-200">
                     📝 Glissez les contenus depuis le panneau latéral vers les cases de la timeline.
@@ -220,7 +220,7 @@ export default function CuringMaturationTimeline({ data, onChange }) {
                                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
                             }`}
                     >
-                        🏺 Phases CDC
+                        🏺 Phases prédéfinies
                         <div className="text-xs mt-1 opacity-80">4 phases (Séchage → Affinage)</div>
                     </button>
                     <button
@@ -236,7 +236,7 @@ export default function CuringMaturationTimeline({ data, onChange }) {
                 </div>
                 {pipelineMode === 'phases' && (
                     <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 mt-3">
-                        ✨ Les 4 phases CDC sont actives avec durées par défaut ajustables
+                        ✨ Les 4 phases sont actives avec durées par défaut ajustables
                     </div>
                 )}
             </div>

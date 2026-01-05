@@ -9,10 +9,10 @@ import { ChevronDown, ChevronUp, Plus, Trash2, Copy } from 'lucide-react'
  * - Drag & drop des préréglages sélectionnés vers timeline
  * - Sauvegarde et gestion des préréglages globaux
  */
-export default function PresetsPanelCDC({ sidebarContent, onPresetsSelected, onDragPreset }) {
+export default function PresetsPanel({ sidebarContent, onPresetsSelected, onDragPreset }) {
     const [presets, setPresets] = useState(() => {
         try {
-            return JSON.parse(localStorage.getItem('pipeline-presets-cdc') || '[]')
+            return JSON.parse(localStorage.getItem('pipeline-presets') || '[]')
         } catch (e) {
             return []
         }
@@ -30,7 +30,7 @@ export default function PresetsPanelCDC({ sidebarContent, onPresetsSelected, onD
 
     // Sauvegarder presets dans localStorage
     useEffect(() => {
-        localStorage.setItem('pipeline-presets-cdc', JSON.stringify(presets))
+        localStorage.setItem('pipeline-presets', JSON.stringify(presets))
     }, [presets])
 
     // Catégories de préréglages prédéfinis
