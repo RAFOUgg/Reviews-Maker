@@ -34,12 +34,24 @@
 
 ### 4. Réorganisation sections
 
-#### 4.1 Fusionner Effets + Expérience
-- ❌ Actuellement 2 sections séparées (index 10 et 11)
-- ✅ Créer `EffectsAndExperienceSection.jsx` unique
-  - Settings consommation (méthode, dosage, durée)
-  - Effets ressentis (montée, intensité, liste effets)
-  - Expérience globale
+#### 4.1 Fusionner Effets + Expérience ✅ TERMINÉ
+- ✅ Composant créé : `client/src/components/reviews/sections/EffectsAndExperienceSection.jsx`
+- ✅ **Section 1 : Paramètres de Consommation**
+  - Méthode (combustion, vapeur, infusion, etc.)
+  - Dosage estimé (mg ou g)
+  - Début des effets (immédiat, rapide, différé, etc.)
+  - Durée totale (5-15min jusqu'à 4h+)
+  - Contextes d'usage (matin, soir, seul, social, médical, etc.)
+- ✅ **Section 2 : Intensité & Montée**
+  - Slider montée (rapidité) /10
+  - Slider intensité /10
+- ✅ **Section 3 : Effets Ressentis**
+  - Maximum 8 effets sélectionnables
+  - Filtres : tous, mentaux, physiques, thérapeutiques, positifs, négatifs
+  - Données depuis EFFECTS_LIST
+- ✅ Design cohérent avec thème sombre
+- ✅ Résumé visuel en bas de section
+- 🔄 Reste à intégrer dans CreateFlowerReview (remplacer sections 10 et 11)
 
 #### 4.2 Intégrer Récolte dans Pipeline Culture
 - ❌ Section standalone "Récolte" (index 3)
@@ -47,13 +59,17 @@
 - ✅ Supprimer section standalone
 - ✅ Ajouter champ "Date de récolte" qui marque la fin de timeline
 
-#### 4.3 Fusionner Terpènes + Analytiques
-- ❌ 2 sections séparées (index 4 et 5)
-- ✅ Créer `AnalyticsSection.jsx` unique
-  - Upload PDF certificat
-  - Saisie manuelle cannabinoïdes
-  - Saisie manuelle terpènes
-  - Extraction automatique depuis PDF (futur)
+#### 4.3 Fusionner Terpènes + Analytiques ✅ DÉJÀ FAIT
+- ✅ Composant existant : `client/src/components/reviews/sections/AnalyticsSection.jsx`
+- ✅ **Fonctionnalités déjà présentes** :
+  - Upload PDF certificat cannabinoïdes
+  - Upload PDF profil terpénique (séparé)
+  - Saisie manuelle : THC, CBD, CBG, CBC
+  - Prévisualisation des certificats
+  - Gestion d'erreurs (format, taille)
+- ✅ Design cohérent avec thème sombre
+- ✅ Support formats : PDF, JPEG, PNG (max 5MB)
+- 🔄 Reste à vérifier si utilisé dans CreateFlowerReview
 
 ### 5. Trichomes - Jauge gradient ✅ TERMINÉ
 - ✅ Composant créé : `client/src/components/reviews/sections/TrichomeGradientSlider.jsx`
@@ -70,6 +86,64 @@
 - ⚠️ Zones de saisie illisibles (manque contraste)
 - ✅ Appliquer partout : `bg-gray-900/90 dark:bg-gray-900/95` + `border-gray-700/50`
 - ✅ Inputs : `bg-white/5 dark:bg-white/10` + `border-white/20`
+
+---
+
+## Structure Finale : 13 → 10 sections
+
+### Modifications dans CreateFlowerReview (index.jsx lignes 68-81)
+
+**AVANT (13 sections) :**
+```javascript
+const sections = [
+    { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
+    { id: 'genetics', icon: '🧬', title: 'Génétiques & PhenoHunt' },
+    { id: 'culture', icon: '🌱', title: 'Culture & Pipeline' },
+    { id: 'recolte', icon: '🌾', title: 'Récolte & Post-Récolte' },        // ❌ SUPPRIMER (intégrer dans Culture)
+    { id: 'analytics', icon: '🔬', title: 'Analytiques PDF' },             // ✏️ RENOMMER → "Analytiques"
+    { id: 'terpenes', icon: '🧪', title: 'Terpènes (Manuel)' },            // ❌ SUPPRIMER (déjà dans Analytics)
+    { id: 'visual', icon: '👁️', title: 'Visuel & Technique' },
+    { id: 'odeurs', icon: '👃', title: 'Odeurs' },
+    { id: 'texture', icon: '🤚', title: 'Texture' },
+    { id: 'gouts', icon: '😋', title: 'Goûts' },
+    { id: 'effets', icon: '💥', title: 'Effets ressentis' },               // ❌ FUSIONNER
+    { id: 'experience', icon: '🔥', title: 'Expérience d\'utilisation' },  // ❌ FUSIONNER
+    { id: 'curing', icon: '🌡️', title: 'Curing & Maturation' },
+]
+```
+
+**APRÈS (10 sections) :**
+```javascript
+const sections = [
+    { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
+    { id: 'genetics', icon: '🧬', title: 'Génétiques & PhenoHunt' },
+    { id: 'culture', icon: '🌱', title: 'Culture & Pipeline' },           // ✅ Récolte dans sidebar RECOLTE
+    { id: 'analytics', icon: '🔬', title: 'Analytiques' },                // ✅ Cannabinoïdes + Terpènes
+    { id: 'visual', icon: '👁️', title: 'Visuel & Technique' },            // ✅ Corrigé (multi-couleurs)
+    { id: 'odeurs', icon: '👃', title: 'Odeurs' },
+    { id: 'texture', icon: '🤚', title: 'Texture' },
+    { id: 'gouts', icon: '😋', title: 'Goûts' },
+    { id: 'effects-experience', icon: '💥', title: 'Effets & Expérience' }, // ✅ Section unifiée
+    { id: 'curing', icon: '🌡️', title: 'Curing & Maturation' },
+]
+```
+
+### Import à ajouter :
+```javascript
+import EffectsAndExperienceSection from '../../components/reviews/sections/EffectsAndExperienceSection'
+```
+
+### Rendu section (switch/case) :
+```javascript
+// REMPLACER les cas 'effets' et 'experience' par :
+case 'effects-experience':
+    return <EffectsAndExperienceSection 
+        data={formData.effectsExperience} 
+        onChange={(data) => handleChange('effectsExperience', data)} 
+    />
+```
+
+---
 
 ## Plan d'action
 
