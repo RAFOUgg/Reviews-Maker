@@ -38,14 +38,5 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
         </div>
     );
 };
-        { id: 'drySift', name: 'Dry Sift (Tamis)', icon: Filter },
-        { id: 'static', name: 'Static Tech', icon: Zap },
-    ];
-
-    return (
-        <div className="space-y-6">
-            <LiquidGlass variant="card" className="p-6">
-                <div className="flex items-center gap-2 mb-4">
-                    <FlaskConical className="w-6 h-6" />
 
 export default SeparationPipelineSection;

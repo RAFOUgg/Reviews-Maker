@@ -41,11 +41,11 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
 };
 
 export default CulturePipelineSection;
-        lightType: data.environment?.lightType || 'led',
-        lightPower: data.environment?.lightPower || 200,
+lightType: data.environment?.lightType || 'led',
+    lightPower: data.environment?.lightPower || 200,
         lightDistance: data.environment?.lightDistance || 40,
-        lightSchedule: data.environment?.lightSchedule || '18/6',
-        spectrum: data.environment?.spectrum || 'full',
-        temperature: data.environment?.temperature || 24,
+            lightSchedule: data.environment?.lightSchedule || '18/6',
+                spectrum: data.environment?.spectrum || 'full',
+                    temperature: data.environment?.temperature || 24,
 
 export default CulturePipelineSection;

@@ -109,7 +109,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                         <button
                                             key={interval}
                                             onClick={() => updateConfig('intervalType', interval)}
-                                            className={`py-2 px-3 rounded-lg border-2 text-sm transition-all ${config.intervalType === interval ? 'border-amber-500 bg-amber-500/20' : 'border-white/20 hover:border-white/40' }`}
+                                            className={`py-2 px-3 rounded-lg border-2 text-sm transition-all ${config.intervalType === interval ? 'border-amber-500 bg-amber-500/20' : 'border-white/20 hover:border-white/40'}`}
                                         >
                                             {INTERVAL_TYPES[interval]}
                                         </button>
@@ -152,14 +152,14 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                 <div className="grid grid-cols-2 gap-3">
                                     <button
                                         onClick={() => updateConfig('curingType', 'cold')}
-                                        className={`p-3 rounded-lg border-2 transition-all ${config.curingType === 'cold' ? ' ' : 'border-white/20 hover:border-white/40' }`}
+                                        className={`p-3 rounded-lg border-2 transition-all ${config.curingType === 'cold' ? ' ' : 'border-white/20 hover:border-white/40'}`}
                                     >
                                         <div className="text-2xl mb-1">❄️</div>
                                         <div className="text-sm font-medium">Froid (&lt;5°C)</div>
                                     </button>
                                     <button
                                         onClick={() => updateConfig('curingType', 'warm')}
-                                        className={`p-3 rounded-lg border-2 transition-all ${config.curingType === 'warm' ? 'border-orange-500 bg-orange-500/20' : 'border-white/20 hover:border-white/40' }`}
+                                        className={`p-3 rounded-lg border-2 transition-all ${config.curingType === 'warm' ? 'border-orange-500 bg-orange-500/20' : 'border-white/20 hover:border-white/40'}`}
                                     >
                                         <div className="text-2xl mb-1">🔥</div>
                                         <div className="text-sm font-medium">Chaud (&gt;5°C)</div>
@@ -235,7 +235,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                         <button
                                             key={type.id}
                                             onClick={() => updateConfig('containerType', type.id)}
-                                            className={`p-2 rounded-lg border-2 text-sm transition-all ${config.containerType === type.id ? 'border-amber-500 bg-amber-500/20' : 'border-white/20 hover:border-white/40' }`}
+                                            className={`p-2 rounded-lg border-2 text-sm transition-all ${config.containerType === type.id ? 'border-amber-500 bg-amber-500/20' : 'border-white/20 hover:border-white/40'}`}
                                         >
                                             <div className="text-xl mb-1">{type.icon}</div>
                                             <div className="text-xs">{type.label}</div>
@@ -252,7 +252,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                         <button
                                             key={type.id}
                                             onClick={() => updateConfig('packagingType', type.id)}
-                                            className={`p-2 rounded-lg border-2 text-sm transition-all ${config.packagingType === type.id ? ' ' : 'border-white/20 hover:border-white/40' }`}
+                                            className={`p-2 rounded-lg border-2 text-sm transition-all ${config.packagingType === type.id ? ' ' : 'border-white/20 hover:border-white/40'}`}
                                         >
                                             <div className="text-xl mb-1">{type.icon}</div>
                                             <div className="text-xs">{type.label}</div>
@@ -269,7 +269,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                         <button
                                             key={level.id}
                                             onClick={() => updateConfig('opacity', level.id)}
-                                            className={`p-2 rounded-lg border-2 text-sm transition-all ${config.opacity === level.id ? 'border-cyan-500 ' : 'border-white/20 hover:border-white/40' }`}
+                                            className={`p-2 rounded-lg border-2 text-sm transition-all ${config.opacity === level.id ? 'border-cyan-500 ' : 'border-white/20 hover:border-white/40'}`}
                                         >
                                             <div className="text-xl mb-1">{level.icon}</div>
                                             <div className="text-xs">{level.label}</div>

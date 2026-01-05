@@ -163,45 +163,53 @@ const CuringPipelineDragDrop = ({
             visual: cellData.visual?.overall || 0,
             odor: cellData.odor?.overall || 0,
             taste: cellData.taste?.overall || 0,
+            effects: cellData.effects?.overall || 0
+        }
+    }
 
+    // Handler export GIF
+    const handleExportGIF = async () => {
+        if (timelineData.length === 0) {
+            alert('❌ Aucune donnée à exporter')
+            return
+        }
 
-            // Handler export GIF
-            const handleExportGIF = async () => {
-                if (timelineData.length === 0) {
-                    alert('❌ Aucune donnée à exporter')
-                    return
+        setIsExportingGIF(true)
+        setExportProgress(0)
+
+        try {
+            const blob = await exportCuringEvolutionToGIF(evolutionData, {
+                delay: 300,
+                quality: 10,
+                width: 1200,
+                height: 800,
+                onProgress: (percent) => {
+                    setExportProgress(percent)
                 }
+            })
 
-                setIsExportingGIF(true)
-                setExportProgress(0)
+            const filename = `curing-evolution-${Date.now()}.gif`
+            downloadCuringGIF(blob, filename)
 
-                try {
-                    const blob = await exportCuringEvolutionToGIF(evolutionData, {
-                        delay: 300,
-                        quality: 10,
-                        width: 1200,
-                        height: 800,
-                        onProgress: (percent) => {
-                            setExportProgress(percent)
-                        }
-                    })
+            alert('✅ Export GIF réussi !')
+        } catch (error) {
+            console.error('Export GIF error:', error)
+            alert('❌ Erreur lors de l\'export GIF')
+        } finally {
+            setIsExportingGIF(false)
+            setExportProgress(0)
+        }
+    }
 
-                    const filename = `curing-evolution-${Date.now()}.gif`
-                    downloadCuringGIF(blob, filename)
-
-                    alert('✅ Export GIF réussi !')
-                } catch (error) {
-                    console.error('Export GIF error:', error)
-                    alert('❌ Erreur lors de l\'export GIF')
-                } finally {
-                    setIsExporti < button
-                    onClick = { handleExportGIF }
-                    className = "flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled = { timelineData.length === 0 || isExportingGIF }
-                        >
-                        <Download className="w-4 h-4" />
-                    { isExportingGIF ? `Export... ${exportProgress}%` : 'Export GIF' }
-                        </button >
+    return (
+        <PipelineDragDropView
+            sidebarSections={sidebarSections}
+            timelineConfig={timelineConfig}
+            timelineData={timelineData}
+            onConfigChange={onConfigChange}
+            onDataChange={handleDataChange}
+            emptyMessage="Configurez une période de curing/maturation pour commencer"
+        >
             <div className="px-6 py-4 border-b border-gray-700 bg-gray-900/50">
                 <div className="flex items-center justify-between">
                     <div>
@@ -375,7 +383,7 @@ const CuringPipelineDragDrop = ({
                     />
                 </div>
             </div>
-        </div >
+        </PipelineDragDropView>
     )
 }
 
