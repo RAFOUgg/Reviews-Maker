@@ -1,0 +1,118 @@
+# Audit & Correctifs Formulaire Fleurs - 5 janvier 2026
+
+## Problèmes identifiés
+
+### 1. VisualSection - Colorimétrie et Design ✅ TERMINÉ
+- ✅ Fond sombre appliqué (`bg-gray-900/90 dark:bg-gray-900/95`)
+- ✅ Sélection multiple couleurs avec pourcentages (total doit = 100%)
+- ✅ Indicateur visuel de validation (vert si 100%, orange sinon)
+- ✅ Design harmonisé avec inputs sombres (bg-white/5, border-white/10)
+- ✅ Suppression dépendance LiquidSlider
+- ✅ Résumé visuel mis à jour
+
+### 2. Pipeline Culture - Bugs de sélection ✅ CORRIGÉ
+- ✅ **Bug identifié** : Classes CSS incomplètes dans PipelineDragDropView.jsx (ligne 1579)
+  - Avant : `cellClass += isSelected ? ' ring-2   dark:' : '';` (classes vides)
+  - Après : Ajout complet `ring-4 ring-blue-500 dark:ring-blue-400 bg-blue-500/10`
+- ✅ Classes CSS refactorisées pour clarté (commentaires explicites)
+- ✅ Séparation visuelle claire entre :
+  - Sélection simple (modal) : anneau violet
+  - Sélection multi (mode masse) : anneau bleu + fond bleu/10
+  - Hover drag : anneau violet + pulse
+
+### 3. Pipeline Curing - Configuration trame ✅ VÉRIFIÉ
+- ✅ **Interface existante** : Le contrôle du nombre de cases existe dans `PipelineDragDropView.jsx` (lignes 1288-1450)
+- ✅ Contrôles disponibles selon type d'intervalle :
+  - Secondes : input nombre (max 900s)
+  - Heures : input nombre (max 336h)
+  - Jours : input nombre (max 365)
+  - Dates : date début + date fin (calcul automatique)
+  - Semaines : input nombre (max 52)
+  - Phases : prédéfini (4 phases pour curing)
+- ℹ️ **Note** : L'interface est déjà fonctionnelle, visible dans la section configuration
+- 📸 Demander à l'utilisateur de vérifier si l'interface est accessible ou cachée
+
+### 4. Réorganisation sections
+
+#### 4.1 Fusionner Effets + Expérience
+- ❌ Actuellement 2 sections séparées (index 10 et 11)
+- ✅ Créer `EffectsAndExperienceSection.jsx` unique
+  - Settings consommation (méthode, dosage, durée)
+  - Effets ressentis (montée, intensité, liste effets)
+  - Expérience globale
+
+#### 4.2 Intégrer Récolte dans Pipeline Culture
+- ❌ Section standalone "Récolte" (index 3)
+- ✅ Données récolte dans la sidebar Culture (section RECOLTE déjà présente)
+- ✅ Supprimer section standalone
+- ✅ Ajouter champ "Date de récolte" qui marque la fin de timeline
+
+#### 4.3 Fusionner Terpènes + Analytiques
+- ❌ 2 sections séparées (index 4 et 5)
+- ✅ Créer `AnalyticsSection.jsx` unique
+  - Upload PDF certificat
+  - Saisie manuelle cannabinoïdes
+  - Saisie manuelle terpènes
+  - Extraction automatique depuis PDF (futur)
+
+### 5. Trichomes - Jauge gradient ✅ TERMINÉ
+- ✅ Composant créé : `client/src/components/reviews/sections/TrichomeGradientSlider.jsx`
+- ✅ Une seule jauge avec gradient automatique (10 stades)
+- ✅ Couleur du curseur change selon position
+- ✅ Gradient : blanc transparent → beige → violet/pourpre → bordeaux → brun foncé
+- ✅ Description interactive du stade de maturité
+- ✅ Légende rapide (Immature / Optimal / Mature+)
+- ✅ Design cohérent avec le thème sombre
+- 🔄 Reste à intégrer dans la section Récolte (sera fait lors de la fusion avec Pipeline Culture)
+
+### 6. Harmonisation colorimétrie globale
+- ⚠️ Fond blanc dans plusieurs sections
+- ⚠️ Zones de saisie illisibles (manque contraste)
+- ✅ Appliquer partout : `bg-gray-900/90 dark:bg-gray-900/95` + `border-gray-700/50`
+- ✅ Inputs : `bg-white/5 dark:bg-white/10` + `border-white/20`
+
+## Plan d'action
+
+### Phase 1 : Corrections visuelles ✅
+1. Corriger VisualSection (fond, couleurs multiples)
+2. Créer TrichomeGradientSlider
+3. Harmoniser colorimétrie toutes sections
+
+### Phase 2 : Réorganisation sections
+4. Fusionner Effets + Expérience
+5. Intégrer Récolte dans Pipeline Culture
+6. Fusionner Terpènes + Analytiques
+7. Mettre à jour `sections` array dans `index.jsx`
+
+### Phase 3 : Corrections bugs pipeline
+8. Débugger sélection Culture pipeline
+9. Ajouter contrôle trame Curing
+
+### Phase 4 : Tests
+10. Test création review complète
+11. Test édition review existante
+12. Test sauvegarde/restauration
+13. Validation export/aperçu
+
+## Structure finale sections (11 → 8 sections)
+
+1. 📋 Informations générales *(inchangé)*
+2. 🧬 Génétiques & PhenoHunt *(inchangé)*
+3. 🌱 Culture & Pipeline *(+ données récolte intégrées)*
+4. 🔬 Analytiques *(PDF + terpènes + cannabinoïdes)*
+5. 👁️ Visuel & Technique *(couleurs multiples, gradient trichomes)*
+6. 👃 Odeurs *(inchangé)*
+7. 🤚 Texture *(inchangé)*
+8. 😋 Goûts *(inchangé)*
+9. 💥 Effets & Expérience *(fusionné)*
+10. 🌡️ Curing & Maturation *(inchangé)*
+
+**Réduction : 13 sections → 10 sections**
+
+---
+
+## Logs de progression
+
+### 2026-01-05 20:00 - Début audit
+- Identification des problèmes
+- Plan d'action établi

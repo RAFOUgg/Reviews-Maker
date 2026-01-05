@@ -1572,15 +1572,33 @@ const PipelineDragDropView = ({
                                     const isSelected = selectedCells.includes(cell.timestamp);
                                     const isHovered = hoveredCell === cell.timestamp;
 
-                                    // Only apply purple border to first cell if selected
+                                    // Construire classes CSS pour la cellule
                                     let cellClass = `relative p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[80px]`;
-                                    cellClass += hasData ? ' border-green-500 bg-green-500/10' : ' border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800';
-                                    cellClass += selectedCell === cell.timestamp ? ' ring-2  shadow-lg' : ' hover: hover:shadow-md';
-                                    cellClass += isSelected ? ' ring-2   dark:' : '';
-                                    cellClass += isHovered && draggedContent ? ' ring-4   dark: scale-105 shadow-2xl  animate-pulse' : '';
-                                    if (isFirst) cellClass += ' col-span-2  ';
-                                    // Remove purple border if not selected
-                                    if (isFirst && !isSelected) cellClass = cellClass.replace('ring-2 ', '');
+
+                                    // Bordure et fond selon données
+                                    cellClass += hasData
+                                        ? ' border-green-500 bg-green-500/10'
+                                        : ' border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800';
+
+                                    // Selected par clic simple (modal)
+                                    cellClass += selectedCell === cell.timestamp
+                                        ? ' ring-2 ring-violet-500 shadow-lg'
+                                        : ' hover:border-violet-400 hover:shadow-md';
+
+                                    // Selected en mode masse (multi-sélection)
+                                    cellClass += isSelected
+                                        ? ' ring-4 ring-blue-500 dark:ring-blue-400 bg-blue-500/10'
+                                        : '';
+
+                                    // Hover pendant drag
+                                    cellClass += isHovered && draggedContent
+                                        ? ' ring-4 ring-violet-500 dark:ring-violet-400 scale-105 shadow-2xl animate-pulse'
+                                        : '';
+
+                                    // Span 2 colonnes pour première cellule
+                                    if (isFirst) {
+                                        cellClass += ' col-span-2';
+                                    }
 
                                     return (
                                         <div
