@@ -340,17 +340,45 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                     </h4>
                     <CuringPipelineDragDrop
                         timelineConfig={{
-                            intervalType: config.intervalType,
+                            type: config.intervalType,
                             startDate: config.startDate,
                             endDate: config.endDate,
                             curingType: config.curingType
                         }}
                         timelineData={data.curingTimeline || []}
-                        onConfigChange={(newConfig) => {
-                            updateConfig('curingTimeline', newConfig)
+                        onConfigChange={(key, value) => {
+                            // Adapter handler pour PipelineDragDropView
+                            const updatedConfig = {
+                                type: config.intervalType,
+                                startDate: config.startDate,
+                                endDate: config.endDate,
+                                curingType: config.curingType,
+                                [key]: value
+                            };
+                            // Update local config si nécessaire
+                            if (key === 'type') updateConfig('intervalType', value);
+                            if (key === 'startDate') updateConfig('startDate', value);
+                            if (key === 'endDate') updateConfig('endDate', value);
                         }}
-                        onDataChange={(newData) => {
-                            onChange({ ...data, curingTimeline: newData })
+                        onDataChange={(timestamp, field, value) => {
+                            // Adapter handler pour PipelineDragDropView
+                            const currentData = data.curingTimeline || [];
+                            const existingIndex = currentData.findIndex(cell => cell.timestamp === timestamp);
+
+                            let updatedData;
+                            if (existingIndex >= 0) {
+                                updatedData = [...currentData];
+                                if (value === null || value === undefined) {
+                                    const { [field]: removed, ...rest } = updatedData[existingIndex];
+                                    updatedData[existingIndex] = rest;
+                                } else {
+                                    updatedData[existingIndex] = { ...updatedData[existingIndex], [field]: value };
+                                }
+                            } else {
+                                updatedData = [...currentData, { timestamp, [field]: value }];
+                            }
+
+                            onChange({ ...data, curingTimeline: updatedData });
                         }}
                         initialData={{
                             temperature: config.temperature,

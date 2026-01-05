@@ -8,12 +8,33 @@ import { LiquidCard } from '../../../components/liquid';
 import CulturePipelineDragDrop from '../../../components/pipeline/CulturePipelineDragDrop';
 
 const CulturePipelineSection = ({ data = {}, onChange }) => {
-    const handleConfigChange = (config) => {
-        onChange({ ...data, cultureTimelineConfig: config });
+    // Adapter les handlers pour PipelineDragDropView
+    const handleConfigChange = (key, value) => {
+        const updatedConfig = { ...(data.cultureTimelineConfig || {}), [key]: value };
+        onChange({ ...data, cultureTimelineConfig: updatedConfig });
     };
 
-    const handleDataChange = (timelineData) => {
-        onChange({ ...data, cultureTimelineData: timelineData });
+    const handleDataChange = (timestamp, field, value) => {
+        const currentData = data.cultureTimelineData || [];
+        const existingIndex = currentData.findIndex(cell => cell.timestamp === timestamp);
+
+        let updatedData;
+        if (existingIndex >= 0) {
+            // Update existing cell
+            updatedData = [...currentData];
+            if (value === null || value === undefined) {
+                // Remove field
+                const { [field]: removed, ...rest } = updatedData[existingIndex];
+                updatedData[existingIndex] = rest;
+            } else {
+                updatedData[existingIndex] = { ...updatedData[existingIndex], [field]: value };
+            }
+        } else {
+            // Add new cell
+            updatedData = [...currentData, { timestamp, [field]: value }];
+        }
+
+        onChange({ ...data, cultureTimelineData: updatedData });
     };
 
     return (

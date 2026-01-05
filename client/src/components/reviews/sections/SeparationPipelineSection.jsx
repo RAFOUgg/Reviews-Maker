@@ -8,16 +8,30 @@ import SeparationPipelineDragDrop from '../../pipeline/SeparationPipelineDragDro
 import { LiquidGlass } from '../../ui';
 
 const SeparationPipelineSection = ({ data = {}, onChange }) => {
-    const [separationData, setSeparationData] = useState(data.separationData || {
-        separationType: 'ice-water',
-        numberOfPasses: 3,
-        batchSize: 100,
-        ...data
-    });
+    // Adapter les handlers pour PipelineDragDropView
+    const handleConfigChange = (key, value) => {
+        const updatedConfig = { ...(data.separationTimelineConfig || {}), [key]: value };
+        onChange({ ...data, separationTimelineConfig: updatedConfig });
+    };
 
-    const handleSeparationChange = (newData) => {
-        setSeparationData(newData);
-        onChange?.({ ...data, separationData: newData });
+    const handleDataChange = (timestamp, field, value) => {
+        const currentData = data.separationTimelineData || [];
+        const existingIndex = currentData.findIndex(cell => cell.timestamp === timestamp);
+
+        let updatedData;
+        if (existingIndex >= 0) {
+            updatedData = [...currentData];
+            if (value === null || value === undefined) {
+                const { [field]: removed, ...rest } = updatedData[existingIndex];
+                updatedData[existingIndex] = rest;
+            } else {
+                updatedData[existingIndex] = { ...updatedData[existingIndex], [field]: value };
+            }
+        } else {
+            updatedData = [...currentData, { timestamp, [field]: value }];
+        }
+
+        onChange({ ...data, separationTimelineData: updatedData });
     };
 
     return (
@@ -31,9 +45,10 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
             </div>
 
             <SeparationPipelineDragDrop
-                data={separationData}
-                onChange={handleSeparationChange}
-                intervalType="hours"
+                timelineConfig={data.separationTimelineConfig || { type: 'heure' }}
+                timelineData={data.separationTimelineData || []}
+                onConfigChange={handleConfigChange}
+                onDataChange={handleDataChange}
             />
         </div>
     );
