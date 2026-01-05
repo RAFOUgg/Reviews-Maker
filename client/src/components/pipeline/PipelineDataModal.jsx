@@ -189,7 +189,14 @@ const PipelineDataModal = ({
         const { key, label, icon, type = 'text' } = item;
 
         // SELECT avec options (options peuvent être des strings ou des objets {value,label})
-        if (type === 'select' && Array.isArray(item.options)) {
+        if (type === 'select') {
+            if (!Array.isArray(item.options)) {
+                return (
+                    <div className="p-3 bg-red-900/30 border border-red-600 text-red-200 text-xs rounded">
+                        ❌ Select "{label}" n'a pas d'options défini
+                    </div>
+                );
+            }
             return (
                 <FieldWrapper item={item} key={key}>
                     <div className="space-y-2">
@@ -216,7 +223,14 @@ const PipelineDataModal = ({
         }
 
         // MULTISELECT - cases where options is an array of option objects
-        if (type === 'multiselect' && Array.isArray(item.options)) {
+        if (type === 'multiselect') {
+            if (!Array.isArray(item.options)) {
+                return (
+                    <div className="p-3 bg-red-900/30 border border-red-600 text-red-200 text-xs rounded">
+                        ❌ Multiselect "{label}" n'a pas d'options défini
+                    </div>
+                );
+            }
             const selected = Array.isArray(formData[key]) ? formData[key] : [];
             return (
                 <FieldWrapper item={item} key={key}>

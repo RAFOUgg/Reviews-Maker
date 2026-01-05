@@ -1309,7 +1309,7 @@ const PipelineDragDropView = ({
                             <select
                                 value={timelineConfig.type || 'jour'}
                                 onChange={(e) => onConfigChange('type', e.target.value)}
-                                className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:"
+                                className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
                             >
                                 <option value="seconde">⏱️ Secondes</option>
                                 <option value="heure">🕐 Heures</option>
@@ -1332,7 +1332,7 @@ const PipelineDragDropView = ({
                                     max="900"
                                     value={timelineConfig.totalSeconds || ''}
                                     onChange={(e) => onConfigChange('totalSeconds', parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
+                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                                     placeholder="Ex: 300"
                                 />
                             </div>
@@ -1350,7 +1350,7 @@ const PipelineDragDropView = ({
                                     max="336"
                                     value={timelineConfig.totalHours || ''}
                                     onChange={(e) => onConfigChange('totalHours', parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
+                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                                     placeholder="Ex: 72"
                                 />
                             </div>
@@ -1368,7 +1368,7 @@ const PipelineDragDropView = ({
                                     max="365"
                                     value={timelineConfig.totalDays || ''}
                                     onChange={(e) => onConfigChange('totalDays', parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
+                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                                     placeholder="Ex: 90"
                                 />
                             </div>
@@ -1385,7 +1385,7 @@ const PipelineDragDropView = ({
                                         type="date"
                                         value={timelineConfig.start || ''}
                                         onChange={(e) => onConfigChange('start', e.target.value)}
-                                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
+                                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                                     />
                                 </div>
                                 <div>
@@ -1396,7 +1396,7 @@ const PipelineDragDropView = ({
                                         type="date"
                                         value={timelineConfig.end || ''}
                                         onChange={(e) => onConfigChange('end', e.target.value)}
-                                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
+                                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                                     />
                                 </div>
                                 {timelineConfig.start && timelineConfig.end && (
@@ -1424,7 +1424,7 @@ const PipelineDragDropView = ({
                                     max="52"
                                     value={timelineConfig.totalWeeks || ''}
                                     onChange={(e) => onConfigChange('totalWeeks', parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
+                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                                     placeholder="Ex: 12"
                                 />
                             </div>
