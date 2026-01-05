@@ -215,22 +215,20 @@ export default function CuringMaturationTimeline({ data, onChange }) {
                 <div className="flex gap-3">
                     <button
                         onClick={() => handleModeChange('phases')}
-                        className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
-                            pipelineMode === 'phases'
+                        className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${pipelineMode === 'phases'
                                 ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
                                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
-                        }`}
+                            }`}
                     >
                         🏺 Phases CDC
                         <div className="text-xs mt-1 opacity-80">4 phases (Séchage → Affinage)</div>
                     </button>
                     <button
                         onClick={() => handleModeChange('custom')}
-                        className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
-                            pipelineMode === 'custom'
+                        className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${pipelineMode === 'custom'
                                 ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
                                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
-                        }`}
+                            }`}
                     >
                         ⚙️ Personnalisé
                         <div className="text-xs mt-1 opacity-80">Configuration libre</div>
