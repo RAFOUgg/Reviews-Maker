@@ -636,7 +636,7 @@ const PipelineDragDropView = ({
         e.stopPropagation();
         setHoveredCell(null);
         console.log('✅ handleDrop CDC: draggedContent=', draggedContent, 'timestamp=', timestamp);
-        
+
         if (!draggedContent) {
             console.log('✅ handleDrop: Pas de draggedContent, sortir');
             return;
@@ -644,7 +644,7 @@ const PipelineDragDropView = ({
 
         const sel = selectedCellsRef.current || [];
         const appliesToSelection = (sel && sel.length > 0) && (sel.includes(timestamp) || massAssignMode);
-        
+
         // 1️⃣ GROUPED PRESET: Appliquer à toutes les cases sélectionnées (avec modale pour valeurs)
         if (draggedContent.type === 'grouped' && draggedContent.group && Array.isArray(draggedContent.group.fields)) {
             console.log('✅ handleDrop: GROUPED preset détecté, ouverture MultiAssignModal');
@@ -666,7 +666,7 @@ const PipelineDragDropView = ({
         // 3️⃣ SINGLE FIELD CONFORMITÉ CDC: 
         // Ajouter directement SANS modale avec valeur par défaut
         console.log('✅ handleDrop: Single field CDC - ajout direct');
-        
+
         if (appliesToSelection) {
             // Appliquer à toutes les cellules sélectionnées
             console.log(`✅ handleDrop: Application à ${sel.length} cellules sélectionnées`);
@@ -675,7 +675,7 @@ const PipelineDragDropView = ({
                 onDataChange(ts, draggedContent.key, defaultValue);
                 console.log(`  ✓ Ajout ${draggedContent.label} (${draggedContent.key}) = "${defaultValue}" à timestamp ${ts}`);
             });
-            
+
             // Feedback visuel: Toast succès
             console.log(`✅ Feedback: ${draggedContent.label} ajouté à ${sel.length} case(s)`);
         } else {
@@ -1613,12 +1613,12 @@ const PipelineDragDropView = ({
 
                                     // Gradient d'intensité GitHub-style selon nombre de données
                                     if (hasData) {
-                                        const dataCount = Object.keys(cellData).filter(k => 
+                                        const dataCount = Object.keys(cellData).filter(k =>
                                             !['timestamp', 'date', 'label', 'phase', 'day', 'week', 'hours', 'seconds', 'note', '_meta'].includes(k)
                                         ).length;
                                         const intensity = Math.min(dataCount / 10, 1);
                                         const intensityIndex = Math.floor(intensity * 4); // 0-4
-                                        
+
                                         // Palette verte progressive (GitHub-style)
                                         const gradients = [
                                             'border-green-400 bg-green-100/40 dark:border-green-600 dark:bg-green-950/30',

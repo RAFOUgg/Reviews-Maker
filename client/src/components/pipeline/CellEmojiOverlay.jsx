@@ -34,16 +34,16 @@ const CellEmojiOverlay = ({ cellData, sidebarContent, onShowDetails }) => {
     }
 
     const emojis = getEmojis()
-    
+
     // Compter le nombre de données pour gradient d'intensité GitHub-style
-    const dataCount = Object.keys(cellData).filter(k => 
+    const dataCount = Object.keys(cellData).filter(k =>
         !['timestamp', 'date', 'label', 'phase', 'day', 'week', 'hours', 'seconds', 'note', '_meta'].includes(k)
     ).length
-    
+
     // Calculer l'intensité (0 à 1) basée sur le nombre de données
     // GitHub: max ~10 commits par jour = intensité max
     const intensity = Math.min(dataCount / 10, 1)
-    
+
     // Palette gradient vert (style GitHub contributions)
     const gradientClasses = [
         'bg-green-50 dark:bg-green-950/30',
@@ -59,7 +59,7 @@ const CellEmojiOverlay = ({ cellData, sidebarContent, onShowDetails }) => {
         'border-green-500 dark:border-green-500',
         'border-green-600 dark:border-green-400'
     ]
-    
+
     const intensityIndex = Math.floor(intensity * (gradientClasses.length - 1))
     const bgClass = dataCount === 0 ? 'bg-gray-50 dark:bg-gray-900' : gradientClasses[intensityIndex]
     const borderClass = dataCount === 0 ? 'border-gray-300 dark:border-gray-700' : borderClasses[intensityIndex]

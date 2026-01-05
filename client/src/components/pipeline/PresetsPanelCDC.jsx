@@ -78,7 +78,7 @@ export default function PresetsPanelCDC({ sidebarContent, onPresetsSelected, onD
     // Créer un nouveau préréglage personnalisé
     const handleCreatePreset = () => {
         if (!newPresetName.trim()) return
-        
+
         const newPreset = {
             id: Date.now(),
             name: newPresetName,

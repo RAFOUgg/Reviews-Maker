@@ -463,7 +463,7 @@ const PipelineDataModal = ({
 
                         {/* Zone drag & drop CDC pour ajouter plus de champs */}
                         {!droppedItem && (
-                            <div 
+                            <div
                                 onDragOver={(e) => {
                                     e.preventDefault();
                                     e.currentTarget.classList.add('ring-2', 'ring-blue-400');
