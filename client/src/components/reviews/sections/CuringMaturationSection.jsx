@@ -40,10 +40,8 @@ const OPACITY_LEVELS = [
 ];
 
 const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }) => {
+    // State local pour les config de curing (environnement)
     const [config, setConfig] = useState({
-        intervalType: 'days',
-        startDate: '',
-        endDate: '',
         curingType: 'cold',
         temperature: '',
         humidity: '',
@@ -53,6 +51,16 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
         volumeOccupied: '',
         notes: '',
         ...data
+    });
+
+    // State local pour la config timeline - SÉPARÉ ET CONTRÔLÉ
+    const [timelineConfig, setTimelineConfig] = useState({
+        type: data.curingTimelineConfig?.type || 'jour',
+        totalDays: data.curingTimelineConfig?.totalDays || 30,
+        totalHours: data.curingTimelineConfig?.totalHours,
+        totalWeeks: data.curingTimelineConfig?.totalWeeks,
+        startDate: data.curingTimelineConfig?.startDate || '',
+        endDate: data.curingTimelineConfig?.endDate || ''
     });
 
     const [showConfig, setShowConfig] = useState(true);
@@ -101,50 +109,8 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                             exit={{ height: 0, opacity: 0 }}
                             className="space-y-4 overflow-hidden"
                         >
-                            {/* Type d'intervalle */}
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Intervalle de temps</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {['seconds', 'minutes', 'hours', 'days', 'weeks', 'months'].map(interval => (
-                                        <button
-                                            key={interval}
-                                            onClick={() => updateConfig('intervalType', interval)}
-                                            className={`py-2 px-3 rounded-lg border-2 text-sm transition-all ${config.intervalType === interval ? 'border-amber-500 bg-amber-500/20' : 'border-white/20 hover:border-white/40'}`}
-                                        >
-                                            {INTERVAL_TYPES[interval]}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Dates */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">Date début</label>
-                                    <input
-                                        type="date"
-                                        value={config.startDate}
-                                        onChange={(e) => updateConfig('startDate', e.target.value)}
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">Date fin (optionnel)</label>
-                                    <input
-                                        type="date"
-                                        value={config.endDate}
-                                        onChange={(e) => updateConfig('endDate', e.target.value)}
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg"
-                                    />
-                                </div>
-                            </div>
-
-                            {duration && (
-                                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-sm">
-                                    <AlertCircle className="w-4 h-4 inline mr-2" />
-                                    Durée totale: <strong>{duration} jours</strong>
-                                </div>
-                            )}
+                            {/* NOTE: La configuration de la trame (type d'intervalle, nombre de jours, etc.) 
+                                 se fait directement dans le composant PipelineDragDropView ci-dessous */}
 
                             {/* Type de curing */}
                             <div>
@@ -323,7 +289,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                 <h4 className="text-sm font-bold mb-3">📋 Résumé Curing/Maturation</h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                     <div><strong>Type:</strong> {config.curingType === 'cold' ? 'Froid (<5°C)' : 'Chaud (>5°C)'}</div>
-                    <div><strong>Durée:</strong> {duration ? `${duration} jours` : 'Non définie'}</div>
+                    <div><strong>Intervalle:</strong> {INTERVAL_TYPES[timelineConfig.type] || 'Jours'}</div>
                     <div><strong>Température:</strong> {config.temperature || 'N/A'}°C</div>
                     <div><strong>Humidité:</strong> {config.humidity || 'N/A'}%</div>
                     <div><strong>Récipient:</strong> {CONTAINER_TYPES.find(t => t.id === config.containerType)?.label}</div>
@@ -331,74 +297,73 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                 </div>
             </LiquidCard>
 
-            {/* Pipeline Curing avec évolution temporelle */}
-            {config.startDate && config.intervalType && (
-                <LiquidCard className="p-6">
-                    <h4 className="text-sm font-bold mb-4 flex items-center gap-2">
-                        <Timer className="w-4 h-4" />
-                        Pipeline Évolution Curing
-                    </h4>
-                    <CuringPipelineDragDrop
-                        timelineConfig={{
-                            type: config.intervalType || 'jour',
-                            totalDays: config.intervalType === 'jour' || !config.intervalType ? 30 : undefined,
-                            startDate: config.startDate,
-                            endDate: config.endDate,
-                            curingType: config.curingType
-                        }}
-                        timelineData={data.curingTimeline || []}
-                        onConfigChange={(key, value) => {
-                            console.log('🔧 CuringMaturation onConfigChange:', key, value);
+            {/* Pipeline Curing avec évolution temporelle - TOUJOURS AFFICHÉ */}
+            <LiquidCard className="p-6">
+                <h4 className="text-sm font-bold mb-4 flex items-center gap-2">
+                    <Timer className="w-4 h-4" />
+                    Pipeline Évolution Curing
+                </h4>
+                <CuringPipelineDragDrop
+                    timelineConfig={{
+                        type: config.intervalType || 'jour',
+                        totalDays: config.intervalType === 'jour' || !config.intervalType ? 30 : undefined,
+                        startDate: config.startDate,
+                        endDate: config.endDate,
+                        curingType: config.curingType
+                    }}
+                    timelineData={data.curingTimeline || []}
+                    onConfigChange={(key, value) => {
+                        console.log('🔧 CuringMaturation onConfigChange:', key, value);
 
-                            // Update local config immédiatement
-                            if (key === 'type') {
-                                updateConfig('intervalType', value);
-                            } else if (key === 'startDate') {
-                                updateConfig('startDate', value);
-                            } else if (key === 'endDate') {
-                                updateConfig('endDate', value);
-                            } else if (key === 'totalDays' || key === 'totalHours' || key === 'totalMinutes') {
-                                // Stocker la config complète dans data
-                                const updatedConfig = {
-                                    type: config.intervalType || 'jour',
-                                    [key]: value,
-                                    startDate: config.startDate,
-                                    endDate: config.endDate,
-                                    curingType: config.curingType
-                                };
-                                onChange({ ...data, curingTimelineConfig: updatedConfig });
-                            }
-                        }}
-                        onDataChange={(timestamp, field, value) => {
-                            // Adapter handler pour PipelineDragDropView
-                            const currentData = data.curingTimeline || [];
-                            const existingIndex = currentData.findIndex(cell => cell.timestamp === timestamp);
+                        // Update local config immédiatement
+                        if (key === 'type') {
+                            updateConfig('intervalType', value);
+                        } else if (key === 'startDate') {
+                            updateConfig('startDate', value);
+                        } else if (key === 'endDate') {
+                            updateConfig('endDate', value);
+                        } else if (key === 'totalDays' || key === 'totalHours' || key === 'totalMinutes') {
+                            // Stocker la config complète dans data
+                            const updatedConfig = {
+                                type: config.intervalType || 'jour',
+                                [key]: value,
+                                startDate: config.startDate,
+                                endDate: config.endDate,
+                                curingType: config.curingType
+                            };
+                            onChange({ ...data, curingTimelineConfig: updatedConfig });
+                        }
+                    }}
+                    onDataChange={(timestamp, field, value) => {
+                        // Adapter handler pour PipelineDragDropView
+                        const currentData = data.curingTimeline || [];
+                        const existingIndex = currentData.findIndex(cell => cell.timestamp === timestamp);
 
-                            let updatedData;
-                            if (existingIndex >= 0) {
-                                updatedData = [...currentData];
-                                if (value === null || value === undefined) {
-                                    const { [field]: removed, ...rest } = updatedData[existingIndex];
-                                    updatedData[existingIndex] = rest;
-                                } else {
-                                    updatedData[existingIndex] = { ...updatedData[existingIndex], [field]: value };
-                                }
+                        let updatedData;
+                        if (existingIndex >= 0) {
+                            updatedData = [...currentData];
+                            if (value === null || value === undefined) {
+                                const { [field]: removed, ...rest } = updatedData[existingIndex];
+                                updatedData[existingIndex] = rest;
                             } else {
-                                updatedData = [...currentData, { timestamp, [field]: value }];
+                                updatedData[existingIndex] = { ...updatedData[existingIndex], [field]: value };
                             }
+                        } else {
+                            updatedData = [...currentData, { timestamp, [field]: value }];
+                        }
 
-                            onChange({ ...data, curingTimeline: updatedData });
-                        }}
-                        initialData={{
-                            temperature: config.temperature,
-                            humidity: config.humidity,
-                            containerType: config.containerType,
-                            packagingType: config.packagingType,
-                            opacity: config.opacity,
-                            volumeOccupied: config.volumeOccupied
-                        }}
-                    />
-                </LiquidCard>
+                        onChange({ ...data, curingTimeline: updatedData });
+                    }}
+                    initialData={{
+                        temperature: config.temperature,
+                        humidity: config.humidity,
+                        containerType: config.containerType,
+                        packagingType: config.packagingType,
+                        opacity: config.opacity,
+                        volumeOccupied: config.volumeOccupied
+                    }}
+                />
+            </LiquidCard>
             )}
         </div>
     );
