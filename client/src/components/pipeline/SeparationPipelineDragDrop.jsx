@@ -299,6 +299,5 @@ const PassModal = ({ pass, onSave, onClose }) => {
         </div>
     )
 }
-}
 
 export default SeparationPipelineDragDrop

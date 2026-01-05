@@ -2,7 +2,7 @@ import UnifiedPipelineDragDrop from './UnifiedPipelineDragDrop'
 import { CULTURE_SIDEBAR_CONTENT } from '../../config/cultureSidebarContent'
 import { CULTURE_PHASES } from '../../config/pipelinePhases'
 import { CultureEvolutionGraph } from './CultureEvolutionGraph'
-import { CultureCSVExporter } from '../../utils/CultureCSVExporter'
+import { CultureCSVExporter } from './CultureCSVExporter'
 
 /**
  * CulturePipelineDragDrop - Pipeline Culture wrapper utilisant le système unifié
