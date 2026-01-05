@@ -1161,32 +1161,49 @@ const PipelineDragDropView = ({
                                 <div className="p-2 bg-white dark:bg-gray-900 space-y-1">
                                     {section.items?.map((item) => {
                                         const isPreConfigured = preConfiguredItems[item.key] !== undefined;
-                                        const handleSidebarItemClick = (e, item) => {
+                                        const isSelected = multiSelectedItems.includes(item.key);
+
+                                        const handleSidebarItemClick = (e) => {
+                                            // Ne rien faire si c'est juste le début d'un drag
+                                            if (e.type === 'mousedown') return;
+
                                             if (e.ctrlKey || e.metaKey) {
-                                                setMultiSelectedItems(prev => prev.includes(item.key)
-                                                    ? prev.filter(k => k !== item.key)
-                                                    : [...prev, item.key]);
-                                            } else {
+                                                // Multi-sélection avec Ctrl
+                                                setMultiSelectedItems(prev =>
+                                                    prev.includes(item.key)
+                                                        ? prev.filter(k => k !== item.key)
+                                                        : [...prev, item.key]
+                                                );
+                                            } else if (!isSelected) {
+                                                // Simple clic : sélection unique
                                                 setMultiSelectedItems([item.key]);
                                             }
                                         };
+
                                         return (
                                             <div
                                                 key={item.key}
                                                 draggable="true"
                                                 onDragStart={(e) => {
-                                                    if (multiSelectedItems.length > 1) {
-                                                        e.dataTransfer.setData('application/multi-items', JSON.stringify(multiSelectedItems.map(k => section.items.find(i => i.key === k))));
-                                                        setDraggedContent({ type: 'multi', items: multiSelectedItems.map(k => section.items.find(i => i.key === k)) });
-                                                    } else {
+                                                    // Si l'item n'est pas dans la sélection multiple, drag uniquement cet item
+                                                    if (!isSelected || multiSelectedItems.length === 1) {
                                                         handleDragStart(e, item);
+                                                        setMultiSelectedItems([]); // Clear selection après drag
+                                                    } else {
+                                                        // Multi-items drag
+                                                        const selectedItems = multiSelectedItems
+                                                            .map(k => section.items.find(i => i.key === k))
+                                                            .filter(Boolean);
+                                                        e.dataTransfer.setData('application/multi-items', JSON.stringify(selectedItems));
+                                                        setDraggedContent({ type: 'multi', items: selectedItems });
                                                     }
                                                 }}
                                                 onDragEnd={(e) => {
                                                     e.currentTarget.classList.remove('dragging');
+                                                    setDraggedContent(null);
                                                     setMultiSelectedItems([]);
                                                 }}
-                                                onClick={(e) => handleSidebarItemClick(e, item)}
+                                                onClick={handleSidebarItemClick}
                                                 onContextMenu={(e) => {
                                                     e.preventDefault();
                                                     setContextMenu({
@@ -1198,7 +1215,10 @@ const PipelineDragDropView = ({
                                                         anchorRect: e.currentTarget.getBoundingClientRect()
                                                     });
                                                 }}
-                                                className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group ${isPreConfigured ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30' : 'bg-gray-50 dark:bg-gray-800 border-transparent hover: hover:bg-gray-100 dark:hover:bg-gray-700'} ${multiSelectedItems.includes(item.key) ? 'ring-2 ' : ''}`}
+                                                className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group ${isPreConfigured
+                                                        ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30'
+                                                        : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                    } ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
                                                 style={{ touchAction: 'none' }}
                                                 title={isPreConfigured ? `Pré-configuré: ${preConfiguredItems[item.key]}${item.unit || ''}` : 'Clic droit pour pré-configurer'}
                                             >
@@ -1210,7 +1230,7 @@ const PipelineDragDropView = ({
                                                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex-1">
                                                     {item.label}
                                                 </span>
-                                                <span className={`text-xs transition-colors ${isPreConfigured ? 'text-green-600 dark:text-green-400' : 'text-gray-400 group-hover:'}`}>
+                                                <span className={`text-xs transition-colors ${isPreConfigured ? 'text-green-600 dark:text-green-400' : 'text-gray-400 group-hover:text-gray-600'}`}>
                                                     {isPreConfigured ? '✓' : '⋮⋮'}
                                                 </span>
                                             </div>
