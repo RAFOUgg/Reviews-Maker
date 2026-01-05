@@ -1162,10 +1162,14 @@ const PipelineDragDropView = ({
                                     {section.items?.map((item) => {
                                         const isPreConfigured = preConfiguredItems[item.key] !== undefined;
                                         const isSelected = multiSelectedItems.includes(item.key);
+                                        let isDragging = false;
 
                                         const handleSidebarItemClick = (e) => {
-                                            // Ne rien faire si c'est juste le début d'un drag
-                                            if (e.type === 'mousedown') return;
+                                            // Ne rien faire si on est en train de drag
+                                            if (isDragging) {
+                                                isDragging = false;
+                                                return;
+                                            }
 
                                             if (e.ctrlKey || e.metaKey) {
                                                 // Multi-sélection avec Ctrl
@@ -1174,9 +1178,9 @@ const PipelineDragDropView = ({
                                                         ? prev.filter(k => k !== item.key)
                                                         : [...prev, item.key]
                                                 );
-                                            } else if (!isSelected) {
-                                                // Simple clic : sélection unique
-                                                setMultiSelectedItems([item.key]);
+                                            } else {
+                                                // Simple clic : désélection si déjà sélectionné, sinon sélection
+                                                setMultiSelectedItems(isSelected ? [] : [item.key]);
                                             }
                                         };
 
@@ -1185,6 +1189,7 @@ const PipelineDragDropView = ({
                                                 key={item.key}
                                                 draggable="true"
                                                 onDragStart={(e) => {
+                                                    isDragging = true;
                                                     // Si l'item n'est pas dans la sélection multiple, drag uniquement cet item
                                                     if (!isSelected || multiSelectedItems.length === 1) {
                                                         handleDragStart(e, item);
@@ -1216,8 +1221,8 @@ const PipelineDragDropView = ({
                                                     });
                                                 }}
                                                 className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group ${isPreConfigured
-                                                        ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30'
-                                                        : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30'
+                                                    : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
                                                     } ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
                                                 style={{ touchAction: 'none' }}
                                                 title={isPreConfigured ? `Pré-configuré: ${preConfiguredItems[item.key]}${item.unit || ''}` : 'Clic droit pour pré-configurer'}

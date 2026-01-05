@@ -348,21 +348,24 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                         }}
                         timelineData={data.curingTimeline || []}
                         onConfigChange={(key, value) => {
-                            // Adapter handler pour PipelineDragDropView
-                            const updatedConfig = {
-                                type: config.intervalType || 'jour',
-                                totalDays: key === 'totalDays' ? value : (config.intervalType === 'jour' || !config.intervalType ? 30 : undefined),
-                                startDate: config.startDate,
-                                endDate: config.endDate,
-                                curingType: config.curingType,
-                                [key]: value
-                            };
-                            // Update local config si nécessaire
-                            if (key === 'type') updateConfig('intervalType', value);
-                            if (key === 'startDate') updateConfig('startDate', value);
-                            if (key === 'endDate') updateConfig('endDate', value);
-                            if (key === 'totalDays') {
-                                // Stocker totalDays si besoin
+                            console.log('🔧 CuringMaturation onConfigChange:', key, value);
+
+                            // Update local config immédiatement
+                            if (key === 'type') {
+                                updateConfig('intervalType', value);
+                            } else if (key === 'startDate') {
+                                updateConfig('startDate', value);
+                            } else if (key === 'endDate') {
+                                updateConfig('endDate', value);
+                            } else if (key === 'totalDays' || key === 'totalHours' || key === 'totalMinutes') {
+                                // Stocker la config complète dans data
+                                const updatedConfig = {
+                                    type: config.intervalType || 'jour',
+                                    [key]: value,
+                                    startDate: config.startDate,
+                                    endDate: config.endDate,
+                                    curingType: config.curingType
+                                };
                                 onChange({ ...data, curingTimelineConfig: updatedConfig });
                             }
                         }}
