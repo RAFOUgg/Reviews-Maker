@@ -215,8 +215,8 @@ export default function EffectsAndExperienceSection({ data, onChange }) {
                                     type="button"
                                     onClick={() => toggleContext(context.value)}
                                     className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${isSelected
-                                            ? 'bg-violet-500 text-white shadow-lg'
-                                            : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                                        ? 'bg-violet-500 text-white shadow-lg'
+                                        : 'bg-white/10 text-gray-300 hover:bg-white/20'
                                         }`}
                                 >
                                     {context.label}
@@ -280,8 +280,8 @@ export default function EffectsAndExperienceSection({ data, onChange }) {
                     <button
                         onClick={() => setEffectsFilter('all')}
                         className={`px-3 py-1 rounded-lg text-xs font-medium ${effectsFilter === 'all'
-                                ? 'bg-violet-500 text-white'
-                                : 'bg-white/10 text-gray-400 hover:bg-white/20'
+                            ? 'bg-violet-500 text-white'
+                            : 'bg-white/10 text-gray-400 hover:bg-white/20'
                             }`}
                     >
                         Tous
@@ -289,8 +289,8 @@ export default function EffectsAndExperienceSection({ data, onChange }) {
                     <button
                         onClick={() => setEffectsFilter('mental')}
                         className={`px-3 py-1 rounded-lg text-xs font-medium ${effectsFilter === 'mental'
-                                ? 'bg-blue-500 text-white'
-                                : 'bg-white/10 text-gray-400 hover:bg-white/20'
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-white/10 text-gray-400 hover:bg-white/20'
                             }`}
                     >
                         🧠 Mentaux
@@ -298,8 +298,8 @@ export default function EffectsAndExperienceSection({ data, onChange }) {
                     <button
                         onClick={() => setEffectsFilter('physical')}
                         className={`px-3 py-1 rounded-lg text-xs font-medium ${effectsFilter === 'physical'
-                                ? 'bg-green-500 text-white'
-                                : 'bg-white/10 text-gray-400 hover:bg-white/20'
+                            ? 'bg-green-500 text-white'
+                            : 'bg-white/10 text-gray-400 hover:bg-white/20'
                             }`}
                     >
                         💪 Physiques
@@ -307,8 +307,8 @@ export default function EffectsAndExperienceSection({ data, onChange }) {
                     <button
                         onClick={() => setEffectsFilter('therapeutic')}
                         className={`px-3 py-1 rounded-lg text-xs font-medium ${effectsFilter === 'therapeutic'
-                                ? 'bg-purple-500 text-white'
-                                : 'bg-white/10 text-gray-400 hover:bg-white/20'
+                            ? 'bg-purple-500 text-white'
+                            : 'bg-white/10 text-gray-400 hover:bg-white/20'
                             }`}
                     >
                         ⚕️ Thérapeutiques
@@ -317,8 +317,8 @@ export default function EffectsAndExperienceSection({ data, onChange }) {
                         <button
                             onClick={() => setEffectsFilter('positive')}
                             className={`px-3 py-1 rounded-lg text-xs font-medium ${effectsFilter === 'positive'
-                                    ? 'bg-green-500 text-white'
-                                    : 'bg-white/10 text-gray-400 hover:bg-white/20'
+                                ? 'bg-green-500 text-white'
+                                : 'bg-white/10 text-gray-400 hover:bg-white/20'
                                 }`}
                         >
                             ✅ Positifs
@@ -326,8 +326,8 @@ export default function EffectsAndExperienceSection({ data, onChange }) {
                         <button
                             onClick={() => setEffectsFilter('negative')}
                             className={`px-3 py-1 rounded-lg text-xs font-medium ${effectsFilter === 'negative'
-                                    ? 'bg-red-500 text-white'
-                                    : 'bg-white/10 text-gray-400 hover:bg-white/20'
+                                ? 'bg-red-500 text-white'
+                                : 'bg-white/10 text-gray-400 hover:bg-white/20'
                                 }`}
                         >
                             ⚠️ Négatifs
@@ -348,10 +348,10 @@ export default function EffectsAndExperienceSection({ data, onChange }) {
                                 onClick={() => toggleEffect(effect.key)}
                                 disabled={isDisabled}
                                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${isSelected
-                                        ? 'bg-violet-500 text-white shadow-lg'
-                                        : isDisabled
-                                            ? 'bg-white/5 text-gray-600 cursor-not-allowed'
-                                            : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                                    ? 'bg-violet-500 text-white shadow-lg'
+                                    : isDisabled
+                                        ? 'bg-white/5 text-gray-600 cursor-not-allowed'
+                                        : 'bg-white/10 text-gray-300 hover:bg-white/20'
                                     }`}
                             >
                                 <span className="mr-1">{effect.emoji}</span>
