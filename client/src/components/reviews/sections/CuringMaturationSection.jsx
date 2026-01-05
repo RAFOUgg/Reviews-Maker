@@ -304,35 +304,20 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                     Pipeline Évolution Curing
                 </h4>
                 <CuringPipelineDragDrop
-                    timelineConfig={{
-                        type: config.intervalType || 'jour',
-                        totalDays: config.intervalType === 'jour' || !config.intervalType ? 30 : undefined,
-                        startDate: config.startDate,
-                        endDate: config.endDate,
-                        curingType: config.curingType
-                    }}
+                    timelineConfig={timelineConfig}
                     timelineData={data.curingTimeline || []}
                     onConfigChange={(key, value) => {
                         console.log('🔧 CuringMaturation onConfigChange:', key, value);
 
-                        // Update local config immédiatement
-                        if (key === 'type') {
-                            updateConfig('intervalType', value);
-                        } else if (key === 'startDate') {
-                            updateConfig('startDate', value);
-                        } else if (key === 'endDate') {
-                            updateConfig('endDate', value);
-                        } else if (key === 'totalDays' || key === 'totalHours' || key === 'totalMinutes') {
-                            // Stocker la config complète dans data
-                            const updatedConfig = {
-                                type: config.intervalType || 'jour',
-                                [key]: value,
-                                startDate: config.startDate,
-                                endDate: config.endDate,
-                                curingType: config.curingType
-                            };
-                            onChange({ ...data, curingTimelineConfig: updatedConfig });
-                        }
+                        // Mettre à jour le state local IMMÉDIATEMENT
+                        setTimelineConfig(prev => ({
+                            ...prev,
+                            [key]: value
+                        }));
+
+                        // Propager au parent pour sauvegarde
+                        const updatedConfig = { ...timelineConfig, [key]: value };
+                        onChange({ ...data, curingTimelineConfig: updatedConfig });
                     }}
                     onDataChange={(timestamp, field, value) => {
                         // Adapter handler pour PipelineDragDropView
@@ -364,7 +349,6 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                     }}
                 />
             </LiquidCard>
-            )}
         </div>
     );
 };
