@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import LiquidSlider from '../../liquid/LiquidSlider';
+import LiquidSlider from '../../LiquidSlider';
 import { EFFECTS } from '../../../data/effects';
 
 /**
