@@ -206,7 +206,6 @@ const CuringPipelineDragDrop = ({
     return (
         <div className="w-full h-full flex flex-col bg-gray-900 text-white">
             {/* Header */}
-            /* Header */}
             <div className="px-6 py-4 border-b border-gray-700 bg-gray-900/50">
                 <div className="flex items-center justify-between">
                     <div>
