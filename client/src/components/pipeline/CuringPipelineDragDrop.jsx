@@ -300,9 +300,9 @@ const CuringPipelineDragDrop = ({
                                                     const shouldShow = shouldShowField(item, curingData)
                                                     if (!shouldShow) return null
 
-                                                    const hasValue = curingData[item.id] !== null && 
-                                                                   curingData[item.id] !== undefined && 
-                                                                   curingData[item.id] !== ''
+                                                    const hasValue = curingData[item.id] !== null &&
+                                                        curingData[item.id] !== undefined &&
+                                                        curingData[item.id] !== ''
 
                                                     return (
                                                         <div
@@ -320,11 +320,11 @@ const CuringPipelineDragDrop = ({
                                                                 flex items-center gap-2 px-3 py-2 rounded-md
                                                                 transition-all
                                                                 ${item.type !== 'info' ? 'cursor-move' : ''}
-                                                                ${hasValue 
-                                                                    ? 'bg-green-900/20 border border-green-700/50' 
+                                                                ${hasValue
+                                                                    ? 'bg-green-900/20 border border-green-700/50'
                                                                     : item.type === 'info'
-                                                                    ? 'bg-blue-900/20 border border-blue-700/50'
-                                                                    : 'bg-gray-800/50 hover:bg-gray-700 border border-transparent'
+                                                                        ? 'bg-blue-900/20 border border-blue-700/50'
+                                                                        : 'bg-gray-800/50 hover:bg-gray-700 border border-transparent'
                                                                 }
                                                             `}
                                                             title={item.tooltip}
