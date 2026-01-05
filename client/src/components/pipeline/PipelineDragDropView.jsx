@@ -1,5 +1,7 @@
-// Modal d'attribution multi-données avec onglets
+// Modal d'attribution multi-données avec onglets - Utilise FieldRenderer pour champs complexes
 import { useState as useModalState } from 'react';
+import FieldRenderer from './FieldRenderer';
+
 function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, onApply, selectedCells }) {
     const [activeTab, setActiveTab] = useModalState('data');
     const [values, setValues] = useModalState({});
@@ -24,30 +26,35 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
         if (section) sectionMap[section.id].push(item);
     });
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 min-w-[340px] max-w-[95vw] border border-gray-200 dark:border-gray-700">
-                <div className="flex gap-4 mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 min-w-[400px] max-w-[95vw] max-h-[90vh] border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                    Configuration des données
+                </h3>
+                <div className="flex gap-2 mb-4">
                     <button className={`liquid-btn ${activeTab === 'data' ? 'liquid-btn--primary' : ''}`} onClick={() => setActiveTab('data')}>Toutes les données</button>
                     <button className={`liquid-btn ${activeTab === 'group' ? 'liquid-btn--primary' : ''}`} onClick={() => setActiveTab('group')}>Groupes</button>
                 </div>
                 {activeTab === 'data' && (
-                    <div className="max-h-80 overflow-y-auto">
+                    <div className="flex-1 overflow-y-auto pr-2 space-y-6">
                         {Object.entries(sectionMap).map(([sectionId, sectionItems]) => {
                             if (sectionItems.length === 0) return null;
                             const section = sidebarSections.find(sec => sec.id === sectionId);
                             return (
-                                <div key={sectionId} className="mb-4">
-                                    <div className="font-semibold text-sm mb-2">{section.label}</div>
-                                    <div className="grid grid-cols-2 gap-2">
+                                <div key={sectionId} className="space-y-3">
+                                    <div className="flex items-center gap-2 font-semibold text-sm text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
+                                        <span>{section.icon}</span>
+                                        <span>{section.label}</span>
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-4">
                                         {sectionItems.map(item => (
                                             item && (
-                                                <div key={item.key} className="flex flex-col gap-1">
-                                                    <label className="text-xs font-medium">{item.label}</label>
-                                                    <input
-                                                        className="px-2 py-1 border rounded text-xs"
-                                                        value={values[item.key] || ''}
-                                                        onChange={e => setValues(v => ({ ...v, [item.key]: e.target.value }))}
-                                                        placeholder={item.unit || ''}
+                                                <div key={item.key}>
+                                                    <FieldRenderer
+                                                        field={item}
+                                                        value={values[item.key]}
+                                                        onChange={(newValue) => setValues(v => ({ ...v, [item.key]: newValue }))}
+                                                        allData={values}
                                                     />
                                                 </div>)
                                         ))}
@@ -58,10 +65,12 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
                     </div>
                 )}
                 {activeTab === 'group' && (
-                    <div className="p-4 text-sm text-gray-600">Gestion des groupes à venir…</div>
+                    <div className="p-4 text-sm text-gray-600 dark:text-gray-400">Gestion des groupes à venir…</div>
                 )}
-                <div className="flex gap-2 mt-6">
-                    <button className="flex-1 liquid-btn liquid-btn--accent" onClick={() => onApply(values)}>Appliquer à {selectedCells.length > 0 ? `${selectedCells.length} cases` : 'la case'}</button>
+                <div className="flex gap-2 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button className="flex-1 liquid-btn liquid-btn--accent" onClick={() => onApply(values)}>
+                        Appliquer à {selectedCells.length > 0 ? `${selectedCells.length} case${selectedCells.length > 1 ? 's' : ''}` : 'la case'}
+                    </button>
                     <button className="flex-1 liquid-btn" onClick={onClose}>Annuler</button>
                 </div>
                 <ConfirmModal

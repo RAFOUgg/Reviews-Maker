@@ -12,9 +12,12 @@
  * 
  * PRINCIPE: Tous les champs numériques sont LIBRES (pas de validation min/max stricte)
  * Les suggestions/catégories sont des aides UX, jamais des contraintes
+ * 
+ * UPDATE 04/01/2026: Intégration cultureSidebarContent.js (Phase 1.1)
  */
 
 import { CULTURE_FORM_DATA } from '../data/cultureFormData'
+import { CULTURE_SIDEBAR_CONTENT } from './cultureSidebarContent'
 
 // ============================================================================
 // CULTURE PIPELINE (Fleurs) - 85+ champs CDC
@@ -789,7 +792,17 @@ export const RECIPE_PIPELINE_CONFIG = {
 // ============================================================================
 export const getPipelineConfig = (type) => {
     const configs = {
-        culture: CULTURE_PIPELINE_CONFIG,
+        culture: {
+            ...CULTURE_PIPELINE_CONFIG,
+            // PHASE 1.1: Override avec nouvelle sidebar CDC complète
+            sidebarContent: CULTURE_SIDEBAR_CONTENT,
+            intervalTypes: [
+                { value: 'phases', label: 'Phases physiologiques', icon: '🌱', maxCells: 12 },
+                { value: 'days', label: 'Jours', icon: '📅', maxCells: 365 },
+                { value: 'weeks', label: 'Semaines', icon: '📆', maxCells: 52 },
+                { value: 'months', label: 'Mois', icon: '📅', maxCells: 12 }
+            ]
+        },
         curing: CURING_PIPELINE_CONFIG,
         separation: SEPARATION_PIPELINE_CONFIG,
         purification: PURIFICATION_PIPELINE_CONFIG,
