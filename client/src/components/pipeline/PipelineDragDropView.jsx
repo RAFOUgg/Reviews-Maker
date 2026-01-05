@@ -630,40 +630,61 @@ const PipelineDragDropView = ({
         setHoveredCell(null);
     };
 
-    // Nouvelle version CDC : handleDrop sans préréglages
+    // CDC CONFORME: handleDrop ajoute directement sans modale
     const handleDrop = (e, timestamp) => {
         e.preventDefault();
         e.stopPropagation();
         setHoveredCell(null);
-        console.log('🔴 handleDrop: draggedContent=', draggedContent, 'timestamp=', timestamp);
+        console.log('✅ handleDrop CDC: draggedContent=', draggedContent, 'timestamp=', timestamp);
+        
         if (!draggedContent) {
-            console.log('🔴 handleDrop: Pas de draggedContent, sortir');
+            console.log('✅ handleDrop: Pas de draggedContent, sortir');
             return;
         }
+
         const sel = selectedCellsRef.current || [];
         const appliesToSelection = (sel && sel.length > 0) && (sel.includes(timestamp) || massAssignMode);
-        console.log('🔴 handleDrop: selectedCells=', sel, 'appliesToSelection=', appliesToSelection);
-        // Grouped preset or multi-data drop: open multi-assign modal
-        if ((draggedContent.type === 'grouped' && draggedContent.group && Array.isArray(draggedContent.group.fields)) || (draggedContent.type === 'multi' && Array.isArray(draggedContent.items))) {
-            console.log('🔴 handleDrop: Ouverture MultiAssignModal (grouped ou multi)');
+        
+        // 1️⃣ GROUPED PRESET: Appliquer à toutes les cases sélectionnées (avec modale pour valeurs)
+        if (draggedContent.type === 'grouped' && draggedContent.group && Array.isArray(draggedContent.group.fields)) {
+            console.log('✅ handleDrop: GROUPED preset détecté, ouverture MultiAssignModal');
             setMultiAssignContent(draggedContent);
             setShowMultiAssignModal(true);
             setDraggedContent(null);
             return;
         }
-        // For single data field, open modal for value definition
-        console.log('🔴 handleDrop: Ouverture PipelineDataModal (single field)');
-        if (appliesToSelection) {
-            setCurrentCellTimestamp(sel[0]);
-            setDroppedItem({ timestamp: sel[0], content: draggedContent });
-            setIsModalOpen(true);
-            console.log('🔴 handleDrop: Ouvert PipelineDataModal pour timestamp=', sel[0]);
-        } else {
-            setCurrentCellTimestamp(timestamp);
-            setDroppedItem({ timestamp, content: draggedContent });
-            setIsModalOpen(true);
-            console.log('🔴 handleDrop: Ouvert PipelineDataModal pour timestamp=', timestamp);
+
+        // 2️⃣ MULTI-SÉLECTION: Ouvrir modale pour plusieurs champs
+        if (draggedContent.type === 'multi' && Array.isArray(draggedContent.items)) {
+            console.log('✅ handleDrop: MULTI-sélection détectée, ouverture MultiAssignModal');
+            setMultiAssignContent(draggedContent);
+            setShowMultiAssignModal(true);
+            setDraggedContent(null);
+            return;
         }
+
+        // 3️⃣ SINGLE FIELD CONFORMITÉ CDC: 
+        // Ajouter directement SANS modale avec valeur par défaut
+        console.log('✅ handleDrop: Single field CDC - ajout direct');
+        
+        if (appliesToSelection) {
+            // Appliquer à toutes les cellules sélectionnées
+            console.log(`✅ handleDrop: Application à ${sel.length} cellules sélectionnées`);
+            sel.forEach(ts => {
+                const defaultValue = draggedContent.defaultValue !== undefined ? draggedContent.defaultValue : '';
+                onDataChange(ts, draggedContent.key, defaultValue);
+                console.log(`  ✓ Ajout ${draggedContent.label} (${draggedContent.key}) = "${defaultValue}" à timestamp ${ts}`);
+            });
+            
+            // Feedback visuel: Toast succès
+            console.log(`✅ Feedback: ${draggedContent.label} ajouté à ${sel.length} case(s)`);
+        } else {
+            // Ajouter à la seule cellule dropée
+            const defaultValue = draggedContent.defaultValue !== undefined ? draggedContent.defaultValue : '';
+            onDataChange(timestamp, draggedContent.key, defaultValue);
+            console.log(`✅ Ajout direct: ${draggedContent.label} (${draggedContent.key}) = "${defaultValue}" à timestamp ${timestamp}`);
+        }
+
         setDraggedContent(null);
     };
 
@@ -1590,10 +1611,26 @@ const PipelineDragDropView = ({
                                     // Construire classes CSS pour la cellule
                                     let cellClass = `relative p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[80px]`;
 
-                                    // Bordure et fond selon données
-                                    cellClass += hasData
-                                        ? ' border-green-500 bg-green-500/10'
-                                        : ' border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800';
+                                    // Gradient d'intensité GitHub-style selon nombre de données
+                                    if (hasData) {
+                                        const dataCount = Object.keys(cellData).filter(k => 
+                                            !['timestamp', 'date', 'label', 'phase', 'day', 'week', 'hours', 'seconds', 'note', '_meta'].includes(k)
+                                        ).length;
+                                        const intensity = Math.min(dataCount / 10, 1);
+                                        const intensityIndex = Math.floor(intensity * 4); // 0-4
+                                        
+                                        // Palette verte progressive (GitHub-style)
+                                        const gradients = [
+                                            'border-green-400 bg-green-100/40 dark:border-green-600 dark:bg-green-950/30',
+                                            'border-green-500 bg-green-200/50 dark:border-green-500 dark:bg-green-900/40',
+                                            'border-green-600 bg-green-300/60 dark:border-green-400 dark:bg-green-800/50',
+                                            'border-green-700 bg-green-400/70 dark:border-green-300 dark:bg-green-700/60',
+                                            'border-green-800 bg-green-500/80 dark:border-green-200 dark:bg-green-600/70'
+                                        ];
+                                        cellClass += ' ' + gradients[intensityIndex];
+                                    } else {
+                                        cellClass += ' border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800';
+                                    }
 
                                     // Selected par clic simple (modal)
                                     cellClass += selectedCell === cell.timestamp
@@ -1644,6 +1681,10 @@ const PipelineDragDropView = ({
                                                 <CellEmojiOverlay
                                                     cellData={cellData}
                                                     sidebarContent={sidebarContent}
+                                                    onShowDetails={() => {
+                                                        setCurrentCellTimestamp(cell.timestamp);
+                                                        setIsModalOpen(true);
+                                                    }}
                                                 />
                                             )}
 

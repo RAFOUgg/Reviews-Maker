@@ -4,6 +4,7 @@ import {
     ChevronDown, ChevronRight, Thermometer, Droplets, Wind, Sun,
     Sprout, Scissors, Ruler, Scale, Calendar, Package, Beaker, Leaf
 } from 'lucide-react';
+import PresetsPanelCDC from './PresetsPanelCDC';
 
 /**
  * PipelineContentsSidebar - Volet latéral hiérarchisé avec contenus drag & drop
@@ -235,6 +236,20 @@ const PipelineContentsSidebar = ({
                 <p className="text-xs text-gray-400 mt-2">
                     Glissez les éléments vers les cases de la timeline
                 </p>
+            </div>
+
+            {/* Panneau préréglages CDC CONFORME */}
+            <div className="p-2">
+                <PresetsPanelCDC
+                    sidebarContent={schema}
+                    onPresetsSelected={(selected) => {
+                        console.log('Préréglages sélectionnés:', selected);
+                    }}
+                    onDragPreset={(preset) => {
+                        console.log('Drag preset:', preset);
+                        onDragStart(preset);
+                    }}
+                />
             </div>
 
             {/* Liste des catégories et contenus */}

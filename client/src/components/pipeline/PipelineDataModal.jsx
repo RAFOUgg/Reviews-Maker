@@ -22,7 +22,9 @@ const PipelineDataModal = ({
     intervalLabel = '',
     droppedItem = null,
     pipelineType = 'culture' // Type de pipeline pour localStorage
-    , onFieldDelete
+    , onFieldDelete,
+    onDragOver = null,  // Callback for drag over
+    onDrop = null       // Callback for drop
 }) => {
     const [formData, setFormData] = useState({});
     const [activeTab, setActiveTab] = useState('form'); // 'form' ou 'presets'
@@ -456,6 +458,33 @@ const PipelineDataModal = ({
                                     <Bookmark className="w-4 h-4 inline mr-1" />
                                     Préréglages ({fieldPresets.length})
                                 </button>
+                            </div>
+                        )}
+
+                        {/* Zone drag & drop CDC pour ajouter plus de champs */}
+                        {!droppedItem && (
+                            <div 
+                                onDragOver={(e) => {
+                                    e.preventDefault();
+                                    e.currentTarget.classList.add('ring-2', 'ring-blue-400');
+                                    onDragOver && onDragOver(e);
+                                }}
+                                onDragLeave={(e) => {
+                                    e.currentTarget.classList.remove('ring-2', 'ring-blue-400');
+                                }}
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    e.currentTarget.classList.remove('ring-2', 'ring-blue-400');
+                                    onDrop && onDrop(e);
+                                }}
+                                className="p-4 m-4 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-lg bg-blue-50/30 dark:bg-blue-900/20 text-center transition-all"
+                            >
+                                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+                                    ⤡ Déposez d'autres éléments ici pour ajouter des champs
+                                </p>
+                                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                    Drag depuis le panneau latéral
+                                </p>
                             </div>
                         )}
 
