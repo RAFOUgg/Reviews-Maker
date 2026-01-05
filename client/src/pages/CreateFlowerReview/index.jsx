@@ -11,16 +11,13 @@ import { flowerReviewsService } from '../../services/apiService'
 import InfosGenerales from './sections/InfosGenerales'
 import Genetiques from './sections/Genetiques'
 import CulturePipelineSection from './sections/CulturePipelineSection'
-import Recolte from './sections/Recolte'
 import AnalyticsSection from '../../components/reviews/sections/AnalyticsSection'
 import VisualSection from '../../components/reviews/sections/VisualSection'
 import OdorSection from '../../components/reviews/sections/OdorSection'
 import TextureSection from '../../components/reviews/sections/TextureSection'
 import TasteSection from '../../components/reviews/sections/TasteSection'
-import EffectsSection from '../../components/reviews/sections/EffectsSection'
-import ExperienceUtilisation from '../../components/forms/flower/ExperienceUtilisation'
+import EffectsAndExperienceSection from '../../components/reviews/sections/EffectsAndExperienceSection'
 import CuringMaturationTimeline from '../../components/forms/flower/CuringMaturationTimeline'
-import TerpeneManualInput from '../../components/analytics/TerpeneManualInput'
 
 // Import hooks
 import { useFlowerForm } from './hooks/useFlowerForm'
@@ -64,20 +61,17 @@ export default function CreateFlowerReview() {
         }
     }, [photos])
 
-    // Définition des 13 sections (+ Récolte + Terpènes manuels)
+    // Définition des 10 sections (fusionné : Effets+Expérience, Analytiques+Terpènes)
     const sections = [
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
         { id: 'genetics', icon: '🧬', title: 'Génétiques & PhenoHunt' },
-        { id: 'culture', icon: '🌱', title: 'Culture & Pipeline' },
-        { id: 'recolte', icon: '🌾', title: 'Récolte & Post-Récolte' },
-        { id: 'analytics', icon: '🔬', title: 'Analytiques PDF' },
-        { id: 'terpenes', icon: '🧪', title: 'Terpènes (Manuel)' },
+        { id: 'culture', icon: '🌱', title: 'Culture & Pipeline' }, // Récolte intégrée dans sidebar RECOLTE
+        { id: 'analytics', icon: '🔬', title: 'Analytiques' }, // Cannabinoïdes + Terpènes
         { id: 'visual', icon: '👁️', title: 'Visuel & Technique' },
         { id: 'odeurs', icon: '👃', title: 'Odeurs' },
         { id: 'texture', icon: '🤚', title: 'Texture' },
         { id: 'gouts', icon: '😋', title: 'Goûts' },
-        { id: 'effets', icon: '💥', title: 'Effets ressentis' },
-        { id: 'experience', icon: '🔥', title: 'Expérience d\'utilisation' },
+        { id: 'effects-experience', icon: '💥', title: 'Effets & Expérience' }, // Fusionné
         { id: 'curing', icon: '🌡️', title: 'Curing & Maturation' },
     ]
 
@@ -294,61 +288,45 @@ export default function CreateFlowerReview() {
                             />
                         )}
                         {currentSection === 3 && (
-                            <Recolte formData={formData} handleChange={handleChange} />
-                        )}
-                        {currentSection === 4 && (
                             <AnalyticsSection
-                                productType="Fleurs"
+                                productType="Fleur"
                                 data={formData.analytics || {}}
                                 onChange={(analyticsData) => handleChange('analytics', analyticsData)}
                             />
                         )}
-                        {currentSection === 5 && (
-                            <div className="space-y-6">
-                                <TerpeneManualInput
-                                    data={formData.terpenes || {}}
-                                    onChange={(terpenesData) => handleChange('terpenes', terpenesData)}
-                                />
-                            </div>
-                        )}
-                        {currentSection === 6 && (
+                        {currentSection === 4 && (
                             <VisualSection
+                                productType="Fleur"
                                 data={formData.visual || {}}
                                 onChange={(visualData) => handleChange('visual', visualData)}
                             />
                         )}
-                        {currentSection === 7 && (
+                        {currentSection === 5 && (
                             <OdorSection
                                 data={formData.odeurs || {}}
                                 onChange={(odeursData) => handleChange('odeurs', odeursData)}
                             />
                         )}
-                        {currentSection === 8 && (
+                        {currentSection === 6 && (
                             <TextureSection
-                                productType="Fleurs"
+                                productType="Fleur"
                                 data={formData.texture || {}}
                                 onChange={(textureData) => handleChange('texture', textureData)}
                             />
                         )}
-                        {currentSection === 9 && (
+                        {currentSection === 7 && (
                             <TasteSection
                                 data={formData.gouts || {}}
                                 onChange={(goutsData) => handleChange('gouts', goutsData)}
                             />
                         )}
-                        {currentSection === 10 && (
-                            <EffectsSection
-                                data={formData.effets || {}}
-                                onChange={(effetsData) => handleChange('effets', effetsData)}
+                        {currentSection === 8 && (
+                            <EffectsAndExperienceSection
+                                data={formData.effectsExperience || {}}
+                                onChange={(data) => handleChange('effectsExperience', data)}
                             />
                         )}
-                        {currentSection === 11 && (
-                            <ExperienceUtilisation
-                                data={formData.experience || {}}
-                                onChange={(expData) => handleChange('experience', expData)}
-                            />
-                        )}
-                        {currentSection === 12 && (
+                        {currentSection === 9 && (
                             <CuringMaturationTimeline
                                 data={formData.curing || {}}
                                 onChange={(curingData) => handleChange('curing', curingData)}

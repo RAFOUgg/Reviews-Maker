@@ -36,6 +36,7 @@ const PipelineDataModal = ({
         delete initialData.timestamp;
         delete initialData._meta;
         setFormData(initialData);
+        console.log('🟢 PipelineDataModal isOpen:', isOpen, 'droppedItem:', droppedItem, 'cellData:', cellData);
 
         // Charger les préréglages pour ce champ (si droppedItem)
         if (droppedItem && droppedItem.content && droppedItem.content.key) {
@@ -453,7 +454,22 @@ const PipelineDataModal = ({
                                         <p className="text-sm">Glissez-déposez des éléments depuis le panneau latéral</p>
                                     </div>
                                 ) : (
-                                    itemsToDisplay.map(item => renderField(item))
+                                    <>
+                                        <div className="bg-red-100/20 border border-red-300/50 p-3 rounded-lg mb-4">
+                                            <p className="text-xs text-red-300">
+                                                🔴 DEBUG: itemsToDisplay ({itemsToDisplay.length}): {JSON.stringify(itemsToDisplay.slice(0, 2), null, 2)}
+                                            </p>
+                                        </div>
+                                        {itemsToDisplay.map((item, idx) => {
+                                            const rendered = renderField(item);
+                                            if (!rendered) {
+                                                return <div key={idx} className="p-3 bg-yellow-900/30 border border-yellow-600 text-yellow-200 text-xs rounded">
+                                                    ⚠️ Item {idx} ({item?.key}) n'a pas d'input compatible (type={item?.type})
+                                                </div>;
+                                            }
+                                            return <div key={item?.key || idx}>{rendered}</div>;
+                                        })}
+                                    </>
                                 )}
 
                                 {droppedItem && (

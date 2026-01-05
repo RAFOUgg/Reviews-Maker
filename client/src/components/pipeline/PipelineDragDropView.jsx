@@ -7,6 +7,9 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
     const [values, setValues] = useModalState({});
     const [confirmState, setConfirmState] = useModalState({ open: false, title: '', message: '', onConfirm: null });
     if (!isOpen || !droppedContent) return null;
+
+    console.log('🔧 MultiAssignModal - droppedContent:', droppedContent);
+
     // Regroupement par section
     let items = [];
     if (droppedContent.type === 'multi' && Array.isArray(droppedContent.items)) {
@@ -16,6 +19,8 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
     } else if (droppedContent.content) {
         items = [droppedContent.content];
     }
+
+    console.log('🔧 MultiAssignModal - items extracted:', items.length, items);
     // Regroup by section
     const sectionMap = {};
     sidebarSections.forEach(section => {
@@ -630,25 +635,34 @@ const PipelineDragDropView = ({
         e.preventDefault();
         e.stopPropagation();
         setHoveredCell(null);
-        if (!draggedContent) return;
+        console.log('🔴 handleDrop: draggedContent=', draggedContent, 'timestamp=', timestamp);
+        if (!draggedContent) {
+            console.log('🔴 handleDrop: Pas de draggedContent, sortir');
+            return;
+        }
         const sel = selectedCellsRef.current || [];
         const appliesToSelection = (sel && sel.length > 0) && (sel.includes(timestamp) || massAssignMode);
+        console.log('🔴 handleDrop: selectedCells=', sel, 'appliesToSelection=', appliesToSelection);
         // Grouped preset or multi-data drop: open multi-assign modal
         if ((draggedContent.type === 'grouped' && draggedContent.group && Array.isArray(draggedContent.group.fields)) || (draggedContent.type === 'multi' && Array.isArray(draggedContent.items))) {
+            console.log('🔴 handleDrop: Ouverture MultiAssignModal (grouped ou multi)');
             setMultiAssignContent(draggedContent);
             setShowMultiAssignModal(true);
             setDraggedContent(null);
             return;
         }
         // For single data field, open modal for value definition
+        console.log('🔴 handleDrop: Ouverture PipelineDataModal (single field)');
         if (appliesToSelection) {
             setCurrentCellTimestamp(sel[0]);
             setDroppedItem({ timestamp: sel[0], content: draggedContent });
             setIsModalOpen(true);
+            console.log('🔴 handleDrop: Ouvert PipelineDataModal pour timestamp=', sel[0]);
         } else {
             setCurrentCellTimestamp(timestamp);
             setDroppedItem({ timestamp, content: draggedContent });
             setIsModalOpen(true);
+            console.log('🔴 handleDrop: Ouvert PipelineDataModal pour timestamp=', timestamp);
         }
         setDraggedContent(null);
     };
@@ -1172,15 +1186,16 @@ const PipelineDragDropView = ({
                                             }
 
                                             if (e.ctrlKey || e.metaKey) {
-                                                // Multi-sélection avec Ctrl
+                                                // Multi-sélection UNIQUEMENT avec Ctrl/Cmd
                                                 setMultiSelectedItems(prev =>
                                                     prev.includes(item.key)
                                                         ? prev.filter(k => k !== item.key)
                                                         : [...prev, item.key]
                                                 );
                                             } else {
-                                                // Simple clic : désélection si déjà sélectionné, sinon sélection
-                                                setMultiSelectedItems(isSelected ? [] : [item.key]);
+                                                // Clic simple : DÉSÉLECTIONNER TOUT (pas de sélection visuelle)
+                                                // Seul le drag or drop peut utiliser l'item
+                                                setMultiSelectedItems([]);
                                             }
                                         };
 
