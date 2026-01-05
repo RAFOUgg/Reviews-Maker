@@ -1,6 +1,6 @@
 /**
  * CuringMaturationSection - Pipeline universel Curing/Maturation
- * Phase 2 - Conforme CDC avec CuringPipelineDragDrop intégré
+ * Phase 1.7 - Conforme CDC
  * Compatible tous types de produits (Fleurs, Hash, Concentrés, Comestibles)
  */
 
@@ -109,7 +109,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                         <button
                                             key={interval}
                                             onClick={() => updateConfig('intervalType', interval)}
-                                            className={`py-2 px-3 rounded-lg border-2 text-sm transition-all ${config.intervalType === interval ? 'border-amber-500 bg-amber-500/20' : 'border-white/20 hover:border-white/40'}`}
+                                            className={`py-2 px-3 rounded-lg border-2 text-sm transition-all ${config.intervalType === interval ? 'border-amber-500 bg-amber-500/20' : 'border-white/20 hover:border-white/40' }`}
                                         >
                                             {INTERVAL_TYPES[interval]}
                                         </button>
@@ -152,14 +152,14 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                 <div className="grid grid-cols-2 gap-3">
                                     <button
                                         onClick={() => updateConfig('curingType', 'cold')}
-                                        className={`p-3 rounded-lg border-2 transition-all ${config.curingType === 'cold' ? ' ' : 'border-white/20 hover:border-white/40'}`}
+                                        className={`p-3 rounded-lg border-2 transition-all ${config.curingType === 'cold' ? ' ' : 'border-white/20 hover:border-white/40' }`}
                                     >
                                         <div className="text-2xl mb-1">❄️</div>
                                         <div className="text-sm font-medium">Froid (&lt;5°C)</div>
                                     </button>
                                     <button
                                         onClick={() => updateConfig('curingType', 'warm')}
-                                        className={`p-3 rounded-lg border-2 transition-all ${config.curingType === 'warm' ? 'border-orange-500 bg-orange-500/20' : 'border-white/20 hover:border-white/40'}`}
+                                        className={`p-3 rounded-lg border-2 transition-all ${config.curingType === 'warm' ? 'border-orange-500 bg-orange-500/20' : 'border-white/20 hover:border-white/40' }`}
                                     >
                                         <div className="text-2xl mb-1">🔥</div>
                                         <div className="text-sm font-medium">Chaud (&gt;5°C)</div>
@@ -235,7 +235,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                         <button
                                             key={type.id}
                                             onClick={() => updateConfig('containerType', type.id)}
-                                            className={`p-2 rounded-lg border-2 text-sm transition-all ${config.containerType === type.id ? 'border-amber-500 bg-amber-500/20' : 'border-white/20 hover:border-white/40'}`}
+                                            className={`p-2 rounded-lg border-2 text-sm transition-all ${config.containerType === type.id ? 'border-amber-500 bg-amber-500/20' : 'border-white/20 hover:border-white/40' }`}
                                         >
                                             <div className="text-xl mb-1">{type.icon}</div>
                                             <div className="text-xs">{type.label}</div>
@@ -252,7 +252,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                         <button
                                             key={type.id}
                                             onClick={() => updateConfig('packagingType', type.id)}
-                                            className={`p-2 rounded-lg border-2 text-sm transition-all ${config.packagingType === type.id ? ' ' : 'border-white/20 hover:border-white/40'}`}
+                                            className={`p-2 rounded-lg border-2 text-sm transition-all ${config.packagingType === type.id ? ' ' : 'border-white/20 hover:border-white/40' }`}
                                         >
                                             <div className="text-xl mb-1">{type.icon}</div>
                                             <div className="text-xs">{type.label}</div>
@@ -269,7 +269,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                         <button
                                             key={level.id}
                                             onClick={() => updateConfig('opacity', level.id)}
-                                            className={`p-2 rounded-lg border-2 text-sm transition-all ${config.opacity === level.id ? 'border-cyan-500 ' : 'border-white/20 hover:border-white/40'}`}
+                                            className={`p-2 rounded-lg border-2 text-sm transition-all ${config.opacity === level.id ? 'border-cyan-500 ' : 'border-white/20 hover:border-white/40' }`}
                                         >
                                             <div className="text-xl mb-1">{level.icon}</div>
                                             <div className="text-xs">{level.label}</div>
@@ -331,50 +331,36 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                 </div>
             </LiquidCard>
 
-            {/* Pipeline Timeline - NOUVEAU */}
-            {config.startDate && config.endDate && (
+            {/* Pipeline Curing avec évolution temporelle */}
+            {config.startDate && config.intervalType && (
                 <LiquidCard className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold flex items-center gap-2">
-                            <Timer className="w-5 h-5 text-purple-500" />
-                            Timeline Évolution Curing
-                        </h3>
-                        <button onClick={() => setShowTracking(!showTracking)} className="p-2 rounded-lg hover:bg-white/10">
-                            <motion.div animate={{ rotate: showTracking ? 180 : 0 }}>
-                                <ChevronDown className="w-5 h-5" />
-                            </motion.div>
-                        </button>
-                    </div>
-
-                    <AnimatePresence>
-                        {showTracking && (
-                            <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                className="overflow-hidden"
-                            >
-                                <CuringPipelineDragDrop
-                                    timelineConfig={{
-                                        intervalType: config.intervalType,
-                                        startDate: config.startDate,
-                                        endDate: config.endDate
-                                    }}
-                                    timelineData={config.timelineData || []}
-                                    onConfigChange={(newConfig) => updateConfig('timelineConfig', newConfig)}
-                                    onDataChange={(newData) => updateConfig('timelineData', newData)}
-                                    initialData={config}
-                                />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
-                    {!showTracking && (
-                        <div className="text-center text-gray-400 py-8">
-                            <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                            <p>Cliquez pour afficher la timeline d'évolution</p>
-                        </div>
-                    )}
+                    <h4 className="text-sm font-bold mb-4 flex items-center gap-2">
+                        <Timer className="w-4 h-4" />
+                        Pipeline Évolution Curing
+                    </h4>
+                    <CuringPipelineDragDrop
+                        timelineConfig={{
+                            intervalType: config.intervalType,
+                            startDate: config.startDate,
+                            endDate: config.endDate,
+                            curingType: config.curingType
+                        }}
+                        timelineData={data.curingTimeline || []}
+                        onConfigChange={(newConfig) => {
+                            updateConfig('curingTimeline', newConfig)
+                        }}
+                        onDataChange={(newData) => {
+                            onChange({ ...data, curingTimeline: newData })
+                        }}
+                        initialData={{
+                            temperature: config.temperature,
+                            humidity: config.humidity,
+                            containerType: config.containerType,
+                            packagingType: config.packagingType,
+                            opacity: config.opacity,
+                            volumeOccupied: config.volumeOccupied
+                        }}
+                    />
                 </LiquidCard>
             )}
         </div>
