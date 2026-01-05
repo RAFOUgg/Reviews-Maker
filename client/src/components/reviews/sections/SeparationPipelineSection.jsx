@@ -45,7 +45,7 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
             </div>
 
             <SeparationPipelineDragDrop
-                timelineConfig={data.separationTimelineConfig || { type: 'heure' }}
+                timelineConfig={data.separationTimelineConfig || { type: 'heure', totalHours: 24 }}
                 timelineData={data.separationTimelineData || []}
                 onConfigChange={handleConfigChange}
                 onDataChange={handleDataChange}

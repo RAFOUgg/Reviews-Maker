@@ -40,7 +40,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
     return (
         <LiquidCard title="🌱 Pipeline Culture Phase 1" bordered>
             <CulturePipelineDragDrop
-                timelineConfig={data.cultureTimelineConfig || {}}
+                timelineConfig={data.cultureTimelineConfig || { type: 'jour', totalDays: 90 }}
                 timelineData={data.cultureTimelineData || []}
                 onConfigChange={handleConfigChange}
                 onDataChange={handleDataChange}

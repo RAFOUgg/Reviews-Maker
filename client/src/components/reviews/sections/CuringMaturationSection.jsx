@@ -340,7 +340,8 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                     </h4>
                     <CuringPipelineDragDrop
                         timelineConfig={{
-                            type: config.intervalType,
+                            type: config.intervalType || 'jour',
+                            totalDays: config.intervalType === 'jour' || !config.intervalType ? 30 : undefined,
                             startDate: config.startDate,
                             endDate: config.endDate,
                             curingType: config.curingType
@@ -349,7 +350,8 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                         onConfigChange={(key, value) => {
                             // Adapter handler pour PipelineDragDropView
                             const updatedConfig = {
-                                type: config.intervalType,
+                                type: config.intervalType || 'jour',
+                                totalDays: key === 'totalDays' ? value : (config.intervalType === 'jour' || !config.intervalType ? 30 : undefined),
                                 startDate: config.startDate,
                                 endDate: config.endDate,
                                 curingType: config.curingType,
@@ -359,6 +361,10 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                             if (key === 'type') updateConfig('intervalType', value);
                             if (key === 'startDate') updateConfig('startDate', value);
                             if (key === 'endDate') updateConfig('endDate', value);
+                            if (key === 'totalDays') {
+                                // Stocker totalDays si besoin
+                                onChange({ ...data, curingTimelineConfig: updatedConfig });
+                            }
                         }}
                         onDataChange={(timestamp, field, value) => {
                             // Adapter handler pour PipelineDragDropView

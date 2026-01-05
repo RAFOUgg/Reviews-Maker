@@ -46,7 +46,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
             </div>
 
             <CulturePipelineDragDrop
-                timelineConfig={data.cultureTimelineConfig || {}}
+                timelineConfig={data.cultureTimelineConfig || { type: 'jour', totalDays: 90 }}
                 timelineData={data.cultureTimelineData || []}
                 onConfigChange={handleConfigChange}
                 onDataChange={handleDataChange}
