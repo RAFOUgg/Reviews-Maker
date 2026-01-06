@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Save, Download, Upload, Info, FolderPlus } from 'lucide-react';
 import PipelineContentsSidebar from './PipelineContentsSidebar';
 import PipelineGridView from './PipelineGridView';
-import PipelineCellModal from './PipelineCellModal';
+import PipelineDataModal from './PipelineDataModal';
 import PresetGroupsManager from './PresetGroupsManager';
 import { LiquidCard, LiquidButton } from '../liquid';
 
@@ -402,25 +402,26 @@ return (
         {/* Modal d'édition */}
         <AnimatePresence>
             {isModalOpen && selectedCell !== null && (
-                <PipelineCellModal
-                    setDroppedItemForModal(null);
-                        }}
-            cellIndex={selectedCell}
-            cellData={cells[selectedCell] || {}}
-            config={config}
-            contentSchema={contentSchema}
-            onSave={handleSaveCell}
-            pipelineType={pipelineType}
-            droppedItem={droppedItemForModal}
-            timestamp={selectedCell}
-            intervalLabel={`Jour ${selectedCell + 1}`}
-            sidebarSections={contentSchemall] || { }}
-            config={config}
-            contentSchema={contentSchema}
-            onSave={handleSaveCell}
-            pipelineType={pipelineType}
-                    />
-                )}
+                <PipelineDataModal
+                    isOpen={isModalOpen}
+                    onClose={() => {
+                        setIsModalOpen(false);
+                        setSelectedCell(null);
+                        setDroppedItemForModal(null);
+                    }}
+                    cellData={cells[selectedCell] || {}}
+                    sidebarSections={contentSchema}
+                    onSave={(payload) => {
+                        const cellIndex = payload.timestamp || selectedCell;
+                        const cellData = payload.data || payload;
+                        handleSaveCell(cellIndex, cellData);
+                    }}
+                    timestamp={selectedCell}
+                    intervalLabel={`Jour ${selectedCell + 1}`}
+                    droppedItem={droppedItemForModal}
+                    pipelineType={pipelineType}
+                />
+            )}
 
             {/* Gestionnaire de groupes de pré-réglages */}
             <PresetGroupsManager
