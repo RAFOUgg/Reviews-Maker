@@ -150,7 +150,22 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {sectionItems.map(item => {
                                             const itemKey = item.key || item.id;
-                                            return item && (
+                                            console.log(`🎨 Rendering item "${itemKey}":`, {
+                                                label: item.label,
+                                                type: item.type,
+                                                hasOptions: !!item.options,
+                                                optionsCount: item.options?.length,
+                                                firstOption: item.options?.[0],
+                                                hasTooltip: !!item.tooltip,
+                                                hasIcon: !!item.icon
+                                            });
+
+                                            if (!item) {
+                                                console.error(`❌ Item "${itemKey}" est null/undefined !`);
+                                                return null;
+                                            }
+
+                                            return (
                                                 <div key={itemKey} className="col-span-1">
                                                     <FieldRenderer
                                                         field={item}
