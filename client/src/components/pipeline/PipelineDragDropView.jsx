@@ -56,9 +56,12 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
 
     // Regroup by section
     const sectionMap = {};
+    const orphanItems = []; // Items non trouvés dans aucune section
+
     sidebarSections.forEach(section => {
         sectionMap[section.id] = [];
     });
+
     items.forEach(item => {
         const itemKey = item.key || item.id;
         const section = sidebarSections.find(sec =>
@@ -66,47 +69,85 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
         );
         if (section) {
             sectionMap[section.id].push(item);
+        } else {
+            orphanItems.push(item);
+            console.warn('⚠️ Item orphelin (section non trouvée):', itemKey, item);
         }
     });
 
     // Debug: compter items par section
     const itemsToDisplay = Object.values(sectionMap).flat().length;
-    console.log('🔧 MultiAssignModal - Items à afficher:', itemsToDisplay, 'par sections:',
-        Object.entries(sectionMap).map(([id, items]) => `${id}: ${items.length}`).join(', '));
+    const sectionsWithItems = Object.entries(sectionMap).filter(([_, items]) => items.length > 0);
+    console.log('🔧 MultiAssignModal - Items à afficher:', itemsToDisplay, 'sections:', sectionsWithItems.length,
+        sectionsWithItems.map(([id, items]) => `${id}: ${items.length}`).join(', '));
+
+    if (orphanItems.length > 0) {
+        console.warn('⚠️ Items orphelins détectés:', orphanItems.length, orphanItems.map(i => i.key || i.id));
+    }
+    sectionsWithItems.map(([id, items]) => `${id}: ${items.length}`).join(', '));
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 min-w-[400px] max-w-[95vw] max-h-[90vh] border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-                    Configuration des données
-                </h3>
-                <div className="flex gap-2 mb-4">
-                    <button className={`liquid-btn ${activeTab === 'data' ? 'liquid-btn--primary' : ''}`} onClick={() => setActiveTab('data')}>Toutes les données</button>
-                    <button className={`liquid-btn ${activeTab === 'group' ? 'liquid-btn--primary' : ''}`} onClick={() => setActiveTab('group')}>Groupes</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] border border-gray-200 dark:border-gray-700 flex flex-col">
+                {/* Header fixe */}
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+                        Configuration des données
+                        <span className="ml-2 text-sm font-normal text-gray-500">
+                            ({itemsToDisplay} champ{itemsToDisplay > 1 ? 's' : ''})
+                        </span>
+                    </h3>
+                    <div className="flex gap-2">
+                        <button
+                            className={`liquid-btn ${activeTab === 'data' ? 'liquid-btn--primary' : ''}`}
+                            onClick={() => setActiveTab('data')}
+                        >
+                            Toutes les données
+                        </button>
+                        <button
+                            className={`liquid-btn ${activeTab === 'group' ? 'liquid-btn--primary' : ''}`}
+                            onClick={() => setActiveTab('group')}
+                        >
+                            Groupes
+                        </button>
+                    </div>
                 </div>
+
+                {/* Contenu scrollable */}
                 {activeTab === 'data' && (
-                    <div className="flex-1 overflow-y-auto pr-2 space-y-6">
-                        {Object.entries(sectionMap).map(([sectionId, sectionItems]) => {
-                            if (sectionItems.length === 0) return null;
+                    <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 min-h-0">
+                        {sectionsWithItems.length === 0 && (
+                            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                                Aucune donnée à configurer
+                            </div>
+                        )}
+                        {sectionsWithItems.map(([sectionId, sectionItems]) => {
                             const section = sidebarSections.find(sec => sec.id === sectionId);
+                            if (!section) return null;
+
                             return (
                                 <div key={sectionId} className="space-y-3">
-                                    <div className="flex items-center gap-2 font-semibold text-sm text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
-                                        <span>{section.icon}</span>
+                                    <div className="sticky top-0 bg-white dark:bg-gray-900 z-10 flex items-center gap-2 font-semibold text-sm text-gray-900 dark:text-white border-b-2 border-blue-500 dark:border-blue-400 pb-2 mb-3">
+                                        <span className="text-lg">{section.icon}</span>
                                         <span>{section.label}</span>
+                                        <span className="ml-auto text-xs font-normal text-gray-500">
+                                            {sectionItems.length} champ{sectionItems.length > 1 ? 's' : ''}
+                                        </span>
                                     </div>
-                                    <div className="grid grid-cols-1 gap-4">
-                                        {sectionItems.map(item => (
-                                            item && (
-                                                <div key={item.key}>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {sectionItems.map(item => {
+                                            const itemKey = item.key || item.id;
+                                            return item && (
+                                                <div key={itemKey} className="col-span-1">
                                                     <FieldRenderer
                                                         field={item}
-                                                        value={values[item.key]}
-                                                        onChange={(newValue) => setValues(v => ({ ...v, [item.key]: newValue }))}
+                                                        value={values[itemKey]}
+                                                        onChange={(newValue) => setValues(v => ({ ...v, [itemKey]: newValue }))}
                                                         allData={values}
                                                     />
-                                                </div>)
-                                        ))}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             );
@@ -114,13 +155,24 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
                     </div>
                 )}
                 {activeTab === 'group' && (
-                    <div className="p-4 text-sm text-gray-600 dark:text-gray-400">Gestion des groupes à venir…</div>
+                    <div className="flex-1 overflow-y-auto px-6 py-4">
+                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                            Gestion des groupes à venir…
+                        </div>
+                    </div>
                 )}
-                <div className="flex gap-2 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <button className="flex-1 liquid-btn liquid-btn--accent" onClick={() => onApply(values)}>
+
+                {/* Footer fixe */}
+                <div className="flex gap-3 p-6 border-t border-gray-200 dark:border-gray-700 shrink-0">
+                    <button
+                        className="flex-1 liquid-btn liquid-btn--accent"
+                        onClick={() => onApply(values)}
+                    >
                         Appliquer à {selectedCells.length > 0 ? `${selectedCells.length} case${selectedCells.length > 1 ? 's' : ''}` : 'la case'}
                     </button>
-                    <button className="flex-1 liquid-btn" onClick={onClose}>Annuler</button>
+                    <button className="flex-1 liquid-btn" onClick={onClose}>
+                        Annuler
+                    </button>
                 </div>
                 <ConfirmModal
                     open={confirmState.open}

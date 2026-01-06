@@ -72,86 +72,236 @@ const WeedPreview = ({ selectedColors = [] }) => {
                     transition={{ duration: 0.8 }}
                 />
 
-                {/* Image de buds avec effets de couleur */}
-                <motion.div
-                    className="relative w-60 h-60 flex items-center justify-center"
+                {/* SVG Bud de cannabis */}
+                <motion.svg
+                    width="240"
+                    height="300"
+                    viewBox="0 0 240 300"
+                    className="relative z-10 drop-shadow-2xl"
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.6, ease: 'easeOut' }}
                 >
-                    {/* Image de base avec colorisation */}
-                    <motion.img
-                        src="/buds.webp"
-                        alt="Cannabis buds preview"
-                        className="w-full h-full object-contain drop-shadow-2xl relative z-10"
-                        style={{
-                            filter: hasColors
-                                ? `drop-shadow(0 0 30px ${gradientStops[0]?.color}90) 
-                                   brightness(${1 - (gradientStops[0]?.color === '#553C9A' || gradientStops[0]?.color === '#22543D' ? 0.2 : 0)}) 
-                                   saturate(1.2)`
-                                : 'drop-shadow(0 0 30px #38A16990) brightness(1) saturate(1.2)'
-                        }}
-                    />
+                    <defs>
+                        {/* Gradient dynamique */}
+                        <linearGradient id="budGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            {gradientStops.map((stop, index) => (
+                                <motion.stop
+                                    key={index}
+                                    offset={stop.offset}
+                                    stopColor={stop.color}
+                                    initial={{ stopColor: '#38A169' }}
+                                    animate={{ stopColor: stop.color }}
+                                    transition={{ duration: 0.5 }}
+                                />
+                            ))}
+                        </linearGradient>
 
-                    {/* Overlay colorimétrique multiple avec blend modes */}
+                        {/* Filtre glow */}
+                        <filter id="budGlow">
+                            <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                            <feMerge>
+                                <feMergeNode in="coloredBlur" />
+                                <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                        </filter>
+
+                        {/* Ombres portées */}
+                        <filter id="budShadow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur in="SourceAlpha" stdDeviation="5" />
+                            <feOffset dx="0" dy="5" result="offsetblur" />
+                            <feComponentTransfer>
+                                <feFuncA type="linear" slope="0.4" />
+                            </feComponentTransfer>
+                            <feMerge>
+                                <feMergeNode />
+                                <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                        </filter>
+                    </defs>
+
+                    {/* Forme de bud de cannabis (style pyramidale dentelée) */}
+                    <g filter="url(#budShadow)">
+                        {/* Corps principal de la bud */}
+                        <motion.path
+                            d="M 120 40 
+                               C 110 45, 105 50, 100 60
+                               C 95 70, 92 75, 88 85
+                               L 85 95
+                               C 82 105, 80 115, 78 125
+                               C 76 140, 75 155, 75 170
+                               L 75 190
+                               C 75 200, 78 210, 85 218
+                               C 90 223, 95 226, 100 228
+                               L 110 235
+                               C 115 238, 118 240, 120 242
+                               C 122 240, 125 238, 130 235
+                               L 140 228
+                               C 145 226, 150 223, 155 218
+                               C 162 210, 165 200, 165 190
+                               L 165 170
+                               C 165 155, 164 140, 162 125
+                               C 160 115, 158 105, 155 95
+                               L 152 85
+                               C 148 75, 145 70, 140 60
+                               C 135 50, 130 45, 120 40 Z"
+                            fill="url(#budGradient)"
+                            stroke="#1F2937"
+                            strokeWidth="2"
+                            filter="url(#budGlow)"
+                            initial={{ pathLength: 0, opacity: 0 }}
+                            animate={{ pathLength: 1, opacity: 1 }}
+                            transition={{ duration: 1.2, ease: 'easeInOut' }}
+                        />
+
+                        {/* Calices et dentelures (détails de la bud) */}
+                        {/* Calices supérieurs */}
+                        <motion.path
+                            d="M 120 45 L 115 55 L 108 62 L 115 65 L 120 58 Z"
+                            fill="url(#budGradient)"
+                            stroke="#1F2937"
+                            strokeWidth="1.5"
+                            filter="url(#budGlow)"
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.8, delay: 0.2 }}
+                        />
+                        <motion.path
+                            d="M 120 45 L 125 55 L 132 62 L 125 65 L 120 58 Z"
+                            fill="url(#budGradient)"
+                            stroke="#1F2937"
+                            strokeWidth="1.5"
+                            filter="url(#budGlow)"
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.8, delay: 0.25 }}
+                        />
+
+                        {/* Calices milieu gauche */}
+                        <motion.path
+                            d="M 95 90 L 88 98 L 82 108 L 88 112 L 95 105 Z"
+                            fill="url(#budGradient)"
+                            stroke="#1F2937"
+                            strokeWidth="1.5"
+                            filter="url(#budGlow)"
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.8, delay: 0.3 }}
+                        />
+                        <motion.path
+                            d="M 85 130 L 78 140 L 72 152 L 78 156 L 85 145 Z"
+                            fill="url(#budGradient)"
+                            stroke="#1F2937"
+                            strokeWidth="1.5"
+                            filter="url(#budGlow)"
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.8, delay: 0.35 }}
+                        />
+
+                        {/* Calices milieu droit */}
+                        <motion.path
+                            d="M 145 90 L 152 98 L 158 108 L 152 112 L 145 105 Z"
+                            fill="url(#budGradient)"
+                            stroke="#1F2937"
+                            strokeWidth="1.5"
+                            filter="url(#budGlow)"
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.8, delay: 0.3 }}
+                        />
+                        <motion.path
+                            d="M 155 130 L 162 140 L 168 152 L 162 156 L 155 145 Z"
+                            fill="url(#budGradient)"
+                            stroke="#1F2937"
+                            strokeWidth="1.5"
+                            filter="url(#budGlow)"
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.8, delay: 0.35 }}
+                        />
+
+                        {/* Calices inférieurs */}
+                        <motion.path
+                            d="M 90 180 L 83 192 L 78 205 L 85 208 L 92 195 Z"
+                            fill="url(#budGradient)"
+                            stroke="#1F2937"
+                            strokeWidth="1.5"
+                            filter="url(#budGlow)"
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.8, delay: 0.4 }}
+                        />
+                        <motion.path
+                            d="M 150 180 L 157 192 L 162 205 L 155 208 L 148 195 Z"
+                            fill="url(#budGradient)"
+                            stroke="#1F2937"
+                            strokeWidth="1.5"
+                            filter="url(#budGlow)"
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.8, delay: 0.4 }}
+                        />
+
+                        {/* Tige à la base */}
+                        <motion.path
+                            d="M 118 240 Q 117 255 115 270 L 125 270 Q 123 255 122 240 Z"
+                            fill="url(#budGradient)"
+                            stroke="#1F2937"
+                            strokeWidth="2"
+                            opacity="0.9"
+                            initial={{ pathLength: 0 }}
+                            animate={{ pathLength: 1 }}
+                            transition={{ duration: 0.8, delay: 0.5 }}
+                        />
+
+                        {/* Pistils (petits traits orangés) */}
+                        <motion.g
+                            stroke="#D97706"
+                            strokeWidth="1"
+                            fill="none"
+                            opacity="0.6"
+                            initial={{ pathLength: 0 }}
+                            animate={{ pathLength: 1 }}
+                            transition={{ duration: 1, delay: 0.6 }}
+                        >
+                            <path d="M 110 80 L 100 85" />
+                            <path d="M 130 80 L 140 85" />
+                            <path d="M 95 120 L 85 128" />
+                            <path d="M 145 120 L 155 128" />
+                            <path d="M 105 160 L 95 168" />
+                            <path d="M 135 160 L 145 168" />
+                            <path d="M 110 200 L 100 208" />
+                            <path d="M 130 200 L 140 208" />
+                        </motion.g>
+                    </g>
+
+                    {/* Particules scintillantes (trichomes) */}
                     {hasColors && (
-                        <>
-                            {/* Overlay de base */}
-                            <motion.div
-                                className="absolute inset-0 rounded-2xl"
-                                style={{
-                                    background: gradientStops.length > 1
-                                        ? `linear-gradient(135deg, ${gradientStops.map(s => `${s.color}60`).join(', ')})`
-                                        : `${gradientStops[0]?.color}60`,
-                                    mixBlendMode: 'color',
-                                    pointerEvents: 'none'
-                                }}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 0.7 }}
-                                transition={{ duration: 0.8 }}
-                            />
-
-                            {/* Overlay de luminosité */}
-                            <motion.div
-                                className="absolute inset-0 rounded-2xl"
-                                style={{
-                                    background: `radial-gradient(circle at 40% 40%, ${gradientStops[0]?.color}50 0%, transparent 60%)`,
-                                    mixBlendMode: 'overlay',
-                                    pointerEvents: 'none'
-                                }}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 0.5 }}
-                                transition={{ duration: 1, delay: 0.2 }}
-                            />
-                        </>
-                    )}
-
-                    {/* Particules scintillantes */}
-                    {hasColors && (
-                        <div className="absolute inset-0">
-                            {[...Array(8)].map((_, i) => (
-                                <motion.div
+                        <g>
+                            {[...Array(12)].map((_, i) => (
+                                <motion.circle
                                     key={i}
-                                    className="absolute w-1 h-1 bg-white rounded-full"
-                                    style={{
-                                        left: `${20 + Math.random() * 60}%`,
-                                        top: `${20 + Math.random() * 60}%`
-                                    }}
+                                    cx={80 + Math.random() * 80}
+                                    cy={50 + Math.random() * 190}
+                                    r="1.5"
+                                    fill="white"
+                                    opacity="0"
                                     animate={{
-                                        opacity: [0, 0.8, 0],
+                                        opacity: [0, 0.9, 0],
                                         scale: [0, 1.5, 0]
                                     }}
                                     transition={{
-                                        duration: 2,
+                                        duration: 2.5,
                                         repeat: Infinity,
-                                        delay: i * 0.3,
+                                        delay: i * 0.2,
                                         ease: 'easeInOut'
                                     }}
                                 />
                             ))}
-                        </div>
+                        </g>
                     )}
-                </motion.div>
+                </motion.svg>
             </div>
 
             {/* Légende gradient */}
