@@ -5,6 +5,7 @@ import {
     Sprout, Scissors, Ruler, Scale, Calendar, Package, Beaker, Leaf
 } from 'lucide-react';
 import PresetsPanel from './PresetsPanelCDC';
+import PresetGroupQuickPicker from './PresetGroupQuickPicker';
 
 /**
  * PipelineContentsSidebar - Volet latéral hiérarchisé avec contenus drag & drop

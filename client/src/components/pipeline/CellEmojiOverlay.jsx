@@ -17,12 +17,14 @@ const CellEmojiOverlay = ({ cellData, sidebarContent, onShowDetails }) => {
         // Parcourir toutes les sections et items pour trouver les emojis correspondants
         sidebarContent.forEach(section => {
             section.items?.forEach(item => {
-                if (dataKeys.includes(item.key) && cellData[item.key] !== undefined && cellData[item.key] !== null && cellData[item.key] !== '') {
+                // Support id et key pour compatibilité
+                const itemId = item.id || item.key
+                if (dataKeys.includes(itemId) && cellData[itemId] !== undefined && cellData[itemId] !== null && cellData[itemId] !== '') {
                     if (item.icon) {
                         emojis.push({
                             emoji: item.icon,
                             label: item.label,
-                            value: cellData[item.key]
+                            value: cellData[itemId]
                         })
                     }
                 }

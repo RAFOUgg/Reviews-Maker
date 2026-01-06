@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Save, Download, Upload, Info } from 'lucide-react';
+import { Settings, Save, Download, Upload, Info, FolderPlus } from 'lucide-react';
 import PipelineContentsSidebar from './PipelineContentsSidebar';
 import PipelineGridView from './PipelineGridView';
 import PipelineCellModal from './PipelineCellModal';
+import PresetGroupsManager from './PresetGroupsManager';
 import { LiquidCard, LiquidButton } from '../liquid';
 
 /**
@@ -77,6 +78,7 @@ const PipelineWithSidebar = ({
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [draggedContent, setDraggedContent] = useState(null);
     const [currentPage, setCurrentPage] = useState(0);
+    const [showPresetsManager, setShowPresetsManager] = useState(false);
 
     // Pagination: 100 cases par page max
     const CELLS_PER_PAGE = 100;
@@ -250,6 +252,15 @@ const PipelineWithSidebar = ({
                     </div>
 
                     <div className="flex gap-2">
+                        <LiquidButton
+                            size="sm"
+                            variant="primary"
+                            onClick={() => setShowPresetsManager(true)}
+                            title="Gérer les groupes de pré-réglages"
+                        >
+                            <FolderPlus className="w-4 h-4 mr-1" />
+                            Groupes
+                        </LiquidButton>
                         <LiquidButton size="sm" variant="ghost">
                             <Upload className="w-4 h-4" />
                         </LiquidButton>
@@ -401,6 +412,23 @@ const PipelineWithSidebar = ({
                         pipelineType={pipelineType}
                     />
                 )}
+
+                {/* Gestionnaire de groupes de pré-réglages */}
+                <PresetGroupsManager
+                    isOpen={showPresetsManager}
+                    onClose={() => setShowPresetsManager(false)}
+                    pipelineType={pipelineType}
+                    sidebarSections={contentSchema}
+                    onApplyGroup={(groupFields) => {
+                        // Appliquer le groupe à la case sélectionnée ou aux cases multi-sélectionnées
+                        if (selectedCells.length > 0) {
+                            handleApplyToSelection(groupFields);
+                        } else if (selectedCell !== null) {
+                            handleSaveCell(selectedCell, { ...cells[selectedCell], ...groupFields });
+                        }
+                        setShowPresetsManager(false);
+                    }}
+                />
             </AnimatePresence>
 
             {/* Boutons d'action si multi-sélection */}
