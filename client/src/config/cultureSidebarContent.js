@@ -572,6 +572,16 @@ export const CULTURE_SIDEBAR_CONTENT = {
                 ],
                 icon: '🌈',
                 tooltip: 'Type de spectre lumineux'
+            },
+            {
+                id: 'spectrumImage',
+                label: 'Graphique spectre',
+                type: 'image-upload',
+                icon: '📊',
+                tooltip: 'Upload image du graphique de spectre (optionnel)',
+                accept: 'image/*',
+                maxSize: 5, // MB
+                preview: true
             }
         ]
     },

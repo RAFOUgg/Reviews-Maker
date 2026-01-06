@@ -402,6 +402,77 @@ const FieldRenderer = ({ field, value, onChange, allData = {} }) => {
         )
     }
 
+    if (type === 'image-upload') {
+        const handleFileChange = (e) => {
+            const file = e.target.files?.[0]
+            if (!file) return
+
+            // Vérifier type
+            if (field.accept && !file.type.match(field.accept.replace('*', '.*'))) {
+                alert(`Type de fichier non autorisé. Accepté: ${field.accept}`)
+                return
+            }
+
+            // Vérifier taille (maxSize en MB)
+            if (field.maxSize && file.size > field.maxSize * 1024 * 1024) {
+                alert(`Fichier trop volumineux. Taille max: ${field.maxSize}MB`)
+                return
+            }
+
+            // Convertir en base64
+            const reader = new FileReader()
+            reader.onload = (ev) => {
+                onChange({
+                    filename: file.name,
+                    type: file.type,
+                    size: file.size,
+                    data: ev.target.result // base64
+                })
+            }
+            reader.readAsDataURL(file)
+        }
+
+        return (
+            <div>
+                <label className="block text-xs font-medium text-gray-300 mb-2 flex items-center gap-1">
+                    {icon && <span>{icon}</span>}
+                    {label}
+                </label>
+
+                {/* Upload Button */}
+                <label className="cursor-pointer inline-block px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition">
+                    📁 Choisir un fichier
+                    <input
+                        type="file"
+                        accept={field.accept || 'image/*'}
+                        onChange={handleFileChange}
+                        className="hidden"
+                    />
+                </label>
+
+                {/* Preview */}
+                {field.preview && currentValue?.data && (
+                    <div className="mt-3 space-y-2">
+                        <img
+                            src={currentValue.data}
+                            alt={currentValue.filename || 'Aperçu'}
+                            className="max-w-full h-auto rounded-lg border border-gray-700"
+                        />
+                        <div className="text-xs text-gray-400">
+                            📎 {currentValue.filename} ({(currentValue.size / 1024).toFixed(1)} KB)
+                        </div>
+                        <button
+                            onClick={() => onChange(null)}
+                            className="px-3 py-1 text-xs bg-red-600 hover:bg-red-700 rounded transition"
+                        >
+                            🗑️ Supprimer
+                        </button>
+                    </div>
+                )}
+            </div>
+        )
+    }
+
     // ============================================================================
     // COMPUTED (lecture seule)
     // ============================================================================
