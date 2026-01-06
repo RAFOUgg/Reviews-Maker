@@ -670,28 +670,20 @@ const PipelineDragDropView = ({
                 return;
             }
 
-            // 3️⃣ SINGLE FIELD CONFORMITÉ CDC: 
-            // Ajouter directement SANS modale avec valeur par défaut
-            console.log('✅ handleDrop: Single field CDC - ajout direct');
-
-            if (appliesToSelection) {
-                // Appliquer à toutes les cellules sélectionnées
-                console.log(`✅ handleDrop: Application à ${sel.length} cellules sélectionnées`);
-                sel.forEach(ts => {
-                    const defaultValue = draggedContent.defaultValue !== undefined ? draggedContent.defaultValue : '';
-                    onDataChange(ts, draggedContent.key, defaultValue);
-                    console.log(`  ✓ Ajout ${draggedContent.label} (${draggedContent.key}) = "${defaultValue}" à timestamp ${ts}`);
-                });
-
-                // Feedback visuel: Toast succès
-                console.log(`✅ Feedback: ${draggedContent.label} ajouté à ${sel.length} case(s)`);
-            } else {
-                // Ajouter à la seule cellule dropée
-                const defaultValue = draggedContent.defaultValue !== undefined ? draggedContent.defaultValue : '';
-                onDataChange(timestamp, draggedContent.key, defaultValue);
-                console.log(`✅ Ajout direct: ${draggedContent.label} (${draggedContent.key}) = "${defaultValue}" à timestamp ${timestamp}`);
-            }
-
+            // 3️⃣ SINGLE FIELD : Ouvrir modale pour saisie
+            // (Même comportement que grouped/multi pour cohérence UX)
+            console.log('✅ handleDrop: Single field - ouverture modale de saisie');
+            
+            // Convertir single field en format compatible MultiAssignModal
+            const singleFieldContent = {
+                type: 'single',
+                content: draggedContent,
+                items: [draggedContent]
+            };
+            
+            setMultiAssignContent(singleFieldContent);
+            setCurrentCellTimestamp(timestamp);
+            setShowMultiAssignModal(true);
             setDraggedContent(null);
 
         } catch (error) {

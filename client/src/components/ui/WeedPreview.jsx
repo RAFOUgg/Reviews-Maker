@@ -81,7 +81,7 @@ const WeedPreview = ({ selectedColors = [] }) => {
                 >
                     {/* Image de base */}
                     <motion.img
-                        src="/data/buds.png"
+                        src="/buds.png"
                         alt="Cannabis buds preview"
                         className="w-full h-full object-contain drop-shadow-2xl"
                         style={{
