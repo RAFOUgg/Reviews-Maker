@@ -72,175 +72,51 @@ const WeedPreview = ({ selectedColors = [] }) => {
                     transition={{ duration: 0.8 }}
                 />
 
-                {/* SVG Feuille de cannabis */}
-                <motion.svg
-                    width="240"
-                    height="240"
-                    viewBox="0 0 240 240"
-                    className="relative z-10 drop-shadow-2xl"
+                {/* Image de buds avec effets de couleur */}
+                <motion.div
+                    className="relative w-60 h-60"
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.6, ease: 'easeOut' }}
                 >
-                    <defs>
-                        {/* Gradient dynamique */}
-                        <linearGradient id="weedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            {gradientStops.map((stop, index) => (
-                                <motion.stop
-                                    key={index}
-                                    offset={stop.offset}
-                                    stopColor={stop.color}
-                                    initial={{ stopColor: '#38A169' }}
-                                    animate={{ stopColor: stop.color }}
-                                    transition={{ duration: 0.5 }}
-                                />
-                            ))}
-                        </linearGradient>
+                    {/* Image de base */}
+                    <motion.img
+                        src="/data/buds.png"
+                        alt="Cannabis buds preview"
+                        className="w-full h-full object-contain drop-shadow-2xl"
+                        style={{
+                            filter: hasColors
+                                ? `drop-shadow(0 0 20px ${gradientStops[0]?.color}80)`
+                                : 'drop-shadow(0 0 20px #38A16980)'
+                        }}
+                    />
 
-                        {/* Filtre glow */}
-                        <filter id="glow">
-                            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                            <feMerge>
-                                <feMergeNode in="coloredBlur" />
-                                <feMergeNode in="SourceGraphic" />
-                            </feMerge>
-                        </filter>
-
-                        {/* Ombres portées */}
-                        <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-                            <feGaussianBlur in="SourceAlpha" stdDeviation="4" />
-                            <feOffset dx="0" dy="4" result="offsetblur" />
-                            <feComponentTransfer>
-                                <feFuncA type="linear" slope="0.3" />
-                            </feComponentTransfer>
-                            <feMerge>
-                                <feMergeNode />
-                                <feMergeNode in="SourceGraphic" />
-                            </feMerge>
-                        </filter>
-                    </defs>
-
-                    {/* Feuille de cannabis (7 folioles caractéristiques) */}
-                    <g filter="url(#shadow)">
-                        {/* Foliole centrale (la plus grande) */}
-                        <motion.path
-                            d="M 120 30 Q 115 50 115 80 Q 115 110 118 140 L 122 140 Q 125 110 125 80 Q 125 50 120 30 Z"
-                            fill="url(#weedGradient)"
-                            stroke="#1F2937"
-                            strokeWidth="1.5"
-                            filter="url(#glow)"
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ duration: 1, ease: 'easeInOut' }}
-                        />
-
-                        {/* Folioles latérales gauche (3) */}
-                        <motion.path
-                            d="M 118 60 Q 100 65 85 75 Q 70 85 65 95 Q 70 100 85 95 Q 100 90 115 85 Z"
-                            fill="url(#weedGradient)"
-                            stroke="#1F2937"
-                            strokeWidth="1.5"
-                            filter="url(#glow)"
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ duration: 1, delay: 0.1 }}
-                        />
-                        <motion.path
-                            d="M 116 90 Q 95 100 75 115 Q 55 130 48 142 Q 55 148 75 138 Q 95 128 112 118 Z"
-                            fill="url(#weedGradient)"
-                            stroke="#1F2937"
-                            strokeWidth="1.5"
-                            filter="url(#glow)"
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ duration: 1, delay: 0.2 }}
-                        />
-                        <motion.path
-                            d="M 115 120 Q 90 135 70 152 Q 50 169 45 182 Q 52 188 72 175 Q 92 162 110 145 Z"
-                            fill="url(#weedGradient)"
-                            stroke="#1F2937"
-                            strokeWidth="1.5"
-                            filter="url(#glow)"
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ duration: 1, delay: 0.3 }}
-                        />
-
-                        {/* Folioles latérales droite (3) - symétriques */}
-                        <motion.path
-                            d="M 122 60 Q 140 65 155 75 Q 170 85 175 95 Q 170 100 155 95 Q 140 90 125 85 Z"
-                            fill="url(#weedGradient)"
-                            stroke="#1F2937"
-                            strokeWidth="1.5"
-                            filter="url(#glow)"
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ duration: 1, delay: 0.1 }}
-                        />
-                        <motion.path
-                            d="M 124 90 Q 145 100 165 115 Q 185 130 192 142 Q 185 148 165 138 Q 145 128 128 118 Z"
-                            fill="url(#weedGradient)"
-                            stroke="#1F2937"
-                            strokeWidth="1.5"
-                            filter="url(#glow)"
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ duration: 1, delay: 0.2 }}
-                        />
-                        <motion.path
-                            d="M 125 120 Q 150 135 170 152 Q 190 169 195 182 Q 188 188 168 175 Q 148 162 130 145 Z"
-                            fill="url(#weedGradient)"
-                            stroke="#1F2937"
-                            strokeWidth="1.5"
-                            filter="url(#glow)"
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ duration: 1, delay: 0.3 }}
-                        />
-
-                        {/* Tige centrale */}
-                        <motion.path
-                            d="M 118 140 Q 117 170 115 200 L 125 200 Q 123 170 122 140 Z"
-                            fill="url(#weedGradient)"
-                            stroke="#1F2937"
-                            strokeWidth="1.5"
-                            opacity="0.8"
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ duration: 0.8, delay: 0.4 }}
-                        />
-
-                        {/* Nervures (détails) */}
-                        <motion.g
-                            stroke="#1F2937"
-                            strokeWidth="0.5"
-                            fill="none"
-                            opacity="0.4"
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ duration: 1.2, delay: 0.6 }}
-                        >
-                            <path d="M 120 40 L 120 135" />
-                            <path d="M 118 70 L 90 88" />
-                            <path d="M 116 100 L 80 125" />
-                            <path d="M 115 130 L 75 165" />
-                            <path d="M 122 70 L 150 88" />
-                            <path d="M 124 100 L 160 125" />
-                            <path d="M 125 130 L 165 165" />
-                        </motion.g>
-                    </g>
-
-                    {/* Particules scintillantes (si couleurs sélectionnées) */}
+                    {/* Overlay colorimétrique */}
                     {hasColors && (
-                        <g>
+                        <motion.div
+                            className="absolute inset-0 rounded-2xl"
+                            style={{
+                                background: `linear-gradient(135deg, ${gradientStops.map(s => `${s.color}40`).join(', ')})`,
+                                mixBlendMode: 'overlay',
+                                pointerEvents: 'none'
+                            }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 0.6 }}
+                            transition={{ duration: 0.8 }}
+                        />
+                    )}
+
+                    {/* Particules scintillantes */}
+                    {hasColors && (
+                        <div className="absolute inset-0">
                             {[...Array(8)].map((_, i) => (
-                                <motion.circle
+                                <motion.div
                                     key={i}
-                                    cx={60 + Math.random() * 120}
-                                    cy={40 + Math.random() * 140}
-                                    r="2"
-                                    fill="white"
-                                    opacity="0"
+                                    className="absolute w-1 h-1 bg-white rounded-full"
+                                    style={{
+                                        left: `${20 + Math.random() * 60}%`,
+                                        top: `${20 + Math.random() * 60}%`
+                                    }}
                                     animate={{
                                         opacity: [0, 0.8, 0],
                                         scale: [0, 1.5, 0]
@@ -253,9 +129,9 @@ const WeedPreview = ({ selectedColors = [] }) => {
                                     }}
                                 />
                             ))}
-                        </g>
+                        </div>
                     )}
-                </motion.svg>
+                </motion.div>
             </div>
 
             {/* Légende gradient */}
