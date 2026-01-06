@@ -2,20 +2,18 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Palette, Plus, X, Pipette } from 'lucide-react';
 
-// 12 couleurs cannabis selon CDC
+// 10 couleurs cannabis naturelles (base verte/jaune obligatoire)
 const CANNABIS_COLORS = [
-    { id: 'green-bright', name: 'Vert clair', hex: '#9EF01A', angle: 0 },
-    { id: 'green', name: 'Vert', hex: '#38A169', angle: 30 },
-    { id: 'green-dark', name: 'Vert foncé', hex: '#22543D', angle: 60 },
-    { id: 'blue-green', name: 'Bleu-vert', hex: '#319795', angle: 90 },
-    { id: 'purple', name: 'Violet', hex: '#9F7AEA', angle: 120 },
-    { id: 'purple-dark', name: 'Violet foncé', hex: '#553C9A', angle: 150 },
-    { id: 'pink', name: 'Rose', hex: '#ED64A6', angle: 180 },
-    { id: 'red', name: 'Rouge', hex: '#F56565', angle: 210 },
-    { id: 'orange', name: 'Orange', hex: '#ED8936', angle: 240 },
-    { id: 'yellow', name: 'Jaune', hex: '#ECC94B', angle: 270 },
-    { id: 'brown', name: 'Brun', hex: '#8B4513', angle: 300 },
-    { id: 'gray', name: 'Gris', hex: '#718096', angle: 330 }
+    { id: 'green-lime', name: 'Vert lime', hex: '#84CC16', angle: 0, isBase: true },
+    { id: 'green', name: 'Vert', hex: '#22C55E', angle: 36, isBase: true },
+    { id: 'green-forest', name: 'Vert forêt', hex: '#166534', angle: 72, isBase: true },
+    { id: 'green-dark', name: 'Vert foncé', hex: '#14532D', angle: 108 },
+    { id: 'blue-green', name: 'Bleu-vert', hex: '#0D9488', angle: 144 },
+    { id: 'purple', name: 'Violet', hex: '#7C3AED', angle: 180 },
+    { id: 'purple-dark', name: 'Violet foncé', hex: '#4C1D95', angle: 216 },
+    { id: 'orange', name: 'Orange', hex: '#EA580C', angle: 252 },
+    { id: 'yellow', name: 'Jaune', hex: '#CA8A04', angle: 288, isBase: true },
+    { id: 'brown', name: 'Brun', hex: '#78350F', angle: 324 }
 ];
 
 const ColorWheelPicker = ({ value = [], onChange, maxSelections = 5 }) => {
@@ -28,11 +26,26 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 5 }) => {
         const exists = selectedColors.find(s => s.colorId === color.id);
 
         if (exists) {
+            // Empêcher de retirer la couleur si c'est la seule couleur de base
+            const isOnlyBase = color.isBase && selectedColors.filter(s => {
+                const c = CANNABIS_COLORS.find(cc => cc.id === s.colorId);
+                return c?.isBase;
+            }).length === 1;
+
+            if (isOnlyBase) {
+                return; // Ne pas retirer la dernière couleur de base
+            }
+
             // Retirer la couleur
             onChange(selectedColors.filter(s => s.colorId !== color.id));
         } else {
             // Ajouter la couleur si sous limite
             if (selectedColors.length < maxSelections) {
+                // Si c'est la première couleur, elle doit être une couleur de base
+                if (selectedColors.length === 0 && !color.isBase) {
+                    return; // Première sélection doit être verte/jaune
+                }
+
                 const newPercentage = selectedColors.length === 0
                     ? 100
                     : Math.floor(100 / (selectedColors.length + 1));

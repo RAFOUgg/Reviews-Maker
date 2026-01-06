@@ -2,27 +2,25 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 
-// 12 couleurs cannabis (synchronisé avec ColorWheelPicker)
+// 10 couleurs cannabis naturelles (synchronisé avec ColorWheelPicker)
 const CANNABIS_COLORS = [
-    { id: 'green-bright', hex: '#9EF01A' },
-    { id: 'green', hex: '#38A169' },
-    { id: 'green-dark', hex: '#22543D' },
-    { id: 'blue-green', hex: '#319795' },
-    { id: 'purple', hex: '#9F7AEA' },
-    { id: 'purple-dark', hex: '#553C9A' },
-    { id: 'pink', hex: '#ED64A6' },
-    { id: 'red', hex: '#F56565' },
-    { id: 'orange', hex: '#ED8936' },
-    { id: 'yellow', hex: '#ECC94B' },
-    { id: 'brown', hex: '#8B4513' },
-    { id: 'gray', hex: '#718096' }
+    { id: 'green-lime', hex: '#84CC16' },
+    { id: 'green', hex: '#22C55E' },
+    { id: 'green-forest', hex: '#166534' },
+    { id: 'green-dark', hex: '#14532D' },
+    { id: 'blue-green', hex: '#0D9488' },
+    { id: 'purple', hex: '#7C3AED' },
+    { id: 'purple-dark', hex: '#4C1D95' },
+    { id: 'orange', hex: '#EA580C' },
+    { id: 'yellow', hex: '#CA8A04' },
+    { id: 'brown', hex: '#78350F' }
 ];
 
 const WeedPreview = ({ selectedColors = [] }) => {
     // Générer le gradient SVG basé sur les couleurs sélectionnées
     const gradientStops = useMemo(() => {
         if (!selectedColors || selectedColors.length === 0) {
-            return [{ offset: '0%', color: '#38A169' }]; // Vert par défaut
+            return [{ offset: '0%', color: '#22C55E' }]; // Vert par défaut
         }
 
         let offset = 0;
@@ -67,7 +65,7 @@ const WeedPreview = ({ selectedColors = [] }) => {
                     animate={{
                         background: hasColors
                             ? `radial-gradient(circle, ${gradientStops[0]?.color}40, transparent 70%)`
-                            : 'radial-gradient(circle, #38A16940, transparent 70%)'
+                            : 'radial-gradient(circle, #22C55E40, transparent 70%)'
                     }}
                     transition={{ duration: 0.8 }}
                 />
