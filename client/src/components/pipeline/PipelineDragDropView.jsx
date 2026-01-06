@@ -1246,8 +1246,9 @@ const PipelineDragDropView = ({
                             {expandedSections[section.id] && (
                                 <div className="p-2 bg-white dark:bg-gray-900 space-y-1">
                                     {section.items?.map((item) => {
-                                        const isPreConfigured = preConfiguredItems[item.key] !== undefined;
-                                        const isSelected = multiSelectedItems.includes(item.key);
+                                        const itemKey = item.key || item.id;
+                                        const isPreConfigured = preConfiguredItems[itemKey] !== undefined;
+                                        const isSelected = multiSelectedItems.includes(itemKey);
                                         let isDragging = false;
 
                                         const handleSidebarItemClick = (e) => {
@@ -1260,9 +1261,9 @@ const PipelineDragDropView = ({
                                             if (e.ctrlKey || e.metaKey) {
                                                 // Multi-sélection UNIQUEMENT avec Ctrl/Cmd
                                                 setMultiSelectedItems(prev =>
-                                                    prev.includes(item.key)
-                                                        ? prev.filter(k => k !== item.key)
-                                                        : [...prev, item.key]
+                                                    prev.includes(itemKey)
+                                                        ? prev.filter(k => k !== itemKey)
+                                                        : [...prev, itemKey]
                                                 );
                                             } else {
                                                 // Clic simple : DÉSÉLECTIONNER TOUT (pas de sélection visuelle)
@@ -1273,7 +1274,7 @@ const PipelineDragDropView = ({
 
                                         return (
                                             <div
-                                                key={item.key}
+                                                key={itemKey}
                                                 draggable="true"
                                                 onDragStart={(e) => {
                                                     isDragging = true;
@@ -1284,7 +1285,7 @@ const PipelineDragDropView = ({
                                                     } else {
                                                         // Multi-items drag
                                                         const selectedItems = multiSelectedItems
-                                                            .map(k => section.items.find(i => i.key === k))
+                                                            .map(k => section.items.find(i => (i.key || i.id) === k))
                                                             .filter(Boolean);
                                                         e.dataTransfer.setData('application/multi-items', JSON.stringify(selectedItems));
                                                         setDraggedContent({ type: 'multi', items: selectedItems });
@@ -1312,11 +1313,11 @@ const PipelineDragDropView = ({
                                                     : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
                                                     } ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
                                                 style={{ touchAction: 'none' }}
-                                                title={isPreConfigured ? `Pré-configuré: ${preConfiguredItems[item.key]}${item.unit || ''}` : 'Clic droit pour pré-configurer'}
+                                                title={isPreConfigured ? `Pré-configuré: ${preConfiguredItems[itemKey]}${item.unit || ''}` : 'Clic droit pour pré-configurer'}
                                             >
                                                 {/* Badge pré-configuré */}
                                                 {isPreConfigured && (
-                                                    <span className="px-2 py-1 bg-green-200 text-green-800 rounded text-xs mr-1">{preConfiguredItems[item.key]}{item.unit || ''}</span>
+                                                    <span className="px-2 py-1 bg-green-200 text-green-800 rounded text-xs mr-1">{preConfiguredItems[itemKey]}{item.unit || ''}</span>
                                                 )}
                                                 <span className="text-base">{item.icon}</span>
                                                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex-1">
