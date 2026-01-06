@@ -74,36 +74,56 @@ const WeedPreview = ({ selectedColors = [] }) => {
 
                 {/* Image de buds avec effets de couleur */}
                 <motion.div
-                    className="relative w-60 h-60"
+                    className="relative w-60 h-60 flex items-center justify-center"
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.6, ease: 'easeOut' }}
                 >
-                    {/* Image de base */}
+                    {/* Image de base avec colorisation */}
                     <motion.img
-                        src="/buds.png"
+                        src="/buds.webp"
                         alt="Cannabis buds preview"
-                        className="w-full h-full object-contain drop-shadow-2xl"
+                        className="w-full h-full object-contain drop-shadow-2xl relative z-10"
                         style={{
                             filter: hasColors
-                                ? `drop-shadow(0 0 20px ${gradientStops[0]?.color}80)`
-                                : 'drop-shadow(0 0 20px #38A16980)'
+                                ? `drop-shadow(0 0 30px ${gradientStops[0]?.color}90) 
+                                   brightness(${1 - (gradientStops[0]?.color === '#553C9A' || gradientStops[0]?.color === '#22543D' ? 0.2 : 0)}) 
+                                   saturate(1.2)`
+                                : 'drop-shadow(0 0 30px #38A16990) brightness(1) saturate(1.2)'
                         }}
                     />
 
-                    {/* Overlay colorimétrique */}
+                    {/* Overlay colorimétrique multiple avec blend modes */}
                     {hasColors && (
-                        <motion.div
-                            className="absolute inset-0 rounded-2xl"
-                            style={{
-                                background: `linear-gradient(135deg, ${gradientStops.map(s => `${s.color}40`).join(', ')})`,
-                                mixBlendMode: 'overlay',
-                                pointerEvents: 'none'
-                            }}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 0.6 }}
-                            transition={{ duration: 0.8 }}
-                        />
+                        <>
+                            {/* Overlay de base */}
+                            <motion.div
+                                className="absolute inset-0 rounded-2xl"
+                                style={{
+                                    background: gradientStops.length > 1
+                                        ? `linear-gradient(135deg, ${gradientStops.map(s => `${s.color}60`).join(', ')})`
+                                        : `${gradientStops[0]?.color}60`,
+                                    mixBlendMode: 'color',
+                                    pointerEvents: 'none'
+                                }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 0.7 }}
+                                transition={{ duration: 0.8 }}
+                            />
+
+                            {/* Overlay de luminosité */}
+                            <motion.div
+                                className="absolute inset-0 rounded-2xl"
+                                style={{
+                                    background: `radial-gradient(circle at 40% 40%, ${gradientStops[0]?.color}50 0%, transparent 60%)`,
+                                    mixBlendMode: 'overlay',
+                                    pointerEvents: 'none'
+                                }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 0.5 }}
+                                transition={{ duration: 1, delay: 0.2 }}
+                            />
+                        </>
                     )}
 
                     {/* Particules scintillantes */}

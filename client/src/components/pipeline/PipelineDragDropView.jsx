@@ -467,12 +467,15 @@ const PipelineDragDropView = ({
     };
 
     // Ouvrir modal cellule
-    const handleCellClick = (cellId) => {
+    const handleCellClick = (e, cellId) => {
         console.log('🖱️ Clic sur cellule:', cellId);
-        console.log('📊 Mode masse actif:', massAssignMode);
+        console.log('📊 Ctrl/Cmd pressé:', e.ctrlKey || e.metaKey);
         console.log('📋 Cellules sélectionnées avant:', selectedCells);
 
-        if (massAssignMode) {
+        // Détecter Ctrl+click pour sélection multiple (au lieu de massAssignMode)
+        const isMultiSelectClick = e.ctrlKey || e.metaKey;
+
+        if (isMultiSelectClick) {
             // Mode sélection multiple - TOGGLE la cellule
             setSelectedCells(prev => {
                 const isAlreadySelected = prev.includes(cellId);
