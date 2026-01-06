@@ -124,7 +124,19 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
                         )}
                         {sectionsWithItems.map(([sectionId, sectionItems]) => {
                             const section = sidebarSections.find(sec => sec.id === sectionId);
-                            if (!section) return null;
+                            console.log(`🔍 Section lookup: sectionId="${sectionId}", found:`, section);
+                            console.log(`   → sectionItems (${sectionItems.length}):`, sectionItems.map(i => ({
+                                id: i.id,
+                                key: i.key,
+                                label: i.label,
+                                type: i.type,
+                                hasOptions: !!i.options
+                            })));
+
+                            if (!section) {
+                                console.warn(`⚠️ Section "${sectionId}" non trouvée dans sidebarSections`);
+                                return null;
+                            }
 
                             return (
                                 <div key={sectionId} className="space-y-3">
