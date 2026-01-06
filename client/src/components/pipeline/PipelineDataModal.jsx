@@ -159,7 +159,7 @@ const PipelineDataModal = ({
             alert('Impossible de déterminer la clé du champ');
             return;
         }
-        
+
         const fieldValue = formData[fieldKey];
 
         if (!fieldValue && fieldValue !== 0 && fieldValue !== false) {
@@ -198,7 +198,7 @@ const PipelineDataModal = ({
 
         const fieldKey = droppedItem.content.key || droppedItem.content.type;
         if (!fieldKey) return;
-        
+
         const updatedPresets = fieldPresets.filter(p => p.id !== presetId);
         setFieldPresets(updatedPresets);
         localStorage.setItem(`${pipelineType}_field_${fieldKey}_presets`, JSON.stringify(updatedPresets));
