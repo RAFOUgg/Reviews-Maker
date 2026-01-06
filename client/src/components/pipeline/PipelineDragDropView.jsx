@@ -635,57 +635,69 @@ const PipelineDragDropView = ({
         e.preventDefault();
         e.stopPropagation();
         setHoveredCell(null);
-        console.log('✅ handleDrop CDC: draggedContent=', draggedContent, 'timestamp=', timestamp);
 
-        if (!draggedContent) {
-            console.log('✅ handleDrop: Pas de draggedContent, sortir');
-            return;
-        }
+        try {
+            console.log('✅ handleDrop CDC: draggedContent=', draggedContent, 'timestamp=', timestamp);
 
-        const sel = selectedCellsRef.current || [];
-        const appliesToSelection = (sel && sel.length > 0) && (sel.includes(timestamp) || massAssignMode);
+            if (!draggedContent) {
+                console.log('✅ handleDrop: Pas de draggedContent, sortir');
+                return;
+            }
 
-        // 1️⃣ GROUPED PRESET: Appliquer à toutes les cases sélectionnées (avec modale pour valeurs)
-        if (draggedContent.type === 'grouped' && draggedContent.group && Array.isArray(draggedContent.group.fields)) {
-            console.log('✅ handleDrop: GROUPED preset détecté, ouverture MultiAssignModal');
-            setMultiAssignContent(draggedContent);
-            setShowMultiAssignModal(true);
-            setDraggedContent(null);
-            return;
-        }
+            if (!timestamp) {
+                console.warn('⚠️ handleDrop: timestamp invalide ou manquant');
+                return;
+            }
 
-        // 2️⃣ MULTI-SÉLECTION: Ouvrir modale pour plusieurs champs
-        if (draggedContent.type === 'multi' && Array.isArray(draggedContent.items)) {
-            console.log('✅ handleDrop: MULTI-sélection détectée, ouverture MultiAssignModal');
-            setMultiAssignContent(draggedContent);
-            setShowMultiAssignModal(true);
-            setDraggedContent(null);
-            return;
-        }
+            const sel = selectedCellsRef.current || [];
+            const appliesToSelection = (sel && sel.length > 0) && (sel.includes(timestamp) || massAssignMode);
 
-        // 3️⃣ SINGLE FIELD CONFORMITÉ CDC: 
-        // Ajouter directement SANS modale avec valeur par défaut
-        console.log('✅ handleDrop: Single field CDC - ajout direct');
+            // 1️⃣ GROUPED PRESET: Appliquer à toutes les cases sélectionnées (avec modale pour valeurs)
+            if (draggedContent.type === 'grouped' && draggedContent.group && Array.isArray(draggedContent.group.fields)) {
+                console.log('✅ handleDrop: GROUPED preset détecté, ouverture MultiAssignModal');
+                setMultiAssignContent(draggedContent);
+                setShowMultiAssignModal(true);
+                setDraggedContent(null);
+                return;
+            }
 
-        if (appliesToSelection) {
-            // Appliquer à toutes les cellules sélectionnées
-            console.log(`✅ handleDrop: Application à ${sel.length} cellules sélectionnées`);
-            sel.forEach(ts => {
+            // 2️⃣ MULTI-SÉLECTION: Ouvrir modale pour plusieurs champs
+            if (draggedContent.type === 'multi' && Array.isArray(draggedContent.items)) {
+                console.log('✅ handleDrop: MULTI-sélection détectée, ouverture MultiAssignModal');
+                setMultiAssignContent(draggedContent);
+                setShowMultiAssignModal(true);
+                setDraggedContent(null);
+                return;
+            }
+
+            // 3️⃣ SINGLE FIELD CONFORMITÉ CDC: 
+            // Ajouter directement SANS modale avec valeur par défaut
+            console.log('✅ handleDrop: Single field CDC - ajout direct');
+
+            if (appliesToSelection) {
+                // Appliquer à toutes les cellules sélectionnées
+                console.log(`✅ handleDrop: Application à ${sel.length} cellules sélectionnées`);
+                sel.forEach(ts => {
+                    const defaultValue = draggedContent.defaultValue !== undefined ? draggedContent.defaultValue : '';
+                    onDataChange(ts, draggedContent.key, defaultValue);
+                    console.log(`  ✓ Ajout ${draggedContent.label} (${draggedContent.key}) = "${defaultValue}" à timestamp ${ts}`);
+                });
+
+                // Feedback visuel: Toast succès
+                console.log(`✅ Feedback: ${draggedContent.label} ajouté à ${sel.length} case(s)`);
+            } else {
+                // Ajouter à la seule cellule dropée
                 const defaultValue = draggedContent.defaultValue !== undefined ? draggedContent.defaultValue : '';
-                onDataChange(ts, draggedContent.key, defaultValue);
-                console.log(`  ✓ Ajout ${draggedContent.label} (${draggedContent.key}) = "${defaultValue}" à timestamp ${ts}`);
-            });
+                onDataChange(timestamp, draggedContent.key, defaultValue);
+                console.log(`✅ Ajout direct: ${draggedContent.label} (${draggedContent.key}) = "${defaultValue}" à timestamp ${timestamp}`);
+            }
 
-            // Feedback visuel: Toast succès
-            console.log(`✅ Feedback: ${draggedContent.label} ajouté à ${sel.length} case(s)`);
-        } else {
-            // Ajouter à la seule cellule dropée
-            const defaultValue = draggedContent.defaultValue !== undefined ? draggedContent.defaultValue : '';
-            onDataChange(timestamp, draggedContent.key, defaultValue);
-            console.log(`✅ Ajout direct: ${draggedContent.label} (${draggedContent.key}) = "${defaultValue}" à timestamp ${timestamp}`);
+            setDraggedContent(null);
+
+        } catch (error) {
+            console.error('❌ Erreur handleDrop:', error);
+            // Feedback visuel optionnel: toast d'erreur
         }
-
-        setDraggedContent(null);
     };
 
     // Toast feedback retiré (préréglages supprimés)

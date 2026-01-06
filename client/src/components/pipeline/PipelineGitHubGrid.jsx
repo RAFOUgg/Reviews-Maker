@@ -382,6 +382,7 @@ const PipelineGitHubGrid = ({
     const [cellsData, setCellsData] = useState(value.cells || {});
     const [editingCell, setEditingCell] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [selectedCells, setSelectedCells] = useState([]);
 
 
 
@@ -416,9 +417,20 @@ const PipelineGitHubGrid = ({
     }, [config.intervalType, totalCells]);
 
     // Handlers
-    const handleCellClick = (index, data) => {
-        setEditingCell({ index, data });
-        setShowModal(true);
+    const handleCellClick = (e, index, data) => {
+        // Multi-sélection avec Ctrl/Cmd
+        if (e.ctrlKey || e.metaKey) {
+            setSelectedCells(prev =>
+                prev.includes(index)
+                    ? prev.filter(i => i !== index)
+                    : [...prev, index]
+            );
+        } else {
+            // Single sélection classique
+            setSelectedCells([index]);
+            setEditingCell({ index, data });
+            setShowModal(true);
+        }
     };
 
     const handleCellSave = (index, data) => {
@@ -579,7 +591,7 @@ const PipelineGitHubGrid = ({
                                 key={phase.id}
                                 whileHover={{ scale: 1.02 }}
                                 className="relative p-4 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 transition-all cursor-pointer group border-2 border-gray-700 hover:border-white/10"
-                                onClick={() => handleCellClick(idx, cellsData[idx])}
+                                onClick={(e) => handleCellClick(e, idx, cellsData[idx])}
                                 style={cellsData[idx] ? {
                                     borderColor: phase.color,
                                     backgroundColor: phase.color + '15'

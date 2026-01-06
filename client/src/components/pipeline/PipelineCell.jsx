@@ -7,7 +7,8 @@ const PipelineCell = ({
   onClick,
   onHover,
   editable = true,
-  colorScale = 'intensity'
+  colorScale = 'intensity',
+  index // Ajout index pour transmettre au parent
 }) => {
   // Couleurs basées sur l'intensité (style GitHub)
   // 0 = gris/vide, 4 = très intense (vert ou violet selon thème)
@@ -32,14 +33,14 @@ const PipelineCell = ({
     <motion.div
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
-      onClick={onClick}
+      onClick={(e) => onClick?.(e, index, data)}
       onMouseEnter={onHover}
       className={`
         w-3 h-3 md:w-4 md:h-4 rounded-sm cursor-pointer transition-colors duration-200
         ${getBackgroundColor(intensity)}
         ${editable ? 'hover:ring-2 hover:ring-green-300 dark:hover:ring-green-600' : ''}
       `}
-      title={`${data.label}: ${data.value || 'Pas de donnée'}`}
+      title={`${data?.label || 'Cell'}: ${data?.value || 'Pas de donnée'}`}
     />
   );
 };
