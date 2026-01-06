@@ -140,7 +140,7 @@ export default function AromaWheelPicker({
                         <button
                             key={mode}
                             onClick={() => setViewMode(mode)}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === mode ? ' text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }`}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === mode ? ' text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                         >
                             {mode === 'categories' && '🎨 Catégories'}
                             {mode === 'all' && '📋 Tous'}
@@ -180,7 +180,7 @@ export default function AromaWheelPicker({
                                             key={aroma.id}
                                             onClick={() => toggleAroma(aroma.id)}
                                             disabled={!canAddMore && !isSelected}
-                                            className={`p-3 rounded-xl text-left transition-all ${isSelected ? 'bg-gradient-to-br text-white shadow-lg scale-105' : 'bg-gray-800/30 dark:bg-gray-800/50 hover:bg-gray-700/40 border-2 border-gray-600/50 dark:border-gray-700' } ${!canAddMore && !isSelected ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                                            className={`p-3 rounded-xl text-left transition-all ${isSelected ? 'bg-gradient-to-br text-white shadow-lg scale-105' : 'bg-gray-800/30 dark:bg-gray-800/50 hover:bg-gray-700/40 border-2 border-gray-600/50 dark:border-gray-700'} ${!canAddMore && !isSelected ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                                         >
                                             <div className="flex items-center gap-2 mb-1">
                                                 <span className="text-xl">{aroma.emoji}</span>
@@ -254,7 +254,7 @@ export default function AromaWheelPicker({
                                 key={aroma.id}
                                 onClick={() => toggleAroma(aroma.id)}
                                 disabled={!canAddMore && !isSelected}
-                                className={`p-3 rounded-xl text-left transition-all ${isSelected ? 'bg-gradient-to-br text-white shadow-lg scale-105' : 'bg-white hover:bg-gray-50 border-2' } ${!canAddMore && !isSelected ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                                className={`p-3 rounded-xl text-left transition-all ${isSelected ? 'bg-gradient-to-br text-white shadow-lg scale-105' : 'bg-white hover:bg-gray-50 border-2'} ${!canAddMore && !isSelected ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                                 style={{
                                     borderColor: !isSelected ? category?.color : undefined
                                 }}

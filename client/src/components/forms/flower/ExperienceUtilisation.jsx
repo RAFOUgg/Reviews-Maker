@@ -175,7 +175,7 @@ export default function ExperienceUtilisation({ data, onChange }) {
                             key={f}
                             type="button"
                             onClick={() => setFilter(f)}
-                            className={`px-4 py-2 rounded-lg font-medium transition-all ${filter === f ? ' text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }`}
+                            className={`px-4 py-2 rounded-lg font-medium transition-all ${filter === f ? ' text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                         >
                             {f === 'tous' ? '🌐 Tous' :
                                 f === 'positif' ? '✅ Positifs' :
@@ -199,7 +199,7 @@ export default function ExperienceUtilisation({ data, onChange }) {
                                 key={profil.value}
                                 type="button"
                                 onClick={() => toggleMultiSelect('profilsEffets', profil.value)}
-                                className={`px-4 py-3 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md ${bgColor} ${isSelected ? 'scale-105' : '' }`}
+                                className={`px-4 py-3 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md ${bgColor} ${isSelected ? 'scale-105' : ''}`}
                             >
                                 <div className="flex items-center justify-between gap-2">
                                     <span>{profil.label}</span>
@@ -225,7 +225,7 @@ export default function ExperienceUtilisation({ data, onChange }) {
                             key={effet.value}
                             type="button"
                             onClick={() => toggleMultiSelect('effetsSecondaires', effet.value)}
-                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${selectedSecondaires.includes(effet.value) ? 'bg-orange-600 text-white shadow-lg scale-105' : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-orange-400' }`}
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${selectedSecondaires.includes(effet.value) ? 'bg-orange-600 text-white shadow-lg scale-105' : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-orange-400'}`}
                         >
                             {effet.label}
                         </button>
@@ -246,7 +246,7 @@ export default function ExperienceUtilisation({ data, onChange }) {
                             key={usage.value}
                             type="button"
                             onClick={() => toggleMultiSelect('usagesPreferes', usage.value)}
-                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${selectedUsages.includes(usage.value) ? ' text-white shadow-lg scale-105' : 'bg-white border-2 border-gray-200 text-gray-700 hover:' }`}
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${selectedUsages.includes(usage.value) ? ' text-white shadow-lg scale-105' : 'bg-white border-2 border-gray-200 text-gray-700 hover:'}`}
                         >
                             {usage.label}
                         </button>
