@@ -79,6 +79,7 @@ const PipelineWithSidebar = ({
     const [draggedContent, setDraggedContent] = useState(null);
     const [currentPage, setCurrentPage] = useState(0);
     const [showPresetsManager, setShowPresetsManager] = useState(false);
+    const [droppedItemForModal, setDroppedItemForModal] = useState(null); // Item qui vient d'être droppé
 
     // Pagination: 100 cases par page max
     const CELLS_PER_PAGE = 100;
@@ -167,299 +168,307 @@ const PipelineWithSidebar = ({
 
         const newCells = { ...cells };
 
-        // Ajouter le contenu à la case
+        // Initialiser la cellule si elle n'existe pas
         if (!newCells[cellIndex]) {
-            newCells[cellIndex] = { contents: [] };
-        }
-        if (!newCells[cellIndex].contents) {
-            newCells[cellIndex].contents = [];
+            newCells[cellIndex] = {};
         }
 
-        // Vérifier si ce contenu n'existe pas déjà
-        const exists = newCells[cellIndex].contents.find(c => c.type === draggedContent.type);
-        if (!exists) {
-            newCells[cellIndex].contents.push({
-                type: draggedContent.type,
-                category: draggedContent.category,
-                data: {} // Données vides, à remplir via modal
-            });
+        // Ajouter une valeur vide pour le champ droppé
+        // (sera remplie via le modal qui s'ouvre juste après)
+        const fieldKey = draggedContent.key || draggedContent.type;
+
+        // Ne pas écraser si la donnée existe déjà
+        if (newCells[cellIndex][fieldKey] === undefined) {
+            newCells[cellIndex][fieldKey] = ''; // Valeur vide à remplir
         }
 
         setCells(newCells);
+
+        // Conserver l'item droppé pour le modal
+        setDroppedItemForModal({ content: draggedContent });
         setDraggedContent(null);
 
-        // Ouvrir modal pour éditer
+        // Ouvrir modal pour éditer avec l'item droppé
         setSelectedCell(cellIndex);
         setIsModalOpen(true);
 
         // Propager
         onChange({ ...value, cells: newCells });
-    };
+    };payload) => {
+    const cellIndex = payload.timestamp || selectedCell;
+    const cellData = payload.data || payload;
 
-    // Handler: Sauvegarde depuis modal
-    const handleSaveCell = (cellIndex, cellData) => {
-        const newCells = { ...cells, [cellIndex]: cellData };
-        setCells(newCells);
-        onChange({ ...value, cells: newCells });
-        setIsModalOpen(false);
-        setSelectedCell(null);
-    };
+    const newCells = { ...cells, [cellIndex]: { ...cells[cellIndex], ...cellData } };
+    setCells(newCells);
+    onChange({ ...value, cells: newCells });
+    setIsModalOpen(false);
+    setSelectedCell(null);
+    setDroppedItemForModal(null); // Réinitialiser l'item droppé
+    onChange({ ...value, cells: newCells });
+    setIsModalOpen(false);
+    setSelectedCell(null);
+};
 
-    // Handler: Application en masse (sélection multiple)
-    const handleApplyToSelection = (data) => {
-        if (selectedCells.length === 0) return;
+// Handler: Application en masse (sélection multiple)
+const handleApplyToSelection = (data) => {
+    if (selectedCells.length === 0) return;
 
-        const newCells = { ...cells };
-        selectedCells.forEach(cellIndex => {
-            newCells[cellIndex] = { ...(newCells[cellIndex] || {}), ...data };
-        });
+    const newCells = { ...cells };
+    selectedCells.forEach(cellIndex => {
+        newCells[cellIndex] = { ...(newCells[cellIndex] || {}), ...data };
+    });
 
-        setCells(newCells);
-        setSelectedCells([]);
-        onChange({ ...value, cells: newCells });
-    };
+    setCells(newCells);
+    setSelectedCells([]);
+    onChange({ ...value, cells: newCells });
+};
 
-    // Handler: Ajouter des cases (bouton +)
-    const handleAddCells = (count = 10) => {
-        const newDuration = config.duration + count;
-        const type = INTERVAL_TYPES[config.intervalType];
+// Handler: Ajouter des cases (bouton +)
+const handleAddCells = (count = 10) => {
+    const newDuration = config.duration + count;
+    const type = INTERVAL_TYPES[config.intervalType];
 
-        if (newDuration <= (type.max || 365)) {
-            handleConfigChange('duration', newDuration);
-        }
-    };
+    if (newDuration <= (type.max || 365)) {
+        handleConfigChange('duration', newDuration);
+    }
+};
 
-    // Obtenir les cases de la page courante
-    const getPageCells = () => {
-        const start = currentPage * CELLS_PER_PAGE;
-        const end = start + CELLS_PER_PAGE;
-        const allCellIndices = Array.from({ length: totalCells }, (_, i) => i);
-        return allCellIndices.slice(start, end);
-    };
+// Obtenir les cases de la page courante
+const getPageCells = () => {
+    const start = currentPage * CELLS_PER_PAGE;
+    const end = start + CELLS_PER_PAGE;
+    const allCellIndices = Array.from({ length: totalCells }, (_, i) => i);
+    return allCellIndices.slice(start, end);
+};
 
-    return (
-        <LiquidCard className="w-full">
-            {/* En-tête */}
-            <div className="p-4 border-b border-gray-700">
-                <div className="flex items-center justify-between mb-4">
-                    <div>
-                        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                            🧬 PipeLine {pipelineType.charAt(0).toUpperCase() + pipelineType.slice(1)}
-                        </h2>
-                        <p className="text-sm text-gray-400 mt-1">
-                            Glissez-déposez les contenus sur les cases, cliquez pour éditer
-                        </p>
-                    </div>
-
-                    <div className="flex gap-2">
-                        <LiquidButton
-                            size="sm"
-                            variant="primary"
-                            onClick={() => setShowPresetsManager(true)}
-                            title="Gérer les groupes de pré-réglages"
-                        >
-                            <FolderPlus className="w-4 h-4 mr-1" />
-                            Groupes
-                        </LiquidButton>
-                        <LiquidButton size="sm" variant="ghost">
-                            <Upload className="w-4 h-4" />
-                        </LiquidButton>
-                        <LiquidButton size="sm" variant="ghost">
-                            <Download className="w-4 h-4" />
-                        </LiquidButton>
-                        <LiquidButton size="sm" variant="ghost">
-                            <Save className="w-4 h-4" />
-                        </LiquidButton>
-                    </div>
+return (
+    <LiquidCard className="w-full">
+        {/* En-tête */}
+        <div className="p-4 border-b border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                        🧬 PipeLine {pipelineType.charAt(0).toUpperCase() + pipelineType.slice(1)}
+                    </h2>
+                    <p className="text-sm text-gray-400 mt-1">
+                        Glissez-déposez les contenus sur les cases, cliquez pour éditer
+                    </p>
                 </div>
 
-                {/* Configuration de la trame */}
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Type d'intervalle
-                        </label>
-                        <select
-                            value={config.intervalType}
-                            onChange={(e) => handleConfigChange('intervalType', e.target.value)}
-                            disabled={readonly}
-                            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                        >
-                            {Object.entries(INTERVAL_TYPES).map(([key, type]) => (
-                                <option key={key} value={key}>{type.label}</option>
-                            ))}
-                        </select>
-                    </div>
+                <div className="flex gap-2">
+                    <LiquidButton
+                        size="sm"
+                        variant="primary"
+                        onClick={() => setShowPresetsManager(true)}
+                        title="Gérer les groupes de pré-réglages"
+                    >
+                        <FolderPlus className="w-4 h-4 mr-1" />
+                        Groupes
+                    </LiquidButton>
+                    <LiquidButton size="sm" variant="ghost">
+                        <Upload className="w-4 h-4" />
+                    </LiquidButton>
+                    <LiquidButton size="sm" variant="ghost">
+                        <Download className="w-4 h-4" />
+                    </LiquidButton>
+                    <LiquidButton size="sm" variant="ghost">
+                        <Save className="w-4 h-4" />
+                    </LiquidButton>
+                </div>
+            </div>
 
-                    {config.intervalType === 'dates' ? (
-                        <>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Date début *
-                                </label>
-                                <input
-                                    type="date"
-                                    value={config.startDate || ''}
-                                    onChange={(e) => handleConfigChange('startDate', e.target.value)}
-                                    disabled={readonly}
-                                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Date fin *
-                                </label>
-                                <input
-                                    type="date"
-                                    value={config.endDate || ''}
-                                    onChange={(e) => handleConfigChange('endDate', e.target.value)}
-                                    disabled={readonly}
-                                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                                />
-                            </div>
-                        </>
-                    ) : config.intervalType !== 'phases' && (
+            {/* Configuration de la trame */}
+            <div className="grid grid-cols-3 gap-4 mb-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Type d'intervalle
+                    </label>
+                    <select
+                        value={config.intervalType}
+                        onChange={(e) => handleConfigChange('intervalType', e.target.value)}
+                        disabled={readonly}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    >
+                        {Object.entries(INTERVAL_TYPES).map(([key, type]) => (
+                            <option key={key} value={key}>{type.label}</option>
+                        ))}
+                    </select>
+                </div>
+
+                {config.intervalType === 'dates' ? (
+                    <>
                         <div>
                             <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Durée ({INTERVAL_TYPES[config.intervalType].unit})
+                                Date début *
                             </label>
                             <input
-                                type="number"
-                                value={config.duration}
-                                onChange={(e) => handleConfigChange('duration', parseInt(e.target.value) || 1)}
-                                min="1"
-                                max={INTERVAL_TYPES[config.intervalType].max}
+                                type="date"
+                                value={config.startDate || ''}
+                                onChange={(e) => handleConfigChange('startDate', e.target.value)}
                                 disabled={readonly}
                                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
                             />
                         </div>
-                    )}
-                </div>
-
-                {/* Info et pagination */}
-                <div className="flex items-center justify-between text-sm text-gray-400">
-                    <div className="flex items-center gap-2">
-                        <Info className="w-4 h-4" />
-                        <span>{totalCells} cases au total</span>
-                        {selectedCells.length > 0 && (
-                            <span className="ml-4">
-                                {selectedCells.length} sélectionnée(s)
-                            </span>
-                        )}
-                    </div>
-
-                    {totalPages > 1 && (
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
-                                disabled={currentPage === 0}
-                                className="px-3 py-1 bg-gray-800 rounded disabled:opacity-50"
-                            >
-                                ←
-                            </button>
-                            <span>Page {currentPage + 1} / {totalPages}</span>
-                            <button
-                                onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
-                                disabled={currentPage === totalPages - 1}
-                                className="px-3 py-1 bg-gray-800 rounded disabled:opacity-50"
-                            >
-                                →
-                            </button>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                                Date fin *
+                            </label>
+                            <input
+                                type="date"
+                                value={config.endDate || ''}
+                                onChange={(e) => handleConfigChange('endDate', e.target.value)}
+                                disabled={readonly}
+                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                            />
                         </div>
+                    </>
+                ) : config.intervalType !== 'phases' && (
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Durée ({INTERVAL_TYPES[config.intervalType].unit})
+                        </label>
+                        <input
+                            type="number"
+                            value={config.duration}
+                            onChange={(e) => handleConfigChange('duration', parseInt(e.target.value) || 1)}
+                            min="1"
+                            max={INTERVAL_TYPES[config.intervalType].max}
+                            disabled={readonly}
+                            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                        />
+                    </div>
+                )}
+            </div>
+
+            {/* Info et pagination */}
+            <div className="flex items-center justify-between text-sm text-gray-400">
+                <div className="flex items-center gap-2">
+                    <Info className="w-4 h-4" />
+                    <span>{totalCells} cases au total</span>
+                    {selectedCells.length > 0 && (
+                        <span className="ml-4">
+                            {selectedCells.length} sélectionnée(s)
+                        </span>
                     )}
                 </div>
+
+                {totalPages > 1 && (
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                            disabled={currentPage === 0}
+                            className="px-3 py-1 bg-gray-800 rounded disabled:opacity-50"
+                        >
+                            ←
+                        </button>
+                        <span>Page {currentPage + 1} / {totalPages}</span>
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+                            disabled={currentPage === totalPages - 1}
+                            className="px-3 py-1 bg-gray-800 rounded disabled:opacity-50"
+                        >
+                            →
+                        </button>
+                    </div>
+                )}
             </div>
+        </div>
 
-            {/* Layout principal: Sidebar + Grille */}
-            <div className="flex h-[600px]">
-                {/* Sidebar gauche */}
-                <PipelineContentsSidebar
-                    contentSchema={contentSchema}
-                    onDragStart={handleDragStart}
-                    pipelineType={pipelineType}
-                    readonly={readonly}
-                />
+        {/* Layout principal: Sidebar + Grille */}
+        <div className="flex h-[600px]">
+            {/* Sidebar gauche */}
+            <PipelineContentsSidebar
+                contentSchema={contentSchema}
+                onDragStart={handleDragStart}
+                pipelineType={pipelineType}
+                readonly={readonly}
+            />
 
-                {/* Grille de cases */}
-                <PipelineGridView
-                    cells={cells}
-                    config={config}
-                    cellIndices={getPageCells()}
-                    onCellClick={handleCellClick}
-                    onDropOnCell={handleDropOnCell}
-                    draggedContent={draggedContent}
-                    selectedCells={selectedCells}
-                    readonly={readonly}
-                    onAddCells={handleAddCells}
-                    canAddMore={config.duration < (INTERVAL_TYPES[config.intervalType].max || 365)}
-                />
-            </div>
+            {/* Grille de cases */}
+            <PipelineGridView
+                cells={cells}
+                config={config}
+                cellIndices={getPageCells()}
+                onCellClick={handleCellClick}
+                onDropOnCell={handleDropOnCell}
+                draggedContent={draggedContent}
+                selectedCells={selectedCells}
+                readonly={readonly}
+                onAddCells={handleAddCells}
+                canAddMore={config.duration < (INTERVAL_TYPES[config.intervalType].max || 365)}
+            />
+        </div>
 
-            {/* Modal d'édition */}
-            <AnimatePresence>
-                {isModalOpen && selectedCell !== null && (
-                    <PipelineCellModal
-                        isOpen={isModalOpen}
-                        onClose={() => {
-                            setIsModalOpen(false);
-                            setSelectedCell(null);
+        {/* Modal d'édition */}
+        <AnimatePresence>
+            {isModalOpen && selectedCell !== null && (
+                <PipelineCellModal
+                    setDroppedItemForModal(null);
                         }}
-                        cellIndex={selectedCell}
-                        cellData={cells[selectedCell] || {}}
-                        config={config}
-                        contentSchema={contentSchema}
-                        onSave={handleSaveCell}
-                        pipelineType={pipelineType}
+            cellIndex={selectedCell}
+            cellData={cells[selectedCell] || {}}
+            config={config}
+            contentSchema={contentSchema}
+            onSave={handleSaveCell}
+            pipelineType={pipelineType}
+            droppedItem={droppedItemForModal}
+            timestamp={selectedCell}
+            intervalLabel={`Jour ${selectedCell + 1}`}
+            sidebarSections={contentSchemall] || { }}
+            config={config}
+            contentSchema={contentSchema}
+            onSave={handleSaveCell}
+            pipelineType={pipelineType}
                     />
                 )}
 
-                {/* Gestionnaire de groupes de pré-réglages */}
-                <PresetGroupsManager
-                    isOpen={showPresetsManager}
-                    onClose={() => setShowPresetsManager(false)}
-                    pipelineType={pipelineType}
-                    sidebarSections={contentSchema}
-                    onApplyGroup={(groupFields) => {
-                        // Appliquer le groupe à la case sélectionnée ou aux cases multi-sélectionnées
-                        if (selectedCells.length > 0) {
-                            handleApplyToSelection(groupFields);
-                        } else if (selectedCell !== null) {
-                            handleSaveCell(selectedCell, { ...cells[selectedCell], ...groupFields });
-                        }
-                        setShowPresetsManager(false);
-                    }}
-                />
-            </AnimatePresence>
+            {/* Gestionnaire de groupes de pré-réglages */}
+            <PresetGroupsManager
+                isOpen={showPresetsManager}
+                onClose={() => setShowPresetsManager(false)}
+                pipelineType={pipelineType}
+                sidebarSections={contentSchema}
+                onApplyGroup={(groupFields) => {
+                    // Appliquer le groupe à la case sélectionnée ou aux cases multi-sélectionnées
+                    if (selectedCells.length > 0) {
+                        handleApplyToSelection(groupFields);
+                    } else if (selectedCell !== null) {
+                        handleSaveCell(selectedCell, { ...cells[selectedCell], ...groupFields });
+                    }
+                    setShowPresetsManager(false);
+                }}
+            />
+        </AnimatePresence>
 
-            {/* Boutons d'action si multi-sélection */}
-            {selectedCells.length > 0 && (
-                <div className="fixed bottom-6 right-6 bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-2xl">
-                    <div className="flex items-center gap-4">
-                        <span className="text-white font-medium">
-                            {selectedCells.length} case(s) sélectionnée(s)
-                        </span>
-                        <LiquidButton
-                            size="sm"
-                            onClick={() => {
-                                // Ouvrir modal pour données à appliquer
-                                setSelectedCell(selectedCells[0]);
-                                setIsModalOpen(true);
-                            }}
-                        >
-                            Appliquer des données
-                        </LiquidButton>
-                        <LiquidButton
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setSelectedCells([])}
-                        >
-                            Annuler
-                        </LiquidButton>
-                    </div>
+        {/* Boutons d'action si multi-sélection */}
+        {selectedCells.length > 0 && (
+            <div className="fixed bottom-6 right-6 bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-2xl">
+                <div className="flex items-center gap-4">
+                    <span className="text-white font-medium">
+                        {selectedCells.length} case(s) sélectionnée(s)
+                    </span>
+                    <LiquidButton
+                        size="sm"
+                        onClick={() => {
+                            // Ouvrir modal pour données à appliquer
+                            setSelectedCell(selectedCells[0]);
+                            setIsModalOpen(true);
+                        }}
+                    >
+                        Appliquer des données
+                    </LiquidButton>
+                    <LiquidButton
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setSelectedCells([])}
+                    >
+                        Annuler
+                    </LiquidButton>
                 </div>
-            )}
-        </LiquidCard>
-    );
+            </div>
+        )}
+    </LiquidCard>
+);
 };
 
 export default PipelineWithSidebar;
