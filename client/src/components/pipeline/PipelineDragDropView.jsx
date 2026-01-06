@@ -84,7 +84,6 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
     if (orphanItems.length > 0) {
         console.warn('⚠️ Items orphelins détectés:', orphanItems.length, orphanItems.map(i => i.key || i.id));
     }
-    sectionsWithItems.map(([id, items]) => `${id}: ${items.length}`).join(', '));
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
