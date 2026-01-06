@@ -1895,16 +1895,23 @@ const PipelineDragDropView = ({
                 sidebarSections={sidebarContent}
                 selectedCells={selectedCells}
                 onApply={(values) => {
+                    console.log('🎯 MultiAssignModal onApply - values:', values);
                     const targets = selectedCells.length > 0 ? selectedCells : [currentCellTimestamp];
+                    console.log('🎯 Targets:', targets);
+
                     const allChanges = [];
                     targets.forEach(ts => {
+                        console.log(`📝 Applying to cell ${ts}:`, values);
                         Object.entries(values).forEach(([key, value]) => {
+                            console.log(`  → ${key}: ${value}`);
                             const prev = getCellData(ts) || {};
                             const prevValue = prev && prev.data ? prev.data[key] : undefined;
                             allChanges.push({ timestamp: ts, field: key, previousValue: prevValue });
                             onDataChange(ts, key, value);
                         });
                     });
+
+                    console.log('✅ onApply terminé, changes:', allChanges.length);
                     if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'multi-assign', changes: allChanges });
                     setShowMultiAssignModal(false);
                     setMultiAssignContent(null);
