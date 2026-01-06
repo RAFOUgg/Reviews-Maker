@@ -141,23 +141,27 @@ export default function CuringMaturationTimeline({ data, onChange }) {
 
     // Handler pour modification de configuration timeline
     const handleCuringConfigChange = (field, value) => {
-        onChange('curingTimelineConfig', {
+        const updatedConfig = {
             ...curingTimelineConfig,
             [field]: value
-        })
+        };
+        onChange({
+            ...data,
+            curingTimelineConfig: updatedConfig
+        });
     }
 
     // Handler pour modification de données timeline curing
     const handleCuringDataChange = (timestamp, field, value) => {
         const existingIndex = curingTimelineData.findIndex(d => d.timestamp === timestamp)
 
+        let updatedData;
         if (existingIndex >= 0) {
-            const newData = [...curingTimelineData]
-            newData[existingIndex] = {
-                ...newData[existingIndex],
+            updatedData = [...curingTimelineData]
+            updatedData[existingIndex] = {
+                ...updatedData[existingIndex],
                 [field]: value
             }
-            onChange('curingTimelineData', newData)
         } else {
             const cellDate = new Date(timestamp)
             const newEntry = {
@@ -165,8 +169,13 @@ export default function CuringMaturationTimeline({ data, onChange }) {
                 date: cellDate.toISOString().split('T')[0],
                 [field]: value
             }
-            onChange('curingTimelineData', [...curingTimelineData, newEntry])
+            updatedData = [...curingTimelineData, newEntry]
         }
+
+        onChange({
+            ...data,
+            curingTimelineData: updatedData
+        });
     }
 
     // Handlers pour presets

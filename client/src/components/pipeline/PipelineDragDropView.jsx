@@ -1670,7 +1670,7 @@ const PipelineDragDropView = ({
                                             onDragOver={(e) => handleDragOver(e, cell.timestamp)}
                                             onDragLeave={handleDragLeave}
                                             onDrop={(e) => handleDrop(e, cell.timestamp)}
-                                            onClick={() => handleCellClick(cell.timestamp)}
+                                            onClick={(e) => handleCellClick(e, cell.timestamp)}
                                             onMouseEnter={(e) => { handleCellHover(e, cell.timestamp); }}
                                             onMouseLeave={handleCellLeave}
                                             onMouseDown={(e) => { if (e.button === 0) startSelection(e, idx, cell.timestamp); }}
