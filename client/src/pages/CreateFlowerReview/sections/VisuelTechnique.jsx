@@ -63,6 +63,7 @@ export default function VisuelTechnique({ formData, handleChange }) {
                                         selectedColors={formData.selectedColors || []}
                                         densite={formData.densite || 5}
                                         trichomes={formData.trichomes || 5}
+                                        pistils={formData.pistils || 5}
                                         manucure={formData.manucure || 5}
                                         moisissure={formData.moisissure || 10}
                                         graines={formData.graines || 10}

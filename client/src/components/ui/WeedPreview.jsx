@@ -16,14 +16,63 @@ const CANNABIS_COLORS = [
     { id: 'brown', hex: '#78350F' }
 ];
 
+const clamp01 = (value) => Math.min(1, Math.max(0, value));
+
+const mixHexColors = (from, to, amount = 0.5) => {
+    const ratio = clamp01(amount);
+    const cleanFrom = from.replace('#', '');
+    const cleanTo = to.replace('#', '');
+    if (cleanFrom.length !== 6 || cleanTo.length !== 6) return from;
+
+    const fromRGB = [
+        parseInt(cleanFrom.slice(0, 2), 16),
+        parseInt(cleanFrom.slice(2, 4), 16),
+        parseInt(cleanFrom.slice(4, 6), 16)
+    ];
+
+    const toRGB = [
+        parseInt(cleanTo.slice(0, 2), 16),
+        parseInt(cleanTo.slice(2, 4), 16),
+        parseInt(cleanTo.slice(4, 6), 16)
+    ];
+
+    const mixed = fromRGB.map((channel, index) => {
+        const target = toRGB[index];
+        return Math.round(channel + (target - channel) * ratio)
+            .toString(16)
+            .padStart(2, '0');
+    });
+
+    return `#${mixed.join('')}`;
+};
+
+const createRandomGenerator = (seed) => {
+    let value = seed || 1;
+    return () => {
+        value = (value * 1664525 + 1013904223) % 4294967296;
+        return value / 4294967296;
+    };
+};
+
 const WeedPreview = ({
     selectedColors = [],
     densite = 5,
     trichomes = 5,
+    pistils = 5,
     manucure = 5,
     moisissure = 10,
     graines = 10
 }) => {
+    const randomSeed = useMemo(() => {
+        const seedString = `${densite}-${trichomes}-${pistils}-${manucure}-${moisissure}-${graines}-${selectedColors
+            .map(s => `${s.colorId}-${s.percentage}`)
+            .join('-')}`;
+        let hash = 0;
+        for (let i = 0; i < seedString.length; i++) {
+            hash = (hash * 31 + seedString.charCodeAt(i)) >>> 0;
+        }
+        return hash || 1;
+    }, [densite, trichomes, pistils, manucure, moisissure, graines, selectedColors]);
     // Générer le gradient SVG basé sur les couleurs sélectionnées
     const gradientStops = useMemo(() => {
         if (!selectedColors || selectedColors.length === 0) {
@@ -68,21 +117,22 @@ const WeedPreview = ({
 
     // Distribuer les couleurs aux bractées de manière déterministe
     const bracteeColors = useMemo(() => {
+        const baseArray = () => Array(24).fill(mixHexColors('#22C55E', '#E6FFCC', 0.08 + manucure * 0.01));
+
         if (!hasColors || selectedColors.length === 0) {
-            return Array(24).fill('#22C55E');
+            return baseArray();
         }
 
-        // Créer un tableau de 24 bractées
+        // Créer un tableau de 24 bractées réparties selon les pourcentages
         const colors = [];
         selectedColors.forEach(selected => {
             const colorData = CANNABIS_COLORS.find(c => c.id === selected.colorId);
             const count = Math.round((selected.percentage / 100) * 24);
             for (let i = 0; i < count; i++) {
-                colors.push(colorData?.hex || '#22C55E');
+                colors.push(colorData?.hex || baseColor);
             }
         });
 
-        // S'assurer qu'on a exactement 24 couleurs
         while (colors.length < 24) {
             colors.push(baseColor);
         }
@@ -97,7 +147,6 @@ const WeedPreview = ({
             seedNum += seed.charCodeAt(i);
         }
 
-        // Fisher-Yates shuffle avec seed
         const shuffled = [...colors];
         for (let i = shuffled.length - 1; i > 0; i--) {
             seedNum = (seedNum * 9301 + 49297) % 233280;
@@ -105,8 +154,12 @@ const WeedPreview = ({
             [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
         }
 
-        return shuffled;
-    }, [selectedColors, hasColors, baseColor]);
+        // Lissage visuel : petite touche de lumière et d'ombre pour texturer les bractées
+        return shuffled.map(color => {
+            const withLight = mixHexColors(color, '#FFFFFF', 0.09 + manucure * 0.02);
+            return mixHexColors(withLight, '#0B1015', 0.05 + (10 - densite) * 0.015);
+        });
+    }, [selectedColors, hasColors, baseColor, manucure, densite]);
 
     // Calculs des effets visuels basés sur les jauges
     const visualEffects = useMemo(() => {
@@ -116,8 +169,9 @@ const WeedPreview = ({
         // Manucure: 0 = touffu/pointu, 10 = arrondi/compact
         const roundness = manucure / 10; // 0 à 1
 
-        // Trichomes: nombre de trichomes à afficher
-        const trichomeCount = Math.round((trichomes / 10) * 25); // 0 à 25
+        // Trichomes: nombre et épaisseur
+        const trichomeCount = Math.round((trichomes / 10) * 35); // 0 à 35
+        const trichomeSize = 0.35 + (trichomes / 10) * 0.5;
 
         // Moisissure: 0 = max taches, 10 = aucune
         const moldSpots = Math.round(((10 - moisissure) / 10) * 8); // 0 à 8
@@ -125,8 +179,77 @@ const WeedPreview = ({
         // Graines: 0 = max graines, 10 = aucune
         const seedCount = Math.round(((10 - graines) / 10) * 5); // 0 à 5
 
-        return { spacing, roundness, trichomeCount, moldSpots, seedCount };
-    }, [densite, trichomes, manucure, moisissure, graines]);
+        // Pistils: quantité et courbure
+        const pistilCount = Math.max(4, Math.round((pistils / 10) * 18));
+        const pistilCurl = 6 + pistils * 0.6;
+
+        // Ligne externe: plus fine si manucure haute
+        const strokeWidth = 0.7 + ((10 - manucure) / 10) * 0.5;
+
+        // Étincelles supplémentaires pour un rendu plus "givré"
+        const sparkleIntensity = Math.max(0, trichomes - 4);
+
+        return {
+            spacing,
+            roundness,
+            trichomeCount,
+            trichomeSize,
+            moldSpots,
+            seedCount,
+            pistilCount,
+            pistilCurl,
+            strokeWidth,
+            sparkleIntensity
+        };
+    }, [densite, trichomes, manucure, moisissure, graines, pistils]);
+
+    const pistilColor = useMemo(() => mixHexColors('#FBBF24', '#C2410C', pistils / 10), [pistils]);
+    const pistilHighlight = useMemo(() => mixHexColors(pistilColor, '#FFE8C7', 0.35), [pistilColor]);
+
+    const trichomePoints = useMemo(() => {
+        const random = createRandomGenerator(randomSeed + 13);
+        const points = [];
+        for (let i = 0; i < visualEffects.trichomeCount; i++) {
+            const angle = random() * Math.PI * 2;
+            const radius = 18 + random() * 32 * (0.9 + visualEffects.roundness * 0.3);
+            const wobble = (random() - 0.5) * 12;
+            const x = 120 + Math.cos(angle) * radius;
+            const y = 140 + Math.sin(angle) * radius * 1.12 - 28 + wobble * 0.2;
+            const tilt = (random() - 0.5) * 35;
+            const length = 3 + random() * (1.6 + trichomes * 0.18);
+            points.push({ x, y, tilt, length, delay: 0.7 + i * 0.012 });
+        }
+        return points;
+    }, [visualEffects.trichomeCount, visualEffects.roundness, trichomes, randomSeed]);
+
+    const sparklePoints = useMemo(() => {
+        const count = Math.min(24, Math.max(6, Math.floor(visualEffects.trichomeCount / 1.2)));
+        const random = createRandomGenerator(randomSeed + 71);
+        return Array.from({ length: count }, (_, i) => {
+            const angle = (i / count) * Math.PI * 2 + random() * 0.6;
+            const radius = 18 + Math.cos(i * 1.3) * 24 * (0.9 + visualEffects.roundness * 0.2);
+            const x = 120 + Math.cos(angle) * radius;
+            const y = 140 + Math.sin(angle) * radius * 1.05 - 24 + random() * 6;
+            return { x, y, delay: i * 0.1 + 0.4, duration: 1.6 + random() * 0.9 };
+        });
+    }, [visualEffects.trichomeCount, visualEffects.roundness, randomSeed]);
+
+    const pistilCurves = useMemo(() => {
+        const rings = [60, 80, 105, 130, 155, 180];
+        const random = createRandomGenerator(randomSeed + 211);
+        const curves = [];
+        for (let i = 0; i < visualEffects.pistilCount; i++) {
+            const ring = rings[i % rings.length];
+            const angle = (i / visualEffects.pistilCount) * Math.PI * 2 + random() * 0.8;
+            const baseX = 120 + Math.cos(angle) * (ring / 4.2);
+            const baseY = 95 + ring * 0.33 + random() * 10;
+            const curl = visualEffects.pistilCurl * (0.6 + random() * 0.6);
+            const tipX = baseX + curl * Math.cos(angle + 0.9 + random() * 0.5);
+            const tipY = baseY - curl * 0.65;
+            curves.push({ baseX, baseY, tipX, tipY, delay: 0.55 + i * 0.02 });
+        }
+        return curves;
+    }, [visualEffects.pistilCount, visualEffects.pistilCurl, randomSeed]);
 
     return (
         <div className="relative">
@@ -156,7 +279,12 @@ const WeedPreview = ({
                     viewBox="0 0 240 300"
                     className="relative z-10 drop-shadow-2xl"
                     initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
+                    animate={{
+                        scale: 0.96 + (densite / 10) * 0.08,
+                        opacity: 1,
+                        rotate: (0.5 - visualEffects.roundness) * 2,
+                        y: (1.2 - visualEffects.spacing) * 6
+                    }}
                     transition={{ duration: 0.6, ease: 'easeOut' }}
                 >
                     <defs>
@@ -168,6 +296,13 @@ const WeedPreview = ({
                                 <feMergeNode in="SourceGraphic" />
                             </feMerge>
                         </filter>
+
+                        {/* Dégradé iridescent basé sur la sélection de couleurs */}
+                        <radialGradient id="budIridescent" cx="50%" cy="42%" r="65%">
+                            {(hasColors ? gradientStops : [{ offset: '0%', color: baseColor }, { offset: '100%', color: mixHexColors(baseColor, '#0B1015', 0.3) }]).map((stop, index) => (
+                                <stop key={`stop-${index}`} offset={stop.offset} stopColor={stop.color} stopOpacity={0.85 - index * 0.08} />
+                            ))}
+                        </radialGradient>
 
                         {/* Ombres portées */}
                         <filter id="budShadow" x="-50%" y="-50%" width="200%" height="200%">
@@ -452,53 +587,73 @@ const WeedPreview = ({
                             transition={{ duration: 0.6, delay: 0.5 }}
                         />
 
-                        {/* Pistils orangés (petits fils qui dépassent) */}
-                        <motion.g
-                            stroke="#D97706"
-                            strokeWidth="1.2"
-                            strokeLinecap="round"
-                            fill="none"
-                            opacity="0.7"
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ duration: 0.8, delay: 0.6 }}
-                        >
-                            <path d="M 113 65 Q 108 68 102 72" />
-                            <path d="M 127 65 Q 132 68 138 72" />
-                            <path d="M 100 95 Q 94 99 88 105" />
-                            <path d="M 140 95 Q 146 99 152 105" />
-                            <path d="M 85 130 Q 78 135 72 142" />
-                            <path d="M 155 130 Q 162 135 168 142" />
-                            <path d="M 95 165 Q 88 170 82 178" />
-                            <path d="M 145 165 Q 152 170 158 178" />
-                            <path d="M 102 200 Q 95 206 88 214" />
-                            <path d="M 138 200 Q 145 206 152 214" />
-                        </motion.g>
-
-                        {/* Trichomes (poils blancs/transparents) - distribution naturelle sur les bractées */}
-                        {visualEffects.trichomeCount > 0 && (
-                            <g opacity="0.7">
-                                {[...Array(visualEffects.trichomeCount)].map((_, i) => {
-                                    // Distribution sur toute la surface de la bud, plus dense sur les côtés
-                                    const angle = (i / visualEffects.trichomeCount) * Math.PI * 2;
-                                    const radius = 20 + Math.random() * 30;
-                                    const x = 120 + Math.cos(angle) * radius;
-                                    const y = 140 + Math.sin(angle) * radius * 1.2 - 30;
-                                    const hairAngle = angle + (Math.random() - 0.5) * 30;
-                                    const hairLength = 3 + Math.random() * 2;
+                        {/* Pistils orangés, plus dynamiques et liés au slider */}
+                        {visualEffects.pistilCount > 0 && (
+                            <motion.g
+                                stroke={pistilColor}
+                                strokeWidth="1.4"
+                                strokeLinecap="round"
+                                fill="none"
+                                opacity="0.9"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.6, delay: 0.5 }}
+                            >
+                                {pistilCurves.map((curve, i) => {
+                                    const controlX = curve.baseX + (curve.tipX - curve.baseX) * 0.35;
+                                    const controlY = curve.baseY - visualEffects.pistilCurl * 0.5;
                                     return (
-                                        <motion.line
-                                            key={`trichome-${i}`}
-                                            x1={x}
-                                            y1={y}
-                                            x2={x + Math.cos(hairAngle) * hairLength}
-                                            y2={y - hairLength}
-                                            stroke="rgba(255,255,255,0.6)"
-                                            strokeWidth="0.4"
+                                        <motion.path
+                                            key={`pistil-${i}`}
+                                            d={`M ${curve.baseX} ${curve.baseY} Q ${controlX} ${controlY} ${curve.tipX} ${curve.tipY}`}
+                                            stroke={pistilColor}
+                                            strokeWidth="1.3"
                                             strokeLinecap="round"
                                             initial={{ pathLength: 0, opacity: 0 }}
                                             animate={{ pathLength: 1, opacity: 1 }}
-                                            transition={{ duration: 0.4, delay: 0.7 + i * 0.01 }}
+                                            transition={{ duration: 0.7, delay: curve.delay }}
+                                        />
+                                    );
+                                })}
+
+                                {pistilCurves.map((curve, i) => {
+                                    const controlX = curve.baseX + (curve.tipX - curve.baseX) * 0.32;
+                                    const controlY = curve.baseY - visualEffects.pistilCurl * 0.65;
+                                    return (
+                                        <motion.path
+                                            key={`pistil-highlight-${i}`}
+                                            d={`M ${curve.baseX} ${curve.baseY} Q ${controlX} ${controlY} ${curve.tipX} ${curve.tipY}`}
+                                            stroke={pistilHighlight}
+                                            strokeWidth="0.9"
+                                            strokeLinecap="round"
+                                            opacity="0.75"
+                                            initial={{ pathLength: 0, opacity: 0 }}
+                                            animate={{ pathLength: 1, opacity: 0.75 }}
+                                            transition={{ duration: 0.6, delay: curve.delay + 0.08 }}
+                                        />
+                                    );
+                                })}
+                            </motion.g>
+                        )}
+
+                        {/* Trichomes (poils blancs/transparents) - distribution naturelle sur les bractées */}
+                        {trichomePoints.length > 0 && (
+                            <g opacity="0.8">
+                                {trichomePoints.map((point, i) => {
+                                    const tiltRad = (point.tilt * Math.PI) / 180;
+                                    return (
+                                        <motion.line
+                                            key={`trichome-${i}`}
+                                            x1={point.x}
+                                            y1={point.y}
+                                            x2={point.x + Math.cos(tiltRad) * point.length}
+                                            y2={point.y - point.length}
+                                            stroke="rgba(255,255,255,0.72)"
+                                            strokeWidth={visualEffects.trichomeSize}
+                                            strokeLinecap="round"
+                                            initial={{ pathLength: 0, opacity: 0 }}
+                                            animate={{ pathLength: 1, opacity: 1 }}
+                                            transition={{ duration: 0.45, delay: point.delay }}
                                         />
                                     );
                                 })}
@@ -619,39 +774,44 @@ const WeedPreview = ({
                                 })}
                             </g>
                         )}
+
+                        {/* Lavis colorimétrique pour lisser les bractées (lié au sélecteur de couleurs) */}
+                        <motion.ellipse
+                            cx="120"
+                            cy="150"
+                            rx="72"
+                            ry="118"
+                            fill="url(#budIridescent)"
+                            fillOpacity="0.2"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 0.2 + (hasColors ? 0.08 : 0), scale: 1 + visualEffects.roundness * 0.02 }}
+                            transition={{ duration: 0.65, delay: 0.32 }}
+                        />
                     </g>
 
                     {/* Particules scintillantes (effet trichomes brillants) - distribution naturelle */}
-                    {visualEffects.trichomeCount > 5 && (
+                    {sparklePoints.length > 0 && (
                         <g>
-                            {[...Array(Math.min(20, Math.floor(visualEffects.trichomeCount / 1.5)))].map((_, i) => {
-                                // Distribution sur les bractées de manière naturelle
-                                const angle = (i / 20) * Math.PI * 2 + Math.sin(i * 0.7) * 0.5;
-                                const radius = 18 + Math.cos(i * 1.3) * 25;
-                                const x = 120 + Math.cos(angle) * radius;
-                                const y = 140 + Math.sin(angle) * radius * 1.1 - 25;
-
-                                return (
-                                    <motion.circle
-                                        key={i}
-                                        cx={x}
-                                        cy={y}
-                                        r="0.8"
-                                        fill="white"
-                                        opacity="0"
-                                        animate={{
-                                            opacity: [0, 0.9, 0],
-                                            scale: [0, 1.4, 0]
-                                        }}
-                                        transition={{
-                                            duration: 1.8 + Math.random() * 0.8,
-                                            repeat: Infinity,
-                                            delay: i * 0.12,
-                                            ease: 'easeInOut'
-                                        }}
-                                    />
-                                );
-                            })}
+                            {sparklePoints.map((sparkle, i) => (
+                                <motion.circle
+                                    key={`sparkle-${i}`}
+                                    cx={sparkle.x}
+                                    cy={sparkle.y}
+                                    r={0.9 + visualEffects.trichomeSize * 0.3}
+                                    fill="white"
+                                    opacity="0"
+                                    animate={{
+                                        opacity: [0, 0.95, 0],
+                                        scale: [0, 1.4 + visualEffects.sparkleIntensity * 0.05, 0]
+                                    }}
+                                    transition={{
+                                        duration: sparkle.duration,
+                                        repeat: Infinity,
+                                        delay: sparkle.delay,
+                                        ease: 'easeInOut'
+                                    }}
+                                />
+                            ))}
                         </g>
                     )}
                 </motion.svg>
