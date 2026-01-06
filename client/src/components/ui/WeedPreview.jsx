@@ -16,7 +16,14 @@ const CANNABIS_COLORS = [
     { id: 'brown', hex: '#78350F' }
 ];
 
-const WeedPreview = ({ selectedColors = [] }) => {
+const WeedPreview = ({
+    selectedColors = [],
+    densite = 5,
+    trichomes = 5,
+    manucure = 5,
+    moisissure = 10,
+    graines = 10
+}) => {
     // Générer le gradient SVG basé sur les couleurs sélectionnées
     const gradientStops = useMemo(() => {
         if (!selectedColors || selectedColors.length === 0) {
@@ -101,6 +108,26 @@ const WeedPreview = ({ selectedColors = [] }) => {
         return shuffled;
     }, [selectedColors, hasColors, baseColor]);
 
+    // Calculs des effets visuels basés sur les jauges
+    const visualEffects = useMemo(() => {
+        // Densité: 0 = espacement max, 10 = compact
+        const spacing = 1 + ((10 - densite) / 10) * 0.8; // 1.8x à 1x
+
+        // Manucure: 0 = touffu/pointu, 10 = arrondi/compact
+        const roundness = manucure / 10; // 0 à 1
+
+        // Trichomes: nombre de trichomes à afficher
+        const trichomeCount = Math.round((trichomes / 10) * 25); // 0 à 25
+
+        // Moisissure: 0 = max taches, 10 = aucune
+        const moldSpots = Math.round(((10 - moisissure) / 10) * 8); // 0 à 8
+
+        // Graines: 0 = max graines, 10 = aucune
+        const seedCount = Math.round(((10 - graines) / 10) * 5); // 0 à 5
+
+        return { spacing, roundness, trichomeCount, moldSpots, seedCount };
+    }, [densite, trichomes, manucure, moisissure, graines]);
+
     return (
         <div className="relative">
             {/* Titre */}
@@ -156,20 +183,20 @@ const WeedPreview = ({ selectedColors = [] }) => {
                         </filter>
                     </defs>
 
-                    <g filter="url(#budShadow)">
+                    <g filter="url(#budShadow)" transform={`scale(${1 / visualEffects.spacing})`} transform-origin="120 150">
                         {/* Fond de base (corps principal vert) */}
                         <motion.path
-                            d="M 120 45 
-                               C 108 50, 100 60, 95 75
-                               C 90 90, 87 105, 85 120
-                               C 83 140, 82 160, 82 180
-                               C 82 195, 85 210, 92 220
-                               C 98 228, 108 235, 120 238
-                               C 132 235, 142 228, 148 220
-                               C 155 210, 158 195, 158 180
-                               C 158 160, 157 140, 155 120
-                               C 153 105, 150 90, 145 75
-                               C 140 60, 132 50, 120 45 Z"
+                            d={`M 120 45 
+                               C ${108 * visualEffects.spacing} 50, ${100 * visualEffects.spacing} 60, ${95 * visualEffects.spacing} 75
+                               C ${90 * visualEffects.spacing} 90, ${87 * visualEffects.spacing} 105, ${85 * visualEffects.spacing} 120
+                               C ${83 * visualEffects.spacing} 140, ${82 * visualEffects.spacing} 160, ${82 * visualEffects.spacing} 180
+                               C ${82 * visualEffects.spacing} 195, ${85 * visualEffects.spacing} 210, ${92 * visualEffects.spacing} 220
+                               C ${98 * visualEffects.spacing} 228, ${108 * visualEffects.spacing} 235, 120 238
+                               C ${132 / visualEffects.spacing} 235, ${142 / visualEffects.spacing} 228, ${148 / visualEffects.spacing} 220
+                               C ${155 / visualEffects.spacing} 210, ${158 / visualEffects.spacing} 195, ${158 / visualEffects.spacing} 180
+                               C ${158 / visualEffects.spacing} 160, ${157 / visualEffects.spacing} 140, ${155 / visualEffects.spacing} 120
+                               C ${153 / visualEffects.spacing} 105, ${150 / visualEffects.spacing} 90, ${145 / visualEffects.spacing} 75
+                               C ${140 / visualEffects.spacing} 60, ${132 / visualEffects.spacing} 50, 120 45 Z`}
                             fill={baseColor}
                             fillOpacity="0.6"
                             stroke="none"
@@ -447,16 +474,115 @@ const WeedPreview = ({ selectedColors = [] }) => {
                             <path d="M 102 200 Q 95 206 88 214" />
                             <path d="M 138 200 Q 145 206 152 214" />
                         </motion.g>
+
+                        {/* Trichomes (poils blancs/transparents) */}
+                        {visualEffects.trichomeCount > 0 && (
+                            <g opacity="0.7">
+                                {[...Array(visualEffects.trichomeCount)].map((_, i) => {
+                                    const x = 85 + (Math.sin(i * 2.5) * 35 + 35);
+                                    const y = 50 + (i / visualEffects.trichomeCount) * 190;
+                                    const angle = Math.sin(i) * 15;
+                                    return (
+                                        <motion.line
+                                            key={`trichome-${i}`}
+                                            x1={x}
+                                            y1={y}
+                                            x2={x + Math.cos(angle) * 3}
+                                            y2={y - 4}
+                                            stroke="rgba(255,255,255,0.7)"
+                                            strokeWidth="0.5"
+                                            strokeLinecap="round"
+                                            initial={{ pathLength: 0, opacity: 0 }}
+                                            animate={{ pathLength: 1, opacity: 1 }}
+                                            transition={{ duration: 0.6, delay: 0.7 + i * 0.02 }}
+                                        />
+                                    );
+                                })}
+                            </g>
+                        )}
+
+                        {/* Taches de moisissure */}
+                        {visualEffects.moldSpots > 0 && (
+                            <g>
+                                {[...Array(visualEffects.moldSpots)].map((_, i) => {
+                                    const x = 90 + (Math.sin(i * 3.7) * 30 + 20);
+                                    const y = 60 + (i / visualEffects.moldSpots) * 170;
+                                    const size = 3 + Math.cos(i) * 2;
+                                    const colors = ['#3B2414', '#1A1410', '#F5F5DC'];
+                                    const color = colors[i % 3];
+                                    return (
+                                        <motion.ellipse
+                                            key={`mold-${i}`}
+                                            cx={x}
+                                            cy={y}
+                                            rx={size}
+                                            ry={size * 0.8}
+                                            fill={color}
+                                            opacity="0.6"
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            transition={{ duration: 0.5, delay: 0.8 + i * 0.1 }}
+                                        />
+                                    );
+                                })}
+                            </g>
+                        )}
+
+                        {/* Graines */}
+                        {visualEffects.seedCount > 0 && (
+                            <g>
+                                {[...Array(visualEffects.seedCount)].map((_, i) => {
+                                    const x = 95 + (Math.sin(i * 4.2) * 25 + 15);
+                                    const y = 80 + (i / visualEffects.seedCount) * 140;
+                                    return (
+                                        <g key={`seed-${i}`}>
+                                            {/* Corps de la graine (forme d'amande) */}
+                                            <motion.ellipse
+                                                cx={x}
+                                                cy={y}
+                                                rx="4"
+                                                ry="6"
+                                                fill="#8B7355"
+                                                stroke="#5C4A3A"
+                                                strokeWidth="0.5"
+                                                initial={{ scale: 0 }}
+                                                animate={{ scale: 1 }}
+                                                transition={{ duration: 0.5, delay: 0.9 + i * 0.1 }}
+                                            />
+                                            {/* Petites taches noires sur la graine */}
+                                            <motion.circle
+                                                cx={x - 1}
+                                                cy={y - 1.5}
+                                                r="0.5"
+                                                fill="#1A1410"
+                                                initial={{ scale: 0 }}
+                                                animate={{ scale: 1 }}
+                                                transition={{ duration: 0.3, delay: 1 + i * 0.1 }}
+                                            />
+                                            <motion.circle
+                                                cx={x + 0.5}
+                                                cy={y + 1}
+                                                r="0.4"
+                                                fill="#1A1410"
+                                                initial={{ scale: 0 }}
+                                                animate={{ scale: 1 }}
+                                                transition={{ duration: 0.3, delay: 1.1 + i * 0.1 }}
+                                            />
+                                        </g>
+                                    );
+                                })}
+                            </g>
+                        )}
                     </g>
 
-                    {/* Particules scintillantes (trichomes) */}
-                    {hasColors && (
+                    {/* Particules scintillantes (effet trichomes brillants) */}
+                    {visualEffects.trichomeCount > 5 && (
                         <g>
-                            {[...Array(15)].map((_, i) => (
+                            {[...Array(Math.min(15, visualEffects.trichomeCount))].map((_, i) => (
                                 <motion.circle
                                     key={i}
-                                    cx={85 + Math.random() * 70}
-                                    cy={50 + Math.random() * 190}
+                                    cx={85 + (Math.sin(i * 2.1) * 35 + 35)}
+                                    cy={50 + (i / Math.min(15, visualEffects.trichomeCount)) * 190}
                                     r="1.2"
                                     fill="white"
                                     opacity="0"
