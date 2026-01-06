@@ -18,6 +18,7 @@ const CANNABIS_COLORS = [
 
 const ColorWheelPicker = ({ value = [], onChange, maxSelections = 5 }) => {
     const [hoveredColor, setHoveredColor] = useState(null);
+    const [warningMessage, setWarningMessage] = useState('');
 
     // value format: [{ colorId: 'green', percentage: 60 }, ...]
     const selectedColors = Array.isArray(value) ? value : [];
@@ -33,19 +34,25 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 5 }) => {
             }).length === 1;
 
             if (isOnlyBase) {
+                setWarningMessage('❌ Vous devez conserver au moins une couleur de base (verte ou jaune)');
+                setTimeout(() => setWarningMessage(''), 3000);
                 return; // Ne pas retirer la dernière couleur de base
             }
 
             // Retirer la couleur
+            setWarningMessage('');
             onChange(selectedColors.filter(s => s.colorId !== color.id));
         } else {
             // Ajouter la couleur si sous limite
             if (selectedColors.length < maxSelections) {
                 // Si c'est la première couleur, elle doit être une couleur de base
                 if (selectedColors.length === 0 && !color.isBase) {
+                    setWarningMessage('⚠️ La première couleur doit être une couleur de base (verte ou jaune)');
+                    setTimeout(() => setWarningMessage(''), 3000);
                     return; // Première sélection doit être verte/jaune
                 }
 
+                setWarningMessage('');
                 const newPercentage = selectedColors.length === 0
                     ? 100
                     : Math.floor(100 / (selectedColors.length + 1));
@@ -88,6 +95,20 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 5 }) => {
 
     return (
         <div className="space-y-6">
+            {/* Message d'avertissement */}
+            <AnimatePresence>
+                {warningMessage && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="bg-yellow-500/20 border border-yellow-500/50 text-yellow-200 px-4 py-3 rounded-lg text-sm font-medium"
+                    >
+                        {warningMessage}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Roue de couleurs */}
             <div className="flex flex-col items-center">
                 <div className="relative">
