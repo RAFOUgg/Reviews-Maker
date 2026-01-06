@@ -30,10 +30,22 @@ import {
 const FieldRenderer = ({ field, value, onChange, allData = {}, configMode = false }) => {
     const { type, label, icon, tooltip, unit, min, max, step, options, defaultValue } = field
 
+    // Debug log
+    console.log(`🎯 FieldRenderer render:`, {
+        label,
+        type,
+        configMode,
+        hasDependency: !!field.dependsOn,
+        hasShowIf: !!field.showIf,
+        hasOptions: !!options,
+        optionsLength: options?.length
+    });
+
     // Vérifier dépendances (sauf en mode configuration)
     const dependencyNotMet = field.dependsOn && field.showIf && !field.showIf(allData);
 
     if (!configMode && dependencyNotMet) {
+        console.warn(`⚠️ FieldRenderer: Champ "${label}" masqué (dépendance non satisfaite)`);
         return null // Champ masqué car dépendance non satisfaite
     }
 
