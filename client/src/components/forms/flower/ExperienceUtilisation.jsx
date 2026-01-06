@@ -57,9 +57,9 @@ export default function ExperienceUtilisation({ data, onChange }) {
                 <select
                     value={data.methodeConsommation || ''}
                     onChange={(e) => onChange('methodeConsommation', e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-indigo-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-lg"
+                    className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-lg"
                 >
-                    <option value="">Sélectionner une méthode...</option>
+                    <option value="">à sélectionner une méthode...</option>
                     {EXPERIENCE_VALUES.methodeConsommation.map(m => (
                         <option key={m.value} value={m.value}>{m.label}</option>
                     ))}
@@ -81,12 +81,12 @@ export default function ExperienceUtilisation({ data, onChange }) {
                             value={data.dosageUtilise || ''}
                             onChange={(e) => onChange('dosageUtilise', e.target.value)}
                             placeholder="0.5"
-                            className="flex-1 px-4 py-3 border-2 rounded-xl focus:ring-2 focus: outline-none transition-all text-lg"
+                            className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-lg"
                         />
                         <select
                             value={data.dosageUnite || 'g'}
                             onChange={(e) => onChange('dosageUnite', e.target.value)}
-                            className="px-4 py-3 border-2 rounded-xl focus:ring-2 focus: outline-none transition-all"
+                            className="px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                         >
                             <option value="g">grammes (g)</option>
                             <option value="mg">milligrammes (mg)</option>
@@ -107,9 +107,9 @@ export default function ExperienceUtilisation({ data, onChange }) {
                             value={data.dureeEffetsHeures || ''}
                             onChange={(e) => onChange('dureeEffetsHeures', e.target.value)}
                             placeholder="2"
-                            className="flex-1 px-4 py-3 border-2 border-green-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-lg text-center"
+                            className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-lg text-center"
                         />
-                        <span className="flex items-center text-2xl font-bold text-gray-600">:</span>
+                        <span className="flex items-center text-2xl font-bold text-gray-600 dark:text-gray-400">:</span>
                         <input
                             type="number"
                             min="0"
@@ -117,9 +117,9 @@ export default function ExperienceUtilisation({ data, onChange }) {
                             value={data.dureeEffetsMinutes || ''}
                             onChange={(e) => onChange('dureeEffetsMinutes', e.target.value)}
                             placeholder="30"
-                            className="flex-1 px-4 py-3 border-2 border-green-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-lg text-center"
+                            className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-lg text-center"
                         />
-                        <span className="flex items-center text-sm text-gray-600 font-medium">HH:MM</span>
+                        <span className="flex items-center text-sm text-gray-600 dark:text-gray-400 font-medium">HH:MM</span>
                     </div>
                 </div>
             </div>
@@ -134,7 +134,7 @@ export default function ExperienceUtilisation({ data, onChange }) {
                     <select
                         value={data.debutEffets || ''}
                         onChange={(e) => onChange('debutEffets', e.target.value)}
-                        className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus: outline-none transition-all text-lg"
+                        className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-lg"
                     >
                         <option value="">Sélectionner...</option>
                         {EXPERIENCE_VALUES.debutEffets.map(d => (
@@ -151,7 +151,7 @@ export default function ExperienceUtilisation({ data, onChange }) {
                     <select
                         value={data.dureeEffetsCategorie || ''}
                         onChange={(e) => onChange('dureeEffetsCategorie', e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-orange-300 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all text-lg"
+                        className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all text-lg"
                     >
                         <option value="">Sélectionner...</option>
                         {EXPERIENCE_VALUES.dureeEffets.map(d => (
@@ -185,14 +185,14 @@ export default function ExperienceUtilisation({ data, onChange }) {
                 </div>
 
                 {/* Grille de sélection */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto p-4 bg-gray-800/30 dark:bg-gray-800/50 rounded-xl border-2 border-gray-600/50 dark:border-gray-700">
                     {profilsFiltres.map(profil => {
                         const isSelected = selectedProfils.includes(profil.value)
                         const bgColor = isSelected ? (
                             profil.type === 'positif' ? 'bg-green-600 text-white' :
-                                profil.type === 'neutre' ? ' text-white' :
+                                profil.type === 'neutre' ? 'bg-gray-600 text-white' :
                                     'bg-red-600 text-white'
-                        ) : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-indigo-400'
+                        ) : 'bg-gray-700/50 dark:bg-gray-800 border-2 border-gray-600 dark:border-gray-600 text-gray-200 dark:text-gray-300 hover:border-indigo-400'
 
                         return (
                             <button

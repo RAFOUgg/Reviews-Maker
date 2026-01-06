@@ -210,37 +210,6 @@ export default function CuringMaturationTimeline({ data, onChange }) {
                 </p>
             </div>
 
-            {/* Mode Selection: Phases prédéfinies vs Personnalisé */}
-            <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
-                <div className="flex gap-3">
-                    <button
-                        onClick={() => handleModeChange('phases')}
-                        className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${pipelineMode === 'phases'
-                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
-                            }`}
-                    >
-                        🏺 Phases prédéfinies
-                        <div className="text-xs mt-1 opacity-80">4 phases (Séchage → Affinage)</div>
-                    </button>
-                    <button
-                        onClick={() => handleModeChange('custom')}
-                        className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${pipelineMode === 'custom'
-                                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
-                            }`}
-                    >
-                        ⚙️ Personnalisé
-                        <div className="text-xs mt-1 opacity-80">Configuration libre</div>
-                    </button>
-                </div>
-                {pipelineMode === 'phases' && (
-                    <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 mt-3">
-                        ✨ Les 4 phases sont actives avec durées par défaut ajustables
-                    </div>
-                )}
-            </div>
-
             <PipelineDragDropView
                 type="curing"
                 sidebarContent={sidebarContent}

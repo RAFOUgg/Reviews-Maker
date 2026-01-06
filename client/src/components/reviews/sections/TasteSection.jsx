@@ -113,7 +113,7 @@ export default function TasteSection({ productType, data = {}, onChange }) {
                                 className={`p-3 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isSelected ? 'text-white shadow-lg transform scale-105' : isDisabled ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed opacity-50' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:shadow-md border border-gray-200 dark:border-gray-700'}`}
                                 style={isSelected ? { background: note.familyColor } : {}}
                             >
-                                <span>{note.familyIcon}</span>
+                                <span>{note.icon || note.familyIcon}</span>
                                 <span className="truncate">{note.name}</span>
                                 {isSelected && <Plus className="w-3 h-3 fill-current" />}
                             </button>
