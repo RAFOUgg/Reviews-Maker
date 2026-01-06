@@ -59,7 +59,14 @@ export default function VisuelTechnique({ formData, handleChange }) {
                                         <span className="text-lg">✨</span>
                                         Aperçu dynamique
                                     </h4>
-                                    <WeedPreview selectedColors={formData.selectedColors || []} />
+                                    <WeedPreview
+                                        selectedColors={formData.selectedColors || []}
+                                        densite={formData.densite || 5}
+                                        trichomes={formData.trichomes || 5}
+                                        manucure={formData.manucure || 5}
+                                        moisissure={formData.moisissure || 10}
+                                        graines={formData.graines || 10}
+                                    />
                                 </div>
                             </div>
                         )}
