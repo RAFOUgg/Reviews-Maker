@@ -68,14 +68,17 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 5 }) => {
                 : s
         );
 
-        // Auto-normalisation si total > 100%
+        // Forcer le total à 100% exactement
         const total = updated.reduce((sum, s) => sum + s.percentage, 0);
-        if (total > 100) {
+        if (total !== 100) {
             const factor = 100 / total;
-            onChange(updated.map(s => ({
+            const normalized = updated.map((s, index) => ({
                 ...s,
-                percentage: Math.round(s.percentage * factor)
-            })));
+                percentage: index === updated.length - 1
+                    ? 100 - updated.slice(0, -1).reduce((sum, item) => sum + Math.round(item.percentage * factor), 0)
+                    : Math.round(s.percentage * factor)
+            }));
+            onChange(normalized);
         } else {
             onChange(updated);
         }

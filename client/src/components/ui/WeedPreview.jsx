@@ -59,12 +59,13 @@ const WeedPreview = ({ selectedColors = [] }) => {
             : '#22C55E';
     }, [selectedColors]);
 
-    // Distribuer les couleurs aux bractées
+    // Distribuer les couleurs aux bractées de manière déterministe
     const bracteeColors = useMemo(() => {
         if (!hasColors || selectedColors.length === 0) {
             return Array(24).fill('#22C55E');
         }
 
+        // Créer un tableau de 24 bractées
         const colors = [];
         selectedColors.forEach(selected => {
             const colorData = CANNABIS_COLORS.find(c => c.id === selected.colorId);
@@ -74,9 +75,31 @@ const WeedPreview = ({ selectedColors = [] }) => {
             }
         });
 
-        // Mélanger aléatoirement pour distribution naturelle
-        return colors.sort(() => Math.random() - 0.5).slice(0, 24);
-    }, [selectedColors, hasColors]);
+        // S'assurer qu'on a exactement 24 couleurs
+        while (colors.length < 24) {
+            colors.push(baseColor);
+        }
+        if (colors.length > 24) {
+            colors.length = 24;
+        }
+
+        // Mélanger de manière déterministe basé sur les IDs des couleurs
+        const seed = selectedColors.map(s => s.colorId).join('');
+        let seedNum = 0;
+        for (let i = 0; i < seed.length; i++) {
+            seedNum += seed.charCodeAt(i);
+        }
+
+        // Fisher-Yates shuffle avec seed
+        const shuffled = [...colors];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            seedNum = (seedNum * 9301 + 49297) % 233280;
+            const j = Math.floor((seedNum / 233280) * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+
+        return shuffled;
+    }, [selectedColors, hasColors, baseColor]);
 
     return (
         <div className="relative">
