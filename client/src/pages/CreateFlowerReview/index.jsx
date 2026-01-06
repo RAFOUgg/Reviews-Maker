@@ -12,7 +12,7 @@ import InfosGenerales from './sections/InfosGenerales'
 import Genetiques from './sections/Genetiques'
 import CulturePipelineSection from './sections/CulturePipelineSection'
 import AnalyticsSection from '../../components/reviews/sections/AnalyticsSection'
-import VisualSection from '../../components/reviews/sections/VisualSection'
+import VisuelTechnique from './sections/VisuelTechnique'
 import OdorSection from '../../components/reviews/sections/OdorSection'
 import TextureSection from '../../components/reviews/sections/TextureSection'
 import TasteSection from '../../components/reviews/sections/TasteSection'
@@ -296,10 +296,9 @@ export default function CreateFlowerReview() {
                             />
                         )}
                         {currentSection === 4 && (
-                            <VisualSection
-                                productType="Fleur"
-                                data={formData.visual || {}}
-                                onChange={(visualData) => handleChange('visual', visualData)}
+                            <VisuelTechnique
+                                formData={formData}
+                                handleChange={handleChange}
                             />
                         )}
                         {currentSection === 5 && (
