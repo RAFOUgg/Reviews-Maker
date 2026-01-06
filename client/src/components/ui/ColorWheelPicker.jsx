@@ -136,7 +136,8 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 5 }) => {
                                     <motion.path
                                         d={pathData}
                                         fill={color.hex}
-                                        className="cursor-pointer transition-all"
+                                        stroke="none"
+                                        className="cursor-pointer transition-all outline-none"
                                         onMouseEnter={() => setHoveredColor(color)}
                                         onMouseLeave={() => setHoveredColor(null)}
                                         onClick={() => handleColorClick(color)}
@@ -146,7 +147,8 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 5 }) => {
                                             opacity: isSelected ? 1 : isHovered ? 0.9 : 0.7,
                                             filter: isSelected
                                                 ? 'drop-shadow(0 0 10px rgba(255,255,255,0.8)) brightness(1.1)'
-                                                : 'none'
+                                                : 'none',
+                                            outline: 'none'
                                         }}
                                     />
                                 </g>

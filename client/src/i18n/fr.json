@@ -202,8 +202,13 @@
             "title": "Texture",
             "dureté": "Dureté",
             "densité": "Densité tactile",
-            "élasticité": "Élasticité",
-            "collant": "Collant"
+            "friabilité": "Friabilité",
+            "collant": "Collant",
+            "hardness": "Dureté",
+            "density": "Densité tactile",
+            "friability": "Friabilité",
+            "friabilityDesc": "Capacité du produit à s'émietter ou se désagréger au toucher",
+            "stickiness": "Collant"
         },
         "gouts": {
             "title": "Goûts",

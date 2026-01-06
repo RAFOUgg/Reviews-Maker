@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 /**
  * Section 7: Texture
- * - 4 sliders (0-10): dureté, densité tactile, élasticité, collant
+ * - 4 sliders (0-10): dureté, densité tactile, friabilité, collant
  */
 export default function Texture({ data, onChange, errors = {} }) {
     const { t } = useTranslation()
@@ -26,10 +26,10 @@ export default function Texture({ data, onChange, errors = {} }) {
             icon: '🔬'
         },
         {
-            key: 'textureElasticity',
-            label: t('flower.texture.elasticity'),
-            description: t('flower.texture.elasticityDesc'),
-            icon: '🎯'
+            key: 'textureFriability',
+            label: t('flower.texture.friability'),
+            description: t('flower.texture.friabilityDesc'),
+            icon: '🌾'
         },
         {
             key: 'textureStickiness',
