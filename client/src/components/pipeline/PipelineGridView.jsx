@@ -68,9 +68,24 @@ const PipelineGridView = ({
 
     // Calculer l'intensité/densité de données d'une case (0-4)
     const getCellIntensity = (cellData) => {
-        if (!cellData || !cellData.contents || cellData.contents.length === 0) return 0;
+        if (!cellData) return 0;
 
-        const count = cellData.contents.length;
+        // Compter les données significatives (exclure timestamp, _meta)
+        let count = 0;
+
+        // Si ancien format avec contents
+        if (cellData.contents && Array.isArray(cellData.contents)) {
+            count = cellData.contents.length;
+        }
+        // Sinon, compter les propriétés non vides
+        else {
+            for (const key in cellData) {
+                if (key !== 'timestamp' && key !== '_meta' && cellData[key]) {
+                    count++;
+                }
+            }
+        }
+
         if (count === 0) return 0;
         if (count <= 2) return 1;
         if (count <= 4) return 2;
@@ -93,7 +108,10 @@ const PipelineGridView = ({
 
     // Mini-icônes résumées dans la case
     const getMiniIcons = (cellData) => {
-        if (!cellData || !cellData.contents) return [];
+        if (!cellData) return [];
+
+        // Nouveau format: cellData contient directement les données (temperature, humidity, etc.)
+        // Ancien format: cellData.contents = [{type, label, value}]
 
         const iconMap = {
             temperature: '🌡️',
@@ -102,21 +120,57 @@ const PipelineGridView = ({
             ventilation: '🌀',
             light: '💡',
             lightType: '💡',
+            lightHours: '💡',
             irrigation: '💧',
             irrigationType: '💧',
+            waterVolume: '💧',
             fertilizer: '🧪',
             fertilizerType: '🧪',
             training: '✂️',
             trainingMethod: '✂️',
+            trainingLST: '✂️',
+            trainingHST: '✂️',
             morphology: '📏',
             plantHeight: '📏',
+            plantVolume: '📊',
             harvest: '⚖️',
-            harvestDate: '📅'
+            harvestDate: '📅',
+            containerType: '📦',
+            packaging: '📦',
+            curingType: '🌡️',
+            notes: '📝',
+            ph: '⚗️',
+            ec: '⚡',
+            propagationMethod: '🌱',
+            substrateType: '🏔️',
+            substrateVolume: '🏔️',
+            potVolume: '🪴',
+            lightPower: '⚡',
+            lightDistance: '📏',
+            fertilizationFrequency: '🧪'
         };
 
-        return cellData.contents
-            .slice(0, 3) // Max 3 icônes
-            .map(c => iconMap[c.type] || '📍');
+        const icons = [];
+
+        // Si ancien format avec contents
+        if (cellData.contents && Array.isArray(cellData.contents)) {
+            cellData.contents.slice(0, 3).forEach(c => {
+                const icon = c.icon || iconMap[c.type] || iconMap[c.key] || '📍';
+                icons.push(icon);
+            });
+        }
+        // Sinon, scanner les propriétés
+        else {
+            for (const key in cellData) {
+                if (key === 'timestamp' || key === '_meta' || !cellData[key]) continue;
+                const icon = iconMap[key];
+                if (icon && icons.length < 3) {
+                    icons.push(icon);
+                }
+            }
+        }
+
+        return icons;
     };
 
     // Handler drag over
@@ -141,13 +195,53 @@ const PipelineGridView = ({
     // Tooltip content
     const getTooltipContent = (cellIndex, cellData) => {
         const label = getCellLabel(cellIndex);
-        const contents = cellData?.contents || [];
 
-        if (contents.length === 0) {
-            return `${label} - Aucune donnée`;
+        if (!cellData) {
+            return `${label} - Vide\nClic pour ajouter des données`;
         }
 
-        return `${label} - ${contents.length} donnée(s):\n${contents.map(c => c.label || c.type).join(', ')}`;
+        // Compter les données
+        let dataCount = 0;
+        const dataLabels = [];
+
+        // Si ancien format avec contents
+        if (cellData.contents && Array.isArray(cellData.contents)) {
+            dataCount = cellData.contents.length;
+            cellData.contents.slice(0, 5).forEach(c => {
+                dataLabels.push(c.label || c.type || c.key);
+            });
+        }
+        // Sinon, lister les propriétés
+        else {
+            for (const key in cellData) {
+                if (key !== 'timestamp' && key !== '_meta' && cellData[key]) {
+                    dataCount++;
+                    if (dataLabels.length < 5) {
+                        const labelMap = {
+                            temperature: 'Température',
+                            humidity: 'Humidité',
+                            co2: 'CO₂',
+                            ventilation: 'Ventilation',
+                            lightHours: 'Éclairage',
+                            containerType: 'Contenant',
+                            packaging: 'Emballage',
+                            notes: 'Notes',
+                            ph: 'pH',
+                            curingType: 'Type de curing'
+                        };
+                        dataLabels.push(labelMap[key] || key);
+                    }
+                }
+            }
+        }
+
+        if (dataCount === 0) {
+            return `${label} - Vide\nClic pour ajouter`;
+        }
+
+        const summary = dataLabels.join(', ');
+        const more = dataCount > 5 ? `... +${dataCount - 5}` : '';
+        return `${label} - ${dataCount} donnée(s)\n${summary}${more}\nClic pour voir le détail`;
     };
 
     // Layout de la grille selon le type d'intervalle
@@ -210,21 +304,28 @@ const PipelineGridView = ({
                                     {miniIcons.length > 0 && (
                                         <div className="flex gap-0.5 mt-1">
                                             {miniIcons.map((icon, idx) => (
-                                                <span key={idx} className="text-xs opacity-70">{icon}</span>
+                                                <span key={idx} className="text-xs opacity-90">{icon}</span>
                                             ))}
                                         </div>
                                     )}
                                 </div>
                             )}
 
-                            {/* Autres modes: mini-icônes seulement (si assez grand) */}
-                            {config.intervalType !== 'phases' && miniIcons.length > 0 && (
-                                <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                    <div className="text-[6px] flex gap-0.5">
-                                        {miniIcons.map((icon, idx) => (
-                                            <span key={idx}>{icon}</span>
-                                        ))}
-                                    </div>
+                            {/* Autres modes (jours/semaines): afficher mini-icônes toujours visibles si données présentes */}
+                            {config.intervalType !== 'phases' && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    {miniIcons.length > 0 ? (
+                                        <div className="flex flex-col gap-0.5 items-center justify-center">
+                                            {miniIcons.map((icon, idx) => (
+                                                <span key={idx} className="text-[8px] leading-none">{icon}</span>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <span className="text-[6px] text-gray-600 opacity-50">
+                                            {/* Indicateur vide au hover seulement */}
+                                            <span className="opacity-0 hover:opacity-100 transition-opacity">+</span>
+                                        </span>
+                                    )}
                                 </div>
                             )}
 
