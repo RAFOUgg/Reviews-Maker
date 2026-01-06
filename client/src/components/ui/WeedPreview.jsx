@@ -251,6 +251,26 @@ const WeedPreview = ({
         return curves;
     }, [visualEffects.pistilCount, visualEffects.pistilCurl, randomSeed]);
 
+    const bractVeins = useMemo(() => {
+        const random = createRandomGenerator(randomSeed + 331);
+        const count = 18 + Math.round(densite * 0.8);
+        const veins = [];
+        for (let i = 0; i < count; i++) {
+            const angle = random() * Math.PI * 2;
+            const radius = 26 + random() * 58;
+            const baseX = 120 + Math.cos(angle) * radius * 0.55;
+            const baseY = 120 + Math.sin(angle) * radius * 0.75;
+            const bend = (random() - 0.5) * 18;
+            const length = 8 + random() * 14;
+            const ctrlX = baseX + bend;
+            const ctrlY = baseY - length * (0.8 + random() * 0.4);
+            const tipX = baseX + bend * 0.35;
+            const tipY = baseY - length;
+            veins.push({ baseX, baseY, ctrlX, ctrlY, tipX, tipY, delay: 0.4 + i * 0.01 });
+        }
+        return veins;
+    }, [densite, randomSeed]);
+
     return (
         <div className="relative">
             {/* Titre */}
@@ -303,6 +323,11 @@ const WeedPreview = ({
                                 <stop key={`stop-${index}`} offset={stop.offset} stopColor={stop.color} stopOpacity={0.85 - index * 0.08} />
                             ))}
                         </radialGradient>
+
+                        <linearGradient id="veinStroke" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor={mixHexColors(baseColor, '#F8FAFC', 0.45)} stopOpacity="0.85" />
+                            <stop offset="100%" stopColor={mixHexColors(baseColor, '#0B1015', 0.35)} stopOpacity="0.6" />
+                        </linearGradient>
 
                         {/* Ombres portées */}
                         <filter id="budShadow" x="-50%" y="-50%" width="200%" height="200%">
@@ -567,8 +592,8 @@ const WeedPreview = ({
                         <motion.path
                             d="M 152 218 Q 158 227 160 236 Q 152 243 142 241 Q 134 243 129 235 Q 135 226 152 218 Z"
                             fill={bracteeColors[21]}
-                            stroke="#0F1419"
-                            strokeWidth="0.8"
+                            stroke={mixHexColors(baseColor, '#0B1015', 0.68)}
+                            strokeWidth={visualEffects.strokeWidth}
                             filter="url(#bracteeGlow)"
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
@@ -579,13 +604,32 @@ const WeedPreview = ({
                         <motion.path
                             d="M 116 238 Q 115 250 113 265 L 127 265 Q 125 250 124 238 Z"
                             fill={baseColor}
-                            stroke="#0F1419"
-                            strokeWidth="1.5"
+                            stroke={mixHexColors(baseColor, '#0B1015', 0.65)}
+                            strokeWidth={1.2 + (10 - manucure) * 0.08}
                             opacity="0.9"
                             initial={{ pathLength: 0 }}
                             animate={{ pathLength: 1 }}
                             transition={{ duration: 0.6, delay: 0.5 }}
                         />
+
+                        {/* Veines fines pour plus de naturel */}
+                        {bractVeins.length > 0 && (
+                            <g opacity="0.4">
+                                {bractVeins.map((vein, i) => (
+                                    <motion.path
+                                        key={`vein-${i}`}
+                                        d={`M ${vein.baseX} ${vein.baseY} Q ${vein.ctrlX} ${vein.ctrlY} ${vein.tipX} ${vein.tipY}`}
+                                        stroke="url(#veinStroke)"
+                                        strokeWidth={0.8 + visualEffects.roundness * 0.4}
+                                        strokeLinecap="round"
+                                        fill="none"
+                                        initial={{ pathLength: 0, opacity: 0 }}
+                                        animate={{ pathLength: 1, opacity: 1 }}
+                                        transition={{ duration: 0.5, delay: vein.delay }}
+                                    />
+                                ))}
+                            </g>
+                        )}
 
                         {/* Pistils orangés, plus dynamiques et liés au slider */}
                         {visualEffects.pistilCount > 0 && (
