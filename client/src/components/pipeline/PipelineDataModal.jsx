@@ -41,17 +41,19 @@ const PipelineDataModal = ({
         console.log('🟢 PipelineDataModal isOpen:', isOpen, 'droppedItem:', droppedItem, 'cellData:', cellData);
 
         // Charger les préréglages pour ce champ (si droppedItem)
-        if (droppedItem && droppedItem.content && droppedItem.content.key) {
-            const fieldKey = droppedItem.content.key;
-            const storedPresets = localStorage.getItem(`${pipelineType}_field_${fieldKey}_presets`);
-            if (storedPresets) {
-                try {
-                    setFieldPresets(JSON.parse(storedPresets));
-                } catch (e) {
+        if (droppedItem && droppedItem.content) {
+            const fieldKey = droppedItem.content.key || droppedItem.content.type;
+            if (fieldKey) {
+                const storedPresets = localStorage.getItem(`${pipelineType}_field_${fieldKey}_presets`);
+                if (storedPresets) {
+                    try {
+                        setFieldPresets(JSON.parse(storedPresets));
+                    } catch (e) {
+                        setFieldPresets([]);
+                    }
+                } else {
                     setFieldPresets([]);
                 }
-            } else {
-                setFieldPresets([]);
             }
         }
     }, [cellData, timestamp, droppedItem, pipelineType]);
@@ -75,9 +77,18 @@ const PipelineDataModal = ({
             // Afficher uniquement l'item droppé
             return [{ ...droppedItem.content, sectionLabel: '' }];
         } else {
-            // Afficher tous les items qui ont des données
+            // Afficher tous les items qui ont des données dans formData
             const allItems = getAllItems();
-            return allItems.filter(item => formData[item.key] !== undefined);
+            console.log('🔍 getItemsToDisplay - allItems:', allItems.length, 'formData:', formData);
+
+            return allItems.filter(item => {
+                const itemKey = item.key || item.type;
+                const hasData = formData[itemKey] !== undefined && formData[itemKey] !== null && formData[itemKey] !== '';
+                if (hasData) {
+                    console.log(`✅ Item "${item.label}" (key: ${itemKey}) has data:`, formData[itemKey]);
+                }
+                return hasData;
+            });
         }
     };
 
@@ -99,34 +110,37 @@ const PipelineDataModal = ({
         onClose();
     };
 
-    const FieldWrapper = ({ item, children }) => (
-        <div className="relative">
-            {children}
-            <button
-                type="button"
-                title="Supprimer ce champ"
-                onClick={() => {
-                    if (!item || !item.key) return;
-                    setConfirmState({
-                        open: true,
-                        title: 'Effacer le champ',
-                        message: 'Effacer ce champ de la cellule ?',
-                        onConfirm: () => {
-                            if (onFieldDelete) {
-                                onFieldDelete(timestamp, item.key);
-                            } else {
-                                handleChange(item.key, null);
+    const FieldWrapper = ({ item, children }) => {
+        const itemKey = item.key || item.type;
+        return (
+            <div className="relative">
+                {children}
+                <button
+                    type="button"
+                    title="Supprimer ce champ"
+                    onClick={() => {
+                        if (!item || !itemKey) return;
+                        setConfirmState({
+                            open: true,
+                            title: 'Effacer le champ',
+                            message: 'Effacer ce champ de la cellule ?',
+                            onConfirm: () => {
+                                if (onFieldDelete) {
+                                    onFieldDelete(timestamp, itemKey);
+                                } else {
+                                    handleChange(itemKey, null);
+                                }
+                                setConfirmState(prev => ({ ...prev, open: false }));
                             }
-                            setConfirmState(prev => ({ ...prev, open: false }));
-                        }
-                    });
-                }}
-                className="absolute top-1 right-1 text-red-600 hover:text-red-700 p-1 rounded"
-            >
-                ✖
-            </button>
-        </div>
-    );
+                        });
+                    }}
+                    className="absolute top-1 right-1 text-red-600 hover:text-red-700 p-1 rounded"
+                >
+                    ✖
+                </button>
+            </div>
+        );
+    };
 
     // Sauvegarder un nouveau préréglage
     const handleSavePreset = () => {
@@ -135,12 +149,17 @@ const PipelineDataModal = ({
             return;
         }
 
-        if (!droppedItem || !droppedItem.content || !droppedItem.content.key) {
+        if (!droppedItem || !droppedItem.content) {
             alert('Impossible de sauvegarder un préréglage sans champ défini');
             return;
         }
 
-        const fieldKey = droppedItem.content.key;
+        const fieldKey = droppedItem.content.key || droppedItem.content.type;
+        if (!fieldKey) {
+            alert('Impossible de déterminer la clé du champ');
+            return;
+        }
+        
         const fieldValue = formData[fieldKey];
 
         if (!fieldValue && fieldValue !== 0 && fieldValue !== false) {
@@ -177,7 +196,9 @@ const PipelineDataModal = ({
     const handleDeletePreset = (presetId) => {
         if (!droppedItem || !droppedItem.content) return;
 
-        const fieldKey = droppedItem.content.key;
+        const fieldKey = droppedItem.content.key || droppedItem.content.type;
+        if (!fieldKey) return;
+        
         const updatedPresets = fieldPresets.filter(p => p.id !== presetId);
         setFieldPresets(updatedPresets);
         localStorage.setItem(`${pipelineType}_field_${fieldKey}_presets`, JSON.stringify(updatedPresets));
@@ -185,10 +206,13 @@ const PipelineDataModal = ({
 
     // Rendu du champ selon le type
     const renderField = (item) => {
-        if (!item || !item.key) return null;
+        if (!item) return null;
 
-        const value = formData[item.key] || '';
-        const { key, label, icon, type = 'text' } = item;
+        const itemKey = item.key || item.type;
+        const value = formData[itemKey] || '';
+        const { label, icon, type = 'text' } = item;
+
+        console.log(`🎨 Rendering field "${label}" (key: ${itemKey}, type: ${type}), value:`, value);
 
         // SELECT avec options (options peuvent être des strings ou des objets {value,label})
         if (type === 'select') {
@@ -200,7 +224,7 @@ const PipelineDataModal = ({
                 );
             }
             return (
-                <FieldWrapper item={item} key={key}>
+                <FieldWrapper item={item} key={itemKey}>
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
                             {icon && <span className="mr-2">{icon}</span>}
@@ -208,7 +232,7 @@ const PipelineDataModal = ({
                         </label>
                         <select
                             value={value}
-                            onChange={(e) => handleChange(key, e.target.value)}
+                            onChange={(e) => handleChange(itemKey, e.target.value)}
                             className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
                             required={droppedItem !== null}
                         >
@@ -216,7 +240,7 @@ const PipelineDataModal = ({
                             {item.options.map((opt, idx) => {
                                 const val = typeof opt === 'string' ? opt : (opt.value ?? opt);
                                 const labelOpt = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
-                                return <option key={`${key}-${idx}-${val}`} value={val}>{labelOpt}</option>;
+                                return <option key={`${itemKey}-${idx}-${val}`} value={val}>{labelOpt}</option>;
                             })}
                         </select>
                     </div>
@@ -233,9 +257,9 @@ const PipelineDataModal = ({
                     </div>
                 );
             }
-            const selected = Array.isArray(formData[key]) ? formData[key] : [];
+            const selected = Array.isArray(formData[itemKey]) ? formData[itemKey] : [];
             return (
-                <FieldWrapper item={item} key={key}>
+                <FieldWrapper item={item} key={itemKey}>
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
                             {icon && <span className="mr-2">{icon}</span>}
@@ -247,13 +271,13 @@ const PipelineDataModal = ({
                                 const lab = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
                                 const checked = selected.includes(val);
                                 return (
-                                    <label key={`${key}-ms-${idx}`} className="flex items-center gap-2 p-2 border rounded-lg">
+                                    <label key={`${itemKey}-ms-${idx}`} className="flex items-center gap-2 p-2 border rounded-lg">
                                         <input
                                             type="checkbox"
                                             checked={checked}
                                             onChange={(e) => {
                                                 const next = e.target.checked ? [...selected, val] : selected.filter(s => s !== val);
-                                                handleChange(key, next);
+                                                handleChange(itemKey, next);
                                             }}
                                             className="w-4 h-4"
                                         />
@@ -266,7 +290,7 @@ const PipelineDataModal = ({
                                                     const percent = e.target.value === '' ? '' : parseFloat(e.target.value);
                                                     const pctObj = { ...item._percentages, [val]: percent };
                                                     // store companion percentages into formData under a dedicated key
-                                                    handleChange(`${key}__percentages`, pctObj);
+                                                    handleChange(`${itemKey}__percentages`, pctObj);
                                                 }}
                                                 placeholder="%"
                                                 className="ml-auto w-20 px-2 py-1 border rounded text-sm"
@@ -286,7 +310,7 @@ const PipelineDataModal = ({
         // DATE
         if (type === 'date') {
             return (
-                <FieldWrapper item={item} key={key}>
+                <FieldWrapper item={item} key={itemKey}>
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
                             {icon && <span className="mr-2">{icon}</span>}
@@ -295,7 +319,7 @@ const PipelineDataModal = ({
                         <input
                             type="date"
                             value={value || ''}
-                            onChange={(e) => handleChange(key, e.target.value)}
+                            onChange={(e) => handleChange(itemKey, e.target.value)}
                             className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
                             required={droppedItem !== null}
                         />
@@ -307,7 +331,7 @@ const PipelineDataModal = ({
         // NUMBER
         if (type === 'number') {
             return (
-                <FieldWrapper item={item} key={key}>
+                <FieldWrapper item={item} key={itemKey}>
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
                             {icon && <span className="mr-2">{icon}</span>}
@@ -318,7 +342,7 @@ const PipelineDataModal = ({
                             value={value || ''}
                             onChange={(e) => {
                                 const val = e.target.value === '' ? '' : parseFloat(e.target.value);
-                                handleChange(key, val);
+                                handleChange(itemKey, val);
                             }}
                             step={item.step || '0.1'}
                             min={item.min}
@@ -335,12 +359,12 @@ const PipelineDataModal = ({
         // CHECKBOX
         if (type === 'checkbox') {
             return (
-                <FieldWrapper item={item} key={key}>
+                <FieldWrapper item={item} key={itemKey}>
                     <div className="flex items-center gap-3">
                         <input
                             type="checkbox"
                             checked={Boolean(value)}
-                            onChange={(e) => handleChange(key, e.target.checked)}
+                            onChange={(e) => handleChange(itemKey, e.target.checked)}
                             className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 focus:ring-2 focus:"
                         />
                         <label className="text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -356,7 +380,7 @@ const PipelineDataModal = ({
         if (type === 'textarea') {
             const textValue = String(value || '');
             return (
-                <FieldWrapper item={item} key={key}>
+                <FieldWrapper item={item} key={itemKey}>
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
                             {icon && <span className="mr-2">{icon}</span>}
@@ -364,7 +388,7 @@ const PipelineDataModal = ({
                         </label>
                         <textarea
                             value={textValue}
-                            onChange={(e) => handleChange(key, e.target.value)}
+                            onChange={(e) => handleChange(itemKey, e.target.value)}
                             rows={3}
                             maxLength={item.maxLength || 500}
                             className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus: resize-none"
@@ -382,7 +406,7 @@ const PipelineDataModal = ({
 
         // TEXT par défaut
         return (
-            <FieldWrapper item={item} key={key}>
+            <FieldWrapper item={item} key={itemKey}>
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
                         {icon && <span className="mr-2">{icon}</span>}
@@ -391,7 +415,7 @@ const PipelineDataModal = ({
                     <input
                         type="text"
                         value={value || ''}
-                        onChange={(e) => handleChange(key, e.target.value)}
+                        onChange={(e) => handleChange(itemKey, e.target.value)}
                         className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
                         placeholder={item.placeholder || ''}
                         required={droppedItem !== null}
@@ -505,12 +529,13 @@ const PipelineDataModal = ({
                                         </div>
                                         {itemsToDisplay.map((item, idx) => {
                                             const rendered = renderField(item);
+                                            const itemKey = item?.key || item?.type;
                                             if (!rendered) {
                                                 return <div key={idx} className="p-3 bg-yellow-900/30 border border-yellow-600 text-yellow-200 text-xs rounded">
-                                                    ⚠️ Item {idx} ({item?.key}) n'a pas d'input compatible (type={item?.type})
+                                                    ⚠️ Item {idx} ({itemKey}) n'a pas d'input compatible (type={item?.type})
                                                 </div>;
                                             }
-                                            return <div key={item?.key || idx}>{rendered}</div>;
+                                            return <div key={itemKey || idx}>{rendered}</div>;
                                         })}
                                     </>
                                 )}
