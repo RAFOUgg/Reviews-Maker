@@ -172,6 +172,7 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
                                                         value={values[itemKey]}
                                                         onChange={(newValue) => setValues(v => ({ ...v, [itemKey]: newValue }))}
                                                         allData={values}
+                                                        configMode={true}
                                                     />
                                                 </div>
                                             );

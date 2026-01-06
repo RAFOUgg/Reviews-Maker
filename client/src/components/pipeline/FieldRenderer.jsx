@@ -25,12 +25,15 @@ import {
  * @param {*} value - Valeur actuelle
  * @param {Function} onChange - Callback onChange(newValue)
  * @param {Object} allData - Toutes les données (pour champs computed/dependsOn)
+ * @param {Boolean} configMode - Si true, ignore les dépendances showIf (pour modal de config)
  */
-const FieldRenderer = ({ field, value, onChange, allData = {} }) => {
+const FieldRenderer = ({ field, value, onChange, allData = {}, configMode = false }) => {
     const { type, label, icon, tooltip, unit, min, max, step, options, defaultValue } = field
 
-    // Vérifier dépendances
-    if (field.dependsOn && field.showIf && !field.showIf(allData)) {
+    // Vérifier dépendances (sauf en mode configuration)
+    const dependencyNotMet = field.dependsOn && field.showIf && !field.showIf(allData);
+
+    if (!configMode && dependencyNotMet) {
         return null // Champ masqué car dépendance non satisfaite
     }
 
