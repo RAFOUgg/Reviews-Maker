@@ -149,6 +149,23 @@ const FieldRenderer = ({ field, value, onChange, allData = {}, configMode = fals
     // SELECT
     // ============================================================================
     if (type === 'select') {
+        console.log(`📋 Rendering SELECT for "${label}":`, {
+            hasOptions: !!options,
+            optionsIsArray: Array.isArray(options),
+            optionsLength: options?.length,
+            firstOption: options?.[0],
+            allOptions: options
+        });
+
+        if (!options || !Array.isArray(options)) {
+            console.error(`❌ SELECT "${label}": options invalide !`, options);
+            return (
+                <div className="text-red-500 text-xs">
+                    Erreur: options manquantes pour "{label}"
+                </div>
+            );
+        }
+
         return (
             <div>
                 <label className="block text-xs font-medium text-gray-300 mb-1 flex items-center gap-1">
