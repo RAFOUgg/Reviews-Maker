@@ -3,12 +3,37 @@ import { useState as useModalState } from 'react';
 import FieldRenderer from './FieldRenderer';
 
 function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, onApply, selectedCells }) {
-    const [activeTab, setActiveTab] = useModalState('data');
-    const [values, setValues] = useModalState({});
-    const [confirmState, setConfirmState] = useModalState({ open: false, title: '', message: '', onConfirm: null });
-    if (!isOpen || !droppedContent) return null;
+    // Initialiser values avec defaultValue des items
+    const initValues = () => {
+        const defaults = {};
+        if (droppedContent) {
+            let items = [];
+            if (droppedContent.type === 'multi' && Array.isArray(droppedContent.items)) {
+                items = droppedContent.items.filter(Boolean);
+            } else if (droppedContent.type === 'grouped' && droppedContent.group && Array.isArray(droppedContent.group.fields)) {
+                items = droppedContent.group.fields.filter(Boolean).map(f => ({ ...f }));
+            } else if (droppedContent.content) {
+                items = [droppedContent.content];
+            }
+            items.forEach(item => {
+                const key = item.key || item.id;
+                if (key && item.defaultValue !== undefined) {
+                    defaults[key] = item.defaultValue;
+                }
+            });
+        }
+        return defaults;
+    };
 
-    console.log('🔧 MultiAssignModal - droppedContent:', droppedContent);
+    const [activeTab, setActiveTab] = useModalState('data');
+    const [values, setValues] = useModalState(initValues);
+    const [confirmState, setConfirmState] = useModalState({ open: false, title: '', message: '', onConfirm: null });
+    if (!isOpen || !droppedContent) {
+        console.log('❌ MultiAssignModal - Ne s\'affiche pas:', { isOpen, droppedContent });
+        return null;
+    }
+
+    console.log('✅ MultiAssignModal - Affichage:', { isOpen, droppedContent });
 
     // Regroupement par section
     let items = [];
@@ -21,15 +46,34 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
     }
 
     console.log('🔧 MultiAssignModal - items extracted:', items.length, items);
+
+    // Normaliser id/key pour compatibilité (Culture utilise 'id', Curing utilise 'key')
+    items = items.map(item => ({
+        ...item,
+        key: item.key || item.id,
+        id: item.id || item.key
+    }));
+
     // Regroup by section
     const sectionMap = {};
     sidebarSections.forEach(section => {
         sectionMap[section.id] = [];
     });
     items.forEach(item => {
-        const section = sidebarSections.find(sec => Array.isArray(sec.items) && sec.items.some(i => i.key === item.key));
-        if (section) sectionMap[section.id].push(item);
+        const itemKey = item.key || item.id;
+        const section = sidebarSections.find(sec =>
+            Array.isArray(sec.items) && sec.items.some(i => (i.key || i.id) === itemKey)
+        );
+        if (section) {
+            sectionMap[section.id].push(item);
+        }
     });
+
+    // Debug: compter items par section
+    const itemsToDisplay = Object.values(sectionMap).flat().length;
+    console.log('🔧 MultiAssignModal - Items à afficher:', itemsToDisplay, 'par sections:',
+        Object.entries(sectionMap).map(([id, items]) => `${id}: ${items.length}`).join(', '));
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
             <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 min-w-[400px] max-w-[95vw] max-h-[90vh] border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
@@ -673,14 +717,14 @@ const PipelineDragDropView = ({
             // 3️⃣ SINGLE FIELD : Ouvrir modale pour saisie
             // (Même comportement que grouped/multi pour cohérence UX)
             console.log('✅ handleDrop: Single field - ouverture modale de saisie');
-            
+
             // Convertir single field en format compatible MultiAssignModal
             const singleFieldContent = {
                 type: 'single',
                 content: draggedContent,
                 items: [draggedContent]
             };
-            
+
             setMultiAssignContent(singleFieldContent);
             setCurrentCellTimestamp(timestamp);
             setShowMultiAssignModal(true);
