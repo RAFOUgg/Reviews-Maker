@@ -6,6 +6,7 @@ import {
     INVERTED_LABELS,
     TRANSPARENCY_LEVELS
 } from '../../../data/visualOptions';
+import WhiteSlider from '../../ui/WhiteSlider';
 
 /**
  * Section Visuel & Technique
@@ -171,94 +172,72 @@ export default function VisualSection({ productType, data, onChange }) {
 
             {/* Transparence (Hash/Concentrés uniquement) */}
             {isHashOrConcentrate && (
-                <div className="space-y-3 p-4 bg-white/5 rounded-xl border border-white/10">
-                    <div className="flex items-center justify-between">
-                        <label className="text-sm font-semibold text-gray-200">Transparence</label>
-                        <span className="text-lg font-bold text-cyan-400">{transparency}/10</span>
-                    </div>
-                    <input
-                        type="range"
-                        min="1"
-                        max="10"
+                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
+                    <WhiteSlider
+                        label="Transparence"
+                        min={1}
+                        max={10}
                         value={transparency}
-                        onChange={(e) => setTransparency(parseInt(e.target.value))}
-                        className="w-full h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider-cyan"
+                        onChange={(val) => setTransparency(val)}
+                        unit="/10"
+                        helperText={TRANSPARENCY_LEVELS[transparency - 1]?.example}
                     />
-                    <p className="text-xs text-gray-400 italic">
-                        {TRANSPARENCY_LEVELS[transparency - 1]?.example}
-                    </p>
                 </div>
             )}
 
             {/* Sliders de qualité */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Densité */}
-                <div className="space-y-3 p-4 bg-white/5 rounded-xl border border-white/10">
-                    <div className="flex items-center justify-between">
-                        <label className="text-sm font-semibold text-gray-200">Densité</label>
-                        <span className="text-lg font-bold text-purple-400">{density}/10</span>
-                    </div>
-                    <input
-                        type="range"
-                        min="1"
-                        max="10"
+                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
+                    <WhiteSlider
+                        label="Densité"
+                        min={1}
+                        max={10}
                         value={density}
-                        onChange={(e) => setDensity(parseInt(e.target.value))}
-                        className="w-full h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider-purple"
+                        onChange={(val) => setDensity(val)}
+                        unit="/10"
                     />
                 </div>
 
                 {/* Trichomes (Fleurs uniquement) */}
                 {productType === 'Fleur' && (
-                    <div className="space-y-3 p-4 bg-white/5 rounded-xl border border-white/10">
-                        <div className="flex items-center justify-between">
-                            <label className="text-sm font-semibold text-gray-200">Trichomes</label>
-                            <span className="text-lg font-bold text-green-400">{trichomes}/10</span>
-                        </div>
-                        <input
-                            type="range"
-                            min="1"
-                            max="10"
+                    <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
+                        <WhiteSlider
+                            label="Trichomes"
+                            min={1}
+                            max={10}
                             value={trichomes}
-                            onChange={(e) => setTrichomes(parseInt(e.target.value))}
-                            className="w-full h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-lg appearance-none cursor-pointer slider-green"
+                            onChange={(val) => setTrichomes(val)}
+                            unit="/10"
+                            helperText="Quantité et qualité des cristaux"
                         />
-                        <p className="text-xs text-gray-400">Quantité et qualité des cristaux</p>
                     </div>
                 )}
 
                 {/* Moisissures (inversé) */}
-                <div className="space-y-3 p-4 bg-white/5 rounded-xl border border-white/10">
-                    <div className="flex items-center justify-between">
-                        <label className="text-sm font-semibold text-gray-200">Moisissures</label>
-                        <span className="text-lg font-bold text-orange-400">{mold}/10</span>
-                    </div>
-                    <input
-                        type="range"
-                        min="1"
-                        max="10"
+                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
+                    <WhiteSlider
+                        label="Moisissures (10 = aucune)"
+                        min={1}
+                        max={10}
                         value={mold}
-                        onChange={(e) => setMold(parseInt(e.target.value))}
-                        className="w-full h-2 bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 rounded-lg appearance-none cursor-pointer slider-orange"
+                        onChange={(val) => setMold(val)}
+                        unit="/10"
+                        helperText="10 = aucune moisissure"
                     />
-                    <p className="text-xs text-gray-400">10 = aucune moisissure</p>
                 </div>
 
                 {/* Graines (inversé) */}
-                <div className="space-y-3 p-4 bg-white/5 rounded-xl border border-white/10">
-                    <div className="flex items-center justify-between">
-                        <label className="text-sm font-semibold text-gray-200">Graines</label>
-                        <span className="text-lg font-bold text-orange-400">{seeds}/10</span>
-                    </div>
-                    <input
-                        type="range"
-                        min="1"
-                        max="10"
+                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
+                    <WhiteSlider
+                        label="Graines (10 = aucune)"
+                        min={1}
+                        max={10}
                         value={seeds}
-                        onChange={(e) => setSeeds(parseInt(e.target.value))}
-                        className="w-full h-2 bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 rounded-lg appearance-none cursor-pointer slider-orange"
+                        onChange={(val) => setSeeds(val)}
+                        unit="/10"
+                        helperText="10 = aucune graine"
                     />
-                    <p className="text-xs text-gray-400">10 = aucune graine</p>
                 </div>
             </div>
 

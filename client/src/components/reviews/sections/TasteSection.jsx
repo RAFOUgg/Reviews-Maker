@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TASTE_FAMILIES, getAllTasteNotes, TASTE_INTENSITY_LEVELS, AGGRESSIVENESS_LEVELS } from '../../../data/tasteNotes';
 import { Coffee, Sparkles, ArrowDown, ArrowUp, Wind, Plus, X } from 'lucide-react';
-import { LiquidSlider } from '../../../components/liquid';
+import WhiteSlider from '../../ui/WhiteSlider';
 
 /**
  * Section Goûts pour Hash/Concentrés/Fleurs
@@ -69,7 +69,7 @@ export default function TasteSection({ productType, data = {}, onChange }) {
                         {icon}
                         {title}
                     </label>
-                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${notes.length >= maxCount ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' :`}bg-${color}-100 dark:bg-${color}-900/30 text-${color}-600 dark:text-${color}-400`
+                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${notes.length >= maxCount ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : `}bg-${color}-100 dark:bg-${color}-900/30 text-${color}-600 dark:text-${color}-400`
                         }`}>
                         {notes.length}/{maxCount}
                     </span>
@@ -90,7 +90,7 @@ export default function TasteSection({ productType, data = {}, onChange }) {
                                         backgroundImage: `linear-gradient(to bottom right, ${note.familyColor}, ${note.familyColor}dd)`
                                     }}
                                 >
-                                    <span>{note.familyIcon}</span>
+                                    <span>{note.icon || note.familyIcon}</span>
                                     <span>{note.name}</span>
                                     <X className="w-3 h-3" />
                                 </button>
@@ -110,7 +110,7 @@ export default function TasteSection({ productType, data = {}, onChange }) {
                                 key={note.id}
                                 onClick={() => !isDisabled && toggleNote(note.id)}
                                 disabled={isDisabled}
-                                className={`p-3 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isSelected ? 'text-white shadow-lg transform scale-105' : isDisabled ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed opacity-50' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:shadow-md border border-gray-200 dark:border-gray-700' }`}
+                                className={`p-3 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isSelected ? 'text-white shadow-lg transform scale-105' : isDisabled ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed opacity-50' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:shadow-md border border-gray-200 dark:border-gray-700'}`}
                                 style={isSelected ? { background: note.familyColor } : {}}
                             >
                                 <span>{note.familyIcon}</span>
@@ -140,29 +140,27 @@ export default function TasteSection({ productType, data = {}, onChange }) {
 
             {/* Intensité et Agressivité */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 bg-gradient-to-br dark:/20 dark:/20 rounded-xl">
-                    <LiquidSlider
+                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
+                    <WhiteSlider
                         label="Intensité gustative"
                         min={1}
                         max={10}
                         value={intensity}
                         onChange={setIntensity}
-                        color="cyan"
-                        showValue
                         unit="/10"
+                        helperText={TASTE_INTENSITY_LEVELS[intensity - 1]?.label}
                     />
                 </div>
 
-                <div className="p-4 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl">
-                    <LiquidSlider
+                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
+                    <WhiteSlider
                         label="Agressivité / Piquant"
                         min={1}
                         max={10}
                         value={aggressiveness}
                         onChange={setAggressiveness}
-                        color="orange"
-                        showValue
                         unit="/10"
+                        helperText={AGGRESSIVENESS_LEVELS[aggressiveness - 1]?.label}
                     />
                 </div>
             </div>
@@ -176,7 +174,7 @@ export default function TasteSection({ productType, data = {}, onChange }) {
                 <div className="flex flex-wrap gap-2">
                     <button
                         onClick={() => setSelectedFamily(null)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedFamily === null ? 'bg-gradient-to-br text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedFamily === null ? 'bg-gradient-to-br text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                     >
                         Toutes
                     </button>
@@ -184,7 +182,7 @@ export default function TasteSection({ productType, data = {}, onChange }) {
                         <button
                             key={family.id}
                             onClick={() => setSelectedFamily(family.id)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${selectedFamily === family.id ? 'text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${selectedFamily === family.id ? 'text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                             style={selectedFamily === family.id ? { background: family.color } : {}}
                         >
                             <span>{family.icon}</span>

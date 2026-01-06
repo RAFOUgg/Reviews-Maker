@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { EFFECTS_CATEGORIES, getAllEffects, getEffectsByFilter, ONSET_LEVELS, INTENSITY_LEVELS, DURATION_OPTIONS } from '../../../data/effectsCategories';
 import { Zap, Sparkles, Clock, Filter, Plus, X } from 'lucide-react';
-import { LiquidSlider } from '../../../components/liquid';
+import WhiteSlider from '../../ui/WhiteSlider';
 
 /**
  * Section Effets Ressentis pour Hash/Concentrés/Fleurs
@@ -73,29 +73,27 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
 
             {/* Montée, Intensité, Durée */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 bg-gradient-to-br dark:/20 dark:/20 rounded-xl">
-                    <LiquidSlider
+                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
+                    <WhiteSlider
                         label="Montée (rapidité)"
                         min={1}
                         max={10}
                         value={onset}
                         onChange={setOnset}
-                        color="cyan"
-                        showValue
                         unit="/10"
+                        helperText={ONSET_LEVELS[onset - 1]?.label}
                     />
                 </div>
 
-                <div className="p-4 bg-gradient-to-br dark:/20 dark:/20 rounded-xl">
-                    <LiquidSlider
+                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
+                    <WhiteSlider
                         label="Intensité"
                         min={1}
                         max={10}
                         value={intensity}
                         onChange={setIntensity}
-                        color="purple"
-                        showValue
                         unit="/10"
+                        helperText={INTENSITY_LEVELS[intensity - 1]?.label}
                     />
                 </div>
             </div>
@@ -111,7 +109,7 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                         <button
                             key={option.id}
                             onClick={() => setDuration(option.id)}
-                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${duration === option.id ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${duration === option.id ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                         >
                             {option.label}
                         </button>
@@ -130,7 +128,7 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                 <div className="flex flex-wrap gap-2">
                     <button
                         onClick={() => setCategoryFilter(null)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${categoryFilter === null ? 'bg-gradient-to-br text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${categoryFilter === null ? 'bg-gradient-to-br text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                     >
                         Toutes catégories
                     </button>
@@ -138,7 +136,7 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                         <button
                             key={category.id}
                             onClick={() => setCategoryFilter(category.id)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${categoryFilter === category.id ? 'text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${categoryFilter === category.id ? 'text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                             style={categoryFilter === category.id ? { background: category.color } : {}}
                         >
                             <span>{category.icon}</span>
@@ -151,25 +149,25 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                 <div className="flex flex-wrap gap-2">
                     <button
                         onClick={() => setSentimentFilter(null)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === null ? 'bg-gradient-to-br text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === null ? 'bg-gradient-to-br text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                     >
                         Tous
                     </button>
                     <button
                         onClick={() => setSentimentFilter('positive')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === 'positive' ? 'bg-green-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === 'positive' ? 'bg-green-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                     >
                         ✅ Positifs
                     </button>
                     <button
                         onClick={() => setSentimentFilter('negative')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === 'negative' ? 'bg-red-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === 'negative' ? 'bg-red-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                     >
                         ⚠️ Négatifs
                     </button>
                     <button
                         onClick={() => setSentimentFilter('neutral')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === 'neutral' ? ' text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === 'neutral' ? ' text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                     >
                         ⚕️ Thérapeutiques
                     </button>
@@ -183,7 +181,7 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                         <Sparkles className="w-4 h-4" />
                         Effets sélectionnés
                     </label>
-                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${selectedEffects.length >= 8 ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : ' dark: dark:' }`}>
+                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${selectedEffects.length >= 8 ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : ' dark: dark:'}`}>
                         {selectedEffects.length}/8
                     </span>
                 </div>
@@ -226,7 +224,7 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
                                 key={effect.id}
                                 onClick={() => !isDisabled && toggleEffect(effect.id)}
                                 disabled={isDisabled}
-                                className={`p-3 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isSelected ?`}bg-gradient-to-br ${badgeColor} text-white shadow-lg transform scale-105`
+                                className={`p-3 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isSelected ? `}bg-gradient-to-br ${badgeColor} text-white shadow-lg transform scale-105`
                                     : isDisabled
                                         ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
                                         : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:shadow-md border border-gray-200 dark:border-gray-700'

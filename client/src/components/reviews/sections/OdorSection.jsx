@@ -27,7 +27,7 @@ export default function OdorSection({ productType, data = {}, onChange }) {
     }, [dominantNotes, secondaryNotes, intensity, complexity, fidelity]);
 
     return (
-        <div className="space-y-8 p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50">
+        <div className="space-y-8 p-6 bg-gray-900/90 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-700/50">
 
             {/* En-tête */}
             <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-700">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Hand, Sparkles } from 'lucide-react';
-import { LiquidSlider } from '../../../components/liquid';
+import WhiteSlider from '../../ui/WhiteSlider';
 
 /**
  * Niveaux de qualité pour les sliders de texture
@@ -121,105 +121,98 @@ export default function TextureSection({ productType, data = {}, onChange }) {
 
             {/* Champs communs (tous types) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 bg-gradient-to-br dark:/20 dark:/20 rounded-xl">
-                    <LiquidSlider
+                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
+                    <WhiteSlider
                         label="Dureté"
                         min={1}
                         max={10}
                         value={hardness}
                         onChange={setHardness}
-                        color="cyan"
-                        showValue
                         unit="/10"
+                        helperText={TEXTURE_LABELS.hardness[hardness]}
                     />
                 </div>
 
-                <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl">
-                    <LiquidSlider
+                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
+                    <WhiteSlider
                         label="Densité tactile"
                         min={1}
                         max={10}
                         value={density}
                         onChange={setDensity}
-                        color="green"
-                        showValue
                         unit="/10"
+                        helperText={TEXTURE_LABELS.density[density]}
                     />
                 </div>
 
-                <div className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-xl">
-                    <LiquidSlider
+                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
+                    <WhiteSlider
                         label="Collant"
                         min={1}
                         max={10}
                         value={stickiness}
                         onChange={setStickiness}
-                        color="orange"
-                        showValue
                         unit="/10"
+                        helperText={TEXTURE_LABELS.stickiness[stickiness]}
                     />
                 </div>
 
                 {/* Élasticité (Fleurs uniquement) */}
                 {productType === 'Fleurs' && (
-                    <div className="p-4 bg-gradient-to-br dark:/20 dark:/20 rounded-xl">
-                        <LiquidSlider
+                    <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
+                        <WhiteSlider
                             label="Élasticité"
                             min={1}
                             max={10}
                             value={elasticity}
                             onChange={setElasticity}
-                            color="purple"
-                            showValue
                             unit="/10"
+                            helperText={TEXTURE_LABELS.elasticity[elasticity]}
                         />
                     </div>
                 )}
 
                 {/* Malléabilité (Hash uniquement) */}
                 {productType === 'Hash' && (
-                    <div className="p-4 bg-gradient-to-br dark:/20 dark:/20 rounded-xl">
-                        <LiquidSlider
+                    <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
+                        <WhiteSlider
                             label="Malléabilité"
                             min={1}
                             max={10}
                             value={malleability}
                             onChange={setMalleability}
-                            color="purple"
-                            showValue
                             unit="/10"
+                            helperText={TEXTURE_LABELS.malleability[malleability]}
                         />
                     </div>
                 )}
 
                 {/* Friabilité (Hash uniquement) */}
                 {productType === 'Hash' && (
-                    <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl">
-                        <LiquidSlider
+                    <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
+                        <WhiteSlider
                             label="Friabilité"
                             min={1}
                             max={10}
                             value={friability}
                             onChange={setFriability}
-                            color="orange"
-                            showValue
                             unit="/10"
+                            helperText={TEXTURE_LABELS.friability[friability]}
                         />
                     </div>
                 )}
 
                 {/* Viscosité (Concentrés uniquement) */}
                 {productType === 'Concentré' && (
-                    <div className="p-4 bg-gradient-to-br from-teal-50 dark:from-teal-900/20 dark:/20 rounded-xl">
-                        <LiquidSlider
+                    <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
+                        <WhiteSlider
                             label="Viscosité"
                             min={1}
                             max={10}
                             value={viscosity}
                             onChange={setViscosity}
-                            color="cyan"
-                            showValue
                             unit="/10"
+                            helperText={TEXTURE_LABELS.viscosity[viscosity]}
                         />
                     </div>
                 )}
@@ -234,29 +227,27 @@ export default function TextureSection({ productType, data = {}, onChange }) {
                     </h4>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="p-4 bg-gradient-to-br from-red-50 dark:from-red-900/20 dark:/20 rounded-xl">
-                            <LiquidSlider
+                        <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
+                            <WhiteSlider
                                 label="Melting (10 = Full Melt)"
                                 min={1}
                                 max={10}
                                 value={melting}
                                 onChange={setMelting}
-                                color="purple"
-                                showValue
                                 unit="/10"
+                                helperText={TEXTURE_LABELS.melting[melting]}
                             />
                         </div>
 
-                        <div className="p-4 bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-900/20 dark:to-slate-900/20 rounded-xl">
-                            <LiquidSlider
+                        <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
+                            <WhiteSlider
                                 label="Résidus (10 = aucun)"
                                 min={1}
                                 max={10}
                                 value={residue}
                                 onChange={setResidue}
-                                color="orange"
-                                showValue
                                 unit="/10"
+                                helperText={TEXTURE_LABELS.residue[residue]}
                             />
                         </div>
                     </div>
