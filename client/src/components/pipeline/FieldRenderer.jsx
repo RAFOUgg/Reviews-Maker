@@ -179,330 +179,310 @@ const FieldRenderer = ({ field, value, onChange, allData = {}, configMode = fals
                     placeholder="-- Sélectionner --"
                     title={tooltip}
                 />
-                px-3 py-2 text-xs font-medium rounded-lg border-2 transition text-left
-                ${selectedValues.includes(opt.value)
-                    ? 'bg-purple-600 border-purple-500 text-white'
-                    : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
-                }
-              `}
-                        >
-                {opt.icon && <span className="mr-1">{opt.icon}</span>}
-                {opt.label}
-            </button>
-        ))
-    }
-                </div >
-{
-    selectedValues.length > 0 && (
-        <div className="text-xs text-gray-400 mt-2">
-            {selectedValues.length} sélectionné(s)
-        </div>
-    )
-}
-            </div >
+            </div>
         )
     }
 
-// ============================================================================
-// AUTOCOMPLETE
-// ============================================================================
-if (type === 'autocomplete') {
-    return (
-        <div>
-            <label className="block text-xs font-medium text-gray-300 mb-1 flex items-center gap-1">
-                {icon && <span>{icon}</span>}
-                {label}
-            </label>
-            <AutocompleteField
-                value={currentValue || ''}
-                onChange={onChange}
-                suggestions={field.suggestions || field.autocomplete || []}
-                placeholder={field.placeholder || 'Tapez pour rechercher...'}
-                maxSuggestions={field.maxSuggestions || 5}
-            />
-        </div>
-    )
-}
-
-// ============================================================================
-// SLIDER
-// ============================================================================
-if (type === 'slider') {
-    return (
-        <div>
-            <label className="block text-xs font-medium text-gray-300 mb-1 flex items-center gap-1">
-                {icon && <span>{icon}</span>}
-                {label}
-                <span className="ml-auto text-purple-400 font-semibold">
-                    {currentValue || min || 0} {unit}
-                </span>
-            </label>
-            <input
-                type="range"
-                min={min || 0}
-                max={max || 100}
-                step={step || 1}
-                value={currentValue || min || 0}
-                onChange={(e) => onChange(parseFloat(e.target.value))}
-                title={tooltip}
-                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-600"
-            />
-            {field.zones && (
-                <div className="flex gap-1 mt-2 text-xs">
-                    {field.zones.map((zone, idx) => (
-                        <div
-                            key={idx}
-                            className={`px-2 py-1 rounded ${currentValue >= zone.min && currentValue <= zone.max
-                                ? `bg-${zone.color}-600 text-white`
-                                : 'bg-gray-800 text-gray-500'
-                                }`}
-                        >
-                            {zone.label}
-                        </div>
-                    ))}
-                </div>
-            )}
-            {field.suggestions && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                    {field.suggestions.map((sugg, idx) => (
-                        <button
-                            key={idx}
-                            onClick={() => onChange(sugg.value)}
-                            className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded transition"
-                        >
-                            {sugg.label}
-                        </button>
-                    ))}
-                </div>
-            )}
-        </div>
-    )
-}
-
-// ============================================================================
-// STEPPER
-// ============================================================================
-if (type === 'stepper') {
-    return (
-        <div>
-            <label className="block text-xs font-medium text-gray-300 mb-1 flex items-center gap-1">
-                {icon && <span>{icon}</span>}
-                {label}
-            </label>
-            <div className="flex items-center gap-2">
-                <button
-                    onClick={() => onChange(Math.max((min || 0), (currentValue || 0) - 1))}
-                    className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-bold transition"
-                >
-                    −
-                </button>
-                <div className="flex-1 text-center bg-gray-900 px-4 py-2 rounded-lg border border-gray-600 font-semibold text-white">
-                    {currentValue || min || 0} {unit}
-                </div>
-                <button
-                    onClick={() => onChange(Math.min((max || 999), (currentValue || 0) + 1))}
-                    className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-bold transition"
-                >
-                    +
-                </button>
+    // ============================================================================
+    // AUTOCOMPLETE
+    // ============================================================================
+    if (type === 'autocomplete') {
+        return (
+            <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1 flex items-center gap-1">
+                    {icon && <span>{icon}</span>}
+                    {label}
+                </label>
+                <AutocompleteField
+                    value={currentValue || ''}
+                    onChange={onChange}
+                    suggestions={field.suggestions || field.autocomplete || []}
+                    placeholder={field.placeholder || 'Tapez pour rechercher...'}
+                    maxSuggestions={field.maxSuggestions || 5}
+                />
             </div>
-        </div>
-    )
-}
+        )
+    }
 
-// ============================================================================
-// TOGGLE
-// ============================================================================
-if (type === 'toggle') {
-    return (
-        <div className="flex items-center justify-between">
-            <label className="text-xs font-medium text-gray-300 flex items-center gap-1">
-                {icon && <span>{icon}</span>}
-                {label}
-            </label>
-            <button
-                onClick={() => onChange(!currentValue)}
-                className={`
+    // ============================================================================
+    // SLIDER
+    // ============================================================================
+    if (type === 'slider') {
+        return (
+            <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1 flex items-center gap-1">
+                    {icon && <span>{icon}</span>}
+                    {label}
+                    <span className="ml-auto text-purple-400 font-semibold">
+                        {currentValue || min || 0} {unit}
+                    </span>
+                </label>
+                <input
+                    type="range"
+                    min={min || 0}
+                    max={max || 100}
+                    step={step || 1}
+                    value={currentValue || min || 0}
+                    onChange={(e) => onChange(parseFloat(e.target.value))}
+                    title={tooltip}
+                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                />
+                {field.zones && (
+                    <div className="flex gap-1 mt-2 text-xs">
+                        {field.zones.map((zone, idx) => (
+                            <div
+                                key={idx}
+                                className={`px-2 py-1 rounded ${currentValue >= zone.min && currentValue <= zone.max
+                                    ? `bg-${zone.color}-600 text-white`
+                                    : 'bg-gray-800 text-gray-500'
+                                    }`}
+                            >
+                                {zone.label}
+                            </div>
+                        ))}
+                    </div>
+                )}
+                {field.suggestions && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                        {field.suggestions.map((sugg, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => onChange(sugg.value)}
+                                className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded transition"
+                            >
+                                {sugg.label}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
+        )
+    }
+
+    // ============================================================================
+    // STEPPER
+    // ============================================================================
+    if (type === 'stepper') {
+        return (
+            <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1 flex items-center gap-1">
+                    {icon && <span>{icon}</span>}
+                    {label}
+                </label>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => onChange(Math.max((min || 0), (currentValue || 0) - 1))}
+                        className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-bold transition"
+                    >
+                        −
+                    </button>
+                    <div className="flex-1 text-center bg-gray-900 px-4 py-2 rounded-lg border border-gray-600 font-semibold text-white">
+                        {currentValue || min || 0} {unit}
+                    </div>
+                    <button
+                        onClick={() => onChange(Math.min((max || 999), (currentValue || 0) + 1))}
+                        className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-bold transition"
+                    >
+                        +
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
+    // ============================================================================
+    // TOGGLE
+    // ============================================================================
+    if (type === 'toggle') {
+        return (
+            <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-gray-300 flex items-center gap-1">
+                    {icon && <span>{icon}</span>}
+                    {label}
+                </label>
+                <button
+                    onClick={() => onChange(!currentValue)}
+                    className={`
             relative w-12 h-6 rounded-full transition
             ${currentValue ? 'bg-purple-600' : 'bg-gray-700'}
           `}
-                title={tooltip}
-            >
-                <div
-                    className={`
+                    title={tooltip}
+                >
+                    <div
+                        className={`
               absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform
               ${currentValue ? 'translate-x-6' : 'translate-x-0'}
             `}
-                />
-            </button>
-        </div>
-    )
-}
-
-// ============================================================================
-// CHAMPS SPÉCIALISÉS
-// ============================================================================
-if (type === 'dimensions') {
-    return (
-        <div>
-            <label className="block text-xs font-medium text-gray-300 mb-2 flex items-center gap-1">
-                {icon && <span>{icon}</span>}
-                {label}
-            </label>
-            <DimensionsField value={currentValue} onChange={onChange} unit={unit} />
-        </div>
-    )
-}
-
-if (type === 'frequency') {
-    return (
-        <div>
-            <label className="block text-xs font-medium text-gray-300 mb-2 flex items-center gap-1">
-                {icon && <span>{icon}</span>}
-                {label}
-            </label>
-            <FrequencyField value={currentValue} onChange={onChange} presets={field.presets} />
-        </div>
-    )
-}
-
-if (type === 'photoperiod') {
-    return (
-        <div>
-            <label className="block text-xs font-medium text-gray-300 mb-2 flex items-center gap-1">
-                {icon && <span>{icon}</span>}
-                {label}
-            </label>
-            <PhotoperiodField value={currentValue} onChange={onChange} presets={field.presets} />
-        </div>
-    )
-}
-
-if (type === 'pie') {
-    return (
-        <div>
-            <label className="block text-xs font-medium text-gray-300 mb-2 flex items-center gap-1">
-                {icon && <span>{icon}</span>}
-                {label}
-            </label>
-            <PieCompositionField value={currentValue} onChange={onChange} components={field.components} />
-        </div>
-    )
-}
-
-if (type === 'phases') {
-    return (
-        <div>
-            <label className="block text-xs font-medium text-gray-300 mb-2 flex items-center gap-1">
-                {icon && <span>{icon}</span>}
-                {label}
-            </label>
-            <PhasesField value={currentValue} onChange={onChange} phases={field.phases} />
-        </div>
-    )
-}
-
-if (type === 'image-upload') {
-    const handleFileChange = (e) => {
-        const file = e.target.files?.[0]
-        if (!file) return
-
-        // Vérifier type
-        if (field.accept && !file.type.match(field.accept.replace('*', '.*'))) {
-            alert(`Type de fichier non autorisé. Accepté: ${field.accept}`)
-            return
-        }
-
-        // Vérifier taille (maxSize en MB)
-        if (field.maxSize && file.size > field.maxSize * 1024 * 1024) {
-            alert(`Fichier trop volumineux. Taille max: ${field.maxSize}MB`)
-            return
-        }
-
-        // Convertir en base64
-        const reader = new FileReader()
-        reader.onload = (ev) => {
-            onChange({
-                filename: file.name,
-                type: file.type,
-                size: file.size,
-                data: ev.target.result // base64
-            })
-        }
-        reader.readAsDataURL(file)
+                    />
+                </button>
+            </div>
+        )
     }
 
-    return (
-        <div>
-            <label className="block text-xs font-medium text-gray-300 mb-2 flex items-center gap-1">
-                {icon && <span>{icon}</span>}
-                {label}
-            </label>
+    // ============================================================================
+    // CHAMPS SPÉCIALISÉS
+    // ============================================================================
+    if (type === 'dimensions') {
+        return (
+            <div>
+                <label className="block text-xs font-medium text-gray-300 mb-2 flex items-center gap-1">
+                    {icon && <span>{icon}</span>}
+                    {label}
+                </label>
+                <DimensionsField value={currentValue} onChange={onChange} unit={unit} />
+            </div>
+        )
+    }
 
-            {/* Upload Button */}
-            <label className="cursor-pointer inline-block px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition">
-                📁 Choisir un fichier
-                <input
-                    type="file"
-                    accept={field.accept || 'image/*'}
-                    onChange={handleFileChange}
-                    className="hidden"
-                />
-            </label>
+    if (type === 'frequency') {
+        return (
+            <div>
+                <label className="block text-xs font-medium text-gray-300 mb-2 flex items-center gap-1">
+                    {icon && <span>{icon}</span>}
+                    {label}
+                </label>
+                <FrequencyField value={currentValue} onChange={onChange} presets={field.presets} />
+            </div>
+        )
+    }
 
-            {/* Preview */}
-            {field.preview && currentValue?.data && (
-                <div className="mt-3 space-y-2">
-                    <img
-                        src={currentValue.data}
-                        alt={currentValue.filename || 'Aperçu'}
-                        className="max-w-full h-auto rounded-lg border border-gray-700"
+    if (type === 'photoperiod') {
+        return (
+            <div>
+                <label className="block text-xs font-medium text-gray-300 mb-2 flex items-center gap-1">
+                    {icon && <span>{icon}</span>}
+                    {label}
+                </label>
+                <PhotoperiodField value={currentValue} onChange={onChange} presets={field.presets} />
+            </div>
+        )
+    }
+
+    if (type === 'pie') {
+        return (
+            <div>
+                <label className="block text-xs font-medium text-gray-300 mb-2 flex items-center gap-1">
+                    {icon && <span>{icon}</span>}
+                    {label}
+                </label>
+                <PieCompositionField value={currentValue} onChange={onChange} components={field.components} />
+            </div>
+        )
+    }
+
+    if (type === 'phases') {
+        return (
+            <div>
+                <label className="block text-xs font-medium text-gray-300 mb-2 flex items-center gap-1">
+                    {icon && <span>{icon}</span>}
+                    {label}
+                </label>
+                <PhasesField value={currentValue} onChange={onChange} phases={field.phases} />
+            </div>
+        )
+    }
+
+    if (type === 'image-upload') {
+        const handleFileChange = (e) => {
+            const file = e.target.files?.[0]
+            if (!file) return
+
+            // Vérifier type
+            if (field.accept && !file.type.match(field.accept.replace('*', '.*'))) {
+                alert(`Type de fichier non autorisé. Accepté: ${field.accept}`)
+                return
+            }
+
+            // Vérifier taille (maxSize en MB)
+            if (field.maxSize && file.size > field.maxSize * 1024 * 1024) {
+                alert(`Fichier trop volumineux. Taille max: ${field.maxSize}MB`)
+                return
+            }
+
+            // Convertir en base64
+            const reader = new FileReader()
+            reader.onload = (ev) => {
+                onChange({
+                    filename: file.name,
+                    type: file.type,
+                    size: file.size,
+                    data: ev.target.result // base64
+                })
+            }
+            reader.readAsDataURL(file)
+        }
+
+        return (
+            <div>
+                <label className="block text-xs font-medium text-gray-300 mb-2 flex items-center gap-1">
+                    {icon && <span>{icon}</span>}
+                    {label}
+                </label>
+
+                {/* Upload Button */}
+                <label className="cursor-pointer inline-block px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition">
+                    📁 Choisir un fichier
+                    <input
+                        type="file"
+                        accept={field.accept || 'image/*'}
+                        onChange={handleFileChange}
+                        className="hidden"
                     />
-                    <div className="text-xs text-gray-400">
-                        📎 {currentValue.filename} ({(currentValue.size / 1024).toFixed(1)} KB)
+                </label>
+
+                {/* Preview */}
+                {field.preview && currentValue?.data && (
+                    <div className="mt-3 space-y-2">
+                        <img
+                            src={currentValue.data}
+                            alt={currentValue.filename || 'Aperçu'}
+                            className="max-w-full h-auto rounded-lg border border-gray-700"
+                        />
+                        <div className="text-xs text-gray-400">
+                            📎 {currentValue.filename} ({(currentValue.size / 1024).toFixed(1)} KB)
+                        </div>
+                        <button
+                            onClick={() => onChange(null)}
+                            className="px-3 py-1 text-xs bg-red-600 hover:bg-red-700 rounded transition"
+                        >
+                            🗑️ Supprimer
+                        </button>
                     </div>
-                    <button
-                        onClick={() => onChange(null)}
-                        className="px-3 py-1 text-xs bg-red-600 hover:bg-red-700 rounded transition"
-                    >
-                        🗑️ Supprimer
-                    </button>
+                )}
+            </div>
+        )
+    }
+
+    // ============================================================================
+    // COMPUTED (lecture seule)
+    // ============================================================================
+    if (type === 'computed') {
+        const computedValue = field.computeFn ? field.computeFn(allData) : currentValue
+
+        return (
+            <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1 flex items-center gap-1">
+                    {icon && <span>{icon}</span>}
+                    {label}
+                </label>
+                <div className="px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white font-semibold">
+                    {computedValue} {unit}
                 </div>
-            )}
-        </div>
-    )
-}
+                <div className="text-xs text-gray-500 mt-1">
+                    Calculé automatiquement
+                </div>
+            </div>
+        )
+    }
 
-// ============================================================================
-// COMPUTED (lecture seule)
-// ============================================================================
-if (type === 'computed') {
-    const computedValue = field.computeFn ? field.computeFn(allData) : currentValue
-
+    // ============================================================================
+    // TYPE INCONNU
+    // ============================================================================
     return (
-        <div>
-            <label className="block text-xs font-medium text-gray-300 mb-1 flex items-center gap-1">
-                {icon && <span>{icon}</span>}
-                {label}
-            </label>
-            <div className="px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white font-semibold">
-                {computedValue} {unit}
-            </div>
-            <div className="text-xs text-gray-500 mt-1">
-                Calculé automatiquement
-            </div>
+        <div className="text-xs text-red-400">
+            Type de champ inconnu : {type}
         </div>
     )
-}
-
-// ============================================================================
-// TYPE INCONNU
-// ============================================================================
-return (
-    <div className="text-xs text-red-400">
-        Type de champ inconnu : {type}
-    </div>
-)
 }
 
 export default FieldRenderer
