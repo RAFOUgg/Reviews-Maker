@@ -1334,10 +1334,19 @@ const PipelineDragDropView = ({
                                                         handleDragStart(e, item);
                                                         setMultiSelectedItems([]); // Clear selection après drag
                                                     } else {
-                                                        // Multi-items drag
+                                                        // Multi-items drag - Chercher dans TOUTES les sections
                                                         const selectedItems = multiSelectedItems
-                                                            .map(k => section.items.find(i => (i.key || i.id) === k))
+                                                            .map(k => {
+                                                                // Chercher l'item dans toutes les sections
+                                                                for (const sec of sidebarContent) {
+                                                                    const found = sec.items?.find(i => (i.key || i.id) === k);
+                                                                    if (found) return found;
+                                                                }
+                                                                return null;
+                                                            })
                                                             .filter(Boolean);
+
+                                                        console.log('🎯 Multi-drag:', selectedItems.length, 'items depuis', multiSelectedItems.length, 'keys');
                                                         e.dataTransfer.setData('application/multi-items', JSON.stringify(selectedItems));
                                                         setDraggedContent({ type: 'multi', items: selectedItems });
                                                     }
