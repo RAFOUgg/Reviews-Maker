@@ -68,7 +68,9 @@ function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, on
             Array.isArray(sec.items) && sec.items.some(i => (i.key || i.id) === itemKey)
         );
         if (section) {
-            sectionMap[section.id].push(item);
+            // ✨ Récupérer la définition COMPLÈTE depuis sidebarContent (avec options, tooltip, etc.)
+            const fullDefinition = section.items.find(i => (i.key || i.id) === itemKey);
+            sectionMap[section.id].push(fullDefinition || item);
         } else {
             orphanItems.push(item);
             console.warn('⚠️ Item orphelin (section non trouvée):', itemKey, item);

@@ -145,21 +145,10 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 5 }) => {
                                         style={{
                                             opacity: isSelected ? 1 : isHovered ? 0.9 : 0.7,
                                             filter: isSelected
-                                                ? 'drop-shadow(0 0 8px rgba(255,255,255,0.6))'
+                                                ? 'drop-shadow(0 0 10px rgba(255,255,255,0.8)) brightness(1.1)'
                                                 : 'none'
                                         }}
                                     />
-                                    {isSelected && (
-                                        <motion.circle
-                                            cx={140 + 100 * Math.cos(((angle + 15) * Math.PI) / 180)}
-                                            cy={140 + 100 * Math.sin(((angle + 15) * Math.PI) / 180)}
-                                            r="8"
-                                            fill="white"
-                                            initial={{ scale: 0 }}
-                                            animate={{ scale: 1 }}
-                                            className="drop-shadow-md"
-                                        />
-                                    )}
                                 </g>
                             );
                         })}
