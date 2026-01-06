@@ -475,94 +475,140 @@ const WeedPreview = ({
                             <path d="M 138 200 Q 145 206 152 214" />
                         </motion.g>
 
-                        {/* Trichomes (poils blancs/transparents) */}
+                        {/* Trichomes (poils blancs/transparents) - distribution naturelle sur les bractées */}
                         {visualEffects.trichomeCount > 0 && (
                             <g opacity="0.7">
                                 {[...Array(visualEffects.trichomeCount)].map((_, i) => {
-                                    const x = 85 + (Math.sin(i * 2.5) * 35 + 35);
-                                    const y = 50 + (i / visualEffects.trichomeCount) * 190;
-                                    const angle = Math.sin(i) * 15;
+                                    // Distribution sur toute la surface de la bud, plus dense sur les côtés
+                                    const angle = (i / visualEffects.trichomeCount) * Math.PI * 2;
+                                    const radius = 20 + Math.random() * 30;
+                                    const x = 120 + Math.cos(angle) * radius;
+                                    const y = 140 + Math.sin(angle) * radius * 1.2 - 30;
+                                    const hairAngle = angle + (Math.random() - 0.5) * 30;
+                                    const hairLength = 3 + Math.random() * 2;
                                     return (
                                         <motion.line
                                             key={`trichome-${i}`}
                                             x1={x}
                                             y1={y}
-                                            x2={x + Math.cos(angle) * 3}
-                                            y2={y - 4}
-                                            stroke="rgba(255,255,255,0.7)"
-                                            strokeWidth="0.5"
+                                            x2={x + Math.cos(hairAngle) * hairLength}
+                                            y2={y - hairLength}
+                                            stroke="rgba(255,255,255,0.6)"
+                                            strokeWidth="0.4"
                                             strokeLinecap="round"
                                             initial={{ pathLength: 0, opacity: 0 }}
                                             animate={{ pathLength: 1, opacity: 1 }}
-                                            transition={{ duration: 0.6, delay: 0.7 + i * 0.02 }}
+                                            transition={{ duration: 0.4, delay: 0.7 + i * 0.01 }}
                                         />
                                     );
                                 })}
                             </g>
                         )}
 
-                        {/* Taches de moisissure */}
+                        {/* Taches de moisissure - placement naturel et irrégulier */}
                         {visualEffects.moldSpots > 0 && (
                             <g>
                                 {[...Array(visualEffects.moldSpots)].map((_, i) => {
-                                    const x = 90 + (Math.sin(i * 3.7) * 30 + 20);
-                                    const y = 60 + (i / visualEffects.moldSpots) * 170;
-                                    const size = 3 + Math.cos(i) * 2;
-                                    const colors = ['#3B2414', '#1A1410', '#F5F5DC'];
-                                    const color = colors[i % 3];
+                                    // Distribution aléatoire mais cohérente
+                                    const seed = i * 7.3;
+                                    const angle = seed * 0.7;
+                                    const distance = 15 + (Math.sin(seed) * 0.5 + 0.5) * 35;
+                                    const x = 120 + Math.cos(angle) * distance;
+                                    const y = 120 + Math.sin(angle) * distance * 1.3;
+                                    const size = 2.5 + Math.abs(Math.cos(seed * 1.3)) * 3;
+                                    // Couleurs de moisissure plus réalistes
+                                    const colors = ['#2D1B0E', '#1C1410', '#E8E4D8', '#3A2417'];
+                                    const color = colors[i % 4];
+                                    const rotation = Math.sin(seed * 2) * 45;
                                     return (
                                         <motion.ellipse
                                             key={`mold-${i}`}
                                             cx={x}
                                             cy={y}
                                             rx={size}
-                                            ry={size * 0.8}
+                                            ry={size * (0.7 + Math.cos(seed) * 0.2)}
                                             fill={color}
-                                            opacity="0.6"
-                                            initial={{ scale: 0 }}
-                                            animate={{ scale: 1 }}
-                                            transition={{ duration: 0.5, delay: 0.8 + i * 0.1 }}
+                                            opacity="0.5"
+                                            transform={`rotate(${rotation} ${x} ${y})`}
+                                            initial={{ scale: 0, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 0.5 }}
+                                            transition={{ duration: 0.5, delay: 0.8 + i * 0.08 }}
                                         />
                                     );
                                 })}
                             </g>
                         )}
 
-                        {/* Graines */}
+                        {/* Graines - placement naturel entre les bractées */}
                         {visualEffects.seedCount > 0 && (
                             <g>
                                 {[...Array(visualEffects.seedCount)].map((_, i) => {
-                                    const x = 95 + (Math.sin(i * 4.2) * 25 + 15);
-                                    const y = 80 + (i / visualEffects.seedCount) * 140;
+                                    // Graines placées dans les zones creuses entre bractées
+                                    const layerPositions = [
+                                        { x: 105, y: 95 },
+                                        { x: 135, y: 110 },
+                                        { x: 115, y: 145 },
+                                        { x: 125, y: 180 },
+                                        { x: 110, y: 210 }
+                                    ];
+                                    const pos = layerPositions[i % layerPositions.length];
+                                    const offsetX = (Math.sin(i * 3.1) * 8);
+                                    const offsetY = (Math.cos(i * 2.7) * 6);
+                                    const x = pos.x + offsetX;
+                                    const y = pos.y + offsetY;
+                                    const rotation = Math.sin(i * 1.9) * 25;
+
                                     return (
-                                        <g key={`seed-${i}`}>
-                                            {/* Corps de la graine (forme d'amande) */}
+                                        <g key={`seed-${i}`} transform={`rotate(${rotation} ${x} ${y})`}>
+                                            {/* Corps de la graine (forme d'amande allongée) */}
                                             <motion.ellipse
                                                 cx={x}
                                                 cy={y}
-                                                rx="4"
-                                                ry="6"
-                                                fill="#8B7355"
-                                                stroke="#5C4A3A"
-                                                strokeWidth="0.5"
+                                                rx="3.5"
+                                                ry="5.5"
+                                                fill="#7A6A52"
+                                                stroke="#4A3A2A"
+                                                strokeWidth="0.6"
                                                 initial={{ scale: 0 }}
                                                 animate={{ scale: 1 }}
                                                 transition={{ duration: 0.5, delay: 0.9 + i * 0.1 }}
                                             />
-                                            {/* Petites taches noires sur la graine */}
+                                            {/* Stries naturelles sur la graine */}
+                                            <motion.line
+                                                x1={x - 2}
+                                                y1={y - 2}
+                                                x2={x - 1.5}
+                                                y2={y + 2}
+                                                stroke="#4A3A2A"
+                                                strokeWidth="0.3"
+                                                opacity="0.5"
+                                                initial={{ pathLength: 0 }}
+                                                animate={{ pathLength: 1 }}
+                                                transition={{ duration: 0.3, delay: 1 + i * 0.1 }}
+                                            />
+                                            {/* Petites taches noires irrégulières sur la graine */}
                                             <motion.circle
-                                                cx={x - 1}
-                                                cy={y - 1.5}
-                                                r="0.5"
+                                                cx={x - 0.8}
+                                                cy={y - 1.2}
+                                                r="0.4"
                                                 fill="#1A1410"
                                                 initial={{ scale: 0 }}
                                                 animate={{ scale: 1 }}
                                                 transition={{ duration: 0.3, delay: 1 + i * 0.1 }}
                                             />
                                             <motion.circle
-                                                cx={x + 0.5}
-                                                cy={y + 1}
-                                                r="0.4"
+                                                cx={x + 1.2}
+                                                cy={y + 0.5}
+                                                r="0.3"
+                                                fill="#1A1410"
+                                                initial={{ scale: 0 }}
+                                                animate={{ scale: 1 }}
+                                                transition={{ duration: 0.3, delay: 1.05 + i * 0.1 }}
+                                            />
+                                            <motion.circle
+                                                cx={x - 0.2}
+                                                cy={y + 2}
+                                                r="0.35"
                                                 fill="#1A1410"
                                                 initial={{ scale: 0 }}
                                                 animate={{ scale: 1 }}
@@ -575,29 +621,37 @@ const WeedPreview = ({
                         )}
                     </g>
 
-                    {/* Particules scintillantes (effet trichomes brillants) */}
+                    {/* Particules scintillantes (effet trichomes brillants) - distribution naturelle */}
                     {visualEffects.trichomeCount > 5 && (
                         <g>
-                            {[...Array(Math.min(15, visualEffects.trichomeCount))].map((_, i) => (
-                                <motion.circle
-                                    key={i}
-                                    cx={85 + (Math.sin(i * 2.1) * 35 + 35)}
-                                    cy={50 + (i / Math.min(15, visualEffects.trichomeCount)) * 190}
-                                    r="1.2"
-                                    fill="white"
-                                    opacity="0"
-                                    animate={{
-                                        opacity: [0, 0.95, 0],
-                                        scale: [0, 1.3, 0]
-                                    }}
-                                    transition={{
-                                        duration: 2.2,
-                                        repeat: Infinity,
-                                        delay: i * 0.15,
-                                        ease: 'easeInOut'
-                                    }}
-                                />
-                            ))}
+                            {[...Array(Math.min(20, Math.floor(visualEffects.trichomeCount / 1.5)))].map((_, i) => {
+                                // Distribution sur les bractées de manière naturelle
+                                const angle = (i / 20) * Math.PI * 2 + Math.sin(i * 0.7) * 0.5;
+                                const radius = 18 + Math.cos(i * 1.3) * 25;
+                                const x = 120 + Math.cos(angle) * radius;
+                                const y = 140 + Math.sin(angle) * radius * 1.1 - 25;
+
+                                return (
+                                    <motion.circle
+                                        key={i}
+                                        cx={x}
+                                        cy={y}
+                                        r="0.8"
+                                        fill="white"
+                                        opacity="0"
+                                        animate={{
+                                            opacity: [0, 0.9, 0],
+                                            scale: [0, 1.4, 0]
+                                        }}
+                                        transition={{
+                                            duration: 1.8 + Math.random() * 0.8,
+                                            repeat: Infinity,
+                                            delay: i * 0.12,
+                                            ease: 'easeInOut'
+                                        }}
+                                    />
+                                );
+                            })}
                         </g>
                     )}
                 </motion.svg>
