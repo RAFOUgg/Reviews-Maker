@@ -163,8 +163,8 @@ const WeedPreview = ({
 
     // Calculs des effets visuels basés sur les jauges
     const visualEffects = useMemo(() => {
-        // Densité: 0 = espacement max, 10 = compact
-        const spacing = 1 + ((10 - densite) / 10) * 0.8; // 1.8x à 1x
+        // Densité: 0 = très aéré, 10 = compact
+        const spacing = 1 + ((10 - densite) / 10) * 0.55; // 1.55x à 1x
 
         // Manucure: 0 = touffu/pointu, 10 = arrondi/compact
         const roundness = manucure / 10; // 0 à 1
@@ -189,6 +189,16 @@ const WeedPreview = ({
         // Étincelles supplémentaires pour un rendu plus "givré"
         const sparkleIntensity = Math.max(0, trichomes - 4);
 
+        // Mise à l'échelle globale (proportions réalistes selon densité/manucure)
+        const budScaleX = 0.9 + (densite / 10) * 0.14 - (1 - roundness) * 0.04;
+        const budScaleY = 0.95 + (densite / 10) * 0.08 + (1 - roundness) * 0.08;
+
+        // Ouverture des feuilles résineuses
+        const leafSpread = 0.75 + (1 - roundness) * 0.25 + (10 - densite) * 0.02;
+
+        // Hauteur des calyxes pour représenter un cola plus ou moins allongé
+        const calyxStretch = 0.9 + (densite / 10) * 0.12 + (1 - roundness) * 0.05;
+
         return {
             spacing,
             roundness,
@@ -199,7 +209,11 @@ const WeedPreview = ({
             pistilCount,
             pistilCurl,
             strokeWidth,
-            sparkleIntensity
+            sparkleIntensity,
+            budScaleX,
+            budScaleY,
+            leafSpread,
+            calyxStretch
         };
     }, [densite, trichomes, manucure, moisissure, graines, pistils]);
 
@@ -254,12 +268,12 @@ const WeedPreview = ({
     const sugarLeaves = useMemo(() => {
         const random = createRandomGenerator(randomSeed + 411);
         const leaves = [];
-        const total = 7;
+        const total = 6 + Math.round((10 - manucure) * 0.3) + Math.round(densite * 0.2);
         for (let i = 0; i < total; i++) {
-            const spread = 28 + random() * 16;
-            const length = 46 + random() * 28;
-            const width = 14 + random() * 9;
-            const angle = -35 + i * (70 / (total - 1)) + (random() - 0.5) * 10;
+            const spread = (28 + random() * 16) * visualEffects.leafSpread;
+            const length = (46 + random() * 28) * (0.9 + (10 - densite) * 0.015);
+            const width = (14 + random() * 9) * (1 + (10 - manucure) * 0.05);
+            const angle = -35 + i * (70 / Math.max(1, total - 1)) + (random() - 0.5) * 10;
             const baseX = 120 + (Math.cos((angle * Math.PI) / 180) * spread) * 0.55;
             const baseY = 185 + random() * 20;
             const angleRad = (angle * Math.PI) / 180;
@@ -282,24 +296,24 @@ const WeedPreview = ({
             });
         }
         return leaves;
-    }, [randomSeed, baseColor, manucure]);
+    }, [randomSeed, baseColor, manucure, densite, visualEffects.leafSpread]);
 
     const calyxClusters = useMemo(() => {
         const random = createRandomGenerator(randomSeed + 521);
-        const count = 12 + Math.round(densite * 1.2);
+        const count = 12 + Math.round(densite * 1.4) + Math.round(trichomes * 0.3);
         const clusters = [];
         for (let i = 0; i < count; i++) {
-            const ring = 42 + random() * 115;
+            const ring = 42 + random() * 115 * visualEffects.calyxStretch;
             const angle = random() * Math.PI * 2;
-            const x = 120 + Math.cos(angle) * (ring * 0.28 + random() * 6);
-            const y = 110 + Math.sin(angle) * (ring * 0.32 + random() * 10);
-            const size = 4.4 + random() * 2.6;
-            const squish = 0.6 + random() * 0.28;
+            const x = 120 + Math.cos(angle) * (ring * 0.25 + random() * 5);
+            const y = 110 + Math.sin(angle) * (ring * 0.3 + random() * 9);
+            const size = 4.2 + random() * 2.4;
+            const squish = 0.6 + random() * 0.24;
             const hueMix = mixHexColors(baseColor, '#2F1E16', 0.25 + random() * 0.1);
             clusters.push({ x, y, rx: size, ry: size * squish, color: hueMix, delay: 0.42 + i * 0.02 });
         }
         return clusters;
-    }, [randomSeed, densite, baseColor]);
+    }, [randomSeed, densite, baseColor, trichomes, visualEffects.calyxStretch]);
 
     const bractVeins = useMemo(() => {
         const random = createRandomGenerator(randomSeed + 331);
@@ -350,10 +364,10 @@ const WeedPreview = ({
                     className="relative z-10 drop-shadow-2xl"
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{
-                        scale: 0.96 + (densite / 10) * 0.08,
+                        scale: 0.92 + (densite / 10) * 0.12,
                         opacity: 1,
-                        rotate: (0.5 - visualEffects.roundness) * 2,
-                        y: (1.2 - visualEffects.spacing) * 6
+                        rotate: (0.5 - visualEffects.roundness) * 1.6,
+                        y: (1.1 - visualEffects.spacing) * 6
                     }}
                     transition={{ duration: 0.6, ease: 'easeOut' }}
                 >
@@ -398,7 +412,11 @@ const WeedPreview = ({
                         </filter>
                     </defs>
 
-                    <g filter="url(#budShadow)" transform={`scale(${1 / visualEffects.spacing})`} transform-origin="120 150">
+                    <g
+                        filter="url(#budShadow)"
+                        transform={`scale(${visualEffects.budScaleX} ${visualEffects.budScaleY}) translate(${120 * (1 / visualEffects.budScaleX - 1)} ${150 * (1 / visualEffects.budScaleY - 1)}) scale(${1 / visualEffects.spacing})`}
+                        transform-origin="120 150"
+                    >
                         {/* Feuilles résineuses autour du cola */}
                         {sugarLeaves.length > 0 && (
                             <g opacity="0.78">
