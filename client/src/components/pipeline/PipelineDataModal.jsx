@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, BookmarkPlus, Bookmark } from 'lucide-react';
 import ConfirmModal from '../ui/ConfirmModal';
+import usePresets from '../../hooks/usePresets';
 
 /**
  * PipelineDataModal - Modal pour saisir les valeurs lors d'un drop
@@ -31,9 +32,11 @@ const PipelineDataModal = ({
 }) => {
     const [formData, setFormData] = useState({});
     const [activeTab, setActiveTab] = useState('data');
-    const [fieldPresets, setFieldPresets] = useState([]); // Préréglages pour ce champ spécifique
     const [newPresetName, setNewPresetName] = useState('');
     const [confirmState, setConfirmState] = useState({ open: false, title: '', message: '', onConfirm: null });
+
+    // Hook pour gérer les préréglages (localStorage + serveur)
+    const { presets, createPreset, deletePreset } = usePresets(pipelineType);
 
     useEffect(() => {
         const initialData = { ...cellData };
@@ -45,22 +48,6 @@ const PipelineDataModal = ({
 
         setFormData(initialData);
         setActiveTab('data');
-
-        if (droppedItem && droppedItem.content) {
-            const fieldKey = droppedItem.content.key || droppedItem.content.type;
-            if (fieldKey) {
-                const storedPresets = localStorage.getItem(`${pipelineType}_field_${fieldKey}_presets`);
-                if (storedPresets) {
-                    try {
-                        setFieldPresets(JSON.parse(storedPresets));
-                    } catch (e) {
-                        setFieldPresets([]);
-                    }
-                } else {
-                    setFieldPresets([]);
-                }
-            }
-        }
     }, [cellData, timestamp, droppedItem, pipelineType]);
 
     // Obtenir tous les items disponibles depuis les sections
@@ -206,32 +193,41 @@ const PipelineDataModal = ({
             createdAt: new Date().toISOString()
         };
 
-        const updatedPresets = [...fieldPresets, newPreset];
-        setFieldPresets(updatedPresets);
-        localStorage.setItem(`${pipelineType}_field_${fieldKey}_presets`, JSON.stringify(updatedPresets));
-        setNewPresetName('');
-        // Message de succès sans "Préréglage"
-        alert(`✓ "${newPreset.name}" sauvegardé !`);
+        try {
+            await createPreset('field', {
+                name: newPreset.name,
+                data: {
+                    value: newPreset.value,
+                    fieldKey: newPreset.fieldKey,
+                    fieldLabel: newPreset.fieldLabel
+                }
+            });
+            setNewPresetName('');
+            alert(`✓ "${newPreset.name}" sauvegardé !`);
+        } catch (err) {
+            console.error('❌ Erreur sauvegarde préréglage:', err);
+            alert('❌ Erreur lors de la sauvegarde');
+        }
     };
 
     // Charger un préréglage
     const handleLoadPreset = (preset) => {
-        if (preset && preset.fieldKey && preset.value !== undefined) {
-            handleChange(preset.fieldKey, preset.value);
+        if (preset && preset.data && preset.data.fieldKey && preset.data.value !== undefined) {
+            handleChange(preset.data.fieldKey, preset.data.value);
             setActiveTab('data');
         }
     };
 
     // Supprimer un préréglage
-    const handleDeletePreset = (presetId) => {
-        if (!droppedItem || !droppedItem.content) return;
+    const handleDeletePreset = async (presetId) => {
+        if (!confirm('Supprimer ce préréglage ?')) return;
 
-        const fieldKey = droppedItem.content.key || droppedItem.content.type;
-        if (!fieldKey) return;
-
-        const updatedPresets = fieldPresets.filter(p => p.id !== presetId);
-        setFieldPresets(updatedPresets);
-        localStorage.setItem(`${pipelineType}_field_${fieldKey}_presets`, JSON.stringify(updatedPresets));
+        try {
+            await deletePreset(presetId);
+        } catch (err) {
+            console.error('❌ Erreur suppression préréglage:', err);
+            alert('❌ Erreur lors de la suppression');
+        }
     };
 
     // Rendu du champ selon le type
@@ -692,7 +688,7 @@ const PipelineDataModal = ({
 
                                     <div>
                                         <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Préréglages disponibles</h3>
-                                        {fieldPresets.length === 0 ? (
+                                        {!droppedItem || !presets.field || presets.field.length === 0 ? (
                                             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                                                 <Bookmark className="w-12 h-12 mx-auto mb-2 opacity-50" />
                                                 <p className="text-sm">Aucun préréglage sauvegardé</p>
@@ -700,40 +696,42 @@ const PipelineDataModal = ({
                                             </div>
                                         ) : (
                                             <div className="space-y-2">
-                                                {fieldPresets.map(preset => (
-                                                    <div
-                                                        key={preset.id}
-                                                        className="p-3 bg-white/5 dark:bg-gray-800 border border-white/5 rounded-lg transition-colors"
-                                                    >
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="flex-1">
-                                                                <p className="font-medium text-sm text-gray-200">
-                                                                    {preset.name}
-                                                                </p>
-                                                                <p className="text-xs text-gray-400 mt-1">
-                                                                    {preset.fieldLabel}: <strong>{String(preset.value)}</strong>
-                                                                </p>
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <button
-                                                                    onClick={() => {
-                                                                        handleLoadPreset(preset);
-                                                                        applyPresetFields({ [preset.fieldKey]: preset.value });
-                                                                    }}
-                                                                    className="liquid-btn liquid-btn--primary text-xs"
-                                                                >
-                                                                    Charger
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleDeletePreset(preset.id)}
-                                                                    className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
-                                                                >
-                                                                    <X className="w-3 h-3" />
-                                                                </button>
+                                                {presets.field
+                                                    .filter(preset => droppedItem && preset.data && preset.data.fieldKey === (droppedItem.content.key || droppedItem.content.type))
+                                                    .map(preset => (
+                                                        <div
+                                                            key={preset.id}
+                                                            className="p-3 bg-white/5 dark:bg-gray-800 border border-white/5 rounded-lg transition-colors"
+                                                        >
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="flex-1">
+                                                                    <p className="font-medium text-sm text-gray-200">
+                                                                        {preset.name}
+                                                                    </p>
+                                                                    <p className="text-xs text-gray-400 mt-1">
+                                                                        {preset.data.fieldLabel}: <strong>{String(preset.data.value)}</strong>
+                                                                    </p>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            handleLoadPreset(preset);
+                                                                            applyPresetFields({ [preset.data.fieldKey]: preset.data.value });
+                                                                        }}
+                                                                        className="liquid-btn liquid-btn--primary text-xs"
+                                                                    >
+                                                                        Charger
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleDeletePreset(preset.id)}
+                                                                        className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
+                                                                    >
+                                                                        <X className="w-3 h-4" />
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                ))}
+                                                    ))}
                                             </div>
                                         )}
                                     </div>

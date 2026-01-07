@@ -3,9 +3,10 @@
  * Préréglages individuels et groupés pour pipelines
  */
 
-const express = require('express');
+import express from 'express';
+import { PrismaClient } from '@prisma/client';
+
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 /**
@@ -142,4 +143,4 @@ router.delete('/:id', requireAuth, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;
