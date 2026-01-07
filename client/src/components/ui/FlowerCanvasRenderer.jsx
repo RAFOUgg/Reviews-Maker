@@ -45,10 +45,10 @@ const FlowerCanvasRenderer = ({
             return x - Math.floor(x);
         };
 
-        // Dimensions
+        // Dimensions - Fleur plus compacte et trapue
         const centerX = W / 2;
-        const stemBottom = H * 0.92;
-        const stemTop = H * 0.12;
+        const stemBottom = H * 0.88;
+        const stemTop = H * 0.25;
         const stemHeight = stemBottom - stemTop;
 
         // Stocker les positions des calices pour y dessiner pistils/trichomes
@@ -79,11 +79,11 @@ const FlowerCanvasRenderer = ({
         // STRUCTURE: Branches + Calices attachés
         // ===============================================
         const drawBranchesAndCalyces = () => {
-            // Nombre de niveaux de branches selon densité
-            const levels = Math.floor(8 + pDensite * 10); // 8-18 niveaux
+            // Nombre de niveaux de branches selon densité - moins de niveaux pour éviter l'étirement
+            const levels = Math.floor(6 + pDensite * 8); // 6-14 niveaux
 
-            // Taille des calices - PLUS GROS
-            const baseCalyxSize = 18 + pDensite * 8; // 18-26px
+            // Taille des calices - proportionnée
+            const baseCalyxSize = 20 + pDensite * 10; // 20-30px
 
             for (let level = 0; level < levels; level++) {
                 const seed = level * 123.456;
@@ -94,17 +94,17 @@ const FlowerCanvasRenderer = ({
                 const y = stemTop + t * stemHeight * 0.85;
 
                 // Largeur de la cola à cette hauteur (forme conique)
-                // Plus large au milieu-bas, étroit en haut et en bas
+                // Plus large au milieu, étroit en haut et en bas
                 let widthFactor;
-                if (t < 0.15) {
-                    widthFactor = t * 4; // Pointe haute
-                } else if (t < 0.6) {
-                    widthFactor = 0.6 + (t - 0.15) * 0.9; // Élargissement
+                if (t < 0.2) {
+                    widthFactor = t * 4.5; // Pointe haute plus progressive
+                } else if (t < 0.7) {
+                    widthFactor = 0.9 + (t - 0.2) * 0.3; // Élargissement jusqu'au max
                 } else {
-                    widthFactor = 1.0 - (t - 0.6) * 0.5; // Rétrécissement bas
+                    widthFactor = 1.2 - (t - 0.7) * 0.8; // Rétrécissement bas plus doux
                 }
 
-                const maxBranchLength = W * 0.28 * widthFactor;
+                const maxBranchLength = W * 0.38 * widthFactor;
 
                 // Branches des deux côtés
                 const branchesPerSide = Math.floor(1 + pDensite * 2); // 1-3 branches par côté
