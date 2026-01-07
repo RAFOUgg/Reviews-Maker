@@ -21,26 +21,26 @@ const PipelineDataModal = ({
     timestamp,
     intervalLabel = '',
     droppedItem = null,
-    pipelineType = 'culture' // Type de pipeline pour localStorage
-    , onFieldDelete,
-    onDragOver = null,  // Callback for drag over
-    onDrop = null       // Callback for drop
+    pipelineType = 'culture',
+    onFieldDelete,
+    onDragOver = null,
+    onDrop = null,
+    groupedPresets = [],
+    preConfiguredItems = {}
 }) => {
     const [formData, setFormData] = useState({});
-    const [activeTab, setActiveTab] = useState('form'); // 'form' ou 'presets'
+    const [activeTab, setActiveTab] = useState('data');
     const [fieldPresets, setFieldPresets] = useState([]); // Préréglages pour ce champ spécifique
     const [newPresetName, setNewPresetName] = useState('');
     const [confirmState, setConfirmState] = useState({ open: false, title: '', message: '', onConfirm: null });
 
     useEffect(() => {
-        // Initialiser avec les données existantes
         const initialData = { ...cellData };
         delete initialData.timestamp;
         delete initialData._meta;
         setFormData(initialData);
-        console.log('🟢 PipelineDataModal isOpen:', isOpen, 'droppedItem:', droppedItem, 'cellData:', cellData);
+        setActiveTab('data');
 
-        // Charger les préréglages pour ce champ (si droppedItem)
         if (droppedItem && droppedItem.content) {
             const fieldKey = droppedItem.content.key || droppedItem.content.type;
             if (fieldKey) {
@@ -108,6 +108,22 @@ const PipelineDataModal = ({
             data: formData
         });
         onClose();
+    };
+
+    const findSidebarFieldByKey = (key) => {
+        for (const section of sidebarSections) {
+            const match = section.items?.find(item => (item.key || item.id || item.type) === key);
+            if (match) {
+                return { ...match, sectionLabel: section.label };
+            }
+        }
+        return null;
+    };
+
+    const applyPresetFields = (fields = {}) => {
+        if (!fields || Object.keys(fields).length === 0) return;
+        setFormData(prev => ({ ...prev, ...fields }));
+        setActiveTab('data');
     };
 
     const FieldWrapper = ({ item, children }) => {
@@ -188,7 +204,7 @@ const PipelineDataModal = ({
     const handleLoadPreset = (preset) => {
         if (preset && preset.fieldKey && preset.value !== undefined) {
             handleChange(preset.fieldKey, preset.value);
-            setActiveTab('form'); // Retour au formulaire
+            setActiveTab('data');
         }
     };
 
@@ -466,24 +482,25 @@ const PipelineDataModal = ({
                             </button>
                         </div>
 
-                        {/* Tabs (si droppedItem présent) */}
-                        {droppedItem && (
-                            <div className="flex border-b border-gray-200 dark:border-gray-700">
-                                <button
-                                    onClick={() => setActiveTab('form')}
-                                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'form' ? 'border-b-2 dark:' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'}`}
-                                >
-                                    📝 Formulaire
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('presets')}
-                                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'presets' ? 'border-b-2 dark:' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'}`}
-                                >
-                                    <Bookmark className="w-4 h-4 inline mr-1" />
-                                    Préréglages ({fieldPresets.length})
-                                </button>
-                            </div>
-                        )}
+                        <div className="flex border-b border-gray-200 dark:border-gray-700">
+                            <button
+                                onClick={() => setActiveTab('data')}
+                                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'data'
+                                    ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-300'
+                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'}`}
+                            >
+                                📝 Données de la cellule
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('presets')}
+                                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'presets'
+                                    ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-300'
+                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'}`}
+                            >
+                                <Bookmark className="w-4 h-4 inline mr-1" />
+                                Pré-réglages
+                            </button>
+                        </div>
 
                         {/* Zone drag & drop CDC pour ajouter plus de champs */}
                         {!droppedItem && (
@@ -513,7 +530,7 @@ const PipelineDataModal = ({
                         )}
 
                         {/* Contenu - TAB FORMULAIRE */}
-                        {activeTab === 'form' && (
+                        {activeTab === 'data' && (
                             <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-180px)]">
                                 {itemsToDisplay.length === 0 ? (
                                     <div className="text-center py-12 text-gray-500 dark:text-gray-400">
@@ -521,23 +538,20 @@ const PipelineDataModal = ({
                                         <p className="text-sm">Glissez-déposez des éléments depuis le panneau latéral</p>
                                     </div>
                                 ) : (
-                                    <>
-                                        <div className="bg-red-100/20 border border-red-300/50 p-3 rounded-lg mb-4">
-                                            <p className="text-xs text-red-300">
-                                                🔴 DEBUG: itemsToDisplay ({itemsToDisplay.length}): {JSON.stringify(itemsToDisplay.slice(0, 2), null, 2)}
-                                            </p>
-                                        </div>
+                                    <div className="space-y-3">
                                         {itemsToDisplay.map((item, idx) => {
                                             const rendered = renderField(item);
                                             const itemKey = item?.key || item?.type;
                                             if (!rendered) {
-                                                return <div key={idx} className="p-3 bg-yellow-900/30 border border-yellow-600 text-yellow-200 text-xs rounded">
-                                                    ⚠️ Item {idx} ({itemKey}) n'a pas d'input compatible (type={item?.type})
-                                                </div>;
+                                                return (
+                                                    <div key={idx} className="p-3 bg-yellow-900/30 border border-yellow-600 text-yellow-200 text-xs rounded">
+                                                        ⚠️ Item {idx} ({itemKey}) n'a pas d'input compatible (type={item?.type})
+                                                    </div>
+                                                );
                                             }
                                             return <div key={itemKey || idx}>{rendered}</div>;
                                         })}
-                                    </>
+                                    </div>
                                 )}
 
                                 {droppedItem && (
@@ -559,80 +573,156 @@ const PipelineDataModal = ({
 
                         {/* Contenu - TAB PRÉRÉGLAGES */}
                         {activeTab === 'presets' && (
-                            <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-180px)]">
-                                {/* Section: Sauvegarder nouveau préréglage */}
-                                <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                                    <h3 className="text-sm font-semibold text-green-800 dark:text-green-300 mb-3 flex items-center gap-2">
-                                        <BookmarkPlus className="w-4 h-4" />
-                                        Sauvegarder un nouveau préréglage
-                                    </h3>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={newPresetName}
-                                            onChange={(e) => setNewPresetName(e.target.value)}
-                                            placeholder="Nom du préréglage (ex: Config Standard)"
-                                            className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
-                                        />
-                                        <button
-                                            onClick={handleSavePreset}
-                                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm flex items-center gap-2"
-                                        >
-                                            <Save className="w-4 h-4" />
-                                            Enregistrer
-                                        </button>
-                                    </div>
-                                    <p className="text-xs text-green-700 dark:text-green-400 mt-2">
-                                        Saisir une valeur dans le formulaire, puis donner un nom à votre configuration
-                                    </p>
-                                </div>
-
-                                {/* Liste des préréglages */}
-                                <div>
-                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                                        Préréglages disponibles
-                                    </h3>
-                                    {fieldPresets.length === 0 ? (
-                                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                                            <Bookmark className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                                            <p className="text-sm">Aucun préréglage sauvegardé</p>
-                                            <p className="text-xs mt-1">Créez-en un pour gagner du temps !</p>
-                                        </div>
+                            <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+                                {/* Groupes de préréglages (multi-champs) */}
+                                <div className="space-y-3">
+                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Groupes enregistrés</h3>
+                                    {(!groupedPresets || groupedPresets.length === 0) ? (
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">Aucun pré-groupe disponible.</p>
                                     ) : (
                                         <div className="space-y-2">
-                                            {fieldPresets.map(preset => (
-                                                <div
-                                                    key={preset.id}
-                                                    className="p-3 bg-white/5 dark:bg-gray-800 border border-white/5 rounded-lg transition-colors"
-                                                >
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex-1">
-                                                            <p className="font-medium text-sm text-gray-200">
-                                                                {preset.name}
-                                                            </p>
-                                                            <p className="text-xs text-gray-400 mt-1">
-                                                                {preset.fieldLabel}: <strong>{String(preset.value)}</strong>
-                                                            </p>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
+                                            {groupedPresets.map((group) => {
+                                                const preview = (group.fields || []).map(f => `${f.key}: ${f.value}`).slice(0, 3).join(', ');
+                                                return (
+                                                    <div key={group.name} className="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/40">
+                                                        <div className="flex items-center justify-between gap-3">
+                                                            <div>
+                                                                <p className="font-medium text-sm text-gray-900 dark:text-white">{group.name}</p>
+                                                                <p className="text-xs text-gray-500 dark:text-gray-400">{group.fields?.length || 0} champ(s)</p>
+                                                            </div>
                                                             <button
-                                                                onClick={() => handleLoadPreset(preset)}
+                                                                type="button"
                                                                 className="liquid-btn liquid-btn--primary text-xs"
+                                                                onClick={() => {
+                                                                    const merged = {};
+                                                                    (group.fields || []).forEach(f => {
+                                                                        const key = f.key || f.id;
+                                                                        if (key) merged[key] = f.value;
+                                                                    });
+                                                                    applyPresetFields(merged);
+                                                                }}
                                                             >
-                                                                Charger
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeletePreset(preset.id)}
-                                                                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
-                                                            >
-                                                                <X className="w-3 h-3" />
+                                                                Charger dans la cellule
                                                             </button>
                                                         </div>
+                                                        {preview && (
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{preview}</p>
+                                                        )}
                                                     </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     )}
+                                </div>
+
+                                {/* Valeurs enregistrées par l'utilisateur */}
+                                <div className="space-y-3">
+                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Réglages utilisateur</h3>
+                                    {(!preConfiguredItems || Object.keys(preConfiguredItems).length === 0) ? (
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">Aucun réglage sauvegardé.</p>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {Object.entries(preConfiguredItems).map(([key, value]) => {
+                                                const def = findSidebarFieldByKey(key);
+                                                return (
+                                                    <div key={key} className="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/40 flex items-center justify-between gap-3">
+                                                        <div>
+                                                            <p className="font-medium text-sm text-gray-900 dark:text-white flex items-center gap-1">
+                                                                {def?.icon && <span>{def.icon}</span>}
+                                                                {def?.label || key}
+                                                            </p>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400">{String(value)}</p>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            className="liquid-btn text-xs"
+                                                            onClick={() => applyPresetFields({ [key]: value })}
+                                                        >
+                                                            Appliquer
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Préréglages spécifiques au champ en cours */}
+                                <div className="space-y-3">
+                                    <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                                        <h3 className="text-sm font-semibold text-green-800 dark:text-green-300 mb-3 flex items-center gap-2">
+                                            <BookmarkPlus className="w-4 h-4" />
+                                            Sauvegarder un préréglage de champ
+                                        </h3>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={newPresetName}
+                                                onChange={(e) => setNewPresetName(e.target.value)}
+                                                placeholder="Nom du préréglage"
+                                                className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                                            />
+                                            <button
+                                                onClick={handleSavePreset}
+                                                disabled={!droppedItem}
+                                                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 text-white rounded-lg text-sm flex items-center gap-2"
+                                            >
+                                                <Save className="w-4 h-4" />
+                                                Enregistrer
+                                            </button>
+                                        </div>
+                                        <p className="text-xs text-green-700 dark:text-green-400 mt-2">
+                                            {droppedItem ? 'Saisissez une valeur dans les données pour ce champ puis enregistrez.' : 'Déposez un champ pour activer les préréglages individuels.'}
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Préréglages disponibles</h3>
+                                        {fieldPresets.length === 0 ? (
+                                            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                                                <Bookmark className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                                                <p className="text-sm">Aucun préréglage sauvegardé</p>
+                                                <p className="text-xs mt-1">Glissez un champ pour ajouter des préréglages ciblés.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {fieldPresets.map(preset => (
+                                                    <div
+                                                        key={preset.id}
+                                                        className="p-3 bg-white/5 dark:bg-gray-800 border border-white/5 rounded-lg transition-colors"
+                                                    >
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex-1">
+                                                                <p className="font-medium text-sm text-gray-200">
+                                                                    {preset.name}
+                                                                </p>
+                                                                <p className="text-xs text-gray-400 mt-1">
+                                                                    {preset.fieldLabel}: <strong>{String(preset.value)}</strong>
+                                                                </p>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        handleLoadPreset(preset);
+                                                                        applyPresetFields({ [preset.fieldKey]: preset.value });
+                                                                    }}
+                                                                    className="liquid-btn liquid-btn--primary text-xs"
+                                                                >
+                                                                    Charger
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeletePreset(preset.id)}
+                                                                    className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
+                                                                >
+                                                                    <X className="w-3 h-3" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -647,7 +737,7 @@ const PipelineDataModal = ({
                                 Annuler
                             </button>
 
-                            {activeTab === 'form' && (
+                            {activeTab === 'data' && (
                                 <button
                                     type="submit"
                                     onClick={handleSubmit}

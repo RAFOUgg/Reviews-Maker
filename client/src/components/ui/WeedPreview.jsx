@@ -163,57 +163,47 @@ const WeedPreview = ({
 
     // Calculs des effets visuels basés sur les jauges
     const visualEffects = useMemo(() => {
-        // Densité: 0 = très aéré, 10 = compact (manucure resserre légèrement)
-        const spacing = 1 + ((10 - densite) / 10) * 0.55 * (0.8 + (1 - manucure / 10) * 0.4); // 1.55x à 1x
+        // Densité: contrôle espacement et volume (0=aéré, 10=compact)
+        const spacing = 1.0 + ((10 - densite) / 10) * 0.4;
+        const budDensity = densite / 10; // 0 à 1
 
-        // Manucure: 0 = touffu/pointu, 10 = arrondi/compact
-        const roundness = manucure / 10; // 0 à 1
+        // Manucure: 0=feuilles présentes, 10=bractées seules
+        const trimLevel = manucure / 10; // 0 à 1
 
-        // Trichomes: nombre et épaisseur
-        const trichomeCount = Math.round((trichomes / 10) * 35); // 0 à 35
-        const trichomeSize = 0.35 + (trichomes / 10) * 0.5;
+        // Trichomes: quantité réaliste avec tige+bulbe
+        const trichomeCount = Math.round((trichomes / 10) * 45); // 0 à 45
+        const trichomeDensity = trichomes / 10;
 
-        // Moisissure: 0 = max taches, 10 = aucune
-        const moldSpots = Math.round(((10 - moisissure) / 10) * 8); // 0 à 8
+        // Pistils: quantité et longueur organique
+        const pistilCount = Math.round((pistils / 10) * 22); // 0 à 22
+        const pistilLength = 12 + pistils * 1.2; // plus longs avec note haute
 
-        // Graines: 0 = max graines, 10 = aucune
-        const seedCount = Math.round(((10 - graines) / 10) * 5); // 0 à 5
+        // Moisissure et graines
+        const moldSpots = Math.round(((10 - moisissure) / 10) * 10);
+        const seedCount = Math.round(((10 - graines) / 10) * 6);
 
-        // Pistils: quantité et courbure
-        const pistilCount = Math.max(4, Math.round((pistils / 10) * 18));
-        const pistilCurl = 10 + pistils * 0.9;
+        // Échelle globale cohérente
+        const budScaleX = 1.02 + budDensity * 0.12;
+        const budScaleY = 1.0 + budDensity * 0.15;
 
-        // Ligne externe: plus fine si manucure haute
-        const strokeWidth = 0.7 + ((10 - manucure) / 10) * 0.5;
-
-        // Étincelles supplémentaires pour un rendu plus "givré"
-        const sparkleIntensity = Math.max(0, trichomes - 4);
-
-        // Mise à l'échelle globale (proportions réalistes selon densité/manucure)
-        const budScaleX = 1.0 + (densite / 10) * 0.16 - (1 - roundness) * 0.05;
-        const budScaleY = 1.02 + (densite / 10) * 0.1 + (1 - roundness) * 0.08;
-
-        // Ouverture des feuilles résineuses
-        const leafSpread = 0.7 + (1 - roundness) * 0.35 + (10 - densite) * 0.018;
-
-        // Hauteur des calyxes pour représenter un cola plus ou moins allongé
-        const calyxStretch = 0.9 + (densite / 10) * 0.12 + (1 - roundness) * 0.05;
+        // Feuilles: disparaissent progressivement avec manucure
+        const leafVisibility = Math.max(0, 1 - trimLevel * 1.2);
+        const leafCount = Math.round((1 - trimLevel) * 7);
 
         return {
             spacing,
-            roundness,
+            budDensity,
+            trimLevel,
             trichomeCount,
-            trichomeSize,
+            trichomeDensity,
+            pistilCount,
+            pistilLength,
             moldSpots,
             seedCount,
-            pistilCount,
-            pistilCurl,
-            strokeWidth,
-            sparkleIntensity,
             budScaleX,
             budScaleY,
-            leafSpread,
-            calyxStretch
+            leafVisibility,
+            leafCount
         };
     }, [densite, trichomes, manucure, moisissure, graines, pistils]);
 
@@ -224,18 +214,17 @@ const WeedPreview = ({
         const random = createRandomGenerator(randomSeed + 13);
         const points = [];
         for (let i = 0; i < visualEffects.trichomeCount; i++) {
-            // Ancrés sur le cône de bractées (évite les feuilles)
             const angle = random() * Math.PI * 2;
-            const radius = 26 + random() * 34 * (0.85 + visualEffects.roundness * 0.25);
-            const wobble = (random() - 0.5) * 6;
+            const radius = 22 + random() * 38;
             const x = 120 + Math.cos(angle) * radius;
-            const y = 140 + Math.sin(angle) * radius * 0.95 - 18 + wobble;
-            const tilt = (random() - 0.5) * 28;
-            const length = 3.2 + random() * (2 + trichomes * 0.16);
-            points.push({ x, y, tilt, length, delay: 0.7 + i * 0.012 });
+            const y = 135 + Math.sin(angle) * radius * 0.92 - 15;
+            const stemLength = 3.5 + random() * 2.5; // tige fine
+            const bulbSize = 0.8 + random() * 0.6 + visualEffects.trichomeDensity * 0.4; // bulbe
+            const tilt = (random() - 0.5) * 25;
+            points.push({ x, y, stemLength, bulbSize, tilt, delay: 0.65 + i * 0.008 });
         }
         return points;
-    }, [visualEffects.trichomeCount, visualEffects.roundness, trichomes, randomSeed]);
+    }, [visualEffects.trichomeCount, visualEffects.trichomeDensity, randomSeed]);
 
     const sparklePoints = useMemo(() => {
         const count = Math.min(24, Math.max(6, Math.floor(visualEffects.trichomeCount / 1.2)));
@@ -250,54 +239,54 @@ const WeedPreview = ({
     }, [visualEffects.trichomeCount, visualEffects.roundness, randomSeed]);
 
     const pistilCurves = useMemo(() => {
-        const rings = [60, 80, 105, 130, 155, 180];
         const random = createRandomGenerator(randomSeed + 211);
         const curves = [];
         for (let i = 0; i < visualEffects.pistilCount; i++) {
-            const ring = rings[i % rings.length];
-            const angle = (i / visualEffects.pistilCount) * Math.PI * 2 + random() * 0.8;
-            const baseX = 120 + Math.cos(angle) * (ring / 4.2);
-            const baseY = 95 + ring * 0.33 + random() * 10;
-            const curl = visualEffects.pistilCurl * (0.6 + random() * 0.6);
-            const tipX = baseX + curl * Math.cos(angle + 0.9 + random() * 0.5);
-            const tipY = baseY - curl * 0.65;
-            curves.push({ baseX, baseY, tipX, tipY, delay: 0.55 + i * 0.02 });
+            const angle = (i / Math.max(1, visualEffects.pistilCount)) * Math.PI * 2 + random() * 1.2;
+            const distance = 18 + random() * 35;
+            const baseX = 120 + Math.cos(angle) * distance * 0.65;
+            const baseY = 120 + Math.sin(angle) * distance * 0.85 + 10;
+            const length = visualEffects.pistilLength * (0.7 + random() * 0.5);
+            const curl = (random() - 0.5) * 8;
+            const tipX = baseX + Math.cos(angle + 0.4) * length + curl;
+            const tipY = baseY - length * 0.6 + Math.abs(curl) * 0.5;
+            curves.push({ baseX, baseY, tipX, tipY, delay: 0.5 + i * 0.025 });
         }
         return curves;
-    }, [visualEffects.pistilCount, visualEffects.pistilCurl, randomSeed]);
+    }, [visualEffects.pistilCount, visualEffects.pistilLength, randomSeed]);
 
     const sugarLeaves = useMemo(() => {
+        if (visualEffects.leafCount === 0) return [];
         const random = createRandomGenerator(randomSeed + 411);
         const leaves = [];
-        const total = Math.max(0, Math.round((1 - manucure / 10) * 8 + (10 - densite) * 0.2));
-        for (let i = 0; i < total; i++) {
-            const spread = (28 + random() * 16) * visualEffects.leafSpread;
-            const length = (46 + random() * 28) * (0.9 + (10 - densite) * 0.015);
-            const width = (14 + random() * 9) * (1 + (10 - manucure) * 0.05);
-            const angle = -35 + i * (70 / Math.max(1, total - 1)) + (random() - 0.5) * 10;
-            const baseX = 120 + (Math.cos((angle * Math.PI) / 180) * spread) * 0.55;
-            const baseY = 185 + random() * 20;
+        for (let i = 0; i < visualEffects.leafCount; i++) {
+            const spread = 32 + random() * 18;
+            const length = 50 + random() * 26;
+            const width = 16 + random() * 8;
+            const angle = -40 + i * (80 / Math.max(1, visualEffects.leafCount - 1)) + (random() - 0.5) * 12;
+            const baseX = 120 + (Math.cos((angle * Math.PI) / 180) * spread) * 0.6;
+            const baseY = 190 + random() * 18;
             const angleRad = (angle * Math.PI) / 180;
             const tipX = baseX + Math.cos(angleRad) * length;
-            const tipY = baseY + Math.sin(angleRad) * length * 0.9;
-            const c1x = baseX + Math.cos(angleRad - 0.7) * width;
-            const c1y = baseY + Math.sin(angleRad - 0.7) * width;
-            const c2x = baseX + Math.cos(angleRad - 0.2) * width * 1.4;
-            const c2y = baseY + Math.sin(angleRad - 0.2) * width * 1.4;
-            const c3x = tipX + Math.cos(angleRad + 0.5) * width * 0.9;
-            const c3y = tipY + Math.sin(angleRad + 0.5) * width * 0.9;
-            const c4x = baseX + Math.cos(angleRad + 0.4) * width * 1.3;
-            const c4y = baseY + Math.sin(angleRad + 0.4) * width * 1.3;
-            const color = mixHexColors(baseColor, '#0B1015', 0.35 + (10 - manucure) * 0.015 + random() * 0.05);
+            const tipY = baseY + Math.sin(angleRad) * length * 0.88;
+            const c1x = baseX + Math.cos(angleRad - 0.65) * width;
+            const c1y = baseY + Math.sin(angleRad - 0.65) * width;
+            const c2x = baseX + Math.cos(angleRad - 0.15) * width * 1.3;
+            const c2y = baseY + Math.sin(angleRad - 0.15) * width * 1.3;
+            const c3x = tipX + Math.cos(angleRad + 0.45) * width * 0.85;
+            const c3y = tipY + Math.sin(angleRad + 0.45) * width * 0.85;
+            const c4x = baseX + Math.cos(angleRad + 0.35) * width * 1.2;
+            const c4y = baseY + Math.sin(angleRad + 0.35) * width * 1.2;
+            const color = mixHexColors(baseColor, '#0B1015', 0.32 + random() * 0.08);
             leaves.push({
                 d: `M ${baseX} ${baseY} C ${c1x} ${c1y} ${c2x} ${c2y} ${tipX} ${tipY} C ${c3x} ${c3y} ${c4x} ${c4y} ${baseX} ${baseY} Z`,
                 color,
-                stroke: mixHexColors(color, '#0B1015', 0.25),
-                delay: 0.28 + i * 0.05
+                stroke: mixHexColors(color, '#0B1015', 0.28),
+                delay: 0.22 + i * 0.045
             });
         }
         return leaves;
-    }, [randomSeed, baseColor, manucure, densite, visualEffects.leafSpread]);
+    }, [randomSeed, baseColor, visualEffects.leafCount]);
 
     const calyxClusters = useMemo(() => {
         const random = createRandomGenerator(randomSeed + 521);

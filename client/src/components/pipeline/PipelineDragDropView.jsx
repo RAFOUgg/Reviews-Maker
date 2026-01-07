@@ -557,6 +557,7 @@ const PipelineDragDropView = ({
         const isMultiSelectClick = e.ctrlKey || e.metaKey;
 
         if (isMultiSelectClick) {
+            setSelectedCell(null);
             // Mode sélection multiple - TOGGLE la cellule
             setSelectedCells(prev => {
                 const isAlreadySelected = prev.includes(cellId);
@@ -577,6 +578,9 @@ const PipelineDragDropView = ({
         } else {
             // Mode normal: ouvrir modal
             console.log('📝 Ouverture modal pour:', cellId);
+            setSelectedCell(cellId);
+            setSelectedCells([]);
+            setDroppedItem(null);
             setCurrentCellTimestamp(cellId);
             setIsModalOpen(true);
 
@@ -1915,6 +1919,8 @@ const PipelineDragDropView = ({
                 droppedItem={droppedItem} // Passer l'item droppé à la modal
                 pipelineType={type} // Passer le type de pipeline pour localStorage
                 onFieldDelete={handleFieldDelete}
+                groupedPresets={groupedPresets}
+                preConfiguredItems={preConfiguredItems}
             />
 
             {/* Modal multi-assign (onglets) */}
