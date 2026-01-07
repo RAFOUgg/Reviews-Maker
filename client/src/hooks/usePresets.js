@@ -65,7 +65,7 @@ export const usePresets = (pipelineType = 'culture') => {
 
                 if (response.ok) {
                     const data = await response.json();
-                    
+
                     // Grouper par type
                     const grouped = {
                         field: data.filter(p => p.type === 'field'),
@@ -74,7 +74,7 @@ export const usePresets = (pipelineType = 'culture') => {
                     };
 
                     setPresets(grouped);
-                    
+
                     // Synchroniser avec localStorage pour backup
                     localStorage.setItem(`presets_${pipelineType}_server`, JSON.stringify(grouped));
                 } else {
