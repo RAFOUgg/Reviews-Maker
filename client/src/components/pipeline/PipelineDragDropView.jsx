@@ -811,6 +811,8 @@ const PipelineDragDropView = ({
     // Sauvegarder données depuis modal
     const handleModalSave = (data) => {
         console.log('💾 Début sauvegarde - data reçue:', data);
+        console.log('💾 selectedCells STATE:', selectedCells);
+        console.log('💾 selectedCells REF:', selectedCellsRef.current);
 
         if (!data || !data.timestamp) {
             console.error('❌ Erreur: pas de timestamp dans les données');
@@ -818,10 +820,21 @@ const PipelineDragDropView = ({
         }
 
         // ✅ Déterminer quelles cellules doivent recevoir les données
-        // Si data.timestamp est dans selectedCells, appliquer à TOUTES les cellules sélectionnées
-        // Sinon, appliquer uniquement à data.timestamp
-        const targetTimestamps = (selectedCells.length > 0 && selectedCells.includes(data.timestamp))
-            ? selectedCells
+        // Utiliser selectedCellsRef.current au lieu de selectedCells pour éviter problème de closure
+        const currentSelection = selectedCellsRef.current || [];
+        const hasSelection = currentSelection.length > 0;
+        const timestampInSelection = currentSelection.includes(data.timestamp);
+
+        console.log('💾 Debug sélection:');
+        console.log('  → selectedCells STATE:', selectedCells);
+        console.log('  → selectedCellsRef.current:', selectedCellsRef.current);
+        console.log('  → currentSelection:', currentSelection);
+        console.log('  → hasSelection:', hasSelection);
+        console.log('  → data.timestamp:', data.timestamp);
+        console.log('  → timestampInSelection:', timestampInSelection);
+
+        const targetTimestamps = (hasSelection && timestampInSelection)
+            ? currentSelection
             : [data.timestamp];
 
         console.log(`🎯 Application des données à ${targetTimestamps.length} cellule(s):`, targetTimestamps);
