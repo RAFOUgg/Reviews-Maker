@@ -1796,7 +1796,10 @@ const PipelineDragDropView = ({
                             <select
                                 value={timelineConfig.type || 'jour'}
                                 onChange={(e) => onConfigChange('type', e.target.value)}
-                                className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                                disabled={timelineData.length > 0}
+                                className={`w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 ${timelineData.length > 0 ? 'opacity-50 cursor-not-allowed' : ''
+                                    }`}
+                                title={timelineData.length > 0 ? '⚠️ Impossible de changer la trame : des données sont déjà renseignées' : 'Choisir le type d\'intervalles'}
                             >
                                 <option value="seconde">⏱️ Secondes</option>
                                 <option value="heure">🕐 Heures</option>
@@ -1805,6 +1808,12 @@ const PipelineDragDropView = ({
                                 <option value="semaine">📆 Semaines</option>
                                 <option value="phase">🌱 Phases</option>
                             </select>
+                            {timelineData.length > 0 && (
+                                <p className="text-xs text-orange-600 dark:text-orange-400 mt-1 flex items-center gap-1">
+                                    <span>⚠️</span>
+                                    <span>Trame verrouillée ({timelineData.length} cellule{timelineData.length > 1 ? 's' : ''} remplie{timelineData.length > 1 ? 's' : ''})</span>
+                                </p>
+                            )}
                         </div>
 
                         {/* SECONDES - Max 900s */}
