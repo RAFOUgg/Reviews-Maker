@@ -35,28 +35,33 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
         const el = menuRef.current;
         if (!el) return;
         const menuRect = el.getBoundingClientRect();
-        const margin = 8;
-        const winW = window.innerWidth;
-        const winH = window.innerHeight;
+        const margin = 10;
 
         let x = position?.x ?? 16;
         let y = position?.y ?? 16;
 
-        // Chercher le conteneur parent (panneau latéral)
+        // Chercher le conteneur parent (panneau latéral ou zone scrollable)
         let containerRect = {
             left: 0,
             top: 0,
-            right: winW,
-            bottom: winH
+            right: window.innerWidth,
+            bottom: window.innerHeight
         };
 
         let parent = el.parentElement;
-        while (parent && parent !== document.body) {
-            const style = window.getComputedStyle(parent);
-            const overflowY = style.overflowY;
+        let foundContainer = false;
 
-            // Si on trouve le panneau latéral avec scroll
-            if (overflowY === 'auto' || overflowY === 'scroll' || parent.classList.contains('overflow-y-auto')) {
+        while (parent && parent !== document.body && !foundContainer) {
+            const style = window.getComputedStyle(parent);
+            const hasScroll = style.overflowY === 'auto' || style.overflowY === 'scroll' ||
+                style.overflowX === 'auto' || style.overflowX === 'scroll';
+
+            // Vérifier aussi les classes typiques de conteneur
+            const isContainer = parent.classList.contains('overflow-y-auto') ||
+                parent.classList.contains('sidebar-content') ||
+                parent.id === 'sidebar-wrapper';
+
+            if (hasScroll || isContainer) {
                 const rect = parent.getBoundingClientRect();
                 containerRect = {
                     left: rect.left,
@@ -64,6 +69,7 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
                     right: rect.right,
                     bottom: rect.bottom
                 };
+                foundContainer = true;
                 break;
             }
             parent = parent.parentElement;
@@ -72,24 +78,46 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
         if (anchorRect) {
             // Centrer horizontalement sur l'élément ancre
             x = Math.round(anchorRect.left + anchorRect.width / 2 - menuRect.width / 2);
-            // Essayer d'afficher au-dessus
+
+            // Essayer d'afficher au-dessus de l'ancre
             if (anchorRect.top - menuRect.height - margin > containerRect.top) {
-                y = Math.round(anchorRect.top - menuRect.height - 8);
+                y = Math.round(anchorRect.top - menuRect.height - margin);
             } else {
-                // Placer en dessous
-                y = Math.round(anchorRect.bottom + 8);
+                // Sinon placer en dessous
+                y = Math.round(anchorRect.bottom + margin);
             }
         }
 
-        // Ajuster pour rester dans le conteneur
-        if (x + menuRect.width + margin > containerRect.right) {
-            x = Math.max(containerRect.left + margin, containerRect.right - menuRect.width - margin);
+        // Ajustements horizontaux : priorité à gauche du conteneur si dépasse à droite
+        if (x + menuRect.width > containerRect.right - margin) {
+            // Essayer de positionner à gauche de l'ancre si disponible
+            if (anchorRect && anchorRect.left - menuRect.width - margin >= containerRect.left) {
+                x = anchorRect.left - menuRect.width - margin;
+            } else {
+                // Sinon coller au bord droit
+                x = Math.max(containerRect.left + margin, containerRect.right - menuRect.width - margin);
+            }
         }
+
+        // Ajustements verticaux : repositionner au-dessus si dépasse en bas
+        if (y + menuRect.height > containerRect.bottom - margin) {
+            // Essayer au-dessus de l'ancre
+            if (anchorRect) {
+                const topY = anchorRect.top - menuRect.height - margin;
+                if (topY >= containerRect.top + margin) {
+                    y = topY;
+                } else {
+                    // Sinon coller au bord bas
+                    y = Math.max(containerRect.top + margin, containerRect.bottom - menuRect.height - margin);
+                }
+            } else {
+                y = Math.max(containerRect.top + margin, containerRect.bottom - menuRect.height - margin);
+            }
+        }
+
+        // S'assurer de rester dans les limites gauche et haut
         if (x < containerRect.left + margin) {
             x = containerRect.left + margin;
-        }
-        if (y + menuRect.height + margin > containerRect.bottom) {
-            y = Math.max(containerRect.top + margin, containerRect.bottom - menuRect.height - margin);
         }
         if (y < containerRect.top + margin) {
             y = containerRect.top + margin;

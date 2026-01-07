@@ -65,7 +65,7 @@ function CellContextMenu({
         setSelectedFieldsToDelete([]);
     }, [cellTimestamp, isOpen]);
 
-    // Recalculer la position après le rendu pour ajustement précis
+    // Recalculer la position après le rendu pour ajustement précis dans le conteneur
     const [finalPosition, setFinalPosition] = useState(null);
 
     useLayoutEffect(() => {
@@ -80,15 +80,75 @@ function CellContextMenu({
         let x = position.x;
         let y = position.y;
 
-        // Ajuster avec les dimensions réelles du menu
-        if (x + menuRect.width > window.innerWidth - padding) {
-            x = window.innerWidth - menuRect.width - padding;
+        // Trouver le conteneur de la timeline (la zone scrollable des cellules)
+        let containerRect = {
+            left: 0,
+            top: 0,
+            right: window.innerWidth,
+            bottom: window.innerHeight
+        };
+
+        // Chercher le conteneur parent scrollable (zone de timeline avec les cellules)
+        let parent = menuRef.current.parentElement;
+        let foundContainer = false;
+
+        while (parent && parent !== document.body && !foundContainer) {
+            const style = window.getComputedStyle(parent);
+            const hasScroll = style.overflowY === 'auto' || style.overflowY === 'scroll' ||
+                style.overflowX === 'auto' || style.overflowX === 'scroll';
+
+            // Vérifier aussi si c'est un conteneur avec une classe spécifique de timeline
+            const isTimelineContainer = parent.classList.contains('timeline-container') ||
+                parent.querySelector('.timeline-grid') ||
+                parent.id === 'timeline-wrapper';
+
+            if (hasScroll || isTimelineContainer) {
+                const rect = parent.getBoundingClientRect();
+                containerRect = {
+                    left: rect.left,
+                    top: rect.top,
+                    right: rect.right,
+                    bottom: rect.bottom
+                };
+                foundContainer = true;
+                break;
+            }
+            parent = parent.parentElement;
         }
-        if (y + menuRect.height > window.innerHeight - padding) {
-            y = window.innerHeight - menuRect.height - padding;
+
+        // Ajuster horizontalement : si dépasse à droite, positionner à gauche du curseur
+        if (x + menuRect.width > containerRect.right - padding) {
+            // Essayer de positionner à gauche du curseur
+            const leftX = position.x - menuRect.width - 10;
+            if (leftX >= containerRect.left + padding) {
+                x = leftX;
+            } else {
+                // Sinon coller au bord droit du conteneur
+                x = containerRect.right - menuRect.width - padding;
+            }
         }
-        if (x < padding) x = padding;
-        if (y < padding) y = padding;
+
+        // Ajuster verticalement : si dépasse en bas, positionner au-dessus du curseur
+        if (y + menuRect.height > containerRect.bottom - padding) {
+            // Essayer de positionner au-dessus du curseur
+            const topY = position.y - menuRect.height - 10;
+            if (topY >= containerRect.top + padding) {
+                y = topY;
+            } else {
+                // Sinon coller au bord bas du conteneur
+                y = containerRect.bottom - menuRect.height - padding;
+            }
+        }
+
+        // S'assurer que le menu ne dépasse pas à gauche
+        if (x < containerRect.left + padding) {
+            x = containerRect.left + padding;
+        }
+
+        // S'assurer que le menu ne dépasse pas en haut
+        if (y < containerRect.top + padding) {
+            y = containerRect.top + padding;
+        }
 
         setFinalPosition({ x, y });
     }, [isOpen, position, showFieldList]);
@@ -135,75 +195,8 @@ function CellContextMenu({
         );
     };
 
-    // Calcul position avec ajustement intelligent - reste dans le conteneur
-    const getAdjustedPosition = () => {
-        const menuWidth = 280; // Largeur estimée du menu
-        const menuHeight = 500; // Hauteur max estimée (augmentée pour les champs)
-        const padding = 10; // Padding par rapport aux bords
-
-        let x = position.x;
-        let y = position.y;
-
-        // Détecter les limites du conteneur parent (timeline)
-        // Chercher l'ancetre avec overflow scroll ou le viewport si rien trouvé
-        let containerRect = {
-            left: 0,
-            top: 0,
-            right: window.innerWidth,
-            bottom: window.innerHeight,
-            width: window.innerWidth,
-            height: window.innerHeight
-        };
-
-        // Chercher le conteneur scrollable parent (la zone de timeline)
-        if (menuRef.current) {
-            let parent = menuRef.current.parentElement;
-            while (parent && parent !== document.body) {
-                const style = window.getComputedStyle(parent);
-                const overflowY = style.overflowY;
-                const overflowX = style.overflowX;
-
-                // Si on trouve un conteneur avec scroll, utiliser ses limites
-                if (overflowY === 'auto' || overflowY === 'scroll' || overflowX === 'auto' || overflowX === 'scroll') {
-                    const rect = parent.getBoundingClientRect();
-                    containerRect = {
-                        left: rect.left,
-                        top: rect.top,
-                        right: rect.right,
-                        bottom: rect.bottom,
-                        width: rect.width,
-                        height: rect.height
-                    };
-                    break;
-                }
-                parent = parent.parentElement;
-            }
-        }
-
-        // Ajuster si dépasse à droite du conteneur
-        if (x + menuWidth > containerRect.right - padding) {
-            x = containerRect.right - menuWidth - padding;
-        }
-
-        // Ajuster si dépasse en bas du conteneur
-        if (y + menuHeight > containerRect.bottom - padding) {
-            y = containerRect.bottom - menuHeight - padding;
-        }
-
-        // Ajuster si dépasse à gauche du conteneur
-        if (x < containerRect.left + padding) {
-            x = containerRect.left + padding;
-        }
-
-        // Ajuster si dépasse en haut du conteneur
-        if (y < containerRect.top + padding) {
-            y = containerRect.top + padding;
-        }
-
-        return { x, y };
-    };
-
-    const adjustedPos = finalPosition || getAdjustedPosition();
+    // Position avec fallback sur position initiale si useLayoutEffect pas encore exécuté
+    const adjustedPos = finalPosition || position;
 
     return (
         <div
