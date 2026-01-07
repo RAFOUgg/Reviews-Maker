@@ -65,39 +65,86 @@ function CellContextMenu({
         setSelectedFieldsToDelete([]);
     }, [cellTimestamp, isOpen]);
 
-    // Position ajustée après le rendu
+    // Position ajustée après le rendu - TOUJOURS 100% visible
     const [adjustedPosition, setAdjustedPosition] = useState(position);
+    const [maxMenuHeight, setMaxMenuHeight] = useState('80vh');
 
     useLayoutEffect(() => {
         if (!isOpen || !menuRef.current) return;
 
-        const menu = menuRef.current.getBoundingClientRect();
-        const viewport = {
-            width: window.innerWidth,
-            height: window.innerHeight
-        };
-        const margin = 8;
+        // Attendre le rendu pour avoir les bonnes dimensions
+        requestAnimationFrame(() => {
+            const menu = menuRef.current;
+            if (!menu) return;
 
-        let x = position.x;
-        let y = position.y;
+            const menuRect = menu.getBoundingClientRect();
+            const viewport = {
+                width: window.innerWidth,
+                height: window.innerHeight
+            };
+            const margin = 12; // Marge minimale par rapport aux bords
 
-        // Ajustement horizontal simple
-        if (x + menu.width > viewport.width - margin) {
-            x = Math.max(margin, viewport.width - menu.width - margin);
-        }
-        if (x < margin) {
-            x = margin;
-        }
+            // Dimensions du menu
+            const menuWidth = menuRect.width;
+            const menuHeight = menuRect.height;
 
-        // Ajustement vertical simple
-        if (y + menu.height > viewport.height - margin) {
-            y = Math.max(margin, viewport.height - menu.height - margin);
-        }
-        if (y < margin) {
-            y = margin;
-        }
+            let x = position.x;
+            let y = position.y;
 
-        setAdjustedPosition({ x, y });
+            // === AJUSTEMENT HORIZONTAL ===
+            // Vérifier si le menu dépasse à droite
+            if (x + menuWidth > viewport.width - margin) {
+                x = viewport.width - menuWidth - margin;
+            }
+            // Vérifier si le menu dépasse à gauche
+            if (x < margin) {
+                x = margin;
+            }
+
+            // === AJUSTEMENT VERTICAL ===
+            // Calculer l'espace disponible en haut et en bas du point de clic
+            const spaceBelow = viewport.height - position.y - margin;
+            const spaceAbove = position.y - margin;
+
+            // Si le menu dépasse en bas
+            if (y + menuHeight > viewport.height - margin) {
+                // Si l'espace au-dessus est suffisant, mettre au-dessus du curseur
+                if (spaceAbove >= menuHeight) {
+                    y = position.y - menuHeight - 8;
+                }
+                // Sinon, si l'espace au-dessus est plus grand, utiliser cet espace avec scroll
+                else if (spaceAbove > spaceBelow) {
+                    y = margin;
+                    setMaxMenuHeight(`${spaceAbove - margin}px`);
+                }
+                // Sinon, coller au bas et limiter la hauteur
+                else {
+                    y = position.y;
+                    if (y + menuHeight > viewport.height - margin) {
+                        y = viewport.height - menuHeight - margin;
+                        if (y < margin) {
+                            y = margin;
+                            setMaxMenuHeight(`${viewport.height - margin * 2}px`);
+                        }
+                    }
+                }
+            }
+
+            // Vérifier si le menu dépasse en haut
+            if (y < margin) {
+                y = margin;
+            }
+
+            // Réinitialiser la hauteur max si assez d'espace
+            const availableHeight = viewport.height - y - margin;
+            if (menuHeight <= availableHeight) {
+                setMaxMenuHeight('80vh');
+            } else {
+                setMaxMenuHeight(`${availableHeight}px`);
+            }
+
+            setAdjustedPosition({ x: Math.round(x), y: Math.round(y) });
+        });
     }, [isOpen, position, showFieldList]);
 
     if (!isOpen) return null;
@@ -145,11 +192,12 @@ function CellContextMenu({
     return (
         <div
             ref={menuRef}
-            className="fixed z-[200] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 min-w-[220px] overflow-hidden"
+            className="fixed z-[200] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
             style={{
                 left: `${adjustedPosition.x}px`,
                 top: `${adjustedPosition.y}px`,
-                maxHeight: '80vh',
+                width: 'min(280px, calc(100vw - 24px))',
+                maxHeight: maxMenuHeight,
                 overflowY: 'auto'
             }}
         >

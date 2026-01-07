@@ -25,7 +25,8 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
     const [value, setValue] = useState(item.defaultValue || '');
     const [selectedSource, setSelectedSource] = useState('');
     const menuRef = useRef(null);
-    const [adjustedPos, setAdjustedPos] = useState({ x: position.x, y: position.y });
+    const [adjustedPos, setAdjustedPos] = useState({ x: 0, y: 0 });
+    const [maxHeight, setMaxHeight] = useState('auto');
 
     useEffect(() => {
         // Fermer au clic extérieur
@@ -39,39 +40,88 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [onClose]);
 
-    // Positionner le menu intelligemment
+    // Positionner le menu intelligemment - TOUJOURS 100% visible
     useLayoutEffect(() => {
         const el = menuRef.current;
         if (!el) return;
 
-        const menuRect = el.getBoundingClientRect();
-        const margin = 8;
-        const viewport = {
-            width: window.innerWidth,
-            height: window.innerHeight
-        };
+        // Attendre que le DOM soit rendu pour avoir les bonnes dimensions
+        requestAnimationFrame(() => {
+            const menuRect = el.getBoundingClientRect();
+            const margin = 12; // Marge minimale par rapport aux bords
+            const viewport = {
+                width: window.innerWidth,
+                height: window.innerHeight
+            };
 
-        let x = position?.x ?? 16;
-        let y = position?.y ?? 16;
+            // Dimensions du menu
+            const menuWidth = Math.min(menuRect.width, viewport.width - margin * 2);
+            const menuHeight = menuRect.height;
 
-        // Ajustement horizontal simple
-        if (x + menuRect.width > viewport.width - margin) {
-            x = Math.max(margin, viewport.width - menuRect.width - margin);
-        }
-        if (x < margin) {
-            x = margin;
-        }
+            // Position initiale basée sur le clic ou l'ancre
+            let x = position?.x ?? viewport.width / 2;
+            let y = position?.y ?? viewport.height / 2;
 
-        // Ajustement vertical simple
-        if (y + menuRect.height > viewport.height - margin) {
-            y = Math.max(margin, viewport.height - menuRect.height - margin);
-        }
-        if (y < margin) {
-            y = margin;
-        }
+            // Si on a un anchorRect (élément source), positionner par rapport à lui
+            if (anchorRect) {
+                // Essayer de centrer horizontalement sur l'ancre
+                x = anchorRect.left + anchorRect.width / 2 - menuWidth / 2;
+                // Positionner en dessous de l'ancre par défaut
+                y = anchorRect.bottom + 8;
+            }
 
-        setAdjustedPos({ x, y });
-    }, [position]);
+            // === AJUSTEMENT HORIZONTAL ===
+            // Vérifier si le menu dépasse à droite
+            if (x + menuWidth > viewport.width - margin) {
+                x = viewport.width - menuWidth - margin;
+            }
+            // Vérifier si le menu dépasse à gauche
+            if (x < margin) {
+                x = margin;
+            }
+
+            // === AJUSTEMENT VERTICAL ===
+            // Calculer l'espace disponible en haut et en bas
+            const spaceBelow = viewport.height - (anchorRect?.bottom ?? y) - margin;
+            const spaceAbove = (anchorRect?.top ?? y) - margin;
+
+            // Si le menu dépasse en bas
+            if (y + menuHeight > viewport.height - margin) {
+                // Essayer de le mettre au-dessus de l'ancre
+                if (anchorRect && spaceAbove >= menuHeight) {
+                    y = anchorRect.top - menuHeight - 8;
+                }
+                // Sinon, si l'espace au-dessus est plus grand, utiliser cet espace
+                else if (spaceAbove > spaceBelow && anchorRect) {
+                    y = anchorRect.top - menuHeight - 8;
+                    // Si ça dépasse en haut, ajuster
+                    if (y < margin) {
+                        y = margin;
+                    }
+                }
+                // Sinon, coller au bas de l'écran
+                else {
+                    y = viewport.height - menuHeight - margin;
+                }
+            }
+
+            // Vérifier si le menu dépasse en haut
+            if (y < margin) {
+                y = margin;
+            }
+
+            // === HAUTEUR MAXIMALE ===
+            // Si le menu est trop grand pour l'écran, limiter sa hauteur
+            const availableHeight = viewport.height - margin * 2;
+            if (menuHeight > availableHeight) {
+                setMaxHeight(`${availableHeight}px`);
+            } else {
+                setMaxHeight('auto');
+            }
+
+            setAdjustedPos({ x: Math.round(x), y: Math.round(y) });
+        });
+    }, [position, anchorRect]);
     // Fonction de rendu des formulaires adaptés selon le type de donnée
     const renderFormInput = () => {
         const baseClass = "w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent";
@@ -369,162 +419,166 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
     return (
         <div
             ref={menuRef}
-            className="fixed z-[9999] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border-2 p-4 min-w-[320px] text-gray-900 dark:text-white"
+            className="fixed z-[9999] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white overflow-hidden"
             style={{
                 left: `${adjustedPos.x}px`,
                 top: `${adjustedPos.y}px`,
                 animation: 'fadeIn 0.15s ease-out',
-                maxWidth: 'calc(100vw - 24px)'
+                width: 'min(360px, calc(100vw - 24px))',
+                maxHeight: maxHeight,
             }}
         >
-            <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                    <Settings className="w-4 h-4 dark:" />
-                    <h3 className="font-bold text-sm text-gray-900 dark:text-white">
-                        Pré-configurer
-                    </h3>
-                </div>
-                <button
-                    onClick={onClose}
-                    className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                    <X className="w-4 h-4 text-gray-500" />
-                </button>
-            </div>
-
-            <div className="mb-3">
-                <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg">{item.icon}</span>
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {item.label}
-                    </span>
-                    {item.unit && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400">({item.unit})</span>
-                    )}
-                </div>
-
-                {/* Formulaire adapté selon type - CDC Complet */}
-                {renderFormInput()}
-            </div>
-
-            {/* Aide visuelle */}
-            <div className="mb-3 p-2 dark: rounded-lg">
-                <p className="text-xs dark:">
-                    💡 Cette valeur sera assignée directement lors du drag & drop
-                </p>
-            </div>
-
-            {/* Assign or copy actions */}
-            <div className="mb-3">
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Assigner maintenant</label>
-                <div className="flex gap-2">
+            {/* Contenu scrollable */}
+            <div className="p-4 overflow-y-auto" style={{ maxHeight: maxHeight !== 'auto' ? `calc(${maxHeight} - 8px)` : 'none' }}>
+                <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                        <Settings className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                        <h3 className="font-bold text-sm text-gray-900 dark:text-white">
+                            Pré-configurer
+                        </h3>
+                    </div>
                     <button
-                        onClick={() => {
-                            if ((value === '' || value === null || value === undefined) && !isConfigured) {
-                                alert('Veuillez saisir une valeur avant d\'assigner.');
-                                return;
-                            }
-                            onAssignNow?.(itemKey, value);
-                            onClose();
-                        }}
-                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${!value && value !== 0 ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed' : ' hover: text-white'}`}
+                        onClick={onClose}
+                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                     >
-                        Assigner maintenant
+                        <X className="w-4 h-4 text-gray-500" />
                     </button>
+                </div>
 
-                    <div className="flex-1">
-                        <label className="text-xs text-gray-500 mb-1 block">Copier depuis une case</label>
-                        <div className="flex gap-2">
-                            <select
-                                value={selectedSource}
-                                onChange={(e) => setSelectedSource(e.target.value)}
-                                className="flex-1 px-2 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
-                            >
-                                <option value="">-- choisir une case --</option>
-                                {cells.map((c) => (
-                                    <option key={c.timestamp} value={c.timestamp}>{c.label || c.timestamp}</option>
-                                ))}
-                            </select>
-                            <button
-                                onClick={() => {
-                                    if (!selectedSource) { alert('Choisir une case source'); return; }
-                                    onAssignFromSource?.(itemKey, selectedSource);
-                                    onClose();
-                                }}
-                                className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
-                            >
-                                Copier
-                            </button>
+                <div className="mb-3">
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="text-lg">{item.icon}</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {item.label}
+                        </span>
+                        {item.unit && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400">({item.unit})</span>
+                        )}
+                    </div>
+
+                    {/* Formulaire adapté selon type - CDC Complet */}
+                    {renderFormInput()}
+                </div>
+
+                {/* Aide visuelle */}
+                <div className="mb-3 p-2 dark: rounded-lg">
+                    <p className="text-xs dark:">
+                        💡 Cette valeur sera assignée directement lors du drag & drop
+                    </p>
+                </div>
+
+                {/* Assign or copy actions */}
+                <div className="mb-3">
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Assigner maintenant</label>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => {
+                                if ((value === '' || value === null || value === undefined) && !isConfigured) {
+                                    alert('Veuillez saisir une valeur avant d\'assigner.');
+                                    return;
+                                }
+                                onAssignNow?.(itemKey, value);
+                                onClose();
+                            }}
+                            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${!value && value !== 0 ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed' : ' hover: text-white'}`}
+                        >
+                            Assigner maintenant
+                        </button>
+
+                        <div className="flex-1">
+                            <label className="text-xs text-gray-500 mb-1 block">Copier depuis une case</label>
+                            <div className="flex gap-2">
+                                <select
+                                    value={selectedSource}
+                                    onChange={(e) => setSelectedSource(e.target.value)}
+                                    className="flex-1 px-2 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                                >
+                                    <option value="">-- choisir une case --</option>
+                                    {cells.map((c) => (
+                                        <option key={c.timestamp} value={c.timestamp}>{c.label || c.timestamp}</option>
+                                    ))}
+                                </select>
+                                <button
+                                    onClick={() => {
+                                        if (!selectedSource) { alert('Choisir une case source'); return; }
+                                        onAssignFromSource?.(itemKey, selectedSource);
+                                        onClose();
+                                    }}
+                                    className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
+                                >
+                                    Copier
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Assign to range / all / selected */}
-            <div className="mb-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Assigner à :</label>
-                <div className="flex items-center gap-2">
-                    <select
-                        value={selectedSource}
-                        onChange={(e) => setSelectedSource(e.target.value)}
-                        className="px-2 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm flex-1"
-                    >
-                        <option value="">-- Début (sélectionner) --</option>
-                        {cells.map((c) => (
-                            <option key={`start-${c.timestamp}`} value={c.timestamp}>{c.label || c.timestamp}</option>
-                        ))}
-                    </select>
+                {/* Assign to range / all / selected */}
+                <div className="mb-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Assigner à :</label>
+                    <div className="flex items-center gap-2">
+                        <select
+                            value={selectedSource}
+                            onChange={(e) => setSelectedSource(e.target.value)}
+                            className="px-2 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm flex-1"
+                        >
+                            <option value="">-- Début (sélectionner) --</option>
+                            {cells.map((c) => (
+                                <option key={`start-${c.timestamp}`} value={c.timestamp}>{c.label || c.timestamp}</option>
+                            ))}
+                        </select>
 
-                    <select
-                        value={''}
-                        onChange={(e) => {
-                            const end = e.target.value;
-                            if (!selectedSource) { alert('Choisir d\'abord une case de début'); return; }
-                            onAssignRange?.(itemKey, selectedSource, end, value || item.defaultValue || '');
-                            onClose();
-                        }}
-                        className="px-2 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm flex-1"
-                    >
-                        <option value="">-- Fin (sélectionner) --</option>
-                        {cells.map((c) => (
-                            <option key={`end-${c.timestamp}`} value={c.timestamp}>{c.label || c.timestamp}</option>
-                        ))}
-                    </select>
+                        <select
+                            value={''}
+                            onChange={(e) => {
+                                const end = e.target.value;
+                                if (!selectedSource) { alert('Choisir d\'abord une case de début'); return; }
+                                onAssignRange?.(itemKey, selectedSource, end, value || item.defaultValue || '');
+                                onClose();
+                            }}
+                            className="px-2 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm flex-1"
+                        >
+                            <option value="">-- Fin (sélectionner) --</option>
+                            {cells.map((c) => (
+                                <option key={`end-${c.timestamp}`} value={c.timestamp}>{c.label || c.timestamp}</option>
+                            ))}
+                        </select>
 
+                        <button
+                            onClick={() => {
+                                // Assign to all
+                                onAssignAll?.(itemKey, value || item.defaultValue || '');
+                                onClose();
+                            }}
+                            className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm"
+                        >
+                            Tous
+                        </button>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-500">Ou déposer directement sur une sélection de cases pour assigner.</div>
+                </div>
+
+                {/* Boutons actions */}
+                <div className="flex gap-2">
+                    {isConfigured && (
+                        <button
+                            onClick={handleClear}
+                            className="flex-1 px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1"
+                        >
+                            <X className="w-3 h-3" />
+                            Retirer config
+                        </button>
+                    )}
                     <button
-                        onClick={() => {
-                            // Assign to all
-                            onAssignAll?.(itemKey, value || item.defaultValue || '');
-                            onClose();
-                        }}
-                        className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm"
+                        onClick={handleSave}
+                        disabled={!value && value !== 0}
+                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${!value && value !== 0 ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl'}`}
                     >
-                        Tous
+                        <Check className="w-3 h-3" />
+                        {isConfigured ? 'Mettre à jour' : 'Pré-configurer'}
                     </button>
                 </div>
-                <div className="mt-2 text-xs text-gray-500">Ou déposer directement sur une sélection de cases pour assigner.</div>
-            </div>
-
-            {/* Boutons actions */}
-            <div className="flex gap-2">
-                {isConfigured && (
-                    <button
-                        onClick={handleClear}
-                        className="flex-1 px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1"
-                    >
-                        <X className="w-3 h-3" />
-                        Retirer config
-                    </button>
-                )}
-                <button
-                    onClick={handleSave}
-                    disabled={!value && value !== 0}
-                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${!value && value !== 0 ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-gradient-to-r hover: hover: text-white shadow-lg hover:shadow-xl'}`}
-                >
-                    <Check className="w-3 h-3" />
-                    {isConfigured ? 'Mettre à jour' : 'Pré-configurer'}
-                </button>
-            </div>
+            </div>{/* Fin contenu scrollable */}
         </div>
     );
 };
