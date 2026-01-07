@@ -4,9 +4,26 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuthStore } from '../store/orchardStore';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+/**
+ * Vérifier si l'utilisateur est authentifié
+ * En vérifiant la présence d'un cookie de session
+ */
+const checkAuth = async () => {
+    try {
+        const response = await fetch(`${API_BASE}/api/users/me`, {
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        return response.ok;
+    } catch {
+        return false;
+    }
+};
 
 /**
  * Hook usePresets
@@ -16,7 +33,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
  * @returns {Object} - { presets, loading, createPreset, updatePreset, deletePreset, refreshPresets }
  */
 export const usePresets = (pipelineType = 'culture') => {
-    const { user, isAuthenticated } = useAuthStore();
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [presets, setPresets] = useState({
         field: [],      // Préréglages individuels de champs
         grouped: [],    // Préréglages groupés
@@ -33,7 +50,11 @@ export const usePresets = (pipelineType = 'culture') => {
         setError(null);
 
         try {
-            if (isAuthenticated && user) {
+            // Vérifier l'authentification
+            const authenticated = await checkAuth();
+            setIsAuthenticated(authenticated);
+
+            if (authenticated) {
                 // Utilisateur connecté : charger depuis l'API
                 const response = await fetch(`${API_BASE}/api/presets?pipelineType=${pipelineType}`, {
                     credentials: 'include',
@@ -44,7 +65,7 @@ export const usePresets = (pipelineType = 'culture') => {
 
                 if (response.ok) {
                     const data = await response.json();
-
+                    
                     // Grouper par type
                     const grouped = {
                         field: data.filter(p => p.type === 'field'),
@@ -53,7 +74,7 @@ export const usePresets = (pipelineType = 'culture') => {
                     };
 
                     setPresets(grouped);
-
+                    
                     // Synchroniser avec localStorage pour backup
                     localStorage.setItem(`presets_${pipelineType}_server`, JSON.stringify(grouped));
                 } else {
@@ -71,7 +92,7 @@ export const usePresets = (pipelineType = 'culture') => {
         } finally {
             setLoading(false);
         }
-    }, [isAuthenticated, user, pipelineType]);
+    }, [pipelineType]);
 
     /**
      * Fallback : charger depuis localStorage
@@ -101,7 +122,7 @@ export const usePresets = (pipelineType = 'culture') => {
         setError(null);
 
         try {
-            if (isAuthenticated && user) {
+            if (isAuthenticated) {
                 // Sauvegarder sur le serveur
                 const response = await fetch(`${API_BASE}/api/presets`, {
                     method: 'POST',
@@ -164,7 +185,7 @@ export const usePresets = (pipelineType = 'culture') => {
             setError(err.message);
             throw err;
         }
-    }, [isAuthenticated, user, pipelineType]);
+    }, [isAuthenticated, pipelineType]);
 
     /**
      * Mettre à jour un préréglage existant
@@ -173,7 +194,7 @@ export const usePresets = (pipelineType = 'culture') => {
         setError(null);
 
         try {
-            if (isAuthenticated && user && !String(id).startsWith('local_')) {
+            if (isAuthenticated && !String(id).startsWith('local_')) {
                 // Mise à jour serveur
                 const response = await fetch(`${API_BASE}/api/presets/${id}`, {
                     method: 'PUT',
@@ -231,7 +252,7 @@ export const usePresets = (pipelineType = 'culture') => {
             setError(err.message);
             throw err;
         }
-    }, [isAuthenticated, user, pipelineType, presets]);
+    }, [isAuthenticated, pipelineType, presets]);
 
     /**
      * Supprimer un préréglage
@@ -240,7 +261,7 @@ export const usePresets = (pipelineType = 'culture') => {
         setError(null);
 
         try {
-            if (isAuthenticated && user && !String(id).startsWith('local_')) {
+            if (isAuthenticated && !String(id).startsWith('local_')) {
                 // Suppression serveur
                 const response = await fetch(`${API_BASE}/api/presets/${id}`, {
                     method: 'DELETE',
@@ -274,7 +295,7 @@ export const usePresets = (pipelineType = 'culture') => {
             setError(err.message);
             throw err;
         }
-    }, [isAuthenticated, user, pipelineType, presets]);
+    }, [isAuthenticated, pipelineType, presets]);
 
     // Charger les préréglages au montage et quand l'auth change
     useEffect(() => {
