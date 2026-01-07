@@ -251,6 +251,56 @@ const WeedPreview = ({
         return curves;
     }, [visualEffects.pistilCount, visualEffects.pistilCurl, randomSeed]);
 
+    const sugarLeaves = useMemo(() => {
+        const random = createRandomGenerator(randomSeed + 411);
+        const leaves = [];
+        const total = 7;
+        for (let i = 0; i < total; i++) {
+            const spread = 28 + random() * 16;
+            const length = 46 + random() * 28;
+            const width = 14 + random() * 9;
+            const angle = -35 + i * (70 / (total - 1)) + (random() - 0.5) * 10;
+            const baseX = 120 + (Math.cos((angle * Math.PI) / 180) * spread) * 0.55;
+            const baseY = 185 + random() * 20;
+            const angleRad = (angle * Math.PI) / 180;
+            const tipX = baseX + Math.cos(angleRad) * length;
+            const tipY = baseY + Math.sin(angleRad) * length * 0.9;
+            const c1x = baseX + Math.cos(angleRad - 0.7) * width;
+            const c1y = baseY + Math.sin(angleRad - 0.7) * width;
+            const c2x = baseX + Math.cos(angleRad - 0.2) * width * 1.4;
+            const c2y = baseY + Math.sin(angleRad - 0.2) * width * 1.4;
+            const c3x = tipX + Math.cos(angleRad + 0.5) * width * 0.9;
+            const c3y = tipY + Math.sin(angleRad + 0.5) * width * 0.9;
+            const c4x = baseX + Math.cos(angleRad + 0.4) * width * 1.3;
+            const c4y = baseY + Math.sin(angleRad + 0.4) * width * 1.3;
+            const color = mixHexColors(baseColor, '#0B1015', 0.35 + (10 - manucure) * 0.015 + random() * 0.05);
+            leaves.push({
+                d: `M ${baseX} ${baseY} C ${c1x} ${c1y} ${c2x} ${c2y} ${tipX} ${tipY} C ${c3x} ${c3y} ${c4x} ${c4y} ${baseX} ${baseY} Z`,
+                color,
+                stroke: mixHexColors(color, '#0B1015', 0.25),
+                delay: 0.28 + i * 0.05
+            });
+        }
+        return leaves;
+    }, [randomSeed, baseColor, manucure]);
+
+    const calyxClusters = useMemo(() => {
+        const random = createRandomGenerator(randomSeed + 521);
+        const count = 12 + Math.round(densite * 1.2);
+        const clusters = [];
+        for (let i = 0; i < count; i++) {
+            const ring = 42 + random() * 115;
+            const angle = random() * Math.PI * 2;
+            const x = 120 + Math.cos(angle) * (ring * 0.28 + random() * 6);
+            const y = 110 + Math.sin(angle) * (ring * 0.32 + random() * 10);
+            const size = 4.4 + random() * 2.6;
+            const squish = 0.6 + random() * 0.28;
+            const hueMix = mixHexColors(baseColor, '#2F1E16', 0.25 + random() * 0.1);
+            clusters.push({ x, y, rx: size, ry: size * squish, color: hueMix, delay: 0.42 + i * 0.02 });
+        }
+        return clusters;
+    }, [randomSeed, densite, baseColor]);
+
     const bractVeins = useMemo(() => {
         const random = createRandomGenerator(randomSeed + 331);
         const count = 18 + Math.round(densite * 0.8);
@@ -329,6 +379,11 @@ const WeedPreview = ({
                             <stop offset="100%" stopColor={mixHexColors(baseColor, '#0B1015', 0.35)} stopOpacity="0.6" />
                         </linearGradient>
 
+                        <radialGradient id="leafDepth" cx="50%" cy="50%" r="60%">
+                            <stop offset="0%" stopColor={mixHexColors(baseColor, '#D1FAE5', 0.1)} stopOpacity="0.85" />
+                            <stop offset="100%" stopColor={mixHexColors(baseColor, '#0B1015', 0.45)} stopOpacity="0.35" />
+                        </radialGradient>
+
                         {/* Ombres portées */}
                         <filter id="budShadow" x="-50%" y="-50%" width="200%" height="200%">
                             <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
@@ -344,6 +399,25 @@ const WeedPreview = ({
                     </defs>
 
                     <g filter="url(#budShadow)" transform={`scale(${1 / visualEffects.spacing})`} transform-origin="120 150">
+                        {/* Feuilles résineuses autour du cola */}
+                        {sugarLeaves.length > 0 && (
+                            <g opacity="0.78">
+                                {sugarLeaves.map((leaf, i) => (
+                                    <motion.path
+                                        key={`sugar-leaf-${i}`}
+                                        d={leaf.d}
+                                        fill="url(#leafDepth)"
+                                        stroke={leaf.stroke}
+                                        strokeWidth="1"
+                                        initial={{ scale: 0.9, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 0.95 }}
+                                        transition={{ duration: 0.5, delay: leaf.delay }}
+                                        style={{ fillOpacity: 0.9 }}
+                                    />
+                                ))}
+                            </g>
+                        )}
+
                         {/* Fond de base (corps principal vert) */}
                         <motion.path
                             d={`M 120 45 
@@ -611,6 +685,27 @@ const WeedPreview = ({
                             animate={{ pathLength: 1 }}
                             transition={{ duration: 0.6, delay: 0.5 }}
                         />
+
+                        {/* Calyxes groupés sur le cola */}
+                        {calyxClusters.length > 0 && (
+                            <g opacity="0.9">
+                                {calyxClusters.map((calyx, i) => (
+                                    <motion.ellipse
+                                        key={`calyx-${i}`}
+                                        cx={calyx.x}
+                                        cy={calyx.y}
+                                        rx={calyx.rx}
+                                        ry={calyx.ry}
+                                        fill={calyx.color}
+                                        stroke={mixHexColors(calyx.color, '#0B1015', 0.4)}
+                                        strokeWidth="0.6"
+                                        initial={{ scale: 0, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        transition={{ duration: 0.45, delay: calyx.delay }}
+                                    />
+                                ))}
+                            </g>
+                        )}
 
                         {/* Veines fines pour plus de naturel */}
                         {bractVeins.length > 0 && (
