@@ -894,7 +894,95 @@ const PipelineDataModal = ({
                                 </div>
 
                                 {/* Préréglages spécifiques au champ en cours */}
-                                <div className="space-y-3">
+                                <div className="space-y-4">
+                                    {/* Section Préréglages groupés */}
+                                    <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                                        <h3 className="text-sm font-semibold text-purple-800 dark:text-purple-300 mb-3 flex items-center gap-2">
+                                            <CheckSquare className="w-4 h-4" />
+                                            Préréglages groupés
+                                        </h3>
+                                        <button
+                                            onClick={() => setShowCreateGroupedModal(true)}
+                                            className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <CheckSquare className="w-4 h-4" />
+                                            Créer un préréglage groupé
+                                        </button>
+                                        <p className="text-xs text-purple-700 dark:text-purple-400 mt-2">
+                                            Créez des groupes de champs avec leurs valeurs pour les réutiliser rapidement.
+                                        </p>
+
+                                        {/* Liste des préréglages groupés */}
+                                        {presets.grouped && presets.grouped.length > 0 && (
+                                            <div className="mt-4 space-y-2">
+                                                <h4 className="text-xs font-semibold text-purple-800 dark:text-purple-300">
+                                                    Préréglages sauvegardés ({presets.grouped.length})
+                                                </h4>
+                                                {presets.grouped.map(preset => (
+                                                    <div
+                                                        key={preset.id}
+                                                        className="p-3 bg-white dark:bg-gray-800 border border-purple-200 dark:border-purple-700 rounded-lg"
+                                                    >
+                                                        <div className="flex items-start justify-between mb-2">
+                                                            <div className="flex-1">
+                                                                <p className="font-medium text-sm text-gray-900 dark:text-gray-100">
+                                                                    {preset.name}
+                                                                </p>
+                                                                {preset.description && (
+                                                                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                                                        {preset.description}
+                                                                    </p>
+                                                                )}
+                                                                <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                                                                    {preset.data?.selectedFields?.length || 0} champ{(preset.data?.selectedFields?.length || 0) > 1 ? 's' : ''}
+                                                                </p>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        if (preset.data?.fields) {
+                                                                            applyPresetFields(preset.data.fields);
+                                                                        }
+                                                                    }}
+                                                                    className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-medium"
+                                                                >
+                                                                    Charger
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeletePreset(preset.id)}
+                                                                    className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
+                                                                >
+                                                                    <X className="w-3 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        {/* Aperçu des champs */}
+                                                        {preset.data?.fields && (
+                                                            <div className="mt-2 pt-2 border-t border-purple-100 dark:border-purple-800">
+                                                                <div className="flex flex-wrap gap-1">
+                                                                    {Object.entries(preset.data.fields).slice(0, 3).map(([key, value]) => (
+                                                                        <span
+                                                                            key={key}
+                                                                            className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 rounded text-xs"
+                                                                        >
+                                                                            {key}: {String(value).substring(0, 15)}{String(value).length > 15 ? '...' : ''}
+                                                                        </span>
+                                                                    ))}
+                                                                    {Object.keys(preset.data.fields).length > 3 && (
+                                                                        <span className="px-2 py-1 text-purple-600 dark:text-purple-400 text-xs">
+                                                                            +{Object.keys(preset.data.fields).length - 3} autres
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Section Préréglages de champ individuel */}
                                     <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                                         <h3 className="text-sm font-semibold text-green-800 dark:text-green-300 mb-3 flex items-center gap-2">
                                             <BookmarkPlus className="w-4 h-4" />
@@ -1002,6 +1090,16 @@ const PipelineDataModal = ({
                     </motion.div>
                 </motion.div>
             )}
+
+            {/* Modal de création de préréglage groupé */}
+            <CreateGroupedPresetModal
+                isOpen={showCreateGroupedModal}
+                onClose={() => setShowCreateGroupedModal(false)}
+                sidebarSections={sidebarSections}
+                pipelineType={pipelineType}
+                onPresetCreated={() => loadPresets()}
+            />
+
             <ConfirmModal open={confirmState.open} title={confirmState.title} message={confirmState.message} onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))} onConfirm={() => setConfirmState(prev => { const cb = prev && prev.onConfirm; if (typeof cb === 'function') cb(); return { ...prev, open: false }; })} />
         </AnimatePresence>
     );
