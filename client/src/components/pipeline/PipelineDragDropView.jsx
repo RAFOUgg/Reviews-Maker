@@ -280,7 +280,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[1100px] max-w-[95vw] h-[75vh] border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[900px] max-w-[90vw] max-h-[80vh] border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                     <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
@@ -288,8 +288,8 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                         {mode === 'create' && <span className="text-sm font-normal text-gray-500">— Nouveau</span>}
                         {mode === 'edit' && <span className="text-sm font-normal text-gray-500">— Modifier "{editingGroup?.name}"</span>}
                     </h3>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
-                        <span className="text-xl">×</span>
+                    <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                        <span className="text-2xl leading-none">×</span>
                     </button>
                 </div>
 
