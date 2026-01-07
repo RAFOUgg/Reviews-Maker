@@ -26,6 +26,203 @@ import { useToast } from '../ToastContainer';
 // Emojis disponibles pour les groupes
 const GROUP_EMOJIS = ['🌱', '🌿', '💧', '☀️', '🌡️', '📊', '⚗️', '🧪', '🔬', '💨', '🏠', '🌞', '🌙', '💡', '🔌', '📅', '⏱️', '📏', '🎯', '✨', '🚀', '💪', '🎨', '🔥', '❄️', '💎', '🌈', '🍃', '🌸', '🍀'];
 
+// Cell Context Menu - Menu contextuel pour cellules timeline
+function CellContextMenu({
+    isOpen,
+    position,
+    cellTimestamp,
+    selectedCells,
+    cellData,
+    sidebarContent,
+    onClose,
+    onDeleteAll,
+    onDeleteFields,
+    onCopy,
+    onPaste,
+    hasCopiedData
+}) {
+    const [showFieldList, setShowFieldList] = useState(false);
+    const [selectedFieldsToDelete, setSelectedFieldsToDelete] = useState([]);
+    const menuRef = useRef(null);
+
+    // Fermer au clic extérieur
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleClickOutside = (e) => {
+            if (menuRef.current && !menuRef.current.contains(e.target)) {
+                onClose();
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen, onClose]);
+
+    // Reset au changement de cellule
+    useEffect(() => {
+        setShowFieldList(false);
+        setSelectedFieldsToDelete([]);
+    }, [cellTimestamp, isOpen]);
+
+    if (!isOpen) return null;
+
+    const targetCount = selectedCells?.length > 0 ? selectedCells.length : 1;
+    const isBulk = targetCount > 1;
+
+    // Extraire les champs présents dans la cellule
+    const dataFields = cellData ? Object.keys(cellData).filter(k =>
+        !['timestamp', 'label', 'date', 'phase', 'week', 'day', 'hours', 'seconds', '_meta'].includes(k)
+    ) : [];
+
+    // Trouver le label d'un champ depuis sidebarContent
+    const getFieldLabel = (fieldKey) => {
+        for (const section of (sidebarContent || [])) {
+            const item = (section.items || []).find(i =>
+                i.id === fieldKey || i.key === fieldKey || i.type === fieldKey
+            );
+            if (item) return `${item.icon || '📌'} ${item.label}`;
+        }
+        return `📌 ${fieldKey}`;
+    };
+
+    const handleDeleteSelectedFields = () => {
+        if (selectedFieldsToDelete.length === 0) return;
+        onDeleteFields(selectedFieldsToDelete);
+        onClose();
+    };
+
+    const toggleFieldSelection = (field) => {
+        setSelectedFieldsToDelete(prev =>
+            prev.includes(field)
+                ? prev.filter(f => f !== field)
+                : [...prev, field]
+        );
+    };
+
+    return (
+        <div
+            ref={menuRef}
+            className="fixed z-[200] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 min-w-[220px] overflow-hidden"
+            style={{
+                left: `${position.x}px`,
+                top: `${position.y}px`,
+                maxHeight: '80vh',
+                overflowY: 'auto'
+            }}
+        >
+            {/* Header */}
+            <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                <div className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+                    {isBulk ? `${targetCount} cellules sélectionnées` : 'Menu cellule'}
+                </div>
+            </div>
+
+            {/* Mode normal: liste des actions */}
+            {!showFieldList && (
+                <div className="py-1">
+                    {/* Copier */}
+                    <button
+                        onClick={() => { onCopy(); onClose(); }}
+                        disabled={dataFields.length === 0}
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
+                    >
+                        <span className="text-base">📋</span>
+                        <span>Copier les données</span>
+                    </button>
+
+                    {/* Coller */}
+                    <button
+                        onClick={() => { onPaste(); onClose(); }}
+                        disabled={!hasCopiedData}
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
+                    >
+                        <span className="text-base">📄</span>
+                        <span>Coller</span>
+                    </button>
+
+                    <div className="h-px bg-gray-200 dark:bg-gray-700 my-1" />
+
+                    {/* Effacer des champs spécifiques */}
+                    <button
+                        onClick={() => setShowFieldList(true)}
+                        disabled={dataFields.length === 0}
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
+                    >
+                        <span className="text-base">🗑️</span>
+                        <span>Effacer des champs...</span>
+                        <span className="ml-auto text-xs text-gray-500">{dataFields.length}</span>
+                    </button>
+
+                    {/* Effacer tout */}
+                    <button
+                        onClick={() => { onDeleteAll(); onClose(); }}
+                        disabled={dataFields.length === 0}
+                        className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 font-medium"
+                    >
+                        <span className="text-base">🗑️</span>
+                        <span>Tout effacer</span>
+                        {isBulk && <span className="ml-auto text-xs">({targetCount})</span>}
+                    </button>
+                </div>
+            )}
+
+            {/* Mode sélection de champs */}
+            {showFieldList && (
+                <div className="py-1">
+                    {/* Header sélection */}
+                    <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                        <button
+                            onClick={() => setShowFieldList(false)}
+                            className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1"
+                        >
+                            <span>←</span> Retour
+                        </button>
+                        <span className="text-xs text-gray-500">
+                            {selectedFieldsToDelete.length} / {dataFields.length}
+                        </span>
+                    </div>
+
+                    {/* Liste des champs avec checkboxes */}
+                    <div className="max-h-[300px] overflow-y-auto">
+                        {dataFields.map(field => (
+                            <label
+                                key={field}
+                                className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={selectedFieldsToDelete.includes(field)}
+                                    onChange={() => toggleFieldSelection(field)}
+                                    className="w-4 h-4 accent-purple-600"
+                                />
+                                <span className="text-sm flex-1">{getFieldLabel(field)}</span>
+                            </label>
+                        ))}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="border-t border-gray-200 dark:border-gray-700 p-2 flex gap-2">
+                        <button
+                            onClick={() => setShowFieldList(false)}
+                            className="flex-1 px-3 py-1.5 text-sm bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg"
+                        >
+                            Annuler
+                        </button>
+                        <button
+                            onClick={handleDeleteSelectedFields}
+                            disabled={selectedFieldsToDelete.length === 0}
+                            className="flex-1 px-3 py-1.5 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                        >
+                            Effacer ({selectedFieldsToDelete.length})
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 // Grouped preset modal - COMPLETE with proper field types, edit mode, emoji
 function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sidebarContent, type }) {
     const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
@@ -691,6 +888,10 @@ const PipelineDragDropView = ({
     // Multi-select sidebar state (global)
     const [multiSelectedItems, setMultiSelectedItems] = useState([]);
 
+    // Cell context menu state
+    const [cellContextMenu, setCellContextMenu] = useState(null); // { position, timestamp, selectedCells }
+    const [copiedCellData, setCopiedCellData] = useState(null); // Pour copier/coller
+
     // Action history for undo (simple stack)
     const [actionsHistory, setActionsHistory] = useState([]);
 
@@ -749,6 +950,106 @@ const PipelineDragDropView = ({
 
                 if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'clear', changes: allChanges });
                 setSelectedCells([]);
+                setConfirmState(prev => ({ ...prev, open: false }));
+            }
+        });
+    };
+
+    // Gestionnaires menu contextuel cellule
+    const handleCellContextMenu = (e, timestamp) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setCellContextMenu({
+            position: { x: e.clientX, y: e.clientY },
+            timestamp,
+            selectedCells: selectedCells.length > 0 ? selectedCells : [timestamp]
+        });
+    };
+
+    const handleCopyCellData = () => {
+        const targets = cellContextMenu?.selectedCells || [];
+        if (targets.length === 0) return;
+
+        // Si une seule cellule, copier directement
+        if (targets.length === 1) {
+            const data = getCellData(targets[0]);
+            setCopiedCellData({ single: data, timestamp: targets[0] });
+            showToast(`Données copiées`, 'success');
+        } else {
+            // Multiple cellules: copier tableau
+            const bulkData = targets.map(ts => ({ timestamp: ts, data: getCellData(ts) }));
+            setCopiedCellData({ bulk: bulkData });
+            showToast(`${targets.length} cellules copiées`, 'success');
+        }
+    };
+
+    const handlePasteCellData = () => {
+        if (!copiedCellData) return;
+        const targets = cellContextMenu?.selectedCells || [];
+        if (targets.length === 0) return;
+
+        const allChanges = [];
+
+        if (copiedCellData.single) {
+            // Coller données simples sur toutes les cibles
+            const sourceData = copiedCellData.single || {};
+            const keys = Object.keys(sourceData).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k));
+
+            targets.forEach(ts => {
+                const prev = getCellData(ts) || {};
+                keys.forEach(k => {
+                    allChanges.push({ timestamp: ts, field: k, previousValue: prev[k] });
+                    onDataChange(ts, k, sourceData[k]);
+                });
+            });
+        } else if (copiedCellData.bulk) {
+            // Coller bulk data (si nombre match)
+            const bulkData = copiedCellData.bulk;
+            const copyCount = Math.min(bulkData.length, targets.length);
+
+            for (let i = 0; i < copyCount; i++) {
+                const sourceData = bulkData[i].data || {};
+                const targetTs = targets[i];
+                const keys = Object.keys(sourceData).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k));
+
+                const prev = getCellData(targetTs) || {};
+                keys.forEach(k => {
+                    allChanges.push({ timestamp: targetTs, field: k, previousValue: prev[k] });
+                    onDataChange(targetTs, k, sourceData[k]);
+                });
+            }
+        }
+
+        if (allChanges.length > 0) {
+            pushAction({ id: Date.now(), type: 'paste', changes: allChanges });
+            showToast(`Données collées sur ${targets.length} cellule(s)`, 'success');
+        }
+    };
+
+    const handleDeleteFieldsFromCells = (fieldsToDelete) => {
+        const targets = cellContextMenu?.selectedCells || [];
+        if (targets.length === 0 || fieldsToDelete.length === 0) return;
+
+        setConfirmState({
+            open: true,
+            title: 'Effacer les champs sélectionnés',
+            message: `Effacer ${fieldsToDelete.length} champ(s) de ${targets.length} cellule(s) ?`,
+            onConfirm: () => {
+                const allChanges = [];
+                targets.forEach(ts => {
+                    const prev = getCellData(ts) || {};
+                    fieldsToDelete.forEach(field => {
+                        if (prev[field] !== undefined) {
+                            allChanges.push({ timestamp: ts, field, previousValue: prev[field] });
+                            onDataChange(ts, field, null);
+                        }
+                    });
+                });
+
+                if (allChanges.length > 0) {
+                    pushAction({ id: Date.now(), type: 'deleteFields', changes: allChanges });
+                    showToast(`${fieldsToDelete.length} champ(s) effacé(s)`, 'success');
+                }
                 setConfirmState(prev => ({ ...prev, open: false }));
             }
         });
@@ -2151,6 +2452,7 @@ const PipelineDragDropView = ({
                                             onDragLeave={handleDragLeave}
                                             onDrop={(e) => handleDrop(e, cell.timestamp)}
                                             onClick={(e) => handleCellClick(e, cell.timestamp)}
+                                            onContextMenu={(e) => handleCellContextMenu(e, cell.timestamp)}
                                             onMouseEnter={(e) => { handleCellHover(e, cell.timestamp); }}
                                             onMouseLeave={handleCellLeave}
                                             onMouseDown={(e) => { if (e.button === 0) startSelection(e, idx, cell.timestamp); }}
@@ -2357,6 +2659,44 @@ const PipelineDragDropView = ({
                         </div>
                     </div>
                 )}
+
+            {/* Cell Context Menu - Menu contextuel sur cellule */}
+            <CellContextMenu
+                isOpen={cellContextMenu !== null}
+                position={cellContextMenu?.position || { x: 0, y: 0 }}
+                cellTimestamp={cellContextMenu?.timestamp}
+                selectedCells={cellContextMenu?.selectedCells || []}
+                cellData={cellContextMenu?.timestamp ? getCellData(cellContextMenu.timestamp) : null}
+                sidebarContent={sidebarContent}
+                onClose={() => setCellContextMenu(null)}
+                onDeleteAll={() => {
+                    const targets = cellContextMenu?.selectedCells || [];
+                    setConfirmState({
+                        open: true,
+                        title: 'Effacer toutes les données',
+                        message: `Effacer toutes les données de ${targets.length} cellule(s) ?`,
+                        onConfirm: () => {
+                            const allChanges = [];
+                            targets.forEach(ts => {
+                                const prev = getCellData(ts) || {};
+                                const keys = Object.keys(prev).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k));
+                                keys.forEach(k => {
+                                    allChanges.push({ timestamp: ts, field: k, previousValue: prev[k] });
+                                    onDataChange(ts, k, null);
+                                });
+                            });
+                            if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'contextMenuDeleteAll', changes: allChanges });
+                            setConfirmState(prev => ({ ...prev, open: false }));
+                            setCellContextMenu(null);
+                            showToast('Données effacées', 'success');
+                        }
+                    });
+                }}
+                onDeleteFields={handleDeleteFieldsFromCells}
+                onCopy={handleCopyCellData}
+                onPaste={handlePasteCellData}
+                hasCopiedData={copiedCellData !== null}
+            />
 
             {/* Toast succès retiré (CDC) */}
         </div>
