@@ -567,19 +567,23 @@ const PipelineDragDropView = ({
                     // Retirer de la sélection
                     const newSelection = prev.filter(id => id !== cellId);
                     console.log('  → Retirée, nouvelle sélection:', newSelection);
+                    selectedCellsRef.current = newSelection;
                     return newSelection;
                 } else {
                     // Ajouter à la sélection
                     const newSelection = [...prev, cellId];
                     console.log('  → Ajoutée, nouvelle sélection:', newSelection);
+                    selectedCellsRef.current = newSelection;
                     return newSelection;
                 }
             });
         } else {
             // Mode normal: ouvrir modal
             console.log('📝 Ouverture modal pour:', cellId);
+            const nextSelection = selectedCells.length > 1 ? selectedCells : [cellId];
+            setSelectedCells(nextSelection);
+            selectedCellsRef.current = nextSelection;
             setSelectedCell(cellId);
-            setSelectedCells([]);
             setDroppedItem(null);
             setCurrentCellTimestamp(cellId);
             setIsModalOpen(true);
