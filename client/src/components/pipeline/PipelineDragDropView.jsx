@@ -65,92 +65,39 @@ function CellContextMenu({
         setSelectedFieldsToDelete([]);
     }, [cellTimestamp, isOpen]);
 
-    // Recalculer la position après le rendu pour ajustement précis dans le conteneur
-    const [finalPosition, setFinalPosition] = useState(null);
+    // Position ajustée après le rendu
+    const [adjustedPosition, setAdjustedPosition] = useState(position);
 
     useLayoutEffect(() => {
-        if (!isOpen || !menuRef.current) {
-            setFinalPosition(null);
-            return;
-        }
+        if (!isOpen || !menuRef.current) return;
 
-        const menuRect = menuRef.current.getBoundingClientRect();
-        const padding = 10;
+        const menu = menuRef.current.getBoundingClientRect();
+        const viewport = {
+            width: window.innerWidth,
+            height: window.innerHeight
+        };
+        const margin = 8;
 
         let x = position.x;
         let y = position.y;
 
-        // Trouver le conteneur de la timeline (la zone scrollable des cellules)
-        let containerRect = {
-            left: 0,
-            top: 0,
-            right: window.innerWidth,
-            bottom: window.innerHeight
-        };
-
-        // Chercher le conteneur parent scrollable (zone de timeline avec les cellules)
-        let parent = menuRef.current.parentElement;
-        let foundContainer = false;
-
-        while (parent && parent !== document.body && !foundContainer) {
-            const style = window.getComputedStyle(parent);
-            const hasScroll = style.overflowY === 'auto' || style.overflowY === 'scroll' ||
-                style.overflowX === 'auto' || style.overflowX === 'scroll';
-
-            // Vérifier aussi si c'est un conteneur avec une classe spécifique de timeline
-            const isTimelineContainer = parent.classList.contains('timeline-container') ||
-                parent.querySelector('.timeline-grid') ||
-                parent.id === 'timeline-wrapper';
-
-            if (hasScroll || isTimelineContainer) {
-                const rect = parent.getBoundingClientRect();
-                containerRect = {
-                    left: rect.left,
-                    top: rect.top,
-                    right: rect.right,
-                    bottom: rect.bottom
-                };
-                foundContainer = true;
-                break;
-            }
-            parent = parent.parentElement;
+        // Ajustement horizontal simple
+        if (x + menu.width > viewport.width - margin) {
+            x = Math.max(margin, viewport.width - menu.width - margin);
+        }
+        if (x < margin) {
+            x = margin;
         }
 
-        // Ajuster horizontalement : si dépasse à droite, positionner à gauche du curseur
-        if (x + menuRect.width > containerRect.right - padding) {
-            // Essayer de positionner à gauche du curseur
-            const leftX = position.x - menuRect.width - 10;
-            if (leftX >= containerRect.left + padding) {
-                x = leftX;
-            } else {
-                // Sinon coller au bord droit du conteneur
-                x = containerRect.right - menuRect.width - padding;
-            }
+        // Ajustement vertical simple
+        if (y + menu.height > viewport.height - margin) {
+            y = Math.max(margin, viewport.height - menu.height - margin);
+        }
+        if (y < margin) {
+            y = margin;
         }
 
-        // Ajuster verticalement : si dépasse en bas, positionner au-dessus du curseur
-        if (y + menuRect.height > containerRect.bottom - padding) {
-            // Essayer de positionner au-dessus du curseur
-            const topY = position.y - menuRect.height - 10;
-            if (topY >= containerRect.top + padding) {
-                y = topY;
-            } else {
-                // Sinon coller au bord bas du conteneur
-                y = containerRect.bottom - menuRect.height - padding;
-            }
-        }
-
-        // S'assurer que le menu ne dépasse pas à gauche
-        if (x < containerRect.left + padding) {
-            x = containerRect.left + padding;
-        }
-
-        // S'assurer que le menu ne dépasse pas en haut
-        if (y < containerRect.top + padding) {
-            y = containerRect.top + padding;
-        }
-
-        setFinalPosition({ x, y });
+        setAdjustedPosition({ x, y });
     }, [isOpen, position, showFieldList]);
 
     if (!isOpen) return null;
@@ -195,16 +142,13 @@ function CellContextMenu({
         );
     };
 
-    // Position avec fallback sur position initiale si useLayoutEffect pas encore exécuté
-    const adjustedPos = finalPosition || position;
-
     return (
         <div
             ref={menuRef}
             className="fixed z-[200] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 min-w-[220px] overflow-hidden"
             style={{
-                left: `${adjustedPos.x}px`,
-                top: `${adjustedPos.y}px`,
+                left: `${adjustedPosition.x}px`,
+                top: `${adjustedPosition.y}px`,
                 maxHeight: '80vh',
                 overflowY: 'auto'
             }}
@@ -2749,104 +2693,80 @@ const PipelineDragDropView = ({
                 position={tooltipData.position}
             />
 
-            {/* Menu contextuel stylisé pour config individuelle et assignation rapide */}
-            {
-                contextMenu && (() => {
-                    // Calculer position intelligente
-                    const menuWidth = 320;
-                    const menuHeight = 400;
-                    const padding = 10;
-
-                    let x = contextMenu.position.x;
-                    let y = contextMenu.position.y;
-
-                    // Ajuster pour rester dans le viewport
-                    if (x + menuWidth > window.innerWidth - padding) {
-                        x = window.innerWidth - menuWidth - padding;
-                    }
-                    if (y + menuHeight > window.innerHeight - padding) {
-                        y = window.innerHeight - menuHeight - padding;
-                    }
-                    if (x < padding) x = padding;
-                    if (y < padding) y = padding;
-
-                    return (
-                        <div className="fixed inset-0 z-50" onClick={() => setContextMenu(null)}>
-                            <div
-                                className="absolute bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 min-w-[320px] max-w-[90vw] border border-gray-200 dark:border-gray-700"
-                                style={{ left: x, top: y, zIndex: 10000 }}
-                                onClick={e => e.stopPropagation()}
-                            >
-                                <h4 className="font-bold text-lg mb-2 flex items-center gap-2">
-                                    <span className="text-base">{contextMenu.item.icon}</span>
-                                    {contextMenu.item.label}
-                                </h4>
-                                <div className="mb-4">
-                                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Valeur par défaut</label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                        defaultValue={preConfiguredItems[contextMenu.item.key] || ''}
-                                        id="preconfig-value-input"
-                                    />
-                                </div>
-                                <div className="flex gap-2 mb-2">
-                                    <button
-                                        className="flex-1 px-4 py-2 hover: text-white rounded-xl font-medium transition-all"
-                                        onClick={() => {
-                                            const val = document.getElementById('preconfig-value-input').value;
-                                            handleConfigureItem(contextMenu.item.key, val);
-                                            setContextMenu(null);
-                                        }}
-                                    >Enregistrer</button>
-                                    <button
-                                        className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-xl font-medium transition-all"
-                                        onClick={() => setContextMenu(null)}
-                                    >Annuler</button>
-                                </div>
-                                <div className="mt-4">
-                                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Assigner à&nbsp;:</label>
-                                    <div className="flex gap-2">
-                                        <button
-                                            className="flex-1 px-3 py-2 hover: text-white rounded-lg text-xs font-semibold"
-                                            onClick={() => {
-                                                // Assignation à toutes les cases sélectionnées
-                                                const val = document.getElementById('preconfig-value-input').value;
-                                                const changes = [];
-                                                selectedCells.forEach(ts => {
-                                                    const prev = getCellData(ts) || {};
-                                                    const prevValue = prev && prev.data ? prev.data[contextMenu.item.key] : undefined;
-                                                    changes.push({ timestamp: ts, field: contextMenu.item.key, previousValue: prevValue });
-                                                    onDataChange(ts, contextMenu.item.key, val);
-                                                });
-                                                if (changes.length > 0) pushAction({ id: Date.now(), type: 'preconfig-assign-selection', changes });
-                                                setContextMenu(null);
-                                            }}
-                                            disabled={selectedCells.length === 0}
-                                        >{selectedCells.length > 0 ? `Sélection (${selectedCells.length})` : 'Sélectionner des cases'}</button>
-                                        <button
-                                            className="flex-1 px-3 py-2 hover: text-white rounded-lg text-xs font-semibold"
-                                            onClick={() => {
-                                                // Assignation à toutes les cases
-                                                const val = document.getElementById('preconfig-value-input').value;
-                                                const changes = [];
-                                                cells.forEach(cell => {
-                                                    const prev = getCellData(cell.timestamp) || {};
-                                                    const prevValue = prev && prev.data ? prev.data[contextMenu.item.key] : undefined;
-                                                    changes.push({ timestamp: cell.timestamp, field: contextMenu.item.key, previousValue: prevValue });
-                                                    onDataChange(cell.timestamp, contextMenu.item.key, val);
-                                                });
-                                                if (changes.length > 0) pushAction({ id: Date.now(), type: 'preconfig-assign-all', changes });
-                                                setContextMenu(null);
-                                            }}
-                                        >Toutes les cases</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })()
-            }
+            {/* Menu contextuel stylisé pour config individuelle et assignation rapide - Utilise ItemContextMenu */}
+            {contextMenu && (
+                <ItemContextMenu
+                    item={contextMenu.item}
+                    position={contextMenu.position}
+                    anchorRect={contextMenu.anchorRect}
+                    onClose={() => setContextMenu(null)}
+                    onConfigure={(key, val) => {
+                        handleConfigureItem(key, val);
+                    }}
+                    isConfigured={preConfiguredItems[contextMenu.item.key || contextMenu.item.id] !== undefined}
+                    cells={cells}
+                    onAssignNow={(key, val) => {
+                        // Assignation à toutes les cases sélectionnées ou à toutes si aucune sélection
+                        const targets = selectedCells.length > 0 ? selectedCells : cells.map(c => c.timestamp);
+                        const changes = [];
+                        targets.forEach(ts => {
+                            const prev = getCellData(ts) || {};
+                            const prevValue = prev[key];
+                            changes.push({ timestamp: ts, field: key, previousValue: prevValue });
+                            onDataChange(ts, key, val);
+                        });
+                        if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-assign-now', changes });
+                        showToast(`${contextMenu.item.label} assigné à ${targets.length} case(s)`, 'success');
+                    }}
+                    onAssignFromSource={(key, sourceTimestamp) => {
+                        // Copier la valeur d'une case source vers les cases sélectionnées
+                        const sourceData = getCellData(sourceTimestamp);
+                        const val = sourceData ? sourceData[key] : undefined;
+                        if (val === undefined) {
+                            showToast('Aucune valeur trouvée dans la case source', 'warning');
+                            return;
+                        }
+                        const targets = selectedCells.length > 0 ? selectedCells : cells.map(c => c.timestamp);
+                        const changes = [];
+                        targets.forEach(ts => {
+                            if (ts === sourceTimestamp) return; // Ne pas copier sur soi-même
+                            const prev = getCellData(ts) || {};
+                            changes.push({ timestamp: ts, field: key, previousValue: prev[key] });
+                            onDataChange(ts, key, val);
+                        });
+                        if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-copy-from-source', changes });
+                        showToast(`Valeur copiée vers ${changes.length} case(s)`, 'success');
+                    }}
+                    onAssignRange={(key, startTs, endTs, val) => {
+                        // Assigner à une plage de cases
+                        const startIdx = cells.findIndex(c => c.timestamp === startTs);
+                        const endIdx = cells.findIndex(c => c.timestamp === endTs);
+                        if (startIdx === -1 || endIdx === -1) return;
+                        const minIdx = Math.min(startIdx, endIdx);
+                        const maxIdx = Math.max(startIdx, endIdx);
+                        const targets = cells.slice(minIdx, maxIdx + 1).map(c => c.timestamp);
+                        const changes = [];
+                        targets.forEach(ts => {
+                            const prev = getCellData(ts) || {};
+                            changes.push({ timestamp: ts, field: key, previousValue: prev[key] });
+                            onDataChange(ts, key, val);
+                        });
+                        if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-assign-range', changes });
+                        showToast(`${contextMenu.item.label} assigné à ${targets.length} case(s)`, 'success');
+                    }}
+                    onAssignAll={(key, val) => {
+                        // Assigner à toutes les cases
+                        const changes = [];
+                        cells.forEach(cell => {
+                            const prev = getCellData(cell.timestamp) || {};
+                            changes.push({ timestamp: cell.timestamp, field: key, previousValue: prev[key] });
+                            onDataChange(cell.timestamp, key, val);
+                        });
+                        if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-assign-all', changes });
+                        showToast(`${contextMenu.item.label} assigné à toutes les cases`, 'success');
+                    }}
+                />
+            )}
 
             {/* Cell Context Menu - Menu contextuel sur cellule */}
             <CellContextMenu
