@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 const FlowerCanvasRenderer = ({
     densite = 5,
@@ -9,112 +9,125 @@ const FlowerCanvasRenderer = ({
     graines = 10
 }) => {
     const canvasRef = useRef(null);
-    const [size, setSize] = useState({ width: 600, height: 500 });
     const animationRef = useRef(null);
     const paramsRef = useRef({ densite, trichomes, pistils, manucure, moisissure, graines });
 
-    // Mise à jour des paramètres
     useEffect(() => {
         paramsRef.current = { densite, trichomes, pistils, manucure, moisissure, graines };
     }, [densite, trichomes, pistils, manucure, moisissure, graines]);
 
-    // Initialisation du canvas et animation loop
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { alpha: true });
         const dpr = window.devicePixelRatio || 1;
 
-        // Setup canvas resolution
         const updateCanvasSize = () => {
             const rect = canvas.parentElement?.getBoundingClientRect();
-            const w = rect?.width || 600;
-            const h = rect?.height || 500;
+            const w = rect?.width || 800;
+            const h = rect?.height || 600;
 
             canvas.width = w * dpr;
             canvas.height = h * dpr;
             ctx.scale(dpr, dpr);
-
-            setSize({ width: w, height: h });
         };
 
         updateCanvasSize();
         window.addEventListener('resize', updateCanvasSize);
 
-        // === FLOWER RENDERER ===
+        // ═══════════════════════════════════════════════════════════
+        // ADVANCED FLOWER RENDERER - HAUTE QUALITÉ
+        // ═══════════════════════════════════════════════════════════
+
         const renderer = {
-            // Couleurs
-            colors: {
-                light_green: '#A3E635',
-                green: '#22C55E',
-                dark_green: '#16A34A',
-                darker_green: '#15803D',
-                pistil_orange: '#EA580C',
-                pistil_red: '#DC2626',
-                trichome_white: '#FFFFFF',
-                shadow: 'rgba(0,0,0,0.15)',
-                mold_gray: '#8B8680',
-                seed_green: '#6B7280'
+            // Palettes couleur réalistes
+            greenPalette: [
+                '#E8F5E9', '#C8E6C9', '#A5D6A7', '#81C784',
+                '#66BB6A', '#4CAF50', '#43A047', '#388E3C',
+                '#2E7D32', '#1B5E20'
+            ],
+
+            pistilColors: ['#FF6B35', '#F7931E', '#FFA500', '#FFB84D', '#FFD700'],
+
+            // Smooth noise pour variation naturelle
+            perlin: (x, y, seed = 0) => {
+                const n = Math.sin(x * 12.9898 + y * 78.233 + seed * 43758.5453) * 43758.5453;
+                return n - Math.floor(n);
             },
 
-            // Seeds aléatoires mais déterministes
-            seededRandom: (seed) => {
-                const x = Math.sin(seed) * 10000;
-                return x - Math.floor(x);
-            },
-
-            // Interpolation linéaire
-            lerp: (a, b, t) => a + (b - a) * Math.max(0, Math.min(1, t)),
-
-            // Dessiner un calice (sepal) avec gradient
-            drawSepal: (cx, cy, rx, ry, rotation, params) => {
+            // Dessiner un calice (sepal) avec texture détaillée
+            drawSepal: (cx, cy, rx, ry, rotation, layerIdx, sIdx) => {
                 ctx.save();
                 ctx.translate(cx, cy);
                 ctx.rotate(rotation);
 
-                // Gradient radial pour donner du volume
-                const grad = ctx.createRadialGradient(-rx * 0.3, -ry * 0.3, 0, 0, 0, rx * 1.2);
-                grad.addColorStop(0, renderer.colors.light_green);
-                grad.addColorStop(0.6, renderer.colors.green);
-                grad.addColorStop(1, renderer.colors.dark_green);
+                // Gradient radial pour volume 3D
+                const glow = ctx.createRadialGradient(-rx * 0.4, -ry * 0.4, 0, 0, 0, rx * 1.3);
+                glow.addColorStop(0, this.greenPalette[2]);
+                glow.addColorStop(0.5, this.greenPalette[4]);
+                glow.addColorStop(1, this.greenPalette[6 + layerIdx % 3]);
 
-                // Dessiner l'ellipse
-                ctx.fillStyle = grad;
+                ctx.fillStyle = glow;
                 ctx.beginPath();
                 ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Stroke subtle
-                ctx.strokeStyle = renderer.colors.darker_green;
-                ctx.lineWidth = 0.5;
+                // Ombre interne pour relief
+                ctx.strokeStyle = this.greenPalette[8];
+                ctx.lineWidth = 0.8;
+                ctx.globalAlpha = 0.4;
                 ctx.stroke();
 
+                // Highlight léger
+                ctx.globalAlpha = 0.15;
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.ellipse(-rx * 0.3, -ry * 0.3, rx * 0.4, ry * 0.3, 0, 0, Math.PI * 2);
+                ctx.fill();
+
                 ctx.restore();
+                ctx.globalAlpha = 1;
             },
 
-            // Dessiner les pistils
-            drawPistils: (cx, cy, density, params) => {
-                const count = Math.round(density * 20);
-                ctx.strokeStyle = renderer.colors.pistil_orange;
-                ctx.globalAlpha = 0.6 + (density / 10) * 0.4;
-                ctx.lineWidth = 0.8 + (density / 10) * 1.5;
+            // Pistils courbes détaillées et naturelles
+            drawPistils: (cx, cy, density) => {
+                if (density < 0.1) return;
+
+                const count = Math.round(density * 60);
+                ctx.globalAlpha = 0.5 + (density / 10) * 0.5;
                 ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
 
                 for (let i = 0; i < count; i++) {
-                    const angle = (i / count) * Math.PI * 2 + Math.sin(i * 0.5) * 0.3;
-                    const length = 15 + Math.random() * 20;
-                    const curve = Math.sin(i * 0.7) * 8;
+                    const angle = (i / count) * Math.PI * 2 + this.perlin(i, density) * 0.5;
+                    const length = 25 + this.perlin(i * 1.5, density) * 20;
+                    const variation = this.perlin(i * 2, density * 5);
 
+                    // Épaisseur variable selon variation
+                    ctx.lineWidth = 0.7 + variation * 1.5;
+                    ctx.strokeStyle = this.pistilColors[Math.floor(variation * this.pistilColors.length)];
+
+                    // Bézier curve naturelle
                     ctx.beginPath();
                     ctx.moveTo(cx, cy);
 
-                    // Point de contrôle pour Bézier
-                    const cpx = cx + Math.cos(angle) * length * 0.4 + curve;
-                    const cpy = cy + Math.sin(angle) * length * 0.4;
+                    const curve1 = Math.sin(i * 0.5) * 12;
+                    const curve2 = Math.cos(i * 0.7) * 8;
+                    const cpx = cx + Math.cos(angle) * length * 0.4 + curve1;
+                    const cpy = cy + Math.sin(angle) * length * 0.4 + curve2 * 0.5;
                     const endX = cx + Math.cos(angle) * length;
-                    const endY = cy + Math.sin(angle) * length * 0.6;
+                    const endY = cy + Math.sin(angle) * length * 0.65;
 
+                    ctx.quadraticCurveTo(cpx, cpy, endX, endY);
+                    ctx.stroke();
+
+                    // Highlight sur pistil
+                    ctx.globalAlpha = (0.5 + density / 10 * 0.5) * 0.4;
+                    ctx.lineWidth = ctx.lineWidth * 0.4;
+                    ctx.strokeStyle = '#FFD700';
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
                     ctx.quadraticCurveTo(cpx, cpy, endX, endY);
                     ctx.stroke();
                 }
@@ -122,27 +135,33 @@ const FlowerCanvasRenderer = ({
                 ctx.globalAlpha = 1;
             },
 
-            // Dessiner les trichomes (points brillants)
-            drawTrichomes: (params) => {
-                const density = params.trichomes;
-                if (density === 0) return;
+            // Trichomes cristallins avec glow réaliste
+            drawTrichomes: (density) => {
+                if (density < 0.1) return;
 
-                const count = Math.round(density * 80);
-                ctx.globalAlpha = 0.6 + (density / 10) * 0.4;
-                ctx.fillStyle = renderer.colors.trichome_white;
+                const count = Math.round(density * 120);
+                ctx.globalAlpha = 0.4 + (density / 10) * 0.6;
 
-                // Bloom/glow effect via shadow
-                ctx.shadowColor = 'rgba(255,255,255,0.8)';
-                ctx.shadowBlur = 2 + density * 0.5;
+                // Glow effect via shadow
+                ctx.shadowColor = `rgba(255, 255, 255, ${0.3 + density * 0.07})`;
+                ctx.shadowBlur = 3 + density * 1.5;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+
+                ctx.fillStyle = '#FFFFFF';
 
                 for (let i = 0; i < count; i++) {
-                    const seed = i * 137.5;
-                    const angle = seed * 0.1;
-                    const radius = 30 + Math.sin(seed * 0.01) * 50;
-                    const x = 300 + Math.cos(angle) * radius;
-                    const y = 200 + Math.sin(angle) * radius * 0.7;
+                    const seed = i * 137.508;
+                    const angle = this.perlin(seed * 0.01, density) * Math.PI * 2;
+                    const radius = 35 + this.perlin(seed * 0.05, density * 10) * 55;
 
-                    const r = 0.5 + renderer.seededRandom(seed) * 1.5;
+                    const x = 400 + Math.cos(angle) * radius;
+                    const y = 280 + Math.sin(angle) * radius * 0.75;
+
+                    // Taille variable des trichomes
+                    const sizeVar = this.perlin(seed * 0.1, density * 2);
+                    const r = 0.8 + sizeVar * 2;
+
                     ctx.beginPath();
                     ctx.arc(x, y, r, 0, Math.PI * 2);
                     ctx.fill();
@@ -152,33 +171,59 @@ const FlowerCanvasRenderer = ({
                 ctx.globalAlpha = 1;
             },
 
-            // Dessiner les feuilles
-            drawLeaves: (params) => {
-                const leafCount = Math.max(0, Math.round((1 - params.manucure / 10) * 6));
-                ctx.fillStyle = renderer.colors.light_green;
-                ctx.strokeStyle = renderer.colors.green;
-                ctx.lineWidth = 0.7;
-                ctx.globalAlpha = 0.7;
+            // Feuilles détaillées et polylobées
+            drawLeaves: (density) => {
+                const leafCount = Math.max(0, Math.round((1 - density / 10) * 8));
+                if (leafCount === 0) return;
+
+                ctx.globalAlpha = 0.75;
+                ctx.lineJoin = 'round';
 
                 for (let i = 0; i < leafCount; i++) {
-                    const angle = (i / Math.max(1, leafCount - 1)) * 120 - 60 + Math.PI;
-                    const length = 60 + Math.sin(i * 0.5) * 15;
+                    const angle = (i / leafCount) * Math.PI * 1.4 - 0.7 + Math.PI * 0.8;
+                    const distance = 85 + i * 8;
+                    const baseX = 400 + Math.cos(angle) * distance;
+                    const baseY = 280 + Math.sin(angle) * distance;
 
                     ctx.save();
-                    ctx.translate(300, 200);
-                    ctx.rotate(angle);
+                    ctx.translate(baseX, baseY);
+                    ctx.rotate(angle + Math.PI / 2);
 
-                    // Feuille polylobée simple
+                    const leafLength = 70 + i * 5;
+                    const leafWidth = 25 + i * 3;
+
+                    // Dégradé vert pour la feuille
+                    const leafGrad = ctx.createLinearGradient(0, 0, leafLength, 0);
+                    leafGrad.addColorStop(0, this.greenPalette[2]);
+                    leafGrad.addColorStop(0.5, this.greenPalette[3]);
+                    leafGrad.addColorStop(1, this.greenPalette[5]);
+
+                    ctx.fillStyle = leafGrad;
+                    ctx.strokeStyle = this.greenPalette[7];
+                    ctx.lineWidth = 1.2;
+
+                    // Forme polylobée
                     ctx.beginPath();
                     ctx.moveTo(0, 0);
-                    for (let j = 0; j <= 5; j++) {
-                        const t = j / 5;
-                        const x = length * t;
-                        const y = Math.sin(t * Math.PI) * (8 + i * 2) * (j % 2 === 0 ? 1 : -1);
-                        if (j === 0) ctx.moveTo(x, y);
-                        else ctx.lineTo(x, y);
+
+                    for (let j = 1; j <= 6; j++) {
+                        const t = j / 6;
+                        const x = leafLength * t;
+                        const curve = Math.sin(t * Math.PI) * leafWidth * (j % 2 === 0 ? 1 : -1);
+                        ctx.lineTo(x, curve);
                     }
+
+                    ctx.closePath();
                     ctx.fill();
+                    ctx.stroke();
+
+                    // Nervure centrale
+                    ctx.strokeStyle = this.greenPalette[7];
+                    ctx.lineWidth = 0.5;
+                    ctx.globalAlpha = 0.4;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(leafLength, 0);
                     ctx.stroke();
 
                     ctx.restore();
@@ -187,109 +232,148 @@ const FlowerCanvasRenderer = ({
                 ctx.globalAlpha = 1;
             },
 
-            // Dessiner la moisissure
-            drawMold: (params) => {
-                const moldIntensity = 1 - (params.moisissure / 10);
-                if (moldIntensity < 0.01) return;
+            // Moisissure/dégradation
+            drawMold: (intensity) => {
+                const moldPower = 1 - (intensity / 10);
+                if (moldPower < 0.05) return;
 
-                ctx.globalAlpha = moldIntensity * 0.5;
-                ctx.fillStyle = renderer.colors.mold_gray;
+                ctx.globalAlpha = moldPower * 0.45;
+                ctx.fillStyle = '#7A6E66';
 
-                for (let i = 0; i < 20; i++) {
-                    const angle = i * Math.PI * 2 / 20;
-                    const radius = 20 + Math.sin(i * 0.5) * 25;
-                    const x = 300 + Math.cos(angle) * radius;
-                    const y = 200 + Math.sin(angle) * radius * 0.6;
+                for (let i = 0; i < 35; i++) {
+                    const seed = i * 73.3;
+                    const angle = this.perlin(seed, moldPower) * Math.PI * 2;
+                    const radius = 20 + this.perlin(seed * 1.5, moldPower * 5) * 40;
+
+                    const x = 400 + Math.cos(angle) * radius;
+                    const y = 280 + Math.sin(angle) * radius * 0.75;
+                    const size = 3 + this.perlin(seed * 2, moldPower) * 4;
 
                     ctx.beginPath();
-                    ctx.arc(x, y, 2 + Math.random() * 3, 0, Math.PI * 2);
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
                     ctx.fill();
                 }
 
                 ctx.globalAlpha = 1;
             },
 
-            // Dessiner les graines
-            drawSeeds: (params) => {
-                const seedCount = Math.max(0, Math.round((1 - params.graines / 10) * 8));
-                ctx.fillStyle = renderer.colors.seed_green;
-                ctx.globalAlpha = 0.6;
+            // Graines/seeds
+            drawSeeds: (intensity) => {
+                const seedCount = Math.max(0, Math.round((1 - intensity / 10) * 12));
+                if (seedCount === 0) return;
+
+                ctx.globalAlpha = 0.65;
+                ctx.fillStyle = '#6B7280';
 
                 for (let i = 0; i < seedCount; i++) {
-                    const angle = i * Math.PI * 2 / seedCount;
-                    const radius = 35 + Math.sin(i * 0.8) * 15;
-                    const x = 300 + Math.cos(angle) * radius;
-                    const y = 200 + Math.sin(angle) * radius * 0.7;
+                    const angle = (i / seedCount) * Math.PI * 2;
+                    const radius = 30 + this.perlin(i * 2.5, intensity) * 25;
 
+                    const x = 400 + Math.cos(angle) * radius;
+                    const y = 280 + Math.sin(angle) * radius * 0.75;
+
+                    // Graine ellipse avec rotation
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.rotate(angle + Math.PI / 4);
+
+                    const seedGrad = ctx.createLinearGradient(-4, -6, 4, 6);
+                    seedGrad.addColorStop(0, '#5A5F66');
+                    seedGrad.addColorStop(1, '#3D4048');
+
+                    ctx.fillStyle = seedGrad;
                     ctx.beginPath();
-                    ctx.ellipse(x, y, 4, 6, angle, 0, Math.PI * 2);
+                    ctx.ellipse(0, 0, 5, 7, 0, 0, Math.PI * 2);
                     ctx.fill();
+
+                    ctx.strokeStyle = '#2A2E35';
+                    ctx.lineWidth = 0.8;
+                    ctx.stroke();
+
+                    ctx.restore();
                 }
 
                 ctx.globalAlpha = 1;
             },
 
-            // Dessiner la structure principale (calices)
-            drawStructure: (params) => {
-                const density = params.densite / 10;
-                const gap = 1 + (1 - density) * 3;
-                const layers = 7;
+            // Structure principale - tous les calices
+            drawStructure: (density) => {
+                const densityFactor = density / 10;
+                const baseGap = 1 + (1 - densityFactor) * 4;
+                const layers = 8;
 
-                let colorIdx = 0;
                 for (let layer = 0; layer < layers; layer++) {
-                    const layerRadius = 50 - layer * (4 + gap * 1.5);
-                    const layerY = 200 + layer * (8 + gap * 2);
-                    const sepsCount = Math.max(3, Math.round(10 - layer * 1.2));
-                    const sizeMultiplier = 1 - layer * 0.12;
+                    const layerCompact = densityFactor;
+                    const layerRadius = 55 - layer * (5 + baseGap * 1.2);
+                    const layerY = 280 + layer * (10 + baseGap * 1.5);
+                    const sepsCount = Math.max(4, Math.round(12 - layer * 1.3 - (1 - densityFactor) * 2));
+                    const sizeMultiplier = 1.1 - layer * 0.14;
 
                     for (let i = 0; i < sepsCount; i++) {
-                        const angle = (i / sepsCount) * Math.PI * 2 + layer * 0.3;
-                        const x = 300 + Math.cos(angle) * layerRadius;
-                        const y = layerY + Math.sin(angle) * layerRadius * 0.5;
+                        const angle = (i / sepsCount) * Math.PI * 2 + layer * 0.35;
+                        const radiusVar = layerRadius * (1 + this.perlin(layer * 10 + i, densityFactor) * 0.2);
 
-                        const rx = 10 * sizeMultiplier * (1 + Math.sin(angle * 3) * 0.15);
-                        const ry = 15 * sizeMultiplier * (1 + Math.cos(angle * 2) * 0.12);
-                        const rotation = angle + Math.PI / 2;
+                        const x = 400 + Math.cos(angle) * radiusVar;
+                        const y = layerY + Math.sin(angle) * radiusVar * 0.55;
 
-                        renderer.drawSepal(x, y, rx, ry, rotation, params);
-                        colorIdx++;
+                        const rx = 11 * sizeMultiplier * (1 + Math.sin(angle * 4) * 0.18);
+                        const ry = 16 * sizeMultiplier * (1 + Math.cos(angle * 3) * 0.15);
+                        const rotation = angle + Math.PI / 2 + this.perlin(layer + i * 0.1, 0) * 0.3;
+
+                        this.drawSepal(x, y, rx, ry, rotation, layer, i);
                     }
                 }
             },
 
-            // Ombre sous la fleur
-            drawShadow: (params) => {
-                ctx.fillStyle = renderer.colors.shadow;
-                ctx.globalAlpha = 0.3;
+            // Tige avec gradient
+            drawStem: () => {
+                const stemGrad = ctx.createLinearGradient(0, 280, 0, 450);
+                stemGrad.addColorStop(0, this.greenPalette[6]);
+                stemGrad.addColorStop(0.5, this.greenPalette[7]);
+                stemGrad.addColorStop(1, this.greenPalette[8]);
+
+                ctx.fillStyle = stemGrad;
+                ctx.globalAlpha = 0.8;
+
+                // Tige légèrement courbe
                 ctx.beginPath();
-                ctx.ellipse(300, 350, 80, 15, 0, 0, Math.PI * 2);
+                ctx.moveTo(395, 350);
+                ctx.quadraticCurveTo(398, 380, 397, 450);
+                ctx.lineTo(403, 450);
+                ctx.quadraticCurveTo(404, 380, 405, 350);
+                ctx.closePath();
                 ctx.fill();
+
                 ctx.globalAlpha = 1;
             },
 
-            // Tige
-            drawStem: (params) => {
-                ctx.fillStyle = renderer.colors.darker_green;
-                ctx.globalAlpha = 0.6;
-                ctx.fillRect(295, 300, 10, 80);
-                ctx.globalAlpha = 1;
+            // Ombre sous la fleur
+            drawShadow: () => {
+                const shadowGrad = ctx.createRadialGradient(400, 450, 0, 400, 450, 100);
+                shadowGrad.addColorStop(0, 'rgba(0, 0, 0, 0.2)');
+                shadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+                ctx.fillStyle = shadowGrad;
+                ctx.beginPath();
+                ctx.ellipse(400, 450, 120, 25, 0, 0, Math.PI * 2);
+                ctx.fill();
             },
 
-            // Draw complet
+            // Dessin complet
             draw: (params) => {
-                // Clear
+                // Background
                 ctx.fillStyle = '#FFFFFF';
-                ctx.fillRect(0, 0, size.width, size.height);
+                ctx.fillRect(0, 0, 800, 600);
 
-                // Render layers
-                renderer.drawShadow(params);
-                renderer.drawStem(params);
-                renderer.drawStructure(params);
-                renderer.drawLeaves(params);
-                renderer.drawMold(params);
-                renderer.drawSeeds(params);
-                renderer.drawPistils(300, 200, params.pistils / 10, params);
-                renderer.drawTrichomes(params);
+                // Render ordre important
+                this.drawShadow();
+                this.drawStem();
+                this.drawStructure(params.densite);
+                this.drawLeaves(params.manucure);
+                this.drawMold(params.moisissure);
+                this.drawSeeds(params.graines);
+                this.drawPistils(400, 280, params.pistils / 10);
+                this.drawTrichomes(params.trichomes / 10);
             }
         };
 
@@ -307,14 +391,14 @@ const FlowerCanvasRenderer = ({
             }
             window.removeEventListener('resize', updateCanvasSize);
         };
-    }, [size]);
+    }, []);
 
     return (
-        <div className="w-full h-full min-h-[400px] bg-white rounded-lg flex items-center justify-center">
+        <div className="w-full h-full min-h-[600px] bg-white rounded-lg overflow-hidden shadow-sm">
             <canvas
                 ref={canvasRef}
-                className="w-full h-full"
-                style={{ display: 'block' }}
+                className="w-full h-full block"
+                style={{ display: 'block', backgroundColor: '#FFFFFF' }}
             />
         </div>
     );
