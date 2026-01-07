@@ -76,118 +76,87 @@ const FlowerCanvasRenderer = ({
         };
 
         // ===============================================
-        // STRUCTURE: Branches + Calices attachés
+        // STRUCTURE: Calices en spirale (vraie morphologie cannabis)
         // ===============================================
         const drawBranchesAndCalyces = () => {
-            // Nombre de niveaux de branches selon densité - moins de niveaux pour éviter l'étirement
-            const levels = Math.floor(6 + pDensite * 8); // 6-14 niveaux
+            // Nombre total de calices selon densité
+            const totalCalyces = Math.floor(15 + pDensite * 35); // 15-50 calices
+            
+            // Taille des calices
+            const baseCalyxSize = 16 + pDensite * 8; // 16-24px
+            
+            // Angle d'or pour la spirale (phyllotaxie du cannabis)
+            const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ~137.5°
 
-            // Taille des calices - proportionnée
-            const baseCalyxSize = 20 + pDensite * 10; // 20-30px
-
-            for (let level = 0; level < levels; level++) {
-                const seed = level * 123.456;
+            // Dessiner les calices en spirale autour de la tige
+            for (let i = 0; i < totalCalyces; i++) {
+                const seed = i * 42.7;
                 const r = seededRandom(seed);
-
-                // Position Y le long de la tige (du haut vers le bas)
-                const t = level / (levels - 1); // 0 = haut, 1 = bas
-                const y = stemTop + t * stemHeight * 0.85;
-
-                // Largeur de la cola à cette hauteur (forme conique)
-                // Plus large au milieu, étroit en haut et en bas
-                let widthFactor;
-                if (t < 0.2) {
-                    widthFactor = t * 4.5; // Pointe haute plus progressive
-                } else if (t < 0.7) {
-                    widthFactor = 0.9 + (t - 0.2) * 0.3; // Élargissement jusqu'au max
+                
+                // Position verticale (0 = haut, 1 = bas)
+                const t = i / (totalCalyces - 1);
+                const y = stemTop + t * stemHeight * 0.88;
+                
+                // Rayon de la cola (forme conique naturelle)
+                let radius;
+                if (t < 0.15) {
+                    // Pointe haute très étroite
+                    radius = W * 0.08 * (t / 0.15);
+                } else if (t < 0.65) {
+                    // Élargissement progressif
+                    radius = W * 0.08 + (W * 0.22) * ((t - 0.15) / 0.5);
                 } else {
-                    widthFactor = 1.2 - (t - 0.7) * 0.8; // Rétrécissement bas plus doux
+                    // Rétrécissement léger vers le bas
+                    radius = W * 0.30 - (W * 0.08) * ((t - 0.65) / 0.35);
                 }
-
-                const maxBranchLength = W * 0.38 * widthFactor;
-
-                // Branches des deux côtés
-                const branchesPerSide = Math.floor(1 + pDensite * 2); // 1-3 branches par côté
-
-                for (let side = -1; side <= 1; side += 2) {
-                    for (let b = 0; b < branchesPerSide; b++) {
-                        const branchSeed = seed + side * 100 + b * 50;
-                        const br = seededRandom(branchSeed);
-
-                        // Longueur de branche variable
-                        const branchLength = maxBranchLength * (0.5 + br * 0.5);
-
-                        // Angle de la branche (vers le haut et l'extérieur)
-                        const baseAngle = side * (Math.PI / 3 + br * 0.3);
-                        const branchEndX = centerX + Math.cos(baseAngle) * branchLength;
-                        const branchEndY = y + Math.sin(baseAngle) * branchLength * 0.3 - branchLength * 0.2;
-
-                        // Dessiner la branche (fine tige verte)
-                        ctx.strokeStyle = '#3d6535';
-                        ctx.lineWidth = 2;
-                        ctx.beginPath();
-                        ctx.moveTo(centerX, y);
-                        ctx.quadraticCurveTo(
-                            centerX + side * branchLength * 0.3,
-                            y - branchLength * 0.1,
-                            branchEndX,
-                            branchEndY
-                        );
-                        ctx.stroke();
-
-                        // Calices le long de la branche
-                        const calyxCount = Math.floor(2 + pDensite * 3); // 2-5 calices par branche
-
-                        for (let c = 0; c < calyxCount; c++) {
-                            const calyxT = (c + 0.5) / calyxCount; // Position le long de la branche
-                            const calyxSeed = branchSeed + c * 17;
-                            const cr = seededRandom(calyxSeed);
-
-                            // Position interpolée le long de la branche
-                            const calyxX = centerX + (branchEndX - centerX) * calyxT + (cr - 0.5) * 8;
-                            const calyxY = y + (branchEndY - y) * calyxT + (cr - 0.5) * 5;
-
-                            // Taille variable
-                            const size = baseCalyxSize * (0.7 + cr * 0.5);
-
-                            // Gonflement si graine
-                            const seedSwelling = pGraines < 0.8 && cr > 0.7 ? 1.3 : 1.0;
-
-                            drawCalyx(calyxX, calyxY, size * seedSwelling, calyxSeed, side);
-
-                            calyxPositions.push({ x: calyxX, y: calyxY, size, seed: calyxSeed });
-                        }
-                    }
-                }
-
-                // Calices sur la tige principale aussi
-                const mainCalyxCount = Math.floor(1 + pDensite * 2);
-                for (let mc = 0; mc < mainCalyxCount; mc++) {
-                    const mcSeed = seed + mc * 33 + 500;
-                    const mcr = seededRandom(mcSeed);
-
-                    const mcX = centerX + (mcr - 0.5) * 15;
-                    const mcY = y + (mcr - 0.5) * 10;
-                    const size = baseCalyxSize * (0.8 + mcr * 0.4);
-
-                    drawCalyx(mcX, mcY, size, mcSeed, mcr > 0.5 ? 1 : -1);
-                    calyxPositions.push({ x: mcX, y: mcY, size, seed: mcSeed });
-                }
+                
+                // Angle en spirale
+                const angle = i * goldenAngle;
+                
+                // Position x,y du calice
+                const calyxX = centerX + Math.cos(angle) * radius;
+                const calyxY = y + (r - 0.5) * 4; // Légère variation verticale
+                
+                // Taille avec variation naturelle
+                const size = baseCalyxSize * (0.85 + r * 0.3);
+                
+                // Gonflement si graines présentes
+                const seedSwelling = pGraines < 0.8 && r > 0.75 ? 1.4 : 1.0;
+                
+                // Direction (vers l'extérieur)
+                const direction = Math.sign(Math.cos(angle));
+                
+                drawCalyx(calyxX, calyxY, size * seedSwelling, seed, direction, angle);
+                calyxPositions.push({ x: calyxX, y: calyxY, size, seed });
+            }
+            
+            // Quelques petites feuilles (sugar leaves) entre les calices
+            const leafCount = Math.floor(3 + pManucure * -2); // 1-3 feuilles si mal manucuré
+            for (let l = 0; l < leafCount; l++) {
+                const leafSeed = l * 789 + 1000;
+                const lr = seededRandom(leafSeed);
+                const lAngle = lr * Math.PI * 2;
+                const lT = 0.3 + lr * 0.4; // Milieu de la cola
+                const lY = stemTop + lT * stemHeight * 0.88;
+                const lRadius = W * 0.25;
+                const lX = centerX + Math.cos(lAngle) * lRadius;
+                
+                drawSugarLeaf(lX, lY, lAngle, leafSeed);
             }
         };
 
         // ===============================================
         // CALICE (Bractée) - Forme teardrop/goutte
         // ===============================================
-        const drawCalyx = (x, y, size, seed, direction) => {
+        const drawCalyx = (x, y, size, seed, direction, angle) => {
             const r = seededRandom(seed);
             const r2 = seededRandom(seed + 1);
 
             ctx.save();
             ctx.translate(x, y);
 
-            // Rotation légère vers l'extérieur
-            const rotation = direction * 0.2 + (r - 0.5) * 0.3;
+            // Rotation : orienté vers l'extérieur depuis le centre
+            const rotation = angle + Math.PI / 2 + (r - 0.5) * 0.4;
             ctx.rotate(rotation);
 
             // Couleurs vertes variées
@@ -241,6 +210,52 @@ const FlowerCanvasRenderer = ({
             ctx.lineTo(0, size * 0.4);
             ctx.stroke();
 
+            ctx.restore();
+        };
+
+        // ===============================================
+        // SUGAR LEAVES (petites feuilles entre calices)
+        // ===============================================
+        const drawSugarLeaf = (x, y, angle, seed) => {
+            const r = seededRandom(seed);
+            
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            
+            // Couleur verte plus claire que les calices
+            const hue = 95 + r * 20;
+            const sat = 50 + r * 20;
+            const light = 38 + r * 8;
+            
+            ctx.fillStyle = `hsl(${hue}, ${sat}%, ${light}%)`;
+            ctx.strokeStyle = `hsl(${hue}, ${sat - 10}%, ${light - 15}%)`;
+            ctx.lineWidth = 1;
+            
+            // Forme de feuille dentelée simple
+            const size = 25 + r * 15;
+            ctx.beginPath();
+            ctx.moveTo(0, -size);
+            
+            // 3 pointes par côté
+            for (let side = -1; side <= 1; side += 2) {
+                ctx.lineTo(side * size * 0.2, -size * 0.6);
+                ctx.lineTo(side * size * 0.4, -size * 0.4);
+                ctx.lineTo(side * size * 0.5, -size * 0.2);
+                ctx.lineTo(side * size * 0.4, size * 0.1);
+            }
+            
+            ctx.lineTo(0, size * 0.2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // Nervure centrale
+            ctx.beginPath();
+            ctx.moveTo(0, -size * 0.9);
+            ctx.lineTo(0, size * 0.1);
+            ctx.stroke();
+            
             ctx.restore();
         };
 

@@ -311,7 +311,12 @@ const PipelineDataModal = ({
     // Obtenir les items à afficher
     const getItemsToDisplay = () => {
         if (droppedItem) {
-            // Afficher uniquement l'item droppé
+            // ✅ BUG FIX #3: Support multi-items drop
+            if (droppedItem.content.type === 'multi' && Array.isArray(droppedItem.content.items)) {
+                console.log('🔍 getItemsToDisplay - Multi-items:', droppedItem.content.items.length);
+                return droppedItem.content.items.map(item => ({ ...item, sectionLabel: '' }));
+            }
+            // Afficher uniquement l'item droppé (single)
             return [{ ...droppedItem.content, sectionLabel: '' }];
         } else {
             // Afficher tous les items qui ont des données dans formData
@@ -352,6 +357,11 @@ const PipelineDataModal = ({
                 data: formData
             });
         });
+
+        // ✅ Feedback utilisateur
+        if (targets.length > 1) {
+            console.log(`✅ Données appliquées à ${targets.length} cases`);
+        }
 
         onClose();
     };

@@ -821,18 +821,36 @@ const PipelineDragDropView = ({
         const changes = [];
         const prevData = getCellData(data.timestamp) || {};
 
-        // Si c'est un drop, sauvegarder uniquement le champ droppé
-        if (droppedItem && droppedItem.timestamp === data.timestamp) {
-            const fieldKey = droppedItem.content.id || droppedItem.content.key || droppedItem.content.type;
-            console.log('🔑 fieldKey extrait de droppedItem:', fieldKey, 'droppedItem.content:', droppedItem.content);
-            if (data.data && data.data[fieldKey] !== undefined) {
-                changes.push({ timestamp: data.timestamp, field: fieldKey, previousValue: prevData[fieldKey] });
-                console.log('✓ Sauvegarde champ droppé:', fieldKey, '=', data.data[fieldKey]);
-                onDataChange(data.timestamp, fieldKey, data.data[fieldKey]);
+        // ✅ BUG FIX #4: Ne plus vérifier droppedItem.timestamp === data.timestamp
+        // Car quand on applique à plusieurs cases, droppedItem.timestamp est différent
+        // À la place, vérifier juste si droppedItem existe (mode drop) ou pas (mode edit)
+        if (droppedItem) {
+            // Mode DROP: sauvegarder uniquement le(s) champ(s) droppé(s)
+            if (droppedItem.content.type === 'multi' && Array.isArray(droppedItem.content.items)) {
+                // Multi-items drop: sauvegarder tous les items droppés
+                console.log('✓ Sauvegarde multi-items:', droppedItem.content.items.length, 'champs');
+                droppedItem.content.items.forEach(item => {
+                    const fieldKey = item.id || item.key || item.type;
+                    if (data.data && data.data[fieldKey] !== undefined) {
+                        changes.push({ timestamp: data.timestamp, field: fieldKey, previousValue: prevData[fieldKey] });
+                        console.log('  → Multi-drop:', fieldKey, '=', data.data[fieldKey]);
+                        onDataChange(data.timestamp, fieldKey, data.data[fieldKey]);
+                    }
+                });
+            } else {
+                // Single item drop
+                const fieldKey = droppedItem.content.id || droppedItem.content.key || droppedItem.content.type;
+                console.log('🔑 fieldKey extrait de droppedItem:', fieldKey, 'droppedItem.content:', droppedItem.content);
+                if (data.data && data.data[fieldKey] !== undefined) {
+                    changes.push({ timestamp: data.timestamp, field: fieldKey, previousValue: prevData[fieldKey] });
+                    console.log('✓ Sauvegarde champ droppé:', fieldKey, '=', data.data[fieldKey]);
+                    onDataChange(data.timestamp, fieldKey, data.data[fieldKey]);
+                }
             }
-            setDroppedItem(null);
+            // Ne pas setDroppedItem(null) ici car handleModalSave est appelé pour chaque timestamp
+            // On le clear dans handleSubmit de PipelineDataModal
         } else {
-            // Sauvegarder toutes les données (cas modal normale)
+            // Sauvegarder toutes les données (cas modal normale - édition)
             console.log('✓ Sauvegarde de tous les champs:', Object.keys(data.data || {}));
             Object.entries(data.data || {}).forEach(([key, value]) => {
                 // Treat empty string/null/undefined as deletion
@@ -1000,6 +1018,55 @@ const PipelineDragDropView = ({
                 return;
             }
 
+            // ✅ BUG FIX #5: Vérifier si données existantes avant d'ouvrir modal (sauf pour groupes)
+            const existingData = getCellData(timestamp);
+            const hasExistingData = existingData && Object.keys(existingData).some(k => 
+                !['timestamp', '_meta', 'date', 'label', 'phase'].includes(k)
+            );
+
+            // ✅ BUG FIX #3: MULTI-ITEMS DROP - Ouvrir modal avec tous les items sélectionnés
+            if (draggedContent.type === 'multi-items' && Array.isArray(draggedContent.items)) {
+                console.log('✅ handleDrop: Multi-items drop avec', draggedContent.items.length, 'items');
+                
+                // Vérifier conflits pour chaque item
+                if (hasExistingData) {
+                    const conflictingItems = draggedContent.items.filter(item => {
+                        const fieldKey = item.id || item.key || item.type;
+                        return existingData[fieldKey] !== undefined;
+                    });
+                    
+                    if (conflictingItems.length > 0) {
+                        const conflictLabels = conflictingItems.map(i => i.label || i.key).join(', ');
+                        setConfirmState({
+                            open: true,
+                            title: 'Écraser les données existantes ?',
+                            message: `La cellule contient déjà des valeurs pour: ${conflictLabels}. Voulez-vous les remplacer ?`,
+                            onConfirm: () => {
+                                setCurrentCellTimestamp(timestamp);
+                                setDroppedItem({
+                                    timestamp,
+                                    content: { type: 'multi', items: draggedContent.items }
+                                });
+                                setIsModalOpen(true);
+                                setDraggedContent(null);
+                                setConfirmState(prev => ({ ...prev, open: false }));
+                            }
+                        });
+                        return;
+                    }
+                }
+                
+                // Pas de conflit ou pas de données existantes
+                setCurrentCellTimestamp(timestamp);
+                setDroppedItem({
+                    timestamp,
+                    content: { type: 'multi', items: draggedContent.items }
+                });
+                setIsModalOpen(true);
+                setDraggedContent(null);
+                return;
+            }
+
             // GROUPED PRESET: Appliquer directement sans ouvrir le modal
             if (draggedContent.type === 'grouped' && draggedContent.group) {
                 console.log('✅ handleDrop: Application groupe préréglage:', draggedContent.group);
@@ -1028,6 +1095,29 @@ const PipelineDragDropView = ({
 
             // Sinon, ouvrir PipelineDataModal avec l'item droppé
             console.log('✅ handleDrop: Ouverture PipelineDataModal');
+            
+            // ✅ BUG FIX #5: Vérifier conflit pour item simple
+            if (hasExistingData) {
+                const fieldKey = draggedContent.id || draggedContent.key || draggedContent.type;
+                const fieldExists = existingData[fieldKey] !== undefined;
+                
+                if (fieldExists) {
+                    setConfirmState({
+                        open: true,
+                        title: 'Écraser la valeur existante ?',
+                        message: `La cellule ${timestamp} contient déjà une valeur pour "${draggedContent.label}". Voulez-vous la remplacer ?`,
+                        onConfirm: () => {
+                            setCurrentCellTimestamp(timestamp);
+                            setDroppedItem({ timestamp, content: draggedContent });
+                            setIsModalOpen(true);
+                            setDraggedContent(null);
+                            setConfirmState(prev => ({ ...prev, open: false }));
+                        }
+                    });
+                    return;
+                }
+            }
+            
             setCurrentCellTimestamp(timestamp);
             setDroppedItem({
                 timestamp,
@@ -2107,25 +2197,6 @@ const PipelineDragDropView = ({
                 timelineData={timelineData}
                 onSavePreset={(p) => { /* noop - preserved for external hooks */ }}
                 onLoadPreset={(p) => applyPipelinePreset(p)}
-            />
-
-            {/* Modal d'édition de cellule */}
-            <PipelineDataModal
-                isOpen={isModalOpen}
-                onClose={() => {
-                    setIsModalOpen(false);
-                    setDroppedItem(null);
-                }}
-                cellData={getCellData(currentCellTimestamp)}
-                sidebarSections={sidebarContent}
-                onSave={handleModalSave}
-                timestamp={currentCellTimestamp}
-                intervalLabel={cells.find(c => c.timestamp === currentCellTimestamp)?.label || ''}
-                droppedItem={droppedItem} // Passer l'item droppé à la modal
-                pipelineType={type} // Passer le type de pipeline pour localStorage
-                onFieldDelete={handleFieldDelete}
-                groupedPresets={groupedPresets}
-                preConfiguredItems={preConfiguredItems}
             />
 
             {/* Modal d'édition de cellule */}

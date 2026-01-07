@@ -23,15 +23,27 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
             // Update existing cell
             updatedData = [...currentData];
             if (value === null || value === undefined) {
-                // Remove field
+                // ✅ BUG FIX: Remove field completely instead of setting to null
                 const { [field]: removed, ...rest } = updatedData[existingIndex];
                 updatedData[existingIndex] = rest;
+                
+                // Si la cellule devient vide (plus aucune donnée utile), la retirer complètement
+                const cellKeys = Object.keys(updatedData[existingIndex]).filter(k => 
+                    !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k)
+                );
+                if (cellKeys.length === 0) {
+                    updatedData = updatedData.filter((_, idx) => idx !== existingIndex);
+                }
             } else {
                 updatedData[existingIndex] = { ...updatedData[existingIndex], [field]: value };
             }
         } else {
-            // Add new cell
-            updatedData = [...currentData, { timestamp, [field]: value }];
+            // Add new cell only if value is not null/undefined
+            if (value !== null && value !== undefined) {
+                updatedData = [...currentData, { timestamp, [field]: value }];
+            } else {
+                updatedData = currentData; // No change
+            }
         }
 
         onChange({ ...data, cultureTimelineData: updatedData });
