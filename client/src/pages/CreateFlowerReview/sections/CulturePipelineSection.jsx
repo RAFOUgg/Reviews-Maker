@@ -15,8 +15,11 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
     };
 
     const handleDataChange = (timestamp, field, value) => {
+        console.log(`🔄 handleDataChange appelé: timestamp=${timestamp}, field=${field}, value=`, value);
         const currentData = data.cultureTimelineData || [];
+        console.log(`  → currentData avant:`, currentData.map(c => c.timestamp));
         const existingIndex = currentData.findIndex(cell => cell.timestamp === timestamp);
+        console.log(`  → existingIndex pour ${timestamp}:`, existingIndex);
 
         let updatedData;
         if (existingIndex >= 0) {
@@ -46,6 +49,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
             }
         }
 
+        console.log(`  → updatedData après:`, updatedData.map(c => `${c.timestamp}(${Object.keys(c).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k)).join(',')})`));
         onChange({ ...data, cultureTimelineData: updatedData });
     };
 
