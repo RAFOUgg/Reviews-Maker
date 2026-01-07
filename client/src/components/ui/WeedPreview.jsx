@@ -163,8 +163,8 @@ const WeedPreview = ({
 
     // Calculs des effets visuels basés sur les jauges
     const visualEffects = useMemo(() => {
-        // Densité: 0 = très aéré, 10 = compact
-        const spacing = 1 + ((10 - densite) / 10) * 0.55; // 1.55x à 1x
+        // Densité: 0 = très aéré, 10 = compact (manucure resserre légèrement)
+        const spacing = 1 + ((10 - densite) / 10) * 0.55 * (0.8 + (1 - manucure / 10) * 0.4); // 1.55x à 1x
 
         // Manucure: 0 = touffu/pointu, 10 = arrondi/compact
         const roundness = manucure / 10; // 0 à 1
@@ -181,7 +181,7 @@ const WeedPreview = ({
 
         // Pistils: quantité et courbure
         const pistilCount = Math.max(4, Math.round((pistils / 10) * 18));
-        const pistilCurl = 6 + pistils * 0.6;
+        const pistilCurl = 10 + pistils * 0.9;
 
         // Ligne externe: plus fine si manucure haute
         const strokeWidth = 0.7 + ((10 - manucure) / 10) * 0.5;
@@ -190,11 +190,11 @@ const WeedPreview = ({
         const sparkleIntensity = Math.max(0, trichomes - 4);
 
         // Mise à l'échelle globale (proportions réalistes selon densité/manucure)
-        const budScaleX = 0.9 + (densite / 10) * 0.14 - (1 - roundness) * 0.04;
-        const budScaleY = 0.95 + (densite / 10) * 0.08 + (1 - roundness) * 0.08;
+        const budScaleX = 1.0 + (densite / 10) * 0.16 - (1 - roundness) * 0.05;
+        const budScaleY = 1.02 + (densite / 10) * 0.1 + (1 - roundness) * 0.08;
 
         // Ouverture des feuilles résineuses
-        const leafSpread = 0.75 + (1 - roundness) * 0.25 + (10 - densite) * 0.02;
+        const leafSpread = 0.7 + (1 - roundness) * 0.35 + (10 - densite) * 0.018;
 
         // Hauteur des calyxes pour représenter un cola plus ou moins allongé
         const calyxStretch = 0.9 + (densite / 10) * 0.12 + (1 - roundness) * 0.05;
@@ -224,13 +224,14 @@ const WeedPreview = ({
         const random = createRandomGenerator(randomSeed + 13);
         const points = [];
         for (let i = 0; i < visualEffects.trichomeCount; i++) {
+            // Ancrés sur le cône de bractées (évite les feuilles)
             const angle = random() * Math.PI * 2;
-            const radius = 18 + random() * 32 * (0.9 + visualEffects.roundness * 0.3);
-            const wobble = (random() - 0.5) * 12;
+            const radius = 26 + random() * 34 * (0.85 + visualEffects.roundness * 0.25);
+            const wobble = (random() - 0.5) * 6;
             const x = 120 + Math.cos(angle) * radius;
-            const y = 140 + Math.sin(angle) * radius * 1.12 - 28 + wobble * 0.2;
-            const tilt = (random() - 0.5) * 35;
-            const length = 3 + random() * (1.6 + trichomes * 0.18);
+            const y = 140 + Math.sin(angle) * radius * 0.95 - 18 + wobble;
+            const tilt = (random() - 0.5) * 28;
+            const length = 3.2 + random() * (2 + trichomes * 0.16);
             points.push({ x, y, tilt, length, delay: 0.7 + i * 0.012 });
         }
         return points;
@@ -241,7 +242,7 @@ const WeedPreview = ({
         const random = createRandomGenerator(randomSeed + 71);
         return Array.from({ length: count }, (_, i) => {
             const angle = (i / count) * Math.PI * 2 + random() * 0.6;
-            const radius = 18 + Math.cos(i * 1.3) * 24 * (0.9 + visualEffects.roundness * 0.2);
+            const radius = 20 + Math.cos(i * 1.3) * 22 * (0.9 + visualEffects.roundness * 0.2);
             const x = 120 + Math.cos(angle) * radius;
             const y = 140 + Math.sin(angle) * radius * 1.05 - 24 + random() * 6;
             return { x, y, delay: i * 0.1 + 0.4, duration: 1.6 + random() * 0.9 };
@@ -268,7 +269,7 @@ const WeedPreview = ({
     const sugarLeaves = useMemo(() => {
         const random = createRandomGenerator(randomSeed + 411);
         const leaves = [];
-        const total = 6 + Math.round((10 - manucure) * 0.3) + Math.round(densite * 0.2);
+        const total = Math.max(0, Math.round((1 - manucure / 10) * 8 + (10 - densite) * 0.2));
         for (let i = 0; i < total; i++) {
             const spread = (28 + random() * 16) * visualEffects.leafSpread;
             const length = (46 + random() * 28) * (0.9 + (10 - densite) * 0.015);
@@ -335,6 +336,24 @@ const WeedPreview = ({
         return veins;
     }, [densite, randomSeed]);
 
+    // Bractéoles supplémentaires pour densifier visuellement la tête
+    const microBracts = useMemo(() => {
+        const random = createRandomGenerator(randomSeed + 911);
+        const count = 12 + Math.round(densite * 0.6) + Math.round((1 - manucure / 10) * 4);
+        const items = [];
+        for (let i = 0; i < count; i++) {
+            const angle = random() * Math.PI * 2;
+            const radius = 20 + random() * 45;
+            const x = 120 + Math.cos(angle) * radius * 0.75;
+            const y = 125 + Math.sin(angle) * radius * 1.05;
+            const size = 6 + random() * 4;
+            const squash = 0.55 + random() * 0.25;
+            const color = bracteeColors[i % bracteeColors.length];
+            items.push({ x, y, rx: size, ry: size * squash, color, delay: 0.25 + i * 0.015 });
+        }
+        return items;
+    }, [randomSeed, densite, manucure, bracteeColors]);
+
     return (
         <div className="relative">
             {/* Titre */}
@@ -358,13 +377,13 @@ const WeedPreview = ({
 
                 {/* SVG Bud de cannabis avec bractées individuelles */}
                 <motion.svg
-                    width="240"
-                    height="300"
+                    width="260"
+                    height="340"
                     viewBox="0 0 240 300"
                     className="relative z-10 drop-shadow-2xl"
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{
-                        scale: 0.92 + (densite / 10) * 0.12,
+                        scale: 1.02 + (densite / 10) * 0.1,
                         opacity: 1,
                         rotate: (0.5 - visualEffects.roundness) * 1.6,
                         y: (1.1 - visualEffects.spacing) * 6
@@ -419,7 +438,7 @@ const WeedPreview = ({
                     >
                         {/* Feuilles résineuses autour du cola */}
                         {sugarLeaves.length > 0 && (
-                            <g opacity="0.78">
+                            <g opacity={0.78 * (1 - manucure / 10 * 0.85)}>
                                 {sugarLeaves.map((leaf, i) => (
                                     <motion.path
                                         key={`sugar-leaf-${i}`}
@@ -428,7 +447,7 @@ const WeedPreview = ({
                                         stroke={leaf.stroke}
                                         strokeWidth="1"
                                         initial={{ scale: 0.9, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 0.95 }}
+                                        animate={{ scale: 1, opacity: 0.9 * (1 - manucure / 10 * 0.7) }}
                                         transition={{ duration: 0.5, delay: leaf.delay }}
                                         style={{ fillOpacity: 0.9 }}
                                     />
@@ -456,6 +475,27 @@ const WeedPreview = ({
                             animate={{ pathLength: 1, opacity: 1 }}
                             transition={{ duration: 1, ease: 'easeInOut' }}
                         />
+
+                        {/* Micro-bractées supplémentaires pour densifier la tête */}
+                        {microBracts.length > 0 && (
+                            <g opacity="0.9">
+                                {microBracts.map((b, i) => (
+                                    <motion.ellipse
+                                        key={`micro-bract-${i}`}
+                                        cx={b.x}
+                                        cy={b.y}
+                                        rx={b.rx}
+                                        ry={b.ry}
+                                        fill={b.color}
+                                        stroke={mixHexColors(b.color, '#0B1015', 0.5)}
+                                        strokeWidth="0.7"
+                                        initial={{ scale: 0, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        transition={{ duration: 0.35, delay: b.delay }}
+                                    />
+                                ))}
+                            </g>
+                        )}
 
                         {/* Bractées individuelles - Section supérieure (sommet) */}
                         {/* Bractée centrale sommet */}
@@ -748,7 +788,7 @@ const WeedPreview = ({
                         {visualEffects.pistilCount > 0 && (
                             <motion.g
                                 stroke={pistilColor}
-                                strokeWidth="1.4"
+                                strokeWidth="1.8"
                                 strokeLinecap="round"
                                 fill="none"
                                 opacity="0.9"
@@ -764,7 +804,7 @@ const WeedPreview = ({
                                             key={`pistil-${i}`}
                                             d={`M ${curve.baseX} ${curve.baseY} Q ${controlX} ${controlY} ${curve.tipX} ${curve.tipY}`}
                                             stroke={pistilColor}
-                                            strokeWidth="1.3"
+                                            strokeWidth="1.7"
                                             strokeLinecap="round"
                                             initial={{ pathLength: 0, opacity: 0 }}
                                             animate={{ pathLength: 1, opacity: 1 }}
@@ -781,7 +821,7 @@ const WeedPreview = ({
                                             key={`pistil-highlight-${i}`}
                                             d={`M ${curve.baseX} ${curve.baseY} Q ${controlX} ${controlY} ${curve.tipX} ${curve.tipY}`}
                                             stroke={pistilHighlight}
-                                            strokeWidth="0.9"
+                                            strokeWidth="1.1"
                                             strokeLinecap="round"
                                             opacity="0.75"
                                             initial={{ pathLength: 0, opacity: 0 }}
@@ -821,110 +861,98 @@ const WeedPreview = ({
                         {visualEffects.moldSpots > 0 && (
                             <g>
                                 {[...Array(visualEffects.moldSpots)].map((_, i) => {
-                                    // Distribution aléatoire mais cohérente
                                     const seed = i * 7.3;
                                     const angle = seed * 0.7;
                                     const distance = 15 + (Math.sin(seed) * 0.5 + 0.5) * 35;
                                     const x = 120 + Math.cos(angle) * distance;
                                     const y = 120 + Math.sin(angle) * distance * 1.3;
-                                    const size = 2.5 + Math.abs(Math.cos(seed * 1.3)) * 3;
-                                    // Couleurs de moisissure plus réalistes
-                                    const colors = ['#2D1B0E', '#1C1410', '#E8E4D8', '#3A2417'];
-                                    const color = colors[i % 4];
+                                    const size = 2.8 + Math.abs(Math.cos(seed * 1.3)) * 3.2;
                                     const rotation = Math.sin(seed * 2) * 45;
+                                    const dark = ['#1A120D', '#2D1B0E', '#0D0B0A'][i % 3];
                                     return (
-                                        <motion.ellipse
-                                            key={`mold-${i}`}
-                                            cx={x}
-                                            cy={y}
-                                            rx={size}
-                                            ry={size * (0.7 + Math.cos(seed) * 0.2)}
-                                            fill={color}
-                                            opacity="0.5"
-                                            transform={`rotate(${rotation} ${x} ${y})`}
-                                            initial={{ scale: 0, opacity: 0 }}
-                                            animate={{ scale: 1, opacity: 0.5 }}
-                                            transition={{ duration: 0.5, delay: 0.8 + i * 0.08 }}
-                                        />
+                                        <g key={`mold-${i}`}>
+                                            <motion.ellipse
+                                                cx={x}
+                                                cy={y}
+                                                rx={size}
+                                                ry={size * (0.75 + Math.cos(seed) * 0.2)}
+                                                fill={dark}
+                                                opacity="0.55"
+                                                transform={`rotate(${rotation} ${x} ${y})`}
+                                                initial={{ scale: 0, opacity: 0 }}
+                                                animate={{ scale: 1, opacity: 0.55 }}
+                                                transition={{ duration: 0.5, delay: 0.8 + i * 0.08 }}
+                                            />
+                                            <motion.ellipse
+                                                cx={x + Math.cos(seed) * 0.8}
+                                                cy={y + Math.sin(seed) * 0.8}
+                                                rx={size * 0.42}
+                                                ry={size * 0.32}
+                                                fill="#E8E4D8"
+                                                opacity="0.7"
+                                                transform={`rotate(${rotation * 0.6} ${x} ${y})`}
+                                                initial={{ scale: 0, opacity: 0 }}
+                                                animate={{ scale: 1, opacity: 0.7 }}
+                                                transition={{ duration: 0.45, delay: 0.85 + i * 0.08 }}
+                                            />
+                                        </g>
                                     );
                                 })}
                             </g>
                         )}
 
-                        {/* Graines - placement naturel entre les bractées */}
+                        {/* Graines - uniquement dans les bractées */}
                         {visualEffects.seedCount > 0 && (
                             <g>
                                 {[...Array(visualEffects.seedCount)].map((_, i) => {
-                                    // Graines placées dans les zones creuses entre bractées
-                                    const layerPositions = [
-                                        { x: 105, y: 95 },
-                                        { x: 135, y: 110 },
-                                        { x: 115, y: 145 },
-                                        { x: 125, y: 180 },
-                                        { x: 110, y: 210 }
-                                    ];
-                                    const pos = layerPositions[i % layerPositions.length];
-                                    const offsetX = (Math.sin(i * 3.1) * 8);
-                                    const offsetY = (Math.cos(i * 2.7) * 6);
-                                    const x = pos.x + offsetX;
-                                    const y = pos.y + offsetY;
+                                    const calyxPos = calyxClusters[i % Math.max(1, calyxClusters.length)] || { x: 120, y: 150 };
+                                    const jitterX = Math.sin(i * 2.3) * 4;
+                                    const jitterY = Math.cos(i * 1.7) * 3;
+                                    const x = calyxPos.x + jitterX;
+                                    const y = calyxPos.y + jitterY;
                                     const rotation = Math.sin(i * 1.9) * 25;
 
                                     return (
                                         <g key={`seed-${i}`} transform={`rotate(${rotation} ${x} ${y})`}>
-                                            {/* Corps de la graine (forme d'amande allongée) */}
                                             <motion.ellipse
                                                 cx={x}
                                                 cy={y}
-                                                rx="3.5"
-                                                ry="5.5"
-                                                fill="#7A6A52"
-                                                stroke="#4A3A2A"
-                                                strokeWidth="0.6"
+                                                rx="3.8"
+                                                ry="5.8"
+                                                fill="#B7A07D"
+                                                stroke="#5C4933"
+                                                strokeWidth="0.65"
                                                 initial={{ scale: 0 }}
                                                 animate={{ scale: 1 }}
                                                 transition={{ duration: 0.5, delay: 0.9 + i * 0.1 }}
                                             />
-                                            {/* Stries naturelles sur la graine */}
-                                            <motion.line
-                                                x1={x - 2}
-                                                y1={y - 2}
-                                                x2={x - 1.5}
-                                                y2={y + 2}
-                                                stroke="#4A3A2A"
-                                                strokeWidth="0.3"
-                                                opacity="0.5"
+                                            <motion.path
+                                                d={`M ${x - 2} ${y - 1.6} Q ${x - 0.5} ${y - 0.8} ${x - 1} ${y + 2}`}
+                                                stroke="#6B5842"
+                                                strokeWidth="0.35"
+                                                fill="none"
+                                                opacity="0.7"
                                                 initial={{ pathLength: 0 }}
                                                 animate={{ pathLength: 1 }}
                                                 transition={{ duration: 0.3, delay: 1 + i * 0.1 }}
                                             />
-                                            {/* Petites taches noires irrégulières sur la graine */}
                                             <motion.circle
-                                                cx={x - 0.8}
-                                                cy={y - 1.2}
-                                                r="0.4"
-                                                fill="#1A1410"
+                                                cx={x - 0.6}
+                                                cy={y - 0.8}
+                                                r="0.45"
+                                                fill="#3B2F25"
                                                 initial={{ scale: 0 }}
                                                 animate={{ scale: 1 }}
                                                 transition={{ duration: 0.3, delay: 1 + i * 0.1 }}
                                             />
                                             <motion.circle
-                                                cx={x + 1.2}
-                                                cy={y + 0.5}
-                                                r="0.3"
-                                                fill="#1A1410"
+                                                cx={x + 1.1}
+                                                cy={y + 0.9}
+                                                r="0.35"
+                                                fill="#2A211C"
                                                 initial={{ scale: 0 }}
                                                 animate={{ scale: 1 }}
                                                 transition={{ duration: 0.3, delay: 1.05 + i * 0.1 }}
-                                            />
-                                            <motion.circle
-                                                cx={x - 0.2}
-                                                cy={y + 2}
-                                                r="0.35"
-                                                fill="#1A1410"
-                                                initial={{ scale: 0 }}
-                                                animate={{ scale: 1 }}
-                                                transition={{ duration: 0.3, delay: 1.1 + i * 0.1 }}
                                             />
                                         </g>
                                     );
