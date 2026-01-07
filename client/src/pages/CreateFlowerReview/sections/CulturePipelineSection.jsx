@@ -3,11 +3,19 @@
  * Utilise CulturePipelineDragDrop (Phase 1 - 84 fields, 12 phases)
  */
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { LiquidCard } from '../../../components/liquid';
 import CulturePipelineDragDrop from '../../../components/pipeline/CulturePipelineDragDrop';
 
 const CulturePipelineSection = ({ data = {}, onChange }) => {
+    // ✅ Ref pour maintenir la dernière version des données (évite le batching)
+    const timelineDataRef = useRef(data.cultureTimelineData || []);
+
+    // Synchroniser la ref quand data change de l'extérieur
+    useEffect(() => {
+        timelineDataRef.current = data.cultureTimelineData || [];
+    }, [data.cultureTimelineData]);
+
     // Adapter les handlers pour PipelineDragDropView
     const handleConfigChange = (key, value) => {
         const updatedConfig = { ...(data.cultureTimelineConfig || {}), [key]: value };
@@ -16,69 +24,61 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
 
     const handleDataChange = (timestamp, field, value) => {
         console.log(`🔄 handleDataChange appelé: timestamp=${timestamp}, field=${field}, value=`, value);
-        console.log(`📌 Type de onChange:`, typeof onChange);
-        console.log(`📌 Data actuel avant onChange:`, data.cultureTimelineData);
 
-        // ✅ FIX: Utiliser une fonction pour accéder à la valeur la plus récente
-        onChange(prevData => {
-            console.log(`🟢 INSIDE onChange callback - prevData:`, prevData);
-            const currentData = prevData.cultureTimelineData || [];
-            console.log(`  → currentData avant:`, currentData.map(c => c.timestamp));
-            const existingIndex = currentData.findIndex(cell => cell.timestamp === timestamp);
-            console.log(`  → existingIndex pour ${timestamp}:`, existingIndex);
+        // ✅ Utiliser la ref pour obtenir les données les plus récentes
+        const currentData = timelineDataRef.current;
+        console.log(`  → currentData avant (depuis ref):`, currentData.map(c => c.timestamp));
+        const existingIndex = currentData.findIndex(cell => cell.timestamp === timestamp);
+        console.log(`  → existingIndex pour ${timestamp}:`, existingIndex);
 
-            let updatedData;
-            if (existingIndex >= 0) {
-                // Update existing cell
-                updatedData = [...currentData];
-                if (value === null || value === undefined) {
-                    // ✅ BUG FIX: Remove field completely instead of setting to null
-                    const { [field]: removed, ...rest } = updatedData[existingIndex];
-                    updatedData[existingIndex] = rest;
+        let updatedData;
+        if (existingIndex >= 0) {
+            // Update existing cell
+            updatedData = [...currentData];
+            if (value === null || value === undefined) {
+                // ✅ BUG FIX: Remove field completely instead of setting to null
+                const { [field]: removed, ...rest } = updatedData[existingIndex];
+                updatedData[existingIndex] = rest;
 
-                    // Si la cellule devient vide (plus aucune donnée utile), la retirer complètement
-                    const cellKeys = Object.keys(updatedData[existingIndex]).filter(k =>
-                        !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k)
-                    );
-                    if (cellKeys.length === 0) {
-                        updatedData = updatedData.filter((_, idx) => idx !== existingIndex);
-                    }
-                } else {
-                    updatedData[existingIndex] = { ...updatedData[existingIndex], [field]: value };
+                // Si la cellule devient vide (plus aucune donnée utile), la retirer complètement
+                const cellKeys = Object.keys(updatedData[existingIndex]).filter(k =>
+                    !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k)
+                );
+                if (cellKeys.length === 0) {
+                    updatedData = updatedData.filter((_, idx) => idx !== existingIndex);
                 }
             } else {
-                // Add new cell only if value is not null/undefined
-                if (value !== null && value !== undefined) {
-                    updatedData = [...currentData, { timestamp, [field]: value }];
-                } else {
-                    updatedData = currentData; // No change
-                }
+                updatedData[existingIndex] = { ...updatedData[existingIndex], [field]: value };
             }
+        } else {
+            // Add new cell only if value is not null/undefined
+            if (value !== null && value !== undefined) {
+                updatedData = [...currentData, { timestamp, [field]: value }];
+            } else {
+                updatedData = currentData; // No change
+            }
+        }
 
-            console.log(`  → updatedData après:`, updatedData.map(c => `${c.timestamp}(${Object.keys(c).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k)).join(',')})`));
-            const result = { ...prevData, cultureTimelineData: updatedData };
-            console.log(`🔵 RETURN from onChange callback:`, result.cultureTimelineData);
-            return result;
-        });
+        console.log(`  → updatedData après:`, updatedData.map(c => `${c.timestamp}(${Object.keys(c).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k)).join(',')})`));
 
-        console.log(`✅ handleDataChange terminé pour ${timestamp}`);
-    };
+        // ✅ Mettre à jour la ref AVANT d'appeler onChange
+        timelineDataRef.current = updatedData;
 
-    return (
-        <LiquidCard title="🌱 Pipeline Culture Phase 1" bordered>
-            <CulturePipelineDragDrop
-                timelineConfig={data.cultureTimelineConfig || { type: 'jour', totalDays: 90 }}
-                timelineData={data.cultureTimelineData || []}
-                onConfigChange={handleConfigChange}
-                onDataChange={handleDataChange}
-                initialData={{
-                    mode: data.mode,
-                    spaceType: data.spaceType,
-                    substrat: data.substrat,
-                    lightType: data.lightType
-                }}
-            />
-        </LiquidCard>
+        // Appeler onChange avec l'objet mis à jour
+        onChange({ ...data, cultureTimelineData: updatedData });
+        <CulturePipelineDragDrop
+            timelineConfig={data.cultureTimelineConfig || { type: 'jour', totalDays: 90 }}
+            timelineData={data.cultureTimelineData || []}
+            onConfigChange={handleConfigChange}
+            onDataChange={handleDataChange}
+            initialData={{
+                mode: data.mode,
+                spaceType: data.spaceType,
+                substrat: data.substrat,
+                lightType: data.lightType
+            }}
+        />
+        </LiquidCard >
     );
 };
 
