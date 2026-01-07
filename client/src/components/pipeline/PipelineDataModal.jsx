@@ -160,7 +160,7 @@ const PipelineDataModal = ({
     };
 
     // Sauvegarder un nouveau préréglage
-    const handleSavePreset = () => {
+    const handleSavePreset = async () => {
         if (!newPresetName.trim()) {
             alert('Veuillez saisir un nom pour le préréglage');
             return;
