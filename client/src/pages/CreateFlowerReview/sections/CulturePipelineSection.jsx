@@ -16,41 +16,45 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
 
     const handleDataChange = (timestamp, field, value) => {
         console.log(`🔄 handleDataChange appelé: timestamp=${timestamp}, field=${field}, value=`, value);
-        const currentData = data.cultureTimelineData || [];
-        console.log(`  → currentData avant:`, currentData.map(c => c.timestamp));
-        const existingIndex = currentData.findIndex(cell => cell.timestamp === timestamp);
-        console.log(`  → existingIndex pour ${timestamp}:`, existingIndex);
 
-        let updatedData;
-        if (existingIndex >= 0) {
-            // Update existing cell
-            updatedData = [...currentData];
-            if (value === null || value === undefined) {
-                // ✅ BUG FIX: Remove field completely instead of setting to null
-                const { [field]: removed, ...rest } = updatedData[existingIndex];
-                updatedData[existingIndex] = rest;
+        // ✅ FIX: Utiliser une fonction pour accéder à la valeur la plus récente
+        onChange(prevData => {
+            const currentData = prevData.cultureTimelineData || [];
+            console.log(`  → currentData avant:`, currentData.map(c => c.timestamp));
+            const existingIndex = currentData.findIndex(cell => cell.timestamp === timestamp);
+            console.log(`  → existingIndex pour ${timestamp}:`, existingIndex);
 
-                // Si la cellule devient vide (plus aucune donnée utile), la retirer complètement
-                const cellKeys = Object.keys(updatedData[existingIndex]).filter(k =>
-                    !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k)
-                );
-                if (cellKeys.length === 0) {
-                    updatedData = updatedData.filter((_, idx) => idx !== existingIndex);
+            let updatedData;
+            if (existingIndex >= 0) {
+                // Update existing cell
+                updatedData = [...currentData];
+                if (value === null || value === undefined) {
+                    // ✅ BUG FIX: Remove field completely instead of setting to null
+                    const { [field]: removed, ...rest } = updatedData[existingIndex];
+                    updatedData[existingIndex] = rest;
+
+                    // Si la cellule devient vide (plus aucune donnée utile), la retirer complètement
+                    const cellKeys = Object.keys(updatedData[existingIndex]).filter(k =>
+                        !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k)
+                    );
+                    if (cellKeys.length === 0) {
+                        updatedData = updatedData.filter((_, idx) => idx !== existingIndex);
+                    }
+                } else {
+                    updatedData[existingIndex] = { ...updatedData[existingIndex], [field]: value };
                 }
             } else {
-                updatedData[existingIndex] = { ...updatedData[existingIndex], [field]: value };
+                // Add new cell only if value is not null/undefined
+                if (value !== null && value !== undefined) {
+                    updatedData = [...currentData, { timestamp, [field]: value }];
+                } else {
+                    updatedData = currentData; // No change
+                }
             }
-        } else {
-            // Add new cell only if value is not null/undefined
-            if (value !== null && value !== undefined) {
-                updatedData = [...currentData, { timestamp, [field]: value }];
-            } else {
-                updatedData = currentData; // No change
-            }
-        }
 
-        console.log(`  → updatedData après:`, updatedData.map(c => `${c.timestamp}(${Object.keys(c).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k)).join(',')})`));
-        onChange({ ...data, cultureTimelineData: updatedData });
+            console.log(`  → updatedData après:`, updatedData.map(c => `${c.timestamp}(${Object.keys(c).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k)).join(',')})`));
+            return { ...prevData, cultureTimelineData: updatedData };
+        });
     };
 
     return (
