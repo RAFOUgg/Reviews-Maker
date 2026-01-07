@@ -214,11 +214,11 @@ export default function CreateFlowerReview() {
             <div className="sticky top-0 z-50 backdrop-blur-xl bg-white/5 border-b border-white/10 shadow-xl">
                 <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
                     <button
-                        onClick={() => navigate('/library')}
-                        className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all"
+                        type="button"
+                        onClick={() => navigate('/')}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
                     >
-                        <ChevronLeft className="w-5 h-5" />
-                        <span>Retour</span>
+                        <ChevronLeft className="w-5 h-5" /> Retour
                     </button>
 
                     {/* Section Navigation */}
@@ -228,10 +228,10 @@ export default function CreateFlowerReview() {
                                 key={section.id}
                                 onClick={() => setCurrentSection(idx)}
                                 className={`text-2xl transition-all hover:scale-110 ${idx === currentSection
-                                        ? 'opacity-100 scale-125'
-                                        : idx < currentSection
-                                            ? 'opacity-70'
-                                            : 'opacity-30'
+                                    ? 'opacity-100 scale-125'
+                                    : idx < currentSection
+                                        ? 'opacity-70'
+                                        : 'opacity-30'
                                     }`}
                                 title={section.title}
                             >

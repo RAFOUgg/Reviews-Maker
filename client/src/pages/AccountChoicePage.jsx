@@ -138,12 +138,16 @@ export default function AccountChoicePage() {
                                 )}
 
                                 {/* Carte principale */}
-                                <div className={`relative overflow-hidden rounded-3xl shadow-2xl transition-all duration-300 ${isSelected ? 'ring-4 ring-white ring-offset-4 ring-offset-purple-600' : 'hover:shadow-purple-900/50'}`}>
+                                <div
+                                    className={`relative overflow-hidden rounded-3xl shadow-2xl transition-all duration-300 ${isSelected ? 'ring-4 ring-white ring-offset-4 ring-offset-purple-600' : 'hover:shadow-purple-900/50'}`}
+                                >
                                     {/* Background gradient */}
-                                    <div className={`absolute inset-0 bg-gradient-to-br ${accountType.gradient} opacity-90 group-hover:opacity-100 transition-opacity`}></div>
+                                    <div
+                                        className={`absolute inset-0 bg-gradient-to-br ${accountType.gradient} opacity-90 group-hover:opacity-100 transition-opacity`}
+                                    ></div>
 
                                     {/* Liquid glass effect */}
-                                    <div className="absolute inset-0 backdrop-blur-xl bg-white/10"></div>
+                                    <div className="absolute inset-0 backdrop-blur-xl bg-white/10 rounded-3xl"></div>
 
                                     {/* Contenu */}
                                     <div className="relative p-8 space-y-6">
