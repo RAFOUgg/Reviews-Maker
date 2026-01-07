@@ -27,7 +27,7 @@ import { useToast } from '../ToastContainer';
 const GROUP_EMOJIS = ['🌱', '🌿', '💧', '☀️', '🌡️', '📊', '⚗️', '🧪', '🔬', '💨', '🏠', '🌞', '🌙', '💡', '🔌', '📅', '⏱️', '📏', '🎯', '✨', '🚀', '💪', '🎨', '🔥', '❄️', '💎', '🌈', '🍃', '🌸', '🍀'];
 
 // Grouped preset modal - COMPLETE with proper field types, edit mode, emoji
-function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sidebarContent }) {
+function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sidebarContent, type }) {
     const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
     const [editingGroup, setEditingGroup] = useState(null);
     const [groupName, setGroupName] = useState('');
@@ -284,7 +284,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[900px] max-w-[95vw] max-h-[90vh] border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[800px] max-w-[95vw] max-h-[90vh] border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                     <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
@@ -2237,6 +2237,7 @@ const PipelineDragDropView = ({
                 groups={groupedPresets}
                 setGroups={setGroupedPresets}
                 sidebarContent={sidebarContent}
+                type={type}
             />
 
             {/* Modal save/load pipeline presets */}

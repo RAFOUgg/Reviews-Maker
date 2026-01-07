@@ -112,6 +112,7 @@ export default function LoginPage() {
                                     placeholder="vous@example.com"
                                     icon={Mail}
                                     required
+                                    className="text-black"
                                 />
 
                                 <LiquidInput
@@ -122,6 +123,7 @@ export default function LoginPage() {
                                     placeholder="••••••••"
                                     icon={Lock}
                                     required
+                                    className="text-black"
                                 />
 
                                 {error && (
@@ -149,7 +151,7 @@ export default function LoginPage() {
                                 <button
                                     type="button"
                                     onClick={() => navigate('/forgot-password')}
-                                    className="text-sm hover: font-medium transition-colors"
+                                    className="text-sm font-medium text-purple-600 hover:text-purple-800 transition-colors"
                                 >
                                     Mot de passe oublié ?
                                 </button>
