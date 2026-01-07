@@ -256,7 +256,8 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
             newGroups = [...groups, group];
         }
         setGroups(newGroups);
-        localStorage.setItem('pipeline-grouped-presets', JSON.stringify(newGroups));
+        const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
+        localStorage.setItem(storageKey, JSON.stringify(newGroups));
         onSave && onSave(newGroups);
         setMode('list');
         resetForm();
@@ -266,7 +267,8 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
         if (!confirm('Supprimer ce groupe ?')) return;
         const newGroups = groups.filter(g => g.id !== groupId && g.name !== groupId);
         setGroups(newGroups);
-        localStorage.setItem('pipeline-grouped-presets', JSON.stringify(newGroups));
+        const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
+        localStorage.setItem(storageKey, JSON.stringify(newGroups));
     };
 
     // Find field definition helper
@@ -678,7 +680,8 @@ const PipelineDragDropView = ({
     };
     // Grouped presets state
     const [groupedPresets, setGroupedPresets] = useState(() => {
-        const saved = localStorage.getItem('pipeline-grouped-presets');
+        const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
+        const saved = localStorage.getItem(storageKey);
         return saved ? JSON.parse(saved) : [];
     });
     const [showGroupedPresetModal, setShowGroupedPresetModal] = useState(false);

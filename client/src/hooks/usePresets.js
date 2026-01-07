@@ -101,7 +101,7 @@ export const usePresets = (pipelineType = 'culture') => {
         try {
             // Format legacy
             const fieldPresets = JSON.parse(localStorage.getItem(`${pipelineType}_field_presets`) || '[]');
-            const groupedPresets = JSON.parse(localStorage.getItem('pipeline-grouped-presets') || '[]');
+            const groupedPresets = JSON.parse(localStorage.getItem(`pipeline-grouped-presets-${pipelineType}`) || '[]');
             const pipelinePresets = JSON.parse(localStorage.getItem('pipeline-presets') || '[]');
 
             setPresets({
@@ -166,7 +166,7 @@ export const usePresets = (pipelineType = 'culture') => {
                 const storageKey = type === 'field'
                     ? `${pipelineType}_field_presets`
                     : type === 'grouped'
-                        ? 'pipeline-grouped-presets'
+                        ? `pipeline-grouped-presets-${pipelineType}`
                         : 'pipeline-presets';
 
                 const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -229,7 +229,7 @@ export const usePresets = (pipelineType = 'culture') => {
                 const storageKey = preset.type === 'field'
                     ? `${pipelineType}_field_presets`
                     : preset.type === 'grouped'
-                        ? 'pipeline-grouped-presets'
+                        ? `pipeline-grouped-presets-${pipelineType}`
                         : 'pipeline-presets';
 
                 const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -280,7 +280,7 @@ export const usePresets = (pipelineType = 'culture') => {
             const storageKey = preset.type === 'field'
                 ? `${pipelineType}_field_presets`
                 : preset.type === 'grouped'
-                    ? 'pipeline-grouped-presets'
+                    ? `pipeline-grouped-presets-${pipelineType}`
                     : 'pipeline-presets';
 
             const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');

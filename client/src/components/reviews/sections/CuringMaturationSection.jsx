@@ -55,7 +55,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
 
     // State local pour la config timeline - SÉPARÉ ET CONTRÔLÉ
     const [timelineConfig, setTimelineConfig] = useState({
-        type: data.curingTimelineConfig?.type || 'jour',
+        type: data.curingTimelineConfig?.type || 'phase',
         totalDays: data.curingTimelineConfig?.totalDays || 30,
         totalHours: data.curingTimelineConfig?.totalHours,
         totalWeeks: data.curingTimelineConfig?.totalWeeks,
