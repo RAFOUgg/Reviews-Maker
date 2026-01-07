@@ -485,7 +485,7 @@ const PipelineDataModal = ({
         const value = formData[itemKey] || '';
         const { label, icon, type = 'text' } = item;
 
-        console.log(`🎨 Rendering field "${label}" (key: ${itemKey}, type: ${type}), value:`, value);
+        console.log(`🎨 Rendering field "${label}" (key: ${itemKey}, type: ${type}), value:`, value, 'item:', item);
 
         // SELECT avec options (options peuvent être des strings ou des objets {value,label})
         if (type === 'select') {
@@ -516,6 +516,166 @@ const PipelineDataModal = ({
                                 return <option key={`${itemKey}-${idx}-${val}`} value={val}>{labelOpt}</option>;
                             })}
                         </select>
+                    </div>
+                </FieldWrapper>
+            );
+        }
+
+        // SLIDER - Afficher input range avec valeur affichée
+        if (type === 'slider' || type === 'stepper') {
+            const min = item.min || 0;
+            const max = item.max || 100;
+            const step = item.step || 1;
+            const unit = item.unit || '';
+            return (
+                <FieldWrapper item={item} key={itemKey}>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {icon && <span className="mr-2">{icon}</span>}
+                            {label}
+                        </label>
+                        <div className="flex items-center gap-3">
+                            <input
+                                type="range"
+                                value={value || item.defaultValue || min}
+                                onChange={(e) => handleChange(itemKey, parseFloat(e.target.value))}
+                                min={min}
+                                max={max}
+                                step={step}
+                                className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                            />
+                            <input
+                                type="number"
+                                value={value || item.defaultValue || ''}
+                                onChange={(e) => handleChange(itemKey, e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                min={min}
+                                max={max}
+                                step={step}
+                                className="w-24 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                                placeholder={`${min}-${max}`}
+                            />
+                            {unit && <span className="text-sm text-gray-600 dark:text-gray-400">{unit}</span>}
+                        </div>
+                        {item.suggestions && item.suggestions.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {item.suggestions.map((sugg, idx) => (
+                                    <button
+                                        key={idx}
+                                        type="button"
+                                        onClick={() => handleChange(itemKey, sugg.value)}
+                                        className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded border border-gray-300 dark:border-gray-600"
+                                    >
+                                        {sugg.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </FieldWrapper>
+            );
+        }
+
+        // FREQUENCY - Valeur + période (ex: 2 fois par jour)
+        if (type === 'frequency') {
+            const freqValue = value || item.defaultValue || { value: 1, period: 'day' };
+            return (
+                <FieldWrapper item={item} key={itemKey}>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {icon && <span className="mr-2">{icon}</span>}
+                            {label}
+                        </label>
+                        <div className="flex gap-2">
+                            <input
+                                type="number"
+                                value={freqValue.value || 1}
+                                onChange={(e) => handleChange(itemKey, { ...freqValue, value: parseFloat(e.target.value) || 1 })}
+                                min="0.1"
+                                step="0.1"
+                                className="w-20 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                            />
+                            <span className="flex items-center text-sm">fois par</span>
+                            <select
+                                value={freqValue.period || 'day'}
+                                onChange={(e) => handleChange(itemKey, { ...freqValue, period: e.target.value })}
+                                className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                            >
+                                <option value="hour">heure</option>
+                                <option value="day">jour</option>
+                                <option value="week">semaine</option>
+                                <option value="month">mois</option>
+                            </select>
+                        </div>
+                    </div>
+                </FieldWrapper>
+            );
+        }
+
+        // DIMENSIONS - L × l × H
+        if (type === 'dimensions') {
+            const dimValue = value || item.defaultValue || { length: 0, width: 0, height: 0 };
+            const unit = item.unit || 'cm';
+            return (
+                <FieldWrapper item={item} key={itemKey}>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {icon && <span className="mr-2">{icon}</span>}
+                            {label}
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                            <div>
+                                <label className="text-xs text-gray-600 dark:text-gray-400">Longueur</label>
+                                <input
+                                    type="number"
+                                    value={dimValue.length || ''}
+                                    onChange={(e) => handleChange(itemKey, { ...dimValue, length: parseFloat(e.target.value) || 0 })}
+                                    className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm"
+                                    placeholder="L"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-600 dark:text-gray-400">Largeur</label>
+                                <input
+                                    type="number"
+                                    value={dimValue.width || ''}
+                                    onChange={(e) => handleChange(itemKey, { ...dimValue, width: parseFloat(e.target.value) || 0 })}
+                                    className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm"
+                                    placeholder="l"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-600 dark:text-gray-400">Hauteur</label>
+                                <input
+                                    type="number"
+                                    value={dimValue.height || ''}
+                                    onChange={(e) => handleChange(itemKey, { ...dimValue, height: parseFloat(e.target.value) || 0 })}
+                                    className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm"
+                                    placeholder="H"
+                                />
+                            </div>
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">
+                            {unit} • {dimValue.length || 0} × {dimValue.width || 0} × {dimValue.height || 0}
+                        </div>
+                    </div>
+                </FieldWrapper>
+            );
+        }
+
+        // COMPUTED - Champ calculé automatiquement (read-only)
+        if (type === 'computed') {
+            const computedValue = item.computeFn ? item.computeFn(formData) : (value || 0);
+            const unit = item.unit || '';
+            return (
+                <FieldWrapper item={item} key={itemKey}>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">
+                            {icon && <span className="mr-2">{icon}</span>}
+                            {label} {item.tooltip && <span className="text-xs">({item.tooltip})</span>}
+                        </label>
+                        <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300">
+                            {computedValue} {unit}
+                        </div>
                     </div>
                 </FieldWrapper>
             );
