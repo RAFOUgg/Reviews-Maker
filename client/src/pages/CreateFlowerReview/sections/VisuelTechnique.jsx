@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import LiquidCard from '../../../components/LiquidCard'
 import ColorWheelPicker from '../../../components/ui/ColorWheelPicker'
-import WeedPreview from '../../../components/ui/WeedPreview'
+import FlowerCanvasRenderer from '../../../components/ui/FlowerCanvasRenderer'
 import PresetSelector from '../../../components/ui/PresetSelector'
 
 const VISUAL_FIELDS = [
@@ -103,8 +103,7 @@ export default function VisuelTechnique({ formData, handleChange }) {
                                                 <span className="text-lg">✨</span>
                                                 Aperçu dynamique
                                             </h4>
-                                            <WeedPreview
-                                                selectedColors={formData.selectedColors || []}
+                                            <FlowerCanvasRenderer
                                                 densite={formData.densite || 5}
                                                 trichomes={formData.trichomes || 5}
                                                 pistils={formData.pistils || 5}
@@ -126,8 +125,7 @@ export default function VisuelTechnique({ formData, handleChange }) {
                                                         AVANT (snapshot)
                                                     </div>
                                                     {snapshot && (
-                                                        <WeedPreview
-                                                            selectedColors={snapshot.selectedColors}
+                                                        <FlowerCanvasRenderer
                                                             densite={snapshot.densite}
                                                             trichomes={snapshot.trichomes}
                                                             pistils={snapshot.pistils}
@@ -143,8 +141,7 @@ export default function VisuelTechnique({ formData, handleChange }) {
                                                     <div className="text-xs font-medium text-green-400 text-center">
                                                         APRÈS (actuel)
                                                     </div>
-                                                    <WeedPreview
-                                                        selectedColors={formData.selectedColors || []}
+                                                    <FlowerCanvasRenderer
                                                         densite={formData.densite || 5}
                                                         trichomes={formData.trichomes || 5}
                                                         pistils={formData.pistils || 5}
@@ -156,7 +153,6 @@ export default function VisuelTechnique({ formData, handleChange }) {
                                             </div>
                                         </div>
                                     )}
-                                    />
                                 </div>
                             </div>
                         )}

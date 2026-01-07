@@ -7,7 +7,7 @@ import usePresets from '../../hooks/usePresets';
 /**
  * Modal sophistiquée pour créer un préréglage groupé
  */
-function CreateGroupedPresetModal({ isOpen, onClose, sidebarSections, pipelineType, onPresetCreated }) {
+function CreateGroupedPresetModal({ isOpen, onClose, sidebarSections, pipelineType, onPresetCreated, prefill = null }) {
     const [groupName, setGroupName] = useState('');
     const [groupDescription, setGroupDescription] = useState('');
     const [selectedFields, setSelectedFields] = useState(new Set());
@@ -16,13 +16,21 @@ function CreateGroupedPresetModal({ isOpen, onClose, sidebarSections, pipelineTy
 
     useEffect(() => {
         if (isOpen) {
-            // Reset form
+            // Reset form or apply prefill
             setGroupName('');
             setGroupDescription('');
-            setSelectedFields(new Set());
-            setFieldValues({});
+            if (prefill && typeof prefill === 'object') {
+                const preFields = prefill.fields || prefill; // allow {fields: {...}} or simple map
+                const sel = new Set(Object.keys(preFields || {}));
+                setSelectedFields(sel);
+                setFieldValues({ ...(preFields || {}) });
+                if (prefill.name) setGroupName(prefill.name);
+            } else {
+                setSelectedFields(new Set());
+                setFieldValues({});
+            }
         }
-    }, [isOpen]);
+    }, [isOpen, prefill]);
 
     if (!isOpen) return null;
 
@@ -270,6 +278,7 @@ const PipelineDataModal = ({
     const [newPresetName, setNewPresetName] = useState('');
     const [confirmState, setConfirmState] = useState({ open: false, title: '', message: '', onConfirm: null });
     const [showCreateGroupedModal, setShowCreateGroupedModal] = useState(false);
+    const [createGroupedPrefill, setCreateGroupedPrefill] = useState(null);
 
     // Hook pour gérer les préréglages (localStorage + serveur)
     const { presets, createPreset, deletePreset, loadPresets } = usePresets(pipelineType);
@@ -822,7 +831,36 @@ const PipelineDataModal = ({
                             <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-180px)]">
                                 {/* Groupes de préréglages (multi-champs) */}
                                 <div className="space-y-3">
-                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Groupes enregistrés</h3>
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Groupes enregistrés</h3>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    // Prefill from current formData (all filled fields)
+                                                    const filled = {};
+                                                    Object.entries(formData).forEach(([k, v]) => {
+                                                        if (v !== undefined && v !== null && v !== '') filled[k] = v;
+                                                    });
+                                                    setCreateGroupedPrefill({ fields: filled, name: '' });
+                                                    setShowCreateGroupedModal(true);
+                                                }}
+                                                className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded"
+                                            >
+                                                Créer depuis la cellule
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setCreateGroupedPrefill(null);
+                                                    setShowCreateGroupedModal(true);
+                                                }}
+                                                className="px-2 py-1 bg-gray-200 hover:bg-gray-300 text-xs rounded"
+                                            >
+                                                Nouveau groupe
+                                            </button>
+                                        </div>
+                                    </div>
                                     {(!groupedPresets || groupedPresets.length === 0) ? (
                                         <p className="text-sm text-gray-500 dark:text-gray-400">Aucun pré-groupe disponible.</p>
                                     ) : (
@@ -1002,6 +1040,14 @@ const PipelineDataModal = ({
                     </motion.div>
                 </motion.div>
             )}
+            <CreateGroupedPresetModal
+                isOpen={showCreateGroupedModal}
+                onClose={() => { setShowCreateGroupedModal(false); setCreateGroupedPrefill(null); }}
+                sidebarSections={sidebarSections}
+                pipelineType={pipelineType}
+                prefill={createGroupedPrefill}
+                onPresetCreated={() => { loadPresets && typeof loadPresets === 'function' && loadPresets(); setShowCreateGroupedModal(false); setCreateGroupedPrefill(null); }}
+            />
             <ConfirmModal open={confirmState.open} title={confirmState.title} message={confirmState.message} onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))} onConfirm={() => setConfirmState(prev => { const cb = prev && prev.onConfirm; if (typeof cb === 'function') cb(); return { ...prev, open: false }; })} />
         </AnimatePresence>
     );
