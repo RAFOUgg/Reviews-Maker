@@ -77,30 +77,25 @@ const WeedPreview = ({
     // Structure 3D de cola avec bractées en forme d'écailles
     const bracts = useMemo(() => {
         const items = [];
-        const layers = 8; // 8 couches pour un cola réaliste
+        const layers = 8;
 
-        // 0 = espacement max (pire), 10 = compact (meilleur)
         const compactness = densite / 10;
 
         let colorIndex = 0;
         for (let layer = 0; layer < layers; layer++) {
-            const layerProgress = layer / (layers - 1);
-            // Pyramide inversée : large en haut, étroit en bas
             const layerRadius = 50 - layer * 5;
             const layerY = 80 + layer * 18;
             const bractCount = Math.max(3, Math.round(7 - layer * 0.5));
 
             for (let i = 0; i < bractCount; i++) {
                 const angle = (i / bractCount) * Math.PI * 2 + layer * 0.4;
-                const radiusVariation = 1 - (1 - compactness) * 0.3; // Plus compact = moins de variation
+                const radiusVariation = 1 - (1 - compactness) * 0.3;
                 const x = 120 + Math.cos(angle) * layerRadius * radiusVariation;
                 const y = layerY + Math.sin(angle) * layerRadius * 0.4 * radiusVariation;
 
-                // Taille augmentée pour 0 = densite faible, diminuée pour 10
                 const baseSize = 14 - layer * 0.8;
                 const size = baseSize * (1.2 - compactness * 0.4);
 
-                // Forme d'écaille organique
                 const scaleWidth = size * (1.2 + Math.sin(angle * 3) * 0.2);
                 const scaleHeight = size * (0.9 + Math.cos(angle * 2) * 0.15);
 
@@ -119,7 +114,7 @@ const WeedPreview = ({
         return items;
     }, [densite, bractColors]);
 
-    // Feuilles dentelées réalistes (0 manucure = max feuilles, 10 = aucune)
+    // Feuilles dentelées réalistes
     const leaves = useMemo(() => {
         const leafCount = Math.max(0, Math.round((1 - manucure / 10) * 7));
         const items = [];
@@ -132,7 +127,6 @@ const WeedPreview = ({
             const baseY = 210 + i * 5;
             const length = 60 + Math.sin(i * 0.7) * 10;
 
-            // Points pour feuille dentelée (7 dentelures)
             const points = [];
             for (let j = 0; j <= 7; j++) {
                 const t = j / 7;
@@ -154,7 +148,7 @@ const WeedPreview = ({
         return items;
     }, [manucure, baseColor]);
 
-    // Pistils organiques bouclés (0 = aucun, 10 = maximum)
+    // Pistils organiques bouclés
     const pistilStrands = useMemo(() => {
         const count = Math.round((pistils / 10) * 35);
         const items = [];
@@ -166,7 +160,6 @@ const WeedPreview = ({
             const length = 18 + pistils * 2.5;
             const curl = Math.sin(i * 0.8) * 10;
 
-            // Courbe organique avec bezier
             const baseX = bract.x;
             const baseY = bract.y;
             const ctrl1X = baseX + Math.cos(angle) * length * 0.4 + curl;
@@ -187,7 +180,7 @@ const WeedPreview = ({
         return items;
     }, [pistils, bracts]);
 
-    // Trichomes cristallins réalistes (0 = aucun, 10 = couverture dense)
+    // Trichomes cristallins réalistes
     const trichomeGlands = useMemo(() => {
         const count = Math.round((trichomes / 10) * 60);
         const items = [];
@@ -195,7 +188,6 @@ const WeedPreview = ({
         bracts.forEach((bract, i) => {
             if (i >= count) return;
 
-            // Multiple trichomes par bractée
             const trichomesPerBract = Math.ceil(trichomes / 3);
             for (let t = 0; t < trichomesPerBract; t++) {
                 const offsetAngle = (i * 137.5 + t * 45) * Math.PI / 180;
@@ -219,7 +211,7 @@ const WeedPreview = ({
         return items;
     }, [trichomes, bracts]);
 
-    // Moisissure (0 = maximum/pire, 10 = aucune)
+    // Moisissure
     const moldSpots = useMemo(() => {
         const count = Math.round((moisissure / 10) * 8);
         const items = [];
@@ -235,7 +227,7 @@ const WeedPreview = ({
         return items;
     }, [moisissure, bracts]);
 
-    // Graines (0 = maximum/pire, 10 = aucune)
+    // Graines
     const seeds = useMemo(() => {
         const count = Math.round((graines / 10) * 6);
         const items = [];
@@ -269,14 +261,12 @@ const WeedPreview = ({
                     transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
                 >
                     <defs>
-                        {/* Gradient pour profondeur des bractées */}
                         <radialGradient id="bractDepth">
                             <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
                             <stop offset="60%" stopColor="rgba(255,255,255,0)" />
                             <stop offset="100%" stopColor="rgba(0,0,0,0.2)" />
                         </radialGradient>
 
-                        {/* Filtre pour ombre portée réaliste */}
                         <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
                             <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
                             <feOffset dx="1" dy="2" result="offsetblur" />
@@ -289,7 +279,6 @@ const WeedPreview = ({
                             </feMerge>
                         </filter>
 
-                        {/* Gradient cristallin pour trichomes */}
                         <radialGradient id="trichomeGlow">
                             <stop offset="0%" stopColor="rgba(255,255,255,1)" />
                             <stop offset="60%" stopColor="rgba(240,248,255,0.9)" />
@@ -314,7 +303,7 @@ const WeedPreview = ({
                         />
                     ))}
 
-                    {/* Tige principale visible en bas */}
+                    {/* Tige principale */}
                     <motion.rect
                         x="115"
                         y="220"
@@ -332,7 +321,6 @@ const WeedPreview = ({
                     {/* Bractées en forme d'écailles avec texture 3D */}
                     {bracts.map((bract, i) => (
                         <g key={`bract-${i}`} transform={`rotate(${bract.rotation} ${bract.x} ${bract.y})`}>
-                            {/* Ombre de la bractée */}
                             <motion.ellipse
                                 cx={bract.x + 1}
                                 cy={bract.y + 2}
@@ -344,7 +332,6 @@ const WeedPreview = ({
                                 transition={{ duration: 0.4, delay: bract.delay }}
                             />
 
-                            {/* Bractée principale */}
                             <motion.ellipse
                                 cx={bract.x}
                                 cy={bract.y}
@@ -359,7 +346,6 @@ const WeedPreview = ({
                                 transition={{ duration: 0.45, delay: bract.delay, type: "spring", stiffness: 120 }}
                             />
 
-                            {/* Reflet pour effet 3D */}
                             <motion.ellipse
                                 cx={bract.x - bract.width * 0.25}
                                 cy={bract.y - bract.height * 0.25}
@@ -371,7 +357,6 @@ const WeedPreview = ({
                                 transition={{ duration: 0.3, delay: bract.delay + 0.1 }}
                             />
 
-                            {/* Nervure centrale */}
                             <motion.line
                                 x1={bract.x}
                                 y1={bract.y - bract.height * 0.8}
@@ -387,10 +372,9 @@ const WeedPreview = ({
                         </g>
                     ))}
 
-                    {/* Pistils organiques avec courbes naturelles */}
+                    {/* Pistils organiques */}
                     {pistilStrands.map((pistil, i) => (
                         <g key={`pistil-${i}`}>
-                            {/* Pistil principal (orange/amber) */}
                             <motion.path
                                 d={`M ${pistil.baseX} ${pistil.baseY} C ${pistil.ctrl1X} ${pistil.ctrl1Y}, ${pistil.ctrl2X} ${pistil.ctrl2Y}, ${pistil.tipX} ${pistil.tipY}`}
                                 stroke="#EA580C"
@@ -404,7 +388,6 @@ const WeedPreview = ({
                                 transition={{ duration: 0.6, delay: pistil.delay, ease: "easeOut" }}
                             />
 
-                            {/* Reflet du pistil */}
                             <motion.path
                                 d={`M ${pistil.baseX} ${pistil.baseY} C ${pistil.ctrl1X} ${pistil.ctrl1Y}, ${pistil.ctrl2X} ${pistil.ctrl2Y}, ${pistil.tipX} ${pistil.tipY}`}
                                 stroke="#FBBF24"
@@ -419,10 +402,9 @@ const WeedPreview = ({
                         </g>
                     ))}
 
-                    {/* Trichomes cristallins ultra réalistes */}
+                    {/* Trichomes cristallins */}
                     {trichomeGlands.map((trich, i) => (
                         <g key={`trichome-${i}`}>
-                            {/* Tige cristalline */}
                             <motion.line
                                 x1={trich.baseX}
                                 y1={trich.baseY}
@@ -436,7 +418,6 @@ const WeedPreview = ({
                                 transition={{ duration: 0.35, delay: trich.delay }}
                             />
 
-                            {/* Bulbe translucide avec effet glow */}
                             <motion.circle
                                 cx={trich.tipX}
                                 cy={trich.tipY}
@@ -453,7 +434,6 @@ const WeedPreview = ({
                                 transition={{ duration: 0.4, delay: trich.delay + 0.1, times: [0, 0.6, 1] }}
                             />
 
-                            {/* Point lumineux dans le bulbe */}
                             <motion.circle
                                 cx={trich.tipX - trich.bulbSize * 0.3}
                                 cy={trich.tipY - trich.bulbSize * 0.3}
@@ -466,10 +446,9 @@ const WeedPreview = ({
                         </g>
                     ))}
 
-                    {/* Moisissure organique */}
+                    {/* Moisissure */}
                     {moldSpots.map((mold, i) => (
                         <g key={`mold-${i}`}>
-                            {/* Tache principale */}
                             <motion.ellipse
                                 cx={mold.x}
                                 cy={mold.y}
@@ -483,7 +462,6 @@ const WeedPreview = ({
                                 transition={{ duration: 0.5, delay: mold.delay }}
                             />
 
-                            {/* Centre blanchâtre */}
                             <motion.ellipse
                                 cx={mold.x + Math.sin(i) * 0.8}
                                 cy={mold.y + Math.cos(i) * 0.8}
@@ -498,10 +476,9 @@ const WeedPreview = ({
                         </g>
                     ))}
 
-                    {/* Graines détaillées */}
+                    {/* Graines */}
                     {seeds.map((seed, i) => (
                         <g key={`seed-${i}`} transform={`rotate(${seed.rotation} ${seed.x} ${seed.y})`}>
-                            {/* Corps de la graine */}
                             <motion.ellipse
                                 cx={seed.x}
                                 cy={seed.y}
@@ -516,7 +493,6 @@ const WeedPreview = ({
                                 transition={{ duration: 0.4, delay: seed.delay }}
                             />
 
-                            {/* Motif de la graine */}
                             <motion.path
                                 d={`M ${seed.x - 2.5} ${seed.y - 2} Q ${seed.x} ${seed.y} ${seed.x - 1.5} ${seed.y + 3}`}
                                 stroke="#6B5842"
@@ -528,7 +504,6 @@ const WeedPreview = ({
                                 transition={{ duration: 0.3, delay: seed.delay + 0.1 }}
                             />
 
-                            {/* Texture supplémentaire */}
                             <motion.circle
                                 cx={seed.x - 0.8}
                                 cy={seed.y - 1.2}
@@ -542,7 +517,7 @@ const WeedPreview = ({
                         </g>
                     ))}
 
-                    {/* Effet de brillance globale (trichomes scintillants) */}
+                    {/* Effet de brillance globale */}
                     {trichomes > 5 && (
                         <>
                             {[...Array(8)].map((_, i) => {
@@ -604,66 +579,6 @@ const WeedPreview = ({
                 </motion.div>
             )}
         </div>
-    );
-};
-
-export default WeedPreview;
-cy = { seed.y }
-rx = "4"
-ry = "6"
-fill = "#B7A07D"
-stroke = "#5C4933"
-strokeWidth = "0.7"
-initial = {{ scale: 0 }}
-animate = {{ scale: 1 }}
-transition = {{ duration: 0.3, delay: seed.delay }}
-                            />
-    < motion.line
-x1 = { seed.x - 2 }
-y1 = { seed.y }
-x2 = { seed.x + 2 }
-y2 = { seed.y }
-stroke = "#6B5842"
-strokeWidth = "0.4"
-initial = {{ pathLength: 0 }}
-animate = {{ pathLength: 1 }}
-transition = {{ duration: 0.2, delay: seed.delay + 0.1 }}
-                            />
-                        </g >
-                    ))}
-                </motion.svg >
-            </div >
-
-    {/* Légende couleurs */ }
-{
-    selectedColors && selectedColors.length > 0 && (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="mt-6 bg-gray-800/30 border border-gray-700 rounded-xl p-4"
-        >
-            <div className="text-xs text-gray-400 mb-3 font-medium">Couleurs appliquées :</div>
-            <div className="flex items-center gap-2 h-8 rounded-lg overflow-hidden border border-gray-600">
-                {selectedColors.map((selected, index) => {
-                    const colorData = CANNABIS_COLORS.find(c => c.id === selected.colorId);
-                    return (
-                        <div
-                            key={selected.colorId}
-                            style={{
-                                width: `${selected.percentage}%`,
-                                backgroundColor: colorData?.hex
-                            }}
-                            className="h-full"
-                            title={`${colorData?.id} - ${selected.percentage}%`}
-                        />
-                    );
-                })}
-            </div>
-        </motion.div>
-    )
-}
-        </div >
     );
 };
 

@@ -1,301 +1,3 @@
-// Modal d'attribution multi-données avec onglets - Utilise FieldRenderer pour champs complexes
-import { useState as useModalState } from 'react';
-import FieldRenderer from './FieldRenderer';
-
-function MultiAssignModal({ isOpen, onClose, droppedContent, sidebarSections, onApply, selectedCells }) {
-    // Initialiser values avec defaultValue des items
-    const initValues = () => {
-        const defaults = {};
-        if (droppedContent) {
-            let items = [];
-            if (droppedContent.type === 'multi' && Array.isArray(droppedContent.items)) {
-                items = droppedContent.items.filter(Boolean);
-            } else if (droppedContent.type === 'grouped' && droppedContent.group && Array.isArray(droppedContent.group.fields)) {
-                items = droppedContent.group.fields.filter(Boolean).map(f => ({ ...f }));
-            } else if (droppedContent.content) {
-                items = [droppedContent.content];
-            }
-            items.forEach(item => {
-                const key = item.key || item.id;
-                if (key && item.defaultValue !== undefined) {
-                    defaults[key] = item.defaultValue;
-                }
-            });
-        }
-        return defaults;
-    };
-
-    const [activeTab, setActiveTab] = useModalState('data');
-    const [values, setValues] = useModalState(initValues);
-    const [confirmState, setConfirmState] = useModalState({ open: false, title: '', message: '', onConfirm: null });
-    if (!isOpen || !droppedContent) {
-        console.log('❌ MultiAssignModal - Ne s\'affiche pas:', { isOpen, droppedContent });
-        return null;
-    }
-
-    console.log('✅ MultiAssignModal - Affichage:', { isOpen, droppedContent });
-
-    // Regroupement par section
-    let items = [];
-    if (droppedContent.type === 'multi' && Array.isArray(droppedContent.items)) {
-        items = droppedContent.items.filter(Boolean);
-    } else if (droppedContent.type === 'grouped' && droppedContent.group && Array.isArray(droppedContent.group.fields)) {
-        items = droppedContent.group.fields.filter(Boolean).map(f => ({ ...f }));
-    } else if (droppedContent.content) {
-        items = [droppedContent.content];
-    }
-
-    console.log('🔧 MultiAssignModal - items extracted:', items.length, items);
-
-    // Normaliser id/key pour compatibilité (Culture utilise 'id', Curing utilise 'key')
-    items = items.map(item => ({
-        ...item,
-        key: item.key || item.id,
-        id: item.id || item.key
-    }));
-
-    // Regroup by section
-    const sectionMap = {};
-    const orphanItems = []; // Items non trouvés dans aucune section
-
-    sidebarSections.forEach(section => {
-        sectionMap[section.id] = [];
-    });
-
-    items.forEach(item => {
-        const itemKey = item.key || item.id;
-        const section = sidebarSections.find(sec =>
-            Array.isArray(sec.items) && sec.items.some(i => (i.key || i.id) === itemKey)
-        );
-        if (section) {
-            // ✨ Récupérer la définition COMPLÈTE depuis sidebarContent (avec options, tooltip, etc.)
-            const fullDefinition = section.items.find(i => (i.key || i.id) === itemKey);
-            sectionMap[section.id].push(fullDefinition || item);
-        } else {
-            orphanItems.push(item);
-            console.warn('⚠️ Item orphelin (section non trouvée):', itemKey, item);
-        }
-    });
-
-    // Debug: compter items par section
-    const itemsToDisplay = Object.values(sectionMap).flat().length;
-    const sectionsWithItems = Object.entries(sectionMap).filter(([_, items]) => items.length > 0);
-    console.log('🔧 MultiAssignModal - Items à afficher:', itemsToDisplay, 'sections:', sectionsWithItems.length,
-        sectionsWithItems.map(([id, items]) => `${id}: ${items.length}`).join(', '));
-
-    if (orphanItems.length > 0) {
-        console.warn('⚠️ Items orphelins détectés:', orphanItems.length, orphanItems.map(i => i.key || i.id));
-    }
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] border border-gray-200 dark:border-gray-700 flex flex-col">
-                {/* Header fixe */}
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
-                        Configuration des données
-                        <span className="ml-2 text-sm font-normal text-gray-500">
-                            ({itemsToDisplay} champ{itemsToDisplay > 1 ? 's' : ''})
-                        </span>
-                    </h3>
-                    <div className="flex gap-2">
-                        <button
-                            className={`liquid-btn ${activeTab === 'data' ? 'liquid-btn--primary' : ''}`}
-                            onClick={() => setActiveTab('data')}
-                        >
-                            Toutes les données
-                        </button>
-                        <button
-                            className={`liquid-btn ${activeTab === 'group' ? 'liquid-btn--primary' : ''}`}
-                            onClick={() => setActiveTab('group')}
-                        >
-                            Groupes
-                        </button>
-                    </div>
-                </div>
-
-                {/* Contenu scrollable */}
-                {activeTab === 'data' && (
-                    <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 min-h-0">
-                        {sectionsWithItems.length === 0 && (
-                            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                                Aucune donnée à configurer
-                            </div>
-                        )}
-                        {sectionsWithItems.map(([sectionId, sectionItems]) => {
-                            const section = sidebarSections.find(sec => sec.id === sectionId);
-                            console.log(`🔍 Section lookup: sectionId="${sectionId}", found:`, section);
-                            console.log(`   → sectionItems (${sectionItems.length}):`, sectionItems.map(i => ({
-                                id: i.id,
-                                key: i.key,
-                                label: i.label,
-                                type: i.type,
-                                hasOptions: !!i.options
-                            })));
-
-                            if (!section) {
-                                console.warn(`⚠️ Section "${sectionId}" non trouvée dans sidebarSections`);
-                                return null;
-                            }
-
-                            return (
-                                <div key={sectionId} className="space-y-3">
-                                    <div className="sticky top-0 bg-white dark:bg-gray-900 z-10 flex items-center gap-2 font-semibold text-sm text-gray-900 dark:text-white border-b-2 border-blue-500 dark:border-blue-400 pb-2 mb-3">
-                                        <span className="text-lg">{section.icon}</span>
-                                        <span>{section.label}</span>
-                                        <span className="ml-auto text-xs font-normal text-gray-500">
-                                            {sectionItems.length} champ{sectionItems.length > 1 ? 's' : ''}
-                                        </span>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {sectionItems.map(item => {
-                                            const itemKey = item.key || item.id;
-                                            console.log(`🎨 Rendering item "${itemKey}":`, {
-                                                label: item.label,
-                                                type: item.type,
-                                                hasOptions: !!item.options,
-                                                optionsCount: item.options?.length,
-                                                firstOption: item.options?.[0],
-                                                hasTooltip: !!item.tooltip,
-                                                hasIcon: !!item.icon
-                                            });
-
-                                            if (!item) {
-                                                console.error(`❌ Item "${itemKey}" est null/undefined !`);
-                                                return null;
-                                            }
-
-                                            return (
-                                                <div key={itemKey} className="col-span-1">
-                                                    <FieldRenderer
-                                                        field={item}
-                                                        value={values[itemKey]}
-                                                        onChange={(newValue) => setValues(v => ({ ...v, [itemKey]: newValue }))}
-                                                        allData={values}
-                                                        configMode={true}
-                                                    />
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
-                {activeTab === 'group' && (
-                    <div className="flex-1 overflow-y-auto px-6 py-4">
-                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                            Gestion des groupes à venir…
-                        </div>
-                    </div>
-                )}
-
-                {/* Footer fixe */}
-                <div className="flex gap-3 p-6 border-t border-gray-200 dark:border-gray-700 shrink-0">
-                    <button
-                        className="flex-1 liquid-btn liquid-btn--accent"
-                        onClick={() => onApply(values)}
-                    >
-                        Appliquer à {selectedCells.length > 0 ? `${selectedCells.length} case${selectedCells.length > 1 ? 's' : ''}` : 'la case'}
-                    </button>
-                    <button className="flex-1 liquid-btn" onClick={onClose}>
-                        Annuler
-                    </button>
-                </div>
-                <ConfirmModal
-                    open={confirmState.open}
-                    title={confirmState.title}
-                    message={confirmState.message}
-                    onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))}
-                    onConfirm={() => setConfirmState(prev => { const cb = prev && prev.onConfirm; if (typeof cb === 'function') cb(); return { ...prev, open: false }; })}
-                />
-            </div>
-        </div>
-    );
-}
-
-// Save / Load entire pipeline presets (inline modal)
-function SavePipelineModal({ isOpen, onClose, timelineConfig, timelineData, onSavePreset, onLoadPreset }) {
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [includeData, setIncludeData] = useState(true);
-    const [saved, setSaved] = useState(() => {
-        try {
-            return JSON.parse(localStorage.getItem('pipeline-presets') || '[]');
-        } catch (e) { return []; }
-    });
-
-    if (!isOpen) return null;
-
-    const handleSave = () => {
-        if (!name.trim()) return alert('Veuillez donner un nom au préréglage');
-        const preset = {
-            id: Date.now(),
-            name: name.trim(),
-            description: description.trim(),
-            createdAt: new Date().toISOString(),
-            config: timelineConfig || {},
-            data: includeData ? (timelineData || []) : []
-        };
-        const next = [...saved, preset];
-        localStorage.setItem('pipeline-presets', JSON.stringify(next));
-        setSaved(next);
-        onSavePreset && onSavePreset(preset);
-        onClose();
-    };
-
-    const handleLoad = (preset) => {
-        if (!confirm(`Charger le préréglage "${preset.name}" et remplacer la configuration actuelle ?`)) return;
-        onLoadPreset && onLoadPreset(preset);
-        onClose();
-    };
-
-    const handleDelete = (id) => {
-        if (!confirm('Supprimer ce préréglage ?')) return;
-        const next = saved.filter(s => s.id !== id);
-        localStorage.setItem('pipeline-presets', JSON.stringify(next));
-        setSaved(next);
-    };
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 min-w-[360px] max-w-[95vw] border border-gray-200 dark:border-gray-700">
-                <h3 className="font-bold text-lg mb-3">Sauvegarder / Charger un préréglage de pipeline</h3>
-                <div className="mb-2">
-                    <input className="w-full px-3 py-2 border rounded mb-2" placeholder="Nom du préréglage" value={name} onChange={e => setName(e.target.value)} />
-                    <input className="w-full px-3 py-2 border rounded mb-2" placeholder="Description (optionnel)" value={description} onChange={e => setDescription(e.target.value)} />
-                    <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={includeData} onChange={e => setIncludeData(e.target.checked)} /> Inclure les données des cases</label>
-                </div>
-                <div className="flex gap-2 mt-4">
-                    <button className="liquid-btn liquid-btn--accent flex-1" onClick={handleSave}>Enregistrer</button>
-                    <button className="liquid-btn flex-1" onClick={onClose}>Fermer</button>
-                </div>
-
-                {saved.length > 0 && (
-                    <div className="mt-4 max-h-40 overflow-y-auto">
-                        <div className="font-semibold mb-2">Préréglages enregistrés</div>
-                        <div className="space-y-2">
-                            {saved.map(p => (
-                                <div key={p.id} className="flex items-center justify-between p-2 border rounded">
-                                    <div>
-                                        <div className="font-medium">{p.name}</div>
-                                        <div className="text-xs text-gray-500">{p.description}</div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button className="liquid-btn" onClick={() => handleLoad(p)}>Charger</button>
-                                        <button className="liquid-btn liquid-btn--danger" onClick={() => handleDelete(p.id)}>Suppr.</button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
-// (handleConfigureItem is declared inside the component where state is available)
 /**
  * PipelineDragDropView - Composant pipeline conforme CDC
  * 
@@ -439,8 +141,6 @@ const PipelineDragDropView = ({
     const [showMassAssignModal, setShowMassAssignModal] = useState(false);
     const [sourceCellForMassAssign, setSourceCellForMassAssign] = useState(null);
     const [droppedItem, setDroppedItem] = useState(null); // Item droppé en attente de saisie
-    const [showMultiAssignModal, setShowMultiAssignModal] = useState(false);
-    const [multiAssignContent, setMultiAssignContent] = useState(null);
     const [hoveredCell, setHoveredCell] = useState(null); // Cellule survolée pendant drag
     const [showPresets, setShowPresets] = useState(false);
     const [showSavePipelineModal, setShowSavePipelineModal] = useState(false);
@@ -766,7 +466,7 @@ const PipelineDragDropView = ({
         setHoveredCell(null);
     };
 
-    // CDC CONFORME: handleDrop ajoute directement sans modale
+    // CDC CONFORME: handleDrop ouvre PipelineDataModal avec l'item droppé
     const handleDrop = (e, timestamp) => {
         e.preventDefault();
         e.stopPropagation();
@@ -785,46 +485,18 @@ const PipelineDragDropView = ({
                 return;
             }
 
-            const sel = selectedCellsRef.current || [];
-            const appliesToSelection = (sel && sel.length > 0) && (sel.includes(timestamp) || massAssignMode);
-
-            // 1️⃣ GROUPED PRESET: Appliquer à toutes les cases sélectionnées (avec modale pour valeurs)
-            if (draggedContent.type === 'grouped' && draggedContent.group && Array.isArray(draggedContent.group.fields)) {
-                console.log('✅ handleDrop: GROUPED preset détecté, ouverture MultiAssignModal');
-                setMultiAssignContent(draggedContent);
-                setShowMultiAssignModal(true);
-                setDraggedContent(null);
-                return;
-            }
-
-            // 2️⃣ MULTI-SÉLECTION: Ouvrir modale pour plusieurs champs
-            if (draggedContent.type === 'multi' && Array.isArray(draggedContent.items)) {
-                console.log('✅ handleDrop: MULTI-sélection détectée, ouverture MultiAssignModal');
-                setMultiAssignContent(draggedContent);
-                setShowMultiAssignModal(true);
-                setDraggedContent(null);
-                return;
-            }
-
-            // 3️⃣ SINGLE FIELD : Ouvrir modale pour saisie
-            // (Même comportement que grouped/multi pour cohérence UX)
-            console.log('✅ handleDrop: Single field - ouverture modale de saisie');
-
-            // Convertir single field en format compatible MultiAssignModal
-            const singleFieldContent = {
-                type: 'single',
-                content: draggedContent,
-                items: [draggedContent]
-            };
-
-            setMultiAssignContent(singleFieldContent);
+            // Ouvrir PipelineDataModal avec l'item droppé
+            console.log('✅ handleDrop: Ouverture PipelineDataModal');
             setCurrentCellTimestamp(timestamp);
-            setShowMultiAssignModal(true);
+            setDroppedItem({
+                timestamp,
+                content: draggedContent
+            });
+            setIsModalOpen(true);
             setDraggedContent(null);
 
         } catch (error) {
             console.error('❌ Erreur handleDrop:', error);
-            // Feedback visuel optionnel: toast d'erreur
         }
     };
 
@@ -1927,36 +1599,24 @@ const PipelineDragDropView = ({
                 preConfiguredItems={preConfiguredItems}
             />
 
-            {/* Modal multi-assign (onglets) */}
-            <MultiAssignModal
-                isOpen={showMultiAssignModal}
-                onClose={() => { setShowMultiAssignModal(false); setMultiAssignContent(null); setSelectedCells([]); }}
-                droppedContent={multiAssignContent}
-                sidebarSections={sidebarContent}
-                selectedCells={selectedCells}
-                onApply={(values) => {
-                    console.log('🎯 MultiAssignModal onApply - values:', values);
-                    const targets = selectedCells.length > 0 ? selectedCells : [currentCellTimestamp];
-                    console.log('🎯 Targets:', targets);
-
-                    const allChanges = [];
-                    targets.forEach(ts => {
-                        console.log(`📝 Applying to cell ${ts}:`, values);
-                        Object.entries(values).forEach(([key, value]) => {
-                            console.log(`  → ${key}: ${value}`);
-                            const prev = getCellData(ts) || {};
-                            const prevValue = prev && prev.data ? prev.data[key] : undefined;
-                            allChanges.push({ timestamp: ts, field: key, previousValue: prevValue });
-                            onDataChange(ts, key, value);
-                        });
-                    });
-
-                    console.log('✅ onApply terminé, changes:', allChanges.length);
-                    if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'multi-assign', changes: allChanges });
-                    setShowMultiAssignModal(false);
-                    setMultiAssignContent(null);
-                    setSelectedCells([]); // Clear selection frame after assignment
+            {/* Modal d'édition de cellule */}
+            <PipelineDataModal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setDroppedItem(null);
                 }}
+                cellData={getCellData(currentCellTimestamp)}
+                sidebarSections={sidebarContent}
+                onSave={handleModalSave}
+                timestamp={currentCellTimestamp}
+                intervalLabel={cells.find(c => c.timestamp === currentCellTimestamp)?.label || ''}
+                droppedItem={droppedItem}
+                pipelineType={type}
+                onFieldDelete={handleFieldDelete}
+                groupedPresets={groupedPresets}
+                preConfiguredItems={preConfiguredItems}
+                selectedCells={selectedCells}
             />
 
             {/* Modal configuration préréglage complet retirée (CDC) */}

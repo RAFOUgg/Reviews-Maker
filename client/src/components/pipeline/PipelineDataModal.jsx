@@ -26,7 +26,8 @@ const PipelineDataModal = ({
     onDragOver = null,
     onDrop = null,
     groupedPresets = [],
-    preConfiguredItems = {}
+    preConfiguredItems = {},
+    selectedCells = []  // Array of selected cell timestamps for apply-to-selection
 }) => {
     const [formData, setFormData] = useState({});
     const [activeTab, setActiveTab] = useState('data');
@@ -103,10 +104,19 @@ const PipelineDataModal = ({
     // Handler pour sauvegarder
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSave({
-            timestamp,
-            data: formData
+        
+        // Appliquer à toutes les cellules sélectionnées si applicable
+        const targets = (selectedCells && selectedCells.length > 0) ? selectedCells : [timestamp];
+        
+        console.log('💾 handleSubmit - targets:', targets, 'formData:', formData);
+        
+        targets.forEach(ts => {
+            onSave({
+                timestamp: ts,
+                data: formData
+            });
         });
+        
         onClose();
     };
 
@@ -745,7 +755,9 @@ const PipelineDataModal = ({
                                     className="px-4 py-2 hover: disabled:bg-gray-400 text-white rounded-lg transition-colors flex items-center gap-2"
                                 >
                                     <Save className="w-4 h-4" />
-                                    Enregistrer
+                                    {selectedCells && selectedCells.length > 1 
+                                        ? `Appliquer à ${selectedCells.length} cases` 
+                                        : 'Enregistrer'}
                                 </button>
                             )}
                         </div>
