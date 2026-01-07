@@ -1500,10 +1500,12 @@ const PipelineDragDropView = ({
                     <div className="mb-3">
                         <div className="font-semibold text-xs text-gray-400 dark:text-gray-300 mb-1">Pré-configuration</div>
                         <button
-                            className="mt-1 mb-2 liquid-btn liquid-btn--primary"
+                            className="w-full mt-1 mb-2 group relative flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl font-medium shadow-md hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300 overflow-hidden"
                             onClick={() => setShowGroupedPresetModal(true)}
                         >
-                            <Plus className="w-4 h-4" /> Groupe de préréglages
+                            <Plus className="w-4 h-4" />
+                            <span>Groupe de préréglages</span>
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                         </button>
                         {groupedPresets.length > 0 && (
                             <div className="flex flex-wrap gap-2">
@@ -2086,159 +2088,156 @@ const PipelineDragDropView = ({
                     </div>
                 )}
             </div>
-        </div>
 
+            {/* Modal grouped preset */}
+            <GroupedPresetModal
+                isOpen={showGroupedPresetModal}
+                onClose={() => setShowGroupedPresetModal(false)}
+                onSave={setGroupedPresets}
+                groups={groupedPresets}
+                setGroups={setGroupedPresets}
+                sidebarContent={sidebarContent}
+            />
 
-            {/* Modal grouped preset */ }
-    <GroupedPresetModal
-        isOpen={showGroupedPresetModal}
-        onClose={() => setShowGroupedPresetModal(false)}
-        onSave={setGroupedPresets}
-        groups={groupedPresets}
-        setGroups={setGroupedPresets}
-        sidebarContent={sidebarContent}
-    />
+            {/* Modal save/load pipeline presets */}
+            <SavePipelineModal
+                isOpen={showSavePipelineModal}
+                onClose={() => setShowSavePipelineModal(false)}
+                timelineConfig={timelineConfig}
+                timelineData={timelineData}
+                onSavePreset={(p) => { /* noop - preserved for external hooks */ }}
+                onLoadPreset={(p) => applyPipelinePreset(p)}
+            />
 
-    {/* Modal save/load pipeline presets */ }
-    <SavePipelineModal
-        isOpen={showSavePipelineModal}
-        onClose={() => setShowSavePipelineModal(false)}
-        timelineConfig={timelineConfig}
-        timelineData={timelineData}
-        onSavePreset={(p) => { /* noop - preserved for external hooks */ }}
-        onLoadPreset={(p) => applyPipelinePreset(p)}
-    />
+            {/* Modal d'édition de cellule */}
+            <PipelineDataModal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setDroppedItem(null);
+                }}
+                cellData={getCellData(currentCellTimestamp)}
+                sidebarSections={sidebarContent}
+                onSave={handleModalSave}
+                timestamp={currentCellTimestamp}
+                intervalLabel={cells.find(c => c.timestamp === currentCellTimestamp)?.label || ''}
+                droppedItem={droppedItem} // Passer l'item droppé à la modal
+                pipelineType={type} // Passer le type de pipeline pour localStorage
+                onFieldDelete={handleFieldDelete}
+                groupedPresets={groupedPresets}
+                preConfiguredItems={preConfiguredItems}
+            />
 
-    {/* Modal d'édition de cellule */ }
-    <PipelineDataModal
-        isOpen={isModalOpen}
-        onClose={() => {
-            setIsModalOpen(false);
-            setDroppedItem(null);
-        }}
-        cellData={getCellData(currentCellTimestamp)}
-        sidebarSections={sidebarContent}
-        onSave={handleModalSave}
-        timestamp={currentCellTimestamp}
-        intervalLabel={cells.find(c => c.timestamp === currentCellTimestamp)?.label || ''}
-        droppedItem={droppedItem} // Passer l'item droppé à la modal
-        pipelineType={type} // Passer le type de pipeline pour localStorage
-        onFieldDelete={handleFieldDelete}
-        groupedPresets={groupedPresets}
-        preConfiguredItems={preConfiguredItems}
-    />
+            {/* Modal d'édition de cellule */}
+            <PipelineDataModal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setDroppedItem(null);
+                }}
+                cellData={getCellData(currentCellTimestamp)}
+                sidebarSections={sidebarContent}
+                onSave={handleModalSave}
+                timestamp={currentCellTimestamp}
+                intervalLabel={cells.find(c => c.timestamp === currentCellTimestamp)?.label || ''}
+                droppedItem={droppedItem}
+                pipelineType={type}
+                onFieldDelete={handleFieldDelete}
+                groupedPresets={groupedPresets}
+                preConfiguredItems={preConfiguredItems}
+                selectedCells={selectedCells}
+            />
 
-    {/* Modal d'édition de cellule */ }
-    <PipelineDataModal
-        isOpen={isModalOpen}
-        onClose={() => {
-            setIsModalOpen(false);
-            setDroppedItem(null);
-        }}
-        cellData={getCellData(currentCellTimestamp)}
-        sidebarSections={sidebarContent}
-        onSave={handleModalSave}
-        timestamp={currentCellTimestamp}
-        intervalLabel={cells.find(c => c.timestamp === currentCellTimestamp)?.label || ''}
-        droppedItem={droppedItem}
-        pipelineType={type}
-        onFieldDelete={handleFieldDelete}
-        groupedPresets={groupedPresets}
-        preConfiguredItems={preConfiguredItems}
-        selectedCells={selectedCells}
-    />
+            {/* Modal configuration préréglage complet retirée (CDC) */}
 
-    {/* Modal configuration préréglage complet retirée (CDC) */ }
+            {/* Tooltip au survol */}
+            <PipelineCellTooltip
+                cellData={tooltipData.cellData}
+                sectionLabel={tooltipData.section}
+                visible={tooltipData.visible}
+                position={tooltipData.position}
+            />
 
-    {/* Tooltip au survol */ }
-    <PipelineCellTooltip
-        cellData={tooltipData.cellData}
-        sectionLabel={tooltipData.section}
-        visible={tooltipData.visible}
-        position={tooltipData.position}
-    />
-
-    {/* Menu contextuel stylisé pour config individuelle et assignation rapide */ }
-    {
-        contextMenu && (
-            <div className="fixed inset-0 z-50" onClick={() => setContextMenu(null)}>
-                <div
-                    className="absolute bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 min-w-[320px] max-w-[90vw] border border-gray-200 dark:border-gray-700"
-                    style={{ left: contextMenu.position.x, top: contextMenu.position.y, transform: 'translate(-10%, 0)', zIndex: 10000 }}
-                    onClick={e => e.stopPropagation()}
-                >
-                    <h4 className="font-bold text-lg mb-2 flex items-center gap-2">
-                        <span className="text-base">{contextMenu.item.icon}</span>
-                        {contextMenu.item.label}
-                    </h4>
-                    <div className="mb-4">
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Valeur par défaut</label>
-                        <input
-                            type="text"
-                            className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                            defaultValue={preConfiguredItems[contextMenu.item.key] || ''}
-                            id="preconfig-value-input"
-                        />
-                    </div>
-                    <div className="flex gap-2 mb-2">
-                        <button
-                            className="flex-1 px-4 py-2 hover: text-white rounded-xl font-medium transition-all"
-                            onClick={() => {
-                                const val = document.getElementById('preconfig-value-input').value;
-                                handleConfigureItem(contextMenu.item.key, val);
-                                setContextMenu(null);
-                            }}
-                        >Enregistrer</button>
-                        <button
-                            className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-xl font-medium transition-all"
-                            onClick={() => setContextMenu(null)}
-                        >Annuler</button>
-                    </div>
-                    <div className="mt-4">
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Assigner à&nbsp;:</label>
-                        <div className="flex gap-2">
-                            <button
-                                className="flex-1 px-3 py-2 hover: text-white rounded-lg text-xs font-semibold"
-                                onClick={() => {
-                                    // Assignation à toutes les cases sélectionnées
-                                    const val = document.getElementById('preconfig-value-input').value;
-                                    const changes = [];
-                                    selectedCells.forEach(ts => {
-                                        const prev = getCellData(ts) || {};
-                                        const prevValue = prev && prev.data ? prev.data[contextMenu.item.key] : undefined;
-                                        changes.push({ timestamp: ts, field: contextMenu.item.key, previousValue: prevValue });
-                                        onDataChange(ts, contextMenu.item.key, val);
-                                    });
-                                    if (changes.length > 0) pushAction({ id: Date.now(), type: 'preconfig-assign-selection', changes });
-                                    setContextMenu(null);
-                                }}
-                                disabled={selectedCells.length === 0}
-                            >{selectedCells.length > 0 ? `Sélection (${selectedCells.length})` : 'Sélectionner des cases'}</button>
-                            <button
-                                className="flex-1 px-3 py-2 hover: text-white rounded-lg text-xs font-semibold"
-                                onClick={() => {
-                                    // Assignation à toutes les cases
-                                    const val = document.getElementById('preconfig-value-input').value;
-                                    const changes = [];
-                                    cells.forEach(cell => {
-                                        const prev = getCellData(cell.timestamp) || {};
-                                        const prevValue = prev && prev.data ? prev.data[contextMenu.item.key] : undefined;
-                                        changes.push({ timestamp: cell.timestamp, field: contextMenu.item.key, previousValue: prevValue });
-                                        onDataChange(cell.timestamp, contextMenu.item.key, val);
-                                    });
-                                    if (changes.length > 0) pushAction({ id: Date.now(), type: 'preconfig-assign-all', changes });
-                                    setContextMenu(null);
-                                }}
-                            >Toutes les cases</button>
+            {/* Menu contextuel stylisé pour config individuelle et assignation rapide */}
+            {
+                contextMenu && (
+                    <div className="fixed inset-0 z-50" onClick={() => setContextMenu(null)}>
+                        <div
+                            className="absolute bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 min-w-[320px] max-w-[90vw] border border-gray-200 dark:border-gray-700"
+                            style={{ left: contextMenu.position.x, top: contextMenu.position.y, transform: 'translate(-10%, 0)', zIndex: 10000 }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <h4 className="font-bold text-lg mb-2 flex items-center gap-2">
+                                <span className="text-base">{contextMenu.item.icon}</span>
+                                {contextMenu.item.label}
+                            </h4>
+                            <div className="mb-4">
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Valeur par défaut</label>
+                                <input
+                                    type="text"
+                                    className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+                                    defaultValue={preConfiguredItems[contextMenu.item.key] || ''}
+                                    id="preconfig-value-input"
+                                />
+                            </div>
+                            <div className="flex gap-2 mb-2">
+                                <button
+                                    className="flex-1 px-4 py-2 hover: text-white rounded-xl font-medium transition-all"
+                                    onClick={() => {
+                                        const val = document.getElementById('preconfig-value-input').value;
+                                        handleConfigureItem(contextMenu.item.key, val);
+                                        setContextMenu(null);
+                                    }}
+                                >Enregistrer</button>
+                                <button
+                                    className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-xl font-medium transition-all"
+                                    onClick={() => setContextMenu(null)}
+                                >Annuler</button>
+                            </div>
+                            <div className="mt-4">
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Assigner à&nbsp;:</label>
+                                <div className="flex gap-2">
+                                    <button
+                                        className="flex-1 px-3 py-2 hover: text-white rounded-lg text-xs font-semibold"
+                                        onClick={() => {
+                                            // Assignation à toutes les cases sélectionnées
+                                            const val = document.getElementById('preconfig-value-input').value;
+                                            const changes = [];
+                                            selectedCells.forEach(ts => {
+                                                const prev = getCellData(ts) || {};
+                                                const prevValue = prev && prev.data ? prev.data[contextMenu.item.key] : undefined;
+                                                changes.push({ timestamp: ts, field: contextMenu.item.key, previousValue: prevValue });
+                                                onDataChange(ts, contextMenu.item.key, val);
+                                            });
+                                            if (changes.length > 0) pushAction({ id: Date.now(), type: 'preconfig-assign-selection', changes });
+                                            setContextMenu(null);
+                                        }}
+                                        disabled={selectedCells.length === 0}
+                                    >{selectedCells.length > 0 ? `Sélection (${selectedCells.length})` : 'Sélectionner des cases'}</button>
+                                    <button
+                                        className="flex-1 px-3 py-2 hover: text-white rounded-lg text-xs font-semibold"
+                                        onClick={() => {
+                                            // Assignation à toutes les cases
+                                            const val = document.getElementById('preconfig-value-input').value;
+                                            const changes = [];
+                                            cells.forEach(cell => {
+                                                const prev = getCellData(cell.timestamp) || {};
+                                                const prevValue = prev && prev.data ? prev.data[contextMenu.item.key] : undefined;
+                                                changes.push({ timestamp: cell.timestamp, field: contextMenu.item.key, previousValue: prevValue });
+                                                onDataChange(cell.timestamp, contextMenu.item.key, val);
+                                            });
+                                            if (changes.length > 0) pushAction({ id: Date.now(), type: 'preconfig-assign-all', changes });
+                                            setContextMenu(null);
+                                        }}
+                                    >Toutes les cases</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        )
-    }
+                )}
 
-    {/* Toast succès retiré (CDC) */ }
-        </div >
+            {/* Toast succès retiré (CDC) */}
+        </div>
     );
 };
 
