@@ -265,7 +265,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                     {/* Create new group */}
                     <div className="space-y-3 pt-2 border-t border-gray-200 dark:border-gray-700">
                         <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Créer un nouveau groupe</h4>
-                        
+
                         <div className="grid grid-cols-2 gap-3">
                             <input
                                 type="text"
@@ -325,7 +325,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                                                         />
                                                         <span className="text-base">{field.icon}</span>
                                                         <span className="text-sm flex-1">{field.label}</span>
-                                                        
+
                                                         {isSelected && (
                                                             <div className="flex items-center gap-1">
                                                                 {renderFieldInput(field)}
