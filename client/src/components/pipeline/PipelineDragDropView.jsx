@@ -65,85 +65,79 @@ function CellContextMenu({
         setSelectedFieldsToDelete([]);
     }, [cellTimestamp, isOpen]);
 
-    // Position ajustée après le rendu - TOUJOURS 100% visible
-    const [adjustedPosition, setAdjustedPosition] = useState(position);
-    const [maxMenuHeight, setMaxMenuHeight] = useState('80vh');
+    // Style du menu - GARANTIR 100% visible
+    const [menuStyle, setMenuStyle] = useState({
+        left: '50%',
+        top: '50%',
+        transform: 'translate(-50%, -50%)',
+        maxHeight: 'calc(100vh - 24px)',
+        opacity: 0
+    });
 
     useLayoutEffect(() => {
         if (!isOpen || !menuRef.current) return;
 
-        // Attendre le rendu pour avoir les bonnes dimensions
+        // Double RAF pour s'assurer que le DOM est bien rendu
         requestAnimationFrame(() => {
-            const menu = menuRef.current;
-            if (!menu) return;
+            requestAnimationFrame(() => {
+                const menu = menuRef.current;
+                if (!menu) return;
 
-            const menuRect = menu.getBoundingClientRect();
-            const viewport = {
-                width: window.innerWidth,
-                height: window.innerHeight
-            };
-            const margin = 12; // Marge minimale par rapport aux bords
+                const menuRect = menu.getBoundingClientRect();
+                const margin = 12;
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
 
-            // Dimensions du menu
-            const menuWidth = menuRect.width;
-            const menuHeight = menuRect.height;
+                // Dimensions du menu
+                const maxMenuWidth = Math.min(280, viewportWidth - margin * 2);
+                const menuWidth = Math.min(menuRect.width, maxMenuWidth);
+                const menuHeight = menuRect.height;
 
-            let x = position.x;
-            let y = position.y;
+                // Hauteur maximale disponible
+                const maxAvailableHeight = viewportHeight - margin * 2;
 
-            // === AJUSTEMENT HORIZONTAL ===
-            // Vérifier si le menu dépasse à droite
-            if (x + menuWidth > viewport.width - margin) {
-                x = viewport.width - menuWidth - margin;
-            }
-            // Vérifier si le menu dépasse à gauche
-            if (x < margin) {
-                x = margin;
-            }
+                // Position de départ (point de clic)
+                let targetX = position.x;
+                let targetY = position.y;
 
-            // === AJUSTEMENT VERTICAL ===
-            // Calculer l'espace disponible en haut et en bas du point de clic
-            const spaceBelow = viewport.height - position.y - margin;
-            const spaceAbove = position.y - margin;
+                // === CALCUL POSITION FINALE ===
+                let finalX = targetX;
+                let finalY = targetY;
 
-            // Si le menu dépasse en bas
-            if (y + menuHeight > viewport.height - margin) {
-                // Si l'espace au-dessus est suffisant, mettre au-dessus du curseur
-                if (spaceAbove >= menuHeight) {
-                    y = position.y - menuHeight - 8;
+                // Contrainte horizontale STRICTE
+                if (finalX + menuWidth > viewportWidth - margin) {
+                    finalX = viewportWidth - menuWidth - margin;
                 }
-                // Sinon, si l'espace au-dessus est plus grand, utiliser cet espace avec scroll
-                else if (spaceAbove > spaceBelow) {
-                    y = margin;
-                    setMaxMenuHeight(`${spaceAbove - margin}px`);
+                if (finalX < margin) {
+                    finalX = margin;
                 }
-                // Sinon, coller au bas et limiter la hauteur
-                else {
-                    y = position.y;
-                    if (y + menuHeight > viewport.height - margin) {
-                        y = viewport.height - menuHeight - margin;
-                        if (y < margin) {
-                            y = margin;
-                            setMaxMenuHeight(`${viewport.height - margin * 2}px`);
-                        }
+
+                // Contrainte verticale STRICTE
+                const effectiveMenuHeight = Math.min(menuHeight, maxAvailableHeight);
+
+                if (finalY + effectiveMenuHeight > viewportHeight - margin) {
+                    // Essayer au-dessus du curseur
+                    if (targetY - effectiveMenuHeight - 8 >= margin) {
+                        finalY = targetY - effectiveMenuHeight - 8;
+                    } else {
+                        // Forcer en bas de l'écran
+                        finalY = viewportHeight - effectiveMenuHeight - margin;
                     }
                 }
-            }
 
-            // Vérifier si le menu dépasse en haut
-            if (y < margin) {
-                y = margin;
-            }
+                if (finalY < margin) {
+                    finalY = margin;
+                }
 
-            // Réinitialiser la hauteur max si assez d'espace
-            const availableHeight = viewport.height - y - margin;
-            if (menuHeight <= availableHeight) {
-                setMaxMenuHeight('80vh');
-            } else {
-                setMaxMenuHeight(`${availableHeight}px`);
-            }
-
-            setAdjustedPosition({ x: Math.round(x), y: Math.round(y) });
+                // Appliquer le style final
+                setMenuStyle({
+                    left: `${Math.round(finalX)}px`,
+                    top: `${Math.round(finalY)}px`,
+                    transform: 'none',
+                    maxHeight: `${maxAvailableHeight}px`,
+                    opacity: 1
+                });
+            });
         });
     }, [isOpen, position, showFieldList]);
 
@@ -192,12 +186,10 @@ function CellContextMenu({
     return (
         <div
             ref={menuRef}
-            className="fixed z-[200] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+            className="fixed z-[200] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden transition-opacity duration-150"
             style={{
-                left: `${adjustedPosition.x}px`,
-                top: `${adjustedPosition.y}px`,
+                ...menuStyle,
                 width: 'min(280px, calc(100vw - 24px))',
-                maxHeight: maxMenuHeight,
                 overflowY: 'auto'
             }}
         >

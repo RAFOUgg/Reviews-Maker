@@ -25,8 +25,13 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
     const [value, setValue] = useState(item.defaultValue || '');
     const [selectedSource, setSelectedSource] = useState('');
     const menuRef = useRef(null);
-    const [adjustedPos, setAdjustedPos] = useState({ x: 0, y: 0 });
-    const [maxHeight, setMaxHeight] = useState('auto');
+    const [menuStyle, setMenuStyle] = useState({
+        left: '50%',
+        top: '50%',
+        transform: 'translate(-50%, -50%)',
+        maxHeight: 'calc(100vh - 24px)',
+        opacity: 0
+    });
 
     useEffect(() => {
         // Fermer au clic extérieur
@@ -40,88 +45,77 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [onClose]);
 
-    // Positionner le menu intelligemment - TOUJOURS 100% visible
+    // Positionner le menu - GARANTIR 100% visible
     useLayoutEffect(() => {
         const el = menuRef.current;
         if (!el) return;
 
-        // Attendre que le DOM soit rendu pour avoir les bonnes dimensions
+        // Double RAF pour s'assurer que le DOM est bien rendu
         requestAnimationFrame(() => {
-            const menuRect = el.getBoundingClientRect();
-            const margin = 12; // Marge minimale par rapport aux bords
-            const viewport = {
-                width: window.innerWidth,
-                height: window.innerHeight
-            };
+            requestAnimationFrame(() => {
+                const menuRect = el.getBoundingClientRect();
+                const margin = 12;
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
 
-            // Dimensions du menu
-            const menuWidth = Math.min(menuRect.width, viewport.width - margin * 2);
-            const menuHeight = menuRect.height;
+                // Largeur du menu (max 360px ou viewport - marges)
+                const maxMenuWidth = Math.min(360, viewportWidth - margin * 2);
+                const menuWidth = Math.min(menuRect.width, maxMenuWidth);
+                const menuHeight = menuRect.height;
 
-            // Position initiale basée sur le clic ou l'ancre
-            let x = position?.x ?? viewport.width / 2;
-            let y = position?.y ?? viewport.height / 2;
+                // Hauteur maximale disponible
+                const maxAvailableHeight = viewportHeight - margin * 2;
 
-            // Si on a un anchorRect (élément source), positionner par rapport à lui
-            if (anchorRect) {
-                // Essayer de centrer horizontalement sur l'ancre
-                x = anchorRect.left + anchorRect.width / 2 - menuWidth / 2;
-                // Positionner en dessous de l'ancre par défaut
-                y = anchorRect.bottom + 8;
-            }
+                // Position de départ (clic ou centre de l'ancre)
+                let targetX = position?.x ?? viewportWidth / 2;
+                let targetY = position?.y ?? viewportHeight / 2;
 
-            // === AJUSTEMENT HORIZONTAL ===
-            // Vérifier si le menu dépasse à droite
-            if (x + menuWidth > viewport.width - margin) {
-                x = viewport.width - menuWidth - margin;
-            }
-            // Vérifier si le menu dépasse à gauche
-            if (x < margin) {
-                x = margin;
-            }
-
-            // === AJUSTEMENT VERTICAL ===
-            // Calculer l'espace disponible en haut et en bas
-            const spaceBelow = viewport.height - (anchorRect?.bottom ?? y) - margin;
-            const spaceAbove = (anchorRect?.top ?? y) - margin;
-
-            // Si le menu dépasse en bas
-            if (y + menuHeight > viewport.height - margin) {
-                // Essayer de le mettre au-dessus de l'ancre
-                if (anchorRect && spaceAbove >= menuHeight) {
-                    y = anchorRect.top - menuHeight - 8;
+                if (anchorRect) {
+                    targetX = anchorRect.left + anchorRect.width / 2;
+                    targetY = anchorRect.bottom + 8;
                 }
-                // Sinon, si l'espace au-dessus est plus grand, utiliser cet espace
-                else if (spaceAbove > spaceBelow && anchorRect) {
-                    y = anchorRect.top - menuHeight - 8;
-                    // Si ça dépasse en haut, ajuster
-                    if (y < margin) {
-                        y = margin;
+
+                // === CALCUL POSITION FINALE ===
+                let finalX = targetX - menuWidth / 2;
+                let finalY = targetY;
+
+                // Contrainte horizontale STRICTE
+                if (finalX + menuWidth > viewportWidth - margin) {
+                    finalX = viewportWidth - menuWidth - margin;
+                }
+                if (finalX < margin) {
+                    finalX = margin;
+                }
+
+                // Contrainte verticale STRICTE
+                const effectiveMenuHeight = Math.min(menuHeight, maxAvailableHeight);
+
+                if (finalY + effectiveMenuHeight > viewportHeight - margin) {
+                    // Essayer au-dessus de l'ancre si possible
+                    if (anchorRect && anchorRect.top - effectiveMenuHeight - 8 >= margin) {
+                        finalY = anchorRect.top - effectiveMenuHeight - 8;
+                    } else {
+                        // Sinon forcer en bas de l'écran
+                        finalY = viewportHeight - effectiveMenuHeight - margin;
                     }
                 }
-                // Sinon, coller au bas de l'écran
-                else {
-                    y = viewport.height - menuHeight - margin;
+
+                if (finalY < margin) {
+                    finalY = margin;
                 }
-            }
 
-            // Vérifier si le menu dépasse en haut
-            if (y < margin) {
-                y = margin;
-            }
-
-            // === HAUTEUR MAXIMALE ===
-            // Si le menu est trop grand pour l'écran, limiter sa hauteur
-            const availableHeight = viewport.height - margin * 2;
-            if (menuHeight > availableHeight) {
-                setMaxHeight(`${availableHeight}px`);
-            } else {
-                setMaxHeight('auto');
-            }
-
-            setAdjustedPos({ x: Math.round(x), y: Math.round(y) });
+                // Appliquer le style final
+                setMenuStyle({
+                    left: `${Math.round(finalX)}px`,
+                    top: `${Math.round(finalY)}px`,
+                    transform: 'none',
+                    maxHeight: `${maxAvailableHeight}px`,
+                    opacity: 1
+                });
+            });
         });
     }, [position, anchorRect]);
+
     // Fonction de rendu des formulaires adaptés selon le type de donnée
     const renderFormInput = () => {
         const baseClass = "w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent";
@@ -419,17 +413,14 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
     return (
         <div
             ref={menuRef}
-            className="fixed z-[9999] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white overflow-hidden"
+            className="fixed z-[9999] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white overflow-hidden transition-opacity duration-150"
             style={{
-                left: `${adjustedPos.x}px`,
-                top: `${adjustedPos.y}px`,
-                animation: 'fadeIn 0.15s ease-out',
+                ...menuStyle,
                 width: 'min(360px, calc(100vw - 24px))',
-                maxHeight: maxHeight,
             }}
         >
             {/* Contenu scrollable */}
-            <div className="p-4 overflow-y-auto" style={{ maxHeight: maxHeight !== 'auto' ? `calc(${maxHeight} - 8px)` : 'none' }}>
+            <div className="p-4 overflow-y-auto" style={{ maxHeight: `calc(${menuStyle.maxHeight} - 8px)` }}>
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                         <Settings className="w-4 h-4 text-gray-600 dark:text-gray-400" />
