@@ -280,7 +280,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[900px] max-w-[95vw] h-[85vh] border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[1100px] max-w-[95vw] h-[75vh] border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                     <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
@@ -1478,7 +1478,7 @@ const PipelineDragDropView = ({
     const completionPercent = cells.length > 0 ? Math.round((filledCells / cells.length) * 100) : 0;
 
     return (
-        <div className="flex gap-6 h-[600px]">
+        <div className="flex gap-6 h-[750px]">
             {/* PANNEAU LATÉRAL HIÉRARCHISÉ */}
             <div className="w-80 flex-shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-y-auto">
                 {/* Section Préréglages en haut */}
