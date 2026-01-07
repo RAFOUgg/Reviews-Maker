@@ -118,29 +118,35 @@ const WeedPreview = ({
     const leaves = useMemo(() => {
         const leafCount = Math.max(0, Math.round((1 - manucure / 10) * 7));
         const items = [];
-
+        
         for (let i = 0; i < leafCount; i++) {
             const angle = -60 + (i / Math.max(1, leafCount - 1)) * 120;
             const rad = (angle * Math.PI) / 180;
-
+            
             const baseX = 120;
             const baseY = 200;
             const length = 50 + Math.sin(i * 0.7) * 8;
-            const dentelureSize = (j === 0 || j === 7) ? 0 : 12 * (1 - Math.abs(t - 0.5) * 2);
-            const perpX = leafX + Math.cos(rad + Math.PI / 2) * dentelureSize * (j % 2 === 0 ? 1 : -1);
-            const perpY = leafY + Math.sin(rad + Math.PI / 2) * dentelureSize * (j % 2 === 0 ? 1 : -1);
-            points.push(`${perpX},${perpY}`);
+            
+            const points = [];
+            for (let j = 0; j <= 7; j++) {
+                const t = j / 7;
+                const leafX = baseX + Math.cos(rad) * length * t;
+                const leafY = baseY + Math.sin(rad) * length * t;
+                const dentelureSize = (j === 0 || j === 7) ? 0 : 12 * (1 - Math.abs(t - 0.5) * 2);
+                const perpX = leafX + Math.cos(rad + Math.PI / 2) * dentelureSize * (j % 2 === 0 ? 1 : -1);
+                const perpY = leafY + Math.sin(rad + Math.PI / 2) * dentelureSize * (j % 2 === 0 ? 1 : -1);
+                points.push(`${perpX},${perpY}`);
+            }
+            
+            items.push({
+                points: points.join(' '),
+                color: darkenColor(baseColor, 0.2),
+                delay: i * 0.04,
+                opacity: 1 - manucure / 10
+            });
         }
-
-        items.push({
-            points: points.join(' '),
-            color: darkenColor(baseColor, 0.2),
-            delay: i * 0.04,
-            opacity: 1 - manucure / 10
-        });
-    }
         return items;
-}, [manucure, baseColor]);
+    }, [manucure, baseColor]);
 
 // Pistils organiques bouclés
 const pistilStrands = useMemo(() => {
