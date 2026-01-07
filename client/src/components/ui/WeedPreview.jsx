@@ -427,7 +427,12 @@ const WeedPreview = ({
                     >
                         {/* Feuilles résineuses autour du cola */}
                         {sugarLeaves.length > 0 && (
-                            <g opacity={0.78 * (1 - manucure / 10 * 0.85)}>
+                            <motion.g
+                                opacity={visualEffects.leafVisibility}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: visualEffects.leafVisibility }}
+                                transition={{ duration: 0.5 }}
+                            >
                                 {sugarLeaves.map((leaf, i) => (
                                     <motion.path
                                         key={`sugar-leaf-${i}`}
@@ -436,12 +441,11 @@ const WeedPreview = ({
                                         stroke={leaf.stroke}
                                         strokeWidth="1"
                                         initial={{ scale: 0.9, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 0.9 * (1 - manucure / 10 * 0.7) }}
+                                        animate={{ scale: 1, opacity: 1 }}
                                         transition={{ duration: 0.5, delay: leaf.delay }}
-                                        style={{ fillOpacity: 0.9 }}
                                     />
                                 ))}
-                            </g>
+                            </motion.g>
                         )}
 
                         {/* Fond de base (corps principal vert) */}
@@ -773,74 +777,77 @@ const WeedPreview = ({
                             </g>
                         )}
 
-                        {/* Pistils orangés, plus dynamiques et liés au slider */}
-                        {visualEffects.pistilCount > 0 && (
-                            <motion.g
-                                stroke={pistilColor}
-                                strokeWidth="1.8"
-                                strokeLinecap="round"
-                                fill="none"
-                                opacity="0.9"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 0.6, delay: 0.5 }}
-                            >
+                        {/* Pistils orangés épais et organiques */}
+                        {pistilCurves.length > 0 && (
+                            <g>
                                 {pistilCurves.map((curve, i) => {
-                                    const controlX = curve.baseX + (curve.tipX - curve.baseX) * 0.35;
-                                    const controlY = curve.baseY - visualEffects.pistilCurl * 0.5;
+                                    const ctrlX = (curve.baseX + curve.tipX) / 2 + Math.sin(i * 0.7) * 4;
+                                    const ctrlY = (curve.baseY + curve.tipY) / 2 - 6;
                                     return (
-                                        <motion.path
-                                            key={`pistil-${i}`}
-                                            d={`M ${curve.baseX} ${curve.baseY} Q ${controlX} ${controlY} ${curve.tipX} ${curve.tipY}`}
-                                            stroke={pistilColor}
-                                            strokeWidth="1.7"
-                                            strokeLinecap="round"
-                                            initial={{ pathLength: 0, opacity: 0 }}
-                                            animate={{ pathLength: 1, opacity: 1 }}
-                                            transition={{ duration: 0.7, delay: curve.delay }}
-                                        />
+                                        <g key={`pistil-${i}`}>
+                                            <motion.path
+                                                d={`M ${curve.baseX} ${curve.baseY} Q ${ctrlX} ${ctrlY} ${curve.tipX} ${curve.tipY}`}
+                                                stroke={pistilColor}
+                                                strokeWidth="2.2"
+                                                strokeLinecap="round"
+                                                fill="none"
+                                                opacity="0.95"
+                                                initial={{ pathLength: 0, opacity: 0 }}
+                                                animate={{ pathLength: 1, opacity: 0.95 }}
+                                                transition={{ duration: 0.65, delay: curve.delay }}
+                                            />
+                                            <motion.path
+                                                d={`M ${curve.baseX} ${curve.baseY} Q ${ctrlX} ${ctrlY} ${curve.tipX} ${curve.tipY}`}
+                                                stroke={pistilHighlight}
+                                                strokeWidth="1.3"
+                                                strokeLinecap="round"
+                                                fill="none"
+                                                opacity="0.7"
+                                                initial={{ pathLength: 0, opacity: 0 }}
+                                                animate={{ pathLength: 1, opacity: 0.7 }}
+                                                transition={{ duration: 0.55, delay: curve.delay + 0.05 }}
+                                            />
+                                        </g>
                                     );
                                 })}
-
-                                {pistilCurves.map((curve, i) => {
-                                    const controlX = curve.baseX + (curve.tipX - curve.baseX) * 0.32;
-                                    const controlY = curve.baseY - visualEffects.pistilCurl * 0.65;
-                                    return (
-                                        <motion.path
-                                            key={`pistil-highlight-${i}`}
-                                            d={`M ${curve.baseX} ${curve.baseY} Q ${controlX} ${controlY} ${curve.tipX} ${curve.tipY}`}
-                                            stroke={pistilHighlight}
-                                            strokeWidth="1.1"
-                                            strokeLinecap="round"
-                                            opacity="0.75"
-                                            initial={{ pathLength: 0, opacity: 0 }}
-                                            animate={{ pathLength: 1, opacity: 0.75 }}
-                                            transition={{ duration: 0.6, delay: curve.delay + 0.08 }}
-                                        />
-                                    );
-                                })}
-                            </motion.g>
+                            </g>
                         )}
 
-                        {/* Trichomes (poils blancs/transparents) - distribution naturelle sur les bractées */}
+                        {/* Trichomes: tige fine avec bulbe au bout */}
                         {trichomePoints.length > 0 && (
-                            <g opacity="0.8">
+                            <g>
                                 {trichomePoints.map((point, i) => {
                                     const tiltRad = (point.tilt * Math.PI) / 180;
+                                    const stemEndX = point.x + Math.cos(tiltRad) * point.stemLength;
+                                    const stemEndY = point.y - point.stemLength;
                                     return (
-                                        <motion.line
-                                            key={`trichome-${i}`}
-                                            x1={point.x}
-                                            y1={point.y}
-                                            x2={point.x + Math.cos(tiltRad) * point.length}
-                                            y2={point.y - point.length}
-                                            stroke="rgba(255,255,255,0.72)"
-                                            strokeWidth={visualEffects.trichomeSize}
-                                            strokeLinecap="round"
-                                            initial={{ pathLength: 0, opacity: 0 }}
-                                            animate={{ pathLength: 1, opacity: 1 }}
-                                            transition={{ duration: 0.45, delay: point.delay }}
-                                        />
+                                        <g key={`trichome-${i}`}>
+                                            {/* Tige fine */}
+                                            <motion.line
+                                                x1={point.x}
+                                                y1={point.y}
+                                                x2={stemEndX}
+                                                y2={stemEndY}
+                                                stroke="rgba(245,245,245,0.75)"
+                                                strokeWidth="0.4"
+                                                strokeLinecap="round"
+                                                initial={{ pathLength: 0, opacity: 0 }}
+                                                animate={{ pathLength: 1, opacity: 1 }}
+                                                transition={{ duration: 0.4, delay: point.delay }}
+                                            />
+                                            {/* Bulbe au bout */}
+                                            <motion.circle
+                                                cx={stemEndX}
+                                                cy={stemEndY}
+                                                r={point.bulbSize}
+                                                fill="rgba(255,255,255,0.85)"
+                                                stroke="rgba(220,220,220,0.6)"
+                                                strokeWidth="0.3"
+                                                initial={{ scale: 0, opacity: 0 }}
+                                                animate={{ scale: 1, opacity: 1 }}
+                                                transition={{ duration: 0.35, delay: point.delay + 0.1 }}
+                                            />
+                                        </g>
                                     );
                                 })}
                             </g>
