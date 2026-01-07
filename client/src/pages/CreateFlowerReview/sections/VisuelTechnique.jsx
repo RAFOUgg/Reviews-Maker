@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import LiquidCard from '../../../components/LiquidCard'
 import ColorWheelPicker from '../../../components/ui/ColorWheelPicker'
 import WeedPreview from '../../../components/ui/WeedPreview'
+import PresetSelector from '../../../components/ui/PresetSelector'
 
 const VISUAL_FIELDS = [
     { key: 'couleur', label: 'Couleur', max: 10 },
@@ -14,9 +15,39 @@ const VISUAL_FIELDS = [
 ]
 
 export default function VisuelTechnique({ formData, handleChange }) {
+    const [compareMode, setCompareMode] = useState(false);
+    const [snapshot, setSnapshot] = useState(null);
+
     const handleColorChange = (colors) => {
         handleChange('selectedColors', colors)
     }
+
+    const handleApplyPreset = (params, colors) => {
+        // Appliquer tous les paramètres du preset
+        Object.entries(params).forEach(([key, value]) => {
+            handleChange(key, value);
+        });
+        // Appliquer les couleurs
+        handleChange('selectedColors', colors);
+    };
+
+    const handleCompareToggle = (isActive) => {
+        setCompareMode(isActive);
+        if (isActive && !snapshot) {
+            // Prendre un snapshot de l'état actuel
+            setSnapshot({
+                selectedColors: formData.selectedColors || [],
+                densite: formData.densite || 5,
+                trichomes: formData.trichomes || 5,
+                pistils: formData.pistils || 5,
+                manucure: formData.manucure || 5,
+                moisissure: formData.moisissure || 10,
+                graines: formData.graines || 10
+            });
+        } else if (!isActive) {
+            setSnapshot(null);
+        }
+    };
 
     return (
         <LiquidCard title="👁️ Visuel & Technique" bordered>
@@ -40,33 +71,91 @@ export default function VisuelTechnique({ formData, handleChange }) {
                             className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-600"
                         />
 
-                        {/* ColorWheelPicker + WeedPreview uniquement pour Couleur */}
+                        {/* ColorWheelPicker + WeedPreview + Presets uniquement pour Couleur */}
                         {field.key === 'couleur' && (
-                            <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8 p-6 bg-gray-900/20 rounded-xl border border-gray-700">
-                                <div>
-                                    <h4 className="text-sm font-semibold text-gray-200 mb-4 flex items-center gap-2">
-                                        <span className="text-lg">🎨</span>
-                                        Sélection colorimétrique
-                                    </h4>
-                                    <ColorWheelPicker
-                                        value={formData.selectedColors || []}
-                                        onChange={handleColorChange}
-                                        maxSelections={5}
-                                    />
-                                </div>
-                                <div>
-                                    <h4 className="text-sm font-semibold text-gray-200 mb-4 flex items-center gap-2">
-                                        <span className="text-lg">✨</span>
-                                        Aperçu dynamique
-                                    </h4>
-                                    <WeedPreview
-                                        selectedColors={formData.selectedColors || []}
-                                        densite={formData.densite || 5}
-                                        trichomes={formData.trichomes || 5}
-                                        pistils={formData.pistils || 5}
-                                        manucure={formData.manucure || 5}
-                                        moisissure={formData.moisissure || 10}
-                                        graines={formData.graines || 10}
+                            <div className="mt-8 space-y-6">
+                                {/* Preset Selector */}
+                                <PresetSelector
+                                    onApplyPreset={handleApplyPreset}
+                                    onCompare={handleCompareToggle}
+                                    currentValues={formData}
+                                />
+
+                                {/* Grid colorimétrique et preview */}
+                                <div className={`grid gap-8 p-6 bg-gray-900/20 rounded-xl border border-gray-700 ${compareMode ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'
+                                    }`}>
+                                    <div>
+                                        <h4 className="text-sm font-semibold text-gray-200 mb-4 flex items-center gap-2">
+                                            <span className="text-lg">🎨</span>
+                                            Sélection colorimétrique
+                                        </h4>
+                                        <ColorWheelPicker
+                                            value={formData.selectedColors || []}
+                                            onChange={handleColorChange}
+                                            maxSelections={5}
+                                        />
+                                    </div>
+
+                                    {/* Mode normal ou comparaison */}
+                                    {!compareMode ? (
+                                        <div>
+                                            <h4 className="text-sm font-semibold text-gray-200 mb-4 flex items-center gap-2">
+                                                <span className="text-lg">✨</span>
+                                                Aperçu dynamique
+                                            </h4>
+                                            <WeedPreview
+                                                selectedColors={formData.selectedColors || []}
+                                                densite={formData.densite || 5}
+                                                trichomes={formData.trichomes || 5}
+                                                pistils={formData.pistils || 5}
+                                                manucure={formData.manucure || 5}
+                                                moisissure={formData.moisissure || 10}
+                                                graines={formData.graines || 10}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            <h4 className="text-sm font-semibold text-gray-200 mb-4 flex items-center gap-2">
+                                                <span className="text-lg">⚖️</span>
+                                                Mode comparaison
+                                            </h4>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                {/* Aperçu AVANT (snapshot) */}
+                                                <div className="space-y-2">
+                                                    <div className="text-xs font-medium text-gray-400 text-center">
+                                                        AVANT (snapshot)
+                                                    </div>
+                                                    {snapshot && (
+                                                        <WeedPreview
+                                                            selectedColors={snapshot.selectedColors}
+                                                            densite={snapshot.densite}
+                                                            trichomes={snapshot.trichomes}
+                                                            pistils={snapshot.pistils}
+                                                            manucure={snapshot.manucure}
+                                                            moisissure={snapshot.moisissure}
+                                                            graines={snapshot.graines}
+                                                        />
+                                                    )}
+                                                </div>
+
+                                                {/* Aperçu APRÈS (actuel) */}
+                                                <div className="space-y-2">
+                                                    <div className="text-xs font-medium text-green-400 text-center">
+                                                        APRÈS (actuel)
+                                                    </div>
+                                                    <WeedPreview
+                                                        selectedColors={formData.selectedColors || []}
+                                                        densite={formData.densite || 5}
+                                                        trichomes={formData.trichomes || 5}
+                                                        pistils={formData.pistils || 5}
+                                                        manucure={formData.manucure || 5}
+                                                        moisissure={formData.moisissure || 10}
+                                                        graines={formData.graines || 10}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                     />
                                 </div>
                             </div>

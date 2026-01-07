@@ -377,35 +377,35 @@ const WeedPreview = ({
 
                         {/* Texture organique pour bractées */}
                         <pattern id="bract-texture" patternUnits="userSpaceOnUse" width="10" height="10">
-                            <path d="M5,0 Q5,3 5,5 Q5,7 5,10" stroke="rgba(0,0,0,0.12)" strokeWidth="0.4" fill="none"/>
-                            <circle cx="2" cy="3" r="0.25" fill="rgba(0,0,0,0.08)"/>
-                            <circle cx="7" cy="6" r="0.25" fill="rgba(0,0,0,0.08)"/>
-                            <circle cx="4" cy="8" r="0.25" fill="rgba(0,0,0,0.08)"/>
+                            <path d="M5,0 Q5,3 5,5 Q5,7 5,10" stroke="rgba(0,0,0,0.12)" strokeWidth="0.4" fill="none" />
+                            <circle cx="2" cy="3" r="0.25" fill="rgba(0,0,0,0.08)" />
+                            <circle cx="7" cy="6" r="0.25" fill="rgba(0,0,0,0.08)" />
+                            <circle cx="4" cy="8" r="0.25" fill="rgba(0,0,0,0.08)" />
                         </pattern>
 
                         {/* Filtre noise organique */}
                         <filter id="organic-noise">
-                            <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="4" seed="42" result="noise"/>
-                            <feColorMatrix in="noise" type="matrix" 
+                            <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="4" seed="42" result="noise" />
+                            <feColorMatrix in="noise" type="matrix"
                                 values="0 0 0 0 0
                                         0 0 0 0 0
                                         0 0 0 0 0
                                         0 0 0 0.1 0"
-                                result="darkerNoise"/>
-                            <feComposite in="SourceGraphic" in2="darkerNoise" operator="arithmetic" k1="0" k2="1" k3="1" k4="0"/>
+                                result="darkerNoise" />
+                            <feComposite in="SourceGraphic" in2="darkerNoise" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" />
                         </filter>
 
                         {/* Ombres dynamiques */}
                         {bracts.map((bract, i) => (
                             <filter key={`shadow-${i}`} id={`shadow-${i}`} x="-50%" y="-50%" width="200%" height="200%">
-                                <feGaussianBlur in="SourceAlpha" stdDeviation={bract.shadow.blur}/>
-                                <feOffset dx={bract.shadow.offsetX} dy={bract.shadow.offsetY} result="offsetblur"/>
+                                <feGaussianBlur in="SourceAlpha" stdDeviation={bract.shadow.blur} />
+                                <feOffset dx={bract.shadow.offsetX} dy={bract.shadow.offsetY} result="offsetblur" />
                                 <feComponentTransfer>
-                                    <feFuncA type="linear" slope={bract.shadow.opacity}/>
+                                    <feFuncA type="linear" slope={bract.shadow.opacity} />
                                 </feComponentTransfer>
                                 <feMerge>
-                                    <feMergeNode/>
-                                    <feMergeNode in="SourceGraphic"/>
+                                    <feMergeNode />
+                                    <feMergeNode in="SourceGraphic" />
                                 </feMerge>
                             </filter>
                         ))}
@@ -418,10 +418,10 @@ const WeedPreview = ({
                         </radialGradient>
 
                         <filter id="crystal-glow">
-                            <feGaussianBlur in="SourceGraphic" stdDeviation="0.8" result="blur"/>
-                            <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                            <feGaussianBlur in="SourceGraphic" stdDeviation="0.8" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
                             <feComponentTransfer>
-                                <feFuncA type="linear" slope="1.5"/>
+                                <feFuncA type="linear" slope="1.5" />
                             </feComponentTransfer>
                         </filter>
 
@@ -431,9 +431,9 @@ const WeedPreview = ({
                                         0 1 0 0 0
                                         0 0 1 0 0
                                         0 0 0 5 -3"
-                                result="bright"/>
-                            <feGaussianBlur in="bright" stdDeviation="3" result="blurred"/>
-                            <feComposite in="SourceGraphic" in2="blurred" operator="over"/>
+                                result="bright" />
+                            <feGaussianBlur in="bright" stdDeviation="3" result="blurred" />
+                            <feComposite in="SourceGraphic" in2="blurred" operator="over" />
                         </filter>
                     </defs>
 

@@ -284,7 +284,7 @@ export const getAllPresets = () => {
 export const getPresetsByCategory = (category) => {
     const cat = PRESET_CATEGORIES[category];
     if (!cat) return [];
-    
+
     return cat.presets.map(name => ({
         name,
         ...VISUAL_PRESETS[name]

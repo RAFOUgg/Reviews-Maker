@@ -1,8 +1,243 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Save, BookmarkPlus, Bookmark } from 'lucide-react';
+import { X, Save, BookmarkPlus, Bookmark, CheckSquare, Square } from 'lucide-react';
 import ConfirmModal from '../ui/ConfirmModal';
 import usePresets from '../../hooks/usePresets';
+
+/**
+ * Modal sophistiquée pour créer un préréglage groupé
+ */
+function CreateGroupedPresetModal({ isOpen, onClose, sidebarSections, pipelineType, onPresetCreated }) {
+    const [groupName, setGroupName] = useState('');
+    const [groupDescription, setGroupDescription] = useState('');
+    const [selectedFields, setSelectedFields] = useState(new Set());
+    const [fieldValues, setFieldValues] = useState({});
+    const { createPreset } = usePresets(pipelineType);
+
+    useEffect(() => {
+        if (isOpen) {
+            // Reset form
+            setGroupName('');
+            setGroupDescription('');
+            setSelectedFields(new Set());
+            setFieldValues({});
+        }
+    }, [isOpen]);
+
+    if (!isOpen) return null;
+
+    // Flatten all items from sections
+    const allFields = sidebarSections.flatMap(section =>
+        (section.items || []).map(item => ({
+            id: item.id || item.key || item.type,
+            label: item.label,
+            icon: item.icon,
+            type: item.type,
+            options: item.options,
+            unit: item.unit,
+            sectionLabel: section.label
+        }))
+    );
+
+    const handleToggleField = (fieldId) => {
+        const newSelected = new Set(selectedFields);
+        if (newSelected.has(fieldId)) {
+            newSelected.delete(fieldId);
+            const newValues = { ...fieldValues };
+            delete newValues[fieldId];
+            setFieldValues(newValues);
+        } else {
+            newSelected.add(fieldId);
+        }
+        setSelectedFields(newSelected);
+    };
+
+    const handleValueChange = (fieldId, value) => {
+        setFieldValues(prev => ({ ...prev, [fieldId]: value }));
+    };
+
+    const handleSave = async () => {
+        if (!groupName.trim()) {
+            alert('Veuillez saisir un nom pour le groupe');
+            return;
+        }
+        if (selectedFields.size === 0) {
+            alert('Veuillez sélectionner au moins un champ');
+            return;
+        }
+
+        // Build fields array with values
+        const fields = {};
+        selectedFields.forEach(fieldId => {
+            fields[fieldId] = fieldValues[fieldId] || '';
+        });
+
+        try {
+            await createPreset('grouped', {
+                name: groupName.trim(),
+                description: groupDescription.trim(),
+                data: {
+                    fields,
+                    selectedFields: Array.from(selectedFields)
+                }
+            });
+            alert(`✓ Préréglage groupé "${groupName}" créé !`);
+            onPresetCreated && onPresetCreated();
+            onClose();
+        } catch (err) {
+            console.error('❌ Erreur création préréglage groupé:', err);
+            alert('❌ Erreur lors de la création');
+        }
+    };
+
+    const getFieldInput = (field) => {
+        const value = fieldValues[field.id] || '';
+
+        if (field.type === 'select' && Array.isArray(field.options)) {
+            return (
+                <select
+                    value={value}
+                    onChange={(e) => handleValueChange(field.id, e.target.value)}
+                    className="flex-1 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-xs"
+                >
+                    <option value="">Sélectionner...</option>
+                    {field.options.map((opt, idx) => {
+                        const val = typeof opt === 'string' ? opt : (opt.value ?? opt);
+                        const labelOpt = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
+                        return <option key={idx} value={val}>{labelOpt}</option>;
+                    })}
+                </select>
+            );
+        }
+
+        return (
+            <input
+                type="text"
+                value={value}
+                onChange={(e) => handleValueChange(field.id, e.target.value)}
+                placeholder="Valeur"
+                className="flex-1 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-xs"
+            />
+        );
+    };
+
+    return (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 w-[600px] max-w-[95vw] max-h-[90vh] border border-gray-200 dark:border-gray-700 flex flex-col"
+            >
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <CheckSquare className="w-5 h-5 text-purple-500" />
+                        Créer un préréglage groupé
+                    </h3>
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                <div className="space-y-4 mb-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Nom du groupe*
+                        </label>
+                        <input
+                            type="text"
+                            value={groupName}
+                            onChange={(e) => setGroupName(e.target.value)}
+                            placeholder="Ex: Configuration Indoor Standard"
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Description (optionnel)
+                        </label>
+                        <input
+                            type="text"
+                            value={groupDescription}
+                            onChange={(e) => setGroupDescription(e.target.value)}
+                            placeholder="Ex: Config pour culture indoor LED 600W"
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                        />
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Champs à inclure ({selectedFields.size} sélectionné{selectedFields.size > 1 ? 's' : ''})
+                    </label>
+                </div>
+
+                <div className="flex-1 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-3 space-y-2 mb-4">
+                    {allFields.map(field => {
+                        const isSelected = selectedFields.has(field.id);
+                        return (
+                            <div
+                                key={field.id}
+                                className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${isSelected ? 'bg-purple-50 dark:bg-purple-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                                    }`}
+                            >
+                                <button
+                                    onClick={() => handleToggleField(field.id)}
+                                    className="flex items-center justify-center w-5 h-5 text-purple-600 dark:text-purple-400"
+                                >
+                                    {isSelected ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
+                                </button>
+
+                                <div className="flex items-center gap-2 flex-1">
+                                    {field.icon && <span className="text-base">{field.icon}</span>}
+                                    <div className="flex-1">
+                                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                            {field.label}
+                                        </div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            {field.sectionLabel}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {isSelected && (
+                                    <div className="flex items-center gap-2 flex-1">
+                                        {getFieldInput(field)}
+                                        {field.unit && (
+                                            <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                                                {field.unit}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+
+                <div className="flex gap-3">
+                    <button
+                        onClick={handleSave}
+                        disabled={!groupName.trim() || selectedFields.size === 0}
+                        className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+                    >
+                        Enregistrer
+                    </button>
+                    <button
+                        onClick={onClose}
+                        className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
+                    >
+                        Annuler
+                    </button>
+                </div>
+            </motion.div>
+        </div>
+    );
+}
 
 /**
  * PipelineDataModal - Modal pour saisir les valeurs lors d'un drop
@@ -34,9 +269,10 @@ const PipelineDataModal = ({
     const [activeTab, setActiveTab] = useState('data');
     const [newPresetName, setNewPresetName] = useState('');
     const [confirmState, setConfirmState] = useState({ open: false, title: '', message: '', onConfirm: null });
+    const [showCreateGroupedModal, setShowCreateGroupedModal] = useState(false);
 
     // Hook pour gérer les préréglages (localStorage + serveur)
-    const { presets, createPreset, deletePreset } = usePresets(pipelineType);
+    const { presets, createPreset, deletePreset, loadPresets } = usePresets(pipelineType);
 
     useEffect(() => {
         const initialData = { ...cellData };
