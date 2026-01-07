@@ -81,10 +81,10 @@ const FlowerCanvasRenderer = ({
         const drawBranchesAndCalyces = () => {
             // Nombre total de calices selon densité
             const totalCalyces = Math.floor(15 + pDensite * 35); // 15-50 calices
-            
+
             // Taille des calices
             const baseCalyxSize = 16 + pDensite * 8; // 16-24px
-            
+
             // Angle d'or pour la spirale (phyllotaxie du cannabis)
             const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ~137.5°
 
@@ -92,11 +92,11 @@ const FlowerCanvasRenderer = ({
             for (let i = 0; i < totalCalyces; i++) {
                 const seed = i * 42.7;
                 const r = seededRandom(seed);
-                
+
                 // Position verticale (0 = haut, 1 = bas)
                 const t = i / (totalCalyces - 1);
                 const y = stemTop + t * stemHeight * 0.88;
-                
+
                 // Rayon de la cola (forme conique naturelle)
                 let radius;
                 if (t < 0.15) {
@@ -109,27 +109,27 @@ const FlowerCanvasRenderer = ({
                     // Rétrécissement léger vers le bas
                     radius = W * 0.30 - (W * 0.08) * ((t - 0.65) / 0.35);
                 }
-                
+
                 // Angle en spirale
                 const angle = i * goldenAngle;
-                
+
                 // Position x,y du calice
                 const calyxX = centerX + Math.cos(angle) * radius;
                 const calyxY = y + (r - 0.5) * 4; // Légère variation verticale
-                
+
                 // Taille avec variation naturelle
                 const size = baseCalyxSize * (0.85 + r * 0.3);
-                
+
                 // Gonflement si graines présentes
                 const seedSwelling = pGraines < 0.8 && r > 0.75 ? 1.4 : 1.0;
-                
+
                 // Direction (vers l'extérieur)
                 const direction = Math.sign(Math.cos(angle));
-                
+
                 drawCalyx(calyxX, calyxY, size * seedSwelling, seed, direction, angle);
                 calyxPositions.push({ x: calyxX, y: calyxY, size, seed });
             }
-            
+
             // Quelques petites feuilles (sugar leaves) entre les calices
             const leafCount = Math.floor(3 + pManucure * -2); // 1-3 feuilles si mal manucuré
             for (let l = 0; l < leafCount; l++) {
@@ -140,7 +140,7 @@ const FlowerCanvasRenderer = ({
                 const lY = stemTop + lT * stemHeight * 0.88;
                 const lRadius = W * 0.25;
                 const lX = centerX + Math.cos(lAngle) * lRadius;
-                
+
                 drawSugarLeaf(lX, lY, lAngle, leafSeed);
             }
         };
@@ -218,25 +218,25 @@ const FlowerCanvasRenderer = ({
         // ===============================================
         const drawSugarLeaf = (x, y, angle, seed) => {
             const r = seededRandom(seed);
-            
+
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(angle);
-            
+
             // Couleur verte plus claire que les calices
             const hue = 95 + r * 20;
             const sat = 50 + r * 20;
             const light = 38 + r * 8;
-            
+
             ctx.fillStyle = `hsl(${hue}, ${sat}%, ${light}%)`;
             ctx.strokeStyle = `hsl(${hue}, ${sat - 10}%, ${light - 15}%)`;
             ctx.lineWidth = 1;
-            
+
             // Forme de feuille dentelée simple
             const size = 25 + r * 15;
             ctx.beginPath();
             ctx.moveTo(0, -size);
-            
+
             // 3 pointes par côté
             for (let side = -1; side <= 1; side += 2) {
                 ctx.lineTo(side * size * 0.2, -size * 0.6);
@@ -244,18 +244,18 @@ const FlowerCanvasRenderer = ({
                 ctx.lineTo(side * size * 0.5, -size * 0.2);
                 ctx.lineTo(side * size * 0.4, size * 0.1);
             }
-            
+
             ctx.lineTo(0, size * 0.2);
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
-            
+
             // Nervure centrale
             ctx.beginPath();
             ctx.moveTo(0, -size * 0.9);
             ctx.lineTo(0, size * 0.1);
             ctx.stroke();
-            
+
             ctx.restore();
         };
 

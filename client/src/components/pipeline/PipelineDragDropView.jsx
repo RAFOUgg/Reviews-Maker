@@ -1020,21 +1020,21 @@ const PipelineDragDropView = ({
 
             // ✅ BUG FIX #5: Vérifier si données existantes avant d'ouvrir modal (sauf pour groupes)
             const existingData = getCellData(timestamp);
-            const hasExistingData = existingData && Object.keys(existingData).some(k => 
+            const hasExistingData = existingData && Object.keys(existingData).some(k =>
                 !['timestamp', '_meta', 'date', 'label', 'phase'].includes(k)
             );
 
             // ✅ BUG FIX #3: MULTI-ITEMS DROP - Ouvrir modal avec tous les items sélectionnés
             if (draggedContent.type === 'multi-items' && Array.isArray(draggedContent.items)) {
                 console.log('✅ handleDrop: Multi-items drop avec', draggedContent.items.length, 'items');
-                
+
                 // Vérifier conflits pour chaque item
                 if (hasExistingData) {
                     const conflictingItems = draggedContent.items.filter(item => {
                         const fieldKey = item.id || item.key || item.type;
                         return existingData[fieldKey] !== undefined;
                     });
-                    
+
                     if (conflictingItems.length > 0) {
                         const conflictLabels = conflictingItems.map(i => i.label || i.key).join(', ');
                         setConfirmState({
@@ -1055,7 +1055,7 @@ const PipelineDragDropView = ({
                         return;
                     }
                 }
-                
+
                 // Pas de conflit ou pas de données existantes
                 setCurrentCellTimestamp(timestamp);
                 setDroppedItem({
@@ -1095,12 +1095,12 @@ const PipelineDragDropView = ({
 
             // Sinon, ouvrir PipelineDataModal avec l'item droppé
             console.log('✅ handleDrop: Ouverture PipelineDataModal');
-            
+
             // ✅ BUG FIX #5: Vérifier conflit pour item simple
             if (hasExistingData) {
                 const fieldKey = draggedContent.id || draggedContent.key || draggedContent.type;
                 const fieldExists = existingData[fieldKey] !== undefined;
-                
+
                 if (fieldExists) {
                     setConfirmState({
                         open: true,
@@ -1117,7 +1117,7 @@ const PipelineDragDropView = ({
                     return;
                 }
             }
-            
+
             setCurrentCellTimestamp(timestamp);
             setDroppedItem({
                 timestamp,
