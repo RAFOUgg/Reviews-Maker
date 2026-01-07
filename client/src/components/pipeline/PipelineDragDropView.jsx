@@ -232,27 +232,34 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
         );
     };
 
-    const handleSave = () => {
+    const handleSaveGroup = () => {
         if (!groupName.trim() || selectedFields.length === 0) return;
         const group = {
-            id: `group_${Date.now()}`,
+            id: editingGroup?.id || `group_${Date.now()}`,
             name: groupName.trim(),
             description: groupDescription.trim(),
+            emoji: groupEmoji,
             fields: selectedFields.map(key => ({
                 key,
                 value: fieldValues[key] ?? ''
             })),
-            createdAt: new Date().toISOString()
+            createdAt: editingGroup?.createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         };
-        const newGroups = [...groups, group];
+
+        let newGroups;
+        if (editingGroup) {
+            // Update existing
+            newGroups = groups.map(g => (g.id === editingGroup.id) ? group : g);
+        } else {
+            // Add new
+            newGroups = [...groups, group];
+        }
         setGroups(newGroups);
         localStorage.setItem('pipeline-grouped-presets', JSON.stringify(newGroups));
-        setGroupName('');
-        setGroupDescription('');
-        setSelectedFields([]);
-        setFieldValues({});
         onSave && onSave(newGroups);
-        onClose();
+        setMode('list');
+        resetForm();
     };
 
     const handleDeleteGroup = (groupId) => {
@@ -262,144 +269,243 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
         localStorage.setItem('pipeline-grouped-presets', JSON.stringify(newGroups));
     };
 
+    // Find field definition helper
+    const findFieldDef = (key) => {
+        for (const section of sections) {
+            const found = section.items.find(i => i.id === key || i.key === key);
+            if (found) return found;
+        }
+        return null;
+    };
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[700px] max-w-full max-h-[85vh] border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[900px] max-w-[95vw] h-[85vh] border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                     <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
                         <span>👥</span> Groupes de préréglages
+                        {mode === 'create' && <span className="text-sm font-normal text-gray-500">— Nouveau</span>}
+                        {mode === 'edit' && <span className="text-sm font-normal text-gray-500">— Modifier "{editingGroup?.name}"</span>}
                     </h3>
                     <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
                         <span className="text-xl">×</span>
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {/* Existing groups */}
-                    {groups.length > 0 && (
-                        <div className="space-y-2">
-                            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Groupes existants</h4>
-                            <div className="space-y-2 max-h-32 overflow-y-auto">
+                {/* LIST MODE */}
+                {mode === 'list' && (
+                    <div className="flex-1 overflow-y-auto p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                {groups.length} groupe(s) enregistré(s)
+                            </h4>
+                            <button
+                                onClick={startCreate}
+                                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                            >
+                                <span>+</span> Nouveau groupe
+                            </button>
+                        </div>
+
+                        {groups.length === 0 ? (
+                            <div className="text-center py-12 text-gray-500">
+                                <div className="text-4xl mb-3">📦</div>
+                                <p>Aucun groupe de préréglages</p>
+                                <p className="text-sm mt-1">Créez un groupe pour sauvegarder plusieurs champs ensemble</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {groups.map((group, idx) => (
-                                    <div key={group.id || idx} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                        <div>
-                                            <div className="font-medium text-sm">{group.name}</div>
-                                            <div className="text-xs text-gray-500">{group.fields?.length || 0} champ(s)</div>
+                                    <div key={group.id || idx} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                                        <div className="flex items-start gap-3">
+                                            <span className="text-3xl">{group.emoji || '🌱'}</span>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-semibold text-gray-900 dark:text-white">{group.name}</div>
+                                                {group.description && (
+                                                    <div className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{group.description}</div>
+                                                )}
+                                                <div className="text-xs text-gray-400 mt-2">
+                                                    {group.fields?.length || 0} champ(s)
+                                                </div>
+                                                {/* Preview des champs */}
+                                                <div className="flex flex-wrap gap-1 mt-2">
+                                                    {(group.fields || []).slice(0, 4).map((f, i) => {
+                                                        const def = findFieldDef(f.key);
+                                                        return (
+                                                            <span key={i} className="text-xs px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">
+                                                                {def?.icon || '📌'} {def?.label || f.key}: {String(f.value).substring(0, 15) || '—'}
+                                                            </span>
+                                                        );
+                                                    })}
+                                                    {(group.fields?.length || 0) > 4 && (
+                                                        <span className="text-xs px-2 py-0.5 text-gray-500">+{group.fields.length - 4}</span>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
+                                        <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                            <button
+                                                onClick={() => startEdit(group)}
+                                                className="flex-1 px-3 py-1.5 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
+                                            >
+                                                ✏️ Modifier
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteGroup(group.id || group.name)}
+                                                className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* CREATE / EDIT MODE */}
+                {(mode === 'create' || mode === 'edit') && (
+                    <div className="flex-1 flex flex-col overflow-hidden">
+                        {/* Form header */}
+                        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+                            <div className="flex items-center gap-3">
+                                {/* Emoji picker */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                        className="w-12 h-12 text-2xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl border border-gray-300 dark:border-gray-600 flex items-center justify-center transition-colors"
+                                    >
+                                        {groupEmoji}
+                                    </button>
+                                    {showEmojiPicker && (
+                                        <div className="absolute top-14 left-0 z-10 p-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 grid grid-cols-6 gap-1 w-[200px]">
+                                            {GROUP_EMOJIS.map(e => (
+                                                <button
+                                                    key={e}
+                                                    onClick={() => { setGroupEmoji(e); setShowEmojiPicker(false); }}
+                                                    className={`w-7 h-7 text-lg rounded hover:bg-gray-100 dark:hover:bg-gray-700 ${groupEmoji === e ? 'bg-purple-100 dark:bg-purple-900' : ''}`}
+                                                >
+                                                    {e}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex-1 grid grid-cols-2 gap-3">
+                                    <input
+                                        type="text"
+                                        value={groupName}
+                                        onChange={(e) => setGroupName(e.target.value)}
+                                        placeholder="Nom du groupe *"
+                                        className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={groupDescription}
+                                        onChange={(e) => setGroupDescription(e.target.value)}
+                                        placeholder="Description (optionnel)"
+                                        className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                                    />
+                                </div>
+                            </div>
+                            {/* Search */}
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="🔍 Rechercher un champ..."
+                                className="w-full mt-3 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                            />
+                        </div>
+
+                        {/* Fields grid - 2 columns on large screens */}
+                        <div className="flex-1 overflow-y-auto p-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                {filteredSections.map(section => (
+                                    <div key={section.id} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                                         <button
-                                            onClick={() => handleDeleteGroup(group.id || group.name)}
-                                            className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                                            onClick={() => toggleSection(section.id)}
+                                            className="w-full flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
                                         >
-                                            Supprimer
+                                            <div className="flex items-center gap-2">
+                                                <span>{section.icon}</span>
+                                                <span className="text-sm font-medium">{section.label}</span>
+                                                <span className="text-xs text-gray-500">({section.items.length})</span>
+                                            </div>
+                                            <span className="text-gray-400">{expandedSections[section.id] ? '▼' : '▶'}</span>
                                         </button>
+
+                                        {expandedSections[section.id] && (
+                                            <div className="p-2 space-y-1 max-h-[250px] overflow-y-auto">
+                                                {section.items.map(field => {
+                                                    const isSelected = selectedFields.includes(field.id);
+                                                    return (
+                                                        <div
+                                                            key={field.id}
+                                                            className={`flex items-center gap-2 p-2 rounded transition-colors ${isSelected ? 'bg-purple-50 dark:bg-purple-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected}
+                                                                onChange={() => handleToggleField(field.id)}
+                                                                className="w-4 h-4 accent-purple-600 flex-shrink-0"
+                                                            />
+                                                            <span className="text-base flex-shrink-0">{field.icon}</span>
+                                                            <span className="text-sm flex-1 truncate">{field.label}</span>
+
+                                                            {isSelected && (
+                                                                <div className="flex items-center gap-1 flex-shrink-0">
+                                                                    {renderFieldInput(field)}
+                                                                    {field.unit && <span className="text-xs text-gray-500">{field.unit}</span>}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
                         </div>
-                    )}
 
-                    {/* Create new group */}
-                    <div className="space-y-3 pt-2 border-t border-gray-200 dark:border-gray-700">
-                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Créer un nouveau groupe</h4>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <input
-                                type="text"
-                                value={groupName}
-                                onChange={(e) => setGroupName(e.target.value)}
-                                placeholder="Nom du groupe *"
-                                className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
-                            />
-                            <input
-                                type="text"
-                                value={groupDescription}
-                                onChange={(e) => setGroupDescription(e.target.value)}
-                                placeholder="Description (optionnel)"
-                                className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
-                            />
-                        </div>
-
-                        {/* Search */}
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="🔍 Rechercher un champ..."
-                            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
-                        />
-
-                        {/* Fields by section */}
-                        <div className="border border-gray-200 dark:border-gray-700 rounded-lg max-h-[300px] overflow-y-auto">
-                            {filteredSections.map(section => (
-                                <div key={section.id} className="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
-                                    <button
-                                        onClick={() => toggleSection(section.id)}
-                                        className="w-full flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <span>{section.icon}</span>
-                                            <span className="text-sm font-medium">{section.label}</span>
-                                            <span className="text-xs text-gray-500">({section.items.length})</span>
-                                        </div>
-                                        <span className="text-gray-400">{expandedSections[section.id] ? '▼' : '▶'}</span>
-                                    </button>
-
-                                    {expandedSections[section.id] && (
-                                        <div className="p-2 space-y-1">
-                                            {section.items.map(field => {
-                                                const isSelected = selectedFields.includes(field.id);
-                                                return (
-                                                    <div
-                                                        key={field.id}
-                                                        className={`flex items-center gap-2 p-2 rounded transition-colors ${isSelected ? 'bg-purple-50 dark:bg-purple-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
-                                                    >
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={isSelected}
-                                                            onChange={() => handleToggleField(field.id)}
-                                                            className="w-4 h-4 accent-purple-600"
-                                                        />
-                                                        <span className="text-base">{field.icon}</span>
-                                                        <span className="text-sm flex-1">{field.label}</span>
-
-                                                        {isSelected && (
-                                                            <div className="flex items-center gap-1">
-                                                                {renderFieldInput(field)}
-                                                                {field.unit && <span className="text-xs text-gray-500">{field.unit}</span>}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="text-xs text-gray-500">
-                            {selectedFields.length} champ(s) sélectionné(s)
+                        {/* Footer */}
+                        <div className="flex items-center justify-between gap-3 p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 bg-gray-50 dark:bg-gray-800/50">
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                                {selectedFields.length} champ(s) sélectionné(s)
+                            </div>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => { setMode('list'); resetForm(); }}
+                                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    onClick={handleSaveGroup}
+                                    disabled={!groupName.trim() || selectedFields.length === 0}
+                                    className="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+                                >
+                                    {editingGroup ? 'Enregistrer les modifications' : 'Créer le groupe'}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
-                {/* Footer */}
-                <div className="flex gap-3 p-4 border-t border-gray-200 dark:border-gray-700">
-                    <button
-                        onClick={handleSave}
-                        disabled={!groupName.trim() || selectedFields.length === 0}
-                        className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
-                    >
-                        Enregistrer le groupe
-                    </button>
-                    <button
-                        onClick={onClose}
-                        className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
-                    >
-                        Fermer
-                    </button>
-                </div>
+                {/* Footer for list mode */}
+                {mode === 'list' && (
+                    <div className="flex gap-3 p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+                        <button
+                            onClick={onClose}
+                            className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
+                        >
+                            Fermer
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -872,6 +978,7 @@ const PipelineDragDropView = ({
     };
 
     // CDC CONFORME: handleDrop ouvre PipelineDataModal avec l'item droppé
+    // OU applique directement un groupe de préréglages
     const handleDrop = (e, timestamp) => {
         e.preventDefault();
         e.stopPropagation();
@@ -890,7 +997,33 @@ const PipelineDragDropView = ({
                 return;
             }
 
-            // Ouvrir PipelineDataModal avec l'item droppé
+            // GROUPED PRESET: Appliquer directement sans ouvrir le modal
+            if (draggedContent.type === 'grouped' && draggedContent.group) {
+                console.log('✅ handleDrop: Application groupe préréglage:', draggedContent.group);
+                const group = draggedContent.group;
+                const fields = group.fields || [];
+
+                if (fields.length === 0) {
+                    console.warn('⚠️ handleDrop: Groupe vide, rien à appliquer');
+                    setDraggedContent(null);
+                    return;
+                }
+
+                // Appliquer chaque champ du groupe à la cellule
+                fields.forEach(f => {
+                    if (f.key && f.value !== undefined && f.value !== '') {
+                        console.log(`  → Applique ${f.key} = ${f.value}`);
+                        onDataChange(timestamp, f.key, f.value);
+                    }
+                });
+
+                // Feedback visuel
+                toast && toast.success(`✓ Groupe "${group.name}" appliqué (${fields.length} champs)`);
+                setDraggedContent(null);
+                return;
+            }
+
+            // Sinon, ouvrir PipelineDataModal avec l'item droppé
             console.log('✅ handleDrop: Ouverture PipelineDataModal');
             setCurrentCellTimestamp(timestamp);
             setDroppedItem({
@@ -1381,10 +1514,10 @@ const PipelineDragDropView = ({
                                             setDraggedContent({ type: 'grouped', group });
                                         }}
                                         onDragEnd={() => setDraggedContent(null)}
-                                        className="px-3 py-2 rounded-lg bg-white/3 dark:bg-gray-800/30 border border-gray-700 text-xs font-bold cursor-grab hover:bg-white/5 dark:hover:bg-gray-800/50 transition-all"
-                                        title={group.fields.map(f => `${f.key}: ${f.value}`).join(', ')}
+                                        className="px-3 py-2 rounded-lg bg-purple-50 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 text-xs font-bold cursor-grab hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all"
+                                        title={`${group.description || ''}\n${(group.fields || []).map(f => `${f.key}: ${f.value}`).join('\n')}`}
                                     >
-                                        <span className="mr-1">👥</span>{group.name}
+                                        <span className="mr-1">{group.emoji || '🌱'}</span>{group.name}
                                     </div>
                                 ))}
                             </div>
