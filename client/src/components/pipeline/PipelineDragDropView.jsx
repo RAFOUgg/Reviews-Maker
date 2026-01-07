@@ -817,60 +817,71 @@ const PipelineDragDropView = ({
             return;
         }
 
-        // Build history of previous values
-        const changes = [];
-        const prevData = getCellData(data.timestamp) || {};
+        // ✅ Déterminer quelles cellules doivent recevoir les données
+        // Si data.timestamp est dans selectedCells, appliquer à TOUTES les cellules sélectionnées
+        // Sinon, appliquer uniquement à data.timestamp
+        const targetTimestamps = (selectedCells.length > 0 && selectedCells.includes(data.timestamp))
+            ? selectedCells
+            : [data.timestamp];
 
-        // ✅ BUG FIX #4: Ne plus vérifier droppedItem.timestamp === data.timestamp
-        // Car quand on applique à plusieurs cases, droppedItem.timestamp est différent
-        // À la place, vérifier juste si droppedItem existe (mode drop) ou pas (mode edit)
-        if (droppedItem) {
-            // Mode DROP: sauvegarder uniquement le(s) champ(s) droppé(s)
-            if (droppedItem.content.type === 'multi' && Array.isArray(droppedItem.content.items)) {
-                // Multi-items drop: sauvegarder tous les items droppés
-                console.log('✓ Sauvegarde multi-items:', droppedItem.content.items.length, 'champs');
-                droppedItem.content.items.forEach(item => {
-                    const fieldKey = item.id || item.key || item.type;
+        console.log(`🎯 Application des données à ${targetTimestamps.length} cellule(s):`, targetTimestamps);
+
+        const allChanges = [];
+
+        // ✅ APPLIQUER LES DONNÉES À TOUTES LES CELLULES CIBLES
+        targetTimestamps.forEach(targetTimestamp => {
+            const prevData = getCellData(targetTimestamp) || {};
+            const changes = [];
+
+            // ✅ BUG FIX: Ne plus vérifier droppedItem.timestamp === data.timestamp
+            // À la place, vérifier juste si droppedItem existe (mode drop) ou pas (mode edit)
+            if (droppedItem) {
+                // Mode DROP: sauvegarder uniquement le(s) champ(s) droppé(s)
+                if (droppedItem.content.type === 'multi' && Array.isArray(droppedItem.content.items)) {
+                    // Multi-items drop: sauvegarder tous les items droppés
+                    console.log(`  ✓ Multi-items drop sur ${targetTimestamp}:`, droppedItem.content.items.length, 'champs');
+                    droppedItem.content.items.forEach(item => {
+                        const fieldKey = item.id || item.key || item.type;
+                        if (data.data && data.data[fieldKey] !== undefined) {
+                            changes.push({ timestamp: targetTimestamp, field: fieldKey, previousValue: prevData[fieldKey] });
+                            console.log(`    → ${fieldKey} =`, data.data[fieldKey]);
+                            onDataChange(targetTimestamp, fieldKey, data.data[fieldKey]);
+                        }
+                    });
+                } else {
+                    // Single item drop
+                    const fieldKey = droppedItem.content.id || droppedItem.content.key || droppedItem.content.type;
                     if (data.data && data.data[fieldKey] !== undefined) {
-                        changes.push({ timestamp: data.timestamp, field: fieldKey, previousValue: prevData[fieldKey] });
-                        console.log('  → Multi-drop:', fieldKey, '=', data.data[fieldKey]);
-                        onDataChange(data.timestamp, fieldKey, data.data[fieldKey]);
+                        changes.push({ timestamp: targetTimestamp, field: fieldKey, previousValue: prevData[fieldKey] });
+                        console.log(`  ✓ Single drop sur ${targetTimestamp}: ${fieldKey} =`, data.data[fieldKey]);
+                        onDataChange(targetTimestamp, fieldKey, data.data[fieldKey]);
+                    }
+                }
+            } else {
+                // Mode EDIT: sauvegarder toutes les données modifiées
+                console.log(`  ✓ Édition sur ${targetTimestamp}:`, Object.keys(data.data || {}).length, 'champs');
+                Object.entries(data.data || {}).forEach(([key, value]) => {
+                    // Treat empty string/null/undefined as deletion
+                    if (value === undefined || value === null || value === '') {
+                        changes.push({ timestamp: targetTimestamp, field: key, previousValue: prevData[key] });
+                        console.log(`    → Suppression: ${key}`);
+                        onDataChange(targetTimestamp, key, null);
+                    } else {
+                        changes.push({ timestamp: targetTimestamp, field: key, previousValue: prevData[key] });
+                        console.log(`    → ${key} =`, value);
+                        onDataChange(targetTimestamp, key, value);
                     }
                 });
-            } else {
-                // Single item drop
-                const fieldKey = droppedItem.content.id || droppedItem.content.key || droppedItem.content.type;
-                console.log('🔑 fieldKey extrait de droppedItem:', fieldKey, 'droppedItem.content:', droppedItem.content);
-                if (data.data && data.data[fieldKey] !== undefined) {
-                    changes.push({ timestamp: data.timestamp, field: fieldKey, previousValue: prevData[fieldKey] });
-                    console.log('✓ Sauvegarde champ droppé:', fieldKey, '=', data.data[fieldKey]);
-                    onDataChange(data.timestamp, fieldKey, data.data[fieldKey]);
-                }
             }
-            // Ne pas setDroppedItem(null) ici car handleModalSave est appelé pour chaque timestamp
-            // On le clear dans handleSubmit de PipelineDataModal
-        } else {
-            // Sauvegarder toutes les données (cas modal normale - édition)
-            console.log('✓ Sauvegarde de tous les champs:', Object.keys(data.data || {}));
-            Object.entries(data.data || {}).forEach(([key, value]) => {
-                // Treat empty string/null/undefined as deletion
-                if (value === undefined || value === null || value === '') {
-                    changes.push({ timestamp: data.timestamp, field: key, previousValue: prevData[key] });
-                    console.log('  → Suppression:', key);
-                    onDataChange(data.timestamp, key, null);
-                } else {
-                    changes.push({ timestamp: data.timestamp, field: key, previousValue: prevData[key] });
-                    console.log('  → Sauvegarde:', key, '=', value);
-                    onDataChange(data.timestamp, key, value);
-                }
-            });
+
+            allChanges.push(...changes);
+        });
+
+        if (allChanges.length > 0) {
+            pushAction({ id: Date.now(), type: 'edit', changes: allChanges });
         }
 
-        if (changes.length > 0) {
-            pushAction({ id: Date.now(), type: 'edit', changes });
-        }
-
-        // Sauvegarder métadonnées si présentes
+        // Sauvegarder métadonnées si présentes (uniquement pour la cellule source)
         if (data.completionPercentage !== undefined) {
             onDataChange(data.timestamp, '_meta', {
                 completionPercentage: data.completionPercentage,
@@ -878,7 +889,7 @@ const PipelineDragDropView = ({
             });
         }
 
-        console.log('✅ Sauvegarde terminée avec succès');
+        console.log(`✅ Sauvegarde terminée: ${targetTimestamps.length} cellule(s) modifiée(s)`);
         setIsModalOpen(false);
         setDroppedItem(null);
     };

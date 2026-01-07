@@ -346,22 +346,15 @@ const PipelineDataModal = ({
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // Appliquer à toutes les cellules sélectionnées si applicable
-        const targets = (selectedCells && selectedCells.length > 0) ? selectedCells : [timestamp];
+        // ✅ onSave sera appelé avec le timestamp courant
+        // handleModalSave dans PipelineDragDropView se charge d'appliquer aux selectedCells
+        console.log('💾 handleSubmit - timestamp:', timestamp, 'formData:', formData);
+        console.log('💾 handleSubmit - selectedCells:', selectedCells?.length || 0, 'cellules');
 
-        console.log('💾 handleSubmit - targets:', targets, 'formData:', formData);
-
-        targets.forEach(ts => {
-            onSave({
-                timestamp: ts,
-                data: formData
-            });
+        onSave({
+            timestamp: timestamp,
+            data: formData
         });
-
-        // ✅ Feedback utilisateur
-        if (targets.length > 1) {
-            console.log(`✅ Données appliquées à ${targets.length} cases`);
-        }
 
         onClose();
     };
