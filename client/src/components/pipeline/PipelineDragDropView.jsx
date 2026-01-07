@@ -107,7 +107,7 @@ function CellContextMenu({
         );
     };
 
-    // Calcul position avec ajustement viewport
+    // Calcul position avec ajustement viewport - utilise pageX/pageY
     const getAdjustedPosition = () => {
         const menuWidth = 280; // Largeur estimée du menu
         const menuHeight = 400; // Hauteur max estimée
@@ -116,24 +116,32 @@ function CellContextMenu({
         let x = position.x;
         let y = position.y;
 
+        // Calculer les limites du viewport en coordonnées absolues (page)
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+        const viewportRight = scrollX + window.innerWidth;
+        const viewportBottom = scrollY + window.innerHeight;
+        const viewportLeft = scrollX;
+        const viewportTop = scrollY;
+
         // Ajuster si dépasse à droite
-        if (x + menuWidth > window.innerWidth - padding) {
-            x = window.innerWidth - menuWidth - padding;
+        if (x + menuWidth > viewportRight - padding) {
+            x = viewportRight - menuWidth - padding;
         }
 
         // Ajuster si dépasse en bas
-        if (y + menuHeight > window.innerHeight - padding) {
-            y = window.innerHeight - menuHeight - padding;
+        if (y + menuHeight > viewportBottom - padding) {
+            y = viewportBottom - menuHeight - padding;
         }
 
         // Ajuster si dépasse à gauche
-        if (x < padding) {
-            x = padding;
+        if (x < viewportLeft + padding) {
+            x = viewportLeft + padding;
         }
 
         // Ajuster si dépasse en haut
-        if (y < padding) {
-            y = padding;
+        if (y < viewportTop + padding) {
+            y = viewportTop + padding;
         }
 
         return { x, y };
@@ -144,7 +152,7 @@ function CellContextMenu({
     return (
         <div
             ref={menuRef}
-            className="fixed z-[200] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 min-w-[220px] overflow-hidden"
+            className="absolute z-[200] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 min-w-[220px] overflow-hidden"
             style={{
                 left: `${adjustedPos.x}px`,
                 top: `${adjustedPos.y}px`,
@@ -1069,7 +1077,7 @@ const PipelineDragDropView = ({
         e.preventDefault();
         e.stopPropagation();
         setCellContextMenu({
-            position: { x: e.clientX, y: e.clientY },
+            position: { x: e.pageX, y: e.pageY },
             timestamp,
             selectedCells: selectedCells.length > 0 ? selectedCells : [timestamp]
         });
@@ -1159,6 +1167,7 @@ const PipelineDragDropView = ({
                     pushAction({ id: Date.now(), type: 'deleteFields', changes: allChanges });
                     showToast(`${fieldsToDelete.length} champ(s) effacé(s)`, 'success');
                 }
+                setCellContextMenu(null); // Fermer le menu contextuel
                 setConfirmState(prev => ({ ...prev, open: false }));
             }
         });

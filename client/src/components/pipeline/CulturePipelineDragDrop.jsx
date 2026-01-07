@@ -32,17 +32,18 @@ const CulturePipelineDragDrop = ({
     }, [])
 
     // Configurer les phases si type === 'phase' (par défaut)
+    // Ensure 'phase' mode is always the default if not modified
     const configWithPhases = useMemo(() => {
-        const finalType = timelineConfig.type || 'phase';
+        const finalType = timelineConfig.type || initialData.type || 'phase';
         if (finalType === 'phase') {
             return {
                 type: 'phase',
                 ...timelineConfig,
-                phases: CULTURE_PHASES
-            }
+                phases: CULTURE_PHASES,
+            };
         }
-        return { ...timelineConfig, type: finalType }
-    }, [timelineConfig])
+        return { ...timelineConfig, type: finalType };
+    }, [timelineConfig, initialData])
 
     return (
         <PipelineDragDropView
