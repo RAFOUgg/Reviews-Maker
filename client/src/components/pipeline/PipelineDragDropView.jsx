@@ -23,60 +23,345 @@ import { useState, useEffect, useRef } from 'react';
 import ConfirmModal from '../ui/ConfirmModal';
 import { useToast } from '../ToastContainer';
 
-// Grouped preset modal (inline for now)
+// Grouped preset modal - COMPLETE with proper field types
 function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sidebarContent }) {
     const [groupName, setGroupName] = useState('');
+    const [groupDescription, setGroupDescription] = useState('');
     const [selectedFields, setSelectedFields] = useState([]);
     const [fieldValues, setFieldValues] = useState({});
+    const [searchTerm, setSearchTerm] = useState('');
+    const [expandedSections, setExpandedSections] = useState({});
+
+    // Reset when opening
+    useEffect(() => {
+        if (isOpen) {
+            setGroupName('');
+            setGroupDescription('');
+            setSelectedFields([]);
+            setFieldValues({});
+            setSearchTerm('');
+            // Expand first section by default
+            const firstSection = (sidebarContent || [])[0];
+            if (firstSection) setExpandedSections({ [firstSection.id]: true });
+        }
+    }, [isOpen, sidebarContent]);
 
     if (!isOpen) return null;
-    const allFields = (sidebarContent || []).flatMap(section => (section.items || []).map(item => ({
-        key: item.key,
-        label: item.label,
-        icon: item.icon,
-        unit: item.unit
-    })));
 
-    const handleToggleField = (key) => {
-        setSelectedFields(f => f.includes(key) ? f.filter(k => k !== key) : [...f, key]);
+    // Group fields by section with full item data
+    const sections = (sidebarContent || []).map(section => ({
+        id: section.id || section.label,
+        label: section.label,
+        icon: section.icon,
+        items: (section.items || []).map(item => ({
+            id: item.id || item.key || item.type,
+            key: item.id || item.key || item.type,
+            label: item.label,
+            icon: item.icon,
+            type: item.type || 'text',
+            options: item.options,
+            unit: item.unit,
+            min: item.min,
+            max: item.max,
+            step: item.step,
+            defaultValue: item.defaultValue
+        }))
+    }));
+
+    // Filter by search
+    const filteredSections = sections.map(section => ({
+        ...section,
+        items: section.items.filter(item =>
+            !searchTerm || item.label.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+    })).filter(section => section.items.length > 0);
+
+    const toggleSection = (sectionId) => {
+        setExpandedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
     };
-    const handleValueChange = (key, value) => {
-        setFieldValues(fv => ({ ...fv, [key]: value }));
+
+    const handleToggleField = (fieldId) => {
+        setSelectedFields(prev =>
+            prev.includes(fieldId)
+                ? prev.filter(k => k !== fieldId)
+                : [...prev, fieldId]
+        );
     };
+
+    const handleValueChange = (fieldId, value) => {
+        setFieldValues(prev => ({ ...prev, [fieldId]: value }));
+    };
+
+    // Render the correct input type based on field definition
+    const renderFieldInput = (field) => {
+        const value = fieldValues[field.id] ?? '';
+        const baseClass = "px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm";
+
+        // SELECT
+        if (field.type === 'select' && Array.isArray(field.options)) {
+            return (
+                <select
+                    value={value}
+                    onChange={(e) => handleValueChange(field.id, e.target.value)}
+                    className={`${baseClass} min-w-[120px]`}
+                >
+                    <option value="">Sélectionner...</option>
+                    {field.options.map((opt, idx) => {
+                        const val = typeof opt === 'string' ? opt : (opt.value ?? opt);
+                        const lab = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
+                        return <option key={idx} value={val}>{lab}</option>;
+                    })}
+                </select>
+            );
+        }
+
+        // MULTISELECT
+        if (field.type === 'multiselect' && Array.isArray(field.options)) {
+            const selected = Array.isArray(value) ? value : [];
+            return (
+                <div className="flex flex-wrap gap-1 max-w-[200px]">
+                    {field.options.slice(0, 6).map((opt, idx) => {
+                        const val = typeof opt === 'string' ? opt : (opt.value ?? opt);
+                        const lab = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
+                        const isChecked = selected.includes(val);
+                        return (
+                            <label key={idx} className={`text-xs px-1 py-0.5 rounded border cursor-pointer ${isChecked ? 'bg-purple-100 dark:bg-purple-900 border-purple-400' : 'border-gray-300'}`}>
+                                <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                        const next = e.target.checked ? [...selected, val] : selected.filter(s => s !== val);
+                                        handleValueChange(field.id, next);
+                                    }}
+                                    className="sr-only"
+                                />
+                                {lab}
+                            </label>
+                        );
+                    })}
+                </div>
+            );
+        }
+
+        // NUMBER / SLIDER / STEPPER
+        if (field.type === 'number' || field.type === 'slider' || field.type === 'stepper') {
+            return (
+                <input
+                    type="number"
+                    value={value}
+                    onChange={(e) => handleValueChange(field.id, e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    min={field.min}
+                    max={field.max}
+                    step={field.step || 1}
+                    placeholder={field.defaultValue !== undefined ? String(field.defaultValue) : ''}
+                    className={`${baseClass} w-20`}
+                />
+            );
+        }
+
+        // DATE
+        if (field.type === 'date') {
+            return (
+                <input
+                    type="date"
+                    value={value}
+                    onChange={(e) => handleValueChange(field.id, e.target.value)}
+                    className={`${baseClass} w-32`}
+                />
+            );
+        }
+
+        // CHECKBOX
+        if (field.type === 'checkbox') {
+            return (
+                <input
+                    type="checkbox"
+                    checked={Boolean(value)}
+                    onChange={(e) => handleValueChange(field.id, e.target.checked)}
+                    className="w-4 h-4"
+                />
+            );
+        }
+
+        // TEXT (default)
+        return (
+            <input
+                type="text"
+                value={value}
+                onChange={(e) => handleValueChange(field.id, e.target.value)}
+                placeholder="Valeur"
+                className={`${baseClass} w-24`}
+            />
+        );
+    };
+
     const handleSave = () => {
         if (!groupName.trim() || selectedFields.length === 0) return;
         const group = {
+            id: `group_${Date.now()}`,
             name: groupName.trim(),
-            fields: selectedFields.map(key => ({ key, value: fieldValues[key] || '' }))
+            description: groupDescription.trim(),
+            fields: selectedFields.map(key => ({
+                key,
+                value: fieldValues[key] ?? ''
+            })),
+            createdAt: new Date().toISOString()
         };
         const newGroups = [...groups, group];
         setGroups(newGroups);
         localStorage.setItem('pipeline-grouped-presets', JSON.stringify(newGroups));
-        setGroupName(''); setSelectedFields([]); setFieldValues({});
+        setGroupName('');
+        setGroupDescription('');
+        setSelectedFields([]);
+        setFieldValues({});
         onSave && onSave(newGroups);
         onClose();
     };
+
+    const handleDeleteGroup = (groupId) => {
+        if (!confirm('Supprimer ce groupe ?')) return;
+        const newGroups = groups.filter(g => g.id !== groupId && g.name !== groupId);
+        setGroups(newGroups);
+        localStorage.setItem('pipeline-grouped-presets', JSON.stringify(newGroups));
+    };
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 min-w-[340px] max-w-[95vw] border border-gray-200 dark:border-gray-700">
-                <h3 className="font-bold text-lg mb-4">Créer un préréglage groupé</h3>
-                <input className="w-full mb-3 px-3 py-2 border rounded-lg" placeholder="Nom du groupe" value={groupName} onChange={e => setGroupName(e.target.value)} />
-                <div className="max-h-40 overflow-y-auto mb-3">
-                    {allFields.map(f => (
-                        <div key={f.key} className="flex items-center gap-2 mb-1">
-                            <input type="checkbox" checked={selectedFields.includes(f.key)} onChange={() => handleToggleField(f.key)} />
-                            <span className="text-base">{f.icon}</span>
-                            <span className="text-xs">{f.label}</span>
-                            {selectedFields.includes(f.key) && (
-                                <input className="ml-2 px-2 py-1 border rounded w-24 text-xs" placeholder="Valeur" value={fieldValues[f.key] || ''} onChange={e => handleValueChange(f.key, e.target.value)} />
-                            )}
-                            {f.unit && <span className="text-xs text-gray-400 ml-1">{f.unit}</span>}
-                        </div>
-                    ))}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[700px] max-w-full max-h-[85vh] border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
+                        <span>👥</span> Groupes de préréglages
+                    </h3>
+                    <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
+                        <span className="text-xl">×</span>
+                    </button>
                 </div>
-                <div className="flex gap-2 mt-4">
-                    <button className="flex-1 liquid-btn liquid-btn--accent" onClick={handleSave} disabled={!groupName.trim() || selectedFields.length === 0}>Enregistrer</button>
-                    <button className="flex-1 liquid-btn" onClick={onClose}>Annuler</button>
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    {/* Existing groups */}
+                    {groups.length > 0 && (
+                        <div className="space-y-2">
+                            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Groupes existants</h4>
+                            <div className="space-y-2 max-h-32 overflow-y-auto">
+                                {groups.map((group, idx) => (
+                                    <div key={group.id || idx} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <div>
+                                            <div className="font-medium text-sm">{group.name}</div>
+                                            <div className="text-xs text-gray-500">{group.fields?.length || 0} champ(s)</div>
+                                        </div>
+                                        <button
+                                            onClick={() => handleDeleteGroup(group.id || group.name)}
+                                            className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                                        >
+                                            Supprimer
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Create new group */}
+                    <div className="space-y-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Créer un nouveau groupe</h4>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                            <input
+                                type="text"
+                                value={groupName}
+                                onChange={(e) => setGroupName(e.target.value)}
+                                placeholder="Nom du groupe *"
+                                className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                            />
+                            <input
+                                type="text"
+                                value={groupDescription}
+                                onChange={(e) => setGroupDescription(e.target.value)}
+                                placeholder="Description (optionnel)"
+                                className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                            />
+                        </div>
+
+                        {/* Search */}
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="🔍 Rechercher un champ..."
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                        />
+
+                        {/* Fields by section */}
+                        <div className="border border-gray-200 dark:border-gray-700 rounded-lg max-h-[300px] overflow-y-auto">
+                            {filteredSections.map(section => (
+                                <div key={section.id} className="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                                    <button
+                                        onClick={() => toggleSection(section.id)}
+                                        className="w-full flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <span>{section.icon}</span>
+                                            <span className="text-sm font-medium">{section.label}</span>
+                                            <span className="text-xs text-gray-500">({section.items.length})</span>
+                                        </div>
+                                        <span className="text-gray-400">{expandedSections[section.id] ? '▼' : '▶'}</span>
+                                    </button>
+
+                                    {expandedSections[section.id] && (
+                                        <div className="p-2 space-y-1">
+                                            {section.items.map(field => {
+                                                const isSelected = selectedFields.includes(field.id);
+                                                return (
+                                                    <div
+                                                        key={field.id}
+                                                        className={`flex items-center gap-2 p-2 rounded transition-colors ${isSelected ? 'bg-purple-50 dark:bg-purple-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isSelected}
+                                                            onChange={() => handleToggleField(field.id)}
+                                                            className="w-4 h-4 accent-purple-600"
+                                                        />
+                                                        <span className="text-base">{field.icon}</span>
+                                                        <span className="text-sm flex-1">{field.label}</span>
+                                                        
+                                                        {isSelected && (
+                                                            <div className="flex items-center gap-1">
+                                                                {renderFieldInput(field)}
+                                                                {field.unit && <span className="text-xs text-gray-500">{field.unit}</span>}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="text-xs text-gray-500">
+                            {selectedFields.length} champ(s) sélectionné(s)
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="flex gap-3 p-4 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                        onClick={handleSave}
+                        disabled={!groupName.trim() || selectedFields.length === 0}
+                        className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+                    >
+                        Enregistrer le groupe
+                    </button>
+                    <button
+                        onClick={onClose}
+                        className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
+                    >
+                        Fermer
+                    </button>
                 </div>
             </div>
         </div>
