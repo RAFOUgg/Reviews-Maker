@@ -377,13 +377,3 @@ const FlowerCanvasRenderer = ({
 };
 
 export default FlowerCanvasRenderer;
-{
-    mold < 10 && (
-        <div className="text-xs text-red-500">⚠ Moisissure: {10 - mold}/10</div>
-    )
-}
-        </div >
-    );
-};
-
-export default FlowerCanvasRenderer;
