@@ -375,30 +375,29 @@ const PipelineDataModal = ({
     const FieldWrapper = ({ item, children }) => {
         const itemKey = item.key || item.type;
         return (
-            <div className="relative">
+            <div className="relative group">
                 {children}
                 <button
                     type="button"
-                    title="Supprimer ce champ"
+                    title="Supprimer ce champ de la cellule"
                     onClick={() => {
                         if (!item || !itemKey) return;
-                        setConfirmState({
-                            open: true,
-                            title: 'Effacer le champ',
-                            message: 'Effacer ce champ de la cellule ?',
-                            onConfirm: () => {
-                                if (onFieldDelete) {
-                                    onFieldDelete(timestamp, itemKey);
-                                } else {
-                                    handleChange(itemKey, null);
-                                }
-                                setConfirmState(prev => ({ ...prev, open: false }));
-                            }
+                        // Suppression directe sans confirmation pour fluidité
+                        if (onFieldDelete) {
+                            onFieldDelete(timestamp, itemKey);
+                        }
+                        // Supprimer également du formData local
+                        setFormData(prev => {
+                            const updated = { ...prev };
+                            delete updated[itemKey];
+                            return updated;
                         });
                     }}
-                    className="absolute top-1 right-1 text-red-600 hover:text-red-700 p-1 rounded"
+                    className="absolute -top-2 -right-2 w-6 h-6 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
                 >
-                    ✖
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                 </button>
             </div>
         );
