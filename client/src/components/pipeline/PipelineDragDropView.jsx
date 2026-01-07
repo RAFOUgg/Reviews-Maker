@@ -19,7 +19,7 @@
  * - onGeneralDataChange: (field, value) => void
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import ConfirmModal from '../ui/ConfirmModal';
 import { useToast } from '../ToastContainer';
 
@@ -66,9 +66,9 @@ function CellContextMenu({
     }, [cellTimestamp, isOpen]);
 
     // Recalculer la position après le rendu pour ajustement précis
-    const [finalPosition, setFinalPosition] = React.useState(null);
+    const [finalPosition, setFinalPosition] = useState(null);
 
-    React.useLayoutEffect(() => {
+    useLayoutEffect(() => {
         if (!isOpen || !menuRef.current) {
             setFinalPosition(null);
             return;

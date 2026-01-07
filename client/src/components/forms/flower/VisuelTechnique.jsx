@@ -156,6 +156,7 @@ export default function VisuelTechnique({ data, onChange, errors = {} }) {
                                     value={data.selectedColors || []}
                                     onChange={handleColorChange}
                                     maxSelections={5}
+                                    className="compact-size closed"
                                 />
                             </div>
 
