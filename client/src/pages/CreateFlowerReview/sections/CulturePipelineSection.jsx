@@ -66,19 +66,24 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
 
         // Appeler onChange avec l'objet mis à jour
         onChange({ ...data, cultureTimelineData: updatedData });
-        <CulturePipelineDragDrop
-            timelineConfig={data.cultureTimelineConfig || { type: 'jour', totalDays: 90 }}
-            timelineData={data.cultureTimelineData || []}
-            onConfigChange={handleConfigChange}
-            onDataChange={handleDataChange}
-            initialData={{
-                mode: data.mode,
-                spaceType: data.spaceType,
-                substrat: data.substrat,
-                lightType: data.lightType
-            }}
-        />
-        </LiquidCard >
+        console.log(`✅ handleDataChange terminé pour ${timestamp}`);
+    };
+
+    return (
+        <LiquidCard title="🌱 Pipeline Culture Phase 1" bordered>
+            <CulturePipelineDragDrop
+                timelineConfig={data.cultureTimelineConfig || { type: 'jour', totalDays: 90 }}
+                timelineData={data.cultureTimelineData || []}
+                onConfigChange={handleConfigChange}
+                onDataChange={handleDataChange}
+                initialData={{
+                    mode: data.mode,
+                    spaceType: data.spaceType,
+                    substrat: data.substrat,
+                    lightType: data.lightType
+                }}
+            />
+        </LiquidCard>
     );
 };
 
