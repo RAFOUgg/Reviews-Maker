@@ -16,9 +16,12 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
 
     const handleDataChange = (timestamp, field, value) => {
         console.log(`🔄 handleDataChange appelé: timestamp=${timestamp}, field=${field}, value=`, value);
+        console.log(`📌 Type de onChange:`, typeof onChange);
+        console.log(`📌 Data actuel avant onChange:`, data.cultureTimelineData);
 
         // ✅ FIX: Utiliser une fonction pour accéder à la valeur la plus récente
         onChange(prevData => {
+            console.log(`🟢 INSIDE onChange callback - prevData:`, prevData);
             const currentData = prevData.cultureTimelineData || [];
             console.log(`  → currentData avant:`, currentData.map(c => c.timestamp));
             const existingIndex = currentData.findIndex(cell => cell.timestamp === timestamp);
@@ -53,8 +56,12 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
             }
 
             console.log(`  → updatedData après:`, updatedData.map(c => `${c.timestamp}(${Object.keys(c).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k)).join(',')})`));
-            return { ...prevData, cultureTimelineData: updatedData };
+            const result = { ...prevData, cultureTimelineData: updatedData };
+            console.log(`🔵 RETURN from onChange callback:`, result.cultureTimelineData);
+            return result;
         });
+
+        console.log(`✅ handleDataChange terminé pour ${timestamp}`);
     };
 
     return (
