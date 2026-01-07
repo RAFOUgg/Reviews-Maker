@@ -31,6 +31,12 @@ const CuringPipelineDragDrop = ({
         weight: []
     })
 
+    // Définir type par défaut
+    const configWithDefaults = useMemo(() => ({
+        type: 'phase',
+        ...timelineConfig
+    }), [timelineConfig]);
+
     // Convertir CURING_SIDEBAR_CONTENT (objet) vers format array
     const sidebarArray = useMemo(() => {
         return Object.entries(CURING_SIDEBAR_CONTENT).map(([key, section]) => ({
@@ -164,7 +170,7 @@ const CuringPipelineDragDrop = ({
             <PipelineDragDropView
                 type="curing"
                 sidebarContent={sidebarArray}
-                timelineConfig={timelineConfig}
+                timelineConfig={configWithDefaults}
                 timelineData={timelineData}
                 onConfigChange={onConfigChange}
                 onDataChange={onDataChange}

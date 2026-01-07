@@ -259,8 +259,10 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
         const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
         localStorage.setItem(storageKey, JSON.stringify(newGroups));
         onSave && onSave(newGroups);
-        setMode('list');
+
+        // Fermer la modal après enregistrement
         resetForm();
+        onClose();
     };
 
     const handleDeleteGroup = (groupId) => {
@@ -282,7 +284,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[900px] max-w-[90vw] max-h-[80vh] border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[900px] max-w-[95vw] max-h-[90vh] border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                     <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
@@ -1106,16 +1108,28 @@ const PipelineDragDropView = ({
                     return;
                 }
 
-                // Appliquer chaque champ du groupe à la cellule
-                fields.forEach(f => {
-                    if (f.key && f.value !== undefined && f.value !== '') {
-                        console.log(`  → Applique ${f.key} = ${f.value}`);
-                        onDataChange(timestamp, f.key, f.value);
-                    }
+                // Déterminer les cellules cibles (celle droppée + sélectionnées)
+                const targetCells = selectedCellsRef.current.length > 0
+                    ? selectedCellsRef.current
+                    : [timestamp];
+
+                console.log(`✅ Application groupe sur ${targetCells.length} cellule(s)`);
+
+                // Appliquer chaque champ du groupe à toutes les cellules cibles
+                targetCells.forEach(ts => {
+                    fields.forEach(f => {
+                        if (f.key && f.value !== undefined && f.value !== '') {
+                            console.log(`  → Applique ${f.key} = ${f.value} sur ${ts}`);
+                            onDataChange(ts, f.key, f.value);
+                        }
+                    });
                 });
 
                 // Feedback visuel
-                toast && toast.success(`✓ Groupe "${group.name}" appliqué (${fields.length} champs)`);
+                const message = targetCells.length > 1
+                    ? `✓ Groupe "${group.name}" appliqué sur ${targetCells.length} cellules (${fields.length} champs chacune)`
+                    : `✓ Groupe "${group.name}" appliqué (${fields.length} champs)`;
+                toast && toast.success(message);
                 setDraggedContent(null);
                 return;
             }
