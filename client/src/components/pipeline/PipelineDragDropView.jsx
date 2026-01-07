@@ -23,28 +23,65 @@ import { useState, useEffect, useRef } from 'react';
 import ConfirmModal from '../ui/ConfirmModal';
 import { useToast } from '../ToastContainer';
 
-// Grouped preset modal - COMPLETE with proper field types
+// Emojis disponibles pour les groupes
+const GROUP_EMOJIS = ['🌱', '🌿', '💧', '☀️', '🌡️', '📊', '⚗️', '🧪', '🔬', '💨', '🏠', '🌞', '🌙', '💡', '🔌', '📅', '⏱️', '📏', '🎯', '✨', '🚀', '💪', '🎨', '🔥', '❄️', '💎', '🌈', '🍃', '🌸', '🍀'];
+
+// Grouped preset modal - COMPLETE with proper field types, edit mode, emoji
 function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sidebarContent }) {
+    const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
+    const [editingGroup, setEditingGroup] = useState(null);
     const [groupName, setGroupName] = useState('');
     const [groupDescription, setGroupDescription] = useState('');
+    const [groupEmoji, setGroupEmoji] = useState('🌱');
     const [selectedFields, setSelectedFields] = useState([]);
     const [fieldValues, setFieldValues] = useState({});
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedSections, setExpandedSections] = useState({});
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
     // Reset when opening
     useEffect(() => {
         if (isOpen) {
-            setGroupName('');
-            setGroupDescription('');
-            setSelectedFields([]);
-            setFieldValues({});
-            setSearchTerm('');
-            // Expand first section by default
-            const firstSection = (sidebarContent || [])[0];
-            if (firstSection) setExpandedSections({ [firstSection.id]: true });
+            setMode('list');
+            setEditingGroup(null);
+            resetForm();
         }
-    }, [isOpen, sidebarContent]);
+    }, [isOpen]);
+
+    const resetForm = () => {
+        setGroupName('');
+        setGroupDescription('');
+        setGroupEmoji('🌱');
+        setSelectedFields([]);
+        setFieldValues({});
+        setSearchTerm('');
+        // Expand all sections by default for better visibility
+        const expanded = {};
+        (sidebarContent || []).forEach(s => { expanded[s.id || s.label] = true; });
+        setExpandedSections(expanded);
+    };
+
+    const startCreate = () => {
+        resetForm();
+        setMode('create');
+    };
+
+    const startEdit = (group) => {
+        setEditingGroup(group);
+        setGroupName(group.name || '');
+        setGroupDescription(group.description || '');
+        setGroupEmoji(group.emoji || '🌱');
+        const fields = group.fields || [];
+        setSelectedFields(fields.map(f => f.key));
+        const vals = {};
+        fields.forEach(f => { vals[f.key] = f.value; });
+        setFieldValues(vals);
+        setSearchTerm('');
+        const expanded = {};
+        (sidebarContent || []).forEach(s => { expanded[s.id || s.label] = true; });
+        setExpandedSections(expanded);
+        setMode('edit');
+    };
 
     if (!isOpen) return null;
 
