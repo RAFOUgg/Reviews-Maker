@@ -30,7 +30,7 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [onClose]);
 
-    // Positionner le menu centré sur l'anchorRect si fourni, sinon utiliser position
+    // Positionner le menu intelligemment dans le conteneur
     useLayoutEffect(() => {
         const el = menuRef.current;
         if (!el) return;
@@ -42,23 +42,58 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
         let x = position?.x ?? 16;
         let y = position?.y ?? 16;
 
+        // Chercher le conteneur parent (panneau latéral)
+        let containerRect = {
+            left: 0,
+            top: 0,
+            right: winW,
+            bottom: winH
+        };
+
+        let parent = el.parentElement;
+        while (parent && parent !== document.body) {
+            const style = window.getComputedStyle(parent);
+            const overflowY = style.overflowY;
+
+            // Si on trouve le panneau latéral avec scroll
+            if (overflowY === 'auto' || overflowY === 'scroll' || parent.classList.contains('overflow-y-auto')) {
+                const rect = parent.getBoundingClientRect();
+                containerRect = {
+                    left: rect.left,
+                    top: rect.top,
+                    right: rect.right,
+                    bottom: rect.bottom
+                };
+                break;
+            }
+            parent = parent.parentElement;
+        }
+
         if (anchorRect) {
-            // Center horizontally over the anchor element and place above if there's space, otherwise below
+            // Centrer horizontalement sur l'élément ancre
             x = Math.round(anchorRect.left + anchorRect.width / 2 - menuRect.width / 2);
-            // Try to show above
-            if (anchorRect.top - menuRect.height - margin > 0) {
+            // Essayer d'afficher au-dessus
+            if (anchorRect.top - menuRect.height - margin > containerRect.top) {
                 y = Math.round(anchorRect.top - menuRect.height - 8);
             } else {
-                // Place below
+                // Placer en dessous
                 y = Math.round(anchorRect.bottom + 8);
             }
         }
 
-        // Clamp
-        if (x + menuRect.width + margin > winW) x = Math.max(margin, winW - menuRect.width - margin);
-        if (x < margin) x = margin;
-        if (y + menuRect.height + margin > winH) y = Math.max(margin, winH - menuRect.height - margin);
-        if (y < margin) y = margin;
+        // Ajuster pour rester dans le conteneur
+        if (x + menuRect.width + margin > containerRect.right) {
+            x = Math.max(containerRect.left + margin, containerRect.right - menuRect.width - margin);
+        }
+        if (x < containerRect.left + margin) {
+            x = containerRect.left + margin;
+        }
+        if (y + menuRect.height + margin > containerRect.bottom) {
+            y = Math.max(containerRect.top + margin, containerRect.bottom - menuRect.height - margin);
+        }
+        if (y < containerRect.top + margin) {
+            y = containerRect.top + margin;
+        }
 
         setAdjustedPos({ x, y });
     }, [position, anchorRect]);
@@ -173,7 +208,7 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
                             onAssignNow?.(item.key, value);
                             onClose();
                         }}
-                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${!value && value !== 0 ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed' : ' hover: text-white' }`}
+                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${!value && value !== 0 ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed' : ' hover: text-white'}`}
                     >
                         Assigner maintenant
                     </button>
@@ -265,7 +300,7 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
                 <button
                     onClick={handleSave}
                     disabled={!value && value !== 0}
-                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${!value && value !== 0 ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-gradient-to-r hover: hover: text-white shadow-lg hover:shadow-xl' }`}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${!value && value !== 0 ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-gradient-to-r hover: hover: text-white shadow-lg hover:shadow-xl'}`}
                 >
                     <Check className="w-3 h-3" />
                     {isConfigured ? 'Mettre à jour' : 'Pré-configurer'}

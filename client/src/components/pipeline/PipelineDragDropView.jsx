@@ -65,6 +65,34 @@ function CellContextMenu({
         setSelectedFieldsToDelete([]);
     }, [cellTimestamp, isOpen]);
 
+    // Recalculer la position après le rendu pour ajustement précis
+    const [finalPosition, setFinalPosition] = React.useState(null);
+
+    React.useLayoutEffect(() => {
+        if (!isOpen || !menuRef.current) {
+            setFinalPosition(null);
+            return;
+        }
+
+        const menuRect = menuRef.current.getBoundingClientRect();
+        const padding = 10;
+
+        let x = position.x;
+        let y = position.y;
+
+        // Ajuster avec les dimensions réelles du menu
+        if (x + menuRect.width > window.innerWidth - padding) {
+            x = window.innerWidth - menuRect.width - padding;
+        }
+        if (y + menuRect.height > window.innerHeight - padding) {
+            y = window.innerHeight - menuRect.height - padding;
+        }
+        if (x < padding) x = padding;
+        if (y < padding) y = padding;
+
+        setFinalPosition({ x, y });
+    }, [isOpen, position, showFieldList]);
+
     if (!isOpen) return null;
 
     const targetCount = selectedCells?.length > 0 ? selectedCells.length : 1;
@@ -107,39 +135,75 @@ function CellContextMenu({
         );
     };
 
-    // Calcul position avec ajustement viewport - utilise clientX/clientY
+    // Calcul position avec ajustement intelligent - reste dans le conteneur
     const getAdjustedPosition = () => {
         const menuWidth = 280; // Largeur estimée du menu
-        const menuHeight = 400; // Hauteur max estimée
-        const padding = 10; // Padding du viewport
+        const menuHeight = 500; // Hauteur max estimée (augmentée pour les champs)
+        const padding = 10; // Padding par rapport aux bords
 
         let x = position.x;
         let y = position.y;
 
-        // Ajuster si dépasse à droite du viewport
-        if (x + menuWidth > window.innerWidth - padding) {
-            x = window.innerWidth - menuWidth - padding;
+        // Détecter les limites du conteneur parent (timeline)
+        // Chercher l'ancetre avec overflow scroll ou le viewport si rien trouvé
+        let containerRect = {
+            left: 0,
+            top: 0,
+            right: window.innerWidth,
+            bottom: window.innerHeight,
+            width: window.innerWidth,
+            height: window.innerHeight
+        };
+
+        // Chercher le conteneur scrollable parent (la zone de timeline)
+        if (menuRef.current) {
+            let parent = menuRef.current.parentElement;
+            while (parent && parent !== document.body) {
+                const style = window.getComputedStyle(parent);
+                const overflowY = style.overflowY;
+                const overflowX = style.overflowX;
+
+                // Si on trouve un conteneur avec scroll, utiliser ses limites
+                if (overflowY === 'auto' || overflowY === 'scroll' || overflowX === 'auto' || overflowX === 'scroll') {
+                    const rect = parent.getBoundingClientRect();
+                    containerRect = {
+                        left: rect.left,
+                        top: rect.top,
+                        right: rect.right,
+                        bottom: rect.bottom,
+                        width: rect.width,
+                        height: rect.height
+                    };
+                    break;
+                }
+                parent = parent.parentElement;
+            }
         }
 
-        // Ajuster si dépasse en bas du viewport
-        if (y + menuHeight > window.innerHeight - padding) {
-            y = window.innerHeight - menuHeight - padding;
+        // Ajuster si dépasse à droite du conteneur
+        if (x + menuWidth > containerRect.right - padding) {
+            x = containerRect.right - menuWidth - padding;
         }
 
-        // Ajuster si dépasse à gauche du viewport
-        if (x < padding) {
-            x = padding;
+        // Ajuster si dépasse en bas du conteneur
+        if (y + menuHeight > containerRect.bottom - padding) {
+            y = containerRect.bottom - menuHeight - padding;
         }
 
-        // Ajuster si dépasse en haut du viewport
-        if (y < padding) {
-            y = padding;
+        // Ajuster si dépasse à gauche du conteneur
+        if (x < containerRect.left + padding) {
+            x = containerRect.left + padding;
+        }
+
+        // Ajuster si dépasse en haut du conteneur
+        if (y < containerRect.top + padding) {
+            y = containerRect.top + padding;
         }
 
         return { x, y };
     };
 
-    const adjustedPos = getAdjustedPosition();
+    const adjustedPos = finalPosition || getAdjustedPosition();
 
     return (
         <div
@@ -2694,81 +2758,102 @@ const PipelineDragDropView = ({
 
             {/* Menu contextuel stylisé pour config individuelle et assignation rapide */}
             {
-                contextMenu && (
-                    <div className="fixed inset-0 z-50" onClick={() => setContextMenu(null)}>
-                        <div
-                            className="absolute bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 min-w-[320px] max-w-[90vw] border border-gray-200 dark:border-gray-700"
-                            style={{ left: contextMenu.position.x, top: contextMenu.position.y, transform: 'translate(-10%, 0)', zIndex: 10000 }}
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <h4 className="font-bold text-lg mb-2 flex items-center gap-2">
-                                <span className="text-base">{contextMenu.item.icon}</span>
-                                {contextMenu.item.label}
-                            </h4>
-                            <div className="mb-4">
-                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Valeur par défaut</label>
-                                <input
-                                    type="text"
-                                    className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
-                                    defaultValue={preConfiguredItems[contextMenu.item.key] || ''}
-                                    id="preconfig-value-input"
-                                />
-                            </div>
-                            <div className="flex gap-2 mb-2">
-                                <button
-                                    className="flex-1 px-4 py-2 hover: text-white rounded-xl font-medium transition-all"
-                                    onClick={() => {
-                                        const val = document.getElementById('preconfig-value-input').value;
-                                        handleConfigureItem(contextMenu.item.key, val);
-                                        setContextMenu(null);
-                                    }}
-                                >Enregistrer</button>
-                                <button
-                                    className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-xl font-medium transition-all"
-                                    onClick={() => setContextMenu(null)}
-                                >Annuler</button>
-                            </div>
-                            <div className="mt-4">
-                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Assigner à&nbsp;:</label>
-                                <div className="flex gap-2">
+                contextMenu && (() => {
+                    // Calculer position intelligente
+                    const menuWidth = 320;
+                    const menuHeight = 400;
+                    const padding = 10;
+
+                    let x = contextMenu.position.x;
+                    let y = contextMenu.position.y;
+
+                    // Ajuster pour rester dans le viewport
+                    if (x + menuWidth > window.innerWidth - padding) {
+                        x = window.innerWidth - menuWidth - padding;
+                    }
+                    if (y + menuHeight > window.innerHeight - padding) {
+                        y = window.innerHeight - menuHeight - padding;
+                    }
+                    if (x < padding) x = padding;
+                    if (y < padding) y = padding;
+
+                    return (
+                        <div className="fixed inset-0 z-50" onClick={() => setContextMenu(null)}>
+                            <div
+                                className="absolute bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 min-w-[320px] max-w-[90vw] border border-gray-200 dark:border-gray-700"
+                                style={{ left: x, top: y, zIndex: 10000 }}
+                                onClick={e => e.stopPropagation()}
+                            >
+                                <h4 className="font-bold text-lg mb-2 flex items-center gap-2">
+                                    <span className="text-base">{contextMenu.item.icon}</span>
+                                    {contextMenu.item.label}
+                                </h4>
+                                <div className="mb-4">
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Valeur par défaut</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+                                        defaultValue={preConfiguredItems[contextMenu.item.key] || ''}
+                                        id="preconfig-value-input"
+                                    />
+                                </div>
+                                <div className="flex gap-2 mb-2">
                                     <button
-                                        className="flex-1 px-3 py-2 hover: text-white rounded-lg text-xs font-semibold"
+                                        className="flex-1 px-4 py-2 hover: text-white rounded-xl font-medium transition-all"
                                         onClick={() => {
-                                            // Assignation à toutes les cases sélectionnées
                                             const val = document.getElementById('preconfig-value-input').value;
-                                            const changes = [];
-                                            selectedCells.forEach(ts => {
-                                                const prev = getCellData(ts) || {};
-                                                const prevValue = prev && prev.data ? prev.data[contextMenu.item.key] : undefined;
-                                                changes.push({ timestamp: ts, field: contextMenu.item.key, previousValue: prevValue });
-                                                onDataChange(ts, contextMenu.item.key, val);
-                                            });
-                                            if (changes.length > 0) pushAction({ id: Date.now(), type: 'preconfig-assign-selection', changes });
+                                            handleConfigureItem(contextMenu.item.key, val);
                                             setContextMenu(null);
                                         }}
-                                        disabled={selectedCells.length === 0}
-                                    >{selectedCells.length > 0 ? `Sélection (${selectedCells.length})` : 'Sélectionner des cases'}</button>
+                                    >Enregistrer</button>
                                     <button
-                                        className="flex-1 px-3 py-2 hover: text-white rounded-lg text-xs font-semibold"
-                                        onClick={() => {
-                                            // Assignation à toutes les cases
-                                            const val = document.getElementById('preconfig-value-input').value;
-                                            const changes = [];
-                                            cells.forEach(cell => {
-                                                const prev = getCellData(cell.timestamp) || {};
-                                                const prevValue = prev && prev.data ? prev.data[contextMenu.item.key] : undefined;
-                                                changes.push({ timestamp: cell.timestamp, field: contextMenu.item.key, previousValue: prevValue });
-                                                onDataChange(cell.timestamp, contextMenu.item.key, val);
-                                            });
-                                            if (changes.length > 0) pushAction({ id: Date.now(), type: 'preconfig-assign-all', changes });
-                                            setContextMenu(null);
-                                        }}
-                                    >Toutes les cases</button>
+                                        className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-xl font-medium transition-all"
+                                        onClick={() => setContextMenu(null)}
+                                    >Annuler</button>
+                                </div>
+                                <div className="mt-4">
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Assigner à&nbsp;:</label>
+                                    <div className="flex gap-2">
+                                        <button
+                                            className="flex-1 px-3 py-2 hover: text-white rounded-lg text-xs font-semibold"
+                                            onClick={() => {
+                                                // Assignation à toutes les cases sélectionnées
+                                                const val = document.getElementById('preconfig-value-input').value;
+                                                const changes = [];
+                                                selectedCells.forEach(ts => {
+                                                    const prev = getCellData(ts) || {};
+                                                    const prevValue = prev && prev.data ? prev.data[contextMenu.item.key] : undefined;
+                                                    changes.push({ timestamp: ts, field: contextMenu.item.key, previousValue: prevValue });
+                                                    onDataChange(ts, contextMenu.item.key, val);
+                                                });
+                                                if (changes.length > 0) pushAction({ id: Date.now(), type: 'preconfig-assign-selection', changes });
+                                                setContextMenu(null);
+                                            }}
+                                            disabled={selectedCells.length === 0}
+                                        >{selectedCells.length > 0 ? `Sélection (${selectedCells.length})` : 'Sélectionner des cases'}</button>
+                                        <button
+                                            className="flex-1 px-3 py-2 hover: text-white rounded-lg text-xs font-semibold"
+                                            onClick={() => {
+                                                // Assignation à toutes les cases
+                                                const val = document.getElementById('preconfig-value-input').value;
+                                                const changes = [];
+                                                cells.forEach(cell => {
+                                                    const prev = getCellData(cell.timestamp) || {};
+                                                    const prevValue = prev && prev.data ? prev.data[contextMenu.item.key] : undefined;
+                                                    changes.push({ timestamp: cell.timestamp, field: contextMenu.item.key, previousValue: prevValue });
+                                                    onDataChange(cell.timestamp, contextMenu.item.key, val);
+                                                });
+                                                if (changes.length > 0) pushAction({ id: Date.now(), type: 'preconfig-assign-all', changes });
+                                                setContextMenu(null);
+                                            }}
+                                        >Toutes les cases</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    );
+                })()
+            }
 
             {/* Cell Context Menu - Menu contextuel sur cellule */}
             <CellContextMenu
