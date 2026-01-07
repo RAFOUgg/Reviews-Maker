@@ -226,9 +226,17 @@ export default function CreateHashReview() {
                             <button
                                 key={section.id}
                                 onClick={() => setCurrentSection(idx)}
-                                className={`w-3 h-3 rounded-full transition-all ${idx === currentSection ? 'bg-white w-8' : idx < currentSection ? 'bg-green-400' : 'bg-white/30'}`}
+                                className={`text-2xl transition-all hover:scale-110 ${
+                                    idx === currentSection 
+                                        ? 'opacity-100 scale-125' 
+                                        : idx < currentSection 
+                                            ? 'opacity-70' 
+                                            : 'opacity-30'
+                                }`}
                                 title={section.title}
-                            />
+                            >
+                                {section.icon}
+                            </button>
                         ))}
                     </div>
 
