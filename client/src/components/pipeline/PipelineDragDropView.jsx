@@ -75,14 +75,21 @@ function CellContextMenu({
         !['timestamp', 'label', 'date', 'phase', 'week', 'day', 'hours', 'seconds', '_meta'].includes(k)
     ) : [];
 
-    // Trouver le label d'un champ depuis sidebarContent
-    const getFieldLabel = (fieldKey) => {
+    // Trouver la définition complète d'un champ depuis sidebarContent
+    const getFieldDefinition = (fieldKey) => {
         for (const section of (sidebarContent || [])) {
             const item = (section.items || []).find(i =>
                 i.id === fieldKey || i.key === fieldKey || i.type === fieldKey
             );
-            if (item) return `${item.icon || '📌'} ${item.label}`;
+            if (item) return { ...item, sectionLabel: section.label };
         }
+        return null;
+    };
+
+    // Trouver le label d'un champ depuis sidebarContent
+    const getFieldLabel = (fieldKey) => {
+        const def = getFieldDefinition(fieldKey);
+        if (def) return `${def.icon || '📌'} ${def.label}`;
         return `📌 ${fieldKey}`;
     };
 
@@ -100,13 +107,47 @@ function CellContextMenu({
         );
     };
 
+    // Calcul position avec ajustement viewport
+    const getAdjustedPosition = () => {
+        const menuWidth = 280; // Largeur estimée du menu
+        const menuHeight = 400; // Hauteur max estimée
+        const padding = 10; // Padding du viewport
+
+        let x = position.x;
+        let y = position.y;
+
+        // Ajuster si dépasse à droite
+        if (x + menuWidth > window.innerWidth - padding) {
+            x = window.innerWidth - menuWidth - padding;
+        }
+
+        // Ajuster si dépasse en bas
+        if (y + menuHeight > window.innerHeight - padding) {
+            y = window.innerHeight - menuHeight - padding;
+        }
+
+        // Ajuster si dépasse à gauche
+        if (x < padding) {
+            x = padding;
+        }
+
+        // Ajuster si dépasse en haut
+        if (y < padding) {
+            y = padding;
+        }
+
+        return { x, y };
+    };
+
+    const adjustedPos = getAdjustedPosition();
+
     return (
         <div
             ref={menuRef}
             className="fixed z-[200] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 min-w-[220px] overflow-hidden"
             style={{
-                left: `${position.x}px`,
-                top: `${position.y}px`,
+                left: `${adjustedPos.x}px`,
+                top: `${adjustedPos.y}px`,
                 maxHeight: '80vh',
                 overflowY: 'auto'
             }}
@@ -183,22 +224,90 @@ function CellContextMenu({
                         </span>
                     </div>
 
-                    {/* Liste des champs avec checkboxes */}
-                    <div className="max-h-[300px] overflow-y-auto">
-                        {dataFields.map(field => (
-                            <label
-                                key={field}
-                                className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={selectedFieldsToDelete.includes(field)}
-                                    onChange={() => toggleFieldSelection(field)}
-                                    className="w-4 h-4 accent-purple-600"
-                                />
-                                <span className="text-sm flex-1">{getFieldLabel(field)}</span>
-                            </label>
-                        ))}
+                    {/* Liste des champs avec valeurs et types */}
+                    <div className="max-h-[400px] overflow-y-auto">
+                        {dataFields.map(field => {
+                            const fieldDef = getFieldDefinition(field);
+                            const currentValue = cellData[field];
+                            const isSelected = selectedFieldsToDelete.includes(field);
+
+                            return (
+                                <div
+                                    key={field}
+                                    className={`px-4 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${isSelected ? 'bg-red-50 dark:bg-red-900/10' : ''
+                                        }`}
+                                >
+                                    {/* Header avec checkbox */}
+                                    <label className="flex items-start gap-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={isSelected}
+                                            onChange={() => toggleFieldSelection(field)}
+                                            className="mt-0.5 w-4 h-4 accent-red-600"
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                    {getFieldLabel(field)}
+                                                </span>
+                                                {fieldDef?.sectionLabel && (
+                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                                                        {fieldDef.sectionLabel}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Affichage de la valeur actuelle selon le type */}
+                                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                                {fieldDef?.type === 'select' && fieldDef?.options ? (
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-purple-600 dark:text-purple-400 font-medium">
+                                                            {currentValue || '(non défini)'}
+                                                        </span>
+                                                        {fieldDef.unit && <span className="text-gray-500">{fieldDef.unit}</span>}
+                                                    </div>
+                                                ) : fieldDef?.type === 'multiselect' ? (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {Array.isArray(currentValue) && currentValue.length > 0 ? (
+                                                            currentValue.map((v, i) => (
+                                                                <span key={i} className="inline-block px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-[10px]">
+                                                                    {v}
+                                                                </span>
+                                                            ))
+                                                        ) : (
+                                                            <span className="text-gray-400">(aucune sélection)</span>
+                                                        )}
+                                                    </div>
+                                                ) : fieldDef?.type === 'number' ? (
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="font-mono text-blue-600 dark:text-blue-400 font-medium">
+                                                            {currentValue ?? '—'}
+                                                        </span>
+                                                        {fieldDef.unit && <span className="text-gray-500">{fieldDef.unit}</span>}
+                                                    </div>
+                                                ) : fieldDef?.type === 'slider' ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                            <div
+                                                                className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+                                                                style={{ width: `${((currentValue || 0) / (fieldDef.max || 10)) * 100}%` }}
+                                                            />
+                                                        </div>
+                                                        <span className="font-mono text-xs text-purple-600 dark:text-purple-400 font-medium">
+                                                            {currentValue || 0}/{fieldDef.max || 10}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-gray-700 dark:text-gray-300 truncate">
+                                                        {currentValue || '(vide)'}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            );
+                        })}
                     </div>
 
                     {/* Actions */}

@@ -19,10 +19,10 @@ export default function VisuelTechnique({ formData, handleChange }) {
 
     return (
         <LiquidCard title="👁️ Visuel & Technique" bordered>
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Left: Color selection */}
-                <div>
-                    <div className="p-4 bg-gray-900/20 rounded-xl border border-gray-700">
+                <div className="flex flex-col items-center">
+                    <div className="p-4 bg-gray-900/20 rounded-xl border border-gray-700 w-full">
                         <h4 className="text-sm font-semibold text-gray-200 mb-4 flex items-center gap-2">
                             <span className="text-lg">🎨</span>
                             Sélection colorimétrique
@@ -39,7 +39,7 @@ export default function VisuelTechnique({ formData, handleChange }) {
                 <div className="space-y-4">
                     {VISUAL_FIELDS.filter(field => field.key !== 'couleur').map(field => (
                         <div key={field.key} className="flex items-center gap-4">
-                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 w-1/2">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 w-1/3">
                                 {field.label}
                             </label>
                             <input
@@ -50,7 +50,7 @@ export default function VisuelTechnique({ formData, handleChange }) {
                                 onChange={(e) => handleChange(field.key, parseInt(e.target.value))}
                                 className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-600"
                             />
-                            <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                            <span className="text-sm font-bold text-gray-900 dark:text-gray-100 w-1/6 text-center">
                                 {formData[field.key] || 0}/{field.max}
                             </span>
                         </div>
