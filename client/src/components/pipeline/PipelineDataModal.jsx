@@ -39,6 +39,10 @@ const PipelineDataModal = ({
         const initialData = { ...cellData };
         delete initialData.timestamp;
         delete initialData._meta;
+
+        console.log('🟢 PipelineDataModal init - cellData:', cellData);
+        console.log('🟢 PipelineDataModal init - initialData:', initialData);
+
         setFormData(initialData);
         setActiveTab('data');
 
@@ -104,19 +108,19 @@ const PipelineDataModal = ({
     // Handler pour sauvegarder
     const handleSubmit = (e) => {
         e.preventDefault();
-        
+
         // Appliquer à toutes les cellules sélectionnées si applicable
         const targets = (selectedCells && selectedCells.length > 0) ? selectedCells : [timestamp];
-        
+
         console.log('💾 handleSubmit - targets:', targets, 'formData:', formData);
-        
+
         targets.forEach(ts => {
             onSave({
                 timestamp: ts,
                 data: formData
             });
         });
-        
+
         onClose();
     };
 
@@ -755,8 +759,8 @@ const PipelineDataModal = ({
                                     className="px-4 py-2 hover: disabled:bg-gray-400 text-white rounded-lg transition-colors flex items-center gap-2"
                                 >
                                     <Save className="w-4 h-4" />
-                                    {selectedCells && selectedCells.length > 1 
-                                        ? `Appliquer à ${selectedCells.length} cases` 
+                                    {selectedCells && selectedCells.length > 1
+                                        ? `Appliquer à ${selectedCells.length} cases`
                                         : 'Enregistrer'}
                                 </button>
                             )}
