@@ -74,7 +74,7 @@ const PipelineDataModal = ({
             console.log('🔍 getItemsToDisplay - allItems:', allItems.length, 'formData:', formData);
 
             return allItems.filter(item => {
-                const itemKey = item.key || item.type;
+                const itemKey = item.id || item.key || item.type;
                 const hasData = formData[itemKey] !== undefined && formData[itemKey] !== null && formData[itemKey] !== '';
                 if (hasData) {
                     console.log(`✅ Item "${item.label}" (key: ${itemKey}) has data:`, formData[itemKey]);
@@ -171,7 +171,7 @@ const PipelineDataModal = ({
             return;
         }
 
-        const fieldKey = droppedItem.content.key || droppedItem.content.type;
+        const fieldKey = droppedItem.content.id || droppedItem.content.key || droppedItem.content.type;
         if (!fieldKey) {
             alert('Impossible de déterminer la clé du champ');
             return;
@@ -234,7 +234,7 @@ const PipelineDataModal = ({
     const renderField = (item) => {
         if (!item) return null;
 
-        const itemKey = item.key || item.type;
+        const itemKey = item.id || item.key || item.type;
         const value = formData[itemKey] || '';
         const { label, icon, type = 'text' } = item;
 
@@ -697,7 +697,7 @@ const PipelineDataModal = ({
                                         ) : (
                                             <div className="space-y-2">
                                                 {presets.field
-                                                    .filter(preset => droppedItem && preset.data && preset.data.fieldKey === (droppedItem.content.key || droppedItem.content.type))
+                                                    .filter(preset => droppedItem && preset.data && preset.data.fieldKey === (droppedItem.content.id || droppedItem.content.key || droppedItem.content.type))
                                                     .map(preset => (
                                                         <div
                                                             key={preset.id}
