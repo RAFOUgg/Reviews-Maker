@@ -76,32 +76,22 @@ function CellContextMenu({
 
         const menuRect = menuRef.current.getBoundingClientRect();
         const padding = 10;
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
 
         let x = position.x;
         let y = position.y;
 
-        // Ajuster horizontalement si dépasse à droite
-        if (x + menuRect.width > viewportWidth - padding) {
-            x = viewportWidth - menuRect.width - padding;
+        // Ajuster avec les dimensions réelles du menu
+        if (x + menuRect.width > window.innerWidth - padding) {
+            x = window.innerWidth - menuRect.width - padding;
         }
-        // Ajuster horizontalement si dépasse à gauche
-        if (x < padding) {
-            x = padding;
+        if (y + menuRect.height > window.innerHeight - padding) {
+            y = window.innerHeight - menuRect.height - padding;
         }
-
-        // Ajuster verticalement si dépasse en bas - PRIORITÉ
-        if (y + menuRect.height > viewportHeight - padding) {
-            y = viewportHeight - menuRect.height - padding;
-        }
-        // Ajuster verticalement si dépasse en haut
-        if (y < padding) {
-            y = padding;
-        }
+        if (x < padding) x = padding;
+        if (y < padding) y = padding;
 
         setFinalPosition({ x, y });
-    }, [isOpen, position, showFieldList, selectedFieldsToDelete.length]);
+    }, [isOpen, position, showFieldList]);
 
     if (!isOpen) return null;
 
