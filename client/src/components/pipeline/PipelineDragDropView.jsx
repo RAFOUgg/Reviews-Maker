@@ -392,7 +392,8 @@ const PipelineDragDropView = ({
 
         // Si c'est un drop, sauvegarder uniquement le champ droppé
         if (droppedItem && droppedItem.timestamp === data.timestamp) {
-            const fieldKey = droppedItem.content.key;
+            const fieldKey = droppedItem.content.id || droppedItem.content.key || droppedItem.content.type;
+            console.log('🔑 fieldKey extrait de droppedItem:', fieldKey, 'droppedItem.content:', droppedItem.content);
             if (data.data && data.data[fieldKey] !== undefined) {
                 changes.push({ timestamp: data.timestamp, field: fieldKey, previousValue: prevData[fieldKey] });
                 console.log('✓ Sauvegarde champ droppé:', fieldKey, '=', data.data[fieldKey]);
