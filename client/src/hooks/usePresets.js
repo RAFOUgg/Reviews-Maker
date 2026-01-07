@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuthStore } from '../stores/orchardStore';
+import { useAuthStore } from '../store/orchardStore';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
