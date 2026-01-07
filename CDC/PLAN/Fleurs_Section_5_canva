@@ -1,0 +1,478 @@
+STRUCTURE HIÉRARCHIQUE GÉNÉRALE
+Une tête de cannabis (cola) est une inflorescence racémeuse composée = une grappe dense de centaines de petites fleurs femelles groupées de manière organique autour d'un axe principal.
+
+text
+COLA (inflorescence totale)
+├── AXE PRINCIPAL (rachis = tige centrale)
+│   └── Branches secondaires, tertiaires, etc. (jusqu'à 7 ordres)
+│
+├── CALICES (× centaines)
+│   ├── BRACT (feuille modifiée protectrice)
+│   ├── CALYX (enveloppe transparente de protection)
+│   └── TRICHOMES (glandulaires = 95% des cannabinoïdes)
+│
+├── PISTILS + STIGMAS (reproductive)
+│   └── Filaments fins (< 0.5mm épaisseur)
+│
+└── FEUILLES SUCRE (sugar leaves)
+    └── Petites feuilles dentelées autour de la structure
+1. LE CALICE (Unité florale de base)
+Qu'est-ce que c'est ?
+Le calice est la plus petite unité structurelle d'une tête. C'est une micro-fleur ovale/poire qui :
+
+Mesure 3-8mm de longueur typiquement
+
+A une forme teardrop/gouttelette légèrement pointue vers le haut
+
+Contient les organes reproducteurs (pistils à l'intérieur)
+
+Stocke 95% des cannabinoïdes et terpènes via les trichomes
+
+Morphologie détaillée du calice
+text
+        🔺 PISTIL (fin filament blanc/orange)
+        │
+    ╱───┴───╲
+   │ CALYX  │  ← Couche transparente protectrice
+   │(inner) │
+   │  ┌──┐  │
+   │  │O │  │ ← OVULE (microscopique, si graines)
+   │  └──┘  │
+    ╲───┬───╱
+        │
+    ═══════════  ← BRACT (feuille modifiée)
+    ═══════════
+        │
+       TIGE
+Les 3 couches du calice (de l'intérieur vers l'extérieur)
+Couche	Nom	Structure	Fonction
+1. Interne	Calyx (réel)	Membranaire, translucide	Protège l'ovule et les pistils
+2. Médiane	Perigonal Bracts	Petites feuilles vertes	Enveloppent le calyx
+3. Externe	Subtending Bract	Grande bractée modifiée	Protection / Point d'attache
+Couleurs des calices (selon maturité & santé)
+Immature (jours 30-45) : Vert vif, petit, dense
+
+Optimal (jours 50-65) : Vert moyen à foncé, légèrement gonflé
+
+Sur-mature (jours 70+) : Vert foncé, virant rouge/violet, calices gonflés
+
+Endommagé/Moisissure : Gris, brun, zones nécrosées visibles
+
+2. LES TRICHOMES (Glandules résinogènes)
+3 Types de trichomes (par taille)
+text
+A) BULBOUS TRICHOMES (Minuscules)
+   10-15 µm de diamètre
+   ├─ Structure: Simple, une cellule basale
+   ├─ Rôle: Fonction défensive mineure
+   └─ Visibilité: Invisible à l'œil nu
+
+B) CAPITATE SESSILE (Sans pédoncule)
+   25-100 µm de diamètre
+   ├─ Structure: Tête ronde + base plate (pas de tige)
+   ├─ Rôle: Production modérée de cannabinoïdes
+   └─ Visibilité: Microscopique, diffuse
+
+C) CAPITATE STALKED (Avec pédoncule) ⭐ MAJEURS
+   150-500 µm de hauteur
+   ├─ Structure: Tige fine (pédoncule) + grosse tête (bulbe)
+   ├─ Rôle: 80-90% de la production de cannabinoïdes/terpènes
+   └─ Visibilité: Visible à l'œil nu = le "sucre" (sugar)
+Anatomie détaillée du trichome capitate-stalked (le principal)
+text
+       ┌─────┐
+       │TÊTE │  200-500 µm diamètre
+       │(bulbe)  - Supercells (cellules métaboliquement actives)
+       │     │  - Stockent cannabinoïdes/terpènes
+       │     │  - Translucides à laiteux selon maturité
+       │     │  - Reflets brillants (biréfringence)
+       └──┬──┘
+          │
+          │   PÉDONCULE
+          │   (tige fine)
+          │   1-2 cellules d'épaisseur
+          │   Transparent
+       ┌──┴──┐
+       │BASE │  Cellules basales d'attache
+       │     │  Sur le calice/bract
+       └─────┘
+Morphologie du bulbe (tête)
+Forme : Sphérique à très légèrement aplatie
+
+Surface : Lisse, parfois avec micro-ondulations
+
+Texture : Translucide (immature) → Opaque blanc laiteux (mature) → Ambre (sur-mature)
+
+Brillance : Réfléchit la lumière (biréfringence du cristal)
+
+Taille réelle : 0.2 - 0.5 mm de diamètre
+
+Distribution des trichomes sur la fleur
+Concentration (du plus au moins dense) :
+
+BRACTS (feuilles protectrices) → Densité MAXIMALE (95%+ des trichomes utiles)
+
+Calices (corps de la fleur) → Très dense
+
+Sugar leaves (petites feuilles) → Modéré à dense
+
+Pistils/Stigmas → ZÉRO trichome (cheveux nus)
+
+Tiges internes → Minimal
+
+Couverture visuelle (paramètre Trichomes 0-10):
+
+0 = Transparent, aucun cristal visible
+
+5 = Givre léger (50% couverture)
+
+8 = Couvert de blanc (80% couverture)
+
+10 = Fleur entièrement enrobée de cristaux (effet "gelé")
+
+États de maturité des trichomes (trichromatique)
+text
+┌─────────────────────────────────────────┐
+│        COULEUR vs MATURITÉ              │
+├─────────────────────────────────────────┤
+│ CLAIR/TRANSLUCIDE → Immature (THC-A)   │
+│ BLANC LAITEUX     → Pic/Optimal (THC)   │
+│ AMBRE DORÉ        → Sur-mature (CBN)    │
+│ BRUN FONCÉ        → Très mature (dégr.) │
+└─────────────────────────────────────────┘
+3. LES PISTILS + STIGMAS (Organes reproducteurs)
+Distinction terminologique (IMPORTANT)
+❌ ERREUR COURANTE : "Pistils" = les cheveux
+✅ CORRECT BOT. :
+
+PISTIL = Organe reproductif complet (style + stigma + ovaire)
+
+STIGMA = Les "cheveux" individuels (poils pollen-capteurs)
+
+Morphologie des stigmas (ce qu'on voit réellement)
+text
+        ╔════════════════════╗
+        ║   STIGMA (cheveu)  ║
+        ║                    ║
+        ║ Longueur: 0.5-3mm  ║ ← Fine fibre
+        ║ Diamètre: 20-50µm  ║
+        ║ Forme: Cylindrique ║
+        ║        légèrement  ║
+        ║        courbe      ║
+        ║                    ║
+        ║ Surface: Papilles  ║ ← Micro-rugosités
+        ║         adhésives  ║    (captent pollen)
+        ╚════════════════════╝
+              │
+              │
+        ╔═════════════════════════╗
+        ║ PISTIL (base/style)     ║
+        ║                         ║
+        ║ Émerge du calyx         ║
+        ║ Souvent en paires       ║
+        ║ (2 stigmas par pistil)  ║
+        ╚═════════════════════════╝
+Évolution chromatique des pistils (indicateur maturité)
+Stade	Âge floral	Couleur	Apparence
+1. Pré-fleur	Jour 0-10	Blanc pur	Fins, tout droits
+2. Floraison	Jour 15-35	Blanc → jaune pâle	Courbés, nombreux
+3. Pic	Jour 40-60	Orange brûlé	Densément groupés
+4. Mature	Jour 60-75	Rouille/marron	Bouclés, rétractés
+5. Sénescence	Jour 75+	Brun foncé	Secs, pelucheux
+Densité de pistils (paramètre 0-10)
+text
+Densité = Nombre de stigmas visibles par unité de surface
+
+0   = Zéro cheveu visible (nettoyée)
+3   = 20-30% de couverture (léger)
+5   = 40-50% visible (normal)
+7   = 60-70% (épais)
+10  = 80-100% (très fourni, presque chevelu)
+Positionnement botanique
+Émergence : Deux stigmas sortent du haut du calice
+
+Orientation : Radiaux, pointant vers l'extérieur/haut
+
+Groupage : Distribuées régulièrement autour du calice
+
+Angle : 30-60° par rapport à la verticale
+
+Entrecroisement : Léger enchevêtrement naturel
+
+4. LES BRACTS (Feuilles modifiées protectrices)
+Structure des bracts
+text
+        FEUILLE NORMALE          vs        BRACT FLORALE
+        
+  Lobes: 5-7                          Lobes: 1-2
+  Taille: 5-15cm                      Taille: 3-8mm
+  Pétiole: Oui (tige)                 Pétiole: Court/absent
+  Fct: Photosynthèse                  Fct: Protection + trichomes
+Anatomie de la bract
+Forme : Ovale, poire, ou lancéolée (pointue)
+
+Texture : Surface lisse avec micro-nervures visibles
+
+Marge : Entière (lisse) ou légèrement dentelée
+
+Couleur : Vert moyen à foncé (peut virer rouge/violet en mature)
+
+Nervures : 1-3 nervures principales très visibles
+
+Trichomes : COUVERTS de trichomes (95% de la concentration)
+
+Position des bracts dans la structure
+text
+        PISTIL
+           ↑
+        ╔═════╗
+        ║ CALYX    
+        ║(internal)║
+        ╚═════╝
+          ↑
+        ┌─────┐
+        │BRACT│  ← Enveloppe externe
+        │     │     Visible à l'œil nu
+        │     │     Généralement paire (2/calice)
+        └─────┘
+          ↑
+        TIGE/AXILE
+Concentration de trichomes sur les bracts (paramètre densité)
+Les bracts sont le site principal de synthèse cannabinoïdes/terpènes :
+
+Densité trichomes = 15-20% plus élevée que sur calice moyen
+
+Distribution : Préférentiellement abaxiale (face inférieure)
+
+Couche : 3-5 couches superposées de trichomes sur bracts denses
+
+5. FEUILLES SUCRE (Sugar Leaves)
+Définition & distinction
+Sugar leaves ≠ Fan leaves (grandes feuilles)
+
+text
+FAN LEAVES           SUGAR LEAVES
+├─ 5-11 lobes        ├─ 2-3 lobes
+├─ 5-25cm            ├─ 5-15mm
+├─ Pétiole long      ├─ Pétiole court
+├─ Mineurs trichomes ├─ Majeurs trichomes
+└─ Tige claire       └─ Intégrés à la cola
+Morphologie des sugar leaves
+Nombre : 10-30 par petite structure florale
+
+Arrangement : Spiralées autour de l'axe
+
+Pointement : Vers l'intérieur/haut (créent forme pointue)
+
+Surface : Parsemée de trichomes capitate-stalked visibles
+
+Couleur : Vert légèrement plus pâle que calices
+
+Maturité : Changent de couleur avec la plante (jaune, rose, violet)
+
+Rôle dans la morphologie globale
+Sugar leaves définissent la silhouette de la fleur :
+
+Créent les "pointes" visibles
+
+Donnent la texture "cristalline" en surface
+
+Couvrent partiellement les calices
+
+Créent le profil triangulaire/conique
+
+6. GRAINES (si présentes)
+Morphologie d'une graine de cannabis
+text
+        ┌──────────────┐
+        │   GRAINE     │
+        │              │
+        │ 5-8mm long   │ Forme: Ovale aplatie
+        │ 3-5mm large  │ 
+        │ 2-3mm épais  │ Texture: Lisse, brillante
+        │              │ Couleur: Gris-brun, motifs
+        │    ║║        │         (marbrures noires)
+        │    ║║        │
+        │    ║║        │ Ligne (seam): ║║
+        └──────────────┘    Point d'attache
+                             (micropyle)
+Intégration dans le calice (si grainée)
+Quand pollination :
+
+La graine gonfle le calice (devient bulbeux/bombé)
+
+Taille du calice augmente de 2-3x
+
+Perte de densité visuelle globale
+
+Réduction trichomes (énergie vers graines)
+
+Paramètre Graines (0-10)
+0 = Zéro graine visible (sinsémilla)
+
+3 = 5-10% des calices contiennent graines
+
+5 = 50% des calices grainés
+
+10 = Pratiquement tout contient une graine
+
+7. MOISISSURE & DÉGRADATION (Botrytis)
+Morphologie de la pourriture botryenne (Botrytis cinerea)
+text
+SAIN vs ENDOMMAGÉ
+
+SAIN              MOISISSURE
+┌────────┐       ┌────────┐
+│ Calice │       │ Calice │
+│ Vert   │  vs   │ Gris   │ + filaments blancs
+│ Brillant        │ Terne  │
+└────────┘       └────────┘
+                  Zones nécrosées
+                  (non-living tissue)
+Signes visuels de moisissure (paramètre Moisissure 0-10)
+Paramètre	Aspect	Progression
+10 (aucune)	Vert pur, brillant, texture nette	Fleur pristine
+8	Très léger poudrage blanc sur 1-2%	Début précoce
+5	20-30% zones grises, filaments visibles	Modéré
+2	50%+ dégradé, zones molles visibles	Sévère
+0	Pourriture massive, perte de structure	Inutilisable
+Types de dégradation visuelle
+Botrytis (gris) : Filaments fins blancs + discoloration
+
+Powdery Mildew (blanc) : Poudre blanche sur surface
+
+Nécrose (brun) : Cellules mortes, texture sèche
+
+Eau : Zones transparentes/macérées, effondrements
+
+8. DENSITÉ STRUCTURELLE (Compaction florale)
+Paramètre "Densité Visuelle" (0-10)
+Ce qui change :
+
+Espacement entre calices
+
+Taille relative des calices
+
+Compaction axiale
+
+Apparence visuelle globale
+
+text
+DENSITÉ 0 (Aéré)        DENSITÉ 10 (Ultra-compact)
+
+    ●                      ███████
+                           ███████
+                           ███████
+    ●         vs           ███████
+                           ███████
+    ●                      ███████
+                           ███████
+
+Calices: Larges espaces   Calices: Imbriqués serrés
+Axe: Visible             Axe: Invisible
+Morphologie à différents niveaux de densité
+Densité	Morphe	Structure calice	Espacement	Profil
+0-2	Sativa	Calices individuels discrets	5mm+	Lâche, effilée
+3-5	Hybride	Groupes de 2-3 calices	2-3mm	Normale
+6-8	Indica	Calices imbriqués	1mm	Compacte
+9-10	Extreme	Calices soudés visuellement	<1mm	Très dense
+Changements morphologiques avec densité
+À densité 0 :
+
+Chaque calice dépistable individuellement
+
+Axe principal très visible
+
+Grande silhouette pour peu de biomasse
+
+À densité 10 :
+
+Calices semblent fusionnés
+
+Axe complètement caché
+
+Forme très compacte, presque géométrique
+
+9. MANUCURE (Enlèvement des feuilles)
+Paramètre "Manucure" (0-10)
+0 = Non-manucurée (entourée de feuilles)
+10 = Manucurée (zéro feuille visible)
+
+Anatomie pré-manucure
+Structure enrobée de :
+
+Sugar leaves intégrées (2-3 lobes, petites)
+
+Semi-mature leaves (3-5 lobes, moyennes)
+
+Ébauches de fan leaves (grandes, 5+ lobes)
+
+Changements visuels (manucure 0→10)
+text
+AVANT MANUCURE (0)          APRÈS MANUCURE (10)
+
+    /\                           /\
+   /  \  feuilles              /  \
+  / -- \                       /----\
+  | -- |  sugar                |    |
+  | -- |  leaves               |    |
+   \  /                         \  /
+    \/                           \/
+
+Feuilles: 70% visibles      Feuilles: 0% visibles
+Structure calice: 30%       Calice: 100% du profil
+Les structures à masquer (paramètre Manucure)
+Manucure 0-3 : Feuilles fan visibles autour
+Manucure 4-6 : Sugar leaves partiellement cachées
+Manucure 7-8 : Seulement les très petites sugar leaves visibles
+Manucure 9-10 : Zéro feuille, structure calice nue
+
+10. PROFIL GLOBAL 3D (Pour rendu Canvas)
+Silhouette générale (vue de côté)
+text
+        △ Pointu (sugar leaves vers haut)
+       ╱ ╲
+      ╱   ╲
+     ╱     ╲  Épaule
+    ╱       ╲ (milieu plus large)
+   │         │
+   │ ▓▓▓▓▓   │ ← Trichomes brillent
+   │▓▓▓▓▓▓▓  │    (réflets blancs)
+   │▓▓▓▓▓▓▓  │
+    ╲       ╱
+     ╲     ╱  Base
+      ╲   ╱
+       ╲_╱
+Axe principal (tige)
+Diamètre : 1-4mm
+
+Couleur : Vert clair à pourpre
+
+Visibilité : Invisible quand densité élevée, très visible à densité basse
+
+Ramification : 3-7 ordres de branches dans une grosse cola
+
+Centre de gravité visuelle
+Doit rester stable lors du morphing paramètres
+
+Tous les changements orbitent autour sans translation
+
+Pivot point = milieu de la tige/axe principal
+
+RÉSUMÉ SYNTHÉTIQUE POUR IA
+Les 6 paramètres modifient DIRECTEMENT :
+Paramètre	Affecte	Visuel
+Densité (0-10)	Espacement calices, compaction	Profil large→étroit
+Trichomes (0-10)	Opacité blanc, couverture, glow	Transparent→Givre blanc
+Pistils (0-10)	Opacité filaments, quantité, longueur	Aucun→Chevelu
+Manucure (0-10)	Visibilité feuilles autour	Enrobée→Nue
+Moisissure (0-10)	Zones grises, nécrose, texture	Vert→Gris pourri
+Graines (0-10)	Gonflements calices, pertes trichomes	Lisse→Bombée
+Invariants (ne changent PAS) :
+✓ Structure botanique de base (calice = teardrop)
+✓ Deux pistils par calice
+✓ Trichomes situés sur bracts/calices (jamais pistils)
+✓ Coloration générale (vert dominant)
+✓ Nervures bracts visibles
+✓ Arrangement spiral des fleurs
+✓ Point d'attache tige
