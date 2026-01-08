@@ -2,9 +2,7 @@ import React from 'react'
 import { Camera, X } from 'lucide-react'
 import LiquidCard from '../../../components/LiquidCard'
 import LiquidButton from '../../../components/LiquidButton'
-import SegmentedControl from '../../../components/ui/SegmentedControl'
 import MultiSelectPills from '../../../components/ui/MultiSelectPills'
-import { INFOS_GENERALES_CONFIG } from '../../../config/flowerReviewConfig'
 
 const PHOTO_TAGS = ['Macro', 'Full plant', 'Bud sec', 'Trichomes', 'Drying', 'Curing']
 
@@ -24,9 +22,6 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
         })
         handleChange('photos', updatedPhotos)
     }
-    // Récupérer les options du type génétique depuis la config
-    const typeGenetiqueField = INFOS_GENERALES_CONFIG.fields.find(f => f.id === 'typeGenetique')
-    const typeOptions = typeGenetiqueField?.options || []
 
     return (
         <div className="space-y-6">
@@ -82,20 +77,6 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                             onChange={(e) => handleChange('farm', e.target.value)}
                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
                             placeholder="Nom du producteur"
-                        />
-                    </div>
-
-                    {/* Type génétique - NOUVEAU: SegmentedControl */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                            Type de génétique *
-                        </label>
-                        <SegmentedControl
-                            options={typeOptions}
-                            value={formData.type || ''}
-                            onChange={(value) => handleChange('type', value)}
-                            fullWidth
-                            size="md"
                         />
                     </div>
 
