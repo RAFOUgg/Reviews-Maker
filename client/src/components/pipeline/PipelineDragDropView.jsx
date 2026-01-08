@@ -878,7 +878,6 @@ import CellEmojiOverlay from './CellEmojiOverlay';
 import PipelineCellTooltip from './PipelineCellTooltip';
 import MassAssignModal from './MassAssignModal';
 import ItemContextMenu from './ItemContextMenu';
-import PreConfigBadge from './PreConfigBadge';
 
 const PipelineDragDropView = ({
     type = 'culture',
@@ -2134,18 +2133,14 @@ const PipelineDragDropView = ({
                                                     : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
                                                     } ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
                                                 style={{ touchAction: 'none' }}
-                                                title={isPreConfigured ? `Pré-configuré: ${preConfiguredItems[itemKey]}${item.unit || ''}` : 'Clic droit pour pré-configurer'}
+                                                title={isPreConfigured ? `Pré-configuré (clic droit pour modifier)` : 'Clic droit pour pré-configurer'}
                                             >
-                                                {/* Badge pré-configuré */}
-                                                {isPreConfigured && (
-                                                    <span className="px-2 py-1 bg-green-200 text-green-800 rounded text-xs mr-1">{preConfiguredItems[itemKey]}{item.unit || ''}</span>
-                                                )}
                                                 <span className="text-base">{item.icon}</span>
                                                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex-1">
                                                     {item.label}
                                                 </span>
-                                                <span className={`text-xs transition-colors ${isPreConfigured ? 'text-green-600 dark:text-green-400' : 'text-gray-400 group-hover:text-gray-600'}`}>
-                                                    {isPreConfigured ? '✓' : '⋮⋮'}
+                                                <span className={`text-xs transition-colors font-semibold ${isPreConfigured ? 'text-green-600 dark:text-green-400' : 'text-gray-400 group-hover:text-gray-600'}`}>
+                                                    {isPreConfigured ? '✓' : '⋮'}
                                                 </span>
                                             </div>
                                         );
