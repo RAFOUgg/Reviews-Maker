@@ -914,6 +914,23 @@ const PipelineDragDropView = ({
         const saved = localStorage.getItem(storageKey);
         return saved ? JSON.parse(saved) : [];
     });
+
+    // Recharger les préréglages quand le type change
+    useEffect(() => {
+        const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
+        const saved = localStorage.getItem(storageKey);
+        setGroupedPresets(saved ? JSON.parse(saved) : []);
+
+        // Nettoyer les anciennes clés si type est défini
+        if (type && type !== 'unknown') {
+            const oldKey = 'pipeline-grouped-presets-unknown';
+            if (localStorage.getItem(oldKey) !== null) {
+                console.log(`🧹 Nettoyage: suppression de ${oldKey}`);
+                localStorage.removeItem(oldKey);
+            }
+        }
+    }, [type]);
+
     const [showGroupedPresetModal, setShowGroupedPresetModal] = useState(false);
     const [contextMenu, setContextMenu] = useState(null); // { item, position }
     // Multi-select sidebar state (global)
