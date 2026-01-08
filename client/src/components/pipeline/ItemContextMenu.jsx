@@ -6,14 +6,13 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { X, Check, Plus, Minus, Copy, Clipboard, Zap } from 'lucide-react';
 
-const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isConfigured, cells = [], onAssignNow, onAssignFromSource, onAssignRange, onAssignAll, selectedCells = [] }) => {
+const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isConfigured, cells = [], onAssignNow, onAssignFromSource, onAssignRange, onAssignAll }) => {
     const [value, setValue] = useState(item.defaultValue || '');
     const [rangeStart, setRangeStart] = useState('');
     const [rangeEnd, setRangeEnd] = useState('');
     const [copySource, setCopySource] = useState('');
     const menuRef = useRef(null);
     const [isVisible, setIsVisible] = useState(false);
-    const hasSelection = selectedCells && selectedCells.length > 0;
 
     // Fermer au clic extérieur ou Escape
     useEffect(() => {
@@ -236,36 +235,6 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
                             </label>
                             {renderInput()}
                         </div>
-
-                        {/* Bouton Assigner - à la sélection ou à toutes les cellules */}
-                        <div className={`p-2 rounded-lg ${hasSelection ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' : 'bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800'}`}>
-                            <div className="text-xs font-medium mb-2 flex items-center gap-1">
-                                {hasSelection ? (
-                                    <><span>✓</span> <span className="text-blue-700 dark:text-blue-300">{selectedCells.length} cellule(s) sélectionnée(s)</span></>
-                                ) : (
-                                    <><span>⚠️</span> <span className="text-orange-700 dark:text-orange-300">Aucune sélection</span></>
-                                )}
-                            </div>
-                            <button
-                                onClick={() => {
-                                    if (hasValue) {
-                                        if (hasSelection) {
-                                            onAssignNow?.(itemKey, value);
-                                        } else {
-                                            onAssignAll?.(itemKey, value);
-                                        }
-                                    }
-                                    onClose();
-                                }}
-                                disabled={!hasValue}
-                                className={`${btnCls} w-full ${hasValue ? (hasSelection ? 'bg-blue-600 hover:bg-blue-700' : 'bg-orange-600 hover:bg-orange-700') + ' text-white' : 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'}`}
-                            >
-                                <Zap className="w-3.5 h-3.5" />
-                                {hasSelection ? `Assigner à ${selectedCells.length} cellule(s)` : 'Assigner à toutes'}
-                            </button>
-                        </div>
-
-                        <div className="h-px bg-gray-200 dark:bg-gray-700" />
 
                         {/* Assigner à une plage */}
                         <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-2">

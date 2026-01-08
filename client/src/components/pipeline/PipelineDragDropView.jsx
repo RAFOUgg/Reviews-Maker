@@ -45,20 +45,12 @@ function CellContextMenu({
     const [selectedFieldsToDelete, setSelectedFieldsToDelete] = useState([]);
     const menuRef = useRef(null);
     const [isVisible, setIsVisible] = useState(false);
-    const [capturedCells, setCapturedCells] = useState([]);
-    const [capturedLabel, setCapturedLabel] = useState('');
 
     // Fermer au clic extérieur ou Escape
     useEffect(() => {
         if (!isOpen) return;
         const handleClickOutside = (e) => {
-            // Vérifier si le clic est vraiment en dehors du menu
-            if (menuRef.current) {
-                const isClickInsideMenu = menuRef.current.contains(e.target);
-                if (!isClickInsideMenu) {
-                    onClose();
-                }
-            }
+            if (menuRef.current && !menuRef.current.contains(e.target)) onClose();
         };
         const handleEscape = (e) => {
             if (e.key === 'Escape') onClose();
@@ -71,23 +63,12 @@ function CellContextMenu({
         };
     }, [isOpen, onClose]);
 
-    // Reset au changement de cellule et capture les infos
+    // Reset au changement de cellule
     useEffect(() => {
         setShowFieldList(false);
         setSelectedFieldsToDelete([]);
         setIsVisible(false);
-        if (isOpen) {
-            const cells = selectedCells?.length > 0 ? selectedCells : [cellTimestamp];
-            setCapturedCells(cells);
-            if (cells.length > 1) {
-                setCapturedLabel(`${cells.length} cellules`);
-            } else if (cellData?.label) {
-                setCapturedLabel(cellData.label);
-            } else {
-                setCapturedLabel(cellTimestamp);
-            }
-        }
-    }, [cellTimestamp, isOpen, selectedCells, cellData]);
+    }, [cellTimestamp, isOpen]);
 
     // Positionnement naturel - à côté du clic comme un vrai menu contextuel
     useLayoutEffect(() => {
@@ -102,55 +83,27 @@ function CellContextMenu({
             const vw = window.innerWidth;
             const vh = window.innerHeight;
 
-            // Utiliser les dimensions réelles si disponibles, sinon des valeurs par défaut
-            const menuHeight = rect.height > 0 ? rect.height : 250;
-            const menuWidth = rect.width > 0 ? rect.width : 260;
-
             let x = position.x;
             let y = position.y;
 
             // Ajustement horizontal : préférer à droite, sinon à gauche
-            if (x + menuWidth > vw - m) {
-                x = Math.max(m, x - menuWidth);
+            if (x + rect.width > vw - m) {
+                x = Math.max(m, x - rect.width);
             }
-            x = Math.max(m, Math.min(x, vw - menuWidth - m));
+            x = Math.max(m, Math.min(x, vw - rect.width - m));
 
-            // Ajustement vertical : préférer en bas, sinon en haut
-            // Vérifier s'il y a assez d'espace en bas
-            const spaceBelow = vh - y;
-            const spaceAbove = y;
-
-            if (spaceBelow < menuHeight + m) {
-                // Pas assez d'espace en bas, afficher au-dessus
-                y = Math.max(m, y - menuHeight - 10);
-            } else {
-                // Assez d'espace en bas, laisser à la position initiale
-                y = Math.min(y, vh - menuHeight - m);
+            // Ajustement vertical : rester dans le viewport
+            if (y + rect.height > vh - m) {
+                y = vh - rect.height - m;
             }
+            y = Math.max(m, y);
 
             menu.style.left = `${Math.round(x)}px`;
             menu.style.top = `${Math.round(y)}px`;
             setIsVisible(true);
         };
 
-        // Première tentative de positionnement
         requestAnimationFrame(() => requestAnimationFrame(positionMenu));
-
-        // Deuxième tentative après un délai plus long pour s'assurer que le menu est rendu
-        const timeoutId = setTimeout(() => {
-            positionMenu();
-        }, 50);
-
-        // Ajouter un listener de scroll pour repositionner le menu
-        const handleScroll = () => {
-            positionMenu();
-        };
-
-        window.addEventListener('scroll', handleScroll, true);
-        return () => {
-            window.removeEventListener('scroll', handleScroll, true);
-            clearTimeout(timeoutId);
-        };
     }, [isOpen, position, showFieldList]);
 
     if (!isOpen) return null;
@@ -199,11 +152,11 @@ function CellContextMenu({
             {/* Header */}
             <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-800">
                 <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    {isBulk ? `📦 Cellules` : '📍 Cellule'}
+                    {isBulk ? `📦 ${targetCount} cellules` : '📍 Cellule'}
                 </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
-                    {capturedLabel}
-                </div>
+                {!isBulk && cellData?.label && (
+                    <div className="text-xs text-gray-500">{cellData.label}</div>
+                )}
             </div>
 
             {/* Mode normal: liste des actions */}
@@ -246,7 +199,7 @@ function CellContextMenu({
 
                     {/* Effacer tout */}
                     <button
-                        onClick={() => { onDeleteAll(capturedCells); onClose(); }}
+                        onClick={() => { onDeleteAll(); onClose(); }}
                         disabled={dataFields.length === 0}
                         className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-3 font-medium transition-colors"
                     >
@@ -307,7 +260,7 @@ function CellContextMenu({
                         <button onClick={() => setShowFieldList(false)} className="flex-1 px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-md transition-colors">
                             Annuler
                         </button>
-                        <button onClick={() => { onDeleteFields(selectedFieldsToDelete, capturedCells); setShowFieldList(false); }} disabled={selectedFieldsToDelete.length === 0} className="flex-1 px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors">
+                        <button onClick={handleDeleteSelectedFields} disabled={selectedFieldsToDelete.length === 0} className="flex-1 px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors">
                             Effacer ({selectedFieldsToDelete.length})
                         </button>
                     </div>
@@ -897,6 +850,7 @@ import CellEmojiOverlay from './CellEmojiOverlay';
 import PipelineCellTooltip from './PipelineCellTooltip';
 import MassAssignModal from './MassAssignModal';
 import ItemContextMenu from './ItemContextMenu';
+import PreConfigBadge from './PreConfigBadge';
 
 const PipelineDragDropView = ({
     type = 'culture',
@@ -1060,8 +1014,7 @@ const PipelineDragDropView = ({
     };
 
     const handleCopyCellData = () => {
-        if (!cellContextMenu) return;
-        const targets = cellContextMenu.selectedCells || [];
+        const targets = cellContextMenu?.selectedCells || [];
         if (targets.length === 0) return;
 
         // Si une seule cellule, copier directement
@@ -1078,8 +1031,8 @@ const PipelineDragDropView = ({
     };
 
     const handlePasteCellData = () => {
-        if (!copiedCellData || !cellContextMenu) return;
-        const targets = cellContextMenu.selectedCells || [];
+        if (!copiedCellData) return;
+        const targets = cellContextMenu?.selectedCells || [];
         if (targets.length === 0) return;
 
         const allChanges = [];
@@ -1120,8 +1073,9 @@ const PipelineDragDropView = ({
         }
     };
 
-    const handleDeleteFieldsFromCells = (fieldsToDelete, targets) => {
-        if (!targets || targets.length === 0 || fieldsToDelete.length === 0) return;
+    const handleDeleteFieldsFromCells = (fieldsToDelete) => {
+        const targets = cellContextMenu?.selectedCells || [];
+        if (targets.length === 0 || fieldsToDelete.length === 0) return;
 
         setConfirmState({
             open: true,
@@ -2152,14 +2106,18 @@ const PipelineDragDropView = ({
                                                     : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
                                                     } ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
                                                 style={{ touchAction: 'none' }}
-                                                title={isPreConfigured ? `Pré-configuré (clic droit pour modifier)` : 'Clic droit pour pré-configurer'}
+                                                title={isPreConfigured ? `Pré-configuré: ${preConfiguredItems[itemKey]}${item.unit || ''}` : 'Clic droit pour pré-configurer'}
                                             >
+                                                {/* Badge pré-configuré */}
+                                                {isPreConfigured && (
+                                                    <span className="px-2 py-1 bg-green-200 text-green-800 rounded text-xs mr-1">{preConfiguredItems[itemKey]}{item.unit || ''}</span>
+                                                )}
                                                 <span className="text-base">{item.icon}</span>
                                                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex-1">
                                                     {item.label}
                                                 </span>
-                                                <span className="text-xs transition-colors text-gray-400 group-hover:text-gray-600">
-                                                    ⋮
+                                                <span className={`text-xs transition-colors ${isPreConfigured ? 'text-green-600 dark:text-green-400' : 'text-gray-400 group-hover:text-gray-600'}`}>
+                                                    {isPreConfigured ? '✓' : '⋮⋮'}
                                                 </span>
                                             </div>
                                         );
@@ -2684,7 +2642,6 @@ const PipelineDragDropView = ({
                     }}
                     isConfigured={preConfiguredItems[contextMenu.item.key || contextMenu.item.id] !== undefined}
                     cells={cells}
-                    selectedCells={selectedCells}
                     onAssignNow={(key, val) => {
                         // Assignation à toutes les cases sélectionnées ou à toutes si aucune sélection
                         const targets = selectedCells.length > 0 ? selectedCells : cells.map(c => c.timestamp);
@@ -2757,8 +2714,8 @@ const PipelineDragDropView = ({
                 cellData={cellContextMenu?.timestamp ? getCellData(cellContextMenu.timestamp) : null}
                 sidebarContent={sidebarContent}
                 onClose={() => setCellContextMenu(null)}
-                onDeleteAll={(capturedCells) => {
-                    const targets = capturedCells || [];
+                onDeleteAll={() => {
+                    const targets = cellContextMenu?.selectedCells || [];
                     setConfirmState({
                         open: true,
                         title: 'Effacer toutes les données',
