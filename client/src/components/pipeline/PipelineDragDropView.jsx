@@ -99,24 +99,39 @@ function CellContextMenu({
             let x = position.x;
             let y = position.y;
 
-            // Ajustement horizontal : préférer à droite, sinon à gauche
-            if (x + rect.width > vw - m) {
-                x = Math.max(m, x - rect.width);
-            }
-            x = Math.max(m, Math.min(x, vw - rect.width - m));
+            // S'assurer que le menu a une hauteur calculée
+            const menuHeight = Math.max(rect.height, 200);
+            const menuWidth = Math.max(rect.width, 260);
 
-            // Ajustement vertical : rester dans le viewport
-            if (y + rect.height > vh - m) {
-                y = vh - rect.height - m;
+            // Ajustement horizontal : préférer à droite, sinon à gauche
+            if (x + menuWidth > vw - m) {
+                x = Math.max(m, x - menuWidth);
             }
-            y = Math.max(m, y);
+            x = Math.max(m, Math.min(x, vw - menuWidth - m));
+
+            // Ajustement vertical : préférer en bas, sinon en haut
+            if (y + menuHeight > vh - m) {
+                y = Math.max(m, y - menuHeight - 10);
+            }
+            y = Math.max(m, Math.min(y, vh - menuHeight - m));
 
             menu.style.left = `${Math.round(x)}px`;
             menu.style.top = `${Math.round(y)}px`;
             setIsVisible(true);
         };
 
+        // Positionner immédiatement
         requestAnimationFrame(() => requestAnimationFrame(positionMenu));
+
+        // Ajouter un listener de scroll pour repositionner le menu
+        const handleScroll = () => {
+            positionMenu();
+        };
+
+        window.addEventListener('scroll', handleScroll, true);
+        return () => {
+            window.removeEventListener('scroll', handleScroll, true);
+        };
     }, [isOpen, position, showFieldList]);
 
     if (!isOpen) return null;
