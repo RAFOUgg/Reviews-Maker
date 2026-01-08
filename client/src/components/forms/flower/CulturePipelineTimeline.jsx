@@ -15,12 +15,12 @@ export default function CulturePipelineTimeline({ data, onChange }) {
 
     // État mode pipeline
     const [pipelineMode, setPipelineMode] = useState(
-        data.cultureTimelineConfig?.mode || 'custom'
+        data.cultureTimelineConfig?.mode || 'phases'
     )
 
     // Configuration Timeline
     const timelineConfig = data.cultureTimelineConfig || {
-        mode: 'custom', // 'phases' ou 'custom'
+        mode: 'phases', // 'phases' ou 'custom'
         type: 'jour', // seconde | heure | jour | date | semaine | phase
         start: '',
         end: '',
@@ -422,19 +422,6 @@ export default function CulturePipelineTimeline({ data, onChange }) {
 
     return (
         <div className="space-y-6">
-            <div className="p-4 dark: border dark: rounded-xl">
-                <h3 className="font-bold dark: mb-2 flex items-center gap-2">
-                    <span>🌱</span> Pipeline de culture : Timeline interactive
-                </h3>
-                <p className="text-sm dark:">
-                    📝 Glissez les contenus depuis le panneau latéral vers les cases de la timeline.
-                    <br />
-                    🎯 <strong>Drag & drop</strong> : Sélectionnez un contenu à gauche et déposez-le sur une case.
-                    <br />
-                    📊 <strong>Édition</strong> : Cliquez sur une case pour modifier ses données.
-                </p>
-            </div>
-
             <PipelineDragDropView
                 type="culture"
                 sidebarContent={sidebarContent}

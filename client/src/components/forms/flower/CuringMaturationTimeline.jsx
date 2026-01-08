@@ -15,12 +15,12 @@ export default function CuringMaturationTimeline({ data, onChange }) {
 
     // État mode pipeline (phases vs personnalisé)
     const [pipelineMode, setPipelineMode] = useState(
-        data.curingTimelineConfig?.mode || 'custom'
+        data.curingTimelineConfig?.mode || 'phases'
     )
 
     // Configuration Timeline pour curing
     const curingTimelineConfig = data.curingTimelineConfig || {
-        mode: 'custom', // 'phases' ou 'custom'
+        mode: 'phases', // 'phases' ou 'custom'
         type: 'jour', // seconde | heure | jour | date | semaine | phase
         start: '',
         end: '',
@@ -206,19 +206,6 @@ export default function CuringMaturationTimeline({ data, onChange }) {
 
     return (
         <div className="space-y-6">
-            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
-                <h3 className="font-bold text-amber-900 dark:text-amber-100 mb-2 flex items-center gap-2">
-                    <span>🔥</span> Pipeline de curing : Timeline interactive
-                </h3>
-                <p className="text-sm text-amber-800 dark:text-amber-200">
-                    📝 Glissez les contenus depuis le panneau latéral vers les cases de la timeline.
-                    <br />
-                    🎯 <strong>Drag & drop</strong> : Sélectionnez un contenu à gauche et déposez-le sur une case.
-                    <br />
-                    📊 <strong>Édition</strong> : Cliquez sur une case pour modifier ses données.
-                </p>
-            </div>
-
             <PipelineDragDropView
                 type="curing"
                 sidebarContent={sidebarContent}

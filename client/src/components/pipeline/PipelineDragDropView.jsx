@@ -922,31 +922,65 @@ const PipelineDragDropView = ({
     const [cellContextMenu, setCellContextMenu] = useState(null); // { position, timestamp, selectedCells }
     const [copiedCellData, setCopiedCellData] = useState(null); // Pour copier/coller
 
-    // Action history for undo (simple stack)
+    // Action history for undo/redo (stack with pointer)
     const [actionsHistory, setActionsHistory] = useState([]);
+    const [historyPointer, setHistoryPointer] = useState(-1); // -1 = vide, 0+ = index dans l'historique
 
     const pushAction = (action) => {
         setActionsHistory(prev => {
-            const next = [...prev, action];
+            const next = [...prev.slice(0, historyPointer + 1), action];
             // limit history length
-            if (next.length > 50) next.shift();
+            if (next.length > 100) next.shift();
             return next;
+        });
+        setHistoryPointer(prev => {
+            const newPointer = Math.min(prev + 1, 99);
+            return newPointer;
         });
     };
 
     const undoLastAction = () => {
-        setActionsHistory(prev => {
-            if (!prev || prev.length === 0) return prev;
-            const last = prev[prev.length - 1];
-            // apply reverse changes
-            if (last && last.changes) {
-                last.changes.forEach(ch => {
-                    // previousValue may be undefined -> clear
-                    onDataChange(ch.timestamp, ch.field, ch.previousValue === undefined ? null : ch.previousValue);
-                });
-            }
-            return prev.slice(0, -1);
-        });
+        if (historyPointer < 0) return;
+        const action = actionsHistory[historyPointer];
+        if (action && action.changes) {
+            action.changes.forEach(ch => {
+                onDataChange(ch.timestamp, ch.field, ch.previousValue === undefined ? null : ch.previousValue);
+            });
+        }
+        setHistoryPointer(prev => Math.max(prev - 1, -1));
+    };
+
+    const redoLastAction = () => {
+        if (historyPointer >= actionsHistory.length - 1) return;
+        const nextPointer = historyPointer + 1;
+        const action = actionsHistory[nextPointer];
+        if (action && action.changes) {
+            action.changes.forEach(ch => {
+                // Pour redo, on doit retrouver la "nouvelle valeur" (celle après la modification)
+                // On cherche la prochaine action qui modifie le même champ
+                let newValue = null;
+                for (let i = nextPointer; i < actionsHistory.length; i++) {
+                    const futureAction = actionsHistory[i];
+                    for (const futureChange of futureAction.changes || []) {
+                        if (futureChange.timestamp === ch.timestamp && futureChange.field === ch.field) {
+                            newValue = futureChange.previousValue;
+                            break;
+                        }
+                    }
+                }
+                // Sinon on reconstruit à partir des données actuelles
+                const currentData = getCellData(ch.timestamp) || {};
+                const storedNewValue = action._newValues?.[`${ch.timestamp}:${ch.field}`];
+                onDataChange(ch.timestamp, ch.field, storedNewValue !== undefined ? storedNewValue : currentData[ch.field]);
+            });
+        }
+        setHistoryPointer(prev => Math.min(prev + 1, actionsHistory.length - 1));
+    };
+
+    // Stocker les nouvelles valeurs dans chaque action pour le redo
+    const pushActionWithNewValues = (action, newValuesMap) => {
+        const enrichedAction = { ...action, _newValues: newValuesMap };
+        pushAction(enrichedAction);
     };
 
     const [confirmState, setConfirmState] = useState({ open: false, title: '', message: '', onConfirm: null });
