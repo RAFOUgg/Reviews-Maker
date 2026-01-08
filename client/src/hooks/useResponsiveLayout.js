@@ -13,9 +13,9 @@ import { useState, useEffect } from 'react';
 export const useResponsiveLayout = () => {
     const [screenSize, setScreenSize] = useState({
         width: typeof window !== 'undefined' ? window.innerWidth : 1024,
-        isMobile: typeof window !== 'undefined' ? window.innerWidth < 640,
-        isTablet: typeof window !== 'undefined' ? (window.innerWidth >= 640 && window.innerWidth < 1024),
-        isDesktop: typeof window !== 'undefined' ? window.innerWidth >= 1024,
+        isMobile: typeof window !== 'undefined' ? window.innerWidth < 640 : false,
+        isTablet: typeof window !== 'undefined' ? (window.innerWidth >= 640 && window.innerWidth < 1024) : false,
+        isDesktop: typeof window !== 'undefined' ? window.innerWidth >= 1024 : false,
     });
 
     useEffect(() => {
