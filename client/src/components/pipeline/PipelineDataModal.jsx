@@ -1038,225 +1038,95 @@ const PipelineDataModal = ({
 
                         {/* Contenu - TAB PRÉRÉGLAGES */}
                         {activeTab === 'presets' && (
-                            <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-180px)]">
-                                {/* Groupes de préréglages depuis sidebarcontent (multi-champs) */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">📦 Groupes de données</h3>
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    // Créer un groupe depuis les données actuelles de la cellule
-                                                    const filled = {};
-                                                    Object.entries(formData).forEach(([k, v]) => {
-                                                        if (v !== undefined && v !== null && v !== '') filled[k] = v;
-                                                    });
-                                                    setCreateGroupedPrefill({ fields: filled, name: '' });
-                                                    setShowCreateGroupedModal(true);
-                                                }}
-                                                className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded flex items-center gap-1"
-                                            >
-                                                💾 Sauvegarder
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Affichage des groupes préréglage depuis sidebar */}
-                                    {(!groupedPresets || groupedPresets.length === 0) && (!presets.grouped || presets.grouped.length === 0) ? (
-                                        <div className="text-center py-8 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                            <p className="text-sm font-medium">📦 Aucun groupe préréglage</p>
-                                            <p className="text-xs mt-1">Créez un groupe depuis cette cellule ou drag-drop depuis le sidebar</p>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-2">
-                                            {/* Groupes préréglage sauvegardés (serveur/localStorage) */}
-                                            {presets.grouped && presets.grouped.length > 0 && (
-                                                presets.grouped.map((group) => {
-                                                    const fieldCount = group.data?.selectedFields?.length || Object.keys(group.data?.fields || {}).length || 0;
-                                                    const preview = group.data?.selectedFields
-                                                        ? group.data.selectedFields.slice(0, 2).join(', ')
-                                                        : Object.keys(group.data?.fields || {}).slice(0, 2).join(', ');
-
-                                                    return (
-                                                        <div key={group.id} className="p-3 rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-900/20 hover:shadow-md transition-all">
-                                                            <div className="flex items-center justify-between gap-3">
-                                                                <div className="flex-1">
-                                                                    <p className="font-medium text-sm text-gray-900 dark:text-white">{group.name}</p>
-                                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{fieldCount} champ(s): {preview}...</p>
-                                                                </div>
-                                                                <button
-                                                                    type="button"
-                                                                    className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs transition-colors"
-                                                                    onClick={() => {
-                                                                        const fields = {};
-                                                                        Object.entries(group.data?.fields || {}).forEach(([k, v]) => {
-                                                                            fields[k] = v;
-                                                                        });
-                                                                        applyPresetFields(fields);
-                                                                    }}
-                                                                >
-                                                                    Charger
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })
-                                            )}
-
-                                            {/* Groupes locaux (groupedPresets prop) */}
-                                            {groupedPresets && groupedPresets.length > 0 && (
-                                                groupedPresets.map((group) => {
-                                                    const preview = (group.fields || []).map(f => `${f.key}: ${f.value}`).slice(0, 2).join(', ');
-                                                    return (
-                                                        <div key={group.name} className="p-3 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/40 dark:bg-blue-900/20 hover:shadow-md transition-all">
-                                                            <div className="flex items-center justify-between gap-3">
-                                                                <div className="flex-1">
-                                                                    <p className="font-medium text-sm text-gray-900 dark:text-white">{group.name}</p>
-                                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{group.fields?.length || 0} champ(s): {preview}...</p>
-                                                                </div>
-                                                                <button
-                                                                    type="button"
-                                                                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-colors"
-                                                                    onClick={() => {
-                                                                        const merged = {};
-                                                                        (group.fields || []).forEach(f => {
-                                                                            const key = f.key || f.id;
-                                                                            if (key) merged[key] = f.value;
-                                                                        });
-                                                                        applyPresetFields(merged);
-                                                                    }}
-                                                                >
-                                                                    Charger
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {/* Info drag-drop */}
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 border-l-2 border-blue-400 pl-3 py-2">
-                                        💡 Vous pouvez aussi drag-drop des groupes directement depuis le panneau latéral dans la zone données
-                                    </p>
+                            <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-180px)]">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">📦 Groupes de préréglages</h3>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setCreateGroupedPrefill(null);
+                                            setShowCreateGroupedModal(true);
+                                        }}
+                                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded flex items-center gap-1 font-medium transition-colors"
+                                    >
+                                        ➕ Nouveau
+                                    </button>
                                 </div>
 
-                                {/* Suggestions depuis le sidebarcontent groupé */}
-                                <div className="space-y-3">
-                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">🎯 Suggestions rapides</h3>
-                                    {(!preConfiguredItems || Object.keys(preConfiguredItems).length === 0) ? (
-                                        <div className="text-center py-6 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
-                                            <p className="text-sm">Aucune suggestion</p>
-                                            <p className="text-xs mt-1">Les données fréquemment utilisées apparaîtront ici</p>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-2">
-                                            {Object.entries(preConfiguredItems).map(([key, value]) => {
-                                                const def = findSidebarFieldByKey(key);
+                                {/* Affichage des groupes préréglage */}
+                                {(!groupedPresets || groupedPresets.length === 0) && (!presets.grouped || presets.grouped.length === 0) ? (
+                                    <div className="text-center py-12 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                                        <p className="text-base font-medium">📦 Aucun groupe préréglage</p>
+                                        <p className="text-xs mt-2">Créez un groupe de préréglages pour réutiliser rapidement des configurations</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {/* Groupes préréglage sauvegardés (serveur/localStorage) */}
+                                        {presets.grouped && presets.grouped.length > 0 && (
+                                            presets.grouped.map((group) => {
+                                                const fieldCount = group.data?.selectedFields?.length || Object.keys(group.data?.fields || {}).length || 0;
+                                                const preview = group.data?.selectedFields
+                                                    ? group.data.selectedFields.slice(0, 3).join(', ')
+                                                    : Object.keys(group.data?.fields || {}).slice(0, 3).join(', ');
+
                                                 return (
-                                                    <div key={key} className="p-3 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-900/20 hover:shadow-md transition-all flex items-center justify-between gap-3">
-                                                        <div className="flex-1">
-                                                            <p className="font-medium text-sm text-gray-900 dark:text-white flex items-center gap-1">
-                                                                {def?.icon && <span>{def.icon}</span>}
-                                                                {def?.label || key}
-                                                            </p>
-                                                            <p className="text-xs text-gray-500 dark:text-gray-400">{String(value)}</p>
+                                                    <div key={group.id} className="p-3 rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-900/20 hover:shadow-md transition-all">
+                                                        <div className="flex items-center justify-between gap-3">
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="font-medium text-sm text-gray-900 dark:text-white">{group.name}</p>
+                                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{fieldCount} champ(s): {preview}</p>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs transition-colors whitespace-nowrap flex-shrink-0"
+                                                                onClick={() => {
+                                                                    const fields = {};
+                                                                    Object.entries(group.data?.fields || {}).forEach(([k, v]) => {
+                                                                        fields[k] = v;
+                                                                    });
+                                                                    applyPresetFields(fields);
+                                                                }}
+                                                            >
+                                                                Charger
+                                                            </button>
                                                         </div>
-                                                        <button
-                                                            type="button"
-                                                            className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs transition-colors"
-                                                            onClick={() => applyPresetFields({ [key]: value })}
-                                                        >
-                                                            Appliquer
-                                                        </button>
                                                     </div>
                                                 );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
+                                            })
+                                        )}
 
-                                {/* Préréglages spécifiques au champ en cours */}
-                                <div className="space-y-3">
-                                    <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                                        <h3 className="text-sm font-semibold text-green-800 dark:text-green-300 mb-3 flex items-center gap-2">
-                                            <BookmarkPlus className="w-4 h-4" />
-                                            Sauvegarder un préréglage de champ
-                                        </h3>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={newPresetName}
-                                                onChange={(e) => setNewPresetName(e.target.value)}
-                                                placeholder="Nom du préréglage"
-                                                className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
-                                            />
-                                            <button
-                                                onClick={handleSavePreset}
-                                                disabled={!droppedItem}
-                                                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 text-white rounded-lg text-sm flex items-center gap-2"
-                                            >
-                                                <Save className="w-4 h-4" />
-                                                Enregistrer
-                                            </button>
-                                        </div>
-                                        <p className="text-xs text-green-700 dark:text-green-400 mt-2">
-                                            {droppedItem ? 'Saisissez une valeur dans les données pour ce champ puis enregistrez.' : 'Déposez un champ pour activer les préréglages individuels.'}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Préréglages disponibles</h3>
-                                        {!droppedItem || !presets.field || presets.field.length === 0 ? (
-                                            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                                                <Bookmark className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                                                <p className="text-sm">Aucun préréglage sauvegardé</p>
-                                                <p className="text-xs mt-1">Glissez un champ pour ajouter des préréglages ciblés.</p>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-2">
-                                                {presets.field
-                                                    .filter(preset => droppedItem && preset.data && preset.data.fieldKey === (droppedItem.content.id || droppedItem.content.key || droppedItem.content.type))
-                                                    .map(preset => (
-                                                        <div
-                                                            key={preset.id}
-                                                            className="p-3 bg-white/5 dark:bg-gray-800 border border-white/5 rounded-lg transition-colors"
-                                                        >
-                                                            <div className="flex items-center justify-between">
-                                                                <div className="flex-1">
-                                                                    <p className="font-medium text-sm text-gray-200">
-                                                                        {preset.name}
-                                                                    </p>
-                                                                    <p className="text-xs text-gray-400 mt-1">
-                                                                        {preset.data.fieldLabel}: <strong>{String(preset.data.value)}</strong>
-                                                                    </p>
-                                                                </div>
-                                                                <div className="flex items-center gap-2">
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            handleLoadPreset(preset);
-                                                                            applyPresetFields({ [preset.data.fieldKey]: preset.data.value });
-                                                                        }}
-                                                                        className="liquid-btn liquid-btn--primary text-xs"
-                                                                    >
-                                                                        Charger
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => handleDeletePreset(preset.id)}
-                                                                        className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
-                                                                    >
-                                                                        <X className="w-3 h-4" />
-                                                                    </button>
-                                                                </div>
+                                        {/* Groupes locaux (groupedPresets prop) */}
+                                        {groupedPresets && groupedPresets.length > 0 && (
+                                            groupedPresets.map((group) => {
+                                                const preview = (group.fields || []).slice(0, 3).map(f => f.key).join(', ');
+                                                return (
+                                                    <div key={group.name} className="p-3 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/40 dark:bg-blue-900/20 hover:shadow-md transition-all">
+                                                        <div className="flex items-center justify-between gap-3">
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="font-medium text-sm text-gray-900 dark:text-white">{group.name}</p>
+                                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{group.fields?.length || 0} champ(s): {preview}</p>
                                                             </div>
+                                                            <button
+                                                                type="button"
+                                                                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-colors whitespace-nowrap flex-shrink-0"
+                                                                onClick={() => {
+                                                                    const merged = {};
+                                                                    (group.fields || []).forEach(f => {
+                                                                        const key = f.key || f.id;
+                                                                        if (key) merged[key] = f.value;
+                                                                    });
+                                                                    applyPresetFields(merged);
+                                                                }}
+                                                            >
+                                                                Charger
+                                                            </button>
                                                         </div>
-                                                    ))}
-                                            </div>
+                                                    </div>
+                                                );
+                                            })
                                         )}
                                     </div>
-                                </div>
+                                )}
                             </div>
                         )}
 
