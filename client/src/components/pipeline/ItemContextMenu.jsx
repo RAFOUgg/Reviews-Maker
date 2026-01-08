@@ -236,6 +236,14 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
                             {renderInput()}
                         </div>
 
+                        {/* Bouton Assigner à la sélection - action rapide */}
+                        <button onClick={() => { if (hasValue) onAssignNow?.(itemKey, value); onClose(); }} disabled={!hasValue} className={`${btnCls} w-full ${hasValue ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'}`}>
+                            <Zap className="w-3.5 h-3.5" />
+                            Assigner à la sélection
+                        </button>
+
+                        <div className="h-px bg-gray-200 dark:bg-gray-700" />
+
                         {/* Assigner à une plage */}
                         <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-2">
                             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
