@@ -43,7 +43,7 @@ const MobilePipelineView = ({
     const CELLS_PER_PAGE = 20;
     const totalCells = cellIndices.length;
     const totalPages = Math.ceil(totalCells / CELLS_PER_PAGE);
-    
+
     const visibleCells = useMemo(() => {
         const start = currentPage * CELLS_PER_PAGE;
         const end = start + CELLS_PER_PAGE;
@@ -110,7 +110,7 @@ const MobilePipelineView = ({
     // Mini-icônes résumées
     const getMiniIcons = (cellData) => {
         if (!cellData) return [];
-        
+
         const iconMap = {
             temperature: '🌡️',
             humidity: '💧',
@@ -209,9 +209,8 @@ const MobilePipelineView = ({
                                     key={index}
                                     onClick={() => handleCellClick(index)}
                                     disabled={readonly}
-                                    className={`${getIntensityColor(intensity)} relative group flex-shrink-0 ${
-                                        isSelected ? 'ring-2 ring-purple-500 scale-105' : ''
-                                    }`}
+                                    className={`${getIntensityColor(intensity)} relative group flex-shrink-0 ${isSelected ? 'ring-2 ring-purple-500 scale-105' : ''
+                                        }`}
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                 >
