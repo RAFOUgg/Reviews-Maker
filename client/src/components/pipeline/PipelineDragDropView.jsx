@@ -44,101 +44,70 @@ function CellContextMenu({
     const [showFieldList, setShowFieldList] = useState(false);
     const [selectedFieldsToDelete, setSelectedFieldsToDelete] = useState([]);
     const menuRef = useRef(null);
+    const [isVisible, setIsVisible] = useState(false);
 
-    // Fermer au clic extérieur
+    // Fermer au clic extérieur ou Escape
     useEffect(() => {
         if (!isOpen) return;
-
         const handleClickOutside = (e) => {
-            if (menuRef.current && !menuRef.current.contains(e.target)) {
-                onClose();
-            }
+            if (menuRef.current && !menuRef.current.contains(e.target)) onClose();
         };
-
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') onClose();
+        };
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
+        };
     }, [isOpen, onClose]);
 
     // Reset au changement de cellule
     useEffect(() => {
         setShowFieldList(false);
         setSelectedFieldsToDelete([]);
+        setIsVisible(false);
     }, [cellTimestamp, isOpen]);
 
-    // Style du menu - GARANTIR 100% visible
-    const [menuStyle, setMenuStyle] = useState({
-        left: '50%',
-        top: '50%',
-        transform: 'translate(-50%, -50%)',
-        maxHeight: 'calc(100vh - 24px)',
-        opacity: 0
-    });
-
+    // Positionnement intelligent - TOUJOURS dans le viewport
     useLayoutEffect(() => {
         if (!isOpen || !menuRef.current) return;
 
-        // Double RAF pour s'assurer que le DOM est bien rendu
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                const menu = menuRef.current;
-                if (!menu) return;
+        const positionMenu = () => {
+            const menu = menuRef.current;
+            if (!menu) return;
 
-                const menuRect = menu.getBoundingClientRect();
-                const margin = 12;
-                const viewportWidth = window.innerWidth;
-                const viewportHeight = window.innerHeight;
+            const rect = menu.getBoundingClientRect();
+            const m = 8;
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const maxW = Math.min(240, vw - m * 2);
+            const maxH = vh - m * 2;
 
-                // Dimensions du menu
-                const maxMenuWidth = Math.min(280, viewportWidth - margin * 2);
-                const menuWidth = Math.min(menuRect.width, maxMenuWidth);
-                const menuHeight = menuRect.height;
+            let x = position.x;
+            let y = position.y;
 
-                // Hauteur maximale disponible
-                const maxAvailableHeight = viewportHeight - margin * 2;
+            // Contraintes strictes
+            x = Math.max(m, Math.min(x, vw - Math.min(rect.width, maxW) - m));
 
-                // Position de départ (point de clic)
-                let targetX = position.x;
-                let targetY = position.y;
-
-                // === CALCUL POSITION FINALE ===
-                let finalX = targetX;
-                let finalY = targetY;
-
-                // Contrainte horizontale STRICTE
-                if (finalX + menuWidth > viewportWidth - margin) {
-                    finalX = viewportWidth - menuWidth - margin;
+            if (y + Math.min(rect.height, maxH) > vh - m) {
+                if (y - rect.height - 8 > m) {
+                    y = y - rect.height - 8;
+                } else {
+                    y = vh - Math.min(rect.height, maxH) - m;
                 }
-                if (finalX < margin) {
-                    finalX = margin;
-                }
+            }
+            y = Math.max(m, y);
 
-                // Contrainte verticale STRICTE
-                const effectiveMenuHeight = Math.min(menuHeight, maxAvailableHeight);
+            menu.style.left = `${Math.round(x)}px`;
+            menu.style.top = `${Math.round(y)}px`;
+            menu.style.maxWidth = `${maxW}px`;
+            menu.style.maxHeight = `${maxH}px`;
+            setIsVisible(true);
+        };
 
-                if (finalY + effectiveMenuHeight > viewportHeight - margin) {
-                    // Essayer au-dessus du curseur
-                    if (targetY - effectiveMenuHeight - 8 >= margin) {
-                        finalY = targetY - effectiveMenuHeight - 8;
-                    } else {
-                        // Forcer en bas de l'écran
-                        finalY = viewportHeight - effectiveMenuHeight - margin;
-                    }
-                }
-
-                if (finalY < margin) {
-                    finalY = margin;
-                }
-
-                // Appliquer le style final
-                setMenuStyle({
-                    left: `${Math.round(finalX)}px`,
-                    top: `${Math.round(finalY)}px`,
-                    transform: 'none',
-                    maxHeight: `${maxAvailableHeight}px`,
-                    opacity: 1
-                });
-            });
-        });
+        requestAnimationFrame(() => requestAnimationFrame(positionMenu));
     }, [isOpen, position, showFieldList]);
 
     if (!isOpen) return null;
@@ -151,21 +120,12 @@ function CellContextMenu({
         !['timestamp', 'label', 'date', 'phase', 'week', 'day', 'hours', 'seconds', '_meta'].includes(k)
     ) : [];
 
-    // Trouver la définition complète d'un champ depuis sidebarContent
-    const getFieldDefinition = (fieldKey) => {
-        for (const section of (sidebarContent || [])) {
-            const item = (section.items || []).find(i =>
-                i.id === fieldKey || i.key === fieldKey || i.type === fieldKey
-            );
-            if (item) return { ...item, sectionLabel: section.label };
-        }
-        return null;
-    };
-
-    // Trouver le label d'un champ depuis sidebarContent
+    // Trouver le label d'un champ
     const getFieldLabel = (fieldKey) => {
-        const def = getFieldDefinition(fieldKey);
-        if (def) return `${def.icon || '📌'} ${def.label}`;
+        for (const section of (sidebarContent || [])) {
+            const item = (section.items || []).find(i => i.id === fieldKey || i.key === fieldKey);
+            if (item) return `${item.icon || '📌'} ${item.label}`;
+        }
         return `📌 ${fieldKey}`;
     };
 
@@ -175,76 +135,34 @@ function CellContextMenu({
         onClose();
     };
 
-    const toggleFieldSelection = (field) => {
-        setSelectedFieldsToDelete(prev =>
-            prev.includes(field)
-                ? prev.filter(f => f !== field)
-                : [...prev, field]
-        );
-    };
-
     return (
         <div
             ref={menuRef}
-            className="fixed z-[200] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden transition-opacity duration-150"
-            style={{
-                ...menuStyle,
-                width: 'min(280px, calc(100vw - 24px))',
-                overflowY: 'auto'
-            }}
+            className="fixed z-[200] bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+            style={{ opacity: isVisible ? 1 : 0, transition: 'opacity 0.1s', width: 'max-content', minWidth: '180px' }}
         >
-            {/* Header */}
-            <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                <div className="text-xs font-semibold text-gray-600 dark:text-gray-400">
-                    {isBulk ? `${targetCount} cellules sélectionnées` : 'Menu cellule'}
+            {/* Header compact */}
+            <div className="px-2.5 py-1.5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                <div className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                    {isBulk ? `${targetCount} cellules` : 'Cellule'}
                 </div>
             </div>
 
-            {/* Mode normal: liste des actions */}
+            {/* Mode normal */}
             {!showFieldList && (
                 <div className="py-1">
-                    {/* Copier */}
-                    <button
-                        onClick={() => { onCopy(); onClose(); }}
-                        disabled={dataFields.length === 0}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
-                    >
-                        <span className="text-base">📋</span>
-                        <span>Copier les données</span>
+                    <button onClick={() => { onCopy(); onClose(); }} disabled={dataFields.length === 0} className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 flex items-center gap-2">
+                        <span>📋</span><span>Copier</span>
                     </button>
-
-                    {/* Coller */}
-                    <button
-                        onClick={() => { onPaste(); onClose(); }}
-                        disabled={!hasCopiedData}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
-                    >
-                        <span className="text-base">📄</span>
-                        <span>Coller</span>
+                    <button onClick={() => { onPaste(); onClose(); }} disabled={!hasCopiedData} className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 flex items-center gap-2">
+                        <span>📄</span><span>Coller</span>
                     </button>
-
                     <div className="h-px bg-gray-200 dark:bg-gray-700 my-1" />
-
-                    {/* Effacer des champs spécifiques */}
-                    <button
-                        onClick={() => setShowFieldList(true)}
-                        disabled={dataFields.length === 0}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
-                    >
-                        <span className="text-base">🗑️</span>
-                        <span>Effacer des champs...</span>
-                        <span className="ml-auto text-xs text-gray-500">{dataFields.length}</span>
+                    <button onClick={() => setShowFieldList(true)} disabled={dataFields.length === 0} className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 flex items-center gap-2">
+                        <span>🗑️</span><span>Effacer champs...</span><span className="ml-auto text-gray-400">{dataFields.length}</span>
                     </button>
-
-                    {/* Effacer tout */}
-                    <button
-                        onClick={() => { onDeleteAll(); onClose(); }}
-                        disabled={dataFields.length === 0}
-                        className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 font-medium"
-                    >
-                        <span className="text-base">🗑️</span>
-                        <span>Tout effacer</span>
-                        {isBulk && <span className="ml-auto text-xs">({targetCount})</span>}
+                    <button onClick={() => { onDeleteAll(); onClose(); }} disabled={dataFields.length === 0} className="w-full px-3 py-1.5 text-left text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 flex items-center gap-2 font-medium">
+                        <span>🗑️</span><span>Tout effacer</span>
                     </button>
                 </div>
             )}
@@ -252,118 +170,28 @@ function CellContextMenu({
             {/* Mode sélection de champs */}
             {showFieldList && (
                 <div className="py-1">
-                    {/* Header sélection */}
-                    <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                        <button
-                            onClick={() => setShowFieldList(false)}
-                            className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1"
-                        >
-                            <span>←</span> Retour
+                    <div className="px-2.5 py-1.5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                        <button onClick={() => setShowFieldList(false)} className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 flex items-center gap-1">
+                            ← Retour
                         </button>
-                        <span className="text-xs text-gray-500">
-                            {selectedFieldsToDelete.length} / {dataFields.length}
-                        </span>
+                        <span className="text-xs text-gray-500">{selectedFieldsToDelete.length}/{dataFields.length}</span>
                     </div>
-
-                    {/* Liste des champs avec valeurs et types */}
-                    <div className="max-h-[400px] overflow-y-auto">
+                    <div className="max-h-40 overflow-y-auto">
                         {dataFields.map(field => {
-                            const fieldDef = getFieldDefinition(field);
-                            const currentValue = cellData[field];
                             const isSelected = selectedFieldsToDelete.includes(field);
-
                             return (
-                                <div
-                                    key={field}
-                                    className={`px-4 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${isSelected ? 'bg-red-50 dark:bg-red-900/10' : ''
-                                        }`}
-                                >
-                                    {/* Header avec checkbox */}
-                                    <label className="flex items-start gap-3 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={isSelected}
-                                            onChange={() => toggleFieldSelection(field)}
-                                            className="mt-0.5 w-4 h-4 accent-red-600"
-                                        />
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                                    {getFieldLabel(field)}
-                                                </span>
-                                                {fieldDef?.sectionLabel && (
-                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
-                                                        {fieldDef.sectionLabel}
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            {/* Affichage de la valeur actuelle selon le type */}
-                                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                                {fieldDef?.type === 'select' && fieldDef?.options ? (
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="text-purple-600 dark:text-purple-400 font-medium">
-                                                            {currentValue || '(non défini)'}
-                                                        </span>
-                                                        {fieldDef.unit && <span className="text-gray-500">{fieldDef.unit}</span>}
-                                                    </div>
-                                                ) : fieldDef?.type === 'multiselect' ? (
-                                                    <div className="flex flex-wrap gap-1">
-                                                        {Array.isArray(currentValue) && currentValue.length > 0 ? (
-                                                            currentValue.map((v, i) => (
-                                                                <span key={i} className="inline-block px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-[10px]">
-                                                                    {v}
-                                                                </span>
-                                                            ))
-                                                        ) : (
-                                                            <span className="text-gray-400">(aucune sélection)</span>
-                                                        )}
-                                                    </div>
-                                                ) : fieldDef?.type === 'number' ? (
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="font-mono text-blue-600 dark:text-blue-400 font-medium">
-                                                            {currentValue ?? '—'}
-                                                        </span>
-                                                        {fieldDef.unit && <span className="text-gray-500">{fieldDef.unit}</span>}
-                                                    </div>
-                                                ) : fieldDef?.type === 'slider' ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                                            <div
-                                                                className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
-                                                                style={{ width: `${((currentValue || 0) / (fieldDef.max || 10)) * 100}%` }}
-                                                            />
-                                                        </div>
-                                                        <span className="font-mono text-xs text-purple-600 dark:text-purple-400 font-medium">
-                                                            {currentValue || 0}/{fieldDef.max || 10}
-                                                        </span>
-                                                    </div>
-                                                ) : (
-                                                    <div className="text-gray-700 dark:text-gray-300 truncate">
-                                                        {currentValue || '(vide)'}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </label>
-                                </div>
+                                <label key={field} className={`flex items-center gap-2 px-2.5 py-1.5 text-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 ${isSelected ? 'bg-red-50 dark:bg-red-900/10' : ''}`}>
+                                    <input type="checkbox" checked={isSelected} onChange={() => setSelectedFieldsToDelete(prev => prev.includes(field) ? prev.filter(f => f !== field) : [...prev, field])} className="w-3 h-3 accent-red-600" />
+                                    <span className="truncate">{getFieldLabel(field)}</span>
+                                </label>
                             );
                         })}
                     </div>
-
-                    {/* Actions */}
-                    <div className="border-t border-gray-200 dark:border-gray-700 p-2 flex gap-2">
-                        <button
-                            onClick={() => setShowFieldList(false)}
-                            className="flex-1 px-3 py-1.5 text-sm bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg"
-                        >
+                    <div className="border-t border-gray-200 dark:border-gray-700 p-1.5 flex gap-1.5">
+                        <button onClick={() => setShowFieldList(false)} className="flex-1 px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded">
                             Annuler
                         </button>
-                        <button
-                            onClick={handleDeleteSelectedFields}
-                            disabled={selectedFieldsToDelete.length === 0}
-                            className="flex-1 px-3 py-1.5 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                        >
+                        <button onClick={handleDeleteSelectedFields} disabled={selectedFieldsToDelete.length === 0} className="flex-1 px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded disabled:opacity-50 font-medium">
                             Effacer ({selectedFieldsToDelete.length})
                         </button>
                     </div>
@@ -372,6 +200,7 @@ function CellContextMenu({
         </div>
     );
 }
+
 
 // Grouped preset modal - COMPLETE with proper field types, edit mode, emoji
 function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sidebarContent, type }) {

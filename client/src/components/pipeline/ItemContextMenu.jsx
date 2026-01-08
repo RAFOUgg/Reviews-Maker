@@ -1,180 +1,134 @@
 /**
- * ItemContextMenu - Menu contextuel clic droit sur items panneau pipeline
- * 
- * Fonctionnalités:
- * - Clic droit sur item → Menu "Pré-configurer"
- * - Mini formulaire saisie valeur ADAPTÉ AU TYPE DE DONNÉE
- * - Sauvegarde valeur pré-configurée
- * - Badge visuel sur items configurés
- * - Drag & drop item configuré → assignment direct
- * 
- * Types supportés:
- * - select: Liste déroulante
- * - multiselect: Checkboxes multiples
- * - number/slider/stepper: Input numérique avec min/max
- * - date: Sélecteur de date
- * - checkbox: Case à cocher
- * - dimensions: Champs L×l×H
- * - text: Input texte (défaut)
+ * ItemContextMenu - Menu contextuel compact et responsive
+ * Toujours 100% visible dans le viewport, adapté au type de donnée
  */
 
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { Settings, X, Check, Plus, Minus } from 'lucide-react';
+import { X, Check, Plus, Minus } from 'lucide-react';
 
 const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isConfigured, cells = [], onAssignNow, onAssignFromSource, onAssignRange, onAssignAll }) => {
     const [value, setValue] = useState(item.defaultValue || '');
-    const [selectedSource, setSelectedSource] = useState('');
+    const [rangeStart, setRangeStart] = useState('');
+    const [rangeEnd, setRangeEnd] = useState('');
     const menuRef = useRef(null);
-    const [menuStyle, setMenuStyle] = useState({
-        left: '50%',
-        top: '50%',
-        transform: 'translate(-50%, -50%)',
-        maxHeight: 'calc(100vh - 24px)',
-        opacity: 0
-    });
+    const [isVisible, setIsVisible] = useState(false);
 
+    // Fermer au clic extérieur ou Escape
     useEffect(() => {
-        // Fermer au clic extérieur
         const handleClickOutside = (e) => {
-            if (menuRef.current && !menuRef.current.contains(e.target)) {
-                onClose();
-            }
+            if (menuRef.current && !menuRef.current.contains(e.target)) onClose();
         };
-
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') onClose();
+        };
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
+        };
     }, [onClose]);
 
-    // Positionner le menu - GARANTIR 100% visible
+    // Positionnement intelligent - TOUJOURS dans le viewport
     useLayoutEffect(() => {
         const el = menuRef.current;
         if (!el) return;
 
-        // Double RAF pour s'assurer que le DOM est bien rendu
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                const menuRect = el.getBoundingClientRect();
-                const margin = 12;
-                const viewportWidth = window.innerWidth;
-                const viewportHeight = window.innerHeight;
+        const positionMenu = () => {
+            const rect = el.getBoundingClientRect();
+            const m = 8; // marge
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const maxW = Math.min(300, vw - m * 2);
+            const maxH = vh - m * 2;
 
-                // Largeur du menu (max 360px ou viewport - marges)
-                const maxMenuWidth = Math.min(360, viewportWidth - margin * 2);
-                const menuWidth = Math.min(menuRect.width, maxMenuWidth);
-                const menuHeight = menuRect.height;
+            let x = position?.x ?? vw / 2;
+            let y = position?.y ?? vh / 2;
+            if (anchorRect) {
+                x = anchorRect.left + anchorRect.width / 2;
+                y = anchorRect.bottom + 4;
+            }
 
-                // Hauteur maximale disponible
-                const maxAvailableHeight = viewportHeight - margin * 2;
+            // Centrer horizontalement
+            x = x - Math.min(rect.width, maxW) / 2;
+            // Contraintes strictes
+            x = Math.max(m, Math.min(x, vw - Math.min(rect.width, maxW) - m));
 
-                // Position de départ (clic ou centre de l'ancre)
-                let targetX = position?.x ?? viewportWidth / 2;
-                let targetY = position?.y ?? viewportHeight / 2;
-
-                if (anchorRect) {
-                    targetX = anchorRect.left + anchorRect.width / 2;
-                    targetY = anchorRect.bottom + 8;
+            // Vertical
+            if (y + Math.min(rect.height, maxH) > vh - m) {
+                if (anchorRect && anchorRect.top - rect.height - 4 > m) {
+                    y = anchorRect.top - rect.height - 4;
+                } else {
+                    y = vh - Math.min(rect.height, maxH) - m;
                 }
+            }
+            y = Math.max(m, y);
 
-                // === CALCUL POSITION FINALE ===
-                let finalX = targetX - menuWidth / 2;
-                let finalY = targetY;
+            el.style.left = `${Math.round(x)}px`;
+            el.style.top = `${Math.round(y)}px`;
+            el.style.maxWidth = `${maxW}px`;
+            el.style.maxHeight = `${maxH}px`;
+            setIsVisible(true);
+        };
 
-                // Contrainte horizontale STRICTE
-                if (finalX + menuWidth > viewportWidth - margin) {
-                    finalX = viewportWidth - menuWidth - margin;
-                }
-                if (finalX < margin) {
-                    finalX = margin;
-                }
-
-                // Contrainte verticale STRICTE
-                const effectiveMenuHeight = Math.min(menuHeight, maxAvailableHeight);
-
-                if (finalY + effectiveMenuHeight > viewportHeight - margin) {
-                    // Essayer au-dessus de l'ancre si possible
-                    if (anchorRect && anchorRect.top - effectiveMenuHeight - 8 >= margin) {
-                        finalY = anchorRect.top - effectiveMenuHeight - 8;
-                    } else {
-                        // Sinon forcer en bas de l'écran
-                        finalY = viewportHeight - effectiveMenuHeight - margin;
-                    }
-                }
-
-                if (finalY < margin) {
-                    finalY = margin;
-                }
-
-                // Appliquer le style final
-                setMenuStyle({
-                    left: `${Math.round(finalX)}px`,
-                    top: `${Math.round(finalY)}px`,
-                    transform: 'none',
-                    maxHeight: `${maxAvailableHeight}px`,
-                    opacity: 1
-                });
-            });
-        });
+        requestAnimationFrame(() => requestAnimationFrame(positionMenu));
     }, [position, anchorRect]);
 
-    // Fonction de rendu des formulaires adaptés selon le type de donnée
-    const renderFormInput = () => {
-        const baseClass = "w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent";
+    const itemKey = item.key || item.id;
 
-        // SELECT - Liste déroulante
+    const handleSave = () => {
+        if (value !== '' && value !== null && value !== undefined) {
+            onConfigure(itemKey, value);
+        }
+        onClose();
+    };
+
+    const handleAssignAll = () => {
+        if (value !== '' && value !== null && value !== undefined) {
+            onAssignAll?.(itemKey, value);
+        }
+        onClose();
+    };
+
+    const handleAssignRange = () => {
+        if (rangeStart && rangeEnd && (value !== '' && value !== null && value !== undefined)) {
+            onAssignRange?.(itemKey, rangeStart, rangeEnd, value);
+            onClose();
+        }
+    };
+
+    // Input CSS commun
+    const inputCls = "w-full px-2 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-purple-500 focus:border-purple-500";
+
+    // Rendu du formulaire selon le type
+    const renderInput = () => {
+        // SELECT
         if (item.type === 'select' && Array.isArray(item.options)) {
             return (
-                <select
-                    value={value || ''}
-                    onChange={(e) => setValue(e.target.value)}
-                    className={baseClass}
-                    autoFocus
-                >
-                    <option value="">-- Sélectionner --</option>
-                    {item.options.map((opt, idx) => {
-                        const val = typeof opt === 'string' ? opt : (opt.value ?? opt);
-                        const lab = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
-                        const icon = typeof opt === 'object' ? opt.icon : '';
-                        return (
-                            <option key={idx} value={val}>
-                                {icon ? `${icon} ` : ''}{lab}
-                            </option>
-                        );
+                <select value={value || ''} onChange={(e) => setValue(e.target.value)} className={inputCls} autoFocus>
+                    <option value="">-- Choisir --</option>
+                    {item.options.map((opt, i) => {
+                        const v = typeof opt === 'string' ? opt : (opt.value ?? opt);
+                        const l = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
+                        return <option key={i} value={v}>{l}</option>;
                     })}
                 </select>
             );
         }
 
-        // MULTISELECT - Checkboxes multiples
+        // MULTISELECT
         if (item.type === 'multiselect' && Array.isArray(item.options)) {
-            const selected = Array.isArray(value) ? value : [];
+            const sel = Array.isArray(value) ? value : [];
             return (
-                <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600">
-                    {item.options.map((opt, idx) => {
-                        const val = typeof opt === 'string' ? opt : (opt.value ?? opt);
-                        const lab = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
-                        const icon = typeof opt === 'object' ? opt.icon : '';
-                        const isChecked = selected.includes(val);
+                <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto p-1 bg-gray-50 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600">
+                    {item.options.slice(0, 15).map((opt, i) => {
+                        const v = typeof opt === 'string' ? opt : (opt.value ?? opt);
+                        const l = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
+                        const checked = sel.includes(v);
                         return (
-                            <label
-                                key={idx}
-                                className={`inline-flex items-center gap-1.5 text-sm px-2.5 py-1.5 rounded-lg border cursor-pointer transition-all ${isChecked
-                                    ? 'bg-purple-100 dark:bg-purple-900/50 border-purple-400 dark:border-purple-600 text-purple-700 dark:text-purple-300'
-                                    : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:border-purple-300'
-                                    }`}
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={isChecked}
-                                    onChange={(e) => {
-                                        const next = e.target.checked
-                                            ? [...selected, val]
-                                            : selected.filter(s => s !== val);
-                                        setValue(next);
-                                    }}
-                                    className="sr-only"
-                                />
-                                {icon && <span>{icon}</span>}
-                                <span>{lab}</span>
+                            <label key={i} className={`text-xs px-1.5 py-0.5 rounded cursor-pointer border ${checked ? 'bg-purple-100 dark:bg-purple-900/50 border-purple-400' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600'}`}>
+                                <input type="checkbox" checked={checked} onChange={(e) => setValue(e.target.checked ? [...sel, v] : sel.filter(x => x !== v))} className="sr-only" />
+                                {l}
                             </label>
                         );
                     })}
@@ -182,394 +136,121 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
             );
         }
 
-        // NUMBER / SLIDER / STEPPER - Input numérique avec contrôles
+        // NUMBER / SLIDER / STEPPER
         if (item.type === 'number' || item.type === 'slider' || item.type === 'stepper') {
-            const numValue = value === '' || value === null || value === undefined ? '' : Number(value);
+            const num = value === '' ? '' : Number(value);
             const step = item.step || 1;
-            const min = item.min !== undefined ? item.min : 0;
-            const max = item.max !== undefined ? item.max : 9999;
-
+            const min = item.min ?? 0;
+            const max = item.max ?? 9999;
             return (
-                <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                        {/* Bouton diminuer */}
-                        <button
-                            type="button"
-                            onClick={() => {
-                                const current = numValue === '' ? min : numValue;
-                                const newVal = Math.max(min, current - step);
-                                setValue(newVal);
-                            }}
-                            className="p-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors"
-                        >
-                            <Minus className="w-4 h-4" />
-                        </button>
-
-                        {/* Input numérique */}
-                        <input
-                            type="number"
-                            min={min}
-                            max={max}
-                            step={step}
-                            value={numValue}
-                            onChange={(e) => setValue(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                            className={`${baseClass} flex-1 text-center`}
-                            placeholder={item.defaultValue !== undefined ? String(item.defaultValue) : `${min} - ${max}`}
-                            autoFocus
-                        />
-
-                        {/* Bouton augmenter */}
-                        <button
-                            type="button"
-                            onClick={() => {
-                                const current = numValue === '' ? min : numValue;
-                                const newVal = Math.min(max, current + step);
-                                setValue(newVal);
-                            }}
-                            className="p-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors"
-                        >
-                            <Plus className="w-4 h-4" />
-                        </button>
-
-                        {/* Unité */}
-                        {item.unit && (
-                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[40px]">
-                                {item.unit}
-                            </span>
-                        )}
-                    </div>
-
-                    {/* Slider visuel si type slider */}
-                    {item.type === 'slider' && (
-                        <input
-                            type="range"
-                            min={min}
-                            max={max}
-                            step={step}
-                            value={numValue || min}
-                            onChange={(e) => setValue(parseFloat(e.target.value))}
-                            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                        />
-                    )}
-
-                    {/* Suggestions si disponibles */}
-                    {item.suggestions && item.suggestions.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 pt-1">
-                            {item.suggestions.map((sug, idx) => (
-                                <button
-                                    key={idx}
-                                    type="button"
-                                    onClick={() => setValue(sug.value)}
-                                    className={`text-xs px-2 py-1 rounded-md border transition-all ${numValue === sug.value
-                                        ? 'bg-purple-100 dark:bg-purple-900/50 border-purple-400 text-purple-700 dark:text-purple-300'
-                                        : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:border-purple-300'
-                                        }`}
-                                >
-                                    {sug.label}
-                                </button>
-                            ))}
-                        </div>
-                    )}
+                <div className="flex items-center gap-1">
+                    <button type="button" onClick={() => setValue(Math.max(min, (num || min) - step))} className="p-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600">
+                        <Minus className="w-3 h-3" />
+                    </button>
+                    <input type="number" min={min} max={max} step={step} value={num} onChange={(e) => setValue(e.target.value === '' ? '' : parseFloat(e.target.value))} className={`${inputCls} flex-1 text-center`} autoFocus />
+                    <button type="button" onClick={() => setValue(Math.min(max, (num || min) + step))} className="p-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600">
+                        <Plus className="w-3 h-3" />
+                    </button>
+                    {item.unit && <span className="text-xs text-gray-500 ml-1">{item.unit}</span>}
                 </div>
             );
         }
 
-        // DATE - Sélecteur de date
+        // DATE
         if (item.type === 'date') {
-            return (
-                <input
-                    type="date"
-                    value={value || ''}
-                    onChange={(e) => setValue(e.target.value)}
-                    className={baseClass}
-                    autoFocus
-                />
-            );
+            return <input type="date" value={value || ''} onChange={(e) => setValue(e.target.value)} className={inputCls} autoFocus />;
         }
 
-        // CHECKBOX - Case à cocher
+        // CHECKBOX
         if (item.type === 'checkbox' || item.type === 'boolean') {
             return (
-                <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <input
-                        type="checkbox"
-                        checked={Boolean(value)}
-                        onChange={(e) => setValue(e.target.checked)}
-                        className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                    />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                        {value ? 'Activé' : 'Désactivé'}
-                    </span>
+                <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={Boolean(value)} onChange={(e) => setValue(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-purple-600" />
+                    <span className="text-sm">{value ? 'Activé' : 'Désactivé'}</span>
                 </label>
             );
         }
 
-        // DIMENSIONS - Champs L×l×H
+        // DIMENSIONS
         if (item.type === 'dimensions') {
-            const dims = typeof value === 'object' && value !== null
-                ? value
-                : { length: '', width: '', height: '' };
-
+            const dims = typeof value === 'object' && value ? value : { length: '', width: '', height: '' };
             return (
-                <div className="space-y-2">
-                    <div className="grid grid-cols-3 gap-2">
-                        <div>
-                            <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Longueur</label>
-                            <input
-                                type="number"
-                                value={dims.length || ''}
-                                onChange={(e) => setValue({ ...dims, length: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                                placeholder="L"
-                                className={`${baseClass} text-center`}
-                                min={0}
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Largeur</label>
-                            <input
-                                type="number"
-                                value={dims.width || ''}
-                                onChange={(e) => setValue({ ...dims, width: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                                placeholder="l"
-                                className={`${baseClass} text-center`}
-                                min={0}
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Hauteur</label>
-                            <input
-                                type="number"
-                                value={dims.height || ''}
-                                onChange={(e) => setValue({ ...dims, height: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                                placeholder="H"
-                                className={`${baseClass} text-center`}
-                                min={0}
-                            />
-                        </div>
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                        {item.unit || 'cm'} (L × l × H)
-                    </div>
+                <div className="grid grid-cols-3 gap-1">
+                    {['length', 'width', 'height'].map((k, i) => (
+                        <input key={k} type="number" placeholder={['L', 'l', 'H'][i]} value={dims[k] || ''} onChange={(e) => setValue({ ...dims, [k]: e.target.value === '' ? '' : parseFloat(e.target.value) })} className={`${inputCls} text-center`} min={0} />
+                    ))}
                 </div>
             );
         }
 
-        // TEXTAREA - Zone de texte multiligne
-        if (item.type === 'textarea') {
-            return (
-                <textarea
-                    value={value || ''}
-                    onChange={(e) => setValue(e.target.value)}
-                    className={`${baseClass} min-h-[80px] resize-y`}
-                    placeholder={item.placeholder || 'Entrer une description...'}
-                    rows={3}
-                    autoFocus
-                />
-            );
-        }
-
-        // COMPUTED - Champs calculés (lecture seule avec info)
-        if (item.type === 'computed') {
-            return (
-                <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                        ⚡ Valeur calculée automatiquement
-                    </div>
-                    {item.computeFrom && (
-                        <div className="text-xs text-gray-400 mt-1">
-                            Basé sur: {item.computeFrom.join(', ')}
-                        </div>
-                    )}
-                </div>
-            );
-        }
-
-        // TEXT (default) - Input texte simple
-        return (
-            <input
-                type="text"
-                value={value || ''}
-                onChange={(e) => setValue(e.target.value)}
-                className={baseClass}
-                placeholder={item.placeholder || 'Entrer une valeur...'}
-                autoFocus
-            />
-        );
+        // TEXT par défaut
+        return <input type="text" value={value || ''} onChange={(e) => setValue(e.target.value)} className={inputCls} placeholder={item.placeholder || 'Valeur...'} autoFocus />;
     };
 
-    // Identifiant de l'item (compatibilité key/id)
-    const itemKey = item.key || item.id;
-
-    const handleSave = () => {
-        onConfigure(itemKey, value);
-        onClose();
-    };
-
-    const handleClear = () => {
-        onConfigure(itemKey, null); // Supprimer la config
-        onClose();
-    };
+    const hasValue = value !== '' && value !== null && value !== undefined;
 
     return (
         <div
             ref={menuRef}
-            className="fixed z-[9999] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white overflow-hidden transition-opacity duration-150"
-            style={{
-                ...menuStyle,
-                width: 'min(360px, calc(100vw - 24px))',
-            }}
+            className="fixed z-[9999] bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+            style={{ opacity: isVisible ? 1 : 0, transition: 'opacity 0.1s', width: 'max-content', minWidth: '220px' }}
         >
-            {/* Contenu scrollable */}
-            <div className="p-4 overflow-y-auto" style={{ maxHeight: `calc(${menuStyle.maxHeight} - 8px)` }}>
-                <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                        <Settings className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                        <h3 className="font-bold text-sm text-gray-900 dark:text-white">
-                            Pré-configurer
-                        </h3>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                    >
-                        <X className="w-4 h-4 text-gray-500" />
+            {/* Header compact */}
+            <div className="flex items-center justify-between px-2.5 py-1.5 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-sm flex-shrink-0">{item.icon}</span>
+                    <span className="text-xs font-medium truncate">{item.label}</span>
+                    {item.unit && <span className="text-xs text-gray-400">({item.unit})</span>}
+                </div>
+                <button onClick={onClose} className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded flex-shrink-0">
+                    <X className="w-3.5 h-3.5 text-gray-500" />
+                </button>
+            </div>
+
+            {/* Contenu */}
+            <div className="p-2.5 space-y-2 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
+                {/* Input */}
+                <div>
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Valeur</label>
+                    {renderInput()}
+                </div>
+
+                {/* Boutons principaux */}
+                <div className="flex gap-1.5">
+                    <button onClick={handleSave} disabled={!hasValue} className="flex-1 px-2 py-1.5 text-xs font-medium bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white rounded transition-colors flex items-center justify-center gap-1">
+                        <Check className="w-3 h-3" />
+                        Pré-config
                     </button>
-                </div>
-
-                <div className="mb-3">
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="text-lg">{item.icon}</span>
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            {item.label}
-                        </span>
-                        {item.unit && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">({item.unit})</span>
-                        )}
-                    </div>
-
-                    {/* Formulaire adapté selon type - CDC Complet */}
-                    {renderFormInput()}
-                </div>
-
-                {/* Aide visuelle */}
-                <div className="mb-3 p-2 dark: rounded-lg">
-                    <p className="text-xs dark:">
-                        💡 Cette valeur sera assignée directement lors du drag & drop
-                    </p>
-                </div>
-
-                {/* Assign or copy actions */}
-                <div className="mb-3">
-                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Assigner maintenant</label>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => {
-                                if ((value === '' || value === null || value === undefined) && !isConfigured) {
-                                    alert('Veuillez saisir une valeur avant d\'assigner.');
-                                    return;
-                                }
-                                onAssignNow?.(itemKey, value);
-                                onClose();
-                            }}
-                            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${!value && value !== 0 ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed' : ' hover: text-white'}`}
-                        >
-                            Assigner maintenant
-                        </button>
-
-                        <div className="flex-1">
-                            <label className="text-xs text-gray-500 mb-1 block">Copier depuis une case</label>
-                            <div className="flex gap-2">
-                                <select
-                                    value={selectedSource}
-                                    onChange={(e) => setSelectedSource(e.target.value)}
-                                    className="flex-1 px-2 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
-                                >
-                                    <option value="">-- choisir une case --</option>
-                                    {cells.map((c) => (
-                                        <option key={c.timestamp} value={c.timestamp}>{c.label || c.timestamp}</option>
-                                    ))}
-                                </select>
-                                <button
-                                    onClick={() => {
-                                        if (!selectedSource) { alert('Choisir une case source'); return; }
-                                        onAssignFromSource?.(itemKey, selectedSource);
-                                        onClose();
-                                    }}
-                                    className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
-                                >
-                                    Copier
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Assign to range / all / selected */}
-                <div className="mb-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Assigner à :</label>
-                    <div className="flex items-center gap-2">
-                        <select
-                            value={selectedSource}
-                            onChange={(e) => setSelectedSource(e.target.value)}
-                            className="px-2 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm flex-1"
-                        >
-                            <option value="">-- Début (sélectionner) --</option>
-                            {cells.map((c) => (
-                                <option key={`start-${c.timestamp}`} value={c.timestamp}>{c.label || c.timestamp}</option>
-                            ))}
-                        </select>
-
-                        <select
-                            value={''}
-                            onChange={(e) => {
-                                const end = e.target.value;
-                                if (!selectedSource) { alert('Choisir d\'abord une case de début'); return; }
-                                onAssignRange?.(itemKey, selectedSource, end, value || item.defaultValue || '');
-                                onClose();
-                            }}
-                            className="px-2 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm flex-1"
-                        >
-                            <option value="">-- Fin (sélectionner) --</option>
-                            {cells.map((c) => (
-                                <option key={`end-${c.timestamp}`} value={c.timestamp}>{c.label || c.timestamp}</option>
-                            ))}
-                        </select>
-
-                        <button
-                            onClick={() => {
-                                // Assign to all
-                                onAssignAll?.(itemKey, value || item.defaultValue || '');
-                                onClose();
-                            }}
-                            className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm"
-                        >
-                            Tous
-                        </button>
-                    </div>
-                    <div className="mt-2 text-xs text-gray-500">Ou déposer directement sur une sélection de cases pour assigner.</div>
-                </div>
-
-                {/* Boutons actions */}
-                <div className="flex gap-2">
                     {isConfigured && (
-                        <button
-                            onClick={handleClear}
-                            className="flex-1 px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1"
-                        >
+                        <button onClick={() => { onConfigure(itemKey, null); onClose(); }} className="px-2 py-1.5 text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded" title="Retirer config">
                             <X className="w-3 h-3" />
-                            Retirer config
                         </button>
                     )}
-                    <button
-                        onClick={handleSave}
-                        disabled={!value && value !== 0}
-                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1 ${!value && value !== 0 ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl'}`}
-                    >
-                        <Check className="w-3 h-3" />
-                        {isConfigured ? 'Mettre à jour' : 'Pré-configurer'}
-                    </button>
                 </div>
-            </div>{/* Fin contenu scrollable */}
+
+                {/* Assignation (si cells disponibles) */}
+                {cells.length > 0 && (
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-2">
+                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Assigner à</label>
+                        <div className="flex gap-1 flex-wrap">
+                            <select value={rangeStart} onChange={(e) => setRangeStart(e.target.value)} className="flex-1 min-w-[70px] px-1.5 py-1 text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded">
+                                <option value="">Début</option>
+                                {cells.map((c) => <option key={c.timestamp} value={c.timestamp}>{c.label}</option>)}
+                            </select>
+                            <select value={rangeEnd} onChange={(e) => setRangeEnd(e.target.value)} className="flex-1 min-w-[70px] px-1.5 py-1 text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded">
+                                <option value="">Fin</option>
+                                {cells.map((c) => <option key={c.timestamp} value={c.timestamp}>{c.label}</option>)}
+                            </select>
+                            <button onClick={handleAssignRange} disabled={!rangeStart || !rangeEnd || !hasValue} className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded" title="Assigner à la plage">
+                                OK
+                            </button>
+                            <button onClick={handleAssignAll} disabled={!hasValue} className="px-2 py-1 text-xs font-medium bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white rounded" title="Assigner à toutes">
+                                Tous
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
