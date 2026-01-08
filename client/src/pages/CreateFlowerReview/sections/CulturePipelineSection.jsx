@@ -36,8 +36,12 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
             // Update existing cell
             updatedData = [...currentData];
             if (value === null || value === undefined) {
-                // ✅ BUG FIX: Remove field completely but KEEP timestamp
+                // ✅ SUPPRESSION: Remove field completely but KEEP timestamp
+                console.log(`  🗑️ SUPPRESSION du champ "${field}" de la cellule ${timestamp}`);
                 const { [field]: removed, ...rest } = updatedData[existingIndex];
+                console.log(`  → Valeur supprimée:`, removed);
+                console.log(`  → Données restantes:`, rest);
+
                 // Restore timestamp and other structural fields
                 updatedData[existingIndex] = {
                     timestamp: updatedData[existingIndex].timestamp,
@@ -46,12 +50,15 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
                     ...(updatedData[existingIndex].phase && { phase: updatedData[existingIndex].phase }),
                     ...rest
                 };
+                console.log(`  → Cellule après suppression:`, updatedData[existingIndex]);
 
                 // Si la cellule devient vide (plus aucune donnée utile), la retirer complètement
                 const cellKeys = Object.keys(updatedData[existingIndex]).filter(k =>
                     !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k)
                 );
+                console.log(`  → Clés restantes (hors métadonnées):`, cellKeys);
                 if (cellKeys.length === 0) {
+                    console.log(`  ⚠️ Cellule vide - SUPPRESSION COMPLÈTE de ${timestamp}`);
                     updatedData = updatedData.filter((_, idx) => idx !== existingIndex);
                 }
             } else {
@@ -72,6 +79,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
         timelineDataRef.current = updatedData;
 
         // Appeler onChange avec l'objet mis à jour
+        console.log(`  → Appel de onChange avec ${updatedData.length} cellule(s)`);
         onChange({ ...data, cultureTimelineData: updatedData });
         console.log(`✅ handleDataChange terminé pour ${timestamp}`);
     };

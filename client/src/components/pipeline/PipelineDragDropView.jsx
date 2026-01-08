@@ -1060,16 +1060,20 @@ const PipelineDragDropView = ({
         const targets = cellContextMenu?.selectedCells || [];
         if (targets.length === 0 || fieldsToDelete.length === 0) return;
 
+        console.log(`🗑️ handleDeleteFieldsFromCells: fields=${fieldsToDelete.join(',')}, targets=${targets.join(',')}`);
+
         setConfirmState({
             open: true,
             title: 'Effacer les champs sélectionnés',
             message: `Effacer ${fieldsToDelete.length} champ(s) de ${targets.length} cellule(s) ?`,
             onConfirm: () => {
+                console.log(`  → Confirmation: début de suppression`);
                 const allChanges = [];
                 targets.forEach(ts => {
                     const prev = getCellData(ts) || {};
                     fieldsToDelete.forEach(field => {
                         if (prev[field] !== undefined) {
+                            console.log(`    ✓ Supprime ${field} de ${ts} (valeur: ${prev[field]})`);
                             allChanges.push({ timestamp: ts, field, previousValue: prev[field] });
                             onDataChange(ts, field, null);
                         }
@@ -1079,9 +1083,11 @@ const PipelineDragDropView = ({
                 if (allChanges.length > 0) {
                     pushAction({ id: Date.now(), type: 'deleteFields', changes: allChanges });
                     showToast(`${fieldsToDelete.length} champ(s) effacé(s)`, 'success');
+                    console.log(`  → Toast: ${fieldsToDelete.length} champ(s) effacé(s)`);
                 }
                 setCellContextMenu(null); // Fermer le menu contextuel
                 setConfirmState(prev => ({ ...prev, open: false }));
+                console.log(`✅ Suppression terminée`);
             }
         });
     };
@@ -2667,24 +2673,31 @@ const PipelineDragDropView = ({
                 onClose={() => setCellContextMenu(null)}
                 onDeleteAll={() => {
                     const targets = cellContextMenu?.selectedCells || [];
+                    console.log(`💥 handleDeleteAll: targets=${targets.join(',')}`);
                     setConfirmState({
                         open: true,
                         title: 'Effacer toutes les données',
                         message: `Effacer toutes les données de ${targets.length} cellule(s) ?`,
                         onConfirm: () => {
+                            console.log(`  → Confirmation: début de suppression complète`);
                             const allChanges = [];
                             targets.forEach(ts => {
                                 const prev = getCellData(ts) || {};
                                 const keys = Object.keys(prev).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k));
+                                console.log(`    ✓ Supprime ${keys.length} champs de ${ts}: ${keys.join(',')}`);
                                 keys.forEach(k => {
                                     allChanges.push({ timestamp: ts, field: k, previousValue: prev[k] });
                                     onDataChange(ts, k, null);
                                 });
                             });
-                            if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'contextMenuDeleteAll', changes: allChanges });
+                            if (allChanges.length > 0) {
+                                pushAction({ id: Date.now(), type: 'contextMenuDeleteAll', changes: allChanges });
+                                console.log(`  → Toast: ${allChanges.length} donnée(s) effacée(s)`);
+                            }
                             setConfirmState(prev => ({ ...prev, open: false }));
                             setCellContextMenu(null);
                             showToast('Données effacées', 'success');
+                            console.log(`✅ Suppression complète terminée`);
                         }
                     });
                 }}
