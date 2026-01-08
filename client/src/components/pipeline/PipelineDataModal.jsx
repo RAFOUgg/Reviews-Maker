@@ -376,7 +376,7 @@ const PipelineDataModal = ({
     };
 
     const FieldWrapper = ({ item, children }) => {
-        const itemKey = item.key || item.type;
+        const itemKey = item.id || item.key || item.type;
         return (
             <div className="relative group">
                 {children}
