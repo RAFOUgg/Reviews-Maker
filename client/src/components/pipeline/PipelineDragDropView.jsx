@@ -499,10 +499,16 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
             // Add new
             newGroups = [...groups, group];
         }
+
+        // Mise à jour du state et localStorage
         setGroups(newGroups);
         const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
         localStorage.setItem(storageKey, JSON.stringify(newGroups));
-        onSave && onSave(newGroups);
+
+        // onSave est optionnel et ne devrait pas être setGroups pour éviter les doubles updates
+        if (onSave && onSave !== setGroups) {
+            onSave(newGroups);
+        }
 
         // Fermer la modal après enregistrement
         resetForm();
@@ -2680,7 +2686,6 @@ const PipelineDragDropView = ({
             <GroupedPresetModal
                 isOpen={showGroupedPresetModal}
                 onClose={() => setShowGroupedPresetModal(false)}
-                onSave={setGroupedPresets}
                 groups={groupedPresets}
                 setGroups={setGroupedPresets}
                 sidebarContent={sidebarContent}
