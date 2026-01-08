@@ -163,11 +163,17 @@ export default function CuringMaturationTimeline({ data, onChange }) {
                 [field]: value
             }
         } else {
-            const cellDate = new Date(timestamp)
+            // En mode phase, le timestamp est un ID de phase, pas une date
             const newEntry = {
                 timestamp,
-                date: cellDate.toISOString().split('T')[0],
                 [field]: value
+            }
+            // Ne créer une date que si ce n'est pas une phase
+            if (curingTimelineConfig.type !== 'phase') {
+                const cellDate = new Date(timestamp)
+                if (!isNaN(cellDate)) {
+                    newEntry.date = cellDate.toISOString().split('T')[0]
+                }
             }
             updatedData = [...curingTimelineData, newEntry]
         }

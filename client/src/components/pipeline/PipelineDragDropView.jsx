@@ -2614,15 +2614,30 @@ const PipelineDragDropView = ({
                                 })}
 
                                 {/* Bouton + pour ajouter des cellules */}
-                                {cells.length > 0 && (timelineConfig.type === 'jour' || timelineConfig.type === 'date') && (
+                                {cells.length > 0 && (timelineConfig.type === 'seconde' || timelineConfig.type === 'heure' || timelineConfig.type === 'jour' || timelineConfig.type === 'semaine' || timelineConfig.type === 'date') && (
                                     <div
-                                        className="p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover: hover: dark:hover: transition-all cursor-pointer flex items-center justify-center min-h-[80px]"
+                                        className="p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all cursor-pointer flex items-center justify-center min-h-[80px]"
                                         onClick={() => {
-                                            // Ajouter un jour à la timeline
-                                            if (timelineConfig.type === 'jour') {
+                                            // Ajouter une cellule selon le type
+                                            if (timelineConfig.type === 'seconde' && timelineConfig.totalSeconds) {
+                                                const current = timelineConfig.totalSeconds || cells.length;
+                                                if (current < 900) {
+                                                    onConfigChange('totalSeconds', current + 1);
+                                                }
+                                            } else if (timelineConfig.type === 'heure' && timelineConfig.totalHours) {
+                                                const current = timelineConfig.totalHours || cells.length;
+                                                if (current < 336) {
+                                                    onConfigChange('totalHours', current + 1);
+                                                }
+                                            } else if (timelineConfig.type === 'jour') {
                                                 const currentDays = timelineConfig.totalDays || cells.length;
                                                 if (currentDays < 365) {
                                                     onConfigChange('totalDays', currentDays + 1);
+                                                }
+                                            } else if (timelineConfig.type === 'semaine') {
+                                                const currentWeeks = timelineConfig.totalWeeks || cells.length;
+                                                if (currentWeeks < 52) {
+                                                    onConfigChange('totalWeeks', currentWeeks + 1);
                                                 }
                                             } else if (timelineConfig.type === 'date' && timelineConfig.end) {
                                                 // Ajouter 1 jour à la date de fin
@@ -2632,7 +2647,7 @@ const PipelineDragDropView = ({
                                                 onConfigChange('end', endDate.toISOString().split('T')[0]);
                                             }
                                         }}
-                                        title="Ajouter un jour"
+                                        title="Ajouter une cellule"
                                     >
                                         <Plus className="w-6 h-6 text-gray-400" />
                                     </div>
