@@ -956,22 +956,33 @@ const PipelineDragDropView = ({
         const action = actionsHistory[nextPointer];
         if (action && action.changes) {
             action.changes.forEach(ch => {
-                // Pour redo, on doit retrouver la "nouvelle valeur" (celle après la modification)
-                // On cherche la prochaine action qui modifie le même champ
-                let newValue = null;
-                for (let i = nextPointer; i < actionsHistory.length; i++) {
-                    const futureAction = actionsHistory[i];
-                    for (const futureChange of futureAction.changes || []) {
-                        if (futureChange.timestamp === ch.timestamp && futureChange.field === ch.field) {
-                            newValue = futureChange.previousValue;
-                            break;
+                // Pour redo, on applique les changements en avant
+                // En cherchant la valeur "actuelle" qui est la previousValue de l'action suivante
+                // ou on utilise directement la valeur stockée si disponible
+                let newValue = ch.newValue; // Si la valeur est stockée
+
+                // Sinon, on cherche dans les prochaines actions
+                if (newValue === undefined) {
+                    for (let i = nextPointer + 1; i < actionsHistory.length; i++) {
+                        const nextAction = actionsHistory[i];
+                        for (const nextChange of nextAction.changes || []) {
+                            if (nextChange.timestamp === ch.timestamp && nextChange.field === ch.field) {
+                                newValue = nextChange.previousValue;
+                                break;
+                            }
                         }
+                        if (newValue !== undefined) break;
                     }
                 }
-                // Sinon on reconstruit à partir des données actuelles
-                const currentData = getCellData(ch.timestamp) || {};
-                const storedNewValue = action._newValues?.[`${ch.timestamp}:${ch.field}`];
-                onDataChange(ch.timestamp, ch.field, storedNewValue !== undefined ? storedNewValue : currentData[ch.field]);
+
+                // Si toujours pas trouvé, c'est qu'il n'y a pas eu de modification après
+                // On reconstruit à partir des données actuelles
+                if (newValue === undefined) {
+                    const currentData = getCellData(ch.timestamp) || {};
+                    newValue = currentData[ch.field];
+                }
+
+                onDataChange(ch.timestamp, ch.field, newValue);
             });
         }
         setHistoryPointer(prev => Math.min(prev + 1, actionsHistory.length - 1));
@@ -982,6 +993,25 @@ const PipelineDragDropView = ({
         const enrichedAction = { ...action, _newValues: newValuesMap };
         pushAction(enrichedAction);
     };
+
+    // Raccourcis clavier pour undo/redo
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            // Ctrl+Z ou Cmd+Z = Undo
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                undoLastAction();
+            }
+            // Ctrl+Shift+Z ou Ctrl+Y ou Cmd+Shift+Z = Redo
+            else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+                e.preventDefault();
+                redoLastAction();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [historyPointer, actionsHistory]);
 
     const [confirmState, setConfirmState] = useState({ open: false, title: '', message: '', onConfirm: null });
 
@@ -2153,16 +2183,36 @@ const PipelineDragDropView = ({
                             Pipeline {type === 'culture' ? 'Culture' : 'Curing/Maturation'}
                         </h3>
                         <div className="flex items-center gap-2">
-                            {/* Undo action only */}
+                            {/* Undo button */}
                             <button
                                 onClick={() => undoLastAction()}
-                                className="group flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 border border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 rounded-xl text-gray-700 dark:text-gray-300 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm transition-all duration-200 shadow-sm hover:shadow"
+                                disabled={historyPointer < 0}
+                                className={`group flex items-center gap-2 px-3 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${historyPointer < 0
+                                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-300 dark:border-gray-700'
+                                        : 'bg-gray-100 dark:bg-gray-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 border border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 text-gray-700 dark:text-gray-300 hover:text-blue-700 dark:hover:text-blue-300 shadow-sm hover:shadow'
+                                    }`}
                                 title="Annuler la dernière action (Ctrl+Z)"
                             >
                                 <svg className="w-4 h-4 transform group-hover:-rotate-45 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                                 </svg>
                                 <span>Annuler</span>
+                            </button>
+
+                            {/* Redo button */}
+                            <button
+                                onClick={() => redoLastAction()}
+                                disabled={historyPointer >= actionsHistory.length - 1}
+                                className={`group flex items-center gap-2 px-3 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${historyPointer >= actionsHistory.length - 1
+                                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-300 dark:border-gray-700'
+                                        : 'bg-gray-100 dark:bg-gray-800 hover:bg-green-100 dark:hover:bg-green-900/40 border border-gray-300 dark:border-gray-600 hover:border-green-400 dark:hover:border-green-500 text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-300 shadow-sm hover:shadow'
+                                    }`}
+                                title="Refaire la dernière action (Ctrl+Shift+Z / Ctrl+Y)"
+                            >
+                                <svg className="w-4 h-4 transform group-hover:rotate-45 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10a8 8 0 01-8 8v2m0-2a8 8 0 100-16v2m0 0h10a8 8 0 018 8v2M21 10l-6-6m6 6l-6 6" />
+                                </svg>
+                                <span>Refaire</span>
                             </button>
                         </div>
                     </div>
