@@ -511,7 +511,8 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
 
     const handleDeleteGroup = (groupId) => {
         if (!confirm('Supprimer ce groupe ?')) return;
-        const newGroups = groups.filter(g => g.id !== groupId && g.name !== groupId);
+        // Supprimer le groupe qui correspond à l'ID ou au nom
+        const newGroups = groups.filter(g => !(g.id === groupId || g.name === groupId));
         setGroups(newGroups);
         const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
         localStorage.setItem(storageKey, JSON.stringify(newGroups));
