@@ -1,15 +1,17 @@
 /**
- * ItemContextMenu - Menu contextuel compact et responsive
- * Toujours 100% visible dans le viewport, adapté au type de donnée
+ * ItemContextMenu - Menu contextuel pour pré-configuration des items pipeline
+ * Position naturelle à côté du clic, responsive, fonctionnel
  */
 
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { X, Check, Plus, Minus } from 'lucide-react';
+import { X, Check, Plus, Minus, Copy, Clipboard, Settings, Zap } from 'lucide-react';
 
 const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isConfigured, cells = [], onAssignNow, onAssignFromSource, onAssignRange, onAssignAll }) => {
     const [value, setValue] = useState(item.defaultValue || '');
     const [rangeStart, setRangeStart] = useState('');
     const [rangeEnd, setRangeEnd] = useState('');
+    const [copySource, setCopySource] = useState('');
+    const [activeTab, setActiveTab] = useState('config'); // 'config' | 'assign'
     const menuRef = useRef(null);
     const [isVisible, setIsVisible] = useState(false);
 
@@ -29,45 +31,35 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
         };
     }, [onClose]);
 
-    // Positionnement intelligent - TOUJOURS dans le viewport
+    // Positionnement naturel - à côté du clic comme un vrai menu contextuel
     useLayoutEffect(() => {
         const el = menuRef.current;
         if (!el) return;
 
         const positionMenu = () => {
             const rect = el.getBoundingClientRect();
-            const m = 8; // marge
+            const m = 8;
             const vw = window.innerWidth;
             const vh = window.innerHeight;
-            const maxW = Math.min(300, vw - m * 2);
-            const maxH = vh - m * 2;
 
-            let x = position?.x ?? vw / 2;
-            let y = position?.y ?? vh / 2;
-            if (anchorRect) {
-                x = anchorRect.left + anchorRect.width / 2;
-                y = anchorRect.bottom + 4;
+            // Position de départ = point de clic
+            let x = position?.x ?? (anchorRect ? anchorRect.right + 4 : vw / 2);
+            let y = position?.y ?? (anchorRect ? anchorRect.top : vh / 2);
+
+            // Ajustement horizontal : préférer à droite, sinon à gauche
+            if (x + rect.width > vw - m) {
+                x = Math.max(m, (position?.x || anchorRect?.left || vw) - rect.width - 4);
             }
+            x = Math.max(m, Math.min(x, vw - rect.width - m));
 
-            // Centrer horizontalement
-            x = x - Math.min(rect.width, maxW) / 2;
-            // Contraintes strictes
-            x = Math.max(m, Math.min(x, vw - Math.min(rect.width, maxW) - m));
-
-            // Vertical
-            if (y + Math.min(rect.height, maxH) > vh - m) {
-                if (anchorRect && anchorRect.top - rect.height - 4 > m) {
-                    y = anchorRect.top - rect.height - 4;
-                } else {
-                    y = vh - Math.min(rect.height, maxH) - m;
-                }
+            // Ajustement vertical : rester dans le viewport
+            if (y + rect.height > vh - m) {
+                y = vh - rect.height - m;
             }
             y = Math.max(m, y);
 
             el.style.left = `${Math.round(x)}px`;
             el.style.top = `${Math.round(y)}px`;
-            el.style.maxWidth = `${maxW}px`;
-            el.style.maxHeight = `${maxH}px`;
             setIsVisible(true);
         };
 
@@ -75,30 +67,40 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
     }, [position, anchorRect]);
 
     const itemKey = item.key || item.id;
+    const hasValue = value !== '' && value !== null && value !== undefined;
 
     const handleSave = () => {
-        if (value !== '' && value !== null && value !== undefined) {
-            onConfigure(itemKey, value);
-        }
+        if (hasValue) onConfigure(itemKey, value);
+        onClose();
+    };
+
+    const handleClear = () => {
+        onConfigure(itemKey, null);
         onClose();
     };
 
     const handleAssignAll = () => {
-        if (value !== '' && value !== null && value !== undefined) {
-            onAssignAll?.(itemKey, value);
-        }
+        if (hasValue) onAssignAll?.(itemKey, value);
         onClose();
     };
 
     const handleAssignRange = () => {
-        if (rangeStart && rangeEnd && (value !== '' && value !== null && value !== undefined)) {
+        if (rangeStart && rangeEnd && hasValue) {
             onAssignRange?.(itemKey, rangeStart, rangeEnd, value);
             onClose();
         }
     };
 
-    // Input CSS commun
-    const inputCls = "w-full px-2 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-purple-500 focus:border-purple-500";
+    const handleCopyFrom = () => {
+        if (copySource) {
+            onAssignFromSource?.(itemKey, copySource);
+            onClose();
+        }
+    };
+
+    // CSS commun
+    const inputCls = "w-full px-2.5 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all";
+    const btnCls = "px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1.5";
 
     // Rendu du formulaire selon le type
     const renderInput = () => {
@@ -106,11 +108,12 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
         if (item.type === 'select' && Array.isArray(item.options)) {
             return (
                 <select value={value || ''} onChange={(e) => setValue(e.target.value)} className={inputCls} autoFocus>
-                    <option value="">-- Choisir --</option>
+                    <option value="">-- Sélectionner --</option>
                     {item.options.map((opt, i) => {
                         const v = typeof opt === 'string' ? opt : (opt.value ?? opt);
                         const l = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
-                        return <option key={i} value={v}>{l}</option>;
+                        const icon = typeof opt === 'object' ? opt.icon : '';
+                        return <option key={i} value={v}>{icon ? `${icon} ` : ''}{l}</option>;
                     })}
                 </select>
             );
@@ -120,13 +123,13 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
         if (item.type === 'multiselect' && Array.isArray(item.options)) {
             const sel = Array.isArray(value) ? value : [];
             return (
-                <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto p-1 bg-gray-50 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-600">
-                    {item.options.slice(0, 15).map((opt, i) => {
+                <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-2 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-300 dark:border-gray-600">
+                    {item.options.map((opt, i) => {
                         const v = typeof opt === 'string' ? opt : (opt.value ?? opt);
                         const l = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
                         const checked = sel.includes(v);
                         return (
-                            <label key={i} className={`text-xs px-1.5 py-0.5 rounded cursor-pointer border ${checked ? 'bg-purple-100 dark:bg-purple-900/50 border-purple-400' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600'}`}>
+                            <label key={i} className={`text-xs px-2 py-1 rounded-md cursor-pointer border transition-all ${checked ? 'bg-purple-100 dark:bg-purple-900/50 border-purple-400 text-purple-700 dark:text-purple-300' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:border-purple-300'}`}>
                                 <input type="checkbox" checked={checked} onChange={(e) => setValue(e.target.checked ? [...sel, v] : sel.filter(x => x !== v))} className="sr-only" />
                                 {l}
                             </label>
@@ -143,15 +146,20 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
             const min = item.min ?? 0;
             const max = item.max ?? 9999;
             return (
-                <div className="flex items-center gap-1">
-                    <button type="button" onClick={() => setValue(Math.max(min, (num || min) - step))} className="p-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600">
-                        <Minus className="w-3 h-3" />
-                    </button>
-                    <input type="number" min={min} max={max} step={step} value={num} onChange={(e) => setValue(e.target.value === '' ? '' : parseFloat(e.target.value))} className={`${inputCls} flex-1 text-center`} autoFocus />
-                    <button type="button" onClick={() => setValue(Math.min(max, (num || min) + step))} className="p-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600">
-                        <Plus className="w-3 h-3" />
-                    </button>
-                    {item.unit && <span className="text-xs text-gray-500 ml-1">{item.unit}</span>}
+                <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => setValue(Math.max(min, (num || min) - step))} className="p-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                            <Minus className="w-4 h-4" />
+                        </button>
+                        <input type="number" min={min} max={max} step={step} value={num} onChange={(e) => setValue(e.target.value === '' ? '' : parseFloat(e.target.value))} className={`${inputCls} flex-1 text-center font-mono`} autoFocus />
+                        <button type="button" onClick={() => setValue(Math.min(max, (num || min) + step))} className="p-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                            <Plus className="w-4 h-4" />
+                        </button>
+                        {item.unit && <span className="text-sm text-gray-500 font-medium">{item.unit}</span>}
+                    </div>
+                    {item.type === 'slider' && (
+                        <input type="range" min={min} max={max} step={step} value={num || min} onChange={(e) => setValue(parseFloat(e.target.value))} className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-600" />
+                    )}
                 </div>
             );
         }
@@ -161,12 +169,12 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
             return <input type="date" value={value || ''} onChange={(e) => setValue(e.target.value)} className={inputCls} autoFocus />;
         }
 
-        // CHECKBOX
+        // CHECKBOX / BOOLEAN
         if (item.type === 'checkbox' || item.type === 'boolean') {
             return (
-                <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={Boolean(value)} onChange={(e) => setValue(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-purple-600" />
-                    <span className="text-sm">{value ? 'Activé' : 'Désactivé'}</span>
+                <label className="flex items-center gap-3 cursor-pointer p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <input type="checkbox" checked={Boolean(value)} onChange={(e) => setValue(e.target.checked)} className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500" />
+                    <span className="text-sm font-medium">{value ? '✓ Activé' : '✗ Désactivé'}</span>
                 </label>
             );
         }
@@ -175,81 +183,150 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
         if (item.type === 'dimensions') {
             const dims = typeof value === 'object' && value ? value : { length: '', width: '', height: '' };
             return (
-                <div className="grid grid-cols-3 gap-1">
-                    {['length', 'width', 'height'].map((k, i) => (
-                        <input key={k} type="number" placeholder={['L', 'l', 'H'][i]} value={dims[k] || ''} onChange={(e) => setValue({ ...dims, [k]: e.target.value === '' ? '' : parseFloat(e.target.value) })} className={`${inputCls} text-center`} min={0} />
-                    ))}
+                <div className="space-y-2">
+                    <div className="grid grid-cols-3 gap-2">
+                        {[['length', 'L'], ['width', 'l'], ['height', 'H']].map(([k, label]) => (
+                            <div key={k}>
+                                <label className="text-xs text-gray-500 mb-1 block">{label}</label>
+                                <input type="number" value={dims[k] || ''} onChange={(e) => setValue({ ...dims, [k]: e.target.value === '' ? '' : parseFloat(e.target.value) })} className={`${inputCls} text-center`} min={0} />
+                            </div>
+                        ))}
+                    </div>
+                    <div className="text-xs text-gray-500 text-center">{item.unit || 'cm'}</div>
                 </div>
             );
         }
 
-        // TEXT par défaut
-        return <input type="text" value={value || ''} onChange={(e) => setValue(e.target.value)} className={inputCls} placeholder={item.placeholder || 'Valeur...'} autoFocus />;
-    };
+        // TEXTAREA
+        if (item.type === 'textarea') {
+            return <textarea value={value || ''} onChange={(e) => setValue(e.target.value)} className={`${inputCls} resize-none`} rows={3} placeholder={item.placeholder || 'Description...'} autoFocus />;
+        }
 
-    const hasValue = value !== '' && value !== null && value !== undefined;
+        // TEXT par défaut
+        return <input type="text" value={value || ''} onChange={(e) => setValue(e.target.value)} className={inputCls} placeholder={item.placeholder || 'Entrer une valeur...'} autoFocus />;
+    };
 
     return (
         <div
             ref={menuRef}
-            className="fixed z-[9999] bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
-            style={{ opacity: isVisible ? 1 : 0, transition: 'opacity 0.1s', width: 'max-content', minWidth: '220px' }}
+            className="fixed z-[9999] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+            style={{ opacity: isVisible ? 1 : 0, transition: 'opacity 0.15s ease-out', width: '320px', maxWidth: 'calc(100vw - 16px)', maxHeight: 'calc(100vh - 16px)' }}
         >
-            {/* Header compact */}
-            <div className="flex items-center justify-between px-2.5 py-1.5 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="text-sm flex-shrink-0">{item.icon}</span>
-                    <span className="text-xs font-medium truncate">{item.label}</span>
-                    {item.unit && <span className="text-xs text-gray-400">({item.unit})</span>}
+            {/* Header */}
+            <div className="flex items-center justify-between px-3 py-2.5 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-lg">{item.icon}</span>
+                    <div className="min-w-0">
+                        <div className="text-sm font-semibold truncate text-gray-900 dark:text-white">{item.label}</div>
+                        {item.unit && <div className="text-xs text-gray-500">Unité: {item.unit}</div>}
+                    </div>
                 </div>
-                <button onClick={onClose} className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded flex-shrink-0">
-                    <X className="w-3.5 h-3.5 text-gray-500" />
+                <button onClick={onClose} className="p-1.5 hover:bg-white/50 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <X className="w-4 h-4 text-gray-500" />
                 </button>
             </div>
 
-            {/* Contenu */}
-            <div className="p-2.5 space-y-2 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
-                {/* Input */}
-                <div>
-                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Valeur</label>
-                    {renderInput()}
-                </div>
-
-                {/* Boutons principaux */}
-                <div className="flex gap-1.5">
-                    <button onClick={handleSave} disabled={!hasValue} className="flex-1 px-2 py-1.5 text-xs font-medium bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white rounded transition-colors flex items-center justify-center gap-1">
-                        <Check className="w-3 h-3" />
-                        Pré-config
+            {/* Tabs si cells disponibles */}
+            {cells.length > 0 && (
+                <div className="flex border-b border-gray-200 dark:border-gray-700">
+                    <button onClick={() => setActiveTab('config')} className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${activeTab === 'config' ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50 dark:bg-purple-900/20' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
+                        <Settings className="w-3.5 h-3.5 inline mr-1" />Configurer
                     </button>
-                    {isConfigured && (
-                        <button onClick={() => { onConfigure(itemKey, null); onClose(); }} className="px-2 py-1.5 text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded" title="Retirer config">
-                            <X className="w-3 h-3" />
-                        </button>
-                    )}
+                    <button onClick={() => setActiveTab('assign')} className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${activeTab === 'assign' ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50 dark:bg-purple-900/20' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
+                        <Zap className="w-3.5 h-3.5 inline mr-1" />Assigner
+                    </button>
                 </div>
+            )}
 
-                {/* Assignation (si cells disponibles) */}
-                {cells.length > 0 && (
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-2">
-                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Assigner à</label>
-                        <div className="flex gap-1 flex-wrap">
-                            <select value={rangeStart} onChange={(e) => setRangeStart(e.target.value)} className="flex-1 min-w-[70px] px-1.5 py-1 text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded">
-                                <option value="">Début</option>
-                                {cells.map((c) => <option key={c.timestamp} value={c.timestamp}>{c.label}</option>)}
-                            </select>
-                            <select value={rangeEnd} onChange={(e) => setRangeEnd(e.target.value)} className="flex-1 min-w-[70px] px-1.5 py-1 text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded">
-                                <option value="">Fin</option>
-                                {cells.map((c) => <option key={c.timestamp} value={c.timestamp}>{c.label}</option>)}
-                            </select>
-                            <button onClick={handleAssignRange} disabled={!rangeStart || !rangeEnd || !hasValue} className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded" title="Assigner à la plage">
-                                OK
+            {/* Contenu */}
+            <div className="p-3 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+                {/* Tab Configuration */}
+                {activeTab === 'config' && (
+                    <div className="space-y-3">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
+                                Valeur par défaut
+                            </label>
+                            {renderInput()}
+                        </div>
+
+                        {/* Info */}
+                        <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md text-xs text-blue-700 dark:text-blue-300">
+                            💡 Cette valeur sera assignée automatiquement lors du drag & drop
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-2">
+                            <button onClick={handleSave} disabled={!hasValue} className={`${btnCls} flex-1 ${hasValue ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'}`}>
+                                <Check className="w-3.5 h-3.5" />
+                                {isConfigured ? 'Mettre à jour' : 'Pré-configurer'}
                             </button>
-                            <button onClick={handleAssignAll} disabled={!hasValue} className="px-2 py-1 text-xs font-medium bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white rounded" title="Assigner à toutes">
-                                Tous
-                            </button>
+                            {isConfigured && (
+                                <button onClick={handleClear} className={`${btnCls} bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300`}>
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            )}
                         </div>
                     </div>
                 )}
+
+                {/* Tab Assignation */}
+                {activeTab === 'assign' && cells.length > 0 && (
+                    <div className="space-y-4">
+                        {/* Valeur à assigner */}
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
+                                Valeur à assigner
+                            </label>
+                            {renderInput()}
+                        </div>
+
+                        {/* Assigner à une plage */}
+                        <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-2">
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                                📍 Assigner à une plage
+                            </label>
+                            <div className="grid grid-cols-2 gap-2">
+                                <select value={rangeStart} onChange={(e) => setRangeStart(e.target.value)} className="px-2 py-1.5 text-xs bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md">
+                                    <option value="">De...</option>
+                                    {cells.map((c) => <option key={c.timestamp} value={c.timestamp}>{c.label}</option>)}
+                                </select>
+                                <select value={rangeEnd} onChange={(e) => setRangeEnd(e.target.value)} className="px-2 py-1.5 text-xs bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md">
+                                    <option value="">À...</option>
+                                    {cells.map((c) => <option key={c.timestamp} value={c.timestamp}>{c.label}</option>)}
+                                </select>
+                            </div>
+                            <button onClick={handleAssignRange} disabled={!rangeStart || !rangeEnd || !hasValue} className={`${btnCls} w-full ${rangeStart && rangeEnd && hasValue ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'}`}>
+                                Assigner à la plage
+                            </button>
+                        </div>
+
+                        {/* Copier depuis une cellule */}
+                        <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-2">
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                                <Copy className="w-3.5 h-3.5 inline mr-1" />Copier depuis
+                            </label>
+                            <div className="flex gap-2">
+                                <select value={copySource} onChange={(e) => setCopySource(e.target.value)} className="flex-1 px-2 py-1.5 text-xs bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md">
+                                    <option value="">Choisir une cellule...</option>
+                                    {cells.map((c) => <option key={c.timestamp} value={c.timestamp}>{c.label}</option>)}
+                                </select>
+                                <button onClick={handleCopyFrom} disabled={!copySource} className={`${btnCls} ${copySource ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'}`}>
+                                    <Clipboard className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Assigner à toutes */}
+                        <button onClick={handleAssignAll} disabled={!hasValue} className={`${btnCls} w-full ${hasValue ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'}`}>
+                            <Zap className="w-3.5 h-3.5" />
+                            Assigner à toutes les cellules
+                        </button>
+                    </div>
+                )}
+
+                {/* Si pas de cells, afficher juste la config */}
+                {cells.length === 0 && activeTab !== 'config' && setActiveTab('config')}
             </div>
         </div>
     );
