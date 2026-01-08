@@ -9,7 +9,8 @@ echo "🚀 Démarrage du déploiement Reviews-Maker..."
 # 1. Pull dernières modifications
 echo "📥 Pull des modifications GitHub..."
 cd /home/ubuntu/Reviews-Maker
-git pull origin feat/templates-backend
+git checkout main
+git pull --rebase origin main
 
 # 2. Build client
 echo "🔨 Build du client React..."
