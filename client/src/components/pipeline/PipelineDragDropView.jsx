@@ -47,20 +47,22 @@ function CellContextMenu({
     const [isVisible, setIsVisible] = useState(false);
     const [capturedCells, setCapturedCells] = useState([]);
     const [capturedLabel, setCapturedLabel] = useState('');
+    const [isMenuHovered, setIsMenuHovered] = useState(false);
     const closeTimeoutRef = useRef(null);
 
     // Fermer au clic extérieur ou Escape
     useEffect(() => {
         if (!isOpen) return;
         const handleClickOutside = (e) => {
+            // Ne pas fermer si la souris est sur le menu
+            if (isMenuHovered) return;
+
             // Vérifier si le clic est vraiment en dehors du menu
             if (menuRef.current) {
                 const isClickInsideMenu = menuRef.current.contains(e.target);
                 if (!isClickInsideMenu) {
-                    // Ajouter un délai court pour éviter les fermetures accidentelles
-                    closeTimeoutRef.current = setTimeout(() => {
-                        onClose();
-                    }, 50);
+                    // Fermer directement sans timeout
+                    onClose();
                 }
             }
         };
@@ -74,7 +76,7 @@ function CellContextMenu({
             document.removeEventListener('keydown', handleEscape);
             if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
         };
-    }, [isOpen, onClose]);
+    }, [isOpen, onClose, isMenuHovered]);
 
     // Reset au changement de cellule et capture les infos
     useEffect(() => {
@@ -201,11 +203,14 @@ function CellContextMenu({
             className="fixed z-[200] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
             style={{ opacity: isVisible ? 1 : 0, transition: 'opacity 0.15s ease-out', width: '260px', maxWidth: 'calc(100vw - 16px)', maxHeight: 'calc(100vh - 16px)' }}
             onMouseEnter={() => {
-                // Annuler tout timeout de fermeture quand la souris entre dans le menu
+                setIsMenuHovered(true);
                 if (closeTimeoutRef.current) {
                     clearTimeout(closeTimeoutRef.current);
                     closeTimeoutRef.current = null;
                 }
+            }}
+            onMouseLeave={() => {
+                setIsMenuHovered(false);
             }}
         >
             {/* Header */}
