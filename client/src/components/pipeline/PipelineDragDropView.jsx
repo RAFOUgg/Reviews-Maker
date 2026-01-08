@@ -47,12 +47,22 @@ function CellContextMenu({
     const [isVisible, setIsVisible] = useState(false);
     const [capturedCells, setCapturedCells] = useState([]);
     const [capturedLabel, setCapturedLabel] = useState('');
+    const closeTimeoutRef = useRef(null);
 
     // Fermer au clic extérieur ou Escape
     useEffect(() => {
         if (!isOpen) return;
         const handleClickOutside = (e) => {
-            if (menuRef.current && !menuRef.current.contains(e.target)) onClose();
+            // Vérifier si le clic est vraiment en dehors du menu
+            if (menuRef.current) {
+                const isClickInsideMenu = menuRef.current.contains(e.target);
+                if (!isClickInsideMenu) {
+                    // Ajouter un délai court pour éviter les fermetures accidentelles
+                    closeTimeoutRef.current = setTimeout(() => {
+                        onClose();
+                    }, 50);
+                }
+            }
         };
         const handleEscape = (e) => {
             if (e.key === 'Escape') onClose();
@@ -62,6 +72,7 @@ function CellContextMenu({
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscape);
+            if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
         };
     }, [isOpen, onClose]);
 
@@ -96,12 +107,12 @@ function CellContextMenu({
             const vw = window.innerWidth;
             const vh = window.innerHeight;
 
+            // Utiliser les dimensions réelles si disponibles, sinon des valeurs par défaut
+            const menuHeight = rect.height > 0 ? rect.height : 250;
+            const menuWidth = rect.width > 0 ? rect.width : 260;
+
             let x = position.x;
             let y = position.y;
-
-            // S'assurer que le menu a une hauteur calculée
-            const menuHeight = Math.max(rect.height, 200);
-            const menuWidth = Math.max(rect.width, 260);
 
             // Ajustement horizontal : préférer à droite, sinon à gauche
             if (x + menuWidth > vw - m) {
@@ -110,18 +121,30 @@ function CellContextMenu({
             x = Math.max(m, Math.min(x, vw - menuWidth - m));
 
             // Ajustement vertical : préférer en bas, sinon en haut
-            if (y + menuHeight > vh - m) {
+            // Vérifier s'il y a assez d'espace en bas
+            const spaceBelow = vh - y;
+            const spaceAbove = y;
+
+            if (spaceBelow < menuHeight + m) {
+                // Pas assez d'espace en bas, afficher au-dessus
                 y = Math.max(m, y - menuHeight - 10);
+            } else {
+                // Assez d'espace en bas, laisser à la position initiale
+                y = Math.min(y, vh - menuHeight - m);
             }
-            y = Math.max(m, Math.min(y, vh - menuHeight - m));
 
             menu.style.left = `${Math.round(x)}px`;
             menu.style.top = `${Math.round(y)}px`;
             setIsVisible(true);
         };
 
-        // Positionner immédiatement
+        // Première tentative de positionnement
         requestAnimationFrame(() => requestAnimationFrame(positionMenu));
+
+        // Deuxième tentative après un délai plus long pour s'assurer que le menu est rendu
+        const timeoutId = setTimeout(() => {
+            positionMenu();
+        }, 50);
 
         // Ajouter un listener de scroll pour repositionner le menu
         const handleScroll = () => {
@@ -131,6 +154,7 @@ function CellContextMenu({
         window.addEventListener('scroll', handleScroll, true);
         return () => {
             window.removeEventListener('scroll', handleScroll, true);
+            clearTimeout(timeoutId);
         };
     }, [isOpen, position, showFieldList]);
 
@@ -176,6 +200,13 @@ function CellContextMenu({
             ref={menuRef}
             className="fixed z-[200] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
             style={{ opacity: isVisible ? 1 : 0, transition: 'opacity 0.15s ease-out', width: '260px', maxWidth: 'calc(100vw - 16px)', maxHeight: 'calc(100vh - 16px)' }}
+            onMouseEnter={() => {
+                // Annuler tout timeout de fermeture quand la souris entre dans le menu
+                if (closeTimeoutRef.current) {
+                    clearTimeout(closeTimeoutRef.current);
+                    closeTimeoutRef.current = null;
+                }
+            }}
         >
             {/* Header */}
             <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-800">
@@ -2139,8 +2170,8 @@ const PipelineDragDropView = ({
                                                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex-1">
                                                     {item.label}
                                                 </span>
-                                                <span className={`text-xs transition-colors font-semibold ${isPreConfigured ? 'text-green-600 dark:text-green-400' : 'text-gray-400 group-hover:text-gray-600'}`}>
-                                                    {isPreConfigured ? '✓' : '⋮'}
+                                                <span className="text-xs transition-colors text-gray-400 group-hover:text-gray-600">
+                                                    ⋮
                                                 </span>
                                             </div>
                                         );
@@ -2665,6 +2696,7 @@ const PipelineDragDropView = ({
                     }}
                     isConfigured={preConfiguredItems[contextMenu.item.key || contextMenu.item.id] !== undefined}
                     cells={cells}
+                    selectedCells={selectedCells}
                     onAssignNow={(key, val) => {
                         // Assignation à toutes les cases sélectionnées ou à toutes si aucune sélection
                         const targets = selectedCells.length > 0 ? selectedCells : cells.map(c => c.timestamp);
