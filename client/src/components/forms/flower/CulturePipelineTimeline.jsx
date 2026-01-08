@@ -21,7 +21,7 @@ export default function CulturePipelineTimeline({ data, onChange }) {
     // Configuration Timeline
     const timelineConfig = data.cultureTimelineConfig || {
         mode: 'phases', // 'phases' ou 'custom'
-        type: 'jour', // seconde | heure | jour | date | semaine | phase
+        type: 'phase', // seconde | heure | jour | date | semaine | phase
         start: '',
         end: '',
         duration: null,

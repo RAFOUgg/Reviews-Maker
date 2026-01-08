@@ -21,7 +21,7 @@ export default function CuringMaturationTimeline({ data, onChange }) {
     // Configuration Timeline pour curing
     const curingTimelineConfig = data.curingTimelineConfig || {
         mode: 'phases', // 'phases' ou 'custom'
-        type: 'jour', // seconde | heure | jour | date | semaine | phase
+        type: 'phase', // seconde | heure | jour | date | semaine | phase
         start: '',
         end: '',
         duration: null,
