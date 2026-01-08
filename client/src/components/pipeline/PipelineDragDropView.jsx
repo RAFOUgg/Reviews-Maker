@@ -195,7 +195,6 @@ function CellContextMenu({
             ref={menuRef}
             className="fixed z-[200] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
             style={{ opacity: isVisible ? 1 : 0, transition: 'opacity 0.15s ease-out', width: '260px', maxWidth: 'calc(100vw - 16px)', maxHeight: 'calc(100vh - 16px)' }}
-            onMouseDown={(e) => e.stopPropagation()}
         >
             {/* Header */}
             <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-800">
