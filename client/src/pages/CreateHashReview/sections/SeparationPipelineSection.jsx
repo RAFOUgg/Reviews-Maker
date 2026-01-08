@@ -54,7 +54,7 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
             <LiquidCard className="p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <Waves className="w-5 h-5 text-blue-500" />
+                        <Waves className="w-5 h-5" />
                         Méthode de séparation
                     </h3>
                     <button
@@ -81,10 +81,7 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
                                     <button
                                         key={id}
                                         onClick={() => updateConfig('method', id)}
-                                        className={`p-4 rounded-lg border-2 transition-all ${config.method === id
-                                            ? 'border-blue-500 bg-blue-500/20 shadow-lg'
-                                            : 'border-gray-600 hover:border-blue-400 bg-gray-800/50'
-                                            }`}
+                                        className={`p-4 rounded-lg border-2 transition-all ${config.method === id ? ' shadow-lg' : 'border-gray-600 hover: bg-gray-800/50' }`}
                                     >
                                         <div className="text-4xl mb-2">{method.icon}</div>
                                         <div className="text-base font-bold text-white">{method.name}</div>
@@ -172,10 +169,7 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
                                             <button
                                                 key={mesh.size}
                                                 onClick={() => toggleMeshSize(mesh.size)}
-                                                className={`p-3 rounded-lg border-2 transition-all ${(config.meshSizes || []).includes(mesh.size)
-                                                    ? 'border-green-500 bg-green-500/20'
-                                                    : 'border-white/20 hover:border-white/40'
-                                                    }`}
+                                                className={`p-3 rounded-lg border-2 transition-all ${(config.meshSizes || []).includes(mesh.size) ? 'border-green-500 bg-green-500/20' : 'border-white/20 hover:border-white/40' }`}
                                             >
                                                 <div className="text-sm font-bold">{mesh.label}</div>
                                                 <div className="text-xs opacity-60 mt-1">{mesh.grade}</div>
@@ -194,7 +188,7 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
 
             {/* Résumé configuration */}
             {currentMethod && (
-                <LiquidCard className="p-6 bg-blue-500/10 border-blue-500/30">
+                <LiquidCard className="p-6 /30">
                     <h4 className="text-sm font-bold mb-3">📋 Résumé configuration</h4>
                     <div className="space-y-2 text-sm">
                         <p><strong>Méthode:</strong> {currentMethod.name}</p>

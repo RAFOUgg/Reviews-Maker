@@ -43,8 +43,8 @@ export default function Layout() {
                 </div>
             </nav>
 
-            {/* Main Content */}
-            <main className="flex-1 container mx-auto px-4 py-8">
+            {/* Main Content: allow inner pages to control max-width (remove global `container`) */}
+            <main className="flex-1 w-full px-4 py-8">
                 <Outlet />
             </main>
 

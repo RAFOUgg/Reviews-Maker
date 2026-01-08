@@ -130,7 +130,7 @@ export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in px-4">
             <div className="glass rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-purple-600 to-violet-700 p-6 text-white">
+                <div className="bg-gradient-to-r p-6 text-white">
                     <h2 className="text-3xl font-black flex items-center gap-3">
                         {step < 4 && <AlertCircle className="w-8 h-8" />}
                         {step === 4 && <CheckCircle2 className="w-8 h-8 text-green-400" />}
@@ -149,7 +149,7 @@ export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
                     {/* Étape 1 : Date de naissance */}
                     {step === 1 && (
                         <div className="space-y-4 animate-fade-in">
-                            <div className="flex items-center gap-3 text-purple-700">
+                            <div className="flex items-center gap-3">
                                 <Calendar className="w-6 h-6" />
                                 <h3 className="text-xl font-bold">Date de naissance</h3>
                             </div>
@@ -161,7 +161,7 @@ export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
                                 value={birthdate}
                                 onChange={(e) => setBirthdate(e.target.value)}
                                 max={new Date().toISOString().split('T')[0]}
-                                className="w-full px-4 py-3 rounded-xl border-2 border-purple-200 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 transition-all"
+                                className="w-full px-4 py-3 rounded-xl border-2 focus: focus:ring-2 focus: transition-all"
                             />
                         </div>
                     )}
@@ -169,7 +169,7 @@ export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
                     {/* Étape 2 : Pays et région */}
                     {step === 2 && (
                         <div className="space-y-4 animate-fade-in">
-                            <div className="flex items-center gap-3 text-purple-700">
+                            <div className="flex items-center gap-3">
                                 <MapPin className="w-6 h-6" />
                                 <h3 className="text-xl font-bold">Pays de résidence</h3>
                             </div>
@@ -184,7 +184,7 @@ export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
                                         setCountry(e.target.value)
                                         setRegion('')
                                     }}
-                                    className="w-full px-4 py-3 rounded-xl border-2 border-purple-200 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 transition-all"
+                                    className="w-full px-4 py-3 rounded-xl border-2 focus: focus:ring-2 focus: transition-all"
                                 >
                                     <option value="">-- Sélectionnez --</option>
                                     {countries.map(c => (
@@ -203,7 +203,7 @@ export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
                                     <select
                                         value={region}
                                         onChange={(e) => setRegion(e.target.value)}
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-purple-200 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 transition-all"
+                                        className="w-full px-4 py-3 rounded-xl border-2 focus: focus:ring-2 focus: transition-all"
                                     >
                                         <option value="">-- Sélectionnez --</option>
                                         {selectedCountry.regions.map(r => (
@@ -218,7 +218,7 @@ export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
                     {/* Étape 3 : Disclaimer RDR */}
                     {step === 3 && (
                         <div className="space-y-4 animate-fade-in">
-                            <div className="flex items-center gap-3 text-purple-700">
+                            <div className="flex items-center gap-3">
                                 <AlertCircle className="w-6 h-6" />
                                 <h3 className="text-xl font-bold">Disclaimer RDR (Réduction Des Risques)</h3>
                             </div>
@@ -241,9 +241,9 @@ export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
                                     type="checkbox"
                                     checked={consentRDR}
                                     onChange={(e) => setConsentRDR(e.target.checked)}
-                                    className="w-6 h-6 rounded border-2 border-purple-300 text-purple-600 focus:ring-2 focus:ring-purple-200 transition-all mt-1"
+                                    className="w-6 h-6 rounded border-2 focus:ring-2 focus: transition-all mt-1"
                                 />
-                                <span className="text-gray-800 text-sm group-hover:text-purple-700 transition-colors">
+                                <span className="text-gray-800 text-sm group-hover: transition-colors">
                                     J'ai lu et compris ce disclaimer. Je confirme avoir l'âge légal requis dans mon pays et je m'engage à respecter la législation en vigueur.
                                 </span>
                             </label>
@@ -285,7 +285,7 @@ export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
                             <button
                                 onClick={handleNextStep}
                                 disabled={loading}
-                                className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-violet-700 text-white font-bold hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r text-white font-bold hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {loading ? 'Vérification...' : step === 3 ? 'Vérifier mon âge' : 'Continuer'}
                             </button>

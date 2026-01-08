@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
 
     if (success) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 px-4">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 dark:from-gray-900 dark:to-gray-800 px-4">
                 <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
                     {/* Success Icon */}
                     <div className="text-center mb-6">
@@ -81,8 +81,8 @@ export default function ForgotPasswordPage() {
                     </div>
 
                     {/* Info Box */}
-                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
-                        <p className="text-sm text-blue-800 dark:text-blue-300">
+                    <div className="dark: border dark: rounded-lg p-4 mb-6">
+                        <p className="text-sm dark:">
                             <strong>Note :</strong> Le lien de réinitialisation expire dans 1 heure.
                         </p>
                     </div>
@@ -100,7 +100,7 @@ export default function ForgotPasswordPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 px-4">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 dark:from-gray-900 dark:to-gray-800 px-4">
             <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
                 {/* Header */}
                 <div className="text-center mb-8">
@@ -142,10 +142,7 @@ export default function ForgotPasswordPage() {
                                 setEmail(e.target.value);
                                 setError('');
                             }}
-                            className={`w-full px-4 py-2 rounded-lg border ${error
-                                    ? 'border-red-500 focus:ring-red-500'
-                                    : 'border-gray-300 dark:border-gray-600 focus:ring-green-500'
-                                } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
+                            className={`w-full px-4 py-2 rounded-lg border ${error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-green-500' } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
                             placeholder="votre@email.com"
                             required
                         />

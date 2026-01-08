@@ -54,7 +54,7 @@ const CuringPipelineSection = ({ data = {}, onChange }) => {
             {/* Quick Config (optional) */}
             <LiquidGlass variant="card" className="p-6">
                 <div className="flex items-center gap-2 mb-4">
-                    <Wind className="w-6 h-6 text-blue-400" />
+                    <Wind className="w-6 h-6" />
                     <h3 className="text-xl font-bold dark:text-white">Configuration Curing</h3>
                 </div>
 
@@ -67,10 +67,7 @@ const CuringPipelineSection = ({ data = {}, onChange }) => {
                                 <button
                                     key={m.id}
                                     onClick={() => handleProcessChange('method', m.id)}
-                                    className={`flex-1 p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${processData.method === m.id
-                                        ? 'bg-blue-600/20 border-blue-500 text-blue-400'
-                                        : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
-                                        }`}
+                                    className={`flex-1 p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${processData.method === m.id ? ' ' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10' }`}
                                 >
                                     <m.icon className="w-5 h-5" />
                                     <span className="text-xs font-medium text-center">{m.name}</span>

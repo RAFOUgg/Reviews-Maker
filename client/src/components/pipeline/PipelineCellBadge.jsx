@@ -15,7 +15,7 @@ const PipelineCellBadge = ({ cellData, sectionId }) => {
         if (completionPercentage === 0) return 'bg-gray-100';
         if (completionPercentage <= 33) return 'bg-yellow-50 border-yellow-300';
         if (completionPercentage <= 66) return 'bg-orange-50 border-orange-300';
-        if (completionPercentage < 100) return 'bg-blue-50 border-blue-300';
+        if (completionPercentage < 100) return ' ';
         return 'bg-green-50 border-green-400';
     };
 
@@ -23,7 +23,7 @@ const PipelineCellBadge = ({ cellData, sectionId }) => {
         if (completionPercentage === 0) return 'text-gray-400';
         if (completionPercentage <= 33) return 'text-yellow-600';
         if (completionPercentage <= 66) return 'text-orange-600';
-        if (completionPercentage < 100) return 'text-blue-600';
+        if (completionPercentage < 100) return '';
         return 'text-green-600';
     };
 
@@ -119,11 +119,7 @@ const PipelineCellBadge = ({ cellData, sectionId }) => {
             {/* Indicateur de niveau en bas */}
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-200">
                 <div
-                    className={`h-full transition-all ${completionPercentage === 100 ? 'bg-green-500' :
-                            completionPercentage >= 67 ? 'bg-blue-500' :
-                                completionPercentage >= 34 ? 'bg-orange-500' :
-                                    'bg-yellow-500'
-                        }`}
+                    className={`h-full transition-all ${completionPercentage === 100 ? 'bg-green-500' : completionPercentage >= 67 ? '' : completionPercentage >= 34 ? 'bg-orange-500' : 'bg-yellow-500' }`}
                     style={{ width: `${completionPercentage}%` }}
                 />
             </div>

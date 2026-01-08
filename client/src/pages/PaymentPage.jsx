@@ -74,8 +74,8 @@ export default function PaymentPage() {
     if (!accountInfo) return null;
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 px-4 py-12">
-            <div className="max-w-4xl w-full">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 dark:from-gray-900 dark:to-gray-800 px-4 py-12">
+            <div className="max-w-7xl w-full">
                 <div className="text-center mb-8">
                     <Link
                         to="/choose-account"
@@ -101,7 +101,7 @@ export default function PaymentPage() {
                             Résumé
                         </h2>
 
-                        <div className="flex items-center gap-4 mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-gray-700 dark:to-gray-700 rounded-lg">
+                        <div className="flex items-center gap-4 mb-6 p-4 bg-gradient-to-r from-green-50 dark:from-gray-700 dark:to-gray-700 rounded-lg">
                             <div className="text-5xl">{accountInfo.icon}</div>
                             <div>
                                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -167,8 +167,8 @@ export default function PaymentPage() {
                         </div>
 
                         {/* Placeholder formulaire */}
-                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
-                            <p className="text-sm text-blue-800 dark:text-blue-300">
+                        <div className="dark: border dark: rounded-lg p-4 mb-6">
+                            <p className="text-sm dark:">
                                 <strong>Note :</strong> Le système de paiement sera intégré prochainement (Stripe/PayPal).
                             </p>
                         </div>

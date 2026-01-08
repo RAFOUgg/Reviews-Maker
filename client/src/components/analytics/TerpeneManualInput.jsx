@@ -11,11 +11,11 @@ export default function TerpeneManualInput({ data = {}, onChange }) {
         { key: 'myrcene', label: 'Myrcène', icon: '🌲', color: 'bg-green-500' },
         { key: 'limonene', label: 'Limonène', icon: '🍋', color: 'bg-yellow-500' },
         { key: 'caryophyllene', label: 'Caryophyllène', icon: '🌶️', color: 'bg-red-500' },
-        { key: 'linalool', label: 'Linalol', icon: '🌸', color: 'bg-purple-500' },
-        { key: 'pinene', label: 'Pinène (α+β)', icon: '🌲', color: 'bg-teal-500' },
+        { key: 'linalool', label: 'Linalol', icon: '🌸', color: '' },
+        { key: 'pinene', label: 'Pinène (α+β)', icon: '🌲', color: '' },
         { key: 'terpinolene', label: 'Terpinolène', icon: '🌿', color: 'bg-lime-500' },
         { key: 'humulene', label: 'Humulène', icon: '🍺', color: 'bg-amber-500' },
-        { key: 'ocimene', label: 'Ocimène', icon: '🌺', color: 'bg-pink-500' },
+        { key: 'ocimene', label: 'Ocimène', icon: '🌺', color: '' },
         { key: 'bisabolol', label: 'Bisabolol', icon: '🌼', color: 'bg-orange-500' },
         { key: 'valencene', label: 'Valencène', icon: '🍊', color: 'bg-orange-600' }
     ]

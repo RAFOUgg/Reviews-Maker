@@ -26,25 +26,13 @@ export default function ColorPaletteControls() {
             <div className="flex gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
                 <button
                     onClick={() => setCustomMode(false)}
-                    className={`
-                        flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all
-                        ${!customMode
-                            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                            : 'text-gray-600 dark:text-gray-400'
-                        }
-                    `}
+                    className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all ${!customMode ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-600 dark:text-gray-400' }`}
                 >
                     Palettes
                 </button>
                 <button
                     onClick={() => setCustomMode(true)}
-                    className={`
-                        flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all
-                        ${customMode
-                            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                            : 'text-gray-600 dark:text-gray-400'
-                        }
-                    `}
+                    className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all ${customMode ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-600 dark:text-gray-400' }`}
                 >
                     Personnalisé
                 </button>
@@ -59,20 +47,14 @@ export default function ColorPaletteControls() {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => applyColorPalette(key)}
-                            className={`
-                                w-full p-4 rounded-xl transition-all border-2 text-left
-                                ${config.colors.palette === key
-                                    ? 'border-purple-500 shadow-lg'
-                                    : 'border-gray-200 dark:border-gray-700 hover:border-purple-300'
-                                }
-                            `}
+                            className={`w-full p-4 rounded-xl transition-all border-2 text-left ${config.colors.palette === key ? ' shadow-lg' : 'border-gray-200 dark:border-gray-700 hover:' }`}
                         >
                             <div className="flex items-center justify-between mb-3">
                                 <span className="font-semibold text-gray-900 dark:text-white">
                                     {palette.name}
                                 </span>
                                 {config.colors.palette === key && (
-                                    <svg className="w-5 h-5 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                     </svg>
                                 )}

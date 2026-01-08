@@ -299,7 +299,7 @@ export function getExportFormatsForUI(accountType) {
             name: 'PNG',
             description: 'Image haute qualité pour le web',
             icon: '🖼️',
-            color: 'from-blue-500 to-blue-600'
+            color: ' '
         },
         jpeg: {
             id: 'jpeg',
@@ -320,7 +320,7 @@ export function getExportFormatsForUI(accountType) {
             name: 'SVG',
             description: 'Vectoriel éditable',
             icon: '🎨',
-            color: 'from-purple-500 to-purple-600',
+            color: ' ',
             premium: true
         },
         csv: {

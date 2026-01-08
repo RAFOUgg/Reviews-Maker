@@ -42,8 +42,8 @@ export default function ConfirmDialog({
         },
         info: {
             icon: 'ℹ️',
-            color: 'text-blue-400',
-            buttonClass: 'bg-blue-600 hover:bg-blue-700'
+            color: '',
+            buttonClass: ' hover:'
         }
     }
 

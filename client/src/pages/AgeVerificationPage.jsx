@@ -105,13 +105,13 @@ export default function AgeVerificationPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-br via-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
             <div className="max-w-md w-full">
                 {/* Card principale */}
                 <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8">
                     {/* Icône et titre */}
                     <div className="text-center mb-8">
-                        <div className="w-20 h-20 bg-gradient-to-br from-violet-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div className="w-20 h-20 bg-gradient-to-br rounded-full flex items-center justify-center mx-auto mb-4">
                             <Calendar className="w-10 h-10 text-white" />
                         </div>
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -194,14 +194,14 @@ export default function AgeVerificationPage() {
 
                         {/* Affichage âge minimum */}
                         <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-                            Âge minimum requis: <strong className="text-violet-600 dark:text-violet-400">{getMinAge()} ans</strong>
+                            Âge minimum requis: <strong className="dark:">{getMinAge()} ans</strong>
                         </div>
 
                         {/* Bouton validation */}
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-4 bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-700 hover:to-pink-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full py-4 bg-gradient-to-r hover: hover: text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? 'Vérification...' : 'Vérifier mon âge'}
                         </button>

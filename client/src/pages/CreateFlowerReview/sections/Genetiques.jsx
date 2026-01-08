@@ -60,7 +60,7 @@ export default function Genetiques({ formData, handleChange }) {
                             type="text"
                             value={genetics.breeder || ''}
                             onChange={(e) => handleGeneticsChange('breeder', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
                             placeholder="Ex: DNA Genetics, Barney's Farm..."
                             list="breeder-suggestions"
                         />
@@ -84,7 +84,7 @@ export default function Genetiques({ formData, handleChange }) {
                             type="text"
                             value={genetics.variety || ''}
                             onChange={(e) => handleGeneticsChange('variety', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
                             placeholder="Ex: OG Kush, Girl Scout Cookies..."
                             list="variety-suggestions"
                         />
@@ -103,7 +103,7 @@ export default function Genetiques({ formData, handleChange }) {
                         <select
                             value={genetics.type || ''}
                             onChange={(e) => handleGeneticsChange('type', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
                         >
                             <option value="">Sélectionner...</option>
                             <option value="indica">🌙 Indica</option>
@@ -141,7 +141,7 @@ export default function Genetiques({ formData, handleChange }) {
                             type="text"
                             value={genetics.phenotype || ''}
                             onChange={(e) => handleGeneticsChange('phenotype', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
                             placeholder="Ex: Pheno #3, Selection A"
                         />
                     </div>
@@ -156,7 +156,7 @@ export default function Genetiques({ formData, handleChange }) {
                             type="text"
                             value={genetics.cloneCode || ''}
                             onChange={(e) => handleGeneticsChange('cloneCode', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
                             placeholder="Ex: Clone-2024-001"
                         />
                     </div>
@@ -173,9 +173,9 @@ export default function Genetiques({ formData, handleChange }) {
 
                 {/* Arbre Généalogique / Canva - COMING SOON */}
                 <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <LiquidCard className="bg-gradient-to-br from-purple-100 via-pink-50 to-indigo-100 dark:from-purple-900/30 dark:via-pink-900/20 dark:to-indigo-900/30 border-2 border-dashed border-purple-300 dark:border-purple-600">
+                    <LiquidCard className="bg-transparent dark:bg-transparent border-2 border-dashed border-gray-600">
                         <div className="text-center py-12">
-                            <Construction className="w-16 h-16 mx-auto text-purple-500 dark:text-purple-400 mb-4 animate-bounce" />
+                            <Construction className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-300 mb-4 animate-bounce" />
                             <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                                 🌳 Arbre Généalogique Interactive
                             </h3>
@@ -188,7 +188,7 @@ export default function Genetiques({ formData, handleChange }) {
                                 <p>📊 Export graphique de l'arbre</p>
                                 <p>📚 Intégration avec votre bibliothèque de cultivars</p>
                             </div>
-                            <div className="mt-6 inline-block px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-full shadow-lg">
+                            <div className="mt-6 inline-block px-6 py-2 liquid-btn liquid-btn--primary">
                                 Coming Soon 🚀
                             </div>
                         </div>
@@ -215,7 +215,7 @@ export default function Genetiques({ formData, handleChange }) {
                                 type="text"
                                 value={genetics.parentage?.mother || ''}
                                 onChange={(e) => handleParentageChange('mother', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
                                 placeholder="Ex: Purple Haze"
                                 list="cultivar-suggestions"
                             />
@@ -230,7 +230,7 @@ export default function Genetiques({ formData, handleChange }) {
                                 type="text"
                                 value={genetics.parentage?.father || ''}
                                 onChange={(e) => handleParentageChange('father', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
                                 placeholder="Ex: OG Kush"
                                 list="cultivar-suggestions"
                             />
@@ -245,7 +245,7 @@ export default function Genetiques({ formData, handleChange }) {
                             <textarea
                                 value={genetics.parentage?.lineage || ''}
                                 onChange={(e) => handleParentageChange('lineage', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 resize-none"
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus: resize-none"
                                 placeholder="Ex: (Purple Haze x OG Kush) F2..."
                                 rows={2}
                             />

@@ -123,14 +123,7 @@ const PipelineCore = ({
                 whileHover={{ scale: 1.15, zIndex: 10 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handleCellClick(index, cellData)}
-                className={`
-          relative group cursor-pointer
-          ${isPhaseMode ? 'w-10 h-10 md:w-12 md:h-12' : 'w-3 h-3 md:w-3.5 md:h-3.5'}
-          rounded-sm border transition-all duration-200
-          hover:border-blue-400 hover:shadow-lg hover:shadow-blue-400/50
-          hover:ring-2 hover:ring-blue-400/50
-          ${getIntensityColor(intensity)}
-        `}
+                className={`relative group cursor-pointer ${isPhaseMode ? 'w-10 h-10 md:w-12 md:h-12' : 'w-3 h-3 md:w-3.5 md:h-3.5'} rounded-sm border transition-all duration-200 hover: hover:shadow-lg hover:shadow-blue-400/50 hover:ring-2 hover:/50 ${getIntensityColor(intensity)}`}
                 style={isPhaseMode && phase ? {
                     backgroundColor: phase.color + '80',
                     borderColor: phase.color
@@ -196,7 +189,7 @@ const PipelineCore = ({
             <div className="flex items-start justify-between">
                 <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                        <Calendar className="w-6 h-6 text-blue-400" />
+                        <Calendar className="w-6 h-6" />
                         <h3 className="text-2xl font-bold text-white">{title}</h3>
                     </div>
                     {description && (
@@ -210,14 +203,14 @@ const PipelineCore = ({
                 <div className="flex items-center gap-4">
                     {/* Statistiques */}
                     <div className="text-right">
-                        <div className="text-2xl font-bold text-blue-400">{completionPercent}%</div>
+                        <div className="text-2xl font-bold">{completionPercent}%</div>
                         <div className="text-xs text-gray-400">{filledCellsCount}/{totalCells} cases</div>
                     </div>
                 </div>
             </div>
 
             {/* Info */}
-            <div className="flex items-center gap-2 text-xs text-gray-400 bg-blue-900/20 rounded-lg p-3 border border-blue-800/30">
+            <div className="flex items-center gap-2 text-xs text-gray-400 rounded-lg p-3 border /30">
                 <Info className="w-4 h-4 flex-shrink-0" />
                 <span>Cliquez sur une case pour éditer les données de cette période</span>
             </div>
@@ -273,9 +266,9 @@ const PipelineCore = ({
 
             {/* Evolution tracking (si activé) */}
             {showEvolutionTracking && filledCellsCount > 0 && (
-                <div className="mt-6 p-4 bg-purple-900/20 rounded-lg border border-purple-800/30">
+                <div className="mt-6 p-4 rounded-lg border /30">
                     <div className="flex items-center gap-2 mb-3">
-                        <TrendingUp className="w-5 h-5 text-purple-400" />
+                        <TrendingUp className="w-5 h-5" />
                         <h4 className="text-sm font-semibold text-white">Évolution des données</h4>
                     </div>
                     <p className="text-xs text-gray-400">

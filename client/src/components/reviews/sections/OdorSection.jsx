@@ -27,11 +27,11 @@ export default function OdorSection({ productType, data = {}, onChange }) {
     }, [dominantNotes, secondaryNotes, intensity, complexity, fidelity]);
 
     return (
-        <div className="space-y-8 p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50">
+        <div className="space-y-8 p-6 bg-gray-900/90 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-700/50">
 
             {/* En-tête */}
             <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
+                <div className="p-3 bg-gradient-to-br rounded-xl">
                     <Flower2 className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -42,7 +42,7 @@ export default function OdorSection({ productType, data = {}, onChange }) {
 
             {/* Fidélité cultivars (Hash/Concentrés uniquement) */}
             {(productType === 'Hash' || productType === 'Concentré') && (
-                <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl">
+                <div className="p-4 bg-gradient-to-br dark:/20 dark:/20 rounded-xl">
                     <LiquidSlider
                         label="Fidélité aux cultivars"
                         min={1}
@@ -93,7 +93,7 @@ export default function OdorSection({ productType, data = {}, onChange }) {
                     />
                 </div>
 
-                <div className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl">
+                <div className="p-4 bg-gradient-to-br dark:/20 dark:/20 rounded-xl">
                     <LiquidSlider
                         label="🌈 Complexité aromatique"
                         min={0}

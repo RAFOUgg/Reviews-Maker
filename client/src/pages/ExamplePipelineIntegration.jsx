@@ -147,7 +147,7 @@ const ExamplePipelineIntegration = () => {
                     </button>
                     <button
                         onClick={handleSave}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+                        className="px-4 py-2 hover: text-white rounded-lg transition-colors"
                     >
                         💾 Sauvegarder
                     </button>
@@ -250,7 +250,7 @@ const ExamplePipelineIntegration = () => {
                                 intervalType: 'phases',
                                 duration: 12
                             })}
-                            className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded text-sm"
+                            className="px-3 py-1 hover: text-white rounded text-sm"
                         >
                             Activer mode Phases
                         </button>
@@ -289,7 +289,7 @@ const ExamplePipelineIntegration = () => {
                                 startDate: '2025-01-01',
                                 endDate: '2025-04-01'
                             })}
-                            className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm"
+                            className="px-3 py-1 hover: text-white rounded text-sm"
                         >
                             Activer mode Dates (Jan-Avr)
                         </button>

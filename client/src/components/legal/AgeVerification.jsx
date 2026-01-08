@@ -172,7 +172,7 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
             <div className="max-w-md w-full bg-gray-900 text-white rounded-2xl shadow-2xl border border-violet-500/30 p-6">
                 <div className="flex items-center gap-3 mb-4">
-                    <svg className="w-8 h-8 text-violet-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                    <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                     </svg>
                     <h2 className="text-2xl font-bold">
@@ -202,8 +202,8 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
                             className={inputClasses}
                             popperClassName="z-50"
                             calendarClassName="bg-gray-900 text-white border border-violet-500/30 rounded-xl shadow-2xl p-3"
-                            dayClassName={() => 'text-sm text-gray-100 hover:!bg-violet-600 hover:!text-white focus:!bg-violet-600 focus:!text-white rounded-full'}
-                            weekDayClassName={() => 'text-violet-300 text-xs font-semibold'}
+                            dayClassName={() => 'text-sm text-gray-100 hover:! hover:!text-white focus:! focus:!text-white rounded-full'}
+                            weekDayClassName={() => ' text-xs font-semibold'}
                             required
                         />
                         <p className="mt-2 text-xs text-gray-400">
@@ -262,7 +262,7 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-violet-400"
+                        className="w-full hover: text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-violet-400"
                     >
                         {loading
                             ? t('ageVerification.verifying', 'Vérification...')

@@ -1,13 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Search, Filter, Grid, List, SortAsc, SortDesc,
-  Heart, MessageCircle, Share2, Eye, Star, Flame,
-  ChevronDown, X, Calendar, TrendingUp, Award
+  Search, Grid, List, Heart, MessageCircle, Eye, Star,
+  Calendar, TrendingUp
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useStore } from '../store/useStore';
-import { LiquidButton, LiquidInput, LiquidCard } from '../components/liquid';
+import { LiquidCard } from '../components/liquid';
 
 // Types de produits avec icônes
 const PRODUCT_TYPES = [
@@ -42,20 +41,13 @@ const ReviewCard = ({ review, onLike, onView }) => {
 
   const handleLike = (e) => {
     e.stopPropagation();
-    setIsLiked(!isLiked);
+    setIsLiked((s) => !s);
     onLike?.(review.id, !isLiked);
   };
 
   const getTypeIcon = (type) => {
     const types = { flower: '🌸', hash: '🟤', concentrate: '💎', edible: '🍪' };
     return types[type] || '🌿';
-  };
-
-  const getRatingColor = (rating) => {
-    if (rating >= 8) return 'from-green-500 to-emerald-500';
-    if (rating >= 6) return 'from-yellow-500 to-amber-500';
-    if (rating >= 4) return 'from-orange-500 to-red-500';
-    return 'from-red-500 to-rose-500';
   };
 
   return (
@@ -67,7 +59,6 @@ const ReviewCard = ({ review, onLike, onView }) => {
       className="cursor-pointer group"
     >
       <LiquidCard className="overflow-hidden">
-        {/* Image */}
         <div className="relative aspect-square overflow-hidden">
           <img
             src={review.imageUrl || '/placeholder-review.jpg'}
@@ -75,53 +66,33 @@ const ReviewCard = ({ review, onLike, onView }) => {
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           />
 
-          {/* Type badge */}
-          <div className="absolute top-3 left-3 px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-white text-sm font-medium flex items-center gap-1">
+          <div className="absolute top-3 left-3 px-3 py-1 bg-panel/60 backdrop-blur-md rounded-full text-title text-sm font-medium flex items-center gap-1">
             <span>{getTypeIcon(review.type)}</span>
             {review.typeName || 'Produit'}
           </div>
 
-          {/* Rating */}
-          <div className={`absolute top-3 right-3 w-12 h-12 rounded-full bg-gradient-to-br ${getRatingColor(review.rating)} flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
+          <div className="absolute top-3 right-3 w-12 h-12 rounded-full bg-card flex items-center justify-center text-title font-bold text-lg shadow-lg">
             {review.rating?.toFixed(1) || '-'}
           </div>
 
-          {/* Hover overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <div className="absolute bottom-4 left-4 right-4">
-              <button className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors">
-                Voir la review
-              </button>
+              <button className="w-full py-2 btn-primary">Voir la review</button>
             </div>
           </div>
         </div>
 
-        {/* Content */}
         <div className="p-4">
-          <h3 className="font-semibold text-gray-900 dark:text-white truncate mb-1">
-            {review.name || 'Sans nom'}
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 truncate mb-3">
-            par @{review.author?.username || 'anonyme'}
-          </p>
+          <h3 className="font-semibold text-title truncate mb-1">{review.name || 'Sans nom'}</h3>
+          <p className="text-sm text-subtitle truncate mb-3">par @{review.author?.username || 'anonyme'}</p>
 
-          {/* Stats */}
-          <div className="flex items-center justify-between text-sm text-gray-500">
-            <button
-              onClick={handleLike}
-              className={`flex items-center gap-1 transition-colors ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
-            >
+          <div className="flex items-center justify-between text-sm text-subtitle">
+            <button onClick={handleLike} className={`flex items-center gap-1 transition-colors ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}>
               <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
               {(review.likes || 0) + (isLiked ? 1 : 0)}
             </button>
-            <div className="flex items-center gap-1">
-              <MessageCircle className="w-4 h-4" />
-              {review.comments || 0}
-            </div>
-            <div className="flex items-center gap-1">
-              <Eye className="w-4 h-4" />
-              {review.views || 0}
-            </div>
+            <div className="flex items-center gap-1"><MessageCircle className="w-4 h-4" />{review.comments || 0}</div>
+            <div className="flex items-center gap-1"><Eye className="w-4 h-4" />{review.views || 0}</div>
           </div>
         </div>
       </LiquidCard>
@@ -194,9 +165,8 @@ export default function GalleryPage() {
   const handleLike = (id, liked) => console.log('Like:', id, liked);
 
   return (
-    <div className="min-h-screen bg-slate-900 relative">
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 via-violet-700/20 to-purple-800/20 pointer-events-none" />
-      <div className="max-w-7xl mx-auto px-4 py-8 relative z-10">
+    <div className="min-h-screen bg-transparent relative">
+      <div className="container-glass mx-auto px-4 py-8 relative z-10">
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-black text-white mb-4 drop-shadow-lg">
             🌿 Galerie Publique
@@ -215,7 +185,7 @@ export default function GalleryPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher une review..."
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-gray-500"
               />
             </div>
             <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
@@ -223,7 +193,7 @@ export default function GalleryPage() {
                 <button
                   key={type.id}
                   onClick={() => setSelectedType(type.id)}
-                  className={`px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${selectedType === type.id ? 'bg-white text-purple-600' : 'bg-white/10 text-white hover:bg-white/20'
+                  className={`px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${selectedType === type.id ? 'bg-white/5 text-white' : 'bg-white/10 text-white hover:bg-white/20'
                     }`}
                 >
                   {type.icon} {type.name}
@@ -234,7 +204,7 @@ export default function GalleryPage() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none"
+                className="px-4 py-2 rounded-xl bg-transparent border border-white/10 text-white focus:outline-none"
               >
                 {SORT_OPTIONS.map((opt) => (
                   <option key={opt.id} value={opt.id} className="bg-gray-800">{opt.name}</option>
@@ -251,18 +221,13 @@ export default function GalleryPage() {
         </LiquidCard>
 
         {loading ? (
-          <div className="text-center text-white">Chargement...</div>
+          <div className="text-center text-subtitle">Chargement...</div>
         ) : filteredReviews.length === 0 ? (
-          <div className="text-center py-16 text-white">Aucune review trouvée</div>
+          <div className="text-center py-16 text-subtitle">Aucune review trouvée</div>
         ) : (
           <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
             {filteredReviews.map((review) => (
-              <ReviewCard
-                key={review.id}
-                review={review}
-                onView={handleViewReview}
-                onLike={handleLike}
-              />
+              <ReviewCard key={review.id} review={review} onView={handleViewReview} onLike={handleLike} />
             ))}
           </div>
         )}

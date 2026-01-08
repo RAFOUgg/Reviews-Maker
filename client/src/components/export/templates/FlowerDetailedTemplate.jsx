@@ -23,7 +23,7 @@ export default function FlowerDetailedTemplate({ review, customModules, isDark =
         <div className={`w-full aspect-video rounded-lg overflow-hidden shadow-lg ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
             <div className="h-full flex flex-col">
                 {/* Hero Image */}
-                <div className="flex-1 relative bg-gradient-to-br from-purple-400 to-pink-400 overflow-hidden">
+                <div className="flex-1 relative bg-gradient-to-br overflow-hidden">
                     {review.mainImageUrl ? (
                         <img
                             src={review.mainImageUrl}
@@ -82,7 +82,7 @@ export default function FlowerDetailedTemplate({ review, customModules, isDark =
                         {effects.length > 0 && (
                             <div className="flex flex-wrap gap-1">
                                 {effects.slice(0, 4).map((effect, i) => (
-                                    <span key={i} className={`px-2 py-1 rounded-full text-white text-xs font-semibold ${isDark ? 'bg-purple-600' : 'bg-purple-500'}`}>
+                                    <span key={i} className={`px-2 py-1 rounded-full text-white text-xs font-semibold ${isDark ? '' : ''}`}>
                                         {effect}
                                     </span>
                                 ))}

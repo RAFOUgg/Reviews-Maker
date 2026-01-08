@@ -19,18 +19,844 @@
  * - onGeneralDataChange: (field, value) => void
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import ConfirmModal from '../ui/ConfirmModal';
+import { useToast } from '../ToastContainer';
+
+// Emojis disponibles pour les groupes
+const GROUP_EMOJIS = ['🌱', '🌿', '💧', '☀️', '🌡️', '📊', '⚗️', '🧪', '🔬', '💨', '🏠', '🌞', '🌙', '💡', '🔌', '📅', '⏱️', '📏', '🎯', '✨', '🚀', '💪', '🎨', '🔥', '❄️', '💎', '🌈', '🍃', '🌸', '🍀'];
+
+// Cell Context Menu - Menu contextuel pour cellules timeline
+function CellContextMenu({
+    isOpen,
+    position,
+    cellTimestamp,
+    selectedCells,
+    cellData,
+    sidebarContent,
+    onClose,
+    onDeleteAll,
+    onDeleteFields,
+    onCopy,
+    onPaste,
+    hasCopiedData
+}) {
+    const [showFieldList, setShowFieldList] = useState(false);
+    const [selectedFieldsToDelete, setSelectedFieldsToDelete] = useState([]);
+    const menuRef = useRef(null);
+    const [isVisible, setIsVisible] = useState(false);
+
+    // Fermer au clic extérieur ou Escape
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleClickOutside = (e) => {
+            if (menuRef.current && !menuRef.current.contains(e.target)) onClose();
+        };
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') onClose();
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
+        };
+    }, [isOpen, onClose]);
+
+    // Reset au changement de cellule
+    useEffect(() => {
+        setShowFieldList(false);
+        setSelectedFieldsToDelete([]);
+        setIsVisible(false);
+    }, [cellTimestamp, isOpen]);
+
+    // Positionnement naturel - à côté du clic comme un vrai menu contextuel
+    useLayoutEffect(() => {
+        if (!isOpen || !menuRef.current) return;
+
+        const positionMenu = () => {
+            const menu = menuRef.current;
+            if (!menu) return;
+
+            const rect = menu.getBoundingClientRect();
+            const m = 8;
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+
+            let x = position.x;
+            let y = position.y;
+
+            // Ajustement horizontal : préférer à droite, sinon à gauche
+            if (x + rect.width > vw - m) {
+                x = Math.max(m, x - rect.width);
+            }
+            x = Math.max(m, Math.min(x, vw - rect.width - m));
+
+            // Ajustement vertical : rester dans le viewport
+            if (y + rect.height > vh - m) {
+                y = vh - rect.height - m;
+            }
+            y = Math.max(m, y);
+
+            menu.style.left = `${Math.round(x)}px`;
+            menu.style.top = `${Math.round(y)}px`;
+            setIsVisible(true);
+        };
+
+        requestAnimationFrame(() => requestAnimationFrame(positionMenu));
+    }, [isOpen, position, showFieldList]);
+
+    if (!isOpen) return null;
+
+    const targetCount = selectedCells?.length > 0 ? selectedCells.length : 1;
+    const isBulk = targetCount > 1;
+
+    // Extraire les champs présents dans la cellule
+    const dataFields = cellData ? Object.keys(cellData).filter(k =>
+        !['timestamp', 'label', 'date', 'phase', 'week', 'day', 'hours', 'seconds', '_meta'].includes(k)
+    ) : [];
+
+    // Trouver la définition complète d'un champ
+    const getFieldDef = (fieldKey) => {
+        for (const section of (sidebarContent || [])) {
+            const item = (section.items || []).find(i => i.id === fieldKey || i.key === fieldKey);
+            if (item) return { ...item, sectionLabel: section.label };
+        }
+        return null;
+    };
+
+    const getFieldLabel = (fieldKey) => {
+        const def = getFieldDef(fieldKey);
+        return def ? `${def.icon || '📌'} ${def.label}` : `📌 ${fieldKey}`;
+    };
+
+    const handleDeleteSelectedFields = () => {
+        if (selectedFieldsToDelete.length === 0) return;
+        onDeleteFields(selectedFieldsToDelete);
+        onClose();
+    };
+
+    const toggleField = (field) => {
+        setSelectedFieldsToDelete(prev => prev.includes(field) ? prev.filter(f => f !== field) : [...prev, field]);
+    };
+
+    const selectAllFields = () => setSelectedFieldsToDelete([...dataFields]);
+    const deselectAllFields = () => setSelectedFieldsToDelete([]);
+
+    return (
+        <div
+            ref={menuRef}
+            className="fixed z-[200] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+            style={{ opacity: isVisible ? 1 : 0, transition: 'opacity 0.15s ease-out', width: '260px', maxWidth: 'calc(100vw - 16px)', maxHeight: 'calc(100vh - 16px)' }}
+        >
+            {/* Header */}
+            <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-800">
+                <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    {isBulk ? `📦 ${targetCount} cellules` : '📍 Cellule'}
+                </div>
+                {!isBulk && cellData?.label && (
+                    <div className="text-xs text-gray-500">{cellData.label}</div>
+                )}
+            </div>
+
+            {/* Mode normal: liste des actions */}
+            {!showFieldList && (
+                <div className="py-1">
+                    {/* Copier */}
+                    <button
+                        onClick={() => { onCopy(); onClose(); }}
+                        disabled={dataFields.length === 0}
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-3 transition-colors"
+                    >
+                        <span className="text-base">📋</span>
+                        <span>Copier les données</span>
+                        {dataFields.length > 0 && <span className="ml-auto text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">{dataFields.length}</span>}
+                    </button>
+
+                    {/* Coller */}
+                    <button
+                        onClick={() => { onPaste(); onClose(); }}
+                        disabled={!hasCopiedData}
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-3 transition-colors"
+                    >
+                        <span className="text-base">📄</span>
+                        <span>Coller</span>
+                        {hasCopiedData && <span className="ml-auto text-xs text-green-600">●</span>}
+                    </button>
+
+                    <div className="h-px bg-gray-200 dark:bg-gray-700 my-1" />
+
+                    {/* Effacer des champs spécifiques */}
+                    <button
+                        onClick={() => setShowFieldList(true)}
+                        disabled={dataFields.length === 0}
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-3 transition-colors"
+                    >
+                        <span className="text-base">🗑️</span>
+                        <span>Effacer des champs...</span>
+                        <span className="ml-auto text-xs text-gray-400">{dataFields.length}</span>
+                    </button>
+
+                    {/* Effacer tout */}
+                    <button
+                        onClick={() => { onDeleteAll(); onClose(); }}
+                        disabled={dataFields.length === 0}
+                        className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-3 font-medium transition-colors"
+                    >
+                        <span className="text-base">💥</span>
+                        <span>Tout effacer</span>
+                        {isBulk && <span className="ml-auto text-xs">({targetCount})</span>}
+                    </button>
+                </div>
+            )}
+
+            {/* Mode sélection de champs */}
+            {showFieldList && (
+                <div>
+                    {/* Header sélection */}
+                    <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-800">
+                        <button onClick={() => setShowFieldList(false)} className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1 transition-colors">
+                            ← Retour
+                        </button>
+                        <div className="flex items-center gap-2">
+                            <button onClick={selectAllFields} className="text-xs text-blue-600 hover:text-blue-700">Tout</button>
+                            <span className="text-gray-300">|</span>
+                            <button onClick={deselectAllFields} className="text-xs text-gray-500 hover:text-gray-700">Aucun</button>
+                            <span className="text-xs text-gray-400 ml-1">{selectedFieldsToDelete.length}/{dataFields.length}</span>
+                        </div>
+                    </div>
+
+                    {/* Liste des champs avec valeurs */}
+                    <div className="max-h-[280px] overflow-y-auto">
+                        {dataFields.map(field => {
+                            const def = getFieldDef(field);
+                            const val = cellData[field];
+                            const isSelected = selectedFieldsToDelete.includes(field);
+
+                            return (
+                                <label key={field} className={`flex items-start gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800 transition-colors ${isSelected ? 'bg-red-50 dark:bg-red-900/10' : ''}`}>
+                                    <input type="checkbox" checked={isSelected} onChange={() => toggleField(field)} className="mt-0.5 w-4 h-4 accent-red-600 rounded" />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                                            {getFieldLabel(field)}
+                                        </div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                                            {def?.type === 'multiselect' && Array.isArray(val) ? (
+                                                val.length > 0 ? val.slice(0, 3).join(', ') + (val.length > 3 ? `... (+${val.length - 3})` : '') : '(vide)'
+                                            ) : def?.type === 'slider' || def?.type === 'number' ? (
+                                                <span className="font-mono">{val ?? '—'}{def.unit ? ` ${def.unit}` : ''}</span>
+                                            ) : (
+                                                String(val ?? '(vide)').slice(0, 30)
+                                            )}
+                                        </div>
+                                    </div>
+                                </label>
+                            );
+                        })}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="border-t border-gray-200 dark:border-gray-700 p-2 flex gap-2 bg-gray-50 dark:bg-gray-800">
+                        <button onClick={() => setShowFieldList(false)} className="flex-1 px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-md transition-colors">
+                            Annuler
+                        </button>
+                        <button onClick={handleDeleteSelectedFields} disabled={selectedFieldsToDelete.length === 0} className="flex-1 px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors">
+                            Effacer ({selectedFieldsToDelete.length})
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// Grouped preset modal - COMPLETE with proper field types, edit mode, emoji
+function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sidebarContent, type }) {
+    const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
+    const [editingGroup, setEditingGroup] = useState(null);
+    const [groupName, setGroupName] = useState('');
+    const [groupDescription, setGroupDescription] = useState('');
+    const [groupEmoji, setGroupEmoji] = useState('🌱');
+    const [selectedFields, setSelectedFields] = useState([]);
+    const [fieldValues, setFieldValues] = useState({});
+    const [searchTerm, setSearchTerm] = useState('');
+    const [expandedSections, setExpandedSections] = useState({});
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+    // Reset when opening
+    useEffect(() => {
+        if (isOpen) {
+            setMode('list');
+            setEditingGroup(null);
+            resetForm();
+        }
+    }, [isOpen]);
+
+    const resetForm = () => {
+        setGroupName('');
+        setGroupDescription('');
+        setGroupEmoji('🌱');
+        setSelectedFields([]);
+        setFieldValues({});
+        setSearchTerm('');
+        // Expand all sections by default for better visibility
+        const expanded = {};
+        (sidebarContent || []).forEach(s => { expanded[s.id || s.label] = true; });
+        setExpandedSections(expanded);
+    };
+
+    const startCreate = () => {
+        resetForm();
+        setMode('create');
+    };
+
+    const startEdit = (group) => {
+        setEditingGroup(group);
+        setGroupName(group.name || '');
+        setGroupDescription(group.description || '');
+        setGroupEmoji(group.emoji || '🌱');
+        const fields = group.fields || [];
+        setSelectedFields(fields.map(f => f.key));
+        const vals = {};
+        fields.forEach(f => { vals[f.key] = f.value; });
+        setFieldValues(vals);
+        setSearchTerm('');
+        const expanded = {};
+        (sidebarContent || []).forEach(s => { expanded[s.id || s.label] = true; });
+        setExpandedSections(expanded);
+        setMode('edit');
+    };
+
+    if (!isOpen) return null;
+
+    // Group fields by section with full item data
+    const sections = (sidebarContent || []).map(section => ({
+        id: section.id || section.label,
+        label: section.label,
+        icon: section.icon,
+        items: (section.items || []).map(item => ({
+            id: item.id || item.key || item.type,
+            key: item.id || item.key || item.type,
+            label: item.label,
+            icon: item.icon,
+            type: item.type || 'text',
+            options: item.options,
+            unit: item.unit,
+            min: item.min,
+            max: item.max,
+            step: item.step,
+            defaultValue: item.defaultValue
+        }))
+    }));
+
+    // Filter by search
+    const filteredSections = sections.map(section => ({
+        ...section,
+        items: section.items.filter(item =>
+            !searchTerm || item.label.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+    })).filter(section => section.items.length > 0);
+
+    const toggleSection = (sectionId) => {
+        setExpandedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
+    };
+
+    const handleToggleField = (fieldId) => {
+        setSelectedFields(prev =>
+            prev.includes(fieldId)
+                ? prev.filter(k => k !== fieldId)
+                : [...prev, fieldId]
+        );
+    };
+
+    const handleValueChange = (fieldId, value) => {
+        setFieldValues(prev => ({ ...prev, [fieldId]: value }));
+    };
+
+    // Render the correct input type based on field definition
+    const renderFieldInput = (field) => {
+        const value = fieldValues[field.id] ?? '';
+        const baseClass = "px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm";
+
+        // SELECT
+        if (field.type === 'select' && Array.isArray(field.options)) {
+            return (
+                <select
+                    value={value}
+                    onChange={(e) => handleValueChange(field.id, e.target.value)}
+                    className={`${baseClass} min-w-[120px]`}
+                >
+                    <option value="">Sélectionner...</option>
+                    {field.options.map((opt, idx) => {
+                        const val = typeof opt === 'string' ? opt : (opt.value ?? opt);
+                        const lab = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
+                        return <option key={idx} value={val}>{lab}</option>;
+                    })}
+                </select>
+            );
+        }
+
+        // MULTISELECT
+        if (field.type === 'multiselect' && Array.isArray(field.options)) {
+            const selected = Array.isArray(value) ? value : [];
+            return (
+                <div className="flex flex-wrap gap-1 max-w-[200px]">
+                    {field.options.slice(0, 6).map((opt, idx) => {
+                        const val = typeof opt === 'string' ? opt : (opt.value ?? opt);
+                        const lab = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
+                        const isChecked = selected.includes(val);
+                        return (
+                            <label key={idx} className={`text-xs px-1 py-0.5 rounded border cursor-pointer ${isChecked ? 'bg-purple-100 dark:bg-purple-900 border-purple-400' : 'border-gray-300'}`}>
+                                <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                        const next = e.target.checked ? [...selected, val] : selected.filter(s => s !== val);
+                                        handleValueChange(field.id, next);
+                                    }}
+                                    className="sr-only"
+                                />
+                                {lab}
+                            </label>
+                        );
+                    })}
+                </div>
+            );
+        }
+
+        // NUMBER / SLIDER / STEPPER
+        if (field.type === 'number' || field.type === 'slider' || field.type === 'stepper') {
+            return (
+                <input
+                    type="number"
+                    value={value}
+                    onChange={(e) => handleValueChange(field.id, e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    min={field.min}
+                    max={field.max}
+                    step={field.step || 1}
+                    placeholder={field.defaultValue !== undefined ? String(field.defaultValue) : ''}
+                    className={`${baseClass} w-20`}
+                />
+            );
+        }
+
+        // DATE
+        if (field.type === 'date') {
+            return (
+                <input
+                    type="date"
+                    value={value}
+                    onChange={(e) => handleValueChange(field.id, e.target.value)}
+                    className={`${baseClass} w-32`}
+                />
+            );
+        }
+
+        // CHECKBOX
+        if (field.type === 'checkbox') {
+            return (
+                <input
+                    type="checkbox"
+                    checked={Boolean(value)}
+                    onChange={(e) => handleValueChange(field.id, e.target.checked)}
+                    className="w-4 h-4"
+                />
+            );
+        }
+
+        // TEXT (default)
+        return (
+            <input
+                type="text"
+                value={value}
+                onChange={(e) => handleValueChange(field.id, e.target.value)}
+                placeholder="Valeur"
+                className={`${baseClass} w-24`}
+            />
+        );
+    };
+
+    const handleSaveGroup = () => {
+        if (!groupName.trim() || selectedFields.length === 0) return;
+        const group = {
+            id: editingGroup?.id || `group_${Date.now()}`,
+            name: groupName.trim(),
+            description: groupDescription.trim(),
+            emoji: groupEmoji,
+            fields: selectedFields.map(key => ({
+                key,
+                value: fieldValues[key] ?? ''
+            })),
+            createdAt: editingGroup?.createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        let newGroups;
+        if (editingGroup) {
+            // Update existing
+            newGroups = groups.map(g => (g.id === editingGroup.id) ? group : g);
+        } else {
+            // Add new
+            newGroups = [...groups, group];
+        }
+
+        // Mise à jour du state et localStorage
+        setGroups(newGroups);
+        const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
+        localStorage.setItem(storageKey, JSON.stringify(newGroups));
+
+        // onSave est optionnel et ne devrait pas être setGroups pour éviter les doubles updates
+        if (onSave && onSave !== setGroups) {
+            onSave(newGroups);
+        }
+
+        // Fermer la modal après enregistrement
+        resetForm();
+        onClose();
+    };
+
+    const handleDeleteGroup = (groupId) => {
+        if (!confirm('Supprimer ce groupe ?')) return;
+        // Supprimer le groupe qui correspond à l'ID ou au nom
+        const newGroups = groups.filter(g => !(g.id === groupId || g.name === groupId));
+        setGroups(newGroups);
+        const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
+        localStorage.setItem(storageKey, JSON.stringify(newGroups));
+    };
+
+    // Find field definition helper
+    const findFieldDef = (key) => {
+        for (const section of sections) {
+            const found = section.items.find(i => i.id === key || i.key === key);
+            if (found) return found;
+        }
+        return null;
+    };
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[800px] max-w-[95vw] max-h-[85vh] border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+                    <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
+                        <span>👥</span> Groupes de préréglages
+                        {mode === 'create' && <span className="text-sm font-normal text-gray-500">— Nouveau</span>}
+                        {mode === 'edit' && <span className="text-sm font-normal text-gray-500">— Modifier "{editingGroup?.name}"</span>}
+                    </h3>
+                    <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                        <span className="text-2xl leading-none">×</span>
+                    </button>
+                </div>
+
+                {/* LIST MODE */}
+                {mode === 'list' && (
+                    <div className="flex-1 overflow-y-auto p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                {groups.length} groupe(s) enregistré(s)
+                            </h4>
+                            <button
+                                onClick={startCreate}
+                                className="group relative px-5 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-semibold shadow-lg hover:shadow-purple-500/25 transition-all duration-300 flex items-center gap-2 overflow-hidden"
+                            >
+                                <span className="relative z-10 flex items-center gap-2">
+                                    <span className="text-lg font-bold">+</span> Nouveau groupe
+                                </span>
+                                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-purple-600 opacity-0 group-hover:opacity-20 transition-opacity" />
+                            </button>
+                        </div>
+
+                        {groups.length === 0 ? (
+                            <div className="text-center py-12 text-gray-500">
+                                <div className="text-4xl mb-3">📦</div>
+                                <p>Aucun groupe de préréglages</p>
+                                <p className="text-sm mt-1">Créez un groupe pour sauvegarder plusieurs champs ensemble</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {groups.map((group, idx) => (
+                                    <div key={group.id || idx} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                                        <div className="flex items-start gap-3">
+                                            <span className="text-3xl">{group.emoji || '🌱'}</span>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-semibold text-gray-900 dark:text-white">{group.name}</div>
+                                                {group.description && (
+                                                    <div className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{group.description}</div>
+                                                )}
+                                                <div className="text-xs text-gray-400 mt-2">
+                                                    {group.fields?.length || 0} champ(s)
+                                                </div>
+                                                {/* Preview des champs */}
+                                                <div className="flex flex-wrap gap-1 mt-2">
+                                                    {(group.fields || []).slice(0, 4).map((f, i) => {
+                                                        const def = findFieldDef(f.key);
+                                                        return (
+                                                            <span key={i} className="text-xs px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">
+                                                                {def?.icon || '📌'} {def?.label || f.key}: {String(f.value).substring(0, 15) || '—'}
+                                                            </span>
+                                                        );
+                                                    })}
+                                                    {(group.fields?.length || 0) > 4 && (
+                                                        <span className="text-xs px-2 py-0.5 text-gray-500">+{group.fields.length - 4}</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                            <button
+                                                onClick={() => startEdit(group)}
+                                                className="flex-1 px-3 py-1.5 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
+                                            >
+                                                ✏️ Modifier
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteGroup(group.id || group.name)}
+                                                className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* CREATE / EDIT MODE */}
+                {(mode === 'create' || mode === 'edit') && (
+                    <div className="flex-1 flex flex-col overflow-hidden">
+                        {/* Form header */}
+                        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+                            <div className="flex items-center gap-3">
+                                {/* Emoji picker */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                        className="w-12 h-12 text-2xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl border border-gray-300 dark:border-gray-600 flex items-center justify-center transition-colors"
+                                    >
+                                        {groupEmoji}
+                                    </button>
+                                    {showEmojiPicker && (
+                                        <div className="absolute top-14 left-0 z-10 p-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 grid grid-cols-6 gap-1 w-[200px]">
+                                            {GROUP_EMOJIS.map(e => (
+                                                <button
+                                                    key={e}
+                                                    onClick={() => { setGroupEmoji(e); setShowEmojiPicker(false); }}
+                                                    className={`w-7 h-7 text-lg rounded hover:bg-gray-100 dark:hover:bg-gray-700 ${groupEmoji === e ? 'bg-purple-100 dark:bg-purple-900' : ''}`}
+                                                >
+                                                    {e}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex-1 grid grid-cols-2 gap-3">
+                                    <input
+                                        type="text"
+                                        value={groupName}
+                                        onChange={(e) => setGroupName(e.target.value)}
+                                        placeholder="Nom du groupe *"
+                                        className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={groupDescription}
+                                        onChange={(e) => setGroupDescription(e.target.value)}
+                                        placeholder="Description (optionnel)"
+                                        className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                                    />
+                                </div>
+                            </div>
+                            {/* Search */}
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="🔍 Rechercher un champ..."
+                                className="w-full mt-3 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                            />
+                        </div>
+
+                        {/* Fields grid - 2 columns on large screens */}
+                        <div className="flex-1 overflow-y-auto p-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                {filteredSections.map(section => (
+                                    <div key={section.id} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                                        <button
+                                            onClick={() => toggleSection(section.id)}
+                                            className="w-full flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <span>{section.icon}</span>
+                                                <span className="text-sm font-medium">{section.label}</span>
+                                                <span className="text-xs text-gray-500">({section.items.length})</span>
+                                            </div>
+                                            <span className="text-gray-400">{expandedSections[section.id] ? '▼' : '▶'}</span>
+                                        </button>
+
+                                        {expandedSections[section.id] && (
+                                            <div className="p-2 space-y-1 max-h-[180px] overflow-y-auto">
+                                                {section.items.map(field => {
+                                                    const isSelected = selectedFields.includes(field.id);
+                                                    return (
+                                                        <div
+                                                            key={field.id}
+                                                            className={`flex items-center gap-2 p-2 rounded transition-colors ${isSelected ? 'bg-purple-50 dark:bg-purple-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected}
+                                                                onChange={() => handleToggleField(field.id)}
+                                                                className="w-4 h-4 accent-purple-600 flex-shrink-0"
+                                                            />
+                                                            <span className="text-base flex-shrink-0">{field.icon}</span>
+                                                            <span className="text-sm flex-1 truncate">{field.label}</span>
+
+                                                            {isSelected && (
+                                                                <div className="flex items-center gap-1 flex-shrink-0">
+                                                                    {renderFieldInput(field)}
+                                                                    {field.unit && <span className="text-xs text-gray-500">{field.unit}</span>}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="flex items-center justify-between gap-3 p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 bg-gray-50 dark:bg-gray-800/50">
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                                {selectedFields.length} champ(s) sélectionné(s)
+                            </div>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => { setMode('list'); resetForm(); }}
+                                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    onClick={handleSaveGroup}
+                                    disabled={!groupName.trim() || selectedFields.length === 0}
+                                    className="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+                                >
+                                    {editingGroup ? 'Enregistrer les modifications' : 'Créer le groupe'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Footer for list mode */}
+                {mode === 'list' && (
+                    <div className="flex gap-3 p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+                        <button
+                            onClick={onClose}
+                            className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
+                        >
+                            Fermer
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// Save / Load entire pipeline presets
+function SavePipelineModal({ isOpen, onClose, timelineConfig, timelineData, onSavePreset, onLoadPreset }) {
+    const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
+    const [includeData, setIncludeData] = useState(true);
+    const [saved, setSaved] = useState(() => {
+        try {
+            return JSON.parse(localStorage.getItem('pipeline-presets') || '[]');
+        } catch (e) { return []; }
+    });
+
+    if (!isOpen) return null;
+
+    const handleSave = () => {
+        if (!name.trim()) return alert('Veuillez donner un nom au préréglage');
+        const preset = {
+            id: Date.now(),
+            name: name.trim(),
+            description: description.trim(),
+            createdAt: new Date().toISOString(),
+            config: timelineConfig || {},
+            data: includeData ? (timelineData || []) : []
+        };
+        const next = [...saved, preset];
+        localStorage.setItem('pipeline-presets', JSON.stringify(next));
+        setSaved(next);
+        onSavePreset && onSavePreset(preset);
+        onClose();
+    };
+
+    const handleLoad = (preset) => {
+        if (!confirm(`Charger le préréglage "${preset.name}" et remplacer la configuration actuelle ?`)) return;
+        onLoadPreset && onLoadPreset(preset);
+        onClose();
+    };
+
+    const handleDelete = (id) => {
+        if (!confirm('Supprimer ce préréglage ?')) return;
+        const next = saved.filter(s => s.id !== id);
+        localStorage.setItem('pipeline-presets', JSON.stringify(next));
+        setSaved(next);
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 min-w-[360px] max-w-[95vw] border border-gray-200 dark:border-gray-700">
+                <h3 className="font-bold text-lg mb-3">Sauvegarder / Charger un préréglage de pipeline</h3>
+                <div className="mb-2">
+                    <input className="w-full px-3 py-2 border rounded mb-2" placeholder="Nom du préréglage" value={name} onChange={e => setName(e.target.value)} />
+                    <input className="w-full px-3 py-2 border rounded mb-2" placeholder="Description (optionnel)" value={description} onChange={e => setDescription(e.target.value)} />
+                    <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={includeData} onChange={e => setIncludeData(e.target.checked)} /> Inclure les données des cases</label>
+                </div>
+                <div className="flex gap-2 mt-4">
+                    <button className="liquid-btn liquid-btn--accent flex-1" onClick={handleSave}>Enregistrer</button>
+                    <button className="liquid-btn flex-1" onClick={onClose}>Fermer</button>
+                </div>
+
+                {saved.length > 0 && (
+                    <div className="mt-4 max-h-40 overflow-y-auto">
+                        <div className="font-semibold mb-2">Préréglages enregistrés</div>
+                        <div className="space-y-2">
+                            {saved.map(p => (
+                                <div key={p.id} className="flex items-center justify-between p-2 border rounded">
+                                    <div>
+                                        <div className="font-medium">{p.name}</div>
+                                        <div className="text-xs text-gray-500">{p.description}</div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button className="liquid-btn" onClick={() => handleLoad(p)}>Charger</button>
+                                        <button className="liquid-btn liquid-btn--danger" onClick={() => handleDelete(p.id)}>Suppr.</button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
 import { ChevronDown, ChevronRight, Plus, Settings, Save, Upload, CheckSquare, Square, Check } from 'lucide-react';
 import PipelineDataModal from './PipelineDataModal';
-import PresetConfigModal from './PresetConfigModal';
 import PipelineCellBadge from './PipelineCellBadge';
 import CellEmojiOverlay from './CellEmojiOverlay';
 import PipelineCellTooltip from './PipelineCellTooltip';
 import MassAssignModal from './MassAssignModal';
-import PresetSelector from './PresetSelector';
 import ItemContextMenu from './ItemContextMenu';
-import PreConfigBadge from './PreConfigBadge';
-import MultiContentAssignModal from './MultiContentAssignModal';
 
 const PipelineDragDropView = ({
     type = 'culture',
@@ -42,14 +868,38 @@ const PipelineDragDropView = ({
     generalFields = [],
     generalData = {},
     onGeneralDataChange = () => { },
+    // Marquee selection threshold in pixels
+    marqueeThreshold = 6,
     presets = [],
     onSavePreset = () => { },
-    onLoadPreset = () => { }
+    // Préréglages retirés
 }) => {
+    // toast helper
+    const toast = useToast();
+    const showToast = (msg, type = 'success') => {
+        try {
+            if (!toast) return;
+            if (type === 'error') return toast.error(msg);
+            if (type === 'warning') return toast.warning ? toast.warning(msg) : toast.info(msg);
+            return toast.success(msg);
+        } catch (e) {
+            console.warn('Toast error', e);
+        }
+    };
     const [expandedSections, setExpandedSections] = useState({});
     const [draggedContent, setDraggedContent] = useState(null);
     const [selectedCell, setSelectedCell] = useState(null);
-    const [showPresets, setShowPresets] = useState(false);
+
+    // Empêcher la sélection automatique de la première case
+    useEffect(() => {
+        setSelectedCells([]); // Clear selection on mount
+    }, []);
+
+    // Clear selection on timelineConfig change (reset)
+    useEffect(() => {
+        setSelectedCells([]);
+    }, [timelineConfig]);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentCellTimestamp, setCurrentCellTimestamp] = useState(null);
     const [tooltipData, setTooltipData] = useState({ visible: false, cellData: null, position: { x: 0, y: 0 }, section: '' });
@@ -57,103 +907,281 @@ const PipelineDragDropView = ({
     const [selectedCells, setSelectedCells] = useState([]);
     const [showMassAssignModal, setShowMassAssignModal] = useState(false);
     const [sourceCellForMassAssign, setSourceCellForMassAssign] = useState(null);
-    const [selectedPresets, setSelectedPresets] = useState([]);
     const [droppedItem, setDroppedItem] = useState(null); // Item droppé en attente de saisie
-    const [showPresetConfigModal, setShowPresetConfigModal] = useState(false);
-    const [editingPreset, setEditingPreset] = useState(null);
-    const [showMultiAssignModal, setShowMultiAssignModal] = useState(false);
-    const [multiAssignContents, setMultiAssignContents] = useState([]);
     const [hoveredCell, setHoveredCell] = useState(null); // Cellule survolée pendant drag
+    const [showPresets, setShowPresets] = useState(false);
+    const [showSavePipelineModal, setShowSavePipelineModal] = useState(false);
     const [isSelecting, setIsSelecting] = useState(false);
     const [selectionStartIdx, setSelectionStartIdx] = useState(null);
 
-    // Refs utilisés par les handlers de drag/selection (déclarés tôt pour éviter TDZ)
-    const selectedCellsRef = useRef([]);
-    
-
-    // ✅ NOUVEAUX ÉTATS POUR CLIC DROIT PRÉ-CONFIGURATION
-    const [contextMenu, setContextMenu] = useState(null); // { item, position }
-    const [preConfiguredItems, setPreConfiguredItems] = useState(() => {
-        // Charger depuis localStorage
-        const saved = localStorage.getItem(`pipeline-preconfig-${type}`);
-        return saved ? JSON.parse(saved) : {};
+    // Grouped presets state
+    const [groupedPresets, setGroupedPresets] = useState(() => {
+        const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
+        const saved = localStorage.getItem(storageKey);
+        return saved ? JSON.parse(saved) : [];
     });
-    const [showSuccessToast, setShowSuccessToast] = useState(null);
 
-    // Handlers pour préréglages
-    const handleTogglePreset = (presetId) => {
-        setSelectedPresets(prev =>
-            prev.includes(presetId)
-                ? prev.filter(id => id !== presetId)
-                : [...prev, presetId]
-        );
-    };
+    // Recharger les préréglages quand le type change
+    useEffect(() => {
+        const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
+        const saved = localStorage.getItem(storageKey);
+        setGroupedPresets(saved ? JSON.parse(saved) : []);
 
-    const handleOpenPresetConfig = (initialData = null) => {
-        setEditingPreset(initialData);
-        setShowPresetConfigModal(true);
-    };
-
-    const handleSavePresetConfig = (preset) => {
-        // Sauvegarder le préréglage via le handler parent UNIQUEMENT
-        // Ne pas sauvegarder directement dans localStorage pour éviter duplications
-        if (onSavePreset) {
-            onSavePreset(preset);
+        // Nettoyer les anciennes clés si type est défini
+        if (type && type !== 'unknown') {
+            const oldKey = 'pipeline-grouped-presets-unknown';
+            if (localStorage.getItem(oldKey) !== null) {
+                console.log(`🧹 Nettoyage: suppression de ${oldKey}`);
+                localStorage.removeItem(oldKey);
+            }
         }
+    }, [type]);
 
-        setShowPresetConfigModal(false);
-        setEditingPreset(null);
-    };
+    const [showGroupedPresetModal, setShowGroupedPresetModal] = useState(false);
+    const [contextMenu, setContextMenu] = useState(null); // { item, position }
+    // Multi-select sidebar state (global)
+    const [multiSelectedItems, setMultiSelectedItems] = useState([]);
 
-    const handleDeletePreset = (presetId) => {
-        // Créer un preset avec action delete pour que le parent le gère
-        if (onSavePreset) {
-            onSavePreset({ id: presetId, _action: 'delete' });
-        }
-        setSelectedPresets(prev => prev.filter(id => id !== presetId));
-    };
+    // Cell context menu state
+    const [cellContextMenu, setCellContextMenu] = useState(null); // { position, timestamp, selectedCells }
+    const [copiedCellData, setCopiedCellData] = useState(null); // Pour copier/coller
 
-    // Appliquer les données d'un préréglage à une cellule
-    const applyPresetToTimestamp = (timestamp, preset) => {
-        if (!preset || !preset.data) return;
-        Object.entries(preset.data).forEach(([key, value]) => {
-            onDataChange(timestamp, key, value);
+    // Action history for undo/redo (stack with pointer)
+    const [actionsHistory, setActionsHistory] = useState([]);
+    const [historyPointer, setHistoryPointer] = useState(-1); // -1 = vide, 0+ = index dans l'historique
+
+    const pushAction = (action) => {
+        setActionsHistory(prev => {
+            const next = [...prev.slice(0, historyPointer + 1), action];
+            // limit history length
+            if (next.length > 100) next.shift();
+            return next;
         });
-        onDataChange(timestamp, '_meta', {
-            presetApplied: preset.id,
-            lastModified: new Date().toISOString()
+        setHistoryPointer(prev => {
+            const newPointer = Math.min(prev + 1, 99);
+            return newPointer;
         });
     };
 
-    // Handler local pour appliquer un préréglage (cellule unique ou sélection multiple)
-    const handleApplyPresetLocal = (preset) => {
-        if (!preset) return;
-
-        if (massAssignMode && selectedCells.length > 0) {
-            if (!window.confirm(`Appliquer le préréglage "${preset.name}" à ${selectedCells.length} cellule(s) ?`)) return;
-            selectedCells.forEach(ts => applyPresetToTimestamp(ts, preset));
-            setMassAssignMode(false);
-            setSelectedCells([]);
-            showToast(`✓ Préréglage "${preset.name}" appliqué à ${selectedCells.length} cellule(s)`);
-            return;
+    const undoLastAction = () => {
+        if (historyPointer < 0) return;
+        const action = actionsHistory[historyPointer];
+        if (action && action.changes) {
+            action.changes.forEach(ch => {
+                onDataChange(ch.timestamp, ch.field, ch.previousValue === undefined ? null : ch.previousValue);
+            });
         }
-
-        if (currentCellTimestamp) {
-            if (!window.confirm(`Appliquer le préréglage "${preset.name}" à la case ${currentCellTimestamp} ?`)) return;
-            applyPresetToTimestamp(currentCellTimestamp, preset);
-            showToast(`✓ Préréglage "${preset.name}" appliqué`);
-            return;
-        }
-
-        if (cells.length > 0) {
-            if (!window.confirm(`Aucune cellule sélectionnée. Appliquer le préréglage "${preset.name}" à la première case (${cells[0].timestamp}) ?`)) return;
-            applyPresetToTimestamp(cells[0].timestamp, preset);
-            showToast(`✓ Préréglage "${preset.name}" appliqué à ${cells[0].timestamp}`);
-            return;
-        }
-
-        alert('Aucune case disponible pour appliquer le préréglage');
+        setHistoryPointer(prev => Math.max(prev - 1, -1));
     };
+
+    const redoLastAction = () => {
+        if (historyPointer >= actionsHistory.length - 1) return;
+        const nextPointer = historyPointer + 1;
+        const action = actionsHistory[nextPointer];
+        if (action && action.changes) {
+            action.changes.forEach(ch => {
+                // Pour redo, on applique les changements en avant
+                // En cherchant la valeur "actuelle" qui est la previousValue de l'action suivante
+                // ou on utilise directement la valeur stockée si disponible
+                let newValue = ch.newValue; // Si la valeur est stockée
+
+                // Sinon, on cherche dans les prochaines actions
+                if (newValue === undefined) {
+                    for (let i = nextPointer + 1; i < actionsHistory.length; i++) {
+                        const nextAction = actionsHistory[i];
+                        for (const nextChange of nextAction.changes || []) {
+                            if (nextChange.timestamp === ch.timestamp && nextChange.field === ch.field) {
+                                newValue = nextChange.previousValue;
+                                break;
+                            }
+                        }
+                        if (newValue !== undefined) break;
+                    }
+                }
+
+                // Si toujours pas trouvé, c'est qu'il n'y a pas eu de modification après
+                // On reconstruit à partir des données actuelles
+                if (newValue === undefined) {
+                    const currentData = getCellData(ch.timestamp) || {};
+                    newValue = currentData[ch.field];
+                }
+
+                onDataChange(ch.timestamp, ch.field, newValue);
+            });
+        }
+        setHistoryPointer(prev => Math.min(prev + 1, actionsHistory.length - 1));
+    };
+
+    // Stocker les nouvelles valeurs dans chaque action pour le redo
+    const pushActionWithNewValues = (action, newValuesMap) => {
+        const enrichedAction = { ...action, _newValues: newValuesMap };
+        pushAction(enrichedAction);
+    };
+
+    // Raccourcis clavier pour undo/redo
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            // Ctrl+Z ou Cmd+Z = Undo
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                undoLastAction();
+            }
+            // Ctrl+Shift+Z ou Ctrl+Y ou Cmd+Shift+Z = Redo
+            else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+                e.preventDefault();
+                redoLastAction();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [historyPointer, actionsHistory]);
+
+    const [confirmState, setConfirmState] = useState({ open: false, title: '', message: '', onConfirm: null });
+
+    const handleClearSelectedData = () => {
+        const targets = (selectedCells && selectedCells.length > 0) ? selectedCells : (currentCellTimestamp ? [currentCellTimestamp] : []);
+        if (!targets || targets.length === 0) {
+            alert('Aucune case sélectionnée à effacer');
+            return;
+        }
+
+        setConfirmState({
+            open: true,
+            title: 'Effacer les données',
+            message: `Effacer toutes les données de ${targets.length} case(s) ? Cette action est annulable.`,
+            onConfirm: () => {
+                const allChanges = [];
+                targets.forEach(ts => {
+                    const prev = getCellData(ts) || {};
+                    const keys = Object.keys(prev).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k));
+                    keys.forEach(k => {
+                        allChanges.push({ timestamp: ts, field: k, previousValue: prev[k] });
+                        onDataChange(ts, k, null);
+                    });
+                    // Also clear _meta if needed
+                    if (prev._meta) {
+                        allChanges.push({ timestamp: ts, field: '_meta', previousValue: prev._meta });
+                        onDataChange(ts, '_meta', null);
+                    }
+                });
+
+                if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'clear', changes: allChanges });
+                setSelectedCells([]);
+                setConfirmState(prev => ({ ...prev, open: false }));
+            }
+        });
+    };
+
+    // Gestionnaires menu contextuel cellule
+    const handleCellContextMenu = (e, timestamp) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setCellContextMenu({
+            position: { x: e.clientX, y: e.clientY },
+            timestamp,
+            selectedCells: selectedCells.length > 0 ? selectedCells : [timestamp]
+        });
+    };
+
+    const handleCopyCellData = () => {
+        const targets = cellContextMenu?.selectedCells || [];
+        if (targets.length === 0) return;
+
+        // Si une seule cellule, copier directement
+        if (targets.length === 1) {
+            const data = getCellData(targets[0]);
+            setCopiedCellData({ single: data, timestamp: targets[0] });
+            showToast(`Données copiées`, 'success');
+        } else {
+            // Multiple cellules: copier tableau
+            const bulkData = targets.map(ts => ({ timestamp: ts, data: getCellData(ts) }));
+            setCopiedCellData({ bulk: bulkData });
+            showToast(`${targets.length} cellules copiées`, 'success');
+        }
+    };
+
+    const handlePasteCellData = () => {
+        if (!copiedCellData) return;
+        const targets = cellContextMenu?.selectedCells || [];
+        if (targets.length === 0) return;
+
+        const allChanges = [];
+
+        if (copiedCellData.single) {
+            // Coller données simples sur toutes les cibles
+            const sourceData = copiedCellData.single || {};
+            const keys = Object.keys(sourceData).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k));
+
+            targets.forEach(ts => {
+                const prev = getCellData(ts) || {};
+                keys.forEach(k => {
+                    allChanges.push({ timestamp: ts, field: k, previousValue: prev[k] });
+                    onDataChange(ts, k, sourceData[k]);
+                });
+            });
+        } else if (copiedCellData.bulk) {
+            // Coller bulk data (si nombre match)
+            const bulkData = copiedCellData.bulk;
+            const copyCount = Math.min(bulkData.length, targets.length);
+
+            for (let i = 0; i < copyCount; i++) {
+                const sourceData = bulkData[i].data || {};
+                const targetTs = targets[i];
+                const keys = Object.keys(sourceData).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k));
+
+                const prev = getCellData(targetTs) || {};
+                keys.forEach(k => {
+                    allChanges.push({ timestamp: targetTs, field: k, previousValue: prev[k] });
+                    onDataChange(targetTs, k, sourceData[k]);
+                });
+            }
+        }
+
+        if (allChanges.length > 0) {
+            pushAction({ id: Date.now(), type: 'paste', changes: allChanges });
+            showToast(`Données collées sur ${targets.length} cellule(s)`, 'success');
+        }
+    };
+
+    const handleDeleteFieldsFromCells = (fieldsToDelete) => {
+        const targets = cellContextMenu?.selectedCells || [];
+        if (targets.length === 0 || fieldsToDelete.length === 0) return;
+
+        console.log(`🗑️ handleDeleteFieldsFromCells: fields=${fieldsToDelete.join(',')}, targets=${targets.join(',')}`);
+
+        setConfirmState({
+            open: true,
+            title: 'Effacer les champs sélectionnés',
+            message: `Effacer ${fieldsToDelete.length} champ(s) de ${targets.length} cellule(s) ?`,
+            onConfirm: () => {
+                console.log(`  → Confirmation: début de suppression`);
+                const allChanges = [];
+                targets.forEach(ts => {
+                    const prev = getCellData(ts) || {};
+                    fieldsToDelete.forEach(field => {
+                        if (prev[field] !== undefined) {
+                            console.log(`    ✓ Supprime ${field} de ${ts} (valeur: ${prev[field]})`);
+                            allChanges.push({ timestamp: ts, field, previousValue: prev[field] });
+                            onDataChange(ts, field, null);
+                        }
+                    });
+                });
+
+                if (allChanges.length > 0) {
+                    pushAction({ id: Date.now(), type: 'deleteFields', changes: allChanges });
+                    showToast(`${fieldsToDelete.length} champ(s) effacé(s)`, 'success');
+                    console.log(`  → Toast: ${fieldsToDelete.length} champ(s) effacé(s)`);
+                }
+                setCellContextMenu(null); // Fermer le menu contextuel
+                setConfirmState(prev => ({ ...prev, open: false }));
+                console.log(`✅ Suppression terminée`);
+            }
+        });
+    };
+
+    // Suppression des handlers préréglages
+
 
     // Toggle section
     const toggleSection = (sectionId) => {
@@ -164,12 +1192,16 @@ const PipelineDragDropView = ({
     };
 
     // Ouvrir modal cellule
-    const handleCellClick = (cellId) => {
+    const handleCellClick = (e, cellId) => {
         console.log('🖱️ Clic sur cellule:', cellId);
-        console.log('📊 Mode masse actif:', massAssignMode);
+        console.log('📊 Ctrl/Cmd pressé:', e.ctrlKey || e.metaKey);
         console.log('📋 Cellules sélectionnées avant:', selectedCells);
 
-        if (massAssignMode) {
+        // Détecter Ctrl+click pour sélection multiple (au lieu de massAssignMode)
+        const isMultiSelectClick = e.ctrlKey || e.metaKey;
+
+        if (isMultiSelectClick) {
+            setSelectedCell(null);
             // Mode sélection multiple - TOGGLE la cellule
             setSelectedCells(prev => {
                 const isAlreadySelected = prev.includes(cellId);
@@ -179,74 +1211,121 @@ const PipelineDragDropView = ({
                     // Retirer de la sélection
                     const newSelection = prev.filter(id => id !== cellId);
                     console.log('  → Retirée, nouvelle sélection:', newSelection);
+                    selectedCellsRef.current = newSelection;
                     return newSelection;
                 } else {
                     // Ajouter à la sélection
                     const newSelection = [...prev, cellId];
                     console.log('  → Ajoutée, nouvelle sélection:', newSelection);
+                    selectedCellsRef.current = newSelection;
                     return newSelection;
                 }
             });
         } else {
             // Mode normal: ouvrir modal
             console.log('📝 Ouverture modal pour:', cellId);
+            const nextSelection = selectedCells.length > 1 ? selectedCells : [cellId];
+            setSelectedCells(nextSelection);
+            selectedCellsRef.current = nextSelection;
+            setSelectedCell(cellId);
+            setDroppedItem(null);
             setCurrentCellTimestamp(cellId);
             setIsModalOpen(true);
 
-            // Si des préréglages sont sélectionnés, proposer de les appliquer
-            if (selectedPresets.length > 0) {
-                const shouldApply = window.confirm(
-                    `Voulez-vous appliquer les ${selectedPresets.length} préréglage(s) sélectionné(s) à cette cellule ?`
-                );
-                if (shouldApply) {
-                    applyPresetsToCell(cellId, selectedPresets);
-                }
-            }
+            // Aucun système de préréglages dans cette vue (désactivé pour CDC)
         }
     };
 
-    // Appliquer des préréglages à une cellule
-    const applyPresetsToCell = (timestamp, presetIds) => {
-        presetIds.forEach(presetId => {
-            const preset = presets.find(p => p.id === presetId);
-            if (preset && preset.data) {
-                // Appliquer toutes les données du préréglage
-                Object.entries(preset.data).forEach(([key, value]) => {
-                    onDataChange(timestamp, key, value);
-                });
-            }
-        });
-    };
+    // Suppression logique préréglages
+
 
     // Sauvegarder données depuis modal
     const handleModalSave = (data) => {
         console.log('💾 Début sauvegarde - data reçue:', data);
+        console.log('💾 selectedCells STATE:', selectedCells);
+        console.log('💾 selectedCells REF:', selectedCellsRef.current);
 
         if (!data || !data.timestamp) {
             console.error('❌ Erreur: pas de timestamp dans les données');
             return;
         }
 
-        // Si c'est un drop, sauvegarder uniquement le champ droppé
-        if (droppedItem && droppedItem.timestamp === data.timestamp) {
-            const fieldKey = droppedItem.content.key;
-            if (data.data && data.data[fieldKey] !== undefined) {
-                console.log('✓ Sauvegarde champ droppé:', fieldKey, '=', data.data[fieldKey]);
-                onDataChange(data.timestamp, fieldKey, data.data[fieldKey]);
-            }
-            setDroppedItem(null);
-        } else {
-            // Sauvegarder toutes les données (cas modal normale)
-            console.log('✓ Sauvegarde de tous les champs:', Object.keys(data.data || {}));
-            Object.entries(data.data || {}).forEach(([key, value]) => {
-                if (value !== undefined && value !== null && value !== '') {
-                    console.log('  → Sauvegarde:', key, '=', value);
-                    onDataChange(data.timestamp, key, value);
+        // ✅ Déterminer quelles cellules doivent recevoir les données
+        // Utiliser selectedCellsRef.current au lieu de selectedCells pour éviter problème de closure
+        const currentSelection = selectedCellsRef.current || [];
+        const hasSelection = currentSelection.length > 0;
+        const timestampInSelection = currentSelection.includes(data.timestamp);
+
+        console.log('💾 Debug sélection:');
+        console.log('  → selectedCells STATE:', selectedCells);
+        console.log('  → selectedCellsRef.current:', selectedCellsRef.current);
+        console.log('  → currentSelection:', currentSelection);
+        console.log('  → hasSelection:', hasSelection);
+        console.log('  → data.timestamp:', data.timestamp);
+        console.log('  → timestampInSelection:', timestampInSelection);
+
+        const targetTimestamps = (hasSelection && timestampInSelection)
+            ? currentSelection
+            : [data.timestamp];
+
+        console.log(`🎯 Application des données à ${targetTimestamps.length} cellule(s):`, targetTimestamps);
+
+        const allChanges = [];
+
+        // ✅ APPLIQUER LES DONNÉES À TOUTES LES CELLULES CIBLES
+        targetTimestamps.forEach(targetTimestamp => {
+            const prevData = getCellData(targetTimestamp) || {};
+            const changes = [];
+
+            // ✅ BUG FIX: Ne plus vérifier droppedItem.timestamp === data.timestamp
+            // À la place, vérifier juste si droppedItem existe (mode drop) ou pas (mode edit)
+            if (droppedItem) {
+                // Mode DROP: sauvegarder uniquement le(s) champ(s) droppé(s)
+                if (droppedItem.content.type === 'multi' && Array.isArray(droppedItem.content.items)) {
+                    // Multi-items drop: sauvegarder tous les items droppés
+                    console.log(`  ✓ Multi-items drop sur ${targetTimestamp}:`, droppedItem.content.items.length, 'champs');
+                    droppedItem.content.items.forEach(item => {
+                        const fieldKey = item.id || item.key || item.type;
+                        if (data.data && data.data[fieldKey] !== undefined) {
+                            changes.push({ timestamp: targetTimestamp, field: fieldKey, previousValue: prevData[fieldKey] });
+                            console.log(`    → ${fieldKey} =`, data.data[fieldKey]);
+                            onDataChange(targetTimestamp, fieldKey, data.data[fieldKey]);
+                        }
+                    });
+                } else {
+                    // Single item drop
+                    const fieldKey = droppedItem.content.id || droppedItem.content.key || droppedItem.content.type;
+                    if (data.data && data.data[fieldKey] !== undefined) {
+                        changes.push({ timestamp: targetTimestamp, field: fieldKey, previousValue: prevData[fieldKey] });
+                        console.log(`  ✓ Single drop sur ${targetTimestamp}: ${fieldKey} =`, data.data[fieldKey]);
+                        onDataChange(targetTimestamp, fieldKey, data.data[fieldKey]);
+                    }
                 }
-            });
+            } else {
+                // Mode EDIT: sauvegarder toutes les données modifiées
+                console.log(`  ✓ Édition sur ${targetTimestamp}:`, Object.keys(data.data || {}).length, 'champs');
+                Object.entries(data.data || {}).forEach(([key, value]) => {
+                    // Treat empty string/null/undefined as deletion
+                    if (value === undefined || value === null || value === '') {
+                        changes.push({ timestamp: targetTimestamp, field: key, previousValue: prevData[key] });
+                        console.log(`    → Suppression: ${key}`);
+                        onDataChange(targetTimestamp, key, null);
+                    } else {
+                        changes.push({ timestamp: targetTimestamp, field: key, previousValue: prevData[key] });
+                        console.log(`    → ${key} =`, value);
+                        onDataChange(targetTimestamp, key, value);
+                    }
+                });
+            }
+
+            allChanges.push(...changes);
+        });
+
+        if (allChanges.length > 0) {
+            pushAction({ id: Date.now(), type: 'edit', changes: allChanges });
         }
 
-        // Sauvegarder métadonnées si présentes
+        // Sauvegarder métadonnées si présentes (uniquement pour la cellule source)
         if (data.completionPercentage !== undefined) {
             onDataChange(data.timestamp, '_meta', {
                 completionPercentage: data.completionPercentage,
@@ -254,7 +1333,7 @@ const PipelineDragDropView = ({
             });
         }
 
-        console.log('✅ Sauvegarde terminée avec succès');
+        console.log(`✅ Sauvegarde terminée: ${targetTimestamps.length} cellule(s) modifiée(s)`);
         setIsModalOpen(false);
         setDroppedItem(null);
     };
@@ -315,22 +1394,31 @@ const PipelineDragDropView = ({
         if (!sourceCellForMassAssign || selectedCells.length === 0) return;
 
         // Copier les champs sélectionnés vers toutes les cellules sélectionnées
+        const allChanges = [];
+        selectedFields = selectedFields || [];
         selectedCells.forEach(timestamp => {
             selectedFields.forEach(fieldKey => {
-                const value = sourceCellForMassAssign.data.data[fieldKey];
+                const prevCell = getCellData(timestamp) || {};
+                const prevValue = prevCell && prevCell.data ? prevCell.data[fieldKey] : undefined;
+                const value = sourceCellForMassAssign && sourceCellForMassAssign.data && sourceCellForMassAssign.data.data ? sourceCellForMassAssign.data.data[fieldKey] : undefined;
+                allChanges.push({ timestamp, field: fieldKey, previousValue: prevValue });
                 onDataChange(timestamp, fieldKey, value);
             });
 
             // Mettre à jour les métadonnées
-            const totalFields = sidebarContent.reduce((acc, section) => acc + (section.items?.length || 0), 0);
+            const totalFields = (sidebarContent || []).reduce((acc, section) => acc + (section.items?.length || 0), 0);
             const filledFields = selectedFields.length;
-            const completionPercentage = Math.round((filledFields / totalFields) * 100);
+            const completionPercentage = Math.round((filledFields / (totalFields || 1)) * 100);
 
+            const prevMeta = (getCellData(timestamp) || {})._meta;
+            allChanges.push({ timestamp, field: '_meta', previousValue: prevMeta });
             onDataChange(timestamp, '_meta', {
                 completionPercentage,
                 lastModified: new Date().toISOString()
             });
         });
+
+        if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'mass-assign', changes: allChanges });
 
         // Réinitialiser
         setShowMassAssignModal(false);
@@ -365,138 +1453,201 @@ const PipelineDragDropView = ({
         setHoveredCell(null);
     };
 
-    // ✅ CORRIGER COMPORTEMENT DROP SELON CDC
+    // CDC CONFORME: handleDrop ouvre PipelineDataModal avec l'item droppé
+    // OU applique directement un groupe de préréglages
     const handleDrop = (e, timestamp) => {
         e.preventDefault();
         e.stopPropagation();
         setHoveredCell(null);
 
-        console.log('💧 Drop détecté sur timestamp:', timestamp);
-        console.log('📦 draggedContent:', draggedContent);
+        try {
+            console.log('✅ handleDrop CDC: draggedContent=', draggedContent, 'timestamp=', timestamp);
 
-        // If draggedContent is an array (multiple contents selected), open multi-assign modal
-        if (Array.isArray(draggedContent) && draggedContent.length > 0) {
-            // Determine target cells (selectedCells or single timestamp)
-            const sel = (typeof selectedCellsRef !== 'undefined' && selectedCellsRef.current) ? selectedCellsRef.current : [];
-            const target = (sel && sel.length > 0) ? sel : [timestamp];
-            setMultiAssignContents(draggedContent);
-            setShowMultiAssignModal(true);
-            // Store the intended targets in a ref so modal can call onApply (guarded)
-            if (typeof multiAssignTargetsRef !== 'undefined' && multiAssignTargetsRef) multiAssignTargetsRef.current = target;
-            return;
-        }
+            if (!draggedContent) {
+                console.log('✅ handleDrop: Pas de draggedContent, sortir');
+                return;
+            }
 
-        if (!draggedContent) {
-            console.warn('⚠️ Pas de draggedContent disponible');
-            return;
-        }
+            if (!timestamp) {
+                console.warn('⚠️ handleDrop: timestamp invalide ou manquant');
+                return;
+            }
 
-        // Si plusieurs cases sont sélectionnées -> n'appliquer à la sélection
-        // que si la case cible fait partie de la sélection ou si le
-        // mode masse est activé. Cela évite d'écraser une sélection
-        // lorsque l'utilisateur veut déposer sur une seule case.
-        const sel = (typeof selectedCellsRef !== 'undefined' && selectedCellsRef.current) ? selectedCellsRef.current : [];
-        const appliesToSelection = (sel && sel.length > 0) && (sel.includes(timestamp) || massAssignMode);
-        if (appliesToSelection) {
-            const preConfigValue = preConfiguredItems[draggedContent.key];
-            // Item pré-configuré -> assignation directe
-            if (preConfigValue !== undefined && preConfigValue !== null) {
-                sel.forEach(ts => onDataChange(ts, draggedContent.key, preConfigValue));
-                showToast(`✓ ${draggedContent.label} appliqué à ${sel.length} case(s)`);
-            } else if (draggedContent.defaultValue !== undefined) {
-                // Si l'item possède une valeur par défaut, l'appliquer
-                sel.forEach(ts => onDataChange(ts, draggedContent.key, draggedContent.defaultValue));
-                showToast(`✓ ${draggedContent.label} appliqué à ${sel.length} case(s)`);
-            } else {
-                // Aucun pré-config ni valeur par défaut -> demander une valeur à l'utilisateur puis appliquer
-                const userVal = window.prompt(`Valeur pour « ${draggedContent.label} » à appliquer à ${sel.length} case(s) :`, '');
-                if (userVal === null) {
-                    showToast('Opération annulée');
-                } else {
-                    sel.forEach(ts => onDataChange(ts, draggedContent.key, userVal));
-                    showToast(`✓ ${draggedContent.label} appliqué à ${sel.length} case(s)`);
+            // ✅ BUG FIX #5: Vérifier si données existantes avant d'ouvrir modal (sauf pour groupes)
+            const existingData = getCellData(timestamp);
+            const hasExistingData = existingData && Object.keys(existingData).some(k =>
+                !['timestamp', '_meta', 'date', 'label', 'phase'].includes(k)
+            );
+
+            // ✅ BUG FIX #3: MULTI-ITEMS DROP - Ouvrir modal avec tous les items sélectionnés
+            if (draggedContent.type === 'multi-items' && Array.isArray(draggedContent.items)) {
+                console.log('✅ handleDrop: Multi-items drop avec', draggedContent.items.length, 'items');
+
+                // Vérifier conflits pour chaque item
+                if (hasExistingData) {
+                    const conflictingItems = draggedContent.items.filter(item => {
+                        const fieldKey = item.id || item.key || item.type;
+                        return existingData[fieldKey] !== undefined;
+                    });
+
+                    if (conflictingItems.length > 0) {
+                        const conflictLabels = conflictingItems.map(i => i.label || i.key).join(', ');
+                        setConfirmState({
+                            open: true,
+                            title: 'Écraser les données existantes ?',
+                            message: `La cellule contient déjà des valeurs pour: ${conflictLabels}. Voulez-vous les remplacer ?`,
+                            onConfirm: () => {
+                                setCurrentCellTimestamp(timestamp);
+                                setDroppedItem({
+                                    timestamp,
+                                    content: { type: 'multi', items: draggedContent.items }
+                                });
+                                setIsModalOpen(true);
+                                setDraggedContent(null);
+                                setConfirmState(prev => ({ ...prev, open: false }));
+                            }
+                        });
+                        return;
+                    }
+                }
+
+                // Pas de conflit ou pas de données existantes
+                setCurrentCellTimestamp(timestamp);
+                setDroppedItem({
+                    timestamp,
+                    content: { type: 'multi', items: draggedContent.items }
+                });
+                setIsModalOpen(true);
+                setDraggedContent(null);
+                return;
+            }
+
+            // GROUPED PRESET: Appliquer directement sans ouvrir le modal
+            if (draggedContent.type === 'grouped' && draggedContent.group) {
+                console.log('✅ handleDrop: Application groupe préréglage:', draggedContent.group);
+                const group = draggedContent.group;
+                const fields = group.fields || [];
+
+                if (fields.length === 0) {
+                    console.warn('⚠️ handleDrop: Groupe vide, rien à appliquer');
+                    setDraggedContent(null);
+                    return;
+                }
+
+                // Déterminer les cellules cibles (celle droppée + sélectionnées)
+                const targetCells = selectedCellsRef.current.length > 0
+                    ? selectedCellsRef.current
+                    : [timestamp];
+
+                console.log(`✅ Application groupe sur ${targetCells.length} cellule(s)`);
+
+                // Appliquer chaque champ du groupe à toutes les cellules cibles
+                targetCells.forEach(ts => {
+                    fields.forEach(f => {
+                        if (f.key && f.value !== undefined && f.value !== '') {
+                            console.log(`  → Applique ${f.key} = ${f.value} sur ${ts}`);
+                            onDataChange(ts, f.key, f.value);
+                        }
+                    });
+                });
+
+                // Feedback visuel
+                const message = targetCells.length > 1
+                    ? `✓ Groupe "${group.name}" appliqué sur ${targetCells.length} cellules (${fields.length} champs chacune)`
+                    : `✓ Groupe "${group.name}" appliqué (${fields.length} champs)`;
+                toast && toast.success(message);
+                setDraggedContent(null);
+                return;
+            }
+
+            // Sinon, ouvrir PipelineDataModal avec l'item droppé
+            console.log('✅ handleDrop: Ouverture PipelineDataModal');
+
+            // ✅ BUG FIX #5: Vérifier conflit pour item simple
+            if (hasExistingData) {
+                const fieldKey = draggedContent.id || draggedContent.key || draggedContent.type;
+                const fieldExists = existingData[fieldKey] !== undefined;
+
+                if (fieldExists) {
+                    setConfirmState({
+                        open: true,
+                        title: 'Écraser la valeur existante ?',
+                        message: `La cellule ${timestamp} contient déjà une valeur pour "${draggedContent.label}". Voulez-vous la remplacer ?`,
+                        onConfirm: () => {
+                            setCurrentCellTimestamp(timestamp);
+                            setDroppedItem({ timestamp, content: draggedContent });
+                            setIsModalOpen(true);
+                            setDraggedContent(null);
+                            setConfirmState(prev => ({ ...prev, open: false }));
+                        }
+                    });
+                    return;
                 }
             }
-        } else {
-            // ✅ VÉRIFIER SI L'ITEM EST PRÉ-CONFIGURÉ
-            const preConfigValue = preConfiguredItems[draggedContent.key];
 
-            if (preConfigValue !== undefined && preConfigValue !== null) {
-                // ✅ ITEM PRÉ-CONFIGURÉ → ASSIGNMENT DIRECT SANS MODALE
-                console.log('✅ Item pré-configuré détecté, assignment direct:', preConfigValue);
-                onDataChange(timestamp, draggedContent.key, preConfigValue);
-
-                // Toast succès
-                showToast(`✓ ${draggedContent.label} : ${preConfigValue}${draggedContent.unit || ''} ajouté`);
-            } else {
-                // ✅ ITEM NORMAL → AJOUT AVEC VALEUR PAR DÉFAUT
-                console.log('➕ Item normal, ajout avec valeur par défaut:', draggedContent.defaultValue);
-                const defaultVal = draggedContent.defaultValue !== undefined ? draggedContent.defaultValue : '';
-                onDataChange(timestamp, draggedContent.key, defaultVal);
-
-                // Toast succès
-                showToast(`✓ ${draggedContent.label} ajouté`);
-            }
-        }
-
-        setDraggedContent(null);
-    };
-
-    const multiAssignTargetsRef = useRef([]);
-
-    const handleMultiAssignApply = (valuesMap, targets) => {
-        const t = targets && targets.length > 0 ? targets : (multiAssignTargetsRef.current || []);
-        if (!t || t.length === 0) return;
-        // valuesMap: { key: value }
-        t.forEach(ts => {
-            Object.entries(valuesMap).forEach(([k, v]) => {
-                onDataChange(ts, k, v);
+            setCurrentCellTimestamp(timestamp);
+            setDroppedItem({
+                timestamp,
+                content: draggedContent
             });
-        });
-        showToast(`✓ ${Object.keys(valuesMap).length} contenu(s) appliqué(s) à ${t.length} case(s)`);
-        // reset
-        setShowMultiAssignModal(false);
-        setMultiAssignContents([]);
-        multiAssignTargetsRef.current = [];
+            setIsModalOpen(true);
+            setDraggedContent(null);
+
+        } catch (error) {
+            console.error('❌ Erreur handleDrop:', error);
+        }
     };
 
-    // ✅ TOAST FEEDBACK
-    const showToast = (message) => {
-        setShowSuccessToast(message);
-        setTimeout(() => setShowSuccessToast(null), 2500);
-    };
+    // Toast feedback retiré (préréglages supprimés)
 
-    // ✅ HANDLER CLIC DROIT SUR ITEM
+    // Handler context menu simplifié (centré, CDC)
     const handleItemContextMenu = (e, item) => {
         e.preventDefault();
         e.stopPropagation();
-
-        console.log('🖱️ Clic droit sur item:', item);
-
-        const rect = e.currentTarget ? e.currentTarget.getBoundingClientRect() : null;
         setContextMenu({
             item,
             position: {
-                x: e.clientX,
-                y: e.clientY
+                x: window.innerWidth / 2,
+                y: window.innerHeight / 2
             },
-            anchorRect: rect
+            anchorRect: null
         });
     };
 
     // Sélection par glissé (mousedown + mouseenter + mouseup)
+    const selectedCellsRef = useRef([]);
+    const gridRef = useRef(null);
+    const cellRefs = useRef({});
+    const selectionStartClientRef = useRef({ x: 0, y: 0 });
+    const selectionStartTimestampRef = useRef(null);
+
+    const [selectionRect, setSelectionRect] = useState({ visible: false, x: 0, y: 0, width: 0, height: 0, startX: 0, startY: 0 });
 
     const startSelection = (e, startIdx, timestamp) => {
-        // Prévenir la sélection native du navigateur
+        // Begin potential drag-selection. We wait for small threshold movement
+        if (e.button !== 0) return;
         e.preventDefault();
+        const clientX = e.clientX;
+        const clientY = e.clientY;
+        // store client start for movement threshold calculations
+        selectionStartClientRef.current = { x: clientX, y: clientY };
+
+        // compute grid-relative start coordinates
+        const gridBox = gridRef.current && gridRef.current.getBoundingClientRect();
+        const relX = gridBox ? clientX - gridBox.left + gridRef.current.scrollLeft : clientX;
+        const relY = gridBox ? clientY - gridBox.top + gridRef.current.scrollTop : clientY;
+
         setIsSelecting(true);
         setSelectionStartIdx(startIdx);
-        const initial = [timestamp];
-        setSelectedCells(initial);
-        selectedCellsRef.current = initial;
+        selectionStartTimestampRef.current = timestamp;
+        // initialize rect but keep it hidden until movement threshold
+        setSelectionRect({ visible: false, x: relX, y: relY, width: 0, height: 0, startX: relX, startY: relY });
+        setSelectedCells([]);
+        selectedCellsRef.current = [];
     };
 
     const updateSelectionTo = (currentIdx) => {
+        // kept for compatibility but not used for rectangle selection
         if (selectionStartIdx === null) return;
         const a = Math.min(selectionStartIdx, currentIdx);
         const b = Math.max(selectionStartIdx, currentIdx);
@@ -505,74 +1656,107 @@ const PipelineDragDropView = ({
         selectedCellsRef.current = range;
     };
 
-    // Stop selection on mouseup anywhere
+    // Mouse move/up handlers for rectangle selection
     useEffect(() => {
-        const onUp = () => {
-            if (isSelecting) {
-                setIsSelecting(false);
-                setSelectionStartIdx(null);
+        const MOVE_THRESHOLD = marqueeThreshold || 6; // px before showing rectangle (configurable prop)
+        const onMove = (e) => {
+            if (!isSelecting) return;
+            const gridBox = gridRef.current && gridRef.current.getBoundingClientRect();
+            const clientX = e.clientX;
+            const clientY = e.clientY;
+
+            const relX = gridBox ? clientX - gridBox.left + gridRef.current.scrollLeft : clientX;
+            const relY = gridBox ? clientY - gridBox.top + gridRef.current.scrollTop : clientY;
+
+            const { startX: relStartX, startY: relStartY, visible } = selectionRect;
+            const dx = relX - relStartX;
+            const dy = relY - relStartY;
+            const absdx = Math.abs(dx);
+            const absdy = Math.abs(dy);
+            const x = Math.min(relStartX, relX);
+            const y = Math.min(relStartY, relY);
+            const width = Math.abs(dx);
+            const height = Math.abs(dy);
+
+            // Only show rectangle after threshold to avoid clicks turning into drags.
+            // Use client distance for threshold to remain consistent even if grid is scrolled.
+            const clientStart = selectionStartClientRef.current || { x: 0, y: 0 };
+            const movedClient = Math.hypot(clientX - clientStart.x, clientY - clientStart.y);
+            if (!visible && movedClient > MOVE_THRESHOLD) {
+                setSelectionRect(prev => ({ ...prev, visible: true, x, y, width, height }));
+            } else if (visible) {
+                setSelectionRect(prev => ({ ...prev, x, y, width, height }));
+            } else {
+                // keep storing start if not visible yet
+                setSelectionRect(prev => ({ ...prev, startX: relStartX, startY: relStartY }));
             }
         };
+
+        const onUp = (e) => {
+            if (!isSelecting) return;
+            const gridBox = gridRef.current && gridRef.current.getBoundingClientRect();
+            const clientX = e.clientX;
+            const clientY = e.clientY;
+
+            // compute current and start positions in grid-relative coordinates using stored client start
+            const relCurrentX = gridBox ? clientX - gridBox.left + gridRef.current.scrollLeft : clientX;
+            const relCurrentY = gridBox ? clientY - gridBox.top + gridRef.current.scrollTop : clientY;
+            const clientStart = selectionStartClientRef.current || { x: clientX, y: clientY };
+            const relStartX = gridBox ? clientStart.x - gridBox.left + gridRef.current.scrollLeft : clientStart.x;
+            const relStartY = gridBox ? clientStart.y - gridBox.top + gridRef.current.scrollTop : clientStart.y;
+
+            const x = Math.min(relStartX, relCurrentX);
+            const y = Math.min(relStartY, relCurrentY);
+            const width = Math.abs(relCurrentX - relStartX);
+            const height = Math.abs(relCurrentY - relStartY);
+
+            const rect = { left: x, top: y, right: x + width, bottom: y + height, width, height };
+            const sel = [];
+
+            if (rect.width > 0 && rect.height > 0) {
+                // compute selected cells intersecting selectionRect using grid-relative coordinates
+                Object.entries(cellRefs.current).forEach(([ts, el]) => {
+                    if (!el) return;
+                    const r = el.getBoundingClientRect();
+                    const cellLeft = r.left - (gridBox ? gridBox.left : 0) + (gridRef.current ? gridRef.current.scrollLeft : 0);
+                    const cellTop = r.top - (gridBox ? gridBox.top : 0) + (gridRef.current ? gridRef.current.scrollTop : 0);
+                    const cellRect = { left: cellLeft, top: cellTop, right: cellLeft + r.width, bottom: cellTop + r.height };
+                    const intersects = !(cellRect.right < rect.left || cellRect.left > rect.right || cellRect.bottom < rect.top || cellRect.top > rect.bottom);
+                    if (intersects) sel.push(ts);
+                });
+                setSelectedCells(sel);
+                selectedCellsRef.current = sel;
+            } else {
+                // treat as click (no significant drag) - select single start cell
+                const ts = selectionStartTimestampRef.current;
+                if (ts) {
+                    setSelectedCells([ts]);
+                    selectedCellsRef.current = [ts];
+                }
+            }
+
+            // cleanup
+            setIsSelecting(false);
+            setSelectionStartIdx(null);
+            selectionStartTimestampRef.current = null;
+            setSelectionRect({ visible: false, x: 0, y: 0, width: 0, height: 0, startX: 0, startY: 0 });
+            selectionStartClientRef.current = { x: 0, y: 0 };
+        };
+
+        window.addEventListener('mousemove', onMove);
         window.addEventListener('mouseup', onUp);
-        return () => window.removeEventListener('mouseup', onUp);
-    }, [isSelecting]);
+        return () => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+        };
+    }, [isSelecting, selectionRect]);
 
     // Keep ref in sync
     useEffect(() => {
         selectedCellsRef.current = selectedCells;
     }, [selectedCells]);
 
-    // ✅ HANDLER CONFIGURATION ITEM
-    const handleConfigureItem = (itemKey, value) => {
-        console.log('⚙️ Configuration item:', itemKey, 'Valeur:', value);
-
-        const newConfig = { ...preConfiguredItems };
-
-        if (value === null) {
-            // Retirer la configuration
-            delete newConfig[itemKey];
-        } else {
-            // Ajouter/mettre à jour
-            newConfig[itemKey] = value;
-        }
-
-        setPreConfiguredItems(newConfig);
-        // Sauvegarder dans localStorage
-        localStorage.setItem(`pipeline-preconfig-${type}`, JSON.stringify(newConfig));
-
-        showToast(value === null ? '✓ Configuration retirée' : '✓ Item pré-configuré');
-    };
-
-    // Assigner immédiatement la valeur configurée (depuis menu clic droit)
-    const handleAssignNow = (itemKey, value) => {
-        if (value === null || value === undefined || value === '') {
-            alert('Aucune valeur fournie pour l\'assignation.');
-            return;
-        }
-
-        if (massAssignMode && selectedCells.length > 0) {
-            if (!window.confirm(`Assigner ${itemKey} = ${value} à ${selectedCells.length} case(s) ?`)) return;
-            selectedCells.forEach(ts => onDataChange(ts, itemKey, value));
-            setMassAssignMode(false);
-            setSelectedCells([]);
-            showToast(`✓ ${itemKey} assigné à ${selectedCells.length} case(s)`);
-            return;
-        }
-
-        if (currentCellTimestamp) {
-            onDataChange(currentCellTimestamp, itemKey, value);
-            showToast(`✓ ${itemKey} assigné à ${currentCellTimestamp}`);
-            return;
-        }
-
-        if (cells.length > 0) {
-            onDataChange(cells[0].timestamp, itemKey, value);
-            showToast(`✓ ${itemKey} assigné à ${cells[0].timestamp}`);
-            return;
-        }
-
-        alert('Aucune case disponible pour assigner la valeur.');
-    };
+    // Handlers configuration retirés (préréglages supprimés)
 
     // Copier la valeur depuis une case source vers la sélection / case courante
     const handleAssignFromSource = (itemKey, sourceTimestamp) => {
@@ -586,8 +1770,15 @@ const PipelineDragDropView = ({
         }
 
         if (massAssignMode && selectedCells.length > 0) {
-            if (!window.confirm(`Copier la valeur depuis ${sourceTimestamp} vers ${selectedCells.length} case(s) ?`)) return;
-            selectedCells.forEach(ts => onDataChange(ts, itemKey, sourceValue));
+            if (!confirm(`Copier la valeur depuis ${sourceTimestamp} vers ${selectedCells.length} case(s) ?`)) return;
+            const allChanges = [];
+            selectedCells.forEach(ts => {
+                const prev = getCellData(ts) || {};
+                const prevValue = prev && prev.data ? prev.data[itemKey] : undefined;
+                allChanges.push({ timestamp: ts, field: itemKey, previousValue: prevValue });
+                onDataChange(ts, itemKey, sourceValue);
+            });
+            if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'mass-assign-from-source', changes: allChanges });
             setMassAssignMode(false);
             setSelectedCells([]);
             showToast(`✓ Copié depuis ${sourceTimestamp} vers ${selectedCells.length} case(s)`);
@@ -619,16 +1810,71 @@ const PipelineDragDropView = ({
         const b = Math.max(startIdx, endIdx);
         const range = cells.slice(a, b + 1).map(c => c.timestamp);
 
-        if (!window.confirm(`Assigner ${itemKey} = ${value} à ${range.length} case(s) ?`)) return;
-        range.forEach(ts => onDataChange(ts, itemKey, value));
+        if (!confirm(`Assigner ${itemKey} = ${value} à ${range.length} case(s) ?`)) return;
+        const allChanges = [];
+        range.forEach(ts => {
+            const prev = getCellData(ts) || {};
+            const prevValue = prev && prev.data ? prev.data[itemKey] : undefined;
+            allChanges.push({ timestamp: ts, field: itemKey, previousValue: prevValue });
+            onDataChange(ts, itemKey, value);
+        });
+        if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'assign-range', changes: allChanges });
         showToast(`✓ ${itemKey} assigné à ${range.length} case(s)`);
     };
 
     // Assigner la valeur à toutes les cases
     const handleAssignAll = (itemKey, value) => {
-        if (!window.confirm(`Assigner ${itemKey} = ${value} à TOUTES les cases (${cells.length}) ?`)) return;
-        cells.forEach(c => onDataChange(c.timestamp, itemKey, value));
+        if (!confirm(`Assigner ${itemKey} = ${value} à TOUTES les cases (${cells.length}) ?`)) return;
+        const allChanges = [];
+        cells.forEach(c => {
+            const prev = getCellData(c.timestamp) || {};
+            const prevValue = prev && prev.data ? prev.data[itemKey] : undefined;
+            allChanges.push({ timestamp: c.timestamp, field: itemKey, previousValue: prevValue });
+            onDataChange(c.timestamp, itemKey, value);
+        });
+        if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'assign-all', changes: allChanges });
         showToast(`✓ ${itemKey} assigné à toutes les cases`);
+    };
+
+    // Appliquer un préréglage de pipeline (chargement) - remplace config et (optionnel) données
+    const applyPipelinePreset = (preset) => {
+        if (!preset) return;
+        // Apply config keys
+        try {
+            const cfg = preset.config || {};
+            Object.entries(cfg).forEach(([k, v]) => {
+                try { onConfigChange(k, v); } catch (e) { console.warn('applyPipelinePreset config error', e); }
+            });
+
+            // Apply data (record previous values for undo)
+            const allChanges = [];
+            (preset.data || []).forEach(cell => {
+                const ts = cell.timestamp;
+                if (!ts) return;
+                const prev = getCellData(ts) || {};
+                Object.entries(cell).forEach(([field, value]) => {
+                    if (field === 'timestamp') return;
+                    const prevValue = prev && prev[field] !== undefined ? prev[field] : (prev.data ? prev.data[field] : undefined);
+                    allChanges.push({ timestamp: ts, field, previousValue: prevValue });
+                    onDataChange(ts, field, value);
+                });
+            });
+
+            if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'load-preset', changes: allChanges });
+            showToast(`✓ Préréglage "${preset.name}" chargé`);
+        } catch (e) {
+            console.error('Erreur lors du chargement du préréglage', e);
+        }
+    };
+
+    // Supprimer un champ d'une case (utilisé par PipelineDataModal)
+    const handleFieldDelete = (ts, fieldKey) => {
+        if (!ts || !fieldKey) return;
+        const prev = getCellData(ts) || {};
+        const prevValue = prev && prev[fieldKey] !== undefined ? prev[fieldKey] : (prev.data ? prev.data[fieldKey] : undefined);
+        onDataChange(ts, fieldKey, null);
+        pushAction({ id: Date.now(), type: 'field-delete', changes: [{ timestamp: ts, field: fieldKey, previousValue: prevValue }] });
+        showToast('Champ effacé');
     };
 
     // Générer les cases de la timeline selon le type d'intervalle
@@ -674,6 +1920,8 @@ const PipelineDragDropView = ({
         if (intervalType === 'date' && start && end) {
             const startDate = new Date(start);
             const endDate = new Date(end);
+            // Validate parsed dates
+            if (isNaN(startDate) || isNaN(endDate)) return [];
             const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
             const count = Math.min(days, 365); // Pagination si > 365 jours
 
@@ -743,15 +1991,38 @@ const PipelineDragDropView = ({
 
     const cells = generateCells();
 
-    // Vérifier si une case a des données (définir AVANT utilisation)
-    const getCellData = (timestamp) => {
-        return timelineData.find(d => d.timestamp === timestamp) || {};
+    // Normaliser et récupérer les champs utiles d'une case (supporte deux shapes: {timestamp, data:{...}} et {timestamp, field:...})
+    const getCellEntry = (timestamp) => timelineData.find(d => d.timestamp === timestamp) || null;
+
+    const getCellFields = (timestamp) => {
+        const entry = getCellEntry(timestamp);
+        if (!entry) return {};
+        let fields = {};
+        if (entry.data && typeof entry.data === 'object') {
+            fields = { ...entry.data };
+        }
+        // copy root-level fields (excluding structural/meta keys)
+        Object.keys(entry).forEach(k => {
+            if (!['timestamp', 'date', 'label', 'phase', 'data', '_meta'].includes(k)) {
+                fields[k] = entry[k];
+            }
+        });
+        // attach meta/date/timestamp for display
+        if (entry.timestamp) fields.timestamp = entry.timestamp;
+        if (entry.date) fields.date = entry.date;
+        if (entry._meta) fields._meta = entry._meta;
+        return fields;
     };
 
     const hasCellData = (timestamp) => {
-        const data = getCellData(timestamp);
-        return Object.keys(data).length > 1; // Plus que juste timestamp
+        const fields = getCellFields(timestamp);
+        // Exclude only structural keys
+        const dataKeys = Object.keys(fields).filter(k => !['_meta', 'timestamp', 'date'].includes(k));
+        return dataKeys.length > 0;
     };
+
+    // Backwards-compatible alias used throughout the file
+    const getCellData = (timestamp) => getCellFields(timestamp);
 
     // Compter les cases avec au moins une donnée (hors timestamp, date, label, etc.)
     const filledCells = cells.filter(cell => {
@@ -767,18 +2038,11 @@ const PipelineDragDropView = ({
     const completionPercent = cells.length > 0 ? Math.round((filledCells / cells.length) * 100) : 0;
 
     return (
-        <div className="flex gap-6 h-[600px]">
+        <div className="flex gap-6 h-[750px]">
             {/* PANNEAU LATÉRAL HIÉRARCHISÉ */}
             <div className="w-80 flex-shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-y-auto">
                 {/* Section Préréglages en haut */}
-                <PresetSelector
-                    presets={presets}
-                    selectedPresets={selectedPresets}
-                    onTogglePreset={handleTogglePreset}
-                    onSaveNew={onSavePreset}
-                    onDelete={handleDeletePreset}
-                    onOpenConfigModal={handleOpenPresetConfig}
-                />
+                {/* Préréglages retirés pour conformité CDC */}
 
                 {/* Header Contenus */}
                 <div className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm p-4 border-b border-gray-200 dark:border-gray-700 z-10">
@@ -786,18 +2050,41 @@ const PipelineDragDropView = ({
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                         Glissez les éléments vers les cases →
                     </p>
-
-                    {/* Bouton créer préréglage global */}
-                    <button
-                        onClick={() => handleOpenPresetConfig()}
-                        className="mt-3 w-full px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Créer un préréglage global
-                    </button>
                 </div>
 
                 <div className="p-3 space-y-2">
+                    {/* Pré-configuration section (was MODE PIPELINE) */}
+                    <div className="mb-3">
+                        <div className="font-semibold text-xs text-gray-400 dark:text-gray-300 mb-1">Pré-configuration</div>
+                        <button
+                            className="w-full mt-1 mb-2 group relative flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl font-medium shadow-md hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300 overflow-hidden"
+                            onClick={() => setShowGroupedPresetModal(true)}
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span>Groupe de préréglages</span>
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                        </button>
+                        {groupedPresets.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                                {groupedPresets.map((group, idx) => (
+                                    <div
+                                        key={group.name + idx}
+                                        draggable="true"
+                                        onDragStart={e => {
+                                            e.dataTransfer.setData('application/grouped-preset', JSON.stringify(group));
+                                            e.dataTransfer.effectAllowed = 'copy';
+                                            setDraggedContent({ type: 'grouped', group });
+                                        }}
+                                        onDragEnd={() => setDraggedContent(null)}
+                                        className="px-3 py-2 rounded-lg bg-purple-50 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 text-xs font-bold cursor-grab hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all"
+                                        title={`${group.description || ''}\n${(group.fields || []).map(f => `${f.key}: ${f.value}`).join('\n')}`}
+                                    >
+                                        <span className="mr-1">{group.emoji || '🌱'}</span>{group.name}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                     {(sidebarContent || []).map((section) => (
                         <div key={section.id} className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                             <button
@@ -807,7 +2094,7 @@ const PipelineDragDropView = ({
                                 <div className="flex items-center gap-2">
                                     <span className="text-lg">{section.icon}</span>
                                     <span className="font-semibold text-sm text-gray-900 dark:text-white">
-                                        {section.label}
+                                        {section.label === 'MODE PIPELINE' ? 'Pré-configuration' : section.label}
                                     </span>
                                 </div>
                                 {expandedSections[section.id] ? (
@@ -820,41 +2107,85 @@ const PipelineDragDropView = ({
                             {expandedSections[section.id] && (
                                 <div className="p-2 bg-white dark:bg-gray-900 space-y-1">
                                     {section.items?.map((item) => {
-                                        const isPreConfigured = preConfiguredItems[item.key] !== undefined;
+                                        const itemKey = item.key || item.id;
+                                        const isSelected = multiSelectedItems.includes(itemKey);
+                                        let isDragging = false;
+
+                                        const handleSidebarItemClick = (e) => {
+                                            // Ne rien faire si on est en train de drag
+                                            if (isDragging) {
+                                                isDragging = false;
+                                                return;
+                                            }
+
+                                            if (e.ctrlKey || e.metaKey) {
+                                                // Multi-sélection UNIQUEMENT avec Ctrl/Cmd
+                                                setMultiSelectedItems(prev =>
+                                                    prev.includes(itemKey)
+                                                        ? prev.filter(k => k !== itemKey)
+                                                        : [...prev, itemKey]
+                                                );
+                                            } else {
+                                                // Clic simple : DÉSÉLECTIONNER TOUT (pas de sélection visuelle)
+                                                // Seul le drag or drop peut utiliser l'item
+                                                setMultiSelectedItems([]);
+                                            }
+                                        };
 
                                         return (
                                             <div
-                                                key={item.key}
+                                                key={itemKey}
                                                 draggable="true"
-                                                onDragStart={(e) => handleDragStart(e, item)}
+                                                onDragStart={(e) => {
+                                                    isDragging = true;
+                                                    // Si l'item n'est pas dans la sélection multiple, drag uniquement cet item
+                                                    if (!isSelected || multiSelectedItems.length === 1) {
+                                                        handleDragStart(e, item);
+                                                        setMultiSelectedItems([]); // Clear selection après drag
+                                                    } else {
+                                                        // Multi-items drag - Chercher dans TOUTES les sections
+                                                        const selectedItems = multiSelectedItems
+                                                            .map(k => {
+                                                                // Chercher l'item dans toutes les sections
+                                                                for (const sec of sidebarContent) {
+                                                                    const found = sec.items?.find(i => (i.key || i.id) === k);
+                                                                    if (found) return found;
+                                                                }
+                                                                return null;
+                                                            })
+                                                            .filter(Boolean);
+
+                                                        console.log('🎯 Multi-drag:', selectedItems.length, 'items depuis', multiSelectedItems.length, 'keys');
+                                                        e.dataTransfer.setData('application/multi-items', JSON.stringify(selectedItems));
+                                                        setDraggedContent({ type: 'multi', items: selectedItems });
+                                                    }
+                                                }}
                                                 onDragEnd={(e) => {
                                                     e.currentTarget.classList.remove('dragging');
+                                                    setDraggedContent(null);
+                                                    setMultiSelectedItems([]);
                                                 }}
-                                                onContextMenu={(e) => handleItemContextMenu(e, item)}
-                                                className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group ${isPreConfigured
-                                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30'
-                                                    : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:border-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                                    }`}
+                                                onClick={handleSidebarItemClick}
+                                                onContextMenu={(e) => {
+                                                    e.preventDefault();
+                                                    setContextMenu({
+                                                        item,
+                                                        position: {
+                                                            x: e.clientX,
+                                                            y: e.clientY
+                                                        },
+                                                        anchorRect: e.currentTarget.getBoundingClientRect()
+                                                    });
+                                                }}
+                                                className="relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700 ${isSelected ? 'ring-2 ring-blue-500' : ''}"
                                                 style={{ touchAction: 'none' }}
-                                                title={isPreConfigured ? `Pré-configuré: ${preConfiguredItems[item.key]}${item.unit || ''}` : 'Clic droit pour pré-configurer'}
                                             >
-                                                {/* Badge pré-configuré */}
-                                                {isPreConfigured && (
-                                                    <PreConfigBadge
-                                                        value={preConfiguredItems[item.key]}
-                                                        unit={item.unit}
-                                                    />
-                                                )}
-
                                                 <span className="text-base">{item.icon}</span>
                                                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex-1">
                                                     {item.label}
                                                 </span>
-                                                <span className={`text-xs transition-colors ${isPreConfigured
-                                                    ? 'text-green-600 dark:text-green-400'
-                                                    : 'text-gray-400 group-hover:text-blue-500'
-                                                    }`}>
-                                                    {isPreConfigured ? '✓' : '⋮⋮'}
+                                                <span className="text-xs transition-colors text-gray-400 group-hover:text-gray-600">
+                                                    ⋮⋮
                                                 </span>
                                             </div>
                                         );
@@ -869,22 +2200,43 @@ const PipelineDragDropView = ({
             {/* TIMELINE PRINCIPALE */}
             <div className="flex-1 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden flex flex-col">
                 {/* HEADER CONFIGURATION */}
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-transparent dark:bg-transparent">
                     <div className="flex items-center justify-between mb-3">
                         <h3 className="font-bold text-gray-900 dark:text-white text-lg flex items-center gap-2">
                             <span>📊</span>
                             Pipeline {type === 'culture' ? 'Culture' : 'Curing/Maturation'}
                         </h3>
                         <div className="flex items-center gap-2">
-                            {/* Mode sélection multiple */}
-                            {/* Multi-selection via click-drag is enabled; explicit "Assignation masse" button removed for CDC-compliance */}
-
+                            {/* Undo button */}
                             <button
-                                onClick={() => setShowPresets(!showPresets)}
-                                className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                                onClick={() => undoLastAction()}
+                                disabled={historyPointer < 0}
+                                className={`group flex items-center gap-2 px-3 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${historyPointer < 0
+                                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-300 dark:border-gray-700'
+                                    : 'bg-gray-100 dark:bg-gray-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 border border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 text-gray-700 dark:text-gray-300 hover:text-blue-700 dark:hover:text-blue-300 shadow-sm hover:shadow'
+                                    }`}
+                                title="Annuler la dernière action (Ctrl+Z)"
                             >
-                                <Settings className="w-4 h-4" />
-                                Préréglages
+                                <svg className="w-4 h-4 transform group-hover:-rotate-45 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                </svg>
+                                <span>Annuler</span>
+                            </button>
+
+                            {/* Redo button */}
+                            <button
+                                onClick={() => redoLastAction()}
+                                disabled={historyPointer >= actionsHistory.length - 1}
+                                className={`group flex items-center gap-2 px-3 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${historyPointer >= actionsHistory.length - 1
+                                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-300 dark:border-gray-700'
+                                    : 'bg-gray-100 dark:bg-gray-800 hover:bg-green-100 dark:hover:bg-green-900/40 border border-gray-300 dark:border-gray-600 hover:border-green-400 dark:hover:border-green-500 text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-300 shadow-sm hover:shadow'
+                                    }`}
+                                title="Refaire la dernière action (Ctrl+Shift+Z / Ctrl+Y)"
+                            >
+                                <svg className="w-4 h-4 transform group-hover:rotate-45 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10a8 8 0 01-8 8v2m0-2a8 8 0 100-16v2m0 0h10a8 8 0 018 8v2M21 10l-6-6m6 6l-6 6" />
+                                </svg>
+                                <span>Refaire</span>
                             </button>
                         </div>
                     </div>
@@ -896,9 +2248,12 @@ const PipelineDragDropView = ({
                                 Type d'intervalles
                             </label>
                             <select
-                                value={timelineConfig.type || 'jour'}
+                                value={timelineConfig.type || 'phase'}
                                 onChange={(e) => onConfigChange('type', e.target.value)}
-                                className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                                disabled={timelineData.length > 0}
+                                className={`w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 ${timelineData.length > 0 ? 'opacity-50 cursor-not-allowed' : ''
+                                    }`}
+                                title={timelineData.length > 0 ? '⚠️ Impossible de changer la trame : des données sont déjà renseignées' : 'Choisir le type d\'intervalles'}
                             >
                                 <option value="seconde">⏱️ Secondes</option>
                                 <option value="heure">🕐 Heures</option>
@@ -907,6 +2262,12 @@ const PipelineDragDropView = ({
                                 <option value="semaine">📆 Semaines</option>
                                 <option value="phase">🌱 Phases</option>
                             </select>
+                            {timelineData.length > 0 && (
+                                <p className="text-xs text-orange-600 dark:text-orange-400 mt-1 flex items-center gap-1">
+                                    <span>⚠️</span>
+                                    <span>Trame verrouillée ({timelineData.length} cellule{timelineData.length > 1 ? 's' : ''} remplie{timelineData.length > 1 ? 's' : ''})</span>
+                                </p>
+                            )}
                         </div>
 
                         {/* SECONDES - Max 900s */}
@@ -921,7 +2282,7 @@ const PipelineDragDropView = ({
                                     max="900"
                                     value={timelineConfig.totalSeconds || ''}
                                     onChange={(e) => onConfigChange('totalSeconds', parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                                     placeholder="Ex: 300"
                                 />
                             </div>
@@ -939,7 +2300,7 @@ const PipelineDragDropView = ({
                                     max="336"
                                     value={timelineConfig.totalHours || ''}
                                     onChange={(e) => onConfigChange('totalHours', parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                                     placeholder="Ex: 72"
                                 />
                             </div>
@@ -957,7 +2318,7 @@ const PipelineDragDropView = ({
                                     max="365"
                                     value={timelineConfig.totalDays || ''}
                                     onChange={(e) => onConfigChange('totalDays', parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                                     placeholder="Ex: 90"
                                 />
                             </div>
@@ -974,7 +2335,7 @@ const PipelineDragDropView = ({
                                         type="date"
                                         value={timelineConfig.start || ''}
                                         onChange={(e) => onConfigChange('start', e.target.value)}
-                                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                                     />
                                 </div>
                                 <div>
@@ -985,7 +2346,7 @@ const PipelineDragDropView = ({
                                         type="date"
                                         value={timelineConfig.end || ''}
                                         onChange={(e) => onConfigChange('end', e.target.value)}
-                                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                                     />
                                 </div>
                                 {timelineConfig.start && timelineConfig.end && (
@@ -1013,7 +2374,7 @@ const PipelineDragDropView = ({
                                     max="52"
                                     value={timelineConfig.totalWeeks || ''}
                                     onChange={(e) => onConfigChange('totalWeeks', parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                                     placeholder="Ex: 12"
                                 />
                             </div>
@@ -1031,69 +2392,67 @@ const PipelineDragDropView = ({
                             </div>
                         )}
 
-                        <div className="flex items-end">
-                            <div className="px-6 py-4 bg-white rounded-lg text-gray-900 shadow-md flex-1">
-                                <div className="text-3xl font-extrabold">{completionPercent}%</div>
-                                <div className="text-sm text-gray-600 mt-1">{filledCells}/{cells.length} cases</div>
+                    </div>
+
+                    {/* Progress bar - Full width spanning entire config area */}
+                    <div className="mt-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Progression</div>
+                            <div className="flex items-center gap-3">
+                                <div className="text-xs text-gray-500 dark:text-gray-400" title={`${filledCells}/${cells.length} cases`}>{filledCells}/{cells.length}</div>
+                                <div className="text-sm font-bold text-purple-600 dark:text-purple-400">{Math.round(completionPercent)}%</div>
                             </div>
                         </div>
-                    </div>
-
-                    
-
-                    {/* Messages d'aide selon type d'intervalle */}
-                    {timelineConfig.type === 'date' && (!timelineConfig.start || !timelineConfig.end) && (
-                        <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
-                            <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
-                            <p className="text-xs text-yellow-800 dark:text-yellow-300">
-                                Mode Dates : Date début ET date fin sont obligatoires
-                            </p>
+                        <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3 overflow-hidden border border-gray-200 dark:border-gray-700 shadow-inner">
+                            <div
+                                className="h-3 rounded-full bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 transition-all duration-500 ease-out"
+                                style={{ width: `${Math.max(0, Math.min(100, completionPercent))}%` }}
+                                aria-valuenow={completionPercent}
+                                aria-valuemin={0}
+                                aria-valuemax={100}
+                            />
                         </div>
-                    )}
-
-                    {timelineConfig.type === 'seconde' && (!timelineConfig.totalSeconds || timelineConfig.totalSeconds > 900) && (
-                        <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
-                            <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
-                            <p className="text-xs text-yellow-800 dark:text-yellow-300">
-                                Maximum 900 secondes (pagination automatique si dépassement)
-                            </p>
-                        </div>
-                    )}
-
-                    {timelineConfig.type === 'heure' && (!timelineConfig.totalHours || timelineConfig.totalHours > 336) && (
-                        <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
-                            <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
-                            <p className="text-xs text-yellow-800 dark:text-yellow-300">
-                                Maximum 336 heures (14 jours)
-                            </p>
-                        </div>
-                    )}
-
-                    {timelineConfig.type === 'jour' && (!timelineConfig.totalDays || timelineConfig.totalDays > 365) && (
-                        <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
-                            <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
-                            <p className="text-xs text-yellow-800 dark:text-yellow-300">
-                                Maximum 365 jours (pagination automatique si dépassement)
-                            </p>
-                        </div>
-                    )}
-                </div>
-
-                {/* Progression globale (barre full-width) */}
-                <div className="w-full -mx-4">
-                    <div className="w-full bg-gray-200 dark:bg-gray-800 h-3 rounded-t-2xl overflow-hidden">
-                        <div
-                            className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-500"
-                            style={{ width: `${completionPercent}%` }}
-                        />
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mt-2 px-4">
-                        <div>{filledCells}/{cells.length} cases</div>
-                        <div className="font-semibold">{completionPercent}%</div>
                     </div>
                 </div>
 
-                {/* TIMELINE GRID */}
+                {/* Messages d'aide selon type d'intervalle */}
+                {timelineConfig.type === 'date' && (!timelineConfig.start || !timelineConfig.end) && (
+                    <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
+                        <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                        <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                            Mode Dates : Date début ET date fin sont obligatoires
+                        </p>
+                    </div>
+                )}
+
+                {timelineConfig.type === 'seconde' && (!timelineConfig.totalSeconds || timelineConfig.totalSeconds > 900) && (
+                    <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
+                        <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                        <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                            Maximum 900 secondes (pagination automatique si dépassement)
+                        </p>
+                    </div>
+                )}
+
+                {timelineConfig.type === 'heure' && (!timelineConfig.totalHours || timelineConfig.totalHours > 336) && (
+                    <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
+                        <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                        <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                            Maximum 336 heures (14 jours)
+                        </p>
+                    </div>
+                )}
+
+                {timelineConfig.type === 'jour' && (!timelineConfig.totalDays || timelineConfig.totalDays > 365) && (
+                    <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
+                        <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                        <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                            Maximum 365 jours (pagination automatique si dépassement)
+                        </p>
+                    </div>
+                )}
+
+                {/* TIMELINE GRID - Inside Pipeline Culture container */}
                 <div className="flex-1 overflow-auto p-4">
                     {cells.length === 0 ? (
                         <div className="flex items-center justify-center h-full">
@@ -1110,7 +2469,67 @@ const PipelineDragDropView = ({
                                 📊 <strong>Autres cases</strong> : Drag & drop des paramètres depuis le panneau latéral
                             </p>
 
-                            <div className="grid grid-cols-7 gap-2 select-none">
+                            <div ref={gridRef} className="grid grid-cols-7 gap-2 select-none relative">
+                                {/* Visual selection frame overlay */}
+                                {selectedCells.length > 1 && !isSelecting && (() => {
+                                    // Compute aggregate bounding box of selected cells using DOM measurements
+                                    const refs = selectedCells.map(ts => cellRefs.current[ts]).filter(Boolean);
+                                    if (!refs || refs.length === 0) return null;
+                                    const gridBox = gridRef.current && gridRef.current.getBoundingClientRect();
+                                    if (!gridBox) return null;
+
+                                    const boxes = refs.map(el => {
+                                        const r = el.getBoundingClientRect();
+                                        return {
+                                            left: r.left,
+                                            top: r.top,
+                                            right: r.right,
+                                            bottom: r.bottom
+                                        };
+                                    });
+
+                                    const leftPx = Math.min(...boxes.map(b => b.left)) - gridBox.left + (gridRef.current ? gridRef.current.scrollLeft : 0);
+                                    const topPx = Math.min(...boxes.map(b => b.top)) - gridBox.top + (gridRef.current ? gridRef.current.scrollTop : 0);
+                                    const rightPx = Math.max(...boxes.map(b => b.right)) - gridBox.left + (gridRef.current ? gridRef.current.scrollLeft : 0);
+                                    const bottomPx = Math.max(...boxes.map(b => b.bottom)) - gridBox.top + (gridRef.current ? gridRef.current.scrollTop : 0);
+
+                                    const widthPx = rightPx - leftPx;
+                                    const heightPx = bottomPx - topPx;
+
+                                    return (
+                                        <div
+                                            className="absolute pointer-events-none z-40 border-4 rounded-2xl shadow-lg animate-fade-in"
+                                            style={{
+                                                top: `${topPx}px`,
+                                                left: `${leftPx}px`,
+                                                width: `${widthPx}px`,
+                                                height: `${heightPx}px`,
+                                                boxSizing: 'border-box',
+                                                transition: 'all 0.08s',
+                                                borderStyle: 'dashed',
+                                                background: 'rgba(80,180,255,0.07)'
+                                            }}
+                                        />
+                                    );
+                                })()}
+                                {/* Selection rectangle (live) */}
+                                {/* Selection marquee (rendered always, animated via opacity/transform) */}
+                                <div
+                                    className="absolute z-50 pointer-events-none border-4 rounded-2xl shadow-lg"
+                                    style={{
+                                        top: selectionRect.y,
+                                        left: selectionRect.x,
+                                        width: selectionRect.width,
+                                        height: selectionRect.height,
+                                        boxSizing: 'border-box',
+                                        borderStyle: 'dashed',
+                                        background: 'rgba(80,180,255,0.06)',
+                                        opacity: selectionRect.visible ? 1 : 0,
+                                        transform: selectionRect.visible ? 'scale(1)' : 'scale(0.98)',
+                                        transition: 'opacity 150ms ease-out, transform 150ms ease-out'
+                                    }}
+                                />
+
                                 {cells.map((cell, idx) => {
                                     const hasData = hasCellData(cell.timestamp);
                                     const cellData = getCellData(cell.timestamp);
@@ -1118,43 +2537,70 @@ const PipelineDragDropView = ({
                                     const isSelected = selectedCells.includes(cell.timestamp);
                                     const isHovered = hoveredCell === cell.timestamp;
 
+                                    // Construire classes CSS pour la cellule
+                                    let cellClass = `relative p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[80px]`;
+
+                                    // Gradient d'intensité GitHub-style selon nombre de données
+                                    if (hasData) {
+                                        const dataCount = Object.keys(cellData).filter(k =>
+                                            !['timestamp', 'date', 'label', 'phase', 'day', 'week', 'hours', 'seconds', 'note', '_meta'].includes(k)
+                                        ).length;
+                                        const intensity = Math.min(dataCount / 10, 1);
+                                        const intensityIndex = Math.floor(intensity * 4); // 0-4
+
+                                        // Palette verte progressive (GitHub-style)
+                                        const gradients = [
+                                            'border-green-400 bg-green-100/40 dark:border-green-600 dark:bg-green-950/30',
+                                            'border-green-500 bg-green-200/50 dark:border-green-500 dark:bg-green-900/40',
+                                            'border-green-600 bg-green-300/60 dark:border-green-400 dark:bg-green-800/50',
+                                            'border-green-700 bg-green-400/70 dark:border-green-300 dark:bg-green-700/60',
+                                            'border-green-800 bg-green-500/80 dark:border-green-200 dark:bg-green-600/70'
+                                        ];
+                                        cellClass += ' ' + gradients[intensityIndex];
+                                    } else {
+                                        cellClass += ' border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800';
+                                    }
+
+                                    // Selected par clic simple (modal)
+                                    cellClass += selectedCell === cell.timestamp
+                                        ? ' ring-2 ring-violet-500 shadow-lg'
+                                        : ' hover:border-violet-400 hover:shadow-md';
+
+                                    // Selected en mode masse (multi-sélection)
+                                    cellClass += isSelected
+                                        ? ' ring-4 ring-blue-500 dark:ring-blue-400 bg-blue-500/10'
+                                        : '';
+
+                                    // Hover pendant drag
+                                    cellClass += isHovered && draggedContent
+                                        ? ' ring-4 ring-violet-500 dark:ring-violet-400 scale-105 shadow-2xl animate-pulse'
+                                        : '';
+
+                                    // Span 2 colonnes pour première cellule
+                                    if (isFirst) {
+                                        cellClass += ' col-span-2';
+                                    }
+
                                     return (
                                         <div
                                             key={cell.timestamp}
                                             onDragOver={(e) => handleDragOver(e, cell.timestamp)}
                                             onDragLeave={handleDragLeave}
                                             onDrop={(e) => handleDrop(e, cell.timestamp)}
-                                            onClick={() => handleCellClick(cell.timestamp)}
-                                            onMouseEnter={(e) => { handleCellHover(e, cell.timestamp); if (isSelecting) updateSelectionTo(idx); }}
+                                            onClick={(e) => handleCellClick(e, cell.timestamp)}
+                                            onContextMenu={(e) => handleCellContextMenu(e, cell.timestamp)}
+                                            onMouseEnter={(e) => { handleCellHover(e, cell.timestamp); }}
                                             onMouseLeave={handleCellLeave}
                                             onMouseDown={(e) => { if (e.button === 0) startSelection(e, idx, cell.timestamp); }}
-                                            onMouseUp={(e) => { if (isSelecting) { setIsSelecting(false); setSelectionStartIdx(null); } }}
-                                            className={`
-                                                relative p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[80px]
-                                                ${hasData
-                                                    ? 'border-green-500 bg-green-500/10'
-                                                    : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800'
-                                                }
-                                                ${selectedCell === cell.timestamp
-                                                    ? 'ring-2 ring-blue-500 shadow-lg'
-                                                    : 'hover:border-blue-400 hover:shadow-md'
-                                                }
-                                                ${isSelected
-                                                    ? 'ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-900/20'
-                                                    : ''
-                                                }
-                                                ${isHovered && draggedContent
-                                                    ? 'ring-4 ring-blue-500 bg-blue-100 dark:bg-blue-900/30 scale-105 shadow-2xl border-blue-500 animate-pulse'
-                                                    : ''
-                                                }
-                                                ${isFirst ? 'col-span-2 bg-purple-500/10 border-purple-500' : ''}
-                                            `}
+                                            onMouseUp={(e) => { /* handled globally to compute rectangle on mouseup */ }}
+                                            ref={(el) => { cellRefs.current[cell.timestamp] = el; }}
+                                            className={cellClass}
                                             style={{ userSelect: 'none' }}
                                         >
                                             {/* Indicateur visuel drop */}
                                             {isHovered && draggedContent && (
-                                                <div className="absolute inset-0 bg-blue-500/20 rounded-lg flex items-center justify-center z-20 pointer-events-none">
-                                                    <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                                                <div className="absolute inset-0 rounded-lg flex items-center justify-center z-20 pointer-events-none">
+                                                    <div className="text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
                                                         📌 Déposer ici
                                                     </div>
                                                 </div>
@@ -1165,6 +2611,10 @@ const PipelineDragDropView = ({
                                                 <CellEmojiOverlay
                                                     cellData={cellData}
                                                     sidebarContent={sidebarContent}
+                                                    onShowDetails={() => {
+                                                        setCurrentCellTimestamp(cell.timestamp);
+                                                        setIsModalOpen(true);
+                                                    }}
                                                 />
                                             )}
 
@@ -1178,7 +2628,7 @@ const PipelineDragDropView = ({
                                                     {cell.date || cell.week || (cell.phase ? `(${cell.duration || 7}j)` : '')}
                                                 </div>
                                                 {isFirst && (
-                                                    <div className="mt-1 text-[10px] text-purple-700 dark:text-purple-300 font-semibold">
+                                                    <div className="mt-1 text-[10px] dark: font-semibold">
                                                         Config générale
                                                     </div>
                                                 )}
@@ -1188,24 +2638,40 @@ const PipelineDragDropView = ({
                                 })}
 
                                 {/* Bouton + pour ajouter des cellules */}
-                                {cells.length > 0 && (timelineConfig.type === 'jour' || timelineConfig.type === 'date') && (
+                                {cells.length > 0 && (timelineConfig.type === 'seconde' || timelineConfig.type === 'heure' || timelineConfig.type === 'jour' || timelineConfig.type === 'semaine' || timelineConfig.type === 'date') && (
                                     <div
-                                        className="p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all cursor-pointer flex items-center justify-center min-h-[80px]"
+                                        className="p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all cursor-pointer flex items-center justify-center min-h-[80px]"
                                         onClick={() => {
-                                            // Ajouter un jour à la timeline
-                                            if (timelineConfig.type === 'jour') {
+                                            // Ajouter une cellule selon le type
+                                            if (timelineConfig.type === 'seconde' && timelineConfig.totalSeconds) {
+                                                const current = timelineConfig.totalSeconds || cells.length;
+                                                if (current < 900) {
+                                                    onConfigChange('totalSeconds', current + 1);
+                                                }
+                                            } else if (timelineConfig.type === 'heure' && timelineConfig.totalHours) {
+                                                const current = timelineConfig.totalHours || cells.length;
+                                                if (current < 336) {
+                                                    onConfigChange('totalHours', current + 1);
+                                                }
+                                            } else if (timelineConfig.type === 'jour') {
                                                 const currentDays = timelineConfig.totalDays || cells.length;
                                                 if (currentDays < 365) {
                                                     onConfigChange('totalDays', currentDays + 1);
                                                 }
+                                            } else if (timelineConfig.type === 'semaine') {
+                                                const currentWeeks = timelineConfig.totalWeeks || cells.length;
+                                                if (currentWeeks < 52) {
+                                                    onConfigChange('totalWeeks', currentWeeks + 1);
+                                                }
                                             } else if (timelineConfig.type === 'date' && timelineConfig.end) {
                                                 // Ajouter 1 jour à la date de fin
                                                 const endDate = new Date(timelineConfig.end);
+                                                if (isNaN(endDate)) return;
                                                 endDate.setDate(endDate.getDate() + 1);
                                                 onConfigChange('end', endDate.toISOString().split('T')[0]);
                                             }
                                         }}
-                                        title="Ajouter un jour"
+                                        title="Ajouter une cellule"
                                     >
                                         <Plus className="w-6 h-6 text-gray-400" />
                                     </div>
@@ -1216,43 +2682,25 @@ const PipelineDragDropView = ({
                 </div>
             </div>
 
-            {/* Modal préréglages (simplifié) */}
-            {showPresets && (
-                <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-50" onClick={() => setShowPresets(false)}>
-                    <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-3xl p-6 max-w-md w-full shadow-2xl border border-gray-200/50 dark:border-gray-700/50" onClick={(e) => e.stopPropagation()}>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">📦 Préréglages</h3>
-                        {presets.length === 0 ? (
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Aucun préréglage sauvegardé</p>
-                        ) : (
-                            <div className="space-y-2">
-                                {presets.map((preset, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => {
-                                            handleApplyPresetLocal(preset);
-                                            setShowPresets(false);
-                                            // Optional: notify parent load
-                                            try { onLoadPreset?.(preset) } catch (e) { /* ignore */ }
-                                        }}
-                                        className="w-full p-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-left transition-colors"
-                                    >
-                                        <div className="font-medium text-gray-900 dark:text-white">{preset.name}</div>
-                                        <div className="text-xs text-gray-600 dark:text-gray-400">
-                                            {Object.keys(preset.data || {}).length} paramètres
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                        <button
-                            onClick={() => setShowPresets(false)}
-                            className="mt-4 w-full px-4 py-2 bg-gray-200/80 dark:bg-gray-700/80 hover:bg-gray-300/80 dark:hover:bg-gray-600/80 rounded-xl font-medium transition-all hover:scale-[1.02]"
-                        >
-                            Fermer
-                        </button>
-                    </div>
-                </div>
-            )}
+            {/* Modal grouped preset */}
+            <GroupedPresetModal
+                isOpen={showGroupedPresetModal}
+                onClose={() => setShowGroupedPresetModal(false)}
+                groups={groupedPresets}
+                setGroups={setGroupedPresets}
+                sidebarContent={sidebarContent}
+                type={type}
+            />
+
+            {/* Modal save/load pipeline presets */}
+            <SavePipelineModal
+                isOpen={showSavePipelineModal}
+                onClose={() => setShowSavePipelineModal(false)}
+                timelineConfig={timelineConfig}
+                timelineData={timelineData}
+                onSavePreset={(p) => { /* noop - preserved for external hooks */ }}
+                onLoadPreset={(p) => applyPipelinePreset(p)}
+            />
 
             {/* Modal d'édition de cellule */}
             <PipelineDataModal
@@ -1266,41 +2714,14 @@ const PipelineDragDropView = ({
                 onSave={handleModalSave}
                 timestamp={currentCellTimestamp}
                 intervalLabel={cells.find(c => c.timestamp === currentCellTimestamp)?.label || ''}
-                droppedItem={droppedItem} // Passer l'item droppé à la modal
-                pipelineType={type} // Passer le type de pipeline pour localStorage
+                droppedItem={droppedItem}
+                pipelineType={type}
+                onFieldDelete={handleFieldDelete}
+                groupedPresets={groupedPresets}
+                selectedCells={selectedCells}
             />
 
-            {/* Modal attribution en masse */}
-            <MassAssignModal
-                isOpen={showMassAssignModal}
-                onClose={() => setShowMassAssignModal(false)}
-                sourceCellData={sourceCellForMassAssign?.data}
-                selectedCellsCount={selectedCells.length}
-                sidebarSections={sidebarContent}
-                onApply={handleMassAssignApply}
-            />
-
-            {/* Modal multi-contenus pour drop multiple */}
-            <MultiContentAssignModal
-                isOpen={showMultiAssignModal}
-                onClose={() => setShowMultiAssignModal(false)}
-                contents={multiAssignContents}
-                targetCells={multiAssignTargetsRef.current || []}
-                preConfigured={preConfiguredItems}
-                onApply={handleMultiAssignApply}
-            />
-
-            {/* Modal configuration préréglage complet CDC */}
-            <PresetConfigModal
-                isOpen={showPresetConfigModal}
-                onClose={() => {
-                    setShowPresetConfigModal(false);
-                    setEditingPreset(null);
-                }}
-                sidebarSections={sidebarContent}
-                onSavePreset={handleSavePresetConfig}
-                initialPreset={editingPreset}
-            />
+            {/* Modal configuration préréglage complet retirée (CDC) */}
 
             {/* Tooltip au survol */}
             <PipelineCellTooltip
@@ -1310,33 +2731,125 @@ const PipelineDragDropView = ({
                 position={tooltipData.position}
             />
 
-            {/* ✅ Menu contextuel clic droit */}
+            {/* Menu contextuel stylisé pour config individuelle et assignation rapide - Utilise ItemContextMenu */}
             {contextMenu && (
                 <ItemContextMenu
                     item={contextMenu.item}
                     position={contextMenu.position}
+                    anchorRect={contextMenu.anchorRect}
                     onClose={() => setContextMenu(null)}
-                    onConfigure={handleConfigureItem}
-                    isConfigured={preConfiguredItems[contextMenu.item.key] !== undefined}
-                    onAssignNow={handleAssignNow}
-                    onAssignFromSource={handleAssignFromSource}
-                    onAssignRange={handleAssignRange}
-                    onAssignAll={handleAssignAll}
+                    isConfigured={false}
                     cells={cells}
+                    onAssignNow={(key, val) => {
+                        // Assignation à toutes les cases sélectionnées ou à toutes si aucune sélection
+                        const targets = selectedCells.length > 0 ? selectedCells : cells.map(c => c.timestamp);
+                        const changes = [];
+                        targets.forEach(ts => {
+                            const prev = getCellData(ts) || {};
+                            const prevValue = prev[key];
+                            changes.push({ timestamp: ts, field: key, previousValue: prevValue });
+                            onDataChange(ts, key, val);
+                        });
+                        if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-assign-now', changes });
+                        showToast(`${contextMenu.item.label} assigné à ${targets.length} case(s)`, 'success');
+                    }}
+                    onAssignRange={(key, startTs, endTs, val) => {
+                        // Assigner à une plage de cases
+                        const startIdx = cells.findIndex(c => c.timestamp === startTs);
+                        const endIdx = cells.findIndex(c => c.timestamp === endTs);
+                        if (startIdx === -1 || endIdx === -1) return;
+                        const minIdx = Math.min(startIdx, endIdx);
+                        const maxIdx = Math.max(startIdx, endIdx);
+                        const targets = cells.slice(minIdx, maxIdx + 1).map(c => c.timestamp);
+                        const changes = [];
+                        targets.forEach(ts => {
+                            const prev = getCellData(ts) || {};
+                            changes.push({ timestamp: ts, field: key, previousValue: prev[key] });
+                            onDataChange(ts, key, val);
+                        });
+                        if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-assign-range', changes });
+                        showToast(`${contextMenu.item.label} assigné à ${targets.length} case(s)`, 'success');
+                    }}
+                    onAssignAll={(key, val) => {
+                        // Assigner à toutes les cases
+                        const changes = [];
+                        cells.forEach(cell => {
+                            const prev = getCellData(cell.timestamp) || {};
+                            changes.push({ timestamp: cell.timestamp, field: key, previousValue: prev[key] });
+                            onDataChange(cell.timestamp, key, val);
+                        });
+                        if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-assign-all', changes });
+                        showToast(`${contextMenu.item.label} assigné à toutes les cases`, 'success');
+                    }}
                 />
             )}
 
-            {/* ✅ Toast succès */}
-            {showSuccessToast && (
-                <div className="fixed bottom-4 right-4 z-[9999] bg-green-600 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-slideInFromRight">
-                    <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                        <Check className="w-4 h-4" />
-                    </div>
-                    <span className="font-medium">{showSuccessToast}</span>
-                </div>
-            )}
+            {/* Cell Context Menu - Menu contextuel sur cellule */}
+            <CellContextMenu
+                isOpen={cellContextMenu !== null}
+                position={cellContextMenu?.position || { x: 0, y: 0 }}
+                cellTimestamp={cellContextMenu?.timestamp}
+                selectedCells={cellContextMenu?.selectedCells || []}
+                cellData={cellContextMenu?.timestamp ? getCellData(cellContextMenu.timestamp) : null}
+                sidebarContent={sidebarContent}
+                onClose={() => setCellContextMenu(null)}
+                onDeleteAll={() => {
+                    const targets = cellContextMenu?.selectedCells || [];
+                    console.log(`💥 handleDeleteAll: targets=${targets.join(',')}`);
+                    setConfirmState({
+                        open: true,
+                        title: 'Effacer toutes les données',
+                        message: `Effacer toutes les données de ${targets.length} cellule(s) ?`,
+                        onConfirm: () => {
+                            console.log(`  → Confirmation: début de suppression complète`);
+                            const allChanges = [];
+                            targets.forEach(ts => {
+                                const prev = getCellData(ts) || {};
+                                const keys = Object.keys(prev).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k));
+                                console.log(`    ✓ Supprime ${keys.length} champs de ${ts}: ${keys.join(',')}`);
+                                keys.forEach(k => {
+                                    allChanges.push({ timestamp: ts, field: k, previousValue: prev[k] });
+                                    onDataChange(ts, k, null);
+                                });
+                            });
+                            if (allChanges.length > 0) {
+                                pushAction({ id: Date.now(), type: 'contextMenuDeleteAll', changes: allChanges });
+                                console.log(`  → Toast: ${allChanges.length} donnée(s) effacée(s)`);
+                            }
+                            setConfirmState(prev => ({ ...prev, open: false }));
+                            setCellContextMenu(null);
+                            showToast('Données effacées', 'success');
+                            console.log(`✅ Suppression complète terminée`);
+                        }
+                    });
+                }}
+                onDeleteFields={handleDeleteFieldsFromCells}
+                onCopy={handleCopyCellData}
+                onPaste={handlePasteCellData}
+                hasCopiedData={copiedCellData !== null}
+            />
+
+            {/* Modal de confirmation pour suppressions */}
+            <ConfirmModal
+                open={confirmState.open}
+                title={confirmState.title}
+                message={confirmState.message}
+                confirmLabel="Supprimer"
+                cancelLabel="Annuler"
+                onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))}
+                onConfirm={() => {
+                    const callback = confirmState.onConfirm;
+                    setConfirmState(prev => ({ ...prev, open: false }));
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                }}
+            />
+
+            {/* Toast succès retiré (CDC) */}
         </div>
     );
 };
 
+export { GroupedPresetModal };
 export default PipelineDragDropView;

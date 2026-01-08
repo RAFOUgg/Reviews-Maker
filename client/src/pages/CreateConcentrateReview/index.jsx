@@ -192,7 +192,7 @@ export default function CreateConcentrateReview() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-600 mx-auto mb-4"></div>
                     <p className="text-gray-400">Chargement...</p>
                 </div>
             </div>
@@ -201,7 +201,7 @@ export default function CreateConcentrateReview() {
 
     return (
         <div className="min-h-screen bg-slate-900 relative pb-20">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-indigo-900/20 to-blue-900/20 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
 
             {/* Header Navigation */}
             <div className="sticky top-0 z-50 liquid-glass border-b border-white/10 shadow-xl">
@@ -220,14 +220,16 @@ export default function CreateConcentrateReview() {
                             <button
                                 key={section.id}
                                 onClick={() => setCurrentSection(idx)}
-                                className={`w-3 h-3 rounded-full transition-all ${idx === currentSection
-                                    ? 'bg-white w-8'
-                                    : idx < currentSection
-                                        ? 'bg-green-400'
-                                        : 'bg-white/30'
+                                className={`text-2xl transition-all hover:scale-110 ${idx === currentSection
+                                        ? 'opacity-100 scale-125'
+                                        : idx < currentSection
+                                            ? 'opacity-70'
+                                            : 'opacity-30'
                                     }`}
                                 title={section.title}
-                            />
+                            >
+                                {section.icon}
+                            </button>
                         ))}
                     </div>
 
@@ -252,7 +254,7 @@ export default function CreateConcentrateReview() {
             </div>
 
             {/* Section Content */}
-            <div className="max-w-6xl mx-auto px-6 py-8">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentSection}

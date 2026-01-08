@@ -43,7 +43,7 @@ export default function TemplateSelector() {
                         defaultRatio: '1:1',
                         supportedRatios: ['1:1', '16:9']
                     });
-                }} className="px-3 py-2 bg-purple-500 text-white rounded-lg text-sm">➕ Créer Template</button>
+                }} className="px-3 py-2 text-white rounded-lg text-sm">➕ Créer Template</button>
             </div>
             <div className="grid grid-cols-1 gap-2">
                 {Object.values(templates).map((template) => (
@@ -52,13 +52,7 @@ export default function TemplateSelector() {
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
                         onClick={() => setTemplate(template.id)}
-                        className={`
-                            p-3 rounded-lg text-left transition-all border-2
-                            ${config.template === template.id
-                                ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-                                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-purple-300'
-                            }
-                        `}
+                        className={`p-3 rounded-lg text-left transition-all border-2 ${config.template === template.id ? ' dark:' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:' }`}
                     >
                         <div className="flex items-start justify-between mb-1.5">
                             <div>
@@ -70,7 +64,7 @@ export default function TemplateSelector() {
                                 </p>
                             </div>
                             {config.template === template.id && (
-                                <svg className="w-5 h-5 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                     {/* Supprimer template custom */}
                                     {!DEFAULT_TEMPLATES[template.id] && (
                                         <button title="Supprimer le template" onClick={(e) => { e.stopPropagation(); if (window.confirm(`Supprimer le template ${template.name}?`)) unregisterTemplate(template.id); }} className="ml-2 p-1 text-xs bg-red-100 rounded">×</button>
@@ -111,15 +105,7 @@ export default function TemplateSelector() {
                                 whileTap={isSupported ? { scale: 0.99 } : {}}
                                 onClick={() => isSupported && setRatio(ratio.id)}
                                 disabled={!isSupported}
-                                className={`
-                                    p-2 rounded-md text-xs font-medium transition-all
-                                    ${config.ratio === ratio.id
-                                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md'
-                                        : isSupported
-                                            ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                                            : 'bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'
-                                    }
-                                `}
+                                className={`p-2 rounded-md text-xs font-medium transition-all ${config.ratio === ratio.id ? 'bg-gradient-to-r text-white shadow-md' : isSupported ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' : 'bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50' }`}
                             >
                                 <div className="flex items-center justify-center gap-1.5">
                                     <span className="text-sm">{ratio.icon}</span>

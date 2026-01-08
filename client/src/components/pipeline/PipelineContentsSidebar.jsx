@@ -4,6 +4,8 @@ import {
     ChevronDown, ChevronRight, Thermometer, Droplets, Wind, Sun,
     Sprout, Scissors, Ruler, Scale, Calendar, Package, Beaker, Leaf
 } from 'lucide-react';
+import PresetsPanel from './PresetsPanelCDC';
+import PresetGroupQuickPicker from './PresetGroupQuickPicker';
 
 /**
  * PipelineContentsSidebar - Volet latéral hiérarchisé avec contenus drag & drop
@@ -237,6 +239,20 @@ const PipelineContentsSidebar = ({
                 </p>
             </div>
 
+            {/* Panneau préréglages */}
+            <div className="p-2">
+                <PresetsPanel
+                    sidebarContent={schema}
+                    onPresetsSelected={(selected) => {
+                        console.log('Préréglages sélectionnés:', selected);
+                    }}
+                    onDragPreset={(preset) => {
+                        console.log('Drag preset:', preset);
+                        onDragStart(preset);
+                    }}
+                />
+            </div>
+
             {/* Liste des catégories et contenus */}
             <div className="p-2">
                 {schema.map((category) => {
@@ -278,13 +294,7 @@ const PipelineContentsSidebar = ({
                                             draggable={!readonly}
                                             onDragStart={(e) => handleDragStart(e, item, category.category)}
                                             onDragEnd={handleDragEnd}
-                                            className={`
-                        flex items-center justify-between p-2 rounded-lg
-                        ${readonly ? 'opacity-50' : 'cursor-grab active:cursor-grabbing hover:bg-gray-800'}
-                        ${draggedItem?.type === item.type ? 'opacity-50' : ''}
-                        transition-all duration-200 border border-transparent
-                        hover:border-blue-500/50
-                      `}
+                                            className={`flex items-center justify-between p-2 rounded-lg ${readonly ? 'opacity-50' : 'cursor-grab active:cursor-grabbing hover:bg-gray-800'} ${draggedItem?.type === item.type ? 'opacity-50' : ''} transition-all duration-200 border border-transparent hover:/50`}
                                         >
                                             <div className="flex items-center gap-2 text-sm text-gray-300">
                                                 <span className="text-lg">{item.icon}</span>
@@ -292,12 +302,7 @@ const PipelineContentsSidebar = ({
                                             </div>
 
                                             {/* Badge */}
-                                            <span className={`
-                        text-xs px-2 py-0.5 rounded-full font-medium
-                        ${item.badge === 'Config' ? 'bg-purple-500/20 text-purple-300' : ''}
-                        ${item.badge === 'Évolutif' ? 'bg-green-500/20 text-green-300' : ''}
-                        ${item.badge === 'Fixe' ? 'bg-blue-500/20 text-blue-300' : ''}
-                      `}>
+                                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${item.badge === 'Config' ? 'bg-white/5 text-gray-200' : ''} ${item.badge === 'Évolutif' ? 'bg-green-500/20 text-green-300' : ''} ${item.badge === 'Fixe' ? ' ' : ''}`}>
                                                 {item.badge}
                                             </span>
                                         </div>
@@ -313,7 +318,7 @@ const PipelineContentsSidebar = ({
             <div className="p-4 border-t border-gray-700 bg-gray-900 text-xs text-gray-400">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                        <span className="w-2 h-2 rounded-full bg-white/5"></span>
                         <span>Config: Défini une seule fois</span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -321,7 +326,7 @@ const PipelineContentsSidebar = ({
                         <span>Évolutif: Peut varier dans le temps</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                        <span className="w-2 h-2 rounded-full"></span>
                         <span>Fixe: Valeur unique finale</span>
                     </div>
                 </div>

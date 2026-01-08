@@ -66,7 +66,7 @@ const PipelineEditor = ({
                   type={field.type}
                   value={data[field.id] || ''}
                   onChange={(e) => handleChange(field.id, e.target.value)}
-                  className="w-full px-3 py-2 bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none transition-all"
+                  className="w-full px-3 py-2 bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-gray-500 outline-none transition-all"
                   placeholder="0"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
@@ -83,7 +83,7 @@ const PipelineEditor = ({
             <textarea
               value={data.notes || ''}
               onChange={(e) => handleChange('notes', e.target.value)}
-              className="w-full px-3 py-2 bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none transition-all min-h-[80px]"
+              className="w-full px-3 py-2 bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-gray-500 outline-none transition-all min-h-[80px]"
               placeholder="Observation particulière..."
             />
           </div>
@@ -98,7 +98,7 @@ const PipelineEditor = ({
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg shadow-lg hover:shadow-purple-500/25 transition-all flex items-center gap-2"
+            className="liquid-btn liquid-btn--primary"
           >
             <Check className="w-4 h-4" />
             Enregistrer

@@ -43,7 +43,7 @@ export default function Gouts({ formData, handleChange }) {
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             Intensité
                         </label>
-                        <span className="text-sm font-bold text-cyan-600 dark:text-cyan-400">
+                        <span className="text-sm font-bold dark:">
                             {formData.intensiteGout || 0}/10
                         </span>
                     </div>
@@ -63,7 +63,7 @@ export default function Gouts({ formData, handleChange }) {
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             Agressivité/piquant
                         </label>
-                        <span className="text-sm font-bold text-cyan-600 dark:text-cyan-400">
+                        <span className="text-sm font-bold dark:">
                             {formData.agressivite || 0}/10
                         </span>
                     </div>
@@ -88,10 +88,8 @@ export default function Gouts({ formData, handleChange }) {
                                 key={taste}
                                 type="button"
                                 onClick={() => toggleTaste(taste, 'dryPuff')}
-                                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedDryPuff.includes(taste)
-                                        ? 'bg-cyan-600 text-white shadow-lg scale-105'
-                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                                    }`}
+                                aria-pressed={selectedDryPuff.includes(taste)}
+                                className={`tag-tile ${selectedDryPuff.includes(taste) ? 'tag-tile--selected px-5 py-3 font-semibold' : ''}`}
                                 disabled={!selectedDryPuff.includes(taste) && selectedDryPuff.length >= 7}
                             >
                                 {taste}
@@ -111,10 +109,8 @@ export default function Gouts({ formData, handleChange }) {
                                 key={taste}
                                 type="button"
                                 onClick={() => toggleTaste(taste, 'inhalation')}
-                                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedInhalation.includes(taste)
-                                        ? 'bg-green-600 text-white shadow-lg scale-105'
-                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                                    }`}
+                                aria-pressed={selectedInhalation.includes(taste)}
+                                className={`tag-tile ${selectedInhalation.includes(taste) ? 'tag-tile--selected px-5 py-3 font-semibold' : ''}`}
                                 disabled={!selectedInhalation.includes(taste) && selectedInhalation.length >= 7}
                             >
                                 {taste}
@@ -134,10 +130,8 @@ export default function Gouts({ formData, handleChange }) {
                                 key={taste}
                                 type="button"
                                 onClick={() => toggleTaste(taste, 'expiration')}
-                                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedExpiration.includes(taste)
-                                        ? 'bg-purple-600 text-white shadow-lg scale-105'
-                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                                    }`}
+                                aria-pressed={selectedExpiration.includes(taste)}
+                                className={`tag-tile ${selectedExpiration.includes(taste) ? 'tag-tile--selected px-5 py-3 font-semibold' : ''}`}
                                 disabled={!selectedExpiration.includes(taste) && selectedExpiration.length >= 7}
                             >
                                 {taste}

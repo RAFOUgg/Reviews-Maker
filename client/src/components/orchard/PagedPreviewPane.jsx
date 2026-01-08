@@ -152,9 +152,9 @@ export default function PagedPreviewPane() {
                             animate={{ opacity: 1, y: 0 }}
                             className="absolute -top-14 left-1/2 -translate-x-1/2 flex items-center gap-3"
                         >
-                            <div className="px-5 py-3 bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 rounded-2xl shadow-2xl border-2 border-purple-300 dark:border-purple-700 flex items-center gap-3 backdrop-blur-xl">
+                            <div className="px-5 py-3 bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 rounded-2xl shadow-2xl border-2 dark: flex items-center gap-3 backdrop-blur-xl">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg">
                                         <span className="text-2xl filter drop-shadow-lg">{currentPage.icon}</span>
                                     </div>
                                     <div className="flex flex-col">
@@ -166,9 +166,9 @@ export default function PagedPreviewPane() {
                                         </span>
                                     </div>
                                 </div>
-                                <div className="h-8 w-px bg-gradient-to-b from-transparent via-purple-300 to-transparent" />
+                                <div className="h-8 w-px bg-gradient-to-b from-transparent to-transparent" />
                                 <div className="flex items-center gap-2">
-                                    <div className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-sm font-black text-white shadow-lg shadow-purple-500/50 min-w-[60px] text-center">
+                                    <div className="px-3 py-1.5 bg-gradient-to-r rounded-xl text-sm font-black text-white shadow-lg shadow-purple-500/50 min-w-[60px] text-center">
                                         {currentPageIndex + 1} / {pages.length}
                                     </div>
                                 </div>
@@ -200,11 +200,11 @@ export default function PagedPreviewPane() {
                             >
                                 <div className="relative">
                                     {/* Glow effect */}
-                                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
+                                    <div className="absolute inset-0 bg-gradient-to-r rounded-full blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
 
                                     {/* Button */}
-                                    <div className="relative w-14 h-14 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-full shadow-2xl flex items-center justify-center border-2 border-purple-300 dark:border-purple-700 group-hover:border-purple-500 dark:group-hover:border-purple-500 transition-all">
-                                        <svg className="w-7 h-7 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                    <div className="relative w-14 h-14 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-full shadow-2xl flex items-center justify-center border-2 dark: group-hover: dark:group-hover: transition-all">
+                                        <svg className="w-7 h-7 dark: group-hover: dark:group-hover: transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                                         </svg>
                                     </div>
@@ -229,11 +229,11 @@ export default function PagedPreviewPane() {
                             >
                                 <div className="relative">
                                     {/* Glow effect */}
-                                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
+                                    <div className="absolute inset-0 bg-gradient-to-r rounded-full blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
 
                                     {/* Button */}
-                                    <div className="relative w-14 h-14 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-full shadow-2xl flex items-center justify-center border-2 border-purple-300 dark:border-purple-700 group-hover:border-purple-500 dark:group-hover:border-purple-500 transition-all">
-                                        <svg className="w-7 h-7 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                    <div className="relative w-14 h-14 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-full shadow-2xl flex items-center justify-center border-2 dark: group-hover: dark:group-hover: transition-all">
+                                        <svg className="w-7 h-7 dark: group-hover: dark:group-hover: transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                         </svg>
                                     </div>
@@ -251,7 +251,7 @@ export default function PagedPreviewPane() {
 
             {/* Page indicators - ENHANCED PROFESSIONAL DESIGN */}
             {pages.length > 1 && (
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-2xl border-2 border-purple-200 dark:border-purple-800">
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 backdrop-blur-xl px-6 py-4 rounded-2xl shadow-2xl border-2 dark:">
                     {/* Page cards instead of dots */}
                     {pages.map((page, index) => {
                         const isActive = index === currentPageIndex;
@@ -293,13 +293,7 @@ export default function PagedPreviewPane() {
                                         setDirection(index > currentPageIndex ? 1 : -1);
                                         setCurrentPage(index);
                                     }}
-                                    className={`
-                                        relative overflow-hidden transition-all duration-300 rounded-xl
-                                        ${isActive
-                                            ? 'w-20 h-16 bg-gradient-to-br from-purple-600 to-pink-600 shadow-lg shadow-purple-500/50 ring-4 ring-purple-300 dark:ring-purple-700'
-                                            : 'w-14 h-12 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 hover:scale-110 shadow-md'
-                                        }
-                                    `}
+                                    className={`relative overflow-hidden transition-all duration-300 rounded-xl ${isActive ? 'w-20 h-16 bg-gradient-to-br shadow-lg shadow-purple-500/50 ring-4 dark:' : 'w-14 h-12 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 hover: hover: dark:hover:/30 dark:hover:/30 hover:scale-110 shadow-md' }`}
                                 >
                                     {/* Page content */}
                                     <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
@@ -350,7 +344,7 @@ export default function PagedPreviewPane() {
                     {/* Progress bar */}
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200 dark:bg-gray-700 rounded-b-2xl overflow-hidden">
                         <motion.div
-                            className="h-full bg-gradient-to-r from-purple-600 to-pink-600"
+                            className="h-full bg-gradient-to-r"
                             initial={false}
                             animate={{
                                 width: `${((currentPageIndex + 1) / pages.length) * 100}%`

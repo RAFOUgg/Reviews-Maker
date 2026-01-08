@@ -36,7 +36,7 @@ export default function Recolte({ formData, handleChange }) {
         if (rendementM2 < 200) return { label: 'Faible', color: 'bg-red-500' }
         if (rendementM2 < 400) return { label: 'Moyen', color: 'bg-yellow-500' }
         if (rendementM2 < 600) return { label: 'Élevé', color: 'bg-green-500' }
-        return { label: 'Exceptionnel', color: 'bg-purple-500' }
+        return { label: 'Exceptionnel', color: '' }
     }
 
     const rendementM2 = parseFloat(calculerRendementM2())
@@ -141,13 +141,7 @@ export default function Recolte({ formData, handleChange }) {
                             </div>
 
                             {/* Validation somme = 100% */}
-                            <div className={`
-                                px-4 py-3 rounded-lg flex items-center justify-between
-                                ${trichomesValid
-                                    ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-500'
-                                    : 'bg-red-50 dark:bg-red-900/20 border-2 border-red-500'
-                                }
-                            `}>
+                            <div className={`px-4 py-3 rounded-lg flex items-center justify-between ${trichomesValid ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-500' : 'bg-red-50 dark:bg-red-900/20 border-2 border-red-500' }`}>
                                 <span className="text-sm font-medium">
                                     {trichomesValid ? '✅ Total' : '⚠️ Total'}
                                 </span>
@@ -172,7 +166,7 @@ export default function Recolte({ formData, handleChange }) {
                         <select
                             value={recolteData.modeRecolte || 'branches'}
                             onChange={(e) => handleRecolteChange('modeRecolte', e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
                         >
                             <option value="plante-entiere">Plante entière</option>
                             <option value="branches">Branches</option>
@@ -198,7 +192,7 @@ export default function Recolte({ formData, handleChange }) {
                                 step="10"
                                 value={recolteData.poidsBrut || ''}
                                 onChange={(e) => handleRecolteChange('poidsBrut', parseFloat(e.target.value))}
-                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
                                 placeholder="Ex: 800"
                             />
                             <p className="text-xs text-gray-500 mt-1">Poids juste après coupe</p>
@@ -217,7 +211,7 @@ export default function Recolte({ formData, handleChange }) {
                                 step="10"
                                 value={recolteData.poidsNet || ''}
                                 onChange={(e) => handleRecolteChange('poidsNet', parseFloat(e.target.value))}
-                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
                                 placeholder="Ex: 150"
                             />
                             <p className="text-xs text-gray-500 mt-1">Poids après trim + séchage initial</p>

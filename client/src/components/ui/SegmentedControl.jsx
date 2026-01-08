@@ -27,18 +27,13 @@ export default function SegmentedControl({
         }
     }
 
+    // Use grid layout when fullWidth to allow responsive columns on horizontal screens
+    const containerClasses = fullWidth
+        ? `grid gap-2 p-1 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 w-full ${className} grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5`
+        : `inline-grid grid-flow-col auto-cols-max gap-1 p-1 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 ${className}`
+
     return (
-        <div
-            className={`
-        relative flex items-center gap-1 p-1 
-        bg-white/10 backdrop-blur-sm rounded-xl 
-        border border-white/20
-        ${fullWidth ? 'w-full' : 'w-fit'}
-        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-        ${className}
-      `}
-            role="radiogroup"
-        >
+        <div className={containerClasses + (disabled ? ' opacity-50 cursor-not-allowed' : '')} role="radiogroup">
             {options.map((option, index) => {
                 const isSelected = value === option.id
 
@@ -50,23 +45,13 @@ export default function SegmentedControl({
                         aria-checked={isSelected}
                         onClick={() => handleSelect(option.id)}
                         disabled={disabled}
-                        className={`
-              relative flex items-center justify-center gap-2
-              ${sizeClasses[size]}
-              ${fullWidth ? 'flex-1' : ''}
-              rounded-lg font-medium transition-all duration-300
-              ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
-              ${isSelected
-                                ? 'text-white shadow-lg'
-                                : 'text-white/70 hover:text-white hover:bg-white/5'
-                            }
-            `}
+                        className={`relative flex items-center justify-center gap-2 ${sizeClasses[size]} ${fullWidth ? 'w-full' : ''} rounded-lg font-medium transition-all duration-300 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} ${isSelected ? 'text-white shadow-lg' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
                     >
                         {/* Background animé pour option sélectionnée */}
                         {isSelected && (
                             <motion.div
                                 layoutId="segmented-background"
-                                className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg"
+                                className="absolute inset-0 bg-gradient-to-br rounded-lg"
                                 initial={false}
                                 transition={{
                                     type: "spring",

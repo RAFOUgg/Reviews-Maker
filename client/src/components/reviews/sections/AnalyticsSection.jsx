@@ -95,7 +95,7 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
 
             {/* En-tête */}
             <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
+                <div className="p-3 bg-gradient-to-br rounded-xl">
                     <Beaker className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -105,10 +105,10 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
             </div>
 
             {/* Note importante */}
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
+            <div className="p-4 dark: border dark: rounded-xl">
                 <div className="flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-blue-800 dark:text-blue-200">
+                    <AlertCircle className="w-5 h-5 dark: flex-shrink-0 mt-0.5" />
+                    <div className="text-sm dark:">
                         <p className="font-semibold mb-1">Section optionnelle</p>
                         <p>Les données analytiques ne sont pas obligatoires. Vous pouvez laisser vide si vous n'avez pas de certificat d'analyse.</p>
                     </div>
@@ -131,7 +131,7 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                     {/* THC */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            THC <span className="text-purple-500">(Δ9-THC)</span>
+                            THC <span className="">(Δ9-THC)</span>
                         </label>
                         <div className="relative">
                             <input
@@ -140,9 +140,7 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                                 onChange={(e) => handleNumberInput(e.target.value, setThc)}
                                 placeholder="0.0"
                                 disabled={!uploadedFile}
-                                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 
-                         rounded-lg text-gray-900 dark:text-white placeholder-gray-400 
-                         focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus: transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">%</span>
                         </div>
@@ -160,9 +158,7 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                                 onChange={(e) => handleNumberInput(e.target.value, setCbd)}
                                 placeholder="0.0"
                                 disabled={!uploadedFile}
-                                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 
-                         rounded-lg text-gray-900 dark:text-white placeholder-gray-400 
-                         focus:outline-none focus:ring-2 focus:ring-green-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">%</span>
                         </div>
@@ -180,9 +176,7 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                                 onChange={(e) => handleNumberInput(e.target.value, setCbg)}
                                 placeholder="0.0"
                                 disabled={!uploadedFile}
-                                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 
-                         rounded-lg text-gray-900 dark:text-white placeholder-gray-400 
-                         focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">%</span>
                         </div>
@@ -191,7 +185,7 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                     {/* CBC */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            CBC <span className="text-blue-500">(Cannabichromene)</span>
+                            CBC <span className="">(Cannabichromene)</span>
                         </label>
                         <div className="relative">
                             <input
@@ -200,9 +194,7 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                                 onChange={(e) => handleNumberInput(e.target.value, setCbc)}
                                 placeholder="0.0"
                                 disabled={!uploadedFile}
-                                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 
-                         rounded-lg text-gray-900 dark:text-white placeholder-gray-400 
-                         focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus: transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">%</span>
                         </div>
@@ -225,12 +217,9 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                         />
                         <label
                             htmlFor="certificate-upload"
-                            className="flex flex-col items-center justify-center p-8 border-2 border-dashed 
-                       border-gray-300 dark:border-gray-600 rounded-xl cursor-pointer
-                       bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 
-                       transition-all group"
+                            className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all group"
                         >
-                            <Upload className="w-12 h-12 text-gray-400 group-hover:text-purple-500 transition-colors mb-3" />
+                            <Upload className="w-12 h-12 text-gray-400 group-hover: transition-colors mb-3" />
                             <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Cliquez pour uploader un certificat
                             </p>
@@ -257,10 +246,10 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => openPreview('cannabinoid')}
-                                    className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                                    className="p-2 hover: dark:hover: rounded-lg transition-colors"
                                     title="Prévisualiser"
                                 >
-                                    <Eye className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                    <Eye className="w-5 h-5 dark:" />
                                 </button>
                                 <button
                                     onClick={() => removeFile('cannabinoid')}
@@ -279,16 +268,16 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                        <FlaskConical className="w-4 h-4 text-purple-500" />
+                        <FlaskConical className="w-4 h-4" />
                         Profil terpénique complet
                     </h4>
-                    <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
+                    <span className="text-xs px-2 py-1 dark: dark: rounded-full">
                         CDC - Certificat uniquement
                     </span>
                 </div>
 
-                <div className="p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
-                    <p className="text-xs text-purple-800 dark:text-purple-200">
+                <div className="p-3 dark: border dark: rounded-lg">
+                    <p className="text-xs dark:">
                         <strong>Conforme CDC :</strong> Le profil terpénique complet doit être fourni via un certificat d'analyse (PDF ou image). Saisie manuelle non autorisée.
                     </p>
                 </div>
@@ -304,12 +293,9 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                         />
                         <label
                             htmlFor="terpene-upload"
-                            className="flex flex-col items-center justify-center p-8 border-2 border-dashed 
-                       border-purple-300 dark:border-purple-600 rounded-xl cursor-pointer
-                       bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 
-                       transition-all group"
+                            className="flex flex-col items-center justify-center p-8 border-2 border-dashed dark: rounded-xl cursor-pointer dark: hover: dark:hover: transition-all group"
                         >
-                            <FlaskConical className="w-12 h-12 text-purple-400 group-hover:text-purple-500 transition-colors mb-3" />
+                            <FlaskConical className="w-12 h-12 group-hover: transition-colors mb-3" />
                             <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Uploader certificat profil terpénique
                             </p>
@@ -319,14 +305,14 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                         </label>
                     </div>
                 ) : (
-                    <div className="p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl">
+                    <div className="p-4 dark: border dark: rounded-xl">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="text-3xl">{getFileIcon(terpeneFile)}</div>
                                 <div>
                                     <p className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                                         {terpeneFile.name}
-                                        <CheckCircle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                        <CheckCircle className="w-4 h-4 dark:" />
                                     </p>
                                     <p className="text-xs text-gray-500 dark:text-gray-400">
                                         {(terpeneFile.size / 1024).toFixed(1)} KB - Profil terpénique
@@ -336,10 +322,10 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => openPreview('terpene')}
-                                    className="p-2 hover:bg-purple-100 dark:hover:bg-purple-900/40 rounded-lg transition-colors"
+                                    className="p-2 hover: dark:hover: rounded-lg transition-colors"
                                     title="Prévisualiser"
                                 >
-                                    <Eye className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                                    <Eye className="w-5 h-5 dark:" />
                                 </button>
                                 <button
                                     onClick={() => removeFile('terpene')}
@@ -365,16 +351,16 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
 
             {/* Résumé */}
             {(thc || cbd || cbg || cbc || uploadedFile || terpeneFile) && (
-                <div className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl space-y-2">
+                <div className="p-4 bg-gradient-to-br dark:/20 dark:/20 rounded-xl space-y-2">
                     <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                        <Beaker className="w-4 h-4 text-purple-500" />
+                        <Beaker className="w-4 h-4" />
                         Résumé analytique
                     </h4>
                     <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                        {thc && <p><span className="font-semibold text-purple-600 dark:text-purple-400">THC :</span> {thc}%</p>}
+                        {thc && <p><span className="font-semibold dark:">THC :</span> {thc}%</p>}
                         {cbd && <p><span className="font-semibold text-green-600 dark:text-green-400">CBD :</span> {cbd}%</p>}
                         {cbg && <p><span className="font-semibold text-orange-600 dark:text-orange-400">CBG :</span> {cbg}%</p>}
-                        {cbc && <p><span className="font-semibold text-blue-600 dark:text-blue-400">CBC :</span> {cbc}%</p>}
+                        {cbc && <p><span className="font-semibold dark:">CBC :</span> {cbc}%</p>}
                         {uploadedFile && (
                             <p className="pt-2 border-t border-gray-300 dark:border-gray-600">
                                 <span className="font-semibold">Certificat cannabinoïdes :</span> {uploadedFile.name}
@@ -382,7 +368,7 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                         )}
                         {terpeneFile && (
                             <p className={uploadedFile ? '' : 'pt-2 border-t border-gray-300 dark:border-gray-600'}>
-                                <span className="font-semibold text-purple-600 dark:text-purple-400">Profil terpénique :</span> {terpeneFile.name}
+                                <span className="font-semibold dark:">Profil terpénique :</span> {terpeneFile.name}
                             </p>
                         )}
                     </div>
@@ -396,16 +382,16 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                     onClick={closePreview}
                 >
                     <div
-                        className="bg-white dark:bg-gray-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-auto relative"
+                        className="bg-white dark:bg-gray-900 rounded-2xl max-w-7xl w-full max-h-[90vh] overflow-auto relative"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header modal */}
                         <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between z-10">
                             <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                 {previewType === 'cannabinoid' ? (
-                                    <><Beaker className="w-5 h-5 text-purple-500" /> Certificat cannabinoïdes</>
+                                    <><Beaker className="w-5 h-5" /> Certificat cannabinoïdes</>
                                 ) : (
-                                    <><FlaskConical className="w-5 h-5 text-purple-500" /> Profil terpénique</>
+                                    <><FlaskConical className="w-5 h-5" /> Profil terpénique</>
                                 )}
                             </h3>
                             <button

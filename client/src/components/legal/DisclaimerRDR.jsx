@@ -194,16 +194,16 @@ export default function DisclaimerRDR() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-2 sm:p-4">
             <div className="max-w-2xl w-full">
                 {/* Card principale */}
-                <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8">
+                <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-8">
                     {/* Header avec icône */}
                     <div className="text-center mb-8">
-                        <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <AlertTriangle className="w-10 h-10 text-white" />
+                        <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                            <AlertTriangle className="w-8 h-8 md:w-10 md:h-10 text-white" />
                         </div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                             {disclaimer.title}
                         </h1>
                         <p className="text-gray-600 dark:text-gray-400">
@@ -212,28 +212,28 @@ export default function DisclaimerRDR() {
                     </div>
 
                     {/* Contenu du disclaimer */}
-                    <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-2xl p-6 mb-6 max-h-96 overflow-y-auto">
-                        <ul className="space-y-4">
+                    <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-2xl p-4 sm:p-6 mb-6 max-h-[60vh] sm:max-h-96 overflow-y-auto">
+                        <ul className="space-y-3 sm:space-y-4">
                             {disclaimer.content.map((item, index) => (
                                 <li key={index} className="flex gap-3 text-gray-800 dark:text-gray-200">
-                                    <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-                                    <span className="text-sm leading-relaxed">{item}</span>
+                                    <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                                    <span className="text-sm sm:text-base leading-relaxed">{item}</span>
                                 </li>
                             ))}
                         </ul>
                     </div>
 
                     {/* Checkbox acceptation */}
-                    <div className="bg-white dark:bg-gray-700 rounded-xl p-6 mb-6 border-2 border-gray-200 dark:border-gray-600">
+                    <div className="bg-white dark:bg-gray-700 rounded-xl p-4 sm:p-6 mb-6 border-2 border-gray-200 dark:border-gray-600">
                         <label className="flex items-start gap-4 cursor-pointer group">
                             <input
                                 type="checkbox"
                                 checked={accepted}
                                 onChange={(e) => setAccepted(e.target.checked)}
-                                className="mt-1 w-5 h-5 rounded border-gray-300 text-violet-600 focus:ring-2 focus:ring-violet-500 cursor-pointer"
+                                className="mt-1 w-4 h-4 sm:w-5 sm:h-5 rounded border-gray-300 focus:ring-2 focus:ring-violet-500 cursor-pointer"
                             />
                             <div className="flex-1">
-                                <p className="text-gray-900 dark:text-white font-semibold mb-2 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition">
+                                <p className="text-gray-900 dark:text-white font-semibold mb-2 group-hover: dark:group-hover: transition">
                                     Je confirme avoir lu et compris
                                 </p>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -244,10 +244,10 @@ export default function DisclaimerRDR() {
                     </div>
 
                     {/* Boutons d'action */}
-                    <div className="flex gap-4">
+                    <div className="flex flex-col sm:flex-row gap-3">
                         <button
                             onClick={() => navigate('/login')}
-                            className="flex-1 py-4 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-semibold rounded-xl transition"
+                            className="flex-1 py-3 sm:py-4 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-semibold rounded-xl transition text-sm sm:text-base"
                         >
                             <X className="w-5 h-5 inline mr-2" />
                             Annuler
@@ -255,7 +255,7 @@ export default function DisclaimerRDR() {
                         <button
                             onClick={handleAccept}
                             disabled={!accepted || loading}
-                            className="flex-1 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                            className="flex-1 py-3 sm:py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base"
                         >
                             {loading ? (
                                 'Validation...'
@@ -269,7 +269,7 @@ export default function DisclaimerRDR() {
                     </div>
 
                     {/* Footer légal */}
-                    <p className="mt-6 text-xs text-center text-gray-500 dark:text-gray-400">
+                    <p className="mt-6 text-xs sm:text-sm text-center text-gray-500 dark:text-gray-400">
                         Reviews-Maker ne promeut ni n'encourage la consommation illégale de substances.
                         Respectez la législation en vigueur dans votre pays.
                     </p>

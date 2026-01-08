@@ -5,8 +5,8 @@ import TemplateRenderer from '../components/orchard/TemplateRenderer'
 import ReviewFullDisplay from '../components/ReviewFullDisplay'
 import { useStore } from '../store/useStore'
 import { useToast } from '../components/ToastContainer'
-import ExportMaker from '../components/export/ExportMaker' // Remplacé
-import { templatesService } from '../services/apiService' // Ajouté
+import ExportMaker from '../components/export/ExportMaker'
+import { templatesService } from '../services/apiService'
 import { Download } from 'lucide-react'
 
 export default function ReviewDetailPage() {
@@ -32,31 +32,17 @@ export default function ReviewDetailPage() {
                 // Parse images to full URLs
                 data.images = parseImages(data.images)
 
-                // Parse JSON fields
+                // Parse JSON fields safely
                 try {
-                    if (typeof data.categoryRatings === 'string') {
-                        data.categoryRatings = JSON.parse(data.categoryRatings)
-                    }
-                    if (typeof data.aromas === 'string') {
-                        data.aromas = JSON.parse(data.aromas)
-                    }
-                    if (typeof data.tastes === 'string') {
-                        data.tastes = JSON.parse(data.tastes)
-                    }
-                    if (typeof data.effects === 'string') {
-                        data.effects = JSON.parse(data.effects)
-                    }
-                    if (typeof data.cultivarsList === 'string') {
-                        data.cultivarsList = JSON.parse(data.cultivarsList)
-                    }
-                    if (typeof data.pipelineExtraction === 'string') {
-                        data.pipelineExtraction = JSON.parse(data.pipelineExtraction)
-                    }
-                    if (typeof data.pipelineSeparation === 'string') {
-                        data.pipelineSeparation = JSON.parse(data.pipelineSeparation)
-                    }
+                    if (typeof data.categoryRatings === 'string') data.categoryRatings = JSON.parse(data.categoryRatings)
+                    if (typeof data.aromas === 'string') data.aromas = JSON.parse(data.aromas)
+                    if (typeof data.tastes === 'string') data.tastes = JSON.parse(data.tastes)
+                    if (typeof data.effects === 'string') data.effects = JSON.parse(data.effects)
+                    if (typeof data.cultivarsList === 'string') data.cultivarsList = JSON.parse(data.cultivarsList)
+                    if (typeof data.pipelineExtraction === 'string') data.pipelineExtraction = JSON.parse(data.pipelineExtraction)
+                    if (typeof data.pipelineSeparation === 'string') data.pipelineSeparation = JSON.parse(data.pipelineSeparation)
                 } catch (e) {
-                    // Erreur silencieuse lors du parsing JSON
+                    // silent
                 }
 
                 setReview(data)
@@ -72,8 +58,7 @@ export default function ReviewDetailPage() {
             setLoading(false)
         }
     }
-    
-    // Nouvelle fonction pour sauvegarder le template
+
     const handleSaveTemplate = async (templateConfig) => {
         const templateName = prompt('Entrez un nom pour votre template :', 'Mon Template Personnalisé');
         if (!templateName) return;
@@ -81,18 +66,17 @@ export default function ReviewDetailPage() {
         try {
             const dataToSave = {
                 name: templateName,
-                description: `Template personnalisé basé sur la review ${review.holderName}`,
+                description: `Template personnalisé basé sur la review ${review?.holderName}`,
                 isPublic: false,
                 config: templateConfig,
-            };
-            await templatesService.create(dataToSave);
-            toast.success('Template sauvegardé avec succès !');
+            }
+            await templatesService.create(dataToSave)
+            toast.success('Template sauvegardé avec succès !')
         } catch (error) {
-            console.error('Erreur lors de la sauvegarde du template:', error);
-            toast.error(error.message || 'Erreur lors de la sauvegarde du template.');
+            console.error('Erreur lors de la sauvegarde du template:', error)
+            toast.error(error.message || 'Erreur lors de la sauvegarde du template.')
         }
-    };
-
+    }
 
     const renderStars = (rating) => {
         const fullStars = Math.floor(rating / 2)
@@ -115,44 +99,40 @@ export default function ReviewDetailPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-                <div className="text-gray-400 text-xl">Chargement...</div>
+            <div className="min-h-screen bg-app flex items-center justify-center">
+                <div className="text-subtitle text-xl">Chargement...</div>
             </div>
         )
     }
 
-    if (!review) {
-        return null
-    }
+    if (!review) return null
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-12 px-4">
-            <div className="max-w-6xl mx-auto">
+        <div className="min-h-screen bg-app py-12 px-4">
+            <div className="container-glass mx-auto">
                 {/* Header with Back & Edit Buttons */}
                 <div className="flex items-center justify-between mb-6">
                     <button
                         onClick={() => navigate('/')}
-                        className="text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+                        className="text-subtitle hover:text-title transition-colors flex items-center gap-2"
                     >
                         <span>←</span>
                         <span>Retour à la galerie</span>
                     </button>
 
                     <div className="flex items-center gap-2">
-                        
                         <button
                             onClick={() => setShowExportModal(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white rounded-xl font-semibold shadow-lg transition-all"
+                            className="flex items-center gap-2 btn-primary"
                         >
                             <Download className="w-5 h-5" />
                             <span>Exporter</span>
                         </button>
-                        
 
                         {isAuthenticated && user?.id === review?.authorId && (
                             <button
                                 onClick={() => navigate(`/edit/${id}`)}
-                                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded-xl font-semibold shadow-lg transition-all"
+                                className="flex items-center gap-2 btn-primary"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -169,8 +149,8 @@ export default function ReviewDetailPage() {
                         <button
                             onClick={() => setViewMode('full')}
                             className={`px-4 py-2 rounded-xl font-medium transition-all ${viewMode === 'full'
-                                ? 'bg-primary-500 text-white'
-                                : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+                                ? 'bg-panel text-title'
+                                : 'bg-card text-subtitle hover:bg-card/80'
                                 }`}
                         >
                             📋 Vue Détaillée
@@ -178,8 +158,8 @@ export default function ReviewDetailPage() {
                         <button
                             onClick={() => setViewMode('orchard')}
                             className={`px-4 py-2 rounded-xl font-medium transition-all ${viewMode === 'orchard'
-                                ? 'bg-primary-500 text-white'
-                                : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50'
+                                ? 'bg-panel text-title'
+                                : 'bg-card text-subtitle hover:bg-card/80'
                                 }`}
                         >
                             🎨 Aperçu Orchard
@@ -189,7 +169,7 @@ export default function ReviewDetailPage() {
 
                 {/* Orchard Template Preview */}
                 {viewMode === 'orchard' && review.orchardConfig ? (
-                    <div className="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-6 border border-gray-700">
+                    <div className="glass liquid-glass--card p-6 bg-panel rounded-2xl border border-white/5">
                         <TemplateRenderer
                             config={typeof review.orchardConfig === 'string' ? (() => {
                                 try { return JSON.parse(review.orchardConfig) } catch { return review.orchardConfig }

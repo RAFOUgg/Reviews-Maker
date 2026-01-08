@@ -13,9 +13,15 @@ export default function CuringMaturationTimeline({ data, onChange }) {
         return saved ? JSON.parse(saved) : []
     })
 
+    // État mode pipeline (phases vs personnalisé)
+    const [pipelineMode, setPipelineMode] = useState(
+        data.curingTimelineConfig?.mode || 'phases'
+    )
+
     // Configuration Timeline pour curing
     const curingTimelineConfig = data.curingTimelineConfig || {
-        type: 'jour', // seconde | heure | jour | date | semaine | phase
+        mode: 'phases', // 'phases' ou 'custom'
+        type: 'phase', // seconde | heure | jour | date | semaine | phase
         start: '',
         end: '',
         duration: null,
@@ -135,32 +141,47 @@ export default function CuringMaturationTimeline({ data, onChange }) {
 
     // Handler pour modification de configuration timeline
     const handleCuringConfigChange = (field, value) => {
-        onChange('curingTimelineConfig', {
+        const updatedConfig = {
             ...curingTimelineConfig,
             [field]: value
-        })
+        };
+        onChange({
+            ...data,
+            curingTimelineConfig: updatedConfig
+        });
     }
 
     // Handler pour modification de données timeline curing
     const handleCuringDataChange = (timestamp, field, value) => {
         const existingIndex = curingTimelineData.findIndex(d => d.timestamp === timestamp)
 
+        let updatedData;
         if (existingIndex >= 0) {
-            const newData = [...curingTimelineData]
-            newData[existingIndex] = {
-                ...newData[existingIndex],
+            updatedData = [...curingTimelineData]
+            updatedData[existingIndex] = {
+                ...updatedData[existingIndex],
                 [field]: value
             }
-            onChange('curingTimelineData', newData)
         } else {
-            const cellDate = new Date(timestamp)
+            // En mode phase, le timestamp est un ID de phase, pas une date
             const newEntry = {
                 timestamp,
-                date: cellDate.toISOString().split('T')[0],
                 [field]: value
             }
-            onChange('curingTimelineData', [...curingTimelineData, newEntry])
+            // Ne créer une date que si ce n'est pas une phase
+            if (curingTimelineConfig.type !== 'phase') {
+                const cellDate = new Date(timestamp)
+                if (!isNaN(cellDate)) {
+                    newEntry.date = cellDate.toISOString().split('T')[0]
+                }
+            }
+            updatedData = [...curingTimelineData, newEntry]
         }
+
+        onChange({
+            ...data,
+            curingTimelineData: updatedData
+        });
     }
 
     // Handlers pour presets
@@ -176,21 +197,21 @@ export default function CuringMaturationTimeline({ data, onChange }) {
         }
     }
 
+    // Handler pour changer le mode et la configuration associated
+    const handleModeChange = (newMode) => {
+        setPipelineMode(newMode)
+        // Si mode 'phases' est sélectionné, changer automatiquement le type de timeline à 'phase'
+        if (newMode === 'phases') {
+            handleCuringConfigChange('type', 'phase')
+            handleCuringConfigChange('mode', 'phases')
+        } else {
+            handleCuringConfigChange('type', 'jour')
+            handleCuringConfigChange('mode', 'custom')
+        }
+    }
+
     return (
         <div className="space-y-6">
-            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
-                <h3 className="font-bold text-amber-900 dark:text-amber-100 mb-2 flex items-center gap-2">
-                    <span>🔥</span> Pipeline de curing : Timeline interactive CDC
-                </h3>
-                <p className="text-sm text-amber-800 dark:text-amber-200">
-                    📝 Glissez les contenus depuis le panneau latéral vers les cases de la timeline.
-                    <br />
-                    🎯 <strong>Drag & drop</strong> : Sélectionnez un contenu à gauche et déposez-le sur une case.
-                    <br />
-                    📊 <strong>Édition</strong> : Cliquez sur une case pour modifier ses données.
-                </p>
-            </div>
-
             <PipelineDragDropView
                 type="curing"
                 sidebarContent={sidebarContent}

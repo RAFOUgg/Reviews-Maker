@@ -6,21 +6,20 @@ import { useToast } from '../../components/ToastContainer'
 import OrchardPanel from '../../components/orchard/OrchardPanel'
 import { AnimatePresence, motion } from 'framer-motion'
 import { flowerReviewsService } from '../../services/apiService'
+import { ResponsiveCreateReviewLayout } from '../../components/ResponsiveCreateReviewLayout'
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
 import Genetiques from './sections/Genetiques'
 import CulturePipelineSection from './sections/CulturePipelineSection'
-import Recolte from './sections/Recolte'
 import AnalyticsSection from '../../components/reviews/sections/AnalyticsSection'
-import VisualSection from '../../components/reviews/sections/VisualSection'
+import VisuelTechnique from './sections/VisuelTechnique'
 import OdorSection from '../../components/reviews/sections/OdorSection'
 import TextureSection from '../../components/reviews/sections/TextureSection'
 import TasteSection from '../../components/reviews/sections/TasteSection'
 import EffectsSection from '../../components/reviews/sections/EffectsSection'
 import ExperienceUtilisation from '../../components/forms/flower/ExperienceUtilisation'
 import CuringMaturationTimeline from '../../components/forms/flower/CuringMaturationTimeline'
-import TerpeneManualInput from '../../components/analytics/TerpeneManualInput'
 
 // Import hooks
 import { useFlowerForm } from './hooks/useFlowerForm'
@@ -64,23 +63,24 @@ export default function CreateFlowerReview() {
         }
     }, [photos])
 
-    // Définition des 13 sections (+ Récolte + Terpènes manuels)
+    // Définition des 10 sections (fusionné : Effets+Expérience, Analytiques+Terpènes)
     const sections = [
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
         { id: 'genetics', icon: '🧬', title: 'Génétiques & PhenoHunt' },
-        { id: 'culture', icon: '🌱', title: 'Culture & Pipeline' },
-        { id: 'recolte', icon: '🌾', title: 'Récolte & Post-Récolte' },
-        { id: 'analytics', icon: '🔬', title: 'Analytiques PDF' },
-        { id: 'terpenes', icon: '🧪', title: 'Terpènes (Manuel)' },
+        { id: 'culture', icon: '🌱', title: 'Culture & Pipeline' }, // Récolte intégrée dans sidebar RECOLTE
+        { id: 'analytics', icon: '🔬', title: 'Analytiques' }, // Cannabinoïdes + Terpènes
         { id: 'visual', icon: '👁️', title: 'Visuel & Technique' },
         { id: 'odeurs', icon: '👃', title: 'Odeurs' },
         { id: 'texture', icon: '🤚', title: 'Texture' },
         { id: 'gouts', icon: '😋', title: 'Goûts' },
-        { id: 'effets', icon: '💥', title: 'Effets ressentis' },
-        { id: 'experience', icon: '🔥', title: 'Expérience d\'utilisation' },
-        { id: 'curing', icon: '🌡️', title: 'Curing & Maturation' },
+        { id: 'effects-experience', icon: '💥', title: 'Effets & Expérience' }, // Fusionné
+        { id: 'curing', icon: '🔥', title: 'Curing & Maturation' },
     ]
 
+    // Emojis pour le carousel
+    const sectionEmojis = sections.map(s => s.icon)
+
+    // Current section data
     const currentSectionData = sections[currentSection]
 
     useEffect(() => {
@@ -206,7 +206,7 @@ export default function CreateFlowerReview() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-600 mx-auto mb-4"></div>
                     <p className="text-gray-400">Chargement...</p>
                 </div>
             </div>
@@ -214,182 +214,117 @@ export default function CreateFlowerReview() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 pb-20">
-            {/* Header Navigation */}
-            <div className="sticky top-0 z-50 backdrop-blur-xl bg-white/5 border-b border-white/10 shadow-xl">
-                <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <button
-                        onClick={() => navigate('/library')}
-                        className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all"
-                    >
-                        <ChevronLeft className="w-5 h-5" />
-                        <span>Retour</span>
-                    </button>
-
-                    {/* Section Navigation */}
-                    <div className="flex items-center gap-3">
-                        {sections.map((section, idx) => (
-                            <button
-                                key={section.id}
-                                onClick={() => setCurrentSection(idx)}
-                                className={`w-3 h-3 rounded-full transition-all ${idx === currentSection
-                                    ? 'bg-white w-8'
-                                    : idx < currentSection
-                                        ? 'bg-green-400'
-                                        : 'bg-white/30'
-                                    }`}
-                                title={section.title}
-                            />
-                        ))}
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={handleSave}
-                            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all"
-                        >
-                            <Save className="w-5 h-5" />
-                            <span>Sauvegarder</span>
-                        </button>
-                        <button
-                            onClick={() => setShowOrchard(!showOrchard)}
-                            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all"
-                        >
-                            <Eye className="w-5 h-5" />
-                            <span>Aperçu</span>
-                        </button>
-                    </div>
-                </div>
+        <ResponsiveCreateReviewLayout
+            currentSection={currentSection}
+            totalSections={sections.length}
+            onSectionChange={setCurrentSection}
+            title="Créer une review Fleur"
+            subtitle="Documentez votre variété en détail"
+            sectionEmojis={sectionEmojis}
+            showProgress={true}
+        >
+            {/* Orchard Preview Button - Mobile optimized */}
+            <div className="flex justify-end mb-4">
+                <button
+                    onClick={() => setShowOrchard(!showOrchard)}
+                    className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 text-purple-300 rounded-lg text-sm font-medium transition-all"
+                >
+                    <Eye className="w-4 h-4 inline mr-2" />
+                    Aperçu
+                </button>
             </div>
 
             {/* Section Content */}
-            <div className="max-w-6xl mx-auto px-6 py-8">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={currentSection}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.4 }}
-                        className="bg-white/98 backdrop-blur-2xl rounded-3xl shadow-2xl p-10"
-                    >
-                        <h2 className="text-2xl font-semibold text-purple-900 mb-6 flex items-center gap-3">
-                            <span className="text-4xl">{currentSectionData.icon}</span>
-                            {currentSectionData.title}
-                            {currentSectionData.required && <span className="text-red-500">*</span>}
-                        </h2>
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={currentSection}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-6"
+                >
+                    <div className="flex items-center gap-3 mb-6">
+                        <span className="text-3xl">{currentSectionData.icon}</span>
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-100">
+                                {currentSectionData.title}
+                                {currentSectionData.required && <span className="text-red-500 ml-2">*</span>}
+                            </h2>
+                        </div>
+                    </div>
 
-                        {/* Render current section */}
-                        {currentSection === 0 && (
-                            <InfosGenerales
-                                formData={formData}
-                                photos={photos}
-                                handleChange={handleChange}
-                                handlePhotoUpload={handlePhotoUpload}
-                                removePhoto={removePhoto}
-                            />
-                        )}
-                        {currentSection === 1 && (
-                            <Genetiques formData={formData} handleChange={handleChange} />
-                        )}
-                        {currentSection === 2 && (
-                            <CulturePipelineSection
-                                data={formData.culture || {}}
-                                onChange={(cultureData) => handleChange('culture', cultureData)}
-                            />
-                        )}
-                        {currentSection === 3 && (
-                            <Recolte formData={formData} handleChange={handleChange} />
-                        )}
-                        {currentSection === 4 && (
-                            <AnalyticsSection
-                                productType="Fleurs"
-                                data={formData.analytics || {}}
-                                onChange={(analyticsData) => handleChange('analytics', analyticsData)}
-                            />
-                        )}
-                        {currentSection === 5 && (
-                            <div className="space-y-6">
-                                <TerpeneManualInput
-                                    data={formData.terpenes || {}}
-                                    onChange={(terpenesData) => handleChange('terpenes', terpenesData)}
-                                />
-                            </div>
-                        )}
-                        {currentSection === 6 && (
-                            <VisualSection
-                                data={formData.visual || {}}
-                                onChange={(visualData) => handleChange('visual', visualData)}
-                            />
-                        )}
-                        {currentSection === 7 && (
-                            <OdorSection
-                                data={formData.odeurs || {}}
-                                onChange={(odeursData) => handleChange('odeurs', odeursData)}
-                            />
-                        )}
-                        {currentSection === 8 && (
-                            <TextureSection
-                                productType="Fleurs"
-                                data={formData.texture || {}}
-                                onChange={(textureData) => handleChange('texture', textureData)}
-                            />
-                        )}
-                        {currentSection === 9 && (
-                            <TasteSection
-                                data={formData.gouts || {}}
-                                onChange={(goutsData) => handleChange('gouts', goutsData)}
-                            />
-                        )}
-                        {currentSection === 10 && (
+                    {/* Render current section */}
+                    {currentSection === 0 && (
+                        <InfosGenerales
+                            formData={formData}
+                            photos={photos}
+                            handleChange={handleChange}
+                            handlePhotoUpload={handlePhotoUpload}
+                            removePhoto={removePhoto}
+                        />
+                    )}
+                    {currentSection === 1 && (
+                        <Genetiques formData={formData} handleChange={handleChange} />
+                    )}
+                    {currentSection === 2 && (
+                        <CulturePipelineSection
+                            data={formData.culture || {}}
+                            onChange={(cultureData) => handleChange('culture', cultureData)}
+                        />
+                    )}
+                    {currentSection === 3 && (
+                        <AnalyticsSection
+                            productType="Fleur"
+                            data={formData.analytics || {}}
+                            onChange={(analyticsData) => handleChange('analytics', analyticsData)}
+                        />
+                    )}
+                    {currentSection === 4 && (
+                        <VisuelTechnique
+                            formData={formData}
+                            handleChange={handleChange}
+                        />
+                    )}
+                    {currentSection === 5 && (
+                        <OdorSection
+                            data={formData.odeurs || {}}
+                            onChange={(odeursData) => handleChange('odeurs', odeursData)}
+                        />
+                    )}
+                    {currentSection === 6 && (
+                        <TextureSection
+                            productType="Fleur"
+                            data={formData.texture || {}}
+                            onChange={(textureData) => handleChange('texture', textureData)}
+                        />
+                    )}
+                    {currentSection === 7 && (
+                        <TasteSection
+                            data={formData.gouts || {}}
+                            onChange={(goutsData) => handleChange('gouts', goutsData)}
+                        />
+                    )}
+                    {currentSection === 8 && (
+                        <div className="space-y-6">
                             <EffectsSection
                                 data={formData.effets || {}}
-                                onChange={(effetsData) => handleChange('effets', effetsData)}
+                                onChange={(data) => handleChange('effets', data)}
                             />
-                        )}
-                        {currentSection === 11 && (
                             <ExperienceUtilisation
                                 data={formData.experience || {}}
-                                onChange={(expData) => handleChange('experience', expData)}
+                                onChange={(data) => handleChange('experience', data)}
                             />
-                        )}
-                        {currentSection === 12 && (
-                            <CuringMaturationTimeline
-                                data={formData.curing || {}}
-                                onChange={(curingData) => handleChange('curing', curingData)}
-                            />
-                        )}
-                    </motion.div>
-                </AnimatePresence>
-
-                {/* Navigation Buttons */}
-                <div className="flex justify-between mt-8">
-                    <button
-                        onClick={handlePrevious}
-                        disabled={currentSection === 0}
-                        className="px-6 py-3 bg-white/10 text-white rounded-xl disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/20 transition-all flex items-center gap-2"
-                    >
-                        <ChevronLeft className="w-5 h-5" />
-                        Précédent
-                    </button>
-                    {currentSection === sections.length - 1 ? (
-                        <button
-                            onClick={handleSubmit}
-                            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:opacity-90 transition-all font-semibold"
-                        >
-                            Publier la review
-                        </button>
-                    ) : (
-                        <button
-                            onClick={handleNext}
-                            className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all flex items-center gap-2"
-                        >
-                            Suivant
-                            <ChevronRight className="w-5 h-5" />
-                        </button>
+                        </div>
                     )}
-                </div>
-            </div>
+                    {currentSection === 9 && (
+                        <CuringMaturationTimeline
+                            data={formData.curing || {}}
+                            onChange={(curingData) => handleChange('curing', curingData)}
+                        />
+                    )}
+                </motion.div>
+            </AnimatePresence>
 
             {/* Orchard Preview Panel */}
             {showOrchard && (
@@ -398,6 +333,6 @@ export default function CreateFlowerReview() {
                     onClose={() => setShowOrchard(false)}
                 />
             )}
-        </div>
+        </ResponsiveCreateReviewLayout>
     )
 }

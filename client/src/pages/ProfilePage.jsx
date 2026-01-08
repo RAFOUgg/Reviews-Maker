@@ -93,12 +93,12 @@ export default function ProfilePage() {
         if (profile.accountType === 'Producteur') {
             badges.push({ icon: '🌱', label: 'Producteur Certifié', color: 'bg-emerald-500' })
         } else if (profile.accountType === 'Influenceur') {
-            badges.push({ icon: '⭐', label: 'Influenceur', color: 'bg-purple-500' })
+            badges.push({ icon: '⭐', label: 'Influenceur', color: '' })
         }
 
         // Badge vérification d'âge
         if (profile.legalAge) {
-            badges.push({ icon: '✓', label: 'Vérifié', color: 'bg-blue-500' })
+            badges.push({ icon: '✓', label: 'Vérifié', color: '' })
         }
 
         // Badge selon nombre de reviews (si stats disponibles)
@@ -143,8 +143,8 @@ export default function ProfilePage() {
 
     return (
         <div className="min-h-screen bg-slate-900 relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 via-violet-700/20 to-purple-800/20 pointer-events-none" />
-            <div className="max-w-4xl mx-auto px-4 py-12 relative z-10 relative z-10">
+            <div className="absolute inset-0 bg-gradient-to-br /20 /20 /20 pointer-events-none" />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10 relative z-10">
                 {/* Header */}
                 <LiquidCard padding="lg" className="mb-8">
                     <button
@@ -165,7 +165,7 @@ export default function ProfilePage() {
                                 alt={profile.username}
                                 className="w-32 h-32 rounded-2xl border-4 border-violet-500 shadow-lg"
                             />
-                            <button className="absolute -bottom-2 -right-2 bg-violet-600 hover:bg-violet-700 text-white p-3 rounded-full shadow-lg transition-colors">
+                            <button className="absolute -bottom-2 -right-2 hover: text-white p-3 rounded-full shadow-lg transition-colors">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -178,7 +178,7 @@ export default function ProfilePage() {
                             <h1 className="text-4xl font-bold text-gray-900 mb-2">{profile.username}</h1>
                             <p className="text-gray-700 mb-4">{profile.email}</p>
                             <div className="flex items-center gap-3 flex-wrap">
-                                <span className="bg-violet-600 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                                <span className="text-white px-4 py-2 rounded-full text-sm font-semibold">
                                     {profile.accountType || 'Consommateur'}
                                 </span>
                                 <span className="text-gray-600 text-sm flex items-center gap-1">
@@ -204,17 +204,17 @@ export default function ProfilePage() {
                 {stats && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                         <LiquidCard padding="md" className="text-center">
-                            <FileText className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                            <FileText className="w-8 h-8 mx-auto mb-2" />
                             <div className="text-3xl font-bold text-gray-900">{stats.totalReviews || 0}</div>
                             <div className="text-sm text-gray-600">Reviews</div>
                         </LiquidCard>
                         <LiquidCard padding="md" className="text-center">
-                            <Download className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                            <Download className="w-8 h-8 mx-auto mb-2" />
                             <div className="text-3xl font-bold text-gray-900">{stats.totalExports || 0}</div>
                             <div className="text-sm text-gray-600">Exports</div>
                         </LiquidCard>
                         <LiquidCard padding="md" className="text-center">
-                            <Heart className="w-8 h-8 text-rose-600 mx-auto mb-2" />
+                            <Heart className="w-8 h-8 mx-auto mb-2" />
                             <div className="text-3xl font-bold text-gray-900">{stats.totalLikes || 0}</div>
                             <div className="text-sm text-gray-600">Likes</div>
                         </LiquidCard>
@@ -237,10 +237,7 @@ export default function ProfilePage() {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`pb-4 px-4 font-semibold transition-colors border-b-2 flex items-center gap-2 ${activeTab === tab.id
-                                ? 'text-white border-violet-500'
-                                : 'text-white/60 hover:text-white border-transparent'
-                                }`}
+                            className={`pb-4 px-4 font-semibold transition-colors border-b-2 flex items-center gap-2 ${activeTab === tab.id ? 'text-white border-violet-500' : 'text-white/60 hover:text-white border-transparent'}`}
                         >
                             <tab.icon className="w-4 h-4" />
                             {tab.label}
@@ -258,44 +255,44 @@ export default function ProfilePage() {
                                 <div>
                                     <h3 className="text-2xl font-bold text-gray-900 mb-6">Vue d'ensemble</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="p-6 bg-gradient-to-br from-purple-50 to-violet-100 rounded-xl">
+                                        <div className="p-6 bg-gradient-to-br rounded-xl">
                                             <div className="flex items-center justify-between mb-4">
                                                 <h4 className="font-bold text-gray-900">Production</h4>
-                                                <Star className="w-6 h-6 text-purple-600" />
+                                                <Star className="w-6 h-6" />
                                             </div>
                                             <div className="space-y-3">
                                                 <div className="flex justify-between">
                                                     <span className="text-gray-700">Reviews créées</span>
-                                                    <span className="font-bold text-purple-900">{stats.totalReviews || 0}</span>
+                                                    <span className="font-bold">{stats.totalReviews || 0}</span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-gray-700">Exports générés</span>
-                                                    <span className="font-bold text-purple-900">{stats.totalExports || 0}</span>
+                                                    <span className="font-bold">{stats.totalExports || 0}</span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-gray-700">Templates sauvegardés</span>
-                                                    <span className="font-bold text-purple-900">{stats.savedTemplates || 0}</span>
+                                                    <span className="font-bold">{stats.savedTemplates || 0}</span>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="p-6 bg-gradient-to-br from-rose-50 to-pink-100 rounded-xl">
+                                        <div className="p-6 bg-gradient-to-br from-rose-50 rounded-xl">
                                             <div className="flex items-center justify-between mb-4">
                                                 <h4 className="font-bold text-gray-900">Engagement</h4>
-                                                <Heart className="w-6 h-6 text-rose-600" />
+                                                <Heart className="w-6 h-6" />
                                             </div>
                                             <div className="space-y-3">
                                                 <div className="flex justify-between">
                                                     <span className="text-gray-700">Likes reçus</span>
-                                                    <span className="font-bold text-rose-900">{stats.likesReceived || 0}</span>
+                                                    <span className="font-bold">{stats.likesReceived || 0}</span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-gray-700">Commentaires reçus</span>
-                                                    <span className="font-bold text-rose-900">{stats.commentsReceived || 0}</span>
+                                                    <span className="font-bold">{stats.commentsReceived || 0}</span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-gray-700">Partages</span>
-                                                    <span className="font-bold text-rose-900">{stats.shares || 0}</span>
+                                                    <span className="font-bold">{stats.shares || 0}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -324,7 +321,7 @@ export default function ProfilePage() {
                                                             {new Date(review.createdAt).toLocaleDateString('fr-FR')}
                                                         </div>
                                                         <div className="flex items-center gap-2 mt-1">
-                                                            <Heart className="w-4 h-4 text-rose-500" />
+                                                            <Heart className="w-4 h-4" />
                                                             <span className="text-sm">{review.likes || 0}</span>
                                                         </div>
                                                     </div>
@@ -421,7 +418,7 @@ export default function ProfilePage() {
                     {/* Legal Tab */}
                     {activeTab === 'legal' && (
                         <div className="space-y-6">
-                            <div className="bg-violet-50 rounded-xl p-6 border border-violet-200">
+                            <div className="rounded-xl p-6 border border-violet-200">
                                 <h3 className="font-bold text-gray-900 mb-3">Conditions Générales d'Utilisation</h3>
                                 <div className="text-sm text-gray-700 space-y-3 max-h-64 overflow-y-auto">
                                     <p>
@@ -443,7 +440,7 @@ export default function ProfilePage() {
                                 </label>
                             </div>
 
-                            <div className="bg-rose-50 rounded-xl p-6 border border-rose-200">
+                            <div className="rounded-xl p-6 border border-rose-200">
                                 <h3 className="font-bold text-gray-900 mb-3">Mentions Légales</h3>
                                 <div className="text-sm text-gray-700 space-y-3 max-h-64 overflow-y-auto">
                                     <p>
@@ -466,7 +463,7 @@ export default function ProfilePage() {
                     {/* Security Tab */}
                     {activeTab === 'security' && (
                         <div className="space-y-6">
-                            <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+                            <div className="rounded-xl p-6 border">
                                 <h3 className="font-bold text-gray-900 mb-4">Authentification</h3>
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">

@@ -39,7 +39,7 @@ export default function Odeurs({ formData, handleChange }) {
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             Intensité aromatique
                         </label>
-                        <span className="text-sm font-bold text-cyan-600 dark:text-cyan-400">
+                        <span className="text-sm font-bold dark:">
                             {formData.intensiteOdeur || 0}/10
                         </span>
                     </div>
@@ -64,10 +64,8 @@ export default function Odeurs({ formData, handleChange }) {
                                 key={aroma}
                                 type="button"
                                 onClick={() => toggleAroma(aroma, 'dominant')}
-                                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedDominant.includes(aroma)
-                                        ? 'bg-cyan-600 text-white shadow-lg scale-105'
-                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                                    }`}
+                                aria-pressed={selectedDominant.includes(aroma)}
+                                className={`tag-tile ${selectedDominant.includes(aroma) ? 'tag-tile--selected px-5 py-3 font-semibold' : ''}`}
                                 disabled={!selectedDominant.includes(aroma) && selectedDominant.length >= 7}
                             >
                                 {aroma}
@@ -87,10 +85,8 @@ export default function Odeurs({ formData, handleChange }) {
                                 key={aroma}
                                 type="button"
                                 onClick={() => toggleAroma(aroma, 'secondary')}
-                                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedSecondary.includes(aroma)
-                                        ? 'bg-purple-600 text-white shadow-lg scale-105'
-                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                                    }`}
+                                aria-pressed={selectedSecondary.includes(aroma)}
+                                className={`tag-tile ${selectedSecondary.includes(aroma) ? 'tag-tile--selected px-5 py-3 font-semibold' : ''}`}
                                 disabled={!selectedSecondary.includes(aroma) && selectedSecondary.length >= 7}
                             >
                                 {aroma}

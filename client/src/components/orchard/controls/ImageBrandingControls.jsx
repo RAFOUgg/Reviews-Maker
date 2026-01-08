@@ -71,7 +71,7 @@ export default function ImageBrandingControls() {
                         max="40"
                         value={config.image.borderRadius}
                         onChange={(e) => updateImage({ borderRadius: parseInt(e.target.value) })}
-                        className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-purple-500 to-purple-300 dark:from-purple-600 dark:to-purple-400 shadow-inner"
+                        className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r dark: dark: shadow-inner"
                     />
                 </div>
 
@@ -87,7 +87,7 @@ export default function ImageBrandingControls() {
                         step="0.1"
                         value={config.image.opacity}
                         onChange={(e) => updateImage({ opacity: parseFloat(e.target.value) })}
-                        className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-purple-500 to-purple-300 dark:from-purple-600 dark:to-purple-400 shadow-inner"
+                        className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r dark: dark: shadow-inner"
                     />
                 </div>
 
@@ -103,13 +103,7 @@ export default function ImageBrandingControls() {
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => updateImage({ filter: filter.id })}
-                                className={`
-                                    p-3 rounded-lg text-sm font-medium transition-all
-                                    ${config.image.filter === filter.id
-                                        ? 'bg-purple-500 text-white shadow-lg'
-                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                                    }
-                                `}
+                                className={`p-3 rounded-lg text-sm font-medium transition-all ${config.image.filter === filter.id ? ' text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
                             >
                                 <span className="mr-2">{filter.preview}</span>
                                 {filter.name}
@@ -130,16 +124,10 @@ export default function ImageBrandingControls() {
                     </h4>
                     <button
                         onClick={() => updateBranding({ enabled: !config.branding.enabled })}
-                        className={`
-                            relative w-11 h-6 rounded-full transition-colors
-                            ${config.branding.enabled ? 'bg-purple-500' : 'bg-gray-300 dark:bg-gray-600'}
-                        `}
+                        className={`relative w-11 h-6 rounded-full transition-colors ${config.branding.enabled ? '' : 'bg-gray-300 dark:bg-gray-600'}`}
                     >
                         <span
-                            className={`
-                                absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform
-                                ${config.branding.enabled ? 'translate-x-5' : 'translate-x-0'}
-                            `}
+                            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${config.branding.enabled ? 'translate-x-5' : 'translate-x-0'}`}
                         />
                     </button>
                 </div>
@@ -211,13 +199,7 @@ export default function ImageBrandingControls() {
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         onClick={() => updateBranding({ position: position.id })}
-                                        className={`
-                                            p-2 rounded-lg text-xs font-medium transition-all
-                                            ${config.branding.position === position.id
-                                                ? 'bg-purple-500 text-white shadow-lg'
-                                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                                            }
-                                        `}
+                                        className={`p-2 rounded-lg text-xs font-medium transition-all ${config.branding.position === position.id ? ' text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
                                     >
                                         <div>{position.icon}</div>
                                         <div className="mt-1">{position.name}</div>
@@ -238,13 +220,7 @@ export default function ImageBrandingControls() {
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         onClick={() => updateBranding({ size: size.id })}
-                                        className={`
-                                            px-3 py-2 rounded-lg text-sm font-medium transition-all
-                                            ${config.branding.size === size.id
-                                                ? 'bg-purple-500 text-white shadow-lg'
-                                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                                            }
-                                        `}
+                                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${config.branding.size === size.id ? ' text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
                                     >
                                         {size.name}
                                     </motion.button>
@@ -264,7 +240,7 @@ export default function ImageBrandingControls() {
                                 step="0.1"
                                 value={config.branding.opacity}
                                 onChange={(e) => updateBranding({ opacity: parseFloat(e.target.value) })}
-                                className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-purple-500 to-purple-300 dark:from-purple-600 dark:to-purple-400 shadow-inner"
+                                className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r dark: dark: shadow-inner"
                             />
                         </div>
                     </motion.div>

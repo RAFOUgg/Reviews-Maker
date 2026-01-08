@@ -76,19 +76,30 @@ const UnifiedPipeline = ({
 
         if (existingIndex >= 0) {
             // Mettre à jour cellule existante
-            newTimelineData[existingIndex] = {
-                ...newTimelineData[existingIndex],
-                data: {
-                    ...newTimelineData[existingIndex].data,
-                    [field]: value
-                }
+            const cell = { ...newTimelineData[existingIndex] };
+            const newData = { ...(cell.data || {}) };
+
+            if (value === null || value === undefined) {
+                // Supprimer la clé réellement
+                delete newData[field];
+            } else {
+                newData[field] = value;
+            }
+
+            // Si plus de données, supprimer la cellule entière
+            if (Object.keys(newData).length === 0) {
+                newTimelineData.splice(existingIndex, 1);
+            } else {
+                newTimelineData[existingIndex] = { ...cell, data: newData };
             }
         } else {
-            // Créer nouvelle cellule
-            newTimelineData.push({
-                timestamp,
-                data: { [field]: value }
-            })
+            // Créer nouvelle cellule uniquement si value non-null
+            if (value !== null && value !== undefined) {
+                newTimelineData.push({
+                    timestamp,
+                    data: { [field]: value }
+                });
+            }
         }
 
         onChange?.({
@@ -143,11 +154,11 @@ const UnifiedPipeline = ({
             bordered
         >
             {/* Instructions utilisateur */}
-            <div className="mb-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-200 dark:border-purple-700 rounded-xl p-4">
-                <h4 className="text-sm font-semibold text-purple-900 dark:text-purple-100 mb-2 flex items-center gap-2">
-                    🌱 {config.title} : Timeline interactive CDC
+            <div className="mb-4 bg-gradient-to-r dark:/20 dark:/20 border dark: rounded-xl p-4">
+                <h4 className="text-sm font-semibold dark: mb-2 flex items-center gap-2">
+                    🌱 {config.title} : Timeline interactive
                 </h4>
-                <ul className="text-xs text-purple-800 dark:text-purple-200 space-y-1 list-disc list-inside">
+                <ul className="text-xs dark: space-y-1 list-disc list-inside">
                     <li>📍 <strong>Glissez</strong> les contenus depuis le panneau latéral vers les cases de la timeline</li>
                     <li>🖱️ <strong>Drag & drop</strong> : Sélectionnez un contenu à gauche et déposez-le sur une case</li>
                     <li>📝 <strong>Édition</strong> : Cliquez sur une case pour modifier ses données</li>

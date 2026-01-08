@@ -101,20 +101,20 @@ export default function LibraryPage() {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2"></div>
             </div>
         )
     }
 
     return (
         <div className="min-h-screen bg-slate-900 relative pb-20 pt-8 px-4 md:px-8">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-indigo-900/20 to-blue-900/20 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-gradient-to-br /20 /20 /20 pointer-events-none"></div>
             <div className="relative max-w-7xl mx-auto space-y-8">
 
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600 drop-shadow-sm">
+                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r drop-shadow-sm">
                             Ma Bibliothèque
                         </h1>
                         <p className="text-gray-600 dark:text-gray-300 mt-1">
@@ -127,10 +127,7 @@ export default function LibraryPage() {
                             <button
                                 key={f}
                                 onClick={() => setFilter(f)}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === f
-                                        ? 'bg-white text-purple-600 shadow-md scale-105'
-                                        : 'text-gray-500 hover:text-purple-500 hover:bg-white/30'
-                                    }`}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === f ? 'bg-white shadow-md scale-105' : 'text-gray-500 hover: hover:bg-white/30' }`}
                             >
                                 {f === 'all' ? 'Toutes' : f === 'public' ? 'Publiques' : 'Privées'}
                             </button>
@@ -149,8 +146,8 @@ export default function LibraryPage() {
                         className="text-center py-16 bg-white/40 dark:bg-black/20 backdrop-blur-md rounded-2xl border border-white/20 shadow-xl"
                     >
                         <div className="max-w-sm mx-auto px-6">
-                            <div className="w-20 h-20 mx-auto bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mb-6">
-                                <svg className="w-10 h-10 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-20 h-20 mx-auto dark: rounded-full flex items-center justify-center mb-6">
+                                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                             </div>
@@ -180,21 +177,18 @@ export default function LibraryPage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95 }}
                                     transition={{ delay: index * 0.05 }}
-                                    className="group relative bg-white/60 dark:bg-gray-800/40 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/20 hover:shadow-xl hover:border-purple-500/30 transition-all hover:-translate-y-1"
+                                    className="group relative bg-white/60 dark:bg-gray-800/40 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/20 hover:shadow-xl hover:/30 transition-all hover:-translate-y-1"
                                 >
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-3 mb-2">
-                                                <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-purple-600 transition-colors">
+                                                <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover: transition-colors">
                                                     {review.holderName}
                                                 </h3>
-                                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${review.isPublic
-                                                    ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400'
-                                                    : 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700/50 dark:text-gray-300'
-                                                    }`}>
+                                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${review.isPublic ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700/50 dark:text-gray-300' }`}>
                                                     {review.isPublic ? 'Publique' : 'Privée'}
                                                 </span>
-                                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-900/30 dark:text-purple-300">
+                                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold border dark: dark:">
                                                     {review.type}
                                                 </span>
                                             </div>
@@ -217,14 +211,14 @@ export default function LibraryPage() {
                                         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={() => toggleVisibility(review.id, review.isPublic)}
-                                                className="p-2 rounded-xl hover:bg-white/50 text-gray-500 hover:text-purple-600 transition-colors"
+                                                className="p-2 rounded-xl hover:bg-white/50 text-gray-500 hover: transition-colors"
                                                 title={review.isPublic ? 'Rendre privée' : 'Rendre publique'}
                                             >
                                                 {review.isPublic ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                             </button>
                                             <button
                                                 onClick={() => navigate(`/review/${review.id}`)}
-                                                className="p-2 rounded-xl hover:bg-white/50 text-gray-500 hover:text-blue-600 transition-colors"
+                                                className="p-2 rounded-xl hover:bg-white/50 text-gray-500 hover: transition-colors"
                                                 title="Voir"
                                             >
                                                 <ExternalLink className="w-5 h-5" />

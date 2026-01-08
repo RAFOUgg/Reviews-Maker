@@ -782,8 +782,8 @@ export default function PipelineTimeline({
                             Mes préréglages
                         </h3>
 
-                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-2">
-                            <p className="text-xs text-blue-800 dark:text-blue-200">
+                        <div className="dark: border dark: rounded-lg p-2">
+                            <p className="text-xs dark:">
                                 💡 <strong>Workflow :</strong><br />
                                 1. Créer un préréglage (bouton en bas)<br />
                                 2. Cliquer dessus pour l'activer<br />
@@ -810,10 +810,7 @@ export default function PipelineTimeline({
                                         draggable
                                         onDragStart={() => handleLoadPreset(preset.id)}
                                         onClick={() => handleLoadPreset(preset.id)}
-                                        className={`p-3 border rounded-lg cursor-pointer transition-all ${activePresetId === preset.id
-                                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
-                                            : 'border-gray-200 dark:border-gray-700 hover:border-primary-300'
-                                            }`}
+                                        className={`p-3 border rounded-lg cursor-pointer transition-all ${activePresetId === preset.id ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md' : 'border-gray-200 dark:border-gray-700 hover:border-primary-300' }`}
                                     >
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="flex-1 min-w-0">
@@ -901,10 +898,7 @@ export default function PipelineTimeline({
                                                 onDragStart={() => handleDragStart(field)}
                                                 onClick={(e) => handleContentClick(field, e)}
                                                 onContextMenu={(e) => handleContentRightClick(field, e)}
-                                                className={`px-3 py-2 border rounded cursor-move hover:shadow-sm transition-all text-xs ${isSelected
-                                                    ? 'bg-primary-100 dark:bg-primary-900/30 border-primary-400 dark:border-primary-600'
-                                                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-primary-400'
-                                                    }`}
+                                                className={`px-3 py-2 border rounded cursor-move hover:shadow-sm transition-all text-xs ${isSelected ? 'bg-primary-100 dark:bg-primary-900/30 border-primary-400 dark:border-primary-600' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-primary-400' }`}
                                             >
                                                 <span className={`${isSelected ? 'font-semibold text-primary-900 dark:text-primary-100' : 'text-gray-900 dark:text-white'}`}>
                                                     {field.label}
@@ -933,8 +927,8 @@ export default function PipelineTimeline({
             <div className="flex-1 overflow-auto">
                 <div className="p-4 space-y-4">
                     {/* Configuration de la timeline */}
-                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
-                        <h3 className="text-sm font-semibold text-purple-900 dark:text-purple-100 mb-3 flex items-center gap-2">
+                    <div className="dark: border dark: rounded-lg p-4">
+                        <h3 className="text-sm font-semibold dark: mb-3 flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
                             Pipeline {pipelineType.charAt(0).toUpperCase() + pipelineType.slice(1)}
                         </h3>
@@ -1032,8 +1026,8 @@ export default function PipelineTimeline({
                         )}
 
                         {!selectedCells.length && activePresetId && (
-                            <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
-                                <p className="text-xs text-blue-800 dark:text-blue-200">
+                            <div className="mt-3 p-3 dark: border dark: rounded-lg">
+                                <p className="text-xs dark:">
                                     💡 Préréglage "{presets.find(p => p.id === activePresetId)?.name}" actif<br />
                                     Sélectionnez des cases pour l'appliquer
                                 </p>
@@ -1069,14 +1063,7 @@ export default function PipelineTimeline({
                                         onClick={(e) => handleCellClick(i, e)}
                                         onDragOver={handleDragOver}
                                         onDrop={() => handleDrop(i)}
-                                        className={`
-                                            aspect-square rounded cursor-pointer transition-all
-                                            ${hasData
-                                                ? 'bg-green-500 hover:bg-green-600'
-                                                : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
-                                            }
-                                            ${isSelected ? 'ring-2 ring-primary-500 ring-offset-2' : ''}
-                                        `}
+                                        className={`aspect-square rounded cursor-pointer transition-all ${hasData ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600' } ${isSelected ? 'ring-2 ring-primary-500 ring-offset-2' : ''}`}
                                         title={`${getCellLabel(i)}${hasData ? ' - Configuré' : ''}`}
                                     >
                                         {timelineConfig.intervalType === 'phases' && (

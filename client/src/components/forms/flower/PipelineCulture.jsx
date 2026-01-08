@@ -317,11 +317,11 @@ export default function PipelineCulture({ data, onChange }) {
     return (
         <div className="space-y-4">
             {/* Instructions d'utilisation */}
-            <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-200 dark:border-purple-700 rounded-xl p-4">
-                <h4 className="text-sm font-semibold text-purple-900 dark:text-purple-100 mb-2 flex items-center gap-2">
-                    📋 Pipeline de culture : Timeline interactive CDC
+            <div className="bg-gradient-to-r dark:/20 dark:/20 border dark: rounded-xl p-4">
+                <h4 className="text-sm font-semibold dark: mb-2 flex items-center gap-2">
+                    📋 Pipeline de culture : Timeline interactive
                 </h4>
-                <ul className="text-xs text-purple-800 dark:text-purple-200 space-y-1 list-disc list-inside">
+                <ul className="text-xs dark: space-y-1 list-disc list-inside">
                     <li>Glissez les contenus depuis le panneau latéral vers les cases de la timeline</li>
                     <li>Drag & drop : Sélectionnez un contenu à gauche et déposez-le sur une case</li>
                     <li>Édition : Cliquez sur une case pour modifier ses données</li>

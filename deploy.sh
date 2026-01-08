@@ -17,6 +17,9 @@ git pull --rebase origin main
 echo "🔨 Build du client React..."
 cd client
 rm -rf dist node_modules/.vite
+echo "📦 Installation des dépendances client (npm ci)..."
+npm ci --no-audit --prefer-offline
+echo "📦 Dépendances installées. Lancement du build..."
 npm run build
 
 # 3. Copie vers Nginx

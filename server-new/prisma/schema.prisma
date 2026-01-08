@@ -95,6 +95,7 @@ model User {
   comments            ReviewComment[]
   exports             Export[]
   exportTemplates     ExportTemplate[]
+  presets             UserPreset[]
 
   @@index([email])
   @@index([discordId])
@@ -1218,4 +1219,24 @@ model ExportTemplate {
   @@index([isCustom])
   @@index([isDefault])
   @@map("export_templates")
+}
+
+// Modèle UserPreset (préréglages de champs pipeline pour l'utilisateur)
+model UserPreset {
+  id           Int      @id @default(autoincrement())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String   // Nom du préréglage
+  description  String?  // Description optionnelle
+  type         String   // "field" (champ individuel), "grouped" (groupe de champs), "pipeline" (pipeline complète)
+  pipelineType String   // "culture", "curing", "separation", "extraction"
+  data         String   // JSON: données du préréglage
+  useCount     Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([userId, type])
+  @@index([userId, pipelineType])
+  @@map("user_presets")
 }

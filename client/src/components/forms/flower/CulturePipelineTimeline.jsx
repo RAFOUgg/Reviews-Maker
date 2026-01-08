@@ -15,13 +15,13 @@ export default function CulturePipelineTimeline({ data, onChange }) {
 
     // État mode pipeline
     const [pipelineMode, setPipelineMode] = useState(
-        data.cultureTimelineConfig?.mode || 'custom'
+        data.cultureTimelineConfig?.mode || 'phases'
     )
 
     // Configuration Timeline
     const timelineConfig = data.cultureTimelineConfig || {
-        mode: 'custom', // 'phases' ou 'custom'
-        type: 'jour', // seconde | heure | jour | date | semaine | phase
+        mode: 'phases', // 'phases' ou 'custom'
+        type: 'phase', // seconde | heure | jour | date | semaine | phase
         start: '',
         end: '',
         duration: null,
@@ -75,28 +75,22 @@ export default function CulturePipelineTimeline({ data, onChange }) {
                     <div className="grid grid-cols-2 gap-2">
                         <button
                             onClick={() => handleModeChange('phases')}
-                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${pipelineMode === 'phases'
-                                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
-                                }`}
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${pipelineMode === 'phases' ? 'bg-gradient-to-r text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'}`}
                         >
                             🌱 Mode Phases
                             <div className="text-xs mt-1 opacity-80">12 étapes prédéfinies</div>
                         </button>
                         <button
                             onClick={() => handleModeChange('custom')}
-                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${pipelineMode === 'custom'
-                                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
-                                }`}
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${pipelineMode === 'custom' ? 'bg-gradient-to-r text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'}`}
                         >
                             ⚙️ Personnalisé
                             <div className="text-xs mt-1 opacity-80">Configuration libre</div>
                         </button>
                     </div>
                     {pipelineMode === 'phases' && (
-                        <div className="text-xs text-gray-600 dark:text-gray-400 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
-                            ✨ Les 12 phases CDC sont actives avec durées par défaut ajustables
+                        <div className="text-xs text-gray-600 dark:text-gray-400 dark: rounded-lg p-3">
+                            ✨ Les 12 phases sont actives avec durées par défaut ajustables
                         </div>
                     )}
                 </div>
@@ -347,19 +341,67 @@ export default function CulturePipelineTimeline({ data, onChange }) {
         if (existingIndex >= 0) {
             // Modifier l'entrée existante
             const newData = [...timelineData]
-            newData[existingIndex] = {
-                ...newData[existingIndex],
-                [field]: value
+            const entry = { ...newData[existingIndex] }
+
+            // Support nested shape { timestamp, data: { ... } } and flat shape
+            if (entry.data && typeof entry.data === 'object') {
+                const newNested = { ...(entry.data || {}) }
+                if (value === null || value === undefined) {
+                    delete newNested[field]
+                } else {
+                    newNested[field] = value
+                }
+
+                // If nested data is empty, remove whole entry
+                if (Object.keys(newNested).length === 0) {
+                    newData.splice(existingIndex, 1)
+                } else {
+                    newData[existingIndex] = { ...entry, data: newNested }
+                }
+            } else {
+                // flat entry
+                if (value === null || value === undefined) {
+                    delete entry[field]
+                } else {
+                    entry[field] = value
+                }
+
+                const usefulKeys = Object.keys(entry).filter(k => k !== 'timestamp' && k !== 'date')
+                if (usefulKeys.length === 0) {
+                    newData.splice(existingIndex, 1)
+                } else {
+                    newData[existingIndex] = entry
+                }
             }
+
             onChange('cultureTimelineData', newData)
         } else {
             // Créer nouvelle entrée
-            const cellDate = new Date(timestamp)
-            const newEntry = {
-                timestamp,
-                date: cellDate.toISOString().split('T')[0],
-                [field]: value
+            // Ne créer une nouvelle entrée que si la valeur est non nulle
+            if (value === null || value === undefined || value === '') return
+
+            // Decide shape: if existing timelineData entries use nested 'data', follow that
+            const prefersNested = timelineData.some(d => d && d.hasOwnProperty('data'))
+
+            // Compute a safe date string only when timestamp encodes a real date
+            let dateStr = undefined
+            try {
+                if (typeof timestamp === 'string') {
+                    if (timestamp.startsWith('date-')) {
+                        const candidate = timestamp.replace(/^date-/, '')
+                        const parsed = new Date(candidate)
+                        if (!isNaN(parsed)) dateStr = parsed.toISOString().split('T')[0]
+                    } else {
+                        const parsed = new Date(timestamp)
+                        if (!isNaN(parsed)) dateStr = parsed.toISOString().split('T')[0]
+                    }
+                }
+            } catch (e) {
+                dateStr = undefined
             }
+
+            const newEntry = prefersNested ? { timestamp, data: { [field]: value } } : { timestamp, [field]: value }
+            if (dateStr) newEntry.date = dateStr
             onChange('cultureTimelineData', [...timelineData, newEntry])
         }
     }
@@ -380,19 +422,6 @@ export default function CulturePipelineTimeline({ data, onChange }) {
 
     return (
         <div className="space-y-6">
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl">
-                <h3 className="font-bold text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
-                    <span>🌱</span> Pipeline de culture : Timeline interactive CDC
-                </h3>
-                <p className="text-sm text-blue-800 dark:text-blue-200">
-                    📝 Glissez les contenus depuis le panneau latéral vers les cases de la timeline.
-                    <br />
-                    🎯 <strong>Drag & drop</strong> : Sélectionnez un contenu à gauche et déposez-le sur une case.
-                    <br />
-                    📊 <strong>Édition</strong> : Cliquez sur une case pour modifier ses données.
-                </p>
-            </div>
-
             <PipelineDragDropView
                 type="culture"
                 sidebarContent={sidebarContent}

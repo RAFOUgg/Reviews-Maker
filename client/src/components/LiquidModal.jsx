@@ -21,8 +21,8 @@ const LiquidModal = ({
   const sizes = {
     sm: 'max-w-md',
     md: 'max-w-2xl',
-    lg: 'max-w-4xl',
-    xl: 'max-w-6xl',
+    lg: 'max-w-6xl',
+    xl: 'max-w-7xl',
     full: 'max-w-[95vw]',
   };
 

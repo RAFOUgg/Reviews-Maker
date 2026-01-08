@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Timer, Thermometer, Droplets, Package, ChevronDown, AlertCircle } from 'lucide-react';
 import LiquidCard from '../../LiquidCard';
 import { INTERVAL_TYPES } from '../../../types/pipelineTypes';
+import CuringPipelineDragDrop from '../../pipeline/CuringPipelineDragDrop';
 
 const CONTAINER_TYPES = [
     { id: 'air_libre', label: 'Air libre', icon: '🌬️' },
@@ -39,10 +40,8 @@ const OPACITY_LEVELS = [
 ];
 
 const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }) => {
+    // State local pour les config de curing (environnement)
     const [config, setConfig] = useState({
-        intervalType: 'days',
-        startDate: '',
-        endDate: '',
         curingType: 'cold',
         temperature: '',
         humidity: '',
@@ -52,6 +51,16 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
         volumeOccupied: '',
         notes: '',
         ...data
+    });
+
+    // State local pour la config timeline - SÉPARÉ ET CONTRÔLÉ
+    const [timelineConfig, setTimelineConfig] = useState({
+        type: data.curingTimelineConfig?.type || 'phase',
+        totalDays: data.curingTimelineConfig?.totalDays || 30,
+        totalHours: data.curingTimelineConfig?.totalHours,
+        totalWeeks: data.curingTimelineConfig?.totalWeeks,
+        startDate: data.curingTimelineConfig?.startDate || '',
+        endDate: data.curingTimelineConfig?.endDate || ''
     });
 
     const [showConfig, setShowConfig] = useState(true);
@@ -100,53 +109,8 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                             exit={{ height: 0, opacity: 0 }}
                             className="space-y-4 overflow-hidden"
                         >
-                            {/* Type d'intervalle */}
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Intervalle de temps</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {['seconds', 'minutes', 'hours', 'days', 'weeks', 'months'].map(interval => (
-                                        <button
-                                            key={interval}
-                                            onClick={() => updateConfig('intervalType', interval)}
-                                            className={`py-2 px-3 rounded-lg border-2 text-sm transition-all ${config.intervalType === interval
-                                                ? 'border-amber-500 bg-amber-500/20'
-                                                : 'border-white/20 hover:border-white/40'
-                                                }`}
-                                        >
-                                            {INTERVAL_TYPES[interval]}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Dates */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">Date début</label>
-                                    <input
-                                        type="date"
-                                        value={config.startDate}
-                                        onChange={(e) => updateConfig('startDate', e.target.value)}
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">Date fin (optionnel)</label>
-                                    <input
-                                        type="date"
-                                        value={config.endDate}
-                                        onChange={(e) => updateConfig('endDate', e.target.value)}
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg"
-                                    />
-                                </div>
-                            </div>
-
-                            {duration && (
-                                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-sm">
-                                    <AlertCircle className="w-4 h-4 inline mr-2" />
-                                    Durée totale: <strong>{duration} jours</strong>
-                                </div>
-                            )}
+                            {/* NOTE: La configuration de la trame (type d'intervalle, nombre de jours, etc.) 
+                                 se fait directement dans le composant PipelineDragDropView ci-dessous */}
 
                             {/* Type de curing */}
                             <div>
@@ -154,20 +118,14 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                 <div className="grid grid-cols-2 gap-3">
                                     <button
                                         onClick={() => updateConfig('curingType', 'cold')}
-                                        className={`p-3 rounded-lg border-2 transition-all ${config.curingType === 'cold'
-                                            ? 'border-blue-500 bg-blue-500/20'
-                                            : 'border-white/20 hover:border-white/40'
-                                            }`}
+                                        className={`p-3 rounded-lg border-2 transition-all ${config.curingType === 'cold' ? ' ' : 'border-white/20 hover:border-white/40'}`}
                                     >
                                         <div className="text-2xl mb-1">❄️</div>
                                         <div className="text-sm font-medium">Froid (&lt;5°C)</div>
                                     </button>
                                     <button
                                         onClick={() => updateConfig('curingType', 'warm')}
-                                        className={`p-3 rounded-lg border-2 transition-all ${config.curingType === 'warm'
-                                            ? 'border-orange-500 bg-orange-500/20'
-                                            : 'border-white/20 hover:border-white/40'
-                                            }`}
+                                        className={`p-3 rounded-lg border-2 transition-all ${config.curingType === 'warm' ? 'border-orange-500 bg-orange-500/20' : 'border-white/20 hover:border-white/40'}`}
                                     >
                                         <div className="text-2xl mb-1">🔥</div>
                                         <div className="text-sm font-medium">Chaud (&gt;5°C)</div>
@@ -243,10 +201,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                         <button
                                             key={type.id}
                                             onClick={() => updateConfig('containerType', type.id)}
-                                            className={`p-2 rounded-lg border-2 text-sm transition-all ${config.containerType === type.id
-                                                ? 'border-amber-500 bg-amber-500/20'
-                                                : 'border-white/20 hover:border-white/40'
-                                                }`}
+                                            className={`p-2 rounded-lg border-2 text-sm transition-all ${config.containerType === type.id ? 'border-amber-500 bg-amber-500/20' : 'border-white/20 hover:border-white/40'}`}
                                         >
                                             <div className="text-xl mb-1">{type.icon}</div>
                                             <div className="text-xs">{type.label}</div>
@@ -263,10 +218,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                         <button
                                             key={type.id}
                                             onClick={() => updateConfig('packagingType', type.id)}
-                                            className={`p-2 rounded-lg border-2 text-sm transition-all ${config.packagingType === type.id
-                                                ? 'border-purple-500 bg-purple-500/20'
-                                                : 'border-white/20 hover:border-white/40'
-                                                }`}
+                                            className={`p-2 rounded-lg border-2 text-sm transition-all ${config.packagingType === type.id ? ' ' : 'border-white/20 hover:border-white/40'}`}
                                         >
                                             <div className="text-xl mb-1">{type.icon}</div>
                                             <div className="text-xs">{type.label}</div>
@@ -283,10 +235,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                                         <button
                                             key={level.id}
                                             onClick={() => updateConfig('opacity', level.id)}
-                                            className={`p-2 rounded-lg border-2 text-sm transition-all ${config.opacity === level.id
-                                                ? 'border-cyan-500 bg-cyan-500/20'
-                                                : 'border-white/20 hover:border-white/40'
-                                                }`}
+                                            className={`p-2 rounded-lg border-2 text-sm transition-all ${config.opacity === level.id ? 'border-cyan-500 ' : 'border-white/20 hover:border-white/40'}`}
                                         >
                                             <div className="text-xl mb-1">{level.icon}</div>
                                             <div className="text-xs">{level.label}</div>
@@ -340,12 +289,73 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                 <h4 className="text-sm font-bold mb-3">📋 Résumé Curing/Maturation</h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                     <div><strong>Type:</strong> {config.curingType === 'cold' ? 'Froid (<5°C)' : 'Chaud (>5°C)'}</div>
-                    <div><strong>Durée:</strong> {duration ? `${duration} jours` : 'Non définie'}</div>
+                    <div><strong>Intervalle:</strong> {INTERVAL_TYPES[timelineConfig.type] || 'Jours'}</div>
                     <div><strong>Température:</strong> {config.temperature || 'N/A'}°C</div>
                     <div><strong>Humidité:</strong> {config.humidity || 'N/A'}%</div>
                     <div><strong>Récipient:</strong> {CONTAINER_TYPES.find(t => t.id === config.containerType)?.label}</div>
                     <div><strong>Emballage:</strong> {PACKAGING_TYPES.find(t => t.id === config.packagingType)?.label}</div>
                 </div>
+            </LiquidCard>
+
+            {/* Pipeline Curing avec évolution temporelle - TOUJOURS AFFICHÉ */}
+            <LiquidCard className="p-6">
+                <h4 className="text-sm font-bold mb-4 flex items-center gap-2">
+                    <Timer className="w-4 h-4" />
+                    Pipeline Évolution Curing
+                </h4>
+                <CuringPipelineDragDrop
+                    timelineConfig={timelineConfig}
+                    timelineData={data.curingTimeline || []}
+                    onConfigChange={(key, value) => {
+                        console.log('🔧 CuringMaturation onConfigChange:', key, value);
+
+                        // Mettre à jour le state local IMMÉDIATEMENT
+                        setTimelineConfig(prev => ({
+                            ...prev,
+                            [key]: value
+                        }));
+
+                        // Propager au parent pour sauvegarde
+                        const updatedConfig = { ...timelineConfig, [key]: value };
+                        onChange({ ...data, curingTimelineConfig: updatedConfig });
+                    }}
+                    onDataChange={(timestamp, field, value) => {
+                        // Adapter handler pour PipelineDragDropView
+                        const currentData = data.curingTimeline || [];
+                        const existingIndex = currentData.findIndex(cell => cell.timestamp === timestamp);
+
+                        let updatedData;
+                        if (existingIndex >= 0) {
+                            updatedData = [...currentData];
+                            if (value === null || value === undefined) {
+                                // Supprimer le champ mais GARDER les métadonnées (timestamp, date, label, phase)
+                                const { [field]: removed, ...rest } = updatedData[existingIndex];
+                                // Restaurer les champs structurels essentiels
+                                updatedData[existingIndex] = {
+                                    timestamp: updatedData[existingIndex].timestamp,
+                                    ...(updatedData[existingIndex].date && { date: updatedData[existingIndex].date }),
+                                    ...(updatedData[existingIndex].label && { label: updatedData[existingIndex].label }),
+                                    ...(updatedData[existingIndex].phase && { phase: updatedData[existingIndex].phase }),
+                                    ...rest
+                                };
+                            } else {
+                                updatedData[existingIndex] = { ...updatedData[existingIndex], [field]: value };
+                            }
+                        } else {
+                            updatedData = [...currentData, { timestamp, [field]: value }];
+                        }
+
+                        onChange({ ...data, curingTimeline: updatedData });
+                    }}
+                    initialData={{
+                        temperature: config.temperature,
+                        humidity: config.humidity,
+                        containerType: config.containerType,
+                        packagingType: config.packagingType,
+                        opacity: config.opacity,
+                        volumeOccupied: config.volumeOccupied
+                    }}
+                />
             </LiquidCard>
         </div>
     );

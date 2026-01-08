@@ -12,7 +12,7 @@ export default function AccountTypeSelector({ selected, onChange }) {
             name: 'Amateur',
             price: 'Gratuit',
             icon: Users,
-            color: 'from-blue-500 to-cyan-500',
+            color: ' ',
             features: [
                 'Accès aux sections : Infos générales, Visuel & Technique, PipeLine Curing, Odeurs, Goûts, Effets',
                 'Templates prédéfinis : Compact, Détaillé, Complète',
@@ -26,7 +26,7 @@ export default function AccountTypeSelector({ selected, onChange }) {
             name: 'Influenceur',
             price: '15.99€/mois',
             icon: TrendingUp,
-            color: 'from-pink-500 to-rose-500',
+            color: ' to-rose-500',
             features: [
                 'Accès aux aperçus détaillés et complets',
                 'Système drag & drop pour composition',
@@ -40,7 +40,7 @@ export default function AccountTypeSelector({ selected, onChange }) {
             name: 'Producteur',
             price: '29.99€/mois',
             icon: Sparkles,
-            color: 'from-purple-500 to-indigo-500',
+            color: ' ',
             features: [
                 'Accès à TOUS les templates (y compris Personnalisé)',
                 'Mode contenus zone personnalisable avec drag & drop',
@@ -55,7 +55,7 @@ export default function AccountTypeSelector({ selected, onChange }) {
 
     return (
         <div className="space-y-4">
-            <h3 className="text-xl font-bold text-center mb-6 bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
+            <h3 className="text-xl font-bold text-center mb-6 bg-gradient-to-r bg-clip-text text-transparent">
                 Choisissez votre type de compte
             </h3>
 
@@ -70,17 +70,14 @@ export default function AccountTypeSelector({ selected, onChange }) {
                             onClick={() => onChange(type.id)}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            className={`relative p-6 rounded-2xl text-left transition-all duration-300 ${isSelected
-                                ? 'bg-white shadow-2xl ring-4 ring-purple-500'
-                                : 'bg-white/80 hover:bg-white shadow-lg hover:shadow-xl'
-                                }`}
+                            className={`relative p-6 rounded-2xl text-left transition-all duration-300 ${isSelected ? 'bg-white shadow-2xl ring-4 ' : 'bg-white/80 hover:bg-white shadow-lg hover:shadow-xl' }`}
                         >
                             {/* Badge sélectionné */}
                             {isSelected && (
                                 <motion.div
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
-                                    className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg"
+                                    className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br rounded-full flex items-center justify-center shadow-lg"
                                 >
                                     <Check className="w-5 h-5 text-white" strokeWidth={3} />
                                 </motion.div>

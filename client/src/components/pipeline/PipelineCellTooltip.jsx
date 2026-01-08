@@ -44,7 +44,7 @@ const PipelineCellTooltip = ({ cellData, sectionLabel, visible, position }) => {
             {/* Header */}
             <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-700">
                 <span className="font-bold text-sm">{sectionLabel}</span>
-                <span className="text-xs bg-purple-500 px-2 py-0.5 rounded-full">
+                <span className="text-xs bg-white/5 px-2 py-0.5 rounded-full text-gray-200">
                     {cellData.completionPercentage}%
                 </span>
             </div>

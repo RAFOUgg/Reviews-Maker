@@ -74,9 +74,9 @@ const AccountTypeSelector = ({ isOpen, onComplete, currentType = 'consumer', ini
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-hidden flex flex-col">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-violet-600 to-purple-700 text-white p-6">
+                <div className="bg-gradient-to-r text-white p-6">
                     <h2 className="text-2xl font-bold flex items-center gap-3">
                         <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
@@ -100,17 +100,7 @@ const AccountTypeSelector = ({ isOpen, onComplete, currentType = 'consumer', ini
                                     key={type.type}
                                     onClick={() => setSelectedType(type.type)}
                                     disabled={type.disabled || (type.requiresSubscription && type.type !== 'consumer')}
-                                    className={`
-                    relative p-6 rounded-lg border-2 text-left transition-all
-                    ${isSelected
-                                            ? 'border-violet-600 bg-violet-50 dark:bg-violet-900/20'
-                                            : 'border-gray-300 dark:border-gray-600 hover:border-violet-400'
-                                        }
-                    ${type.disabled || (type.requiresSubscription && type.type !== 'consumer')
-                                            ? 'opacity-60 cursor-not-allowed'
-                                            : 'cursor-pointer'
-                                        }
-                  `}
+                                    className={`relative p-6 rounded-lg border-2 text-left transition-all ${isSelected ? 'border-violet-600 dark:' : 'border-gray-300 dark:border-gray-600 hover:border-violet-400'} ${type.disabled || (type.requiresSubscription && type.type !== 'consumer') ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                                 >
                                     {isCurrent && (
                                         <span className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
@@ -123,7 +113,7 @@ const AccountTypeSelector = ({ isOpen, onComplete, currentType = 'consumer', ini
                                             {type.name}
                                         </h3>
                                         {type.price > 0 ? (
-                                            <span className="text-xl font-bold text-violet-600 dark:text-violet-400">
+                                            <span className="text-xl font-bold dark:">
                                                 €{type.price}/mois
                                             </span>
                                         ) : (
@@ -167,7 +157,7 @@ const AccountTypeSelector = ({ isOpen, onComplete, currentType = 'consumer', ini
                                     )}
 
                                     {type.requiresVerification && (
-                                        <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1 mt-2">
+                                        <p className="text-xs dark: flex items-center gap-1 mt-2">
                                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                             </svg>
@@ -201,7 +191,7 @@ const AccountTypeSelector = ({ isOpen, onComplete, currentType = 'consumer', ini
                         <button
                             onClick={handleSubmit}
                             disabled={loading || (selectedType !== 'consumer' && accountTypes.find(t => t.type === selectedType)?.requiresSubscription)}
-                            className="flex-1 bg-violet-600 hover:bg-violet-700 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 hover: text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading
                                 ? t('accountType.confirming', 'Confirmation...')

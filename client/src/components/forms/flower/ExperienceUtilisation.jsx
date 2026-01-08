@@ -39,11 +39,11 @@ export default function ExperienceUtilisation({ data, onChange }) {
     return (
         <div className="space-y-8">
             {/* En-tête */}
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-2xl border-2 border-indigo-200">
-                <h3 className="text-xl font-bold text-indigo-800 mb-2 flex items-center gap-2">
+            <div className="bg-gradient-to-r p-6 rounded-2xl border-2 border-indigo-200">
+                <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
                     <span>🧪</span> Expérience d'utilisation durant les tests
                 </h3>
-                <p className="text-sm text-indigo-600">
+                <p className="text-sm">
                     Documentez vos tests de consommation pour aider la communauté
                 </p>
             </div>
@@ -57,9 +57,9 @@ export default function ExperienceUtilisation({ data, onChange }) {
                 <select
                     value={data.methodeConsommation || ''}
                     onChange={(e) => onChange('methodeConsommation', e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-indigo-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-lg"
+                    className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-lg"
                 >
-                    <option value="">Sélectionner une méthode...</option>
+                    <option value="">à sélectionner une méthode...</option>
                     {EXPERIENCE_VALUES.methodeConsommation.map(m => (
                         <option key={m.value} value={m.value}>{m.label}</option>
                     ))}
@@ -81,12 +81,12 @@ export default function ExperienceUtilisation({ data, onChange }) {
                             value={data.dosageUtilise || ''}
                             onChange={(e) => onChange('dosageUtilise', e.target.value)}
                             placeholder="0.5"
-                            className="flex-1 px-4 py-3 border-2 border-purple-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all text-lg"
+                            className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-lg"
                         />
                         <select
                             value={data.dosageUnite || 'g'}
                             onChange={(e) => onChange('dosageUnite', e.target.value)}
-                            className="px-4 py-3 border-2 border-purple-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all"
+                            className="px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                         >
                             <option value="g">grammes (g)</option>
                             <option value="mg">milligrammes (mg)</option>
@@ -107,9 +107,9 @@ export default function ExperienceUtilisation({ data, onChange }) {
                             value={data.dureeEffetsHeures || ''}
                             onChange={(e) => onChange('dureeEffetsHeures', e.target.value)}
                             placeholder="2"
-                            className="flex-1 px-4 py-3 border-2 border-green-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-lg text-center"
+                            className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-lg text-center"
                         />
-                        <span className="flex items-center text-2xl font-bold text-gray-600">:</span>
+                        <span className="flex items-center text-2xl font-bold text-gray-600 dark:text-gray-400">:</span>
                         <input
                             type="number"
                             min="0"
@@ -117,9 +117,9 @@ export default function ExperienceUtilisation({ data, onChange }) {
                             value={data.dureeEffetsMinutes || ''}
                             onChange={(e) => onChange('dureeEffetsMinutes', e.target.value)}
                             placeholder="30"
-                            className="flex-1 px-4 py-3 border-2 border-green-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-lg text-center"
+                            className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-lg text-center"
                         />
-                        <span className="flex items-center text-sm text-gray-600 font-medium">HH:MM</span>
+                        <span className="flex items-center text-sm text-gray-600 dark:text-gray-400 font-medium">HH:MM</span>
                     </div>
                 </div>
             </div>
@@ -134,7 +134,7 @@ export default function ExperienceUtilisation({ data, onChange }) {
                     <select
                         value={data.debutEffets || ''}
                         onChange={(e) => onChange('debutEffets', e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-lg"
+                        className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-lg"
                     >
                         <option value="">Sélectionner...</option>
                         {EXPERIENCE_VALUES.debutEffets.map(d => (
@@ -151,7 +151,7 @@ export default function ExperienceUtilisation({ data, onChange }) {
                     <select
                         value={data.dureeEffetsCategorie || ''}
                         onChange={(e) => onChange('dureeEffetsCategorie', e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-orange-300 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all text-lg"
+                        className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all text-lg"
                     >
                         <option value="">Sélectionner...</option>
                         {EXPERIENCE_VALUES.dureeEffets.map(d => (
@@ -165,7 +165,7 @@ export default function ExperienceUtilisation({ data, onChange }) {
             <div>
                 <label className="text-lg font-semibold text-gray-800 mb-4 block flex items-center gap-2">
                     <span className="text-2xl">🎯</span>
-                    Profils d'effets ressentis (max 8) <span className="text-indigo-600 font-bold">{selectedProfils.length}/8</span>
+                    Profils d'effets ressentis (max 8) <span className="font-bold">{selectedProfils.length}/8</span>
                 </label>
 
                 {/* Filtres par type */}
@@ -175,10 +175,7 @@ export default function ExperienceUtilisation({ data, onChange }) {
                             key={f}
                             type="button"
                             onClick={() => setFilter(f)}
-                            className={`px-4 py-2 rounded-lg font-medium transition-all ${filter === f
-                                ? 'bg-indigo-600 text-white shadow-lg'
-                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                }`}
+                            className={`px-4 py-2 rounded-lg font-medium transition-all ${filter === f ? ' text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                         >
                             {f === 'tous' ? '🌐 Tous' :
                                 f === 'positif' ? '✅ Positifs' :
@@ -188,22 +185,21 @@ export default function ExperienceUtilisation({ data, onChange }) {
                 </div>
 
                 {/* Grille de sélection */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto p-4 bg-gray-800/30 dark:bg-gray-800/50 rounded-xl border-2 border-gray-600/50 dark:border-gray-700">
                     {profilsFiltres.map(profil => {
                         const isSelected = selectedProfils.includes(profil.value)
                         const bgColor = isSelected ? (
                             profil.type === 'positif' ? 'bg-green-600 text-white' :
-                                profil.type === 'neutre' ? 'bg-blue-600 text-white' :
+                                profil.type === 'neutre' ? 'bg-gray-600 text-white' :
                                     'bg-red-600 text-white'
-                        ) : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-indigo-400'
+                        ) : 'bg-gray-700/50 dark:bg-gray-800 border-2 border-gray-600 dark:border-gray-600 text-gray-200 dark:text-gray-300 hover:border-indigo-400'
 
                         return (
                             <button
                                 key={profil.value}
                                 type="button"
                                 onClick={() => toggleMultiSelect('profilsEffets', profil.value)}
-                                className={`px-4 py-3 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md ${bgColor} ${isSelected ? 'scale-105' : ''
-                                    }`}
+                                className={`px-4 py-3 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md ${bgColor} ${isSelected ? 'scale-105' : ''}`}
                             >
                                 <div className="flex items-center justify-between gap-2">
                                     <span>{profil.label}</span>
@@ -229,10 +225,7 @@ export default function ExperienceUtilisation({ data, onChange }) {
                             key={effet.value}
                             type="button"
                             onClick={() => toggleMultiSelect('effetsSecondaires', effet.value)}
-                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${selectedSecondaires.includes(effet.value)
-                                ? 'bg-orange-600 text-white shadow-lg scale-105'
-                                : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-orange-400'
-                                }`}
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${selectedSecondaires.includes(effet.value) ? 'bg-orange-600 text-white shadow-lg scale-105' : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-orange-400'}`}
                         >
                             {effet.label}
                         </button>
@@ -244,7 +237,7 @@ export default function ExperienceUtilisation({ data, onChange }) {
             <div>
                 <label className="text-lg font-semibold text-gray-800 mb-4 block flex items-center gap-2">
                     <span className="text-2xl">💡</span>
-                    Usage préféré / Contexte idéal (max 10) <span className="text-purple-600 font-bold">{selectedUsages.length}/10</span>
+                    Usage préféré / Contexte idéal (max 10) <span className="font-bold">{selectedUsages.length}/10</span>
                 </label>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -253,10 +246,7 @@ export default function ExperienceUtilisation({ data, onChange }) {
                             key={usage.value}
                             type="button"
                             onClick={() => toggleMultiSelect('usagesPreferes', usage.value)}
-                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${selectedUsages.includes(usage.value)
-                                ? 'bg-purple-600 text-white shadow-lg scale-105'
-                                : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-purple-400'
-                                }`}
+                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${selectedUsages.includes(usage.value) ? ' text-white shadow-lg scale-105' : 'bg-white border-2 border-gray-200 text-gray-700 hover:'}`}
                         >
                             {usage.label}
                         </button>
@@ -265,8 +255,8 @@ export default function ExperienceUtilisation({ data, onChange }) {
             </div>
 
             {/* Note informative */}
-            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-xl">
-                <p className="text-sm text-blue-800">
+            <div className="border-l-4 p-4 rounded-r-xl">
+                <p className="text-sm">
                     <span className="font-semibold">💡 Conseil:</span> Ces informations aident la communauté à mieux comprendre les effets et usages recommandés pour ce cultivar.
                 </p>
             </div>

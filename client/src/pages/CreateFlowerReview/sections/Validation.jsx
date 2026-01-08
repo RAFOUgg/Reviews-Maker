@@ -78,8 +78,8 @@ export default function Validation({ formData, saving, onSave, onSubmit }) {
                 </div>
 
                 {/* Note */}
-                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                <div className="p-4 dark: rounded-lg">
+                    <p className="text-sm dark:">
                         💡 Vous pourrez modifier votre review à tout moment depuis votre bibliothèque.
                     </p>
                 </div>

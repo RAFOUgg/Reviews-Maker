@@ -21,8 +21,8 @@ const LiquidSlider = ({
     ...props
 }) => {
     const colorClasses = {
-        purple: 'from-purple-500 to-violet-600',
-        cyan: 'from-cyan-500 to-blue-600',
+        purple: ' ',
+        cyan: ' ',
         green: 'from-green-500 to-emerald-600',
         orange: 'from-orange-500 to-red-600',
     };

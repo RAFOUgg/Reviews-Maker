@@ -64,7 +64,7 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
             <LiquidCard className="p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <Beaker className="w-5 h-5 text-purple-500" />
+                        <Beaker className="w-5 h-5" />
                         Méthode d'extraction
                     </h3>
                     <button onClick={() => setShowConfig(!showConfig)} className="p-2 rounded-lg hover:bg-white/10">
@@ -88,10 +88,7 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
                                     <button
                                         key={id}
                                         onClick={() => updateConfig('extractionMethod', id)}
-                                        className={`p-3 rounded-lg border-2 transition-all ${config.extractionMethod === id
-                                            ? 'border-purple-500 bg-purple-500/20'
-                                            : 'border-white/20 hover:border-white/40'
-                                            }`}
+                                        className={`p-3 rounded-lg border-2 transition-all ${config.extractionMethod === id ? ' ' : 'border-white/20 hover:border-white/40' }`}
                                     >
                                         <div className="text-2xl mb-1">{method.icon}</div>
                                         <div className="text-xs font-medium">{method.label}</div>
@@ -99,7 +96,7 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
                                 ))}
                             </div>
 
-                            <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg text-sm">
+                            <div className="p-4 border /30 rounded-lg text-sm">
                                 {currentExtractionMethod?.description}
                             </div>
                         </motion.div>
@@ -111,7 +108,7 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
             <LiquidCard className="p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <FlaskConical className="w-5 h-5 text-cyan-500" />
+                        <FlaskConical className="w-5 h-5" />
                         Étapes de purification
                     </h3>
                     <button onClick={() => setShowPurification(!showPurification)} className="p-2 rounded-lg hover:bg-white/10">
@@ -168,7 +165,7 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
 
                             <button
                                 onClick={addPurificationStep}
-                                className="w-full py-3 border-2 border-dashed border-white/30 rounded-lg hover:border-cyan-500 hover:bg-cyan-500/10 transition-all flex items-center justify-center gap-2"
+                                className="w-full py-3 border-2 border-dashed border-white/30 rounded-lg hover:border-cyan-500 hover: transition-all flex items-center justify-center gap-2"
                             >
                                 <Plus className="w-5 h-5" />
                                 Ajouter étape de purification
@@ -179,7 +176,7 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
             </LiquidCard>
 
             {/* Résumé */}
-            <LiquidCard className="p-6 bg-gradient-to-br from-purple-500/10 to-cyan-500/10 border-purple-500/30">
+            <LiquidCard className="p-6 bg-gradient-to-br /10 /10 /30">
                 <h4 className="text-sm font-bold mb-3">📋 Résumé process</h4>
                 <div className="space-y-2 text-sm">
                     <p><strong>Extraction:</strong> {currentExtractionMethod?.label || 'Non définie'}</p>

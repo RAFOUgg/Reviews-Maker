@@ -16,7 +16,7 @@ const iconMap = {
 
 const colorMap = {
     success: 'from-green-500 to-emerald-600',
-    info: 'from-cyan-500 to-blue-600',
+    info: ' ',
     warning: 'from-orange-500 to-amber-600',
     error: 'from-red-500 to-rose-600',
 };

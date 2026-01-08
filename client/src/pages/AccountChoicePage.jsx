@@ -41,7 +41,7 @@ export default function AccountChoicePage() {
             description: 'Exports avancés et partage optimisé',
             price: 15.99,
             icon: TrendingUp,
-            gradient: 'from-violet-500 to-purple-600',
+            gradient: ' ',
             popular: true,
             features: [
                 '✨ Sans filigrane Terpologie',
@@ -67,7 +67,7 @@ export default function AccountChoicePage() {
             description: 'Traçabilité complète et exports professionnels',
             price: 29.99,
             icon: Building2,
-            gradient: 'from-blue-500 to-indigo-600',
+            gradient: ' ',
             features: [
                 '🌿 Accès complet à TOUTES les fonctionnalités',
                 '⚙️ PipeLines configurables (Culture, Extraction, Séparation, Curing)',
@@ -99,7 +99,7 @@ export default function AccountChoicePage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-600 via-violet-700 to-purple-800 text-white flex items-center justify-center px-4 py-8 overflow-y-auto">
+        <div className="min-h-screen bg-gradient-to-br text-white flex items-center justify-center px-4 py-8 overflow-y-auto">
             <div className="w-full max-w-7xl my-8">
                 {/* En-tête */}
                 <div className="text-center mb-12 space-y-4 animate-fade-in">
@@ -112,7 +112,7 @@ export default function AccountChoicePage() {
                 </div>
 
                 {/* Grille de cartes */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                     {accountTypes.map((accountType, index) => {
                         const isSelected = selectedType === accountType.type
                         const Icon = accountType.icon
@@ -125,8 +125,7 @@ export default function AccountChoicePage() {
                                     console.log('Sélection type compte:', accountType.type)
                                     setSelectedType(accountType.type)
                                 }}
-                                className={`relative group text-left transition-all duration-500 transform hover:scale-105 ${isSelected ? 'scale-105 z-10' : ''
-                                    }`}
+                                className={`relative group text-left transition-all duration-500 transform hover:scale-105 ${isSelected ? 'scale-105 z-10' : ''}`}
                                 style={{ animationDelay: `${index * 100}ms` }}
                             >
                                 {/* Badge "Populaire" */}
@@ -139,15 +138,16 @@ export default function AccountChoicePage() {
                                 )}
 
                                 {/* Carte principale */}
-                                <div className={`relative overflow-hidden rounded-3xl shadow-2xl transition-all duration-300 ${isSelected
-                                    ? 'ring-4 ring-white ring-offset-4 ring-offset-purple-600'
-                                    : 'hover:shadow-purple-900/50'
-                                    }`}>
+                                <div
+                                    className={`relative overflow-hidden rounded-3xl shadow-2xl transition-all duration-300 ${isSelected ? 'ring-4 ring-white ring-offset-4 ring-offset-purple-600' : 'hover:shadow-purple-900/50'}`}
+                                >
                                     {/* Background gradient */}
-                                    <div className={`absolute inset-0 bg-gradient-to-br ${accountType.gradient} opacity-90 group-hover:opacity-100 transition-opacity`}></div>
+                                    <div
+                                        className={`absolute inset-0 bg-gradient-to-br ${accountType.gradient} opacity-90 group-hover:opacity-100 transition-opacity`}
+                                    ></div>
 
                                     {/* Liquid glass effect */}
-                                    <div className="absolute inset-0 backdrop-blur-xl bg-white/10"></div>
+                                    <div className="absolute inset-0 backdrop-blur-xl bg-white/10 rounded-3xl"></div>
 
                                     {/* Contenu */}
                                     <div className="relative p-8 space-y-6">
@@ -211,10 +211,7 @@ export default function AccountChoicePage() {
 
                                         {/* Bouton de sélection */}
                                         <div className="pt-4">
-                                            <div className={`w-full py-4 rounded-xl font-bold text-center transition-all ${isSelected
-                                                ? 'bg-white text-purple-700 shadow-lg'
-                                                : 'bg-white/20 text-white hover:bg-white/30'
-                                                }`}>
+                                            <div className={`w-full py-4 rounded-xl font-bold text-center transition-all ${isSelected ? 'bg-purple-600 text-white shadow-lg' : 'bg-white/20 text-white hover:bg-white/30'}`}>
                                                 {isSelected ? '✓ Sélectionné' : 'Choisir ce plan'}
                                             </div>
                                         </div>
@@ -273,7 +270,7 @@ export default function AccountChoicePage() {
                 <div className="mt-8 text-center animate-fade-in" style={{ animationDelay: '500ms' }}>
                     <button
                         onClick={handleContinue}
-                        className="inline-flex items-center gap-3 px-12 py-5 bg-white text-purple-700 rounded-2xl font-black text-xl shadow-2xl hover:shadow-purple-900/50 hover:scale-105 transition-all duration-300 group"
+                        className="inline-flex items-center gap-3 px-12 py-5 bg-purple-600 text-white rounded-2xl font-black text-xl shadow-2xl hover:shadow-purple-900/50 hover:scale-105 transition-all duration-300 group"
                     >
                         <span>Continuer avec {accountTypes.find(t => t.type === selectedType)?.name}</span>
                         <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">

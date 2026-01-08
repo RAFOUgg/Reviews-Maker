@@ -37,7 +37,7 @@ export default function GeneticsSection({
         <LiquidCard variant="section" className="space-y-6">
             {/* Header */}
             <div className="flex items-center gap-3 mb-4">
-                <Dna className="w-6 h-6 text-purple-500" />
+                <Dna className="w-6 h-6" />
                 <h3 className="text-xl font-bold text-white">Génétiques</h3>
                 <Info className="w-4 h-4 text-gray-400 cursor-help"
                     title="Informations sur l'origine génétique du cultivar" />
@@ -206,9 +206,7 @@ export default function GeneticsSection({
                             onChange={(e) => handleParentageChange('lineage', e.target.value)}
                             placeholder="Ex: (Purple Haze x OG Kush) F2..."
                             rows={2}
-                            className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg 
-                focus:ring-2 focus:ring-purple-500 focus:border-transparent
-                text-white placeholder-gray-500 resize-none"
+                            className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:ring-2 focus: focus:border-transparent text-white placeholder-gray-500 resize-none"
                         />
                     </div>
                 </div>

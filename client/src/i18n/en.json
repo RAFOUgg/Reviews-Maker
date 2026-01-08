@@ -188,8 +188,16 @@
             "title": "Texture",
             "dureté": "Hardness",
             "densité": "Tactile Density",
-            "élasticité": "Elasticity",
-            "collant": "Stickiness"
+            "friabilité": "Friability",
+            "collant": "Stickiness",
+            "hardness": "Hardness",
+            "hardnessDesc": "Resistance of the product to pressure or deformation",
+            "density": "Tactile Density",
+            "densityDesc": "Compactness and weight perception when touching",
+            "friability": "Friability",
+            "friabilityDesc": "Ability of the product to crumble or break apart when touched",
+            "stickiness": "Stickiness",
+            "stickinessDesc": "Adhesive properties and resin content"
         },
         "gouts": {
             "title": "Tastes",

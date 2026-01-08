@@ -28,7 +28,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
     }
 
     const { typography, colors, contentModules, image, branding } = config;
-    
+
     // 🎯 Calcul des ajustements responsifs selon le ratio
     const responsive = getResponsiveAdjustments(config.ratio, typography);
     const { isSquare, isA4, fontSize, padding, spacing, limits } = responsive;
@@ -44,7 +44,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
     const substrat = extractSubstrat(reviewData.substratMix);
     const extraData = extractExtraData(reviewData.extraData, reviewData).slice(0, limits.maxInfoCards);
 
-    const mainImage = reviewData.mainImageUrl || reviewData.imageUrl || 
+    const mainImage = reviewData.mainImageUrl || reviewData.imageUrl ||
         (Array.isArray(reviewData.images) && reviewData.images[0]);
 
     // Styles
@@ -101,8 +101,8 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
         return (
             <span className="inline-flex items-center gap-2">
                 {[...Array(5)].map((_, i) => (
-                    <svg key={i} width="20" height="20" viewBox="0 0 24 24" 
-                        fill={i < filled ? colors.accent : 'none'} 
+                    <svg key={i} width="20" height="20" viewBox="0 0 24 24"
+                        fill={i < filled ? colors.accent : 'none'}
                         stroke={colors.accent} strokeWidth="1.5"
                     >
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
@@ -153,9 +153,9 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                     {/* Category & Type */}
                     <div className="flex items-center gap-4 mb-4">
                         {contentModules.type && reviewData.type && (
-                            <span style={{ 
-                                fontSize: `${typography.textSize - 2}px`, 
-                                color: colors.accent, 
+                            <span style={{
+                                fontSize: `${typography.textSize - 2}px`,
+                                color: colors.accent,
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.15em',
                                 fontWeight: '600',
@@ -164,8 +164,8 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                             </span>
                         )}
                         {contentModules.category && reviewData.category && (
-                            <span style={{ 
-                                fontSize: `${typography.textSize - 2}px`, 
+                            <span style={{
+                                fontSize: `${typography.textSize - 2}px`,
                                 color: colors.textSecondary,
                                 padding: '4px 12px',
                                 borderRadius: '20px',
@@ -178,10 +178,10 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
 
                     {/* Title */}
                     {contentModules.title && (reviewData.title || reviewData.holderName) && (
-                        <h1 style={{ 
-                            fontSize: `${typography.titleSize + 12}px`, 
-                            fontWeight: typography.titleWeight, 
-                            color: colors.title, 
+                        <h1 style={{
+                            fontSize: `${typography.titleSize + 12}px`,
+                            fontWeight: typography.titleWeight,
+                            color: colors.title,
                             lineHeight: '1.15',
                             marginBottom: '20px',
                         }}>
@@ -212,9 +212,9 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                             className="overflow-hidden shadow-xl"
                             style={{ borderRadius: `${image.borderRadius}px` }}
                         >
-                            <img 
-                                src={mainImage} 
-                                alt={reviewData.title || 'Image'} 
+                            <img
+                                src={mainImage}
+                                alt={reviewData.title || 'Image'}
                                 className="w-full"
                                 style={{ maxHeight: '500px', objectFit: 'cover' }}
                             />

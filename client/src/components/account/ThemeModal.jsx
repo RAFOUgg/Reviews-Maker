@@ -10,7 +10,7 @@ const THEMES = [
         id: 'violet-lean',
         name: 'Violet Intense',
         colors: ['#9333EA', '#DB2777'],
-        gradient: 'from-violet-600 to-rose-500',
+        gradient: ' to-rose-500',
         description: 'Thème par défaut avec gradient violet et rose'
     },
     {
@@ -24,14 +24,14 @@ const THEMES = [
         id: 'tahiti',
         name: 'Tahiti',
         colors: ['#3B82F6', '#06B6D4'],
-        gradient: 'from-blue-500 to-cyan-500',
+        gradient: ' ',
         description: 'Thème océanique avec accent cyan'
     },
     {
         id: 'sakura',
         name: 'Sakura',
         colors: ['#EC4899', '#F97316'],
-        gradient: 'from-pink-500 to-orange-500',
+        gradient: ' to-orange-500',
         description: 'Thème chaud avec dégradé rose-orange'
     },
     {
@@ -56,7 +56,7 @@ export default function ThemeModal({ isOpen, onClose, currentTheme, onThemeChang
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
             <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-violet-600 to-rose-500 px-8 py-6 flex items-center justify-between">
+                <div className="bg-gradient-to-r to-rose-500 px-8 py-6 flex items-center justify-between">
                     <h2 className="text-2xl font-bold text-white">Choisir un Thème</h2>
                     <button
                         onClick={onClose}
@@ -81,10 +81,7 @@ export default function ThemeModal({ isOpen, onClose, currentTheme, onThemeChang
                                 <button
                                     key={theme.id}
                                     onClick={() => handleSelect(theme.id)}
-                                    className={`group relative p-4 rounded-2xl border-2 transition-all duration-300 transform hover:scale-105 ${isSelected
-                                            ? 'border-violet-600 bg-gradient-to-br from-violet-50 to-rose-50 shadow-lg'
-                                            : 'border-gray-200 hover:border-violet-400'
-                                        }`}
+                                    className={`group relative p-4 rounded-2xl border-2 transition-all duration-300 transform hover:scale-105 ${isSelected ? 'border-violet-600 bg-gradient-to-br to-rose-50 shadow-lg' : 'border-gray-200 hover:border-violet-400' }`}
                                 >
                                     {/* Color Preview */}
                                     <div className={`w-full h-24 rounded-xl bg-gradient-to-br ${theme.gradient} mb-4 shadow-md group-hover:shadow-lg transition-shadow`} />
@@ -120,8 +117,8 @@ export default function ThemeModal({ isOpen, onClose, currentTheme, onThemeChang
                     </div>
 
                     {/* Preview Note */}
-                    <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                        <p className="text-sm text-blue-900">
+                    <div className="mt-8 p-4 border rounded-xl">
+                        <p className="text-sm">
                             💡 <strong>Conseil:</strong> Vous pouvez changer de thème à tout moment dans vos paramètres.
                         </p>
                     </div>
@@ -131,7 +128,7 @@ export default function ThemeModal({ isOpen, onClose, currentTheme, onThemeChang
                 <div className="bg-gray-50 border-t border-gray-200 px-8 py-4 flex justify-end">
                     <button
                         onClick={onClose}
-                        className="px-6 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white font-semibold transition-colors"
+                        className="px-6 py-2 rounded-lg hover: text-white font-semibold transition-colors"
                     >
                         Fermer
                     </button>

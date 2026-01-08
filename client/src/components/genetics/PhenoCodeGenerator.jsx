@@ -73,7 +73,7 @@ export default function PhenoCodeGenerator({ value = '', onChange, userId }) {
     }
 
     return (
-        <LiquidCard className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20">
+        <LiquidCard className="bg-gradient-to-br dark:/20 dark:/20">
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div>
@@ -88,13 +88,7 @@ export default function PhenoCodeGenerator({ value = '', onChange, userId }) {
                     <button
                         type="button"
                         onClick={handleToggleCustom}
-                        className={`
-                            px-3 py-1.5 rounded-lg text-xs font-medium transition-all
-                            ${customMode
-                                ? 'bg-orange-500 text-white hover:bg-orange-600'
-                                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                            }
-                        `}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${customMode ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600' }`}
                     >
                         <Edit2 className="w-3 h-3 inline mr-1" />
                         {customMode ? 'Mode manuel' : 'Mode auto'}
@@ -114,13 +108,7 @@ export default function PhenoCodeGenerator({ value = '', onChange, userId }) {
                                         key={p.value}
                                         type="button"
                                         onClick={() => setPrefix(p.value)}
-                                        className={`
-                                            px-3 py-2 rounded-lg text-sm font-medium transition-all
-                                            ${prefix === p.value
-                                                ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-md'
-                                                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:border-purple-400'
-                                            }
-                                        `}
+                                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${prefix === p.value ? 'bg-gradient-to-r text-white shadow-md' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:' }`}
                                         title={p.description}
                                     >
                                         {p.label}
@@ -135,10 +123,10 @@ export default function PhenoCodeGenerator({ value = '', onChange, userId }) {
                                 Code généré
                             </label>
                             <div className="flex items-center gap-2">
-                                <div className="flex-1 px-4 py-3 bg-white dark:bg-gray-800 border-2 border-purple-300 dark:border-purple-600 rounded-lg font-mono text-lg font-bold text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                                <div className="flex-1 px-4 py-3 bg-white dark:bg-gray-800 border-2 dark: rounded-lg font-mono text-lg font-bold dark: flex items-center justify-center">
                                     {loading ? (
                                         <div className="flex items-center gap-2 text-sm text-gray-500">
-                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-500"></div>
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2"></div>
                                             Génération...
                                         </div>
                                     ) : (
@@ -153,7 +141,7 @@ export default function PhenoCodeGenerator({ value = '', onChange, userId }) {
                                     type="button"
                                     onClick={handleRegenerate}
                                     disabled={loading}
-                                    className="px-4 py-3 bg-indigo-500 hover:bg-indigo-600 disabled:bg-gray-400 text-white rounded-lg transition-all shadow-md hover:shadow-lg"
+                                    className="px-4 py-3 hover: disabled:bg-gray-400 text-white rounded-lg transition-all shadow-md hover:shadow-lg"
                                     title="Générer un nouveau code"
                                 >
                                     <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
@@ -193,8 +181,8 @@ export default function PhenoCodeGenerator({ value = '', onChange, userId }) {
                         📋 Exemples de codes :
                     </p>
                     <div className="grid grid-cols-3 gap-2 text-xs">
-                        <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 rounded text-purple-700 dark:text-purple-300 font-mono">PH-01</span>
-                        <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded text-blue-700 dark:text-blue-300 font-mono">F2-03</span>
+                        <span className="px-2 py-1 dark: rounded dark: font-mono">PH-01</span>
+                        <span className="px-2 py-1 dark: rounded dark: font-mono">F2-03</span>
                         <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 rounded text-green-700 dark:text-green-300 font-mono">CUT-12</span>
                     </div>
                 </div>

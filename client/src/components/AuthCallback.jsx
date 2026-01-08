@@ -37,11 +37,11 @@ export default function AuthCallback() {
     }, [navigate, setUser])
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-600 via-violet-700 to-purple-800 flex items-center justify-center px-4">
+        <div className="min-h-screen bg-gradient-to-br flex items-center justify-center px-4">
             <div className="glass rounded-3xl p-10 text-center space-y-6 max-w-md w-full animate-fade-in shadow-2xl">
                 <div className="relative">
                     <div className="w-20 h-20 border-4 border-violet-300/30 border-t-violet-600 rounded-full animate-spin mx-auto" />
-                    <div className="absolute inset-0 w-20 h-20 border-4 border-purple-300/20 border-b-purple-600 rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1s' }} />
+                    <div className="absolute inset-0 w-20 h-20 border-4 /20 border-b-purple-600 rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1s' }} />
                 </div>
                 <div className="space-y-2">
                     <h2 className="text-2xl font-bold text-gray-900">Connexion en cours...</h2>

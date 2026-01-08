@@ -185,13 +185,7 @@ const DragDropExport = ({
                   onDragOver={(e) => handleDragOver(e, index)}
                   onDrop={(e) => handleDrop(e, index)}
                   onDragEnd={() => { setDraggedItem(null); setDragOverIndex(null); }}
-                  className={`
-                    flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-gray-700 
-                    border-2 transition-all cursor-move
-                    ${dragOverIndex === index ? 'border-purple-500 border-dashed' : 'border-transparent'}
-                    ${draggedItem?.index === index ? 'opacity-50' : 'opacity-100'}
-                    ${!section.visible ? 'opacity-60' : ''}
-                  `}
+                  className={`flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-gray-700 border-2 transition-all cursor-move ${dragOverIndex === index ? ' border-dashed' : 'border-transparent'} ${draggedItem?.index === index ? 'opacity-50' : 'opacity-100'} ${!section.visible ? 'opacity-60' : ''}`}
                 >
                   {/* Grip handle */}
                   <GripVertical className="w-4 h-4 text-gray-400 flex-shrink-0" />
@@ -204,14 +198,14 @@ const DragDropExport = ({
                   
                   {/* Required badge */}
                   {section.required && (
-                    <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 text-xs rounded-full">
+                    <span className="px-2 py-0.5 dark: dark: text-xs rounded-full">
                       Requis
                     </span>
                   )}
                   
                   {/* Producer badge */}
                   {section.producerOnly && (
-                    <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 text-xs rounded-full">
+                    <span className="px-2 py-0.5 dark: dark: text-xs rounded-full">
                       Pro
                     </span>
                   )}
@@ -268,14 +262,7 @@ const DragDropExport = ({
                 key={section.id}
                 onClick={() => handleAddSection(section)}
                 disabled={section.producerOnly && !isProducer}
-                className={`
-                  flex items-center gap-2 p-3 rounded-lg border-2 border-dashed 
-                  transition-all text-left
-                  ${section.producerOnly && !isProducer 
-                    ? 'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed' 
-                    : 'border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 cursor-pointer'
-                  }
-                `}
+                className={`flex items-center gap-2 p-3 rounded-lg border-2 border-dashed transition-all text-left ${section.producerOnly && !isProducer ? 'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed' : 'border-gray-300 dark:border-gray-600 hover: hover: dark:hover: cursor-pointer' }`}
               >
                 <Plus className="w-4 h-4 text-gray-400" />
                 <span className="text-lg">{section.icon}</span>

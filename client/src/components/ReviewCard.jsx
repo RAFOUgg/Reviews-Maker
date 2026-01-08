@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom'
 
 export default function ReviewCard({ review }) {
     const typeColors = {
-        Indica: 'from-purple-600 to-purple-800',
+        Indica: ' ',
         Sativa: 'from-green-600 to-emerald-800',
         Hybride: 'from-amber-600 to-orange-800',
-        CBD: 'from-blue-600 to-indigo-800',
+        CBD: ' ',
     }
 
     const typeEmojis = {

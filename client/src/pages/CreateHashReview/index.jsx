@@ -10,7 +10,7 @@ import { LiquidCard, LiquidButton, LiquidAlert } from '../../components/liquid'
 
 // Import sections réutilisables
 import InfosGenerales from './sections/InfosGenerales'
-import SeparationPipelineSection from './sections/SeparationPipelineSection'
+import SeparationPipelineSection from '../../components/reviews/sections/SeparationPipelineSection'
 import AnalyticsSection from '../../components/reviews/sections/AnalyticsSection'
 import VisualSection from '../../components/reviews/sections/VisualSection'
 import OdorSection from '../../components/reviews/sections/OdorSection'
@@ -196,7 +196,7 @@ export default function CreateHashReview() {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4"></div>
                     <p className="text-gray-400">Chargement...</p>
                 </div>
             </div>
@@ -206,8 +206,8 @@ export default function CreateHashReview() {
     return (
         <div className="min-h-screen bg-slate-900 relative pb-20">
             {/* Background gradient overlay */}
-            <div className="fixed inset-0 bg-gradient-radial from-purple-500/10 via-transparent to-transparent pointer-events-none" />
-            <div className="fixed inset-0 bg-gradient-radial from-cyan-500/5 via-transparent to-transparent pointer-events-none" style={{ top: '40%' }} />
+            <div className="fixed inset-0 bg-gradient-radial /10 via-transparent to-transparent pointer-events-none" />
+            <div className="fixed inset-0 bg-gradient-radial /5 via-transparent to-transparent pointer-events-none" style={{ top: '40%' }} />
 
             {/* Header Navigation */}
             <div className="sticky top-0 z-50 liquid-glass border-b border-white/10 shadow-xl">
@@ -226,14 +226,16 @@ export default function CreateHashReview() {
                             <button
                                 key={section.id}
                                 onClick={() => setCurrentSection(idx)}
-                                className={`w-3 h-3 rounded-full transition-all ${idx === currentSection
-                                    ? 'bg-white w-8'
-                                    : idx < currentSection
-                                        ? 'bg-green-400'
-                                        : 'bg-white/30'
+                                className={`text-2xl transition-all hover:scale-110 ${idx === currentSection
+                                        ? 'opacity-100 scale-125'
+                                        : idx < currentSection
+                                            ? 'opacity-70'
+                                            : 'opacity-30'
                                     }`}
                                 title={section.title}
-                            />
+                            >
+                                {section.icon}
+                            </button>
                         ))}
                     </div>
 
@@ -259,7 +261,7 @@ export default function CreateHashReview() {
             </div>
 
             {/* Section Content */}
-            <div className="max-w-6xl mx-auto px-6 py-8 relative z-10">
+            <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentSection}

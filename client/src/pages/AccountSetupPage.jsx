@@ -123,12 +123,12 @@ export default function AccountSetupPage() {
     if (!user) return null
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 flex items-center justify-center p-6">
+        <div className="min-h-screen bg-gradient-to-br flex items-center justify-center p-6">
             <LiquidCard className="max-w-2xl w-full">
                 <div className="p-8 space-y-6">
                     {/* Header */}
                     <div className="text-center space-y-2">
-                        <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                        <h1 className="text-3xl font-bold bg-gradient-to-r bg-clip-text text-transparent">
                             Configuration compte {details.name}
                         </h1>
                         <p className="text-gray-600">
@@ -138,22 +138,22 @@ export default function AccountSetupPage() {
 
                     {/* Steps */}
                     <div className="flex items-center justify-center gap-4">
-                        <div className={`flex items-center gap-2 ${step >= 1 ? 'text-purple-600' : 'text-gray-400'}`}>
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? 'bg-purple-600 text-white' : 'bg-gray-300'}`}>
+                        <div className={`flex items-center gap-2 ${step >= 1 ? '' : 'text-gray-400'}`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? ' text-white' : 'bg-gray-300'}`}>
                                 {step > 1 ? <CheckCircle2 size={16} /> : '1'}
                             </div>
                             <span className="font-medium">Paiement</span>
                         </div>
                         <div className="w-12 h-1 bg-gray-300"></div>
-                        <div className={`flex items-center gap-2 ${step >= 2 ? 'text-purple-600' : 'text-gray-400'}`}>
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? 'bg-purple-600 text-white' : 'bg-gray-300'}`}>
+                        <div className={`flex items-center gap-2 ${step >= 2 ? '' : 'text-gray-400'}`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? ' text-white' : 'bg-gray-300'}`}>
                                 {step > 2 ? <CheckCircle2 size={16} /> : '2'}
                             </div>
                             <span className="font-medium">KYC</span>
                         </div>
                         <div className="w-12 h-1 bg-gray-300"></div>
-                        <div className={`flex items-center gap-2 ${step >= 3 ? 'text-purple-600' : 'text-gray-400'}`}>
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 3 ? 'bg-purple-600 text-white' : 'bg-gray-300'}`}>
+                        <div className={`flex items-center gap-2 ${step >= 3 ? '' : 'text-gray-400'}`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 3 ? ' text-white' : 'bg-gray-300'}`}>
                                 {step >= 3 ? <CheckCircle2 size={16} /> : '3'}
                             </div>
                             <span className="font-medium">Validation</span>
@@ -163,10 +163,10 @@ export default function AccountSetupPage() {
                     {/* Content */}
                     {step === 1 && (
                         <div className="space-y-6">
-                            <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-6 border-2 border-purple-200">
+                            <div className="bg-gradient-to-br rounded-2xl p-6 border-2">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-xl font-bold text-purple-900">Abonnement {details.name}</h3>
-                                    <div className="text-3xl font-black text-purple-600">
+                                    <h3 className="text-xl font-bold">Abonnement {details.name}</h3>
+                                    <div className="text-3xl font-black">
                                         {details.price}
                                         <span className="text-sm text-gray-600 font-normal">/mois</span>
                                     </div>
@@ -210,16 +210,16 @@ export default function AccountSetupPage() {
 
                     {step === 2 && (
                         <div className="space-y-6">
-                            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+                            <div className="border-2 rounded-xl p-6">
                                 <div className="flex items-start gap-3 mb-4">
-                                    <FileCheck className="w-6 h-6 text-blue-600 flex-shrink-0" />
+                                    <FileCheck className="w-6 h-6 flex-shrink-0" />
                                     <div>
-                                        <h3 className="font-bold text-blue-900 mb-2">Vérification d'identité (KYC)</h3>
-                                        <p className="text-sm text-blue-700">
+                                        <h3 className="font-bold mb-2">Vérification d'identité (KYC)</h3>
+                                        <p className="text-sm">
                                             Pour sécuriser la plateforme, nous devons vérifier votre identité.
                                             Veuillez uploader <strong>un document d'identité valide</strong> :
                                         </p>
-                                        <ul className="mt-2 text-sm text-blue-700 list-disc list-inside space-y-1">
+                                        <ul className="mt-2 text-sm list-disc list-inside space-y-1">
                                             <li>Carte d'identité (recto/verso)</li>
                                             <li>Passeport</li>
                                             <li>Permis de conduire</li>

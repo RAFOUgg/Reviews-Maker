@@ -77,17 +77,20 @@ export default function HomePage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-900 relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-gray-900/50 via-gray-800/50 to-black/50 pointer-events-none"></div>
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black relative">
             <div className="relative max-w-7xl mx-auto px-4 py-12 space-y-12">
                 {/* Hero Section */}
-                <HeroSection user={user} isAuthenticated={isAuthenticated} />
+                <div className="glass liquid-glass--card">
+                    <HeroSection user={user} isAuthenticated={isAuthenticated} />
+                </div>
 
                 {/* Create Review Section */}
-                <ProductTypeCards
-                    isAuthenticated={isAuthenticated}
-                    onCreateReview={handleCreateReview}
-                />
+                <div className="glass liquid-glass--card">
+                    <ProductTypeCards
+                        isAuthenticated={isAuthenticated}
+                        onCreateReview={handleCreateReview}
+                    />
+                </div>
 
                 {/* Divider */}
                 <div className="relative py-8">
@@ -102,7 +105,9 @@ export default function HomePage() {
                 </div>
 
                 {/* FilterBar */}
-                <FilterBar reviews={reviews} onFilteredChange={setFilteredReviews} />
+                <div className="glass p-4">
+                    <FilterBar reviews={reviews} onFilteredChange={setFilteredReviews} />
+                </div>
 
                 {/* Reviews Grid */}
                 {loading ? (
@@ -147,12 +152,14 @@ export default function HomePage() {
                                         visible: { opacity: 1, y: 0 }
                                     }}
                                 >
-                                    <HomeReviewCard
-                                        review={review}
-                                        onLike={handleLike}
-                                        onDislike={handleDislike}
-                                        onAuthorClick={setSelectedAuthor}
-                                    />
+                                    <div className="glass p-3">
+                                        <HomeReviewCard
+                                            review={review}
+                                            onLike={handleLike}
+                                            onDislike={handleDislike}
+                                            onAuthorClick={setSelectedAuthor}
+                                        />
+                                    </div>
                                 </motion.div>
                             ))}
                         </motion.div>

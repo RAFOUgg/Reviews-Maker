@@ -168,10 +168,7 @@ export default function EffectSelector({
                                             key={effect}
                                             type="button"
                                             onClick={() => toggleItem(effect)}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                                ? 'bg-[rgb(var(--color-accent))] text-white shadow-lg shadow-[rgba(var(--color-accent),0.4)]'
-                                                : 'bg-theme-secondary text-[rgb(var(--text-primary))] hover:bg-theme-tertiary border border-theme'
-                                                }`}
+                                            className={`effect-tile ${isSelected ? 'effect-tile--selected' : ''}`}
                                         >
                                             {effect}
                                         </button>
@@ -193,13 +190,7 @@ export default function EffectSelector({
                                             key={effect}
                                             type="button"
                                             onClick={() => toggleItem(effect)}
-                                            className="px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
-                                            style={{
-                                                backgroundColor: isSelected ? 'var(--primary)' : 'var(--bg-tertiary)',
-                                                color: isSelected ? '#FFFFFF' : 'var(--text-secondary)',
-                                                border: '1px solid',
-                                                borderColor: isSelected ? 'var(--primary)' : 'var(--border)'
-                                            }}
+                                            className={`effect-tile ${isSelected ? 'effect-tile--selected' : ''}`}
                                         >
                                             {effect}
                                         </button>
@@ -230,13 +221,7 @@ export default function EffectSelector({
                                             key={effect}
                                             type="button"
                                             onClick={() => toggleItem(effect)}
-                                            className="px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
-                                            style={{
-                                                backgroundColor: isSelected ? 'var(--primary)' : 'var(--bg-tertiary)',
-                                                color: isSelected ? '#FFFFFF' : 'var(--text-secondary)',
-                                                border: '1px solid',
-                                                borderColor: isSelected ? 'var(--primary)' : 'var(--border)'
-                                            }}
+                                            className={`effect-tile ${isSelected ? 'effect-tile--selected' : ''}`}
                                         >
                                             {effect}
                                         </button>
@@ -257,13 +242,7 @@ export default function EffectSelector({
                                             key={effect}
                                             type="button"
                                             onClick={() => toggleItem(effect)}
-                                            className="px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
-                                            style={{
-                                                backgroundColor: isSelected ? 'var(--primary)' : 'var(--bg-tertiary)',
-                                                color: isSelected ? '#FFFFFF' : 'var(--text-secondary)',
-                                                border: '1px solid',
-                                                borderColor: isSelected ? 'var(--primary)' : 'var(--border)'
-                                            }}
+                                            className={`effect-tile ${isSelected ? 'effect-tile--selected' : ''}`}
                                         >
                                             {effect}
                                         </button>
@@ -291,13 +270,7 @@ export default function EffectSelector({
                                     key={effect}
                                     type="button"
                                     onClick={() => toggleItem(effect)}
-                                    className="px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
-                                    style={{
-                                        backgroundColor: isSelected ? 'var(--accent)' : 'var(--bg-tertiary)',
-                                        color: isSelected ? '#FFFFFF' : 'var(--text-secondary)',
-                                        border: '1px solid',
-                                        borderColor: isSelected ? 'var(--accent)' : 'var(--border)'
-                                    }}
+                                    className={`effect-tile ${isSelected ? 'effect-tile--selected' : ''}`}
                                 >
                                     {effect}
                                 </button>

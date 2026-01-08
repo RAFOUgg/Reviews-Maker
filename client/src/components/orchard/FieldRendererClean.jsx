@@ -58,7 +58,7 @@ export default function FieldRendererClean({ field, value, compact = false }) {
     // Styles de base
     const baseClass = compact ? 'text-sm' : 'text-base';
     const headerClass = compact ? 'text-xs font-semibold text-gray-400 mb-1' : 'text-sm font-semibold text-gray-400 mb-2';
-    const tagClass = 'px-2 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30';
+    const tagClass = 'px-2 py-1 rounded-full text-xs font-medium   border /30';
 
     switch (field.type) {
         case 'text':
@@ -171,11 +171,11 @@ export default function FieldRendererClean({ field, value, compact = false }) {
                     <div className="flex items-center flex-wrap gap-1">
                         {steps.map((step, i) => (
                             <div key={i} className="flex items-center">
-                                <span className="px-2 py-1 bg-purple-600/30 rounded text-xs text-purple-200 border border-purple-500/30">
+                                <span className="px-2 py-1 rounded text-xs border /30">
                                     {extractLabel(step)}
                                 </span>
                                 {i < steps.length - 1 && (
-                                    <span className="mx-1 text-purple-500">→</span>
+                                    <span className="mx-1">→</span>
                                 )}
                             </div>
                         ))}
@@ -282,7 +282,7 @@ export default function FieldRendererClean({ field, value, compact = false }) {
 
         case 'zone':
             return (
-                <div className="w-full h-full min-h-[60px] flex items-center justify-center border-2 border-dashed border-blue-500/30 rounded-lg text-sm text-blue-400 bg-blue-500/5">
+                <div className="w-full h-full min-h-[60px] flex items-center justify-center border-2 border-dashed /30 rounded-lg text-sm">
                     <span className="mr-2">📦</span>
                     {field.label || 'Zone personnalisée'}
                 </div>

@@ -33,14 +33,14 @@ export const FeatureGate = ({
     influencer_pro: {
       title: "Fonctionnalité Pro",
       message: "Améliorez vos reviews avec le compte Influenceur Pro.",
-      gradient: "from-purple-500 to-indigo-600",
+      gradient: " ",
       icon: Star,
       btnText: "Passer Pro"
     },
     all: {
       title: "Compte Premium Requis",
       message: "Cette fonctionnalité nécessite un compte supérieur.",
-      gradient: "from-blue-500 to-cyan-600",
+      gradient: " ",
       icon: Lock,
       btnText: "Voir les offres"
     }

@@ -1,11 +1,12 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { COULEURS_CANNABIS } from '../../../data/flowerData'
+import ColorWheelPicker from '../../ui/ColorWheelPicker'
+import WeedPreview from '../../ui/WeedPreview'
 
 /**
  * Section 5: Visuel Technique
  * - 7 sliders (0-10): couleur, densité, trichomes, pistils, manucure, moisissure, graines
- * - Nuancier couleurs (picker multi-select)
+ * - ColorWheelPicker avec aperçu dynamique WeedPreview
  */
 export default function VisuelTechnique({ data, onChange, errors = {} }) {
     const { t } = useTranslation()
@@ -14,23 +15,9 @@ export default function VisuelTechnique({ data, onChange, errors = {} }) {
         onChange({ ...data, [field]: value })
     }
 
-    const toggleColor = (colorHex) => {
-        const currentColors = data.nuancierColors || []
-        const index = currentColors.indexOf(colorHex)
-
-        let newColors
-        if (index > -1) {
-            // Remove color
-            newColors = currentColors.filter(c => c !== colorHex)
-        } else {
-            // Add color (max 5)
-            if (currentColors.length >= 5) {
-                return // Max 5 colors
-            }
-            newColors = [...currentColors, colorHex]
-        }
-
-        handleInputChange('nuancierColors', newColors)
+    // Format: [{ colorId: 'green', percentage: 60 }, ...]
+    const handleColorChange = (colors) => {
+        handleInputChange('selectedColors', colors)
     }
 
     const visualScores = [
@@ -160,57 +147,23 @@ export default function VisuelTechnique({ data, onChange, errors = {} }) {
                         <span className="text-xs text-gray-600 dark:text-gray-400 w-6">10</span>
                     </div>
 
-                    {/* Nuancier colors (only for couleurScore) */}
+                    {/* ColorWheelPicker + WeedPreview (only for couleurScore) */}
                     {showNuancier && (
-                        <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                                {t('flower.visual.selectColors')} ({(data.nuancierColors || []).length}/5)
-                            </p>
-                            <div className="grid grid-cols-5 md:grid-cols-10 lg:grid-cols-15 gap-2">
-                                {COULEURS_CANNABIS.map(({ id, label, hex }) => {
-                                    const isSelected = (data.nuancierColors || []).includes(hex)
-                                    return (
-                                        <button
-                                            key={id}
-                                            type="button"
-                                            onClick={() => toggleColor(hex)}
-                                            className={`relative w-10 h-10 rounded-lg border-2 transition-all ${isSelected
-                                                    ? 'border-primary-500 ring-2 ring-primary-300 scale-110'
-                                                    : 'border-gray-300 dark:border-gray-600 hover:scale-105'
-                                                }`}
-                                            style={{ backgroundColor: hex }}
-                                            title={label}
-                                        >
-                                            {isSelected && (
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <svg className="w-6 h-6 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                    </svg>
-                                                </div>
-                                            )}
-                                        </button>
-                                    )
-                                })}
+                        <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Sélection couleurs */}
+                            <div>
+                                <ColorWheelPicker
+                                    value={data.selectedColors || []}
+                                    onChange={handleColorChange}
+                                    maxSelections={5}
+                                    className="compact-size closed"
+                                />
                             </div>
-                            {(data.nuancierColors || []).length > 0 && (
-                                <div className="mt-3 flex flex-wrap gap-2">
-                                    {(data.nuancierColors || []).map((hex) => {
-                                        const color = COULEURS_CANNABIS.find(c => c.hex === hex)
-                                        return (
-                                            <span
-                                                key={hex}
-                                                className="inline-flex items-center gap-1 px-2 py-1 bg-white dark:bg-gray-700 rounded-md text-xs border border-gray-300 dark:border-gray-600"
-                                            >
-                                                <span
-                                                    className="w-3 h-3 rounded-full border border-gray-400"
-                                                    style={{ backgroundColor: hex }}
-                                                />
-                                                {color?.label || hex}
-                                            </span>
-                                        )
-                                    })}
-                                </div>
-                            )}
+
+                            {/* Aperçu visuel animé */}
+                            <div>
+                                <WeedPreview selectedColors={data.selectedColors || []} />
+                            </div>
                         </div>
                     )}
                 </div>
