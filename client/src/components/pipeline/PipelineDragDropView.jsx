@@ -850,7 +850,6 @@ import CellEmojiOverlay from './CellEmojiOverlay';
 import PipelineCellTooltip from './PipelineCellTooltip';
 import MassAssignModal from './MassAssignModal';
 import ItemContextMenu from './ItemContextMenu';
-import PreConfigBadge from './PreConfigBadge';
 
 const PipelineDragDropView = ({
     type = 'culture',
@@ -908,22 +907,6 @@ const PipelineDragDropView = ({
     const [isSelecting, setIsSelecting] = useState(false);
     const [selectionStartIdx, setSelectionStartIdx] = useState(null);
 
-    // Préréglages individuels, section et global
-    const [preConfiguredItems, setPreConfiguredItems] = useState(() => {
-        const saved = localStorage.getItem('pipeline-preconfig-items');
-        return saved ? JSON.parse(saved) : {};
-    });
-    // Handler pour configurer un item individuellement (doit être déclaré ici)
-    const handleConfigureItem = (itemKey, value) => {
-        const newConfig = { ...preConfiguredItems };
-        if (value === null || value === '') {
-            delete newConfig[itemKey];
-        } else {
-            newConfig[itemKey] = value;
-        }
-        setPreConfiguredItems(newConfig);
-        localStorage.setItem('pipeline-preconfig-items', JSON.stringify(newConfig));
-    };
     // Grouped presets state
     const [groupedPresets, setGroupedPresets] = useState(() => {
         const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
@@ -2031,7 +2014,6 @@ const PipelineDragDropView = ({
                                 <div className="p-2 bg-white dark:bg-gray-900 space-y-1">
                                     {section.items?.map((item) => {
                                         const itemKey = item.key || item.id;
-                                        const isPreConfigured = preConfiguredItems[itemKey] !== undefined;
                                         const isSelected = multiSelectedItems.includes(itemKey);
                                         let isDragging = false;
 
@@ -2101,23 +2083,15 @@ const PipelineDragDropView = ({
                                                         anchorRect: e.currentTarget.getBoundingClientRect()
                                                     });
                                                 }}
-                                                className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group ${isPreConfigured
-                                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30'
-                                                    : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
-                                                    } ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+                                                className="relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700 ${isSelected ? 'ring-2 ring-blue-500' : ''}"
                                                 style={{ touchAction: 'none' }}
-                                                title={isPreConfigured ? `Pré-configuré: ${preConfiguredItems[itemKey]}${item.unit || ''}` : 'Clic droit pour pré-configurer'}
                                             >
-                                                {/* Badge pré-configuré */}
-                                                {isPreConfigured && (
-                                                    <span className="px-2 py-1 bg-green-200 text-green-800 rounded text-xs mr-1">{preConfiguredItems[itemKey]}{item.unit || ''}</span>
-                                                )}
                                                 <span className="text-base">{item.icon}</span>
                                                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex-1">
                                                     {item.label}
                                                 </span>
-                                                <span className={`text-xs transition-colors ${isPreConfigured ? 'text-green-600 dark:text-green-400' : 'text-gray-400 group-hover:text-gray-600'}`}>
-                                                    {isPreConfigured ? '✓' : '⋮⋮'}
+                                                <span className="text-xs transition-colors text-gray-400 group-hover:text-gray-600">
+                                                    ⋮⋮
                                                 </span>
                                             </div>
                                         );
@@ -2616,7 +2590,6 @@ const PipelineDragDropView = ({
                 pipelineType={type}
                 onFieldDelete={handleFieldDelete}
                 groupedPresets={groupedPresets}
-                preConfiguredItems={preConfiguredItems}
                 selectedCells={selectedCells}
             />
 
@@ -2637,10 +2610,7 @@ const PipelineDragDropView = ({
                     position={contextMenu.position}
                     anchorRect={contextMenu.anchorRect}
                     onClose={() => setContextMenu(null)}
-                    onConfigure={(key, val) => {
-                        handleConfigureItem(key, val);
-                    }}
-                    isConfigured={preConfiguredItems[contextMenu.item.key || contextMenu.item.id] !== undefined}
+                    isConfigured={false}
                     cells={cells}
                     onAssignNow={(key, val) => {
                         // Assignation à toutes les cases sélectionnées ou à toutes si aucune sélection
@@ -2654,25 +2624,6 @@ const PipelineDragDropView = ({
                         });
                         if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-assign-now', changes });
                         showToast(`${contextMenu.item.label} assigné à ${targets.length} case(s)`, 'success');
-                    }}
-                    onAssignFromSource={(key, sourceTimestamp) => {
-                        // Copier la valeur d'une case source vers les cases sélectionnées
-                        const sourceData = getCellData(sourceTimestamp);
-                        const val = sourceData ? sourceData[key] : undefined;
-                        if (val === undefined) {
-                            showToast('Aucune valeur trouvée dans la case source', 'warning');
-                            return;
-                        }
-                        const targets = selectedCells.length > 0 ? selectedCells : cells.map(c => c.timestamp);
-                        const changes = [];
-                        targets.forEach(ts => {
-                            if (ts === sourceTimestamp) return; // Ne pas copier sur soi-même
-                            const prev = getCellData(ts) || {};
-                            changes.push({ timestamp: ts, field: key, previousValue: prev[key] });
-                            onDataChange(ts, key, val);
-                        });
-                        if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-copy-from-source', changes });
-                        showToast(`Valeur copiée vers ${changes.length} case(s)`, 'success');
                     }}
                     onAssignRange={(key, startTs, endTs, val) => {
                         // Assigner à une plage de cases

@@ -4,13 +4,12 @@
  */
 
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { X, Check, Plus, Minus, Copy, Clipboard, Zap } from 'lucide-react';
+import { X, Check, Plus, Minus, Zap } from 'lucide-react';
 
-const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isConfigured, cells = [], onAssignNow, onAssignFromSource, onAssignRange, onAssignAll }) => {
+const ItemContextMenu = ({ item, position, anchorRect, onClose, isConfigured, cells = [], onAssignNow, onAssignRange, onAssignAll }) => {
     const [value, setValue] = useState(item.defaultValue || '');
     const [rangeStart, setRangeStart] = useState('');
     const [rangeEnd, setRangeEnd] = useState('');
-    const [copySource, setCopySource] = useState('');
     const menuRef = useRef(null);
     const [isVisible, setIsVisible] = useState(false);
 
@@ -76,13 +75,6 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
     const handleAssignRange = () => {
         if (rangeStart && rangeEnd && hasValue) {
             onAssignRange?.(itemKey, rangeStart, rangeEnd, value);
-            onClose();
-        }
-    };
-
-    const handleCopyFrom = () => {
-        if (copySource) {
-            onAssignFromSource?.(itemKey, copySource);
             onClose();
         }
     };
@@ -254,22 +246,6 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
                             <button onClick={handleAssignRange} disabled={!rangeStart || !rangeEnd || !hasValue} className={`${btnCls} w-full ${rangeStart && rangeEnd && hasValue ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'}`}>
                                 Assigner à la plage
                             </button>
-                        </div>
-
-                        {/* Copier depuis une cellule */}
-                        <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-2">
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
-                                <Copy className="w-3.5 h-3.5 inline mr-1" />Copier depuis
-                            </label>
-                            <div className="flex gap-2">
-                                <select value={copySource} onChange={(e) => setCopySource(e.target.value)} className="flex-1 px-2 py-1.5 text-xs bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md">
-                                    <option value="">Choisir une cellule...</option>
-                                    {cells.map((c) => <option key={c.timestamp} value={c.timestamp}>{c.label}</option>)}
-                                </select>
-                                <button onClick={handleCopyFrom} disabled={!copySource} className={`${btnCls} ${copySource ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'}`}>
-                                    <Clipboard className="w-3.5 h-3.5" />
-                                </button>
-                            </div>
                         </div>
 
                         {/* Assigner à toutes */}

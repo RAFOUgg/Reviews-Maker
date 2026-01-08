@@ -24,9 +24,16 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
             // Update existing cell
             updatedData = [...currentData];
             if (value === null || value === undefined) {
-                // Remove field
+                // Remove field but KEEP metadata (timestamp, date, label, phase)
                 const { [field]: removed, ...rest } = updatedData[existingIndex];
-                updatedData[existingIndex] = rest;
+                // Restore essential structural fields
+                updatedData[existingIndex] = {
+                    timestamp: updatedData[existingIndex].timestamp,
+                    ...(updatedData[existingIndex].date && { date: updatedData[existingIndex].date }),
+                    ...(updatedData[existingIndex].label && { label: updatedData[existingIndex].label }),
+                    ...(updatedData[existingIndex].phase && { phase: updatedData[existingIndex].phase }),
+                    ...rest
+                };
             } else {
                 updatedData[existingIndex] = { ...updatedData[existingIndex], [field]: value };
             }

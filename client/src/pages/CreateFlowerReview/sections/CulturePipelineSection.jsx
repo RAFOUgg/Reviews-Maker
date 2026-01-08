@@ -36,9 +36,16 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
             // Update existing cell
             updatedData = [...currentData];
             if (value === null || value === undefined) {
-                // ✅ BUG FIX: Remove field completely instead of setting to null
+                // ✅ BUG FIX: Remove field completely but KEEP timestamp
                 const { [field]: removed, ...rest } = updatedData[existingIndex];
-                updatedData[existingIndex] = rest;
+                // Restore timestamp and other structural fields
+                updatedData[existingIndex] = {
+                    timestamp: updatedData[existingIndex].timestamp,
+                    ...(updatedData[existingIndex].date && { date: updatedData[existingIndex].date }),
+                    ...(updatedData[existingIndex].label && { label: updatedData[existingIndex].label }),
+                    ...(updatedData[existingIndex].phase && { phase: updatedData[existingIndex].phase }),
+                    ...rest
+                };
 
                 // Si la cellule devient vide (plus aucune donnée utile), la retirer complètement
                 const cellKeys = Object.keys(updatedData[existingIndex]).filter(k =>

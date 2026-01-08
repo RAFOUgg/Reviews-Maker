@@ -328,8 +328,16 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                         if (existingIndex >= 0) {
                             updatedData = [...currentData];
                             if (value === null || value === undefined) {
+                                // Supprimer le champ mais GARDER les métadonnées (timestamp, date, label, phase)
                                 const { [field]: removed, ...rest } = updatedData[existingIndex];
-                                updatedData[existingIndex] = rest;
+                                // Restaurer les champs structurels essentiels
+                                updatedData[existingIndex] = {
+                                    timestamp: updatedData[existingIndex].timestamp,
+                                    ...(updatedData[existingIndex].date && { date: updatedData[existingIndex].date }),
+                                    ...(updatedData[existingIndex].label && { label: updatedData[existingIndex].label }),
+                                    ...(updatedData[existingIndex].phase && { phase: updatedData[existingIndex].phase }),
+                                    ...rest
+                                };
                             } else {
                                 updatedData[existingIndex] = { ...updatedData[existingIndex], [field]: value };
                             }
