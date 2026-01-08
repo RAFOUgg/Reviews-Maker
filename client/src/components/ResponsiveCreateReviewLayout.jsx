@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 
 /**
  * ResponsiveCreateReviewLayout - Layout responsive pour pages de création
  * 
  * Gère:
- * - Navigation sections (Prev/Next buttons + Steps indicator)
+ * - Navigation sections (Prev/Next buttons TOUJOURS visibles)
+ * - Carousel d'émojis sections (galerie tournante)
  * - Padding et spacing adaptatif
  * - Full-width sur mobile
  * - Max-width sur desktop
@@ -20,20 +22,31 @@ export const ResponsiveCreateReviewLayout = ({
     title,
     subtitle,
     showProgress = true,
+    sectionEmojis = [], // Array d'émojis pour chaque section
 }) => {
     const layout = useResponsiveLayout();
+    const [emojiCarouselIndex, setEmojiCarouselIndex] = useState(0);
 
     const handlePrevious = () => {
         if (currentSection > 0) {
             onSectionChange(currentSection - 1);
+            setEmojiCarouselIndex(Math.max(0, currentSection - 2));
         }
     };
 
     const handleNext = () => {
         if (currentSection < totalSections - 1) {
             onSectionChange(currentSection + 1);
+            setEmojiCarouselIndex(Math.min(sectionEmojis.length - 3, currentSection + 1));
         }
     };
+
+    // Auto-scroll carousel when section changes
+    useEffect(() => {
+        if (currentSection > 1) {
+            setEmojiCarouselIndex(Math.max(0, currentSection - 1));
+        }
+    }, [currentSection]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 relative pb-24">
@@ -65,38 +78,107 @@ export const ResponsiveCreateReviewLayout = ({
 
                         {/* Progress Indicator */}
                         {showProgress && (
-                            <div className="flex items-center justify-center gap-2">
-                                {/* Mobile: Simple counter */}
-                                {layout.isMobile ? (
-                                    <div className="text-center">
-                                        <div className="text-purple-400 font-bold text-lg">
-                                            {currentSection + 1}/{totalSections}
+                            <div className="space-y-3">
+                                {/* Emoji Carousel - Galerie tournante sur mobile */}
+                                {layout.isMobile && sectionEmojis.length > 0 && (
+                                    <div className="flex items-center justify-center gap-2">
+                                        {emojiCarouselIndex > 0 && (
+                                            <button
+                                                onClick={() => setEmojiCarouselIndex(Math.max(0, emojiCarouselIndex - 1))}
+                                                className="p-1 hover:bg-gray-700/50 rounded transition"
+                                            >
+                                                <ChevronLeft className="w-4 h-4 text-purple-400" />
+                                            </button>
+                                        )}
+
+                                        <div className="flex gap-1">
+                                            <AnimatePresence mode="wait">
+                                                {[0, 1, 2].map((offset) => {
+                                                    const index = emojiCarouselIndex + offset;
+                                                    if (index >= sectionEmojis.length) return null;
+
+                                                    return (
+                                                        <motion.button
+                                                            key={index}
+                                                            initial={{ opacity: 0, x: 10 }}
+                                                            animate={{ opacity: 1, x: 0 }}
+                                                            exit={{ opacity: 0, x: -10 }}
+                                                            onClick={() => onSectionChange(index)}
+                                                            className={`px-3 py-2 rounded-lg transition-all ${
+                                                                index === currentSection
+                                                                    ? 'bg-purple-600 ring-2 ring-purple-400'
+                                                                    : 'bg-gray-700/50 hover:bg-gray-700'
+                                                            }`}
+                                                        >
+                                                            <span className="text-lg">{sectionEmojis[index]}</span>
+                                                        </motion.button>
+                                                    );
+                                                })}
+                                            </AnimatePresence>
                                         </div>
-                                        <div className="text-xs text-gray-500 mt-1">
-                                            Sections complétées
-                                        </div>
-                                    </div>
-                                ) : (
-                                    // Desktop: Progress bar
-                                    <div className="w-full">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="text-sm text-gray-400">
-                                                Étape {currentSection + 1} sur {totalSections}
-                                            </span>
-                                            <span className="text-sm text-purple-400 font-medium">
-                                                {Math.round(((currentSection + 1) / totalSections) * 100)}%
-                                            </span>
-                                        </div>
-                                        <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-gradient-to-r from-purple-500 to-purple-400 transition-all duration-300"
-                                                style={{
-                                                    width: `${((currentSection + 1) / totalSections) * 100}%`
-                                                }}
-                                            />
-                                        </div>
+
+                                        {emojiCarouselIndex < sectionEmojis.length - 3 && (
+                                            <button
+                                                onClick={() => setEmojiCarouselIndex(Math.min(sectionEmojis.length - 3, emojiCarouselIndex + 1))}
+                                                className="p-1 hover:bg-gray-700/50 rounded transition"
+                                            >
+                                                <ChevronRight className="w-4 h-4 text-purple-400" />
+                                            </button>
+                                        )}
                                     </div>
                                 )}
+
+                                {/* Counter + Progress */}
+                                <div className="flex items-center justify-center gap-2">
+                                    {/* Mobile: Simple counter */}
+                                    {layout.isMobile ? (
+                                        <div className="text-center">
+                                            <div className="text-purple-400 font-bold text-lg">
+                                                {currentSection + 1}/{totalSections}
+                                            </div>
+                                            <div className="text-xs text-gray-500 mt-1">
+                                                Sections complétées
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        // Desktop: Progress bar + All emojis
+                                        <div className="w-full space-y-3">
+                                            {sectionEmojis.length > 0 && (
+                                                <div className="flex justify-center gap-2 flex-wrap">
+                                                    {sectionEmojis.map((emoji, idx) => (
+                                                        <button
+                                                            key={idx}
+                                                            onClick={() => onSectionChange(idx)}
+                                                            className={`px-4 py-2 rounded-lg transition-all ${
+                                                                idx === currentSection
+                                                                    ? 'bg-purple-600 ring-2 ring-purple-400 scale-110'
+                                                                    : 'bg-gray-700/50 hover:bg-gray-700'
+                                                            }`}
+                                                        >
+                                                            <span className="text-lg">{emoji}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-sm text-gray-400">
+                                                    Étape {currentSection + 1} sur {totalSections}
+                                                </span>
+                                                <span className="text-sm text-purple-400 font-medium">
+                                                    {Math.round(((currentSection + 1) / totalSections) * 100)}%
+                                                </span>
+                                            </div>
+                                            <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-gradient-to-r from-purple-500 to-purple-400 transition-all duration-300"
+                                                    style={{
+                                                        width: `${((currentSection + 1) / totalSections) * 100}%`
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>
