@@ -2707,6 +2707,23 @@ const PipelineDragDropView = ({
                 hasCopiedData={copiedCellData !== null}
             />
 
+            {/* Modal de confirmation pour suppressions */}
+            <ConfirmModal
+                open={confirmState.open}
+                title={confirmState.title}
+                message={confirmState.message}
+                confirmLabel="Supprimer"
+                cancelLabel="Annuler"
+                onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))}
+                onConfirm={() => {
+                    const callback = confirmState.onConfirm;
+                    setConfirmState(prev => ({ ...prev, open: false }));
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                }}
+            />
+
             {/* Toast succès retiré (CDC) */}
         </div>
     );
