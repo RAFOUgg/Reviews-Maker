@@ -371,6 +371,7 @@ const PipelineDataModal = ({
 
     const applyPresetFields = (fields = {}) => {
         if (!fields || Object.keys(fields).length === 0) return;
+        console.log('✅ Appli cation préréglage groupe:', Object.keys(fields).length, 'champs');
         setFormData(prev => ({ ...prev, ...fields }));
         setActiveTab('data');
     };
@@ -919,30 +920,77 @@ const PipelineDataModal = ({
                             </button>
                         </div>
 
-                        {/* Zone drag & drop CDC pour ajouter plus de champs */}
+                        {/* Zone drag & drop CDC pour ajouter plus de champs + Bouton pour cellules vides */}
                         {!droppedItem && (
-                            <div
-                                onDragOver={(e) => {
-                                    e.preventDefault();
-                                    e.currentTarget.classList.add('ring-2', 'ring-blue-400');
-                                    onDragOver && onDragOver(e);
-                                }}
-                                onDragLeave={(e) => {
-                                    e.currentTarget.classList.remove('ring-2', 'ring-blue-400');
-                                }}
-                                onDrop={(e) => {
-                                    e.preventDefault();
-                                    e.currentTarget.classList.remove('ring-2', 'ring-blue-400');
-                                    onDrop && onDrop(e);
-                                }}
-                                className="p-4 m-4 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-lg bg-blue-50/30 dark:bg-blue-900/20 text-center transition-all"
-                            >
-                                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
-                                    ⤡ Déposez d'autres éléments ici pour ajouter des champs
-                                </p>
-                                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                                    Drag depuis le panneau latéral
-                                </p>
+                            <div className="p-4 m-4 space-y-3">
+                                {/* Bouton "Ajouter des données" si cellule vide */}
+                                {itemsToDisplay.length === 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            // Ouvrir modal pour créer groupe préréglage si cellule vide
+                                            const filled = {};
+                                            Object.entries(formData).forEach(([k, v]) => {
+                                                if (v !== undefined && v !== null && v !== '') filled[k] = v;
+                                            });
+                                            setCreateGroupedPrefill(null);
+                                            setShowCreateGroupedModal(true);
+                                        }}
+                                        className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-medium transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                                    >
+                                        <span className="text-xl">➕</span>
+                                        Ajouter des données à cette cellule
+                                    </button>
+                                )}
+
+                                {/* Zone drag & drop pour ajouter plus de champs */}
+                                <div
+                                    onDragOver={(e) => {
+                                        e.preventDefault();
+                                        e.currentTarget.classList.add('ring-2', 'ring-blue-400', 'bg-blue-100/50', 'dark:bg-blue-900/30');
+                                    }}
+                                    onDragLeave={(e) => {
+                                        e.currentTarget.classList.remove('ring-2', 'ring-blue-400', 'bg-blue-100/50', 'dark:bg-blue-900/30');
+                                    }}
+                                    onDrop={(e) => {
+                                        e.preventDefault();
+                                        e.currentTarget.classList.remove('ring-2', 'ring-blue-400', 'bg-blue-100/50', 'dark:bg-blue-900/30');
+
+                                        // Récupérer les données droppées depuis le sidebar
+                                        try {
+                                            const data = e.dataTransfer.getData('application/json');
+                                            if (data) {
+                                                const dropped = JSON.parse(data);
+                                                console.log('🎯 Drop dans modal:', dropped);
+
+                                                // Si c'est un groupe préréglage (multi-fields)
+                                                if (dropped.type === 'grouped-preset') {
+                                                    const fields = dropped.data?.fields || dropped.fields || {};
+                                                    applyPresetFields(fields);
+                                                }
+                                                // Si c'est un item simple
+                                                else if (dropped.content || dropped.key) {
+                                                    const key = dropped.content?.key || dropped.key;
+                                                    const value = dropped.defaultValue || '';
+                                                    if (key) {
+                                                        handleChange(key, value);
+                                                    }
+                                                }
+                                            }
+                                        } catch (err) {
+                                            console.error('Erreur drop:', err);
+                                        }
+                                        onDrop && onDrop(e);
+                                    }}
+                                    className="p-4 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-lg bg-blue-50/30 dark:bg-blue-900/20 text-center transition-all"
+                                >
+                                    <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+                                        ⤡ Déposez des éléments ou un groupe ici pour ajouter des champs
+                                    </p>
+                                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                        Drag depuis le panneau latéral
+                                    </p>
+                                </div>
                             </div>
                         )}
 
@@ -991,15 +1039,15 @@ const PipelineDataModal = ({
                         {/* Contenu - TAB PRÉRÉGLAGES */}
                         {activeTab === 'presets' && (
                             <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-180px)]">
-                                {/* Groupes de préréglages (multi-champs) */}
+                                {/* Groupes de préréglages depuis sidebarcontent (multi-champs) */}
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Groupes enregistrés</h3>
+                                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">📦 Groupes de données</h3>
                                         <div className="flex items-center gap-2">
                                             <button
                                                 type="button"
                                                 onClick={() => {
-                                                    // Prefill from current formData (all filled fields)
+                                                    // Créer un groupe depuis les données actuelles de la cellule
                                                     const filled = {};
                                                     Object.entries(formData).forEach(([k, v]) => {
                                                         if (v !== undefined && v !== null && v !== '') filled[k] = v;
@@ -1007,72 +1055,109 @@ const PipelineDataModal = ({
                                                     setCreateGroupedPrefill({ fields: filled, name: '' });
                                                     setShowCreateGroupedModal(true);
                                                 }}
-                                                className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded"
+                                                className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded flex items-center gap-1"
                                             >
-                                                Créer depuis la cellule
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setCreateGroupedPrefill(null);
-                                                    setShowCreateGroupedModal(true);
-                                                }}
-                                                className="px-2 py-1 bg-gray-200 hover:bg-gray-300 text-xs rounded"
-                                            >
-                                                Nouveau groupe
+                                                💾 Sauvegarder
                                             </button>
                                         </div>
                                     </div>
-                                    {(!groupedPresets || groupedPresets.length === 0) ? (
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Aucun pré-groupe disponible.</p>
+
+                                    {/* Affichage des groupes préréglage depuis sidebar */}
+                                    {(!groupedPresets || groupedPresets.length === 0) && (!presets.grouped || presets.grouped.length === 0) ? (
+                                        <div className="text-center py-8 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                            <p className="text-sm font-medium">📦 Aucun groupe préréglage</p>
+                                            <p className="text-xs mt-1">Créez un groupe depuis cette cellule ou drag-drop depuis le sidebar</p>
+                                        </div>
                                     ) : (
                                         <div className="space-y-2">
-                                            {groupedPresets.map((group) => {
-                                                const preview = (group.fields || []).map(f => `${f.key}: ${f.value}`).slice(0, 3).join(', ');
-                                                return (
-                                                    <div key={group.name} className="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/40">
-                                                        <div className="flex items-center justify-between gap-3">
-                                                            <div>
-                                                                <p className="font-medium text-sm text-gray-900 dark:text-white">{group.name}</p>
-                                                                <p className="text-xs text-gray-500 dark:text-gray-400">{group.fields?.length || 0} champ(s)</p>
+                                            {/* Groupes préréglage sauvegardés (serveur/localStorage) */}
+                                            {presets.grouped && presets.grouped.length > 0 && (
+                                                presets.grouped.map((group) => {
+                                                    const fieldCount = group.data?.selectedFields?.length || Object.keys(group.data?.fields || {}).length || 0;
+                                                    const preview = group.data?.selectedFields
+                                                        ? group.data.selectedFields.slice(0, 2).join(', ')
+                                                        : Object.keys(group.data?.fields || {}).slice(0, 2).join(', ');
+
+                                                    return (
+                                                        <div key={group.id} className="p-3 rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-900/20 hover:shadow-md transition-all">
+                                                            <div className="flex items-center justify-between gap-3">
+                                                                <div className="flex-1">
+                                                                    <p className="font-medium text-sm text-gray-900 dark:text-white">{group.name}</p>
+                                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{fieldCount} champ(s): {preview}...</p>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs transition-colors"
+                                                                    onClick={() => {
+                                                                        const fields = {};
+                                                                        Object.entries(group.data?.fields || {}).forEach(([k, v]) => {
+                                                                            fields[k] = v;
+                                                                        });
+                                                                        applyPresetFields(fields);
+                                                                    }}
+                                                                >
+                                                                    Charger
+                                                                </button>
                                                             </div>
-                                                            <button
-                                                                type="button"
-                                                                className="liquid-btn liquid-btn--primary text-xs"
-                                                                onClick={() => {
-                                                                    const merged = {};
-                                                                    (group.fields || []).forEach(f => {
-                                                                        const key = f.key || f.id;
-                                                                        if (key) merged[key] = f.value;
-                                                                    });
-                                                                    applyPresetFields(merged);
-                                                                }}
-                                                            >
-                                                                Charger dans la cellule
-                                                            </button>
                                                         </div>
-                                                        {preview && (
-                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{preview}</p>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
+                                                    );
+                                                })
+                                            )}
+
+                                            {/* Groupes locaux (groupedPresets prop) */}
+                                            {groupedPresets && groupedPresets.length > 0 && (
+                                                groupedPresets.map((group) => {
+                                                    const preview = (group.fields || []).map(f => `${f.key}: ${f.value}`).slice(0, 2).join(', ');
+                                                    return (
+                                                        <div key={group.name} className="p-3 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/40 dark:bg-blue-900/20 hover:shadow-md transition-all">
+                                                            <div className="flex items-center justify-between gap-3">
+                                                                <div className="flex-1">
+                                                                    <p className="font-medium text-sm text-gray-900 dark:text-white">{group.name}</p>
+                                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{group.fields?.length || 0} champ(s): {preview}...</p>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-colors"
+                                                                    onClick={() => {
+                                                                        const merged = {};
+                                                                        (group.fields || []).forEach(f => {
+                                                                            const key = f.key || f.id;
+                                                                            if (key) merged[key] = f.value;
+                                                                        });
+                                                                        applyPresetFields(merged);
+                                                                    }}
+                                                                >
+                                                                    Charger
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
                                         </div>
                                     )}
+
+                                    {/* Info drag-drop */}
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 border-l-2 border-blue-400 pl-3 py-2">
+                                        💡 Vous pouvez aussi drag-drop des groupes directement depuis le panneau latéral dans la zone données
+                                    </p>
                                 </div>
 
-                                {/* Valeurs enregistrées par l'utilisateur */}
+                                {/* Suggestions depuis le sidebarcontent groupé */}
                                 <div className="space-y-3">
-                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Réglages utilisateur</h3>
+                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">🎯 Suggestions rapides</h3>
                                     {(!preConfiguredItems || Object.keys(preConfiguredItems).length === 0) ? (
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Aucun réglage sauvegardé.</p>
+                                        <div className="text-center py-6 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
+                                            <p className="text-sm">Aucune suggestion</p>
+                                            <p className="text-xs mt-1">Les données fréquemment utilisées apparaîtront ici</p>
+                                        </div>
                                     ) : (
                                         <div className="space-y-2">
                                             {Object.entries(preConfiguredItems).map(([key, value]) => {
                                                 const def = findSidebarFieldByKey(key);
                                                 return (
-                                                    <div key={key} className="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/40 flex items-center justify-between gap-3">
-                                                        <div>
+                                                    <div key={key} className="p-3 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-900/20 hover:shadow-md transition-all flex items-center justify-between gap-3">
+                                                        <div className="flex-1">
                                                             <p className="font-medium text-sm text-gray-900 dark:text-white flex items-center gap-1">
                                                                 {def?.icon && <span>{def.icon}</span>}
                                                                 {def?.label || key}
@@ -1081,7 +1166,7 @@ const PipelineDataModal = ({
                                                         </div>
                                                         <button
                                                             type="button"
-                                                            className="liquid-btn text-xs"
+                                                            className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs transition-colors"
                                                             onClick={() => applyPresetFields({ [key]: value })}
                                                         >
                                                             Appliquer
