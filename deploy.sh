@@ -10,6 +10,7 @@ echo "🚀 Démarrage du déploiement Reviews-Maker..."
 echo "📥 Pull des modifications GitHub..."
 cd /home/ubuntu/Reviews-Maker
 git checkout main
+git reset --hard origin/main
 git pull --rebase origin main
 
 # 2. Build client
