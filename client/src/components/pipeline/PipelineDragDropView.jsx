@@ -47,21 +47,15 @@ function CellContextMenu({
     const [isVisible, setIsVisible] = useState(false);
     const [capturedCells, setCapturedCells] = useState([]);
     const [capturedLabel, setCapturedLabel] = useState('');
-    const [isMenuHovered, setIsMenuHovered] = useState(false);
-    const closeTimeoutRef = useRef(null);
 
     // Fermer au clic extérieur ou Escape
     useEffect(() => {
         if (!isOpen) return;
         const handleClickOutside = (e) => {
-            // Ne pas fermer si la souris est sur le menu
-            if (isMenuHovered) return;
-
             // Vérifier si le clic est vraiment en dehors du menu
             if (menuRef.current) {
                 const isClickInsideMenu = menuRef.current.contains(e.target);
                 if (!isClickInsideMenu) {
-                    // Fermer directement sans timeout
                     onClose();
                 }
             }
@@ -74,9 +68,8 @@ function CellContextMenu({
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscape);
-            if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
         };
-    }, [isOpen, onClose, isMenuHovered]);
+    }, [isOpen, onClose]);
 
     // Reset au changement de cellule et capture les infos
     useEffect(() => {
@@ -202,16 +195,7 @@ function CellContextMenu({
             ref={menuRef}
             className="fixed z-[200] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
             style={{ opacity: isVisible ? 1 : 0, transition: 'opacity 0.15s ease-out', width: '260px', maxWidth: 'calc(100vw - 16px)', maxHeight: 'calc(100vh - 16px)' }}
-            onMouseEnter={() => {
-                setIsMenuHovered(true);
-                if (closeTimeoutRef.current) {
-                    clearTimeout(closeTimeoutRef.current);
-                    closeTimeoutRef.current = null;
-                }
-            }}
-            onMouseLeave={() => {
-                setIsMenuHovered(false);
-            }}
+            onMouseDown={(e) => e.stopPropagation()}
         >
             {/* Header */}
             <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-800">
