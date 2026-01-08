@@ -1014,7 +1014,8 @@ const PipelineDragDropView = ({
     };
 
     const handleCopyCellData = () => {
-        const targets = cellContextMenu?.selectedCells || [];
+        if (!cellContextMenu) return;
+        const targets = cellContextMenu.selectedCells || [];
         if (targets.length === 0) return;
 
         // Si une seule cellule, copier directement
@@ -1031,8 +1032,8 @@ const PipelineDragDropView = ({
     };
 
     const handlePasteCellData = () => {
-        if (!copiedCellData) return;
-        const targets = cellContextMenu?.selectedCells || [];
+        if (!copiedCellData || !cellContextMenu) return;
+        const targets = cellContextMenu.selectedCells || [];
         if (targets.length === 0) return;
 
         const allChanges = [];
@@ -1074,7 +1075,8 @@ const PipelineDragDropView = ({
     };
 
     const handleDeleteFieldsFromCells = (fieldsToDelete) => {
-        const targets = cellContextMenu?.selectedCells || [];
+        if (!cellContextMenu) return;
+        const targets = cellContextMenu.selectedCells || [];
         if (targets.length === 0 || fieldsToDelete.length === 0) return;
 
         setConfirmState({

@@ -4,14 +4,13 @@
  */
 
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { X, Check, Plus, Minus, Copy, Clipboard, Settings, Zap } from 'lucide-react';
+import { X, Check, Plus, Minus, Copy, Clipboard, Zap } from 'lucide-react';
 
 const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isConfigured, cells = [], onAssignNow, onAssignFromSource, onAssignRange, onAssignAll }) => {
     const [value, setValue] = useState(item.defaultValue || '');
     const [rangeStart, setRangeStart] = useState('');
     const [rangeEnd, setRangeEnd] = useState('');
     const [copySource, setCopySource] = useState('');
-    const [activeTab, setActiveTab] = useState('config'); // 'config' | 'assign'
     const menuRef = useRef(null);
     const [isVisible, setIsVisible] = useState(false);
 
@@ -68,16 +67,6 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
 
     const itemKey = item.key || item.id;
     const hasValue = value !== '' && value !== null && value !== undefined;
-
-    const handleSave = () => {
-        if (hasValue) onConfigure(itemKey, value);
-        onClose();
-    };
-
-    const handleClear = () => {
-        onConfigure(itemKey, null);
-        onClose();
-    };
 
     const handleAssignAll = () => {
         if (hasValue) onAssignAll?.(itemKey, value);
@@ -229,49 +218,15 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
             {/* Tabs si cells disponibles */}
             {cells.length > 0 && (
                 <div className="flex border-b border-gray-200 dark:border-gray-700">
-                    <button onClick={() => setActiveTab('config')} className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${activeTab === 'config' ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50 dark:bg-purple-900/20' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
-                        <Settings className="w-3.5 h-3.5 inline mr-1" />Configurer
-                    </button>
-                    <button onClick={() => setActiveTab('assign')} className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${activeTab === 'assign' ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50 dark:bg-purple-900/20' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
+                    <button className={`flex-1 px-3 py-2 text-xs font-medium transition-colors text-purple-600 border-b-2 border-purple-600 bg-purple-50 dark:bg-purple-900/20`}>
                         <Zap className="w-3.5 h-3.5 inline mr-1" />Assigner
                     </button>
                 </div>
             )}
 
-            {/* Contenu */}
+            {/* Contenu - Assignation */}
             <div className="p-3 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 180px)' }}>
-                {/* Tab Configuration */}
-                {activeTab === 'config' && (
-                    <div className="space-y-3">
-                        <div>
-                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
-                                Valeur par défaut
-                            </label>
-                            {renderInput()}
-                        </div>
-
-                        {/* Info */}
-                        <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md text-xs text-blue-700 dark:text-blue-300">
-                            💡 Cette valeur sera assignée automatiquement lors du drag & drop
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex gap-2">
-                            <button onClick={handleSave} disabled={!hasValue} className={`${btnCls} flex-1 ${hasValue ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'}`}>
-                                <Check className="w-3.5 h-3.5" />
-                                {isConfigured ? 'Mettre à jour' : 'Pré-configurer'}
-                            </button>
-                            {isConfigured && (
-                                <button onClick={handleClear} className={`${btnCls} bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300`}>
-                                    <X className="w-3.5 h-3.5" />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Tab Assignation */}
-                {activeTab === 'assign' && cells.length > 0 && (
+                {cells.length > 0 && (
                     <div className="space-y-4">
                         {/* Valeur à assigner */}
                         <div>
@@ -325,8 +280,12 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, onConfigure, isC
                     </div>
                 )}
 
-                {/* Si pas de cells, afficher juste la config */}
-                {cells.length === 0 && activeTab !== 'config' && setActiveTab('config')}
+                {/* Si pas de cells, afficher message */}
+                {cells.length === 0 && (
+                    <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg text-xs text-gray-600 dark:text-gray-400 text-center">
+                        Sélectionnez des cellules pour assigner des valeurs
+                    </div>
+                )}
             </div>
         </div>
     );
