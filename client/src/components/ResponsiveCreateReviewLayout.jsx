@@ -104,11 +104,10 @@ export const ResponsiveCreateReviewLayout = ({
                                                             animate={{ opacity: 1, x: 0 }}
                                                             exit={{ opacity: 0, x: -10 }}
                                                             onClick={() => onSectionChange(index)}
-                                                            className={`px-3 py-2 rounded-lg transition-all ${
-                                                                index === currentSection
+                                                            className={`px-3 py-2 rounded-lg transition-all ${index === currentSection
                                                                     ? 'bg-purple-600 ring-2 ring-purple-400'
                                                                     : 'bg-gray-700/50 hover:bg-gray-700'
-                                                            }`}
+                                                                }`}
                                                         >
                                                             <span className="text-lg">{sectionEmojis[index]}</span>
                                                         </motion.button>
@@ -149,11 +148,10 @@ export const ResponsiveCreateReviewLayout = ({
                                                         <button
                                                             key={idx}
                                                             onClick={() => onSectionChange(idx)}
-                                                            className={`px-4 py-2 rounded-lg transition-all ${
-                                                                idx === currentSection
+                                                            className={`px-4 py-2 rounded-lg transition-all ${idx === currentSection
                                                                     ? 'bg-purple-600 ring-2 ring-purple-400 scale-110'
                                                                     : 'bg-gray-700/50 hover:bg-gray-700'
-                                                            }`}
+                                                                }`}
                                                         >
                                                             <span className="text-lg">{emoji}</span>
                                                         </button>
@@ -203,8 +201,8 @@ export const ResponsiveCreateReviewLayout = ({
                                     onClick={handlePrevious}
                                     disabled={currentSection === 0}
                                     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${currentSection === 0
-                                            ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
-                                            : 'bg-gray-800 hover:bg-gray-700 text-white'
+                                        ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
+                                        : 'bg-gray-800 hover:bg-gray-700 text-white'
                                         } ${layout.isMobile ? 'text-sm' : 'text-base'}`}
                                 >
                                     <ChevronLeft className={layout.isMobile ? 'w-4 h-4' : 'w-5 h-5'} />
@@ -225,8 +223,8 @@ export const ResponsiveCreateReviewLayout = ({
                                     onClick={handleNext}
                                     disabled={currentSection === totalSections - 1}
                                     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${currentSection === totalSections - 1
-                                            ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
-                                            : 'bg-purple-600 hover:bg-purple-700 text-white'
+                                        ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
+                                        : 'bg-purple-600 hover:bg-purple-700 text-white'
                                         } ${layout.isMobile ? 'text-sm' : 'text-base'}`}
                                 >
                                     {!layout.isMobile && 'Suivant'}

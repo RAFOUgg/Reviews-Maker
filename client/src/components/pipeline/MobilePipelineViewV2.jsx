@@ -157,9 +157,8 @@ const MobilePipelineViewV2 = ({
                                     onClick={() => handleCellClick(index)}
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    className={`relative flex flex-col items-center gap-1 flex-shrink-0 transition-all ${
-                                        selectedCellIndex === index ? 'ring-2 ring-purple-400' : ''
-                                    }`}
+                                    className={`relative flex flex-col items-center gap-1 flex-shrink-0 transition-all ${selectedCellIndex === index ? 'ring-2 ring-purple-400' : ''
+                                        }`}
                                     disabled={readonly}
                                 >
                                     {/* Cell */}
@@ -200,11 +199,10 @@ const MobilePipelineViewV2 = ({
                         <button
                             onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
                             disabled={currentPage === 0}
-                            className={`p-1 rounded transition ${
-                                currentPage === 0
+                            className={`p-1 rounded transition ${currentPage === 0
                                     ? 'text-gray-600 cursor-not-allowed'
                                     : 'text-purple-400 hover:bg-purple-400/10'
-                            }`}
+                                }`}
                         >
                             <ChevronLeft className="w-4 h-4" />
                         </button>
@@ -214,11 +212,10 @@ const MobilePipelineViewV2 = ({
                         <button
                             onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
                             disabled={currentPage === totalPages - 1}
-                            className={`p-1 rounded transition ${
-                                currentPage === totalPages - 1
+                            className={`p-1 rounded transition ${currentPage === totalPages - 1
                                     ? 'text-gray-600 cursor-not-allowed'
                                     : 'text-purple-400 hover:bg-purple-400/10'
-                            }`}
+                                }`}
                         >
                             <ChevronRight className="w-4 h-4" />
                         </button>
