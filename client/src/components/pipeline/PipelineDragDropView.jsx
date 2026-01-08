@@ -2828,4 +2828,5 @@ const PipelineDragDropView = ({
     );
 };
 
+export { GroupedPresetModal };
 export default PipelineDragDropView;
