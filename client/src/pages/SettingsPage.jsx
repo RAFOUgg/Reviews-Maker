@@ -107,15 +107,25 @@ export default function SettingsPage() {
                     </div>
                 )}
 
-                {/* Theme removed — application enforced to dark-only */}
-                <div className="bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-700 mb-6">
-                    <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                        <svg className="w-6 h-6 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                        </svg>
-                        Thème de l'application
-                    </h2>
-                    <p className="text-sm text-gray-300">L'application utilise maintenant exclusivement le mode sombre (dark). Les options de thème ont été supprimées pour garantir une UI cohérente.</p>
+                {/* Account Info (moved to top) */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <img
+                                src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=6366f1&color=fff`}
+                                alt={user.username}
+                                className="w-16 h-16 rounded-full border-2 border-indigo-500"
+                            />
+                            <div>
+                                <p className="font-bold text-gray-900 dark:text-white text-lg">{user.username}</p>
+                                <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Connecté via Discord</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Membre depuis {new Date(user.createdAt || Date.now()).toLocaleDateString('fr-FR')}</p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Language Section */}
@@ -162,8 +172,8 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                {/* Preferences Section */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
+                {/* Preferences Gallery (compact) */}
+                <div className="mb-6">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
@@ -171,40 +181,50 @@ export default function SettingsPage() {
                         Préférences par défaut
                     </h2>
 
-                    <div className="space-y-6">
-                        {/* Default Visibility */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Visibilité par défaut
-                            </label>
-                            <select
-                                value={preferences.defaultVisibility}
-                                onChange={(e) => handlePreferenceChange('defaultVisibility', e.target.value)}
-                                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            >
-                                <option value="public">👁️ Publique</option>
-                                <option value="private">🔒 Privée</option>
-                            </select>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {/* Visibility Card */}
+                        <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <div className="font-medium text-gray-900 dark:text-white">Visibilité par défaut</div>
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">Définir la visibilité par défaut des reviews</div>
+                                </div>
+                                <div className="w-36">
+                                    <select
+                                        value={preferences.defaultVisibility}
+                                        onChange={(e) => handlePreferenceChange('defaultVisibility', e.target.value)}
+                                        className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                                    >
+                                        <option value="public">Publique</option>
+                                        <option value="private">Privée</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Export Format */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Format d'export par défaut
-                            </label>
-                            <select
-                                value={preferences.exportFormat}
-                                onChange={(e) => handlePreferenceChange('exportFormat', e.target.value)}
-                                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            >
-                                <option value="png">🖼️ PNG (Image)</option>
-                                <option value="pdf">📄 PDF (Document)</option>
-                                <option value="json">📊 JSON (Données)</option>
-                            </select>
+                        {/* Export Format Card */}
+                        <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <div className="font-medium text-gray-900 dark:text-white">Format d'export</div>
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">Format par défaut pour l'export</div>
+                                </div>
+                                <div className="w-36">
+                                    <select
+                                        value={preferences.exportFormat}
+                                        onChange={(e) => handlePreferenceChange('exportFormat', e.target.value)}
+                                        className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                                    >
+                                        <option value="png">PNG</option>
+                                        <option value="pdf">PDF</option>
+                                        <option value="json">JSON</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Compact View Toggle */}
-                        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                        {/* Compact View Card */}
+                        <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
                             <div>
                                 <div className="font-medium text-gray-900 dark:text-white">Vue compacte</div>
                                 <div className="text-sm text-gray-500 dark:text-gray-400">Afficher plus de reviews par page</div>
@@ -219,8 +239,8 @@ export default function SettingsPage() {
                             </button>
                         </div>
 
-                        {/* Notifications Toggle */}
-                        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                        {/* Notifications Card */}
+                        <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
                             <div>
                                 <div className="font-medium text-gray-900 dark:text-white">Notifications</div>
                                 <div className="text-sm text-gray-500 dark:text-gray-400">Recevoir des notifications toast</div>
@@ -233,36 +253,6 @@ export default function SettingsPage() {
                                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.showNotifications ? 'translate-x-6' : 'translate-x-1'}`}
                                 />
                             </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Account Info */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        Informations du compte
-                    </h2>
-
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-4">
-                            <img
-                                src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=6366f1&color=fff`}
-                                alt={user.username}
-                                className="w-16 h-16 rounded-full border-2 border-indigo-500"
-                            />
-                            <div>
-                                <p className="font-bold text-gray-900 dark:text-white text-lg">{user.username}</p>
-                                <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
-                            </div>
-                        </div>
-
-                        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Connecté via Discord • Membre depuis {new Date(user.createdAt || Date.now()).toLocaleDateString('fr-FR')}
-                            </p>
                         </div>
                     </div>
                 </div>
