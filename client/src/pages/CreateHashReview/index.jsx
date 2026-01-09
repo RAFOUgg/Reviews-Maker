@@ -35,16 +35,16 @@ export default function CreateHashReview() {
 
     // Définition des sections pour Hash (comme Culture mais adapté)
     const sections = [
-        { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
-        { id: 'separation', icon: '🔬', title: 'Pipeline Séparation', premium: false },
-        { id: 'analytics', icon: '⚗️', title: 'Données Analytiques' },
-        { id: 'visual', icon: '👁️', title: 'Visuel & Technique' },
-        { id: 'odeurs', icon: '👃', title: 'Odeurs' },
-        { id: 'texture', icon: '🤚', title: 'Texture' },
-        { id: 'gouts', icon: '😋', title: 'Goûts' },
-        { id: 'effets', icon: '💥', title: 'Effets' },
-        { id: 'curing', icon: '🔥', title: 'Curing & Maturation' },
-        { id: 'experience', icon: '🧪', title: 'Expérience d\'utilisation' }
+        { id: 'infos', icon: '\ud83d\udccb', title: 'Informations générales', required: true },
+        { id: 'separation', icon: '\u2697\ufe0f', title: 'Pipeline Séparation', premium: false },
+        { id: 'analytics', icon: '\ud83d\udd2c', title: 'Données Analytiques' },
+        { id: 'visual', icon: '\ud83d\udc41\ufe0f', title: 'Visuel & Technique' },
+        { id: 'odeurs', icon: '\ud83d\udc43', title: 'Odeurs' },
+        { id: 'texture', icon: '\ud83e\udd1a', title: 'Texture' },
+        { id: 'gouts', icon: '\ud83d\ude0b', title: 'Goûts' },
+        { id: 'effets', icon: '\ud83d\udca5', title: 'Effets' },
+        { id: 'curing', icon: '\ud83d\udd25', title: 'Curing & Maturation' },
+        { id: 'experience', icon: '\ud83e\uddea', title: 'Expérience d\'utilisation' }
     ]
 
     // Map des sections aux composants

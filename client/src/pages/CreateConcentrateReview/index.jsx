@@ -15,6 +15,7 @@ import TasteSection from '../../components/reviews/sections/TasteSection'
 import EffectsSection from '../../components/reviews/sections/EffectsSection'
 import ExperienceUtilisation from '../../components/forms/flower/ExperienceUtilisation'
 import CuringMaturationSection from '../../components/reviews/sections/CuringMaturationSection'
+import PipelineWrapper from '../../components/wrappers/PipelineWrapper'
 
 // Import hooks
 import { useConcentrateForm } from './hooks/useConcentrateForm'
@@ -34,21 +35,21 @@ export default function CreateConcentrateReview() {
     const { photos, handlePhotoUpload, removePhoto } = usePhotoUpload()
 
     const sections = [
-        { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
-        { id: 'extraction', icon: '⚗️', title: 'Pipeline Extraction' },
-        { id: 'analytics', icon: '🔬', title: 'Données Analytiques' },
-        { id: 'visual', icon: '👁️', title: 'Visuel & Technique' },
-        { id: 'odeurs', icon: '👃', title: 'Odeurs' },
-        { id: 'texture', icon: '🤚', title: 'Texture' },
-        { id: 'gouts', icon: '😋', title: 'Goûts' },
-        { id: 'effets', icon: '💥', title: 'Effets' },
-        { id: 'curing', icon: '🔥', title: 'Curing & Maturation' },
-        { id: 'experience', icon: '🧪', title: 'Expérience d\'utilisation' }
+        { id: 'infos', icon: '\ud83d\udccb', title: 'Informations générales', required: true },
+        { id: 'extraction', icon: '\u2697\ufe0f', title: 'Pipeline Extraction' },
+        { id: 'analytics', icon: '\ud83d\udd2c', title: 'Données Analytiques' },
+        { id: 'visual', icon: '\ud83d\udc41\ufe0f', title: 'Visuel & Technique' },
+        { id: 'odeurs', icon: '\ud83d\udc43', title: 'Odeurs' },
+        { id: 'texture', icon: '\ud83e\udd1a', title: 'Texture' },
+        { id: 'gouts', icon: '\ud83d\ude0b', title: 'Goûts' },
+        { id: 'effets', icon: '\ud83d\udca5', title: 'Effets' },
+        { id: 'curing', icon: '\ud83d\udd25', title: 'Curing & Maturation' },
+        { id: 'experience', icon: '\ud83e\uddea', title: 'Expérience d\'utilisation' }
     ]
 
     const sectionComponents = {
         infos: InfosGenerales,
-        extraction: ExtractionPipelineSection,
+        extraction: PipelineWrapper,
         analytics: AnalyticsSection,
         visual: VisualSection,
         odeurs: OdorSection,
