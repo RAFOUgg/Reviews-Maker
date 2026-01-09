@@ -12,9 +12,11 @@ export default function UserProfileDropdown() {
     useEffect(() => {
         if (isOpen && buttonRef.current) {
             const rect = buttonRef.current.getBoundingClientRect()
+            const adjustedTop = Math.max(rect.bottom + 8, 0) // Ensure dropdown doesn't flicker at incorrect positions
+            const adjustedRight = Math.max(window.innerWidth - rect.right, 0)
             setPosition({
-                top: rect.bottom + 8,
-                right: window.innerWidth - rect.right
+                top: adjustedTop,
+                right: adjustedRight
             })
         }
     }, [isOpen])
