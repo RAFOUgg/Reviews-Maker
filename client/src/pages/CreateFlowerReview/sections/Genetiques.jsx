@@ -89,7 +89,7 @@ export default function Genetiques({ formData, handleChange }) {
                             list="breeder-suggestions"
                         />
                         <datalist id="breeder-suggestions">
-                            {cultivarLibrary
+                            {(cultivars || [])
                                 .map(c => c.breeder)
                                 .filter((v, i, a) => v && a.indexOf(v) === i)
                                 .map(breeder => (
@@ -113,7 +113,7 @@ export default function Genetiques({ formData, handleChange }) {
                             list="variety-suggestions"
                         />
                         <datalist id="variety-suggestions">
-                            {cultivarLibrary.map(c => (
+                            {(cultivars || []).map(c => (
                                 <option key={c.id} value={c.name} />
                             ))}
                         </datalist>
@@ -347,7 +347,7 @@ export default function Genetiques({ formData, handleChange }) {
 
                         {/* Datalist partagé pour suggestions cultivars */}
                         <datalist id="cultivar-suggestions">
-                            {cultivarLibrary.map(c => (
+                            {(cultivars || []).map(c => (
                                 <option key={c.id} value={c.name} />
                             ))}
                         </datalist>
