@@ -161,118 +161,149 @@ Musqué : Musc, Ambre gris, Oud, Néroli
 Catégorie 4 : PIQUANT / ÉPICÉ (15 arômes)
 Poivre (noir, blanc, rose), Clou de girofle, Cannelle, Cardamome, Anis, Badiane, Curcuma, Fenugrec, Ail, Oignon, Piment sec, Wasabi, Gingembre, Réglisse, Menthe poivrée
 
-Catégorie 5 : SKUNKY / ANIMALIC (7 arômes)
-Skunk (phénylacétaldéhyde), Chat / Urine chat, Cheval, Cuir, Sueur / Saumure, Fromage bleu / Fromage puant, Fourrure mouillée
+# REVIEW FLEUR — Plan de données (réécriture)
 
-Catégorie 6 : CHIMIQUE / GAZ (11 arômes)
-Carburant / Essence, Gaz naturel, Plastique brûlé, Caoutchouc, Antiseptique, Alcool dénaturé, Kérosène, Gaz chlore, Ammoniac, Solvant, Peinture fraîche
+Ce document regroupe de façon structurée l'inventaire des champs nécessaires pour une "review" de fleur : identification, traçabilité, analyses, profil sensoriel, pipelines culture et curing.
 
-Catégorie 7 : SUCRÉ / GOURMAND (14 arômes)
-Sucre / Caramel, Miel, Sirop d'érable, Caramelle, Toffee, Chocolat, Vanille, Crème / Lait, Brioche, Noix / Noisette, Cacahuète, Amande, Noix de coco, Praline
+## 1. Informations générales
 
-Catégorie 8 : VÉGÉTAL / HERBACÉ (11 arômes)
-Herbe fraîche coupée, Foin sec, Paille, Roquette, Céleri, Persil, Thé vert, Luzerne, Menthe classique, Thym, Origan
+### 1.1 Identification produit
+- Nom commercial (texte libre) — obligatoire (peut concaténer Cultivar/Phéno/Batch)
+- Cultivar / Strain (multi-select depuis bibliothèque)
+- Code phénotype (texte court, auto‑généré, optionnel)
+- Code clone (texte court, optionnel)
+- Code batch / lot (texte court, traçabilité producteur)
+- Producteur / Farm (auto‑complete, lien vers région et certifications)
+- Région / Pays (enum + texte)
 
-5.3 Saisie arômes (pour chaque catégorie sélectionnée)
-Champ	Type	Valeurs / Options	Unité	Interaction
-Arôme sélectionné (ex : Limonène → Citron)	Enum dans catégorie	Listes déroulantes par catégorie	–	Multi‑sélection max 7 total
-Intensité arôme	Échelle	1–5 (1 = très léger/note, 5 = extrêmement prononcé)	–	Par arôme sélectionné
-Type d'arôme	Enum	Dominant (1ère sensation), Secondaire (présent mais moins), Arrière (traîne), Trait accessoire (très discret)	–	Hiérarchie
-5.4 Évolutions olfactives (optionnel)
-Champ	Type	Valeurs / Options	Unité	Interaction
-Odeur fraîche (< 1 sem curing)	Multi‑sélection	Idem arômes, max 3	–	Optionnel; note évolution
-Odeur curé standard (2–4 sem)	Multi‑sélection	Idem arômes, max 3	–	Profil principal
-Odeur mature (1–3 mois)	Multi‑sélection	Idem arômes, max 3	–	Optionnel; complexification
-Dévouement / Altération note	Texte libre	Descrizione changements en positif ou négatif	–	Optionnel; exemple "prise d'intensité épicée, perte fruité"
-6. TEXTURE & TOUCHÉ
-6.1 Propriétés tactiles
-Champ	Type	Valeurs / Options	Unité	Interaction
-Dureté / Rigidité	Échelle	1–10 (1 = extrêmement mou/mushy, 10 = rock‑hard, cassant)	–	Corrèle densité, âge curing
-Compacité / Densité tactile	Échelle	1–10 (1 = très léger/aérien, 10 = dense compact/lourd)	–	Poids volume petit volume
-Élasticité / Ressort	Échelle	1–10 (1 = casse nettement, 10 = reprend forme, très flexible)	–	Indicateur humidité résiduelle
-Friabilité / Délitement	Échelle	1–10 (1 = cohésion forte, impossible casser/déliter à main, 10 = poudre se désagrège facilement)	–	Affect convenance
-Collant / Résineux	Échelle	1–10 (1 = très collant, dépôts résine mains, 10 = zéro colle, sec sec)	–	Signe fraîcheur / maturité
-Élasticité résine	Échelle	1–10 (1 = caoutchouc mou/flexible résine, 10 = cristallin/cassant trichomes)	–	Optionnel; maturation résine
-6.2 Propriétés de broyage
-Champ	Type	Valeurs / Options	Unité	Interaction
-Nécessité de grinder	Enum	Très facile (main, sans outil), Facile (grinder léger), Normal (grinder standard), Difficile (résistance forte), Trop dur (cassant poudre)	–	Affecte préparation/consommation
-Texture post‑broyage	Enum	Fine homogène, Granuleuse moyenne, Morceaux fins persistants, Poudre fine excessive, Collant boulette (trop résine)	–	Impact experience
-Perte poids post‑broyage	Pourcentage	0–30% (résidu grinder)	% poids avant	Optionnel; haut = perte tritchomes
-6.3 Humidité résiduelle (si testée)
-Champ	Type	Valeurs / Options	Unité	Interaction
-Taux d'humidité estimé (hygromètre)	Nombre + enum	Très sec (< 7%), Sec (7–9%), Optimal (9–12%), Humide (12–15%), Très humide (> 15%)	% humidité relative	Optionnel; affecte brûlure, goût
-Test pli/cassure	Enum	Casse net (très sec), Plie puis casse (bon), Plie sans casser (humide), Mou/mushy (trop humide)	–	Optionnel; vérif rapide
-7. GOÛTS & SAVEURS
-7.1 Intensité générale
-Champ	Type	Valeurs / Options	Unité	Interaction
-Intensité gustative globale	Échelle	1–10 (1 = très subtil/peu goût, 10 = extrêmement intense/prononcé)	–	Majeure; corrèle cannabinoïdes, terps, age
-Harshness / Rugosité gorge	Échelle	1–10 (1 = très rêche/irritant, 10 = très doux/smooth)	–	Indicateur qualité cure, combustion
-Sécheresse bouche	Échelle	1–10 (1 = très sec/coton, 10 = mouillé/humide dans bouche)	–	Normal faible; haut = défaut
-7.2 Profil aromatique par phase (CATA goûts, 4 phases)
-Phase 1 : DRY PUFF (bouffée sèche avant combustion / chauffage)
-Champ	Type	Valeurs / Options	Unité	Interaction
-Arômes secs (avant fumée)	Multi‑select	Idem catégories 8 CATA (max 7 arômes)	–	Contact sec fleur dents
-Intensité goût sec	Échelle	1–5 (subtil → très prononcé)	–	Prélude combustion
-Phase 2 : INHALATION (fumée chaude / vapeur entrée poumons)
-Champ	Type	Valeurs / Options	Unité	Interaction
-Arômes inhalation	Multi‑select	Idem catégories 8 CATA (max 7 arômes)	–	Impression première combustion/vape
-Intensité inhalation	Échelle	1–5	–	Force sensation
-Température perçue	Enum	Froide, tiède, chaude, très chaude, brûlante	–	Optionnel; confort inhalation
-Phase 3 : EXPIRATION (goût fumée en bouche, après rejet)
-Champ	Type	Valeurs / Options	Unité	Interaction
-Arômes expiration	Multi‑select	Idem catégories 8 CATA (max 7 arômes)	–	Notes secondaires après bouffée
-Intensité expiration	Échelle	1–5	–	Persistance goût
-Phase 4 : ARRIÈRE‑GOÛT (finish, traîne palais)
-Champ	Type	Valeurs / Options	Unité	Interaction
-Arômes arrière‑goût	Multi‑select	Idem catégories 8 CATA (max 7 arômes)	–	Notes finales persistantes
-Durée arrière‑goût	Enum	Très court (< 10 sec), Court (10–30 sec), Moyen (30 sec – 2 min), Long (2–5 min), Très long (> 5 min)	–	Intensité résiduelle
-Type arrière‑goût	Enum	Agréable, Neutre, Désagréable, Persistant plaisant, Persistant dérangeant	–	Évaluation positive/négative
-7.3 Évolutions goût (optionnel, par âge curing)
-Champ	Type	Valeurs / Options	Unité	Interaction
-Goût jeune curing (< 1 sem)	Multi‑select	Idem arômes, max 3	–	Note : plutôt « vert / cru » attendu
-Goût curé standard (2–4 sem)	Multi‑select	Idem arômes, max 3	–	Profil principal
-Goût mature (1–3 mois)	Multi‑select	Idem arômes, max 3	–	Optionnel; complexification attente
-Notes évolution saveur	Texte libre	Exemple : "fruité initiale devient épicé, arrière‑goût caramélisé au mois 2"	–	Contextualisation changements
-7.4 Comparaison avec référence (optionnel)
-Champ	Type	Valeurs / Options	Unité	Interaction
-Cultivar référence pour goût	Select DB	Bibliothèque cultivars testés	–	Optionnel; aide classification
-Similarité goût	Texte court	Exemple : "Proche GMO Barney's, mais plus sucré"	–	Comparatif organoleptique
-8. EFFETS & EXPÉRIENCE CONSOMMATION
-8.1 Contexte & méthodologie
-Champ	Type	Valeurs / Options	Unité	Interaction
-Méthode consommation (multi)	Multi‑enum	Voir détail ci‑dessous	–	Obligatoire; 1+ méthodes testées
-SOUS‑SECTION : Combustion (joint, pipe, bong, etc.)
-Champ	Type	Valeurs / Options	Unité	Interaction
-Type combustion	Enum	Joint (tabac / paille), Blunt (feuille tabac), Spliff (mixte joint herbe + tabac), Pipe (verre, bois), Bong (verre eau), Chillum (cône terre), Vape conduction classique, Autre	–	Conditionne "méthode" sélectionnée
-Matériel spécifique	Texte libre	Ex : "Bong verre borosilicate 40cm, bol 4mm"	–	Optionnel; reproductibilité
-SOUS‑SECTION : Vaporisation (vapo herbe sèche, dab, etc.)
-Champ	Type	Valeurs / Options	Unité	Interaction
-Type vape	Enum	Vapo portable (Dynavap, Mighty…), Vapo bureau (Volcano, Evo…), Dab rig (concentré), Puffco type e‑nail, Autre	–	Conditionne "méthode" sélectionnée
-Contrôle température	Enum	Oui (précis), Oui (approximatif cadrans), Non (fixe), Inconnu	–	Affecte profil effet
-Température(s) utilisée(s)	Nombre(s)	160–220 °C (plage typiqu)	°C	Si "Oui contrôle" obligatoire
-Matériel spécifique	Texte libre	Ex : "Mighty @ 200°C", "Dynavap MV avec torch"	–	Optionnel
-SOUS‑SECTION : Ingestion (comestible, infusion, etc.)
-Champ	Type	Valeurs / Options	Unité	Interaction
-Type ingestion	Enum	Comestible fait maison (beurre, huile, déco fleur), Comestible industriel, Infusion/tisane, Smoothie, Teinture, Suppositoire, Autre	–	Conditionne profil absorption
-Matière grasse / vecteur	Enum	Beurre de cannabis (clarified), Huile coco, Huile olive, Graisse animale, Pas de graisse (tisane), Autre	–	Affecte biodisponibilité THC/CBD
-Durée infusion / trempage	Nombre + unité	30 min – 24h	min ou h	Si tisane / infusion
-8.2 Dosage
-Champ	Type	Valeurs / Options	Unité	Interaction
-Dose consommée	Nombre + unité	Nombre estimé	mg cannabinoïdes, g fleur brute, ou nb bouffées	Optionnel mais recommandé
-Unité dose	Enum	Milligrammes THC, Milligrammes CBD, Grammes fleur brute, Nombre bouffées, Nombre joints/pré‑rolls, Nombre tasses (infusion), Nombre tablettes (comestible)	–	Varie selon méthode
-Poids fleur consommée	Nombre	Estimation	g	Optionnel; aide traçabilité
-Estimation THC consommé	Nombre (calc)	Calc = (% THC × poids fleur) / 100	mg THC théorique	Auto‑calculé si données analytiques présentes
-8.3 Cinétique des effets
-Champ	Type	Valeurs / Options	Unité	Interaction
-Délai avant ressenti d'effets	Nombre + enum	Combustion : 1–5 min, Vape : 2–10 min, Comestible : 30 min – 2h	min ou "rapide/progressif/lent"	Dépend méthode + individu
-Temps de montée en puissance	Nombre + enum	Phase montée effet	min	Combustion/vape rapide; comestible lent
-Pic d'intensité d'effet	Nombre + unité	Temps auquel effet maximal atteint	min après consommation	Typiquement 15–60 min combustion
-Durée totale session	Nombre + unité	Du ressenti initial à retour baseline	h ou min	Combustion : 2–4h, Comestible : 4–8h+
-Durée remontée (déescalade)	Nombre + unité	Temps pour revenir à baseline normal	h	Implication séance suivante
-8.4 Profil d'effets (sélection jusqu'à 8 effets)
-Effets Cognitifs
-Focus / Concentration (concentration accrue vs dispersé)
+### 1.2 Classification légale & commerciale
+- Type légal (enum — ex. CBD ≤0.3% THC, THC récréatif, Médical)
+- Type de produit (enum — fleur brute, enrichie, transformée, pré‑roll)
+- Certifications / labels (multi‑enum — AB, GMP, autre)
 
+### 1.3 Traçabilité temporelle
+- Date de récolte
+- Date de fin de séchage
+- Date de début de curing
+- Date d'analyse sensorielle / review
+- Âge du produit au test (auto‑calculé)
+- Stade de maturation au test (enum : Fraîchement curé, Jeune, Bien curé, Mature, Archive)
+
+### 1.4 Métadonnées visuelles
+- Galerie photos (1–4 ; JPG/PNG/WebP, max 5MB) + tags par photo
+- Vidéo courte optionnelle (MP4 <30s)
+
+## 2. Génétiques & traçabilité lignée
+- Nom du breeder / sélectionneur (auto‑complete)
+- Variétés parentes (P1, P2) — optionnel
+- Type de cross / hybridation (F1, F2, BX, S1…)
+- Composition génétique (% Indica / Sativa / Ruderalis)
+- Dominante cannabinoïde estimée (THC‑dominant, CBD‑dominant, etc.)
+- Statut phénotype (Keeper, Test, Rejet…)
+- Notes généalogiques (texte libre)
+
+## 3. Données analytiques (cannabinoïdes & terpènes)
+
+### 3.1 Cannabinoïdes
+- Δ9‑THC, THCa, CBD, CBDa, CBG, CBGa, CBC, CBN, THCV, CBDV, autres (valeurs décimales % poids sec)
+- Δ9‑THC total équivalent = THC + THCa × 0.877
+- CBD total équivalent = CBD + CBDa × 0.877
+- Ratio THC:CBD, total cannabinoïdes (auto‑calculs)
+
+### 3.2 Terpènes (profil)
+- Liste principale (Myrcène, Caryophyllène, Limonène, Pinène, Linalol, Humulène, Terpinolène, Ocimène, Camphène, Nerolidol, Borneol, Geraniol)
+- Champs dynamiques pour autres terpènes
+- Total terpènes (auto), chémotype terpénique (dominé par…) et upload certificat
+
+### 3.3 Contaminants & pureté (optionnel)
+- Pesticides, moisissures pathogènes, métaux lourds, résidus solvants (valeurs / enum selon labo)
+
+### 3.4 Métadonnées certificat d'analyse
+- Upload certificat (PDF/JPG/PNG), nom du laboratoire, référence échantillon, date, méthode analytique, standardisation
+
+## 4. Visuel & aspect macro
+
+### 4.1 Couleur & apparence
+- Couleur dominante / secondaires (sélecteur), intensité et uniformité (échelle 1–10)
+
+### 4.2 Structure & densité
+- Densité visuelle (1–10), type de structure (aérée, moyenne, compacte, rock‑hard), taille moyenne des têtes (micro→huge)
+
+### 4.3 Trichomes
+- Abondance (1–10), type visible, couleur dominante (transparent/laiteux/ambre), proportion laiteux/ambre (%), intégrité
+
+### 4.4 Pistils et défauts visuels
+- Couleur pistils, proportion matures (%), abondance (1–10), signes de moisissure, graines, corps étrangers
+
+### 4.5 Manucure & débris
+- Type de manucure (machine, ciseaux, main…), qualité (1–10), proportion de feuilles résiduelles, type de débris
+
+## 5. Profil aromatique (CATA – nez)
+
+### 5.1 Intensité générale
+- Intensité odeur globale (1–10)
+
+### 5.2 Notes dominantes (max 7)
+- Catégories principales : Fruité, Floral, Terreux/Boisé, Piquant/Épicé, Skunky/Animalic, Chimique/Gaz, Sucré/Gourmand, Végétal/Herbacé
+- Sous‑arômes listés par catégorie (exemples inclus)
+
+### 5.3 Détails par note
+- Pour chaque arôme sélectionné : intensité (1–5), rôle (dominant/secondaire/arrière)
+
+### 5.4 Évolution olfactive (optionnel)
+- Comparaison J0 / 2–4 sem / 1–3 mois (notes évolutives)
+
+## 6. Texture & toucher
+- Dureté, compacité, élasticité, friabilité, collant (échelles 1–10)
+- Propriétés de broyage et perte de poids post‑broyage
+- Humidité résiduelle (estimation hygromètre) et test pli/cassure
+
+## 7. Goûts & saveurs
+- Intensité gustative (1–10), harshness / rugosité gorge (1–10)
+- Profil aromatique par phase : Dry puff, Inhalation, Expiration, Arrière‑goût (sélection CATA + intensités)
+- Durée arrière‑goût (énumération)
+
+## 8. Effets & expérience de consommation
+
+### 8.1 Contexte & méthode
+- Méthode(s) de consommation testée(s) (combustion, vaporisation, ingestion), matériel et paramètres (températures)
+
+### 8.2 Dosage
+- Dose consommée (mg THC estimé, g fleur, nb bouffées), unité dose, estimation THC consommé (calc)
+
+### 8.3 Cinétique
+- Délai ressenti, temps montée, pic d'intensité, durée totale session, durée de retour à la baseline
+
+### 8.4 Profil d'effets (sélection jusqu'à 8)
+- Effets cognitifs, physiques, émotionnels, sensoriels (liste exhaustive fournie)
+- Intensité par effet (1–5), polarité (positif/neutre/négatif)
+
+### 8.5 Effets indésirables
+- Listing des effets indésirables, sévérité (1–5), gestion utilisée
+
+### 8.6 Notes expérience globale
+- Recommandation (Oui/Non/Neutre), note globale (1–10), notes libres, public cible recommandé
+
+## 9. Pipeline culture (résumé remonté vers la review)
+- Mode & espace (Indoor/Outdoor/Greenhouse, dimensions), substrat, système irrigation
+- Lumière & climat (type lampe, puissance, PPFD si disponible, photopériode)
+- Durées (durée totale culture, durée floraison), formations & techniques (LST, SCROG, topping)
+- Post‑récolte : rinçage, durée séchage, conditions
+
+## 10. Pipeline curing (résumé)
+- Type emballage initial et récipient de curing (bocal verre ambré, CVault, sac, etc.)
+- Conditions curing : température, humidité, fréquence d'ouverture, ventilation
+- Évolutions organoleptiques attendues pendant curing
+- Stade maturation final et recommandations de consommation
+
+## 11. Synthèses & métadonnées
+- Scores synthétiques : note globale (1–10), qualité générale (A→E), value for money
+- Comparatifs : cultivar de référence, différenciation texte
+- Métadonnées review : testeur, protocole de test, statut (brouillon/final), visibilité (privée/publique)
+
+---
+
+Remarque : ce document est une réorganisation et synthèse du contenu d'origine. Les champs dynamiques et uploads restent identiques ; cette version améliore la lisibilité et facilite l'implémentation front/back.
 Créativité (pensées associatives, imagination)
 
 Euphorie (bien‑être intense, rires)
