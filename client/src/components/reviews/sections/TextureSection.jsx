@@ -62,9 +62,10 @@ const TEXTURE_LABELS = {
 
 /**
  * Section Texture pour Hash/Concentrés/Fleurs
- * Props: productType, data, onChange
+ * Props: productType, formData, handleChange
  */
-export default function TextureSection({ productType, data = {}, onChange }) {
+export default function TextureSection({ productType, formData = {}, handleChange }) {
+    const data = formData.texture || {};
     const [hardness, setHardness] = useState(data?.hardness || 5);
     const [density, setDensity] = useState(data?.density || 5);
     const [malleability, setMalleability] = useState(data?.malleability || 5);
@@ -102,7 +103,7 @@ export default function TextureSection({ productType, data = {}, onChange }) {
             textureData.viscosity = viscosity;
         }
 
-        onChange(textureData);
+        handleChange('texture', textureData);
     }, [hardness, density, malleability, elasticity, stickiness, melting, residue, friability, viscosity, productType]);
 
     return (

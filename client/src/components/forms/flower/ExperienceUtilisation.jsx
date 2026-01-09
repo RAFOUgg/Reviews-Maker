@@ -5,7 +5,8 @@ import { EXPERIENCE_VALUES } from '../../../data/formValues'
  * ExperienceUtilisation - Section pour documenter les tests de consommation
  * Correspond à la section "Expérience d'utilisation durant les tests" du cahier des charges
  */
-export default function ExperienceUtilisation({ data = {}, onChange = () => {} }) {
+export default function ExperienceUtilisation({ formData = {}, handleChange = () => {} }) {
+    const data = formData.experience || {};
     const [filter, setFilter] = useState('tous')
 
     const selectedProfils = (data && data.profilsEffets) || []
@@ -26,8 +27,15 @@ export default function ExperienceUtilisation({ data = {}, onChange = () => {} }
         }
 
         if (newValue.length <= (maxLimits[key] || 10)) {
-            onChange(key, newValue)
+            const updatedData = { ...data, [key]: newValue };
+            handleChange('experience', updatedData);
         }
+    }
+
+    // Wrapper pour les changements de form elements
+    const onChange = (key, newValue) => {
+        const updatedData = { ...data, [key]: newValue };
+        handleChange('experience', updatedData);
     }
 
     // Filtrer les profils d'effets selon le filtre actif

@@ -5,9 +5,10 @@ import WhiteSlider from '../../ui/WhiteSlider';
 
 /**
  * Section Effets Ressentis pour Hash/Concentrés/Fleurs
- * Props: productType, data, onChange
+ * Props: productType, formData, handleChange
  */
-export default function EffectsSection({ productType, data = {}, onChange }) {
+export default function EffectsSection({ productType, formData = {}, handleChange }) {
+    const data = formData.effets || {};
     const [onset, setOnset] = useState(data?.onset || 5);
     const [intensity, setIntensity] = useState(data?.intensity || 5);
     const [duration, setDuration] = useState(data?.duration || '1-2h');
@@ -16,10 +17,9 @@ export default function EffectsSection({ productType, data = {}, onChange }) {
     // Filtres
     const [categoryFilter, setCategoryFilter] = useState(null); // null, 'mental', 'physical', 'therapeutic'
     const [sentimentFilter, setSentimentFilter] = useState(null); // null, 'positive', 'negative', 'neutral'
-
     // Synchroniser avec parent
     useEffect(() => {
-        onChange({
+        handleChange('effets', {
             onset,
             intensity,
             duration,

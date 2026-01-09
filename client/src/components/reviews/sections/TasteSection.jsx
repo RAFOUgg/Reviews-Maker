@@ -5,9 +5,10 @@ import WhiteSlider from '../../ui/WhiteSlider';
 
 /**
  * Section Goûts pour Hash/Concentrés/Fleurs
- * Props: productType, data, onChange
+ * Props: productType, formData, handleChange
  */
-export default function TasteSection({ productType, data = {}, onChange }) {
+export default function TasteSection({ productType, formData = {}, handleChange }) {
+    const data = formData.gouts || {};
     const [selectedFamily, setSelectedFamily] = useState(null);
     const [intensity, setIntensity] = useState(data?.intensity || 5);
     const [aggressiveness, setAggressiveness] = useState(data?.aggressiveness || 5);
@@ -17,7 +18,7 @@ export default function TasteSection({ productType, data = {}, onChange }) {
 
     // Synchroniser avec parent
     useEffect(() => {
-        onChange({
+        handleChange('gouts', {
             intensity,
             aggressiveness,
             dryPuffNotes,

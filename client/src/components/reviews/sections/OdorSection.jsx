@@ -6,18 +6,18 @@ import AromaWheelPicker from '../../ui/AromaWheelPicker';
 /**
  * Section Odeurs pour Hash/Concentrés/Fleurs
  * NOUVEAU: Utilise AromaWheelPicker avec roue CATA
- * Props: productType, data, onChange
+ * Props: productType, formData, handleChange
  */
-export default function OdorSection({ productType, data = {}, onChange }) {
+export default function OdorSection({ productType, formData = {}, handleChange }) {
+    const data = formData.odeurs || {};
     const [dominantNotes, setDominantNotes] = useState(data?.dominantNotes || []);
     const [secondaryNotes, setSecondaryNotes] = useState(data?.secondaryNotes || []);
     const [intensity, setIntensity] = useState(data?.intensity || 5);
     const [complexity, setComplexity] = useState(data?.complexity || 5);
     const [fidelity, setFidelity] = useState(data?.fidelity || 5);
-
     // Synchroniser avec parent
     useEffect(() => {
-        onChange({
+        handleChange('odeurs', {
             dominantNotes,
             secondaryNotes,
             intensity,

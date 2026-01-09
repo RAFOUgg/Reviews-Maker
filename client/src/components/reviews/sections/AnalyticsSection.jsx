@@ -4,9 +4,10 @@ import { Beaker, Upload, File, X, CheckCircle, AlertCircle, Eye, FlaskConical } 
 /**
  * Section Données Analytiques pour Hash/Concentrés/Fleurs
  * Conforme CDC - Upload certificat cannabinoïdes + profil terpénique
- * Props: productType, data, onChange
+ * Props: productType, formData, handleChange
  */
-export default function AnalyticsSection({ productType, data = {}, onChange }) {
+export default function AnalyticsSection({ productType, formData = {}, handleChange }) {
+    const data = formData.analytics || {};
     const [thc, setThc] = useState(data?.thc || '');
     const [cbd, setCbd] = useState(data?.cbd || '');
     const [cbg, setCbg] = useState(data?.cbg || '');
@@ -19,7 +20,7 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
 
     // Synchroniser avec parent
     useEffect(() => {
-        onChange({
+        handleChange('analytics', {
             thc: thc ? parseFloat(thc) : null,
             cbd: cbd ? parseFloat(cbd) : null,
             cbg: cbg ? parseFloat(cbg) : null,

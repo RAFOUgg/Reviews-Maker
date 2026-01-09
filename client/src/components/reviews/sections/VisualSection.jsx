@@ -13,7 +13,8 @@ import WhiteSlider from '../../ui/WhiteSlider';
  * Utilisée pour Hash, Concentrés et Fleurs
  * Champs adaptés selon le type de produit
  */
-export default function VisualSection({ productType, data, onChange }) {
+export default function VisualSection({ productType, formData = {}, handleChange }) {
+    const data = formData.visual || {};
     // Couleurs multiples avec pourcentages
     const [selectedColors, setSelectedColors] = useState(data?.colors || []);
     const [colorRating, setColorRating] = useState(data?.colorRating || 5);
@@ -34,8 +35,8 @@ export default function VisualSection({ productType, data, onChange }) {
             mold,
             seeds
         };
-        onChange?.(visualData);
-    }, [selectedColors, colorRating, density, trichomes, mold, seeds, transparency, productType, onChange]);
+        handleChange('visual', visualData);
+    }, [selectedColors, colorRating, density, trichomes, mold, seeds, transparency, productType, handleChange]);
 
     const allColors = getAllColorShades();
     const isHashOrConcentrate = productType === 'Hash' || productType === 'Concentré';
