@@ -383,8 +383,7 @@ const PipelineGitHubGrid = ({
     const [editingCell, setEditingCell] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [selectedCells, setSelectedCells] = useState([]);
-
-
+    const containerRef = useRef(null);
 
     // Calcul nombre de cases
     const totalCells = useMemo(() => {
