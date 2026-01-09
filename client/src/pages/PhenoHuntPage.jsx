@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ReactFlowProvider } from 'reactflow';
 import { usePhenoHuntStore } from '../store/index';
-import SidebarHierarchique from '../../components/phenohunt/SidebarHierarchique';
-import CanevasPhenoHunt from '../../components/phenohunt/CanevasPhenoHunt';
+import SidebarHierarchique from '../components/phenohunt/SidebarHierarchique';
+import CanevasPhenoHunt from '../components/phenohunt/CanevasPhenoHunt';
 import { Plus, Settings, Download, Upload, Home } from 'lucide-react';
 
 /**
