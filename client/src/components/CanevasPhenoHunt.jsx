@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import ReactFlow, { addEdge, useNodesState, useEdgesState } from 'reactflow';
 import 'reactflow/dist/style.css';
+import { v4 as uuidv4 } from 'uuid';
 
 const initialNodes = [
     {
@@ -19,15 +20,42 @@ const CanevasPhenoHunt = () => {
 
     const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
 
+    const handleNodeDragStop = (event, node) => {
+        console.log('Node dragged:', node);
+    };
+
+    const saveTreeChanges = async () => {
+        try {
+            const response = await fetch('/api/phenotrees/1', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ nodes, edges }),
+            });
+            if (!response.ok) {
+                throw new Error('Failed to save tree changes');
+            }
+            console.log('Tree changes saved successfully');
+        } catch (error) {
+            console.error('Error saving tree changes:', error);
+        }
+    };
+
     return (
-        <div className="h-full bg-gray-900">
+        <div className="h-full bg-gradient-to-br from-gray-900 to-gray-800 md:w-3/4 w-full">
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
-                onNodesChange={onNodesChange}
+                onNodesChange={(changes) => {
+                    onNodesChange(changes);
+                    saveTreeChanges();
+                }}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
+                onNodeDragStop={handleNodeDragStop}
                 fitView
+                className="shadow-lg rounded-lg border border-gray-700"
             />
         </div>
     );
