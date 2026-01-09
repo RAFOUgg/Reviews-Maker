@@ -194,22 +194,9 @@ const PipelineWithSidebar = ({
 
         // Propager
         onChange({ ...value, cells: newCells });
-    };payload) => {
-    const cellIndex = payload.timestamp || selectedCell;
-    const cellData = payload.data || payload;
+    };
 
-    const newCells = { ...cells, [cellIndex]: { ...cells[cellIndex], ...cellData } };
-    setCells(newCells);
-    onChange({ ...value, cells: newCells });
-    setIsModalOpen(false);
-    setSelectedCell(null);
-    setDroppedItemForModal(null); // Réinitialiser l'item droppé
-    onChange({ ...value, cells: newCells });
-    setIsModalOpen(false);
-    setSelectedCell(null);
-};
-
-// Handler: Application en masse (sélection multiple)
+    // Handler: Application en masse (sélection multiple)
 const handleApplyToSelection = (data) => {
     if (selectedCells.length === 0) return;
 
