@@ -6,7 +6,7 @@ import CreateReviewFormWrapper from '../../components/CreateReviewFormWrapper'
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
-import ExtractionPipelineSection from './sections/ExtractionPipelineSection'
+import ExtractionPipelineSection from '../../components/reviews/sections/ExtractionPipelineSection'
 import AnalyticsSection from '../../components/reviews/sections/AnalyticsSection'
 import VisualSection from '../../components/reviews/sections/VisualSection'
 import OdorSection from '../../components/reviews/sections/OdorSection'
@@ -15,7 +15,6 @@ import TasteSection from '../../components/reviews/sections/TasteSection'
 import EffectsSection from '../../components/reviews/sections/EffectsSection'
 import ExperienceUtilisation from '../../components/forms/flower/ExperienceUtilisation'
 import CuringMaturationSection from '../../components/reviews/sections/CuringMaturationSection'
-import PipelineWrapper from '../../components/wrappers/PipelineWrapper'
 
 // Import hooks
 import { useConcentrateForm } from './hooks/useConcentrateForm'
@@ -49,7 +48,7 @@ export default function CreateConcentrateReview() {
 
     const sectionComponents = {
         infos: InfosGenerales,
-        extraction: PipelineWrapper,
+        extraction: ExtractionPipelineSection,
         analytics: AnalyticsSection,
         visual: VisualSection,
         odeurs: OdorSection,
