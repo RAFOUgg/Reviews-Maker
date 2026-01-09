@@ -105,10 +105,10 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
             </div>
 
             {/* Note importante */}
-            <div className="p-4 dark: border dark: rounded-xl">
+            <div className="p-4 border border-blue-200 dark:border-blue-700/50 rounded-xl bg-blue-50 dark:bg-blue-900/20">
                 <div className="flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 dark: flex-shrink-0 mt-0.5" />
-                    <div className="text-sm dark:">
+                    <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-blue-900 dark:text-blue-100">
                         <p className="font-semibold mb-1">Section optionnelle</p>
                         <p>Les données analytiques ne sont pas obligatoires. Vous pouvez laisser vide si vous n'avez pas de certificat d'analyse.</p>
                     </div>
@@ -140,7 +140,7 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                                 onChange={(e) => handleNumberInput(e.target.value, setThc)}
                                 placeholder="0.0"
                                 disabled={!uploadedFile}
-                                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus: transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">%</span>
                         </div>
@@ -194,7 +194,7 @@ export default function AnalyticsSection({ productType, data = {}, onChange }) {
                                 onChange={(e) => handleNumberInput(e.target.value, setCbc)}
                                 placeholder="0.0"
                                 disabled={!uploadedFile}
-                                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus: transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">%</span>
                         </div>

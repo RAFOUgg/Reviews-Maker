@@ -5,12 +5,12 @@ import { EXPERIENCE_VALUES } from '../../../data/formValues'
  * ExperienceUtilisation - Section pour documenter les tests de consommation
  * Correspond à la section "Expérience d'utilisation durant les tests" du cahier des charges
  */
-export default function ExperienceUtilisation({ data, onChange }) {
+export default function ExperienceUtilisation({ data = {}, onChange = () => {} }) {
     const [filter, setFilter] = useState('tous')
 
-    const selectedProfils = data.profilsEffets || []
-    const selectedSecondaires = data.effetsSecondaires || []
-    const selectedUsages = data.usagesPreferes || []
+    const selectedProfils = (data && data.profilsEffets) || []
+    const selectedSecondaires = (data && data.effetsSecondaires) || []
+    const selectedUsages = (data && data.usagesPreferes) || []
 
     const toggleMultiSelect = (key, value) => {
         const current = data[key] || []
