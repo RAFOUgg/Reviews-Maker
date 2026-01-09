@@ -9,7 +9,6 @@ import InfosGenerales from './sections/InfosGenerales'
 import RecipePipelineSection from './sections/RecipePipelineSection'
 import TasteSection from '../../components/reviews/sections/TasteSection'
 import EffectsSection from '../../components/reviews/sections/EffectsSection'
-import ExperienceUtilisation from '../../components/forms/flower/ExperienceUtilisation'
 
 // Import hooks
 import { useEdibleForm } from './hooks/useEdibleForm'
@@ -32,16 +31,14 @@ export default function CreateEdibleReview() {
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
         { id: 'recipe', icon: '🥘', title: 'Recette & Préparation' },
         { id: 'gouts', icon: '😋', title: 'Goûts' },
-        { id: 'effets', icon: '💥', title: 'Effets' },
-        { id: 'experience', icon: '🍽️', title: 'Expérience d\'utilisation' }
+        { id: 'effets', icon: '💥', title: 'Effets + Expérience' }
     ]
 
     const sectionComponents = {
         infos: InfosGenerales,
         recipe: RecipePipelineSection,
         gouts: TasteSection,
-        effets: EffectsSection,
-        experience: ExperienceUtilisation
+        effets: EffectsSection
     }
 
     const handleSave = async () => {

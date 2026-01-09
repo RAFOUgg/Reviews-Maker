@@ -76,6 +76,10 @@ export default function HomePage() {
         }
     }
 
+    const handleNavigateToPhenoHunt = () => {
+        navigate('/phenohunt');
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black relative">
             <div className="relative max-w-7xl mx-auto px-4 py-12 space-y-12">
@@ -190,6 +194,17 @@ export default function HomePage() {
                         />
                     </>
                 )}
+
+                {/* PhénoHunt Navigation Button */}
+                <div className="text-center pt-8">
+                    <LiquidButton
+                        onClick={handleNavigateToPhenoHunt}
+                        variant="secondary"
+                        size="lg"
+                    >
+                        Accéder à PhénoHunt
+                    </LiquidButton>
+                </div>
             </div>
 
             {/* Animations CSS */}

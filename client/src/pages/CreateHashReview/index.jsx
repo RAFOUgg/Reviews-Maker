@@ -13,7 +13,7 @@ import OdorSection from '../../components/reviews/sections/OdorSection'
 import TextureSection from '../../components/reviews/sections/TextureSection'
 import TasteSection from '../../components/reviews/sections/TasteSection'
 import EffectsSection from '../../components/reviews/sections/EffectsSection'
-import ExperienceUtilisation from '../../components/forms/flower/ExperienceUtilisation'
+
 import CuringMaturationSection from '../../components/reviews/sections/CuringMaturationSection'
 
 // Import hooks
@@ -33,18 +33,17 @@ export default function CreateHashReview() {
     const { formData, handleChange, loading, saving, setSaving } = useHashForm(id)
     const { photos, handlePhotoUpload, removePhoto } = usePhotoUpload()
 
-    // Définition des sections pour Hash (comme Culture mais adapté)
+    // Définition des sections pour Hash
     const sections = [
-        { id: 'infos', icon: '\ud83d\udccb', title: 'Informations générales', required: true },
-        { id: 'separation', icon: '\u2697\ufe0f', title: 'Pipeline Séparation', premium: false },
-        { id: 'analytics', icon: '\ud83d\udd2c', title: 'Données Analytiques' },
-        { id: 'visual', icon: '\ud83d\udc41\ufe0f', title: 'Visuel & Technique' },
-        { id: 'odeurs', icon: '\ud83d\udc43', title: 'Odeurs' },
-        { id: 'texture', icon: '\ud83e\udd1a', title: 'Texture' },
-        { id: 'gouts', icon: '\ud83d\ude0b', title: 'Goûts' },
-        { id: 'effets', icon: '\ud83d\udca5', title: 'Effets' },
-        { id: 'curing', icon: '\ud83d\udd25', title: 'Curing & Maturation' },
-        { id: 'experience', icon: '\ud83e\uddea', title: 'Expérience d\'utilisation' }
+        { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
+        { id: 'separation', icon: '⚗️', title: 'Pipeline Séparation', premium: false },
+        { id: 'analytics', icon: '🔬', title: 'Données Analytiques' },
+        { id: 'visual', icon: '👁️', title: 'Visuel & Technique' },
+        { id: 'odeurs', icon: '👃', title: 'Odeurs' },
+        { id: 'texture', icon: '🤚', title: 'Texture' },
+        { id: 'gouts', icon: '😋', title: 'Goûts' },
+        { id: 'effets', icon: '💥', title: 'Effets + Expérience' },
+        { id: 'curing', icon: '🔥', title: 'Curing & Maturation' }
     ]
 
     // Map des sections aux composants
@@ -57,8 +56,7 @@ export default function CreateHashReview() {
         texture: TextureSection,
         gouts: TasteSection,
         effets: EffectsSection,
-        curing: CuringMaturationSection,
-        experience: ExperienceUtilisation
+        curing: CuringMaturationSection
     }
 
     const handleSave = async () => {
