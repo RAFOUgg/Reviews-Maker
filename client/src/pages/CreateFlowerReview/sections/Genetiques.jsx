@@ -1,36 +1,46 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Dna, Leaf, Info } from 'lucide-react'
+import { Dna, Leaf, Info, X } from 'lucide-react'
 import LiquidCard from '../../../components/LiquidCard'
 import PhenoCodeGenerator from '../../../components/genetics/PhenoCodeGenerator'
-import GenealogyCanvas from '../../../components/genealogy/GenealogyCanvas'
-import CultivarLibraryPanel from '../../../components/genealogy/CultivarLibraryPanel'
+import SidebarHierarchique from '../../../components/phenohunt/SidebarHierarchique'
+import CanevasPhenoHunt from '../../../components/phenohunt/CanevasPhenoHunt'
+import { usePhenoHuntStore } from '../../../store/index'
 import { useStore } from '../../../store/useStore'
 
 export default function Genetiques({ formData, handleChange }) {
-    const [cultivarLibrary, setCultivarLibrary] = useState([])
-    const [showGenealogySection, setShowGenealogySection] = useState(false)
+    const [showPhenoHunt, setShowPhenoHunt] = useState(false)
     const genetics = formData.genetics || {}
     const { user } = useStore()
+    
+    // PhenoHunt store
+    const {
+        trees,
+        activeTreeId,
+        nodes,
+        edges,
+        cultivars,
+        setActiveTree,
+        getActiveTreeData,
+        syncGeneticFormData
+    } = usePhenoHuntStore()
 
-    // Charger la bibliothèque de cultivars
-    useEffect(() => {
-        fetch('/api/cultivars', { credentials: 'include' })
-            .then(res => res.json())
-            .then(data => setCultivarLibrary(data))
-            .catch(console.error)
-    }, [])
-
-    // Gestion de l'arbre généalogique
-    const handleGenealogyChange = (genealogyData) => {
-        handleChange('genetics', {
-            ...genetics,
-            genealogy: genealogyData
-        })
+    // Synchroniser la sélection PhenoHunt avec le formulaire
+    const handleSyncPhenoHunt = () => {
+        if (activeTreeId) {
+            const activeTree = getActiveTreeData()
+            if (activeTree) {
+                handleChange('genetics', {
+                    ...genetics,
+                    phenoHuntTreeId: activeTreeId,
+                    phenoHuntData: activeTree,
+                    // Récupérer le cultivar principal de l'arbre (premier nœud)
+                    variety: activeTree.nodes?.[0]?.label || genetics.variety
+                })
+                setShowPhenoHunt(false)
+            }
+        }
     }
-
-    // Récupérer les IDs des cultivars déjà sur le canva
-    const selectedCultivarIds = (genetics.genealogy?.nodes || []).map(n => n.cultivarId)
 
     const handleGeneticsChange = (field, value) => {
         const newGenetics = {
@@ -185,60 +195,97 @@ export default function Genetiques({ formData, handleChange }) {
                     />
                 </div>
 
-                {/* Arbre Généalogique / Canva Interactive */}
+                {/* Arbre Généalogique / PhenoHunt Interactive */}
                 <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                     <button
                         type="button"
-                        onClick={() => setShowGenealogySection(!showGenealogySection)}
+                        onClick={() => setShowPhenoHunt(!showPhenoHunt)}
                         className="w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-lg transition-all flex items-center justify-between group"
                     >
                         <span className="flex items-center gap-2">
                             <span className="text-xl">🌳</span>
-                            Arbre Généalogique Interactive
+                            PhenoHunt - Arbre Généalogique Interactive
                         </span>
                         <span className="transform transition-transform group-hover:translate-x-1">
-                            {showGenealogySection ? '▼' : '▶'}
+                            {showPhenoHunt ? '▼' : '▶'}
                         </span>
                     </button>
 
-                    {showGenealogySection && (
+                    {showPhenoHunt && (
                         <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
-                            className="mt-4 p-4 bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 rounded-lg"
+                            className="mt-4 p-6 bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
                         >
-                            {/* Layout 2 colonnes: Bibliothèque + Canva */}
-                            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-full">
-                                {/* Panneau bibliothèque (1/4) */}
-                                <div className="lg:col-span-1">
-                                    <CultivarLibraryPanel
-                                        cultivarLibrary={cultivarLibrary}
-                                        selectedInCanvas={selectedCultivarIds}
-                                    />
+                            {/* Layout: Sidebar + Canvas */}
+                            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[600px]">
+                                {/* Sidebar Cultivars & Projects (1/4) */}
+                                <div className="lg:col-span-1 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
+                                    <SidebarHierarchique />
                                 </div>
 
-                                {/* Canva principal (3/4) */}
-                                <div className="lg:col-span-3">
-                                    <div className="space-y-3">
-                                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                            Canva Généalogique
-                                        </h4>
-                                        <GenealogyCanvas
-                                            genealogy={genetics.genealogy || { nodes: [], connections: [] }}
-                                            cultivarLibrary={cultivarLibrary}
-                                            onChange={handleGenealogyChange}
-                                            disabled={false}
-                                        />
+                                {/* Canvas Principal (3/4) */}
+                                <div className="lg:col-span-3 flex flex-col gap-4">
+                                    <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                        <CanevasPhenoHunt />
+                                    </div>
+                                    
+                                    {/* Boutons d'action */}
+                                    <div className="flex gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={handleSyncPhenoHunt}
+                                            disabled={!activeTreeId}
+                                            className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all"
+                                        >
+                                            ✓ Valider la sélection
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPhenoHunt(false)}
+                                            className="px-4 py-2 bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-semibold rounded-lg transition-all"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Info CDC */}
                             <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-xs text-blue-900 dark:text-blue-100">
-                                <p>💡 <strong>Arbre généalogique:</strong> Visualisez les relations parents/enfants entre vos cultivars. Drag & drop depuis la bibliothèque, créez des liens, et exportez en JSON.</p>
+                                <p>💡 <strong>PhenoHunt:</strong> Créez et visualisez des arbres généalogiques complets de vos cultivars. Drag & drop pour ajouter, créez des relations parents/enfants, et synchronisez avec votre review.</p>
                             </div>
+
+                            {/* Afficher le cultivar sélectionné */}
+                            {activeTreeId && (
+                                <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-xs text-green-900 dark:text-green-100">
+                                    <p>✓ <strong>Arbre sélectionné:</strong> {trees.find(t => t.id === activeTreeId)?.name || 'Sans titre'}</p>
+                                </div>
+                            )}
                         </motion.div>
+                    )}
+
+                    {/* Afficher l'arbre sélectionné */}
+                    {genetics.phenoHuntTreeId && (
+                        <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg text-sm">
+                            <p className="text-purple-900 dark:text-purple-100">
+                                <strong>📊 Arbre sélectionné:</strong> {trees.find(t => t.id === genetics.phenoHuntTreeId)?.name || 'Personnalisé'}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        handleChange('genetics', {
+                                            ...genetics,
+                                            phenoHuntTreeId: undefined,
+                                            phenoHuntData: undefined
+                                        })
+                                    }}
+                                    className="ml-2 text-xs text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 underline"
+                                >
+                                    Modifier
+                                </button>
+                            </p>
+                        </div>
                     )}
                 </div>
 
