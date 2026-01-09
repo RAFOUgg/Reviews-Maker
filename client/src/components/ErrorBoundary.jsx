@@ -154,31 +154,4 @@ export default class ErrorBoundary extends Component {
         return this.props.children
     }
 }
-                                </pre>
-                            </details>
-                        )}
 
-                        <div className="flex gap-3">
-                            <Button
-                                onClick={() => window.history.back()}
-                                variant="secondary"
-                                className="flex-1"
-                            >
-                                ← Retour
-                            </Button>
-                            <Button
-                                onClick={this.handleReset}
-                                variant="primary"
-                                className="flex-1"
-                            >
-                                🔄 Recharger
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )
-        }
-
-        return this.props.children
-    }
-}
