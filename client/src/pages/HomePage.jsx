@@ -19,11 +19,6 @@ export default function HomePage() {
     const [filteredReviews, setFilteredReviews] = useState([])
     const [showAll, setShowAll] = useState(false)
     const [selectedAuthor, setSelectedAuthor] = useState(null)
-    // Local UI state for compact preferences gallery
-    const [visibility, setVisibility] = useState('Publique')
-    const [exportFormat, setExportFormat] = useState('PNG (Image)')
-    const [compactView, setCompactView] = useState(false)
-    const [notificationsEnabled, setNotificationsEnabled] = useState(true)
 
     useEffect(() => {
         fetchReviews()
@@ -91,67 +86,6 @@ export default function HomePage() {
                 {/* Hero Section */}
                 <div className="glass liquid-glass--card">
                     <HeroSection user={user} isAuthenticated={isAuthenticated} title="Terpologie" />
-                </div>
-
-                {/* Account Info + Preferences (compact gallery) */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="glass liquid-glass--card p-4 flex items-start gap-4 md:col-span-1">
-                        <img src={user?.avatar || '/default-avatar.png'} alt="avatar" className="w-16 h-16 rounded-full border border-theme-accent" />
-                        <div>
-                            <div className="text-xl font-bold text-white">{user?.displayName || user?.name || 'Utilisateur'}</div>
-                            <div className="text-sm text-gray-300">{user?.email || '—'}</div>
-                            <div className="text-xs text-gray-400 mt-2">Connecté via {user?.provider || 'Discord'} • Membre depuis {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}</div>
-                        </div>
-                    </div>
-
-                    <div className="md:col-span-2 space-y-3">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                            <div className="glass p-3 flex flex-col justify-between">
-                                <div className="text-sm text-gray-300 font-medium">Visibilité par défaut</div>
-                                <div className="mt-2 text-white font-semibold">{visibility}</div>
-                                <div className="mt-3">
-                                    <button className="btn-small" onClick={() => setVisibility(visibility === 'Publique' ? 'Privée' : 'Publique')}>Toggle</button>
-                                </div>
-                            </div>
-
-                            <div className="glass p-3 flex flex-col justify-between">
-                                <div className="text-sm text-gray-300 font-medium">Format d'export par défaut</div>
-                                <div className="mt-2 text-white font-semibold">{exportFormat}</div>
-                                <div className="mt-3">
-                                    <select value={exportFormat} onChange={(e) => setExportFormat(e.target.value)} className="w-full bg-theme-tertiary rounded px-2 py-1">
-                                        <option>PNG (Image)</option>
-                                        <option>JPEG (Image)</option>
-                                        <option>PDF</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="glass p-3 flex flex-col justify-between">
-                                <div className="text-sm text-gray-300 font-medium">Vue compacte</div>
-                                <div className="mt-2 text-white font-semibold">{compactView ? 'Activée' : 'Désactivée'}</div>
-                                <div className="mt-3">
-                                    <label className="switch">
-                                        <input type="checkbox" checked={compactView} onChange={() => setCompactView(!compactView)} />
-                                        <span className="slider"></span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div className="glass p-3 flex flex-col justify-between">
-                                <div className="text-sm text-gray-300 font-medium">Notifications</div>
-                                <div className="mt-2 text-white font-semibold">{notificationsEnabled ? 'Actives' : 'Inactives'}</div>
-                                <div className="mt-3">
-                                    <label className="switch">
-                                        <input type="checkbox" checked={notificationsEnabled} onChange={() => setNotificationsEnabled(!notificationsEnabled)} />
-                                        <span className="slider"></span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="text-right">
-                            <button className="btn-primary" onClick={() => toast.success('Préférences mises à jour (local)')}>Enregistrer</button>
-                        </div>
-                    </div>
                 </div>
 
                 {/* Create Review Section */}

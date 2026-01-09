@@ -93,6 +93,18 @@ export default function EffectsSection({ productType, formData = {}, handleChang
         return EFFECTS_CATEGORIES[categoryId]?.icon || '•';
     };
 
+    const getEffectBadgeColor = (effect) => {
+        const categoryColor = EFFECTS_CATEGORIES[effect.category]?.color || '#6B7280';
+        // Retourne un gradient basé sur la catégorie et le sentiment
+        if (effect.sentiment === 'negative') {
+            return `from-red-500 to-red-600`;
+        }
+        if (effect.category === 'mental') return `from-purple-500 to-purple-600`;
+        if (effect.category === 'physical') return `from-green-500 to-green-600`;
+        if (effect.category === 'therapeutic') return `from-blue-500 to-blue-600`;
+        return `from-gray-500 to-gray-600`;
+    };
+
     return (
         <div className="space-y-8 p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50">
 
