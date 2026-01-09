@@ -1,6 +1,7 @@
 /**
  * CreateReviewFormWrapper - Composant wrapper unifié pour TOUS les types
  * Utilise la structure et l'apparence de Fleur (la plus avancée)
+ * OPTIMISÉ MOBILE FIRST - Responsive et accessible sur tous les appareils
  * 
  * Paramètres:
  * - productType: 'flower' | 'hash' | 'concentrate' | 'edible'
@@ -13,6 +14,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Eye } from 'lucide-react'
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout'
 import { ResponsiveCreateReviewLayout } from './ResponsiveCreateReviewLayout'
 import OrchardPanel from './orchard/OrchardPanel'
 
@@ -36,6 +38,7 @@ const CreateReviewFormWrapper = ({
 }) => {
     const [currentSection, setCurrentSection] = useState(0)
     const [showOrchard, setShowOrchard] = useState(false)
+    const layout = useResponsiveLayout()
     const scrollContainerRef = useRef(null)
 
     // Synchroniser les photos avec formData
@@ -53,9 +56,9 @@ const CreateReviewFormWrapper = ({
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center bg-gray-900">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
                     <p className="text-gray-400">Chargement...</p>
                 </div>
             </div>
@@ -78,37 +81,58 @@ const CreateReviewFormWrapper = ({
             onSubmit={onSubmit}
             isSaving={saving}
         >
-            {/* Orchard Preview Button - Mobile optimized */}
-            <div className="flex justify-end mb-4">
+            {/* Aperçu Button - Mobile Optimized */}
+            <div className={`flex justify-end mb-4 ${layout.isMobile ? 'px-0' : 'px-0'}`}>
                 <button
                     onClick={() => setShowOrchard(!showOrchard)}
-                    className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 text-purple-300 rounded-lg text-sm font-medium transition-all"
+                    className={`flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 text-purple-300 rounded-lg font-medium transition-all ${
+                        layout.isMobile 
+                            ? 'px-3 py-2 text-xs'
+                            : 'px-4 py-2 text-sm'
+                    }`}
                 >
-                    <Eye className="w-4 h-4 inline mr-2" />
-                    Aperçu
+                    <Eye className={layout.isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
+                    <span>{layout.isMobile ? 'Aperçu' : 'Aperçu'}</span>
                 </button>
             </div>
 
-            {/* Section Content */}
+            {/* Section Header - Mobile Optimized */}
             <AnimatePresence mode="wait">
                 <motion.div
-                    key={currentSection}
+                    key={`header-${currentSection}`}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.2 }}
+                    className={`flex items-start gap-3 mb-4 ${layout.isMobile ? '-mx-4 px-4 py-3 bg-gray-800/30 border-b border-gray-700/50' : 'p-0'}`}
+                >
+                    <span className={layout.isMobile ? 'text-2xl flex-shrink-0' : 'text-3xl flex-shrink-0'}>
+                        {currentSectionData?.icon}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                        <h2 className={`font-semibold text-gray-100 ${
+                            layout.isMobile ? 'text-base' : 'text-xl'
+                        }`}>
+                            {currentSectionData?.title}
+                            {currentSectionData?.required && <span className="text-red-500 ml-2">*</span>}
+                        </h2>
+                        {layout.isMobile && (
+                            <p className="text-xs text-gray-400 mt-0.5">Étape {currentSection + 1}/{sections.length}</p>
+                        )}
+                    </div>
+                </motion.div>
+            </AnimatePresence>
+
+            {/* Section Content - Mobile Optimized */}
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={`content-${currentSection}`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                    className="space-y-6"
+                    transition={{ duration: 0.25 }}
+                    className={`space-y-4 ${layout.isMobile ? '' : 'space-y-6'}`}
                 >
-                    <div className="flex items-center gap-3 mb-6">
-                        <span className="text-3xl">{currentSectionData?.icon}</span>
-                        <div>
-                            <h2 className="text-xl font-semibold text-gray-100">
-                                {currentSectionData?.title}
-                                {currentSectionData?.required && <span className="text-red-500 ml-2">*</span>}
-                            </h2>
-                        </div>
-                    </div>
-
                     {/* Render current section component */}
                     {SectionComponent ? (
                         <SectionComponent
@@ -120,14 +144,16 @@ const CreateReviewFormWrapper = ({
                             productType={productType}
                         />
                     ) : (
-                        <div className="text-center text-gray-400 py-8">
+                        <div className={`text-center text-gray-400 py-8 ${
+                            layout.isMobile ? 'text-xs' : 'text-sm'
+                        }`}>
                             Composant non trouvé pour {currentSectionData?.id}
                         </div>
                     )}
                 </motion.div>
             </AnimatePresence>
 
-            {/* Orchard Preview Panel */}
+            {/* Orchard Preview Panel - Mobile Optimized */}
             {showOrchard && (
                 <OrchardPanel
                     reviewData={formData}

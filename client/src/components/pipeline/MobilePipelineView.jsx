@@ -6,19 +6,17 @@ import { CULTURE_PHASES } from './PipelineWithSidebar';
 
 /**
  * MobilePipelineView - Vue timeline optimisée pour mobile
+ * COMPLÈTEMENT REVU POUR MOBILE FIRST
  * 
- * Replaces drag & drop avec:
- * ✅ Timeline compacte en pleine largeur
- * ✅ Clique sur cellule → Modal d'édition
- * ✅ Ajout de groupe/données via la modal
- * ✅ Suppression de données dans la modal
- * ✅ Swipe pour navigation (optionnel)
- * 
- * Design:
- * - Timeline horizontale scrollable
- * - Cellules carrées colorées (intensité)
- * - Mini-icônes de résumé
- * - "+" pour ajouter cellules
+ * Caractéristiques:
+ * ✅ Pas de drag-drop (inutilisable sur mobile)
+ * ✅ Ajout via cellule (click → modal)
+ * ✅ Timeline horizontale scrollable compacte
+ * ✅ Cellules visuelles avec densité
+ * ✅ 100% responsive
+ * ✅ Aucun overflow horizontal
+ * ✅ Boutons accessibles au pouce
+ * ✅ Pagination fluide
  */
 
 const MobilePipelineView = ({
@@ -35,12 +33,10 @@ const MobilePipelineView = ({
 }) => {
     const [selectedCell, setSelectedCell] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [draggedContent, setDraggedContent] = useState(null);
-    const [editingContent, setEditingContent] = useState(null);
     const [currentPage, setCurrentPage] = useState(0);
 
-    // Pagination: 20 cellules par page sur mobile
-    const CELLS_PER_PAGE = 20;
+    // Pagination optimisée mobile: 12 cellules par page (taille petite)
+    const CELLS_PER_PAGE = 12;
     const totalCells = cellIndices.length;
     const totalPages = Math.ceil(totalCells / CELLS_PER_PAGE);
 
@@ -97,14 +93,14 @@ const MobilePipelineView = ({
         return 4;
     };
 
-    // Couleurs selon intensité
+    // Couleurs selon intensité - Optimisé pour petites tailles
     const getIntensityColor = (intensity) => {
-        const baseClasses = 'w-14 h-14 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all';
-        if (intensity === 0) return `${baseClasses} bg-gray-700/40 border-gray-600/40 hover:bg-gray-700/60`;
-        if (intensity === 1) return `${baseClasses} bg-green-900/50 border-green-700/60 hover:bg-green-900/70`;
-        if (intensity === 2) return `${baseClasses} bg-green-700/70 border-green-500/80 hover:bg-green-700/90`;
-        if (intensity === 3) return `${baseClasses} bg-green-500/80 border-green-400/90 hover:bg-green-500/100`;
-        return `${baseClasses} bg-green-400/90 border-green-300 hover:bg-green-400`;
+        const baseClasses = 'w-12 h-12 sm:w-14 sm:h-14 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all active:scale-95';
+        if (intensity === 0) return `${baseClasses} bg-gray-700/40 border-gray-600/40`;
+        if (intensity === 1) return `${baseClasses} bg-green-900/50 border-green-700/60`;
+        if (intensity === 2) return `${baseClasses} bg-green-700/70 border-green-500/80`;
+        if (intensity === 3) return `${baseClasses} bg-green-500/80 border-green-400/90`;
+        return `${baseClasses} bg-green-400/90 border-green-300`;
     };
 
     // Mini-icônes résumées
@@ -145,7 +141,7 @@ const MobilePipelineView = ({
             }
         }
 
-        return icons.slice(0, 2); // Max 2 icônes
+        return icons.slice(0, 1); // Max 1 icône sur mobile
     };
 
     const handleCellClick = (index) => {
@@ -178,24 +174,29 @@ const MobilePipelineView = ({
     };
 
     return (
-        <div className="w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl p-4 space-y-4">
-            {/* Configuration Summary */}
-            <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700">
-                <div className="text-sm text-gray-400">
-                    <span className="font-semibold text-gray-300">Trame:</span>
-                    <span className="ml-2">{config.intervalType === 'phases' ? '12 Phases' : `${config.duration} ${config.intervalType}`}</span>
+        <div className="w-full space-y-3">
+            {/* Configuration Summary - Compact */}
+            <div className="bg-gray-800/30 rounded-lg p-2.5 border border-gray-700/50 space-y-1">
+                <div className="text-xs font-semibold text-purple-400">
+                    ⚙️ Configuration
+                </div>
+                <div className="text-xs text-gray-300">
+                    Trame: <span className="text-purple-300 font-medium">
+                        {config.intervalType === 'phases' ? '12 Phases' : `${config.duration} ${config.intervalType}`}
+                    </span>
                 </div>
                 {config.startDate && (
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-400">
                         Début: {new Date(config.startDate).toLocaleDateString('fr-FR')}
                     </div>
                 )}
             </div>
 
-            {/* Timeline - Horizontal Scroll */}
+            {/* Timeline - Horizontal Scroll Optimisé */}
             <div className="relative">
-                <div className="overflow-x-auto pb-2 scrollbar-thin">
-                    <div className="flex gap-2 px-2 min-w-min">
+                {/* Timeline container - Full width, no overflow */}
+                <div className="overflow-x-auto -mx-3 px-3 pb-2 scrollbar-hide">
+                    <div className="flex gap-1.5 min-w-min">
                         {visibleCells.map((index) => {
                             const cellData = cells[index];
                             const intensity = getCellIntensity(cellData);
@@ -209,39 +210,35 @@ const MobilePipelineView = ({
                                     key={index}
                                     onClick={() => handleCellClick(index)}
                                     disabled={readonly}
-                                    className={`${getIntensityColor(intensity)} relative group flex-shrink-0 ${isSelected ? 'ring-2 ring-purple-500 scale-105' : ''
-                                        }`}
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                                    className={`${getIntensityColor(intensity)} flex-shrink-0 relative group ${
+                                        isSelected ? 'ring-2 ring-purple-500' : ''
+                                    }`}
+                                    whileTap={{ scale: 0.9 }}
                                 >
                                     {/* Contenu de la cellule */}
-                                    <div className="flex flex-col items-center justify-center gap-1">
-                                        {icon && <span className="text-xl">{icon}</span>}
+                                    <div className="flex flex-col items-center justify-center gap-0.5 w-full h-full p-1">
+                                        {icon && (
+                                            <span className="text-lg leading-none">{icon}</span>
+                                        )}
                                         {!icon && (
-                                            <div className="text-xs font-bold text-gray-100 opacity-70">
+                                            <div className="text-xs font-bold text-gray-100 leading-none">
                                                 {label}
                                             </div>
                                         )}
                                         {miniIcons.length > 0 && (
-                                            <div className="flex gap-0.5 flex-wrap justify-center max-w-xs">
-                                                {miniIcons.map((emoji, i) => (
-                                                    <span key={i} className="text-xs">
-                                                        {emoji}
-                                                    </span>
-                                                ))}
+                                            <div className="text-xs leading-none">
+                                                {miniIcons[0]}
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* Tooltip au survol - Label complet */}
-                                    <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-900 px-3 py-1 rounded text-xs text-gray-100 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 border border-gray-700">
-                                        {getCellLabel(index)}
-                                        {intensity > 0 && ` (${intensity} données)`}
-                                    </div>
-
                                     {/* Indicateur "données présentes" */}
                                     {intensity > 0 && (
-                                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border border-green-300" />
+                                        <motion.div
+                                            className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-400 rounded-full border border-green-300"
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                        />
                                     )}
                                 </motion.button>
                             );
@@ -251,35 +248,34 @@ const MobilePipelineView = ({
                         {canAddMore && (
                             <motion.button
                                 onClick={handleAddCells}
-                                className="w-14 h-14 rounded-lg border-2 border-dashed border-gray-600 hover:border-gray-400 flex items-center justify-center flex-shrink-0 transition-all hover:bg-gray-700/30"
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
+                                className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg border-2 border-dashed border-gray-600 flex items-center justify-center flex-shrink-0 transition-all active:scale-95"
+                                whileTap={{ scale: 0.9 }}
                             >
-                                <Plus className="w-5 h-5 text-gray-400" />
+                                <Plus className="w-4 h-4 text-gray-400" />
                             </motion.button>
                         )}
                     </div>
                 </div>
 
-                {/* Pagination - Si beaucoup de cellules */}
+                {/* Pagination - Compact */}
                 {totalPages > 1 && (
-                    <div className="flex items-center justify-between mt-3 px-2">
+                    <div className="flex items-center justify-center gap-2 mt-2">
                         <button
                             onClick={goToPreviousPage}
                             disabled={currentPage === 0}
-                            className="p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 disabled:opacity-50 transition-all"
+                            className="p-1.5 rounded-lg bg-gray-700/50 hover:bg-gray-700 disabled:opacity-30 transition-all active:scale-90"
                         >
                             <ChevronLeft className="w-4 h-4 text-gray-300" />
                         </button>
 
-                        <span className="text-xs text-gray-400">
-                            Page {currentPage + 1} / {totalPages}
+                        <span className="text-xs text-gray-400 min-w-[50px] text-center">
+                            {currentPage + 1}/{totalPages}
                         </span>
 
                         <button
                             onClick={goToNextPage}
                             disabled={currentPage === totalPages - 1}
-                            className="p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 disabled:opacity-50 transition-all"
+                            className="p-1.5 rounded-lg bg-gray-700/50 hover:bg-gray-700 disabled:opacity-30 transition-all active:scale-90"
                         >
                             <ChevronRight className="w-4 h-4 text-gray-300" />
                         </button>
@@ -287,10 +283,12 @@ const MobilePipelineView = ({
                 )}
             </div>
 
-            {/* Info: Mode Click-to-Edit */}
-            <div className="bg-blue-900/20 border border-blue-700/40 rounded-lg p-2 text-xs text-blue-300 text-center">
-                💡 Cliquez sur une cellule pour ajouter ou modifier les données
-            </div>
+            {/* Hint: Click to Add Data */}
+            {!readonly && (
+                <div className="bg-blue-900/20 border border-blue-700/40 rounded-lg p-2 text-xs text-blue-300 text-center">
+                    👇 Cliquez sur une cellule pour ajouter des données
+                </div>
+            )}
 
             {/* Modal d'édition de cellule */}
             <AnimatePresence>
