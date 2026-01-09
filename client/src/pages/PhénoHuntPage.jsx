@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ReactFlowProvider } from 'reactflow';
-import { usePhenoHuntStore } from '../../store/usePhenoHuntStore';
+import { usePhenoHuntStore } from '../../store/usePhenoHuntStore.js';
 import SidebarHierarchique from '../../components/phenohunt/SidebarHierarchique';
 import CanevasPhenoHunt from '../../components/phenohunt/CanevasPhenoHunt';
 import { Plus, Settings, Download, Upload, Home } from 'lucide-react';
 
 /**
- * PhenoHuntPage - Page principale du module PhenoHunt
+ * PhénoHuntPage - Page principale du module PhénoHunt
  */
-export default function PhenoHuntPage() {
+export default function PhénoHuntPage() {
     const navigate = useNavigate();
     const {
         phenoTrees,
@@ -72,7 +72,7 @@ export default function PhenoHuntPage() {
                     >
                         <Home className="w-5 h-5" />
                     </button>
-                    <h1 className="text-2xl font-bold text-white">🌿 PhenoHunt</h1>
+                    <h1 className="text-2xl font-bold text-white">🌿 PhénoHunt</h1>
                 </div>
 
                 {/* Header Actions */}

@@ -12,7 +12,7 @@ import ReactFlow, {
     getConnectedEdges,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { usePhenoHuntStore } from '../../store/usePhenoHuntStore.js';
+import { usePhenoHuntStore } from '../../store/usePhenoHuntStore';
 import PhenoNode from './PhenoNode';
 import PhenoEdge from './PhenoEdge';
 import { ZoomIn, ZoomOut, Edit3, Trash2, Copy, Save } from 'lucide-react';
