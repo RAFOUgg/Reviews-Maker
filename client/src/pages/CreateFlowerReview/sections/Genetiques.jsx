@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Dna, Leaf, Info, Construction } from 'lucide-react'
+import { Dna, Leaf, Info } from 'lucide-react'
 import LiquidCard from '../../../components/LiquidCard'
 import PhenoCodeGenerator from '../../../components/genetics/PhenoCodeGenerator'
+import GenealogyCanvas from '../../../components/genealogy/GenealogyCanvas'
+import CultivarLibraryPanel from '../../../components/genealogy/CultivarLibraryPanel'
 import { useStore } from '../../../store/useStore'
 
 export default function Genetiques({ formData, handleChange }) {
     const [cultivarLibrary, setCultivarLibrary] = useState([])
+    const [showGenealogySection, setShowGenealogySection] = useState(false)
     const genetics = formData.genetics || {}
     const { user } = useStore()
 
@@ -17,6 +20,17 @@ export default function Genetiques({ formData, handleChange }) {
             .then(data => setCultivarLibrary(data))
             .catch(console.error)
     }, [])
+
+    // Gestion de l'arbre généalogique
+    const handleGenealogyChange = (genealogyData) => {
+        handleChange('genetics', {
+            ...genetics,
+            genealogy: genealogyData
+        })
+    }
+
+    // Récupérer les IDs des cultivars déjà sur le canva
+    const selectedCultivarIds = (genetics.genealogy?.nodes || []).map(n => n.cultivarId)
 
     const handleGeneticsChange = (field, value) => {
         const newGenetics = {
@@ -171,28 +185,61 @@ export default function Genetiques({ formData, handleChange }) {
                     />
                 </div>
 
-                {/* Arbre Généalogique / Canva - COMING SOON */}
+                {/* Arbre Généalogique / Canva Interactive */}
                 <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <LiquidCard className="bg-transparent dark:bg-transparent border-2 border-dashed border-gray-600">
-                        <div className="text-center py-12">
-                            <Construction className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-300 mb-4 animate-bounce" />
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                                🌳 Arbre Généalogique Interactive
-                            </h3>
-                            <p className="text-gray-600 dark:text-gray-400 mb-4">
-                                Fonctionnalité en cours de développement
-                            </p>
-                            <div className="max-w-md mx-auto space-y-2 text-sm text-gray-500 dark:text-gray-400">
-                                <p>✨ Canva drag & drop pour créer l'arbre</p>
-                                <p>🔗 Visualisation des relations parents/enfants</p>
-                                <p>📊 Export graphique de l'arbre</p>
-                                <p>📚 Intégration avec votre bibliothèque de cultivars</p>
+                    <button
+                        type="button"
+                        onClick={() => setShowGenealogySection(!showGenealogySection)}
+                        className="w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-lg transition-all flex items-center justify-between group"
+                    >
+                        <span className="flex items-center gap-2">
+                            <span className="text-xl">🌳</span>
+                            Arbre Généalogique Interactive
+                        </span>
+                        <span className="transform transition-transform group-hover:translate-x-1">
+                            {showGenealogySection ? '▼' : '▶'}
+                        </span>
+                    </button>
+
+                    {showGenealogySection && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mt-4 p-4 bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 rounded-lg"
+                        >
+                            {/* Layout 2 colonnes: Bibliothèque + Canva */}
+                            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-full">
+                                {/* Panneau bibliothèque (1/4) */}
+                                <div className="lg:col-span-1">
+                                    <CultivarLibraryPanel
+                                        cultivarLibrary={cultivarLibrary}
+                                        selectedInCanvas={selectedCultivarIds}
+                                    />
+                                </div>
+
+                                {/* Canva principal (3/4) */}
+                                <div className="lg:col-span-3">
+                                    <div className="space-y-3">
+                                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                            Canva Généalogique
+                                        </h4>
+                                        <GenealogyCanvas
+                                            genealogy={genetics.genealogy || { nodes: [], connections: [] }}
+                                            cultivarLibrary={cultivarLibrary}
+                                            onChange={handleGenealogyChange}
+                                            disabled={false}
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                            <div className="mt-6 inline-block px-6 py-2 liquid-btn liquid-btn--primary">
-                                Coming Soon 🚀
+
+                            {/* Info CDC */}
+                            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-xs text-blue-900 dark:text-blue-100">
+                                <p>💡 <strong>Arbre généalogique:</strong> Visualisez les relations parents/enfants entre vos cultivars. Drag & drop depuis la bibliothèque, créez des liens, et exportez en JSON.</p>
                             </div>
-                        </div>
-                    </LiquidCard>
+                        </motion.div>
+                    )}
                 </div>
 
                 {/* Généalogie */}

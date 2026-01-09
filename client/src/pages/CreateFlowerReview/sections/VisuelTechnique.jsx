@@ -12,9 +12,11 @@ const VISUAL_FIELDS = [
     { key: 'graines', label: 'Graines (10=aucune)', max: 10 }
 ]
 
-export default function VisuelTechnique({ formData, handleChange }) {
+export default function VisuelTechnique({ formData = {}, handleChange = () => {} }) {
     const handleColorChange = (colors) => {
-        handleChange('selectedColors', colors)
+        if (handleChange && typeof handleChange === 'function') {
+            handleChange('selectedColors', colors)
+        }
     }
 
     return (
@@ -47,11 +49,15 @@ export default function VisuelTechnique({ formData, handleChange }) {
                                 min="0"
                                 max={field.max}
                                 value={formData[field.key] || 0}
-                                onChange={(e) => handleChange(field.key, parseInt(e.target.value))}
+                                onChange={(e) => {
+                                    if (handleChange && typeof handleChange === 'function') {
+                                        handleChange(field.key, parseInt(e.target.value))
+                                    }
+                                }}
                                 className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-600"
                             />
                             <span className="text-sm font-bold text-gray-900 dark:text-gray-100 w-1/6 text-center">
-                                {formData[field.key] || 0}/{field.max}
+                                {(formData && formData[field.key]) || 0}/{field.max}
                             </span>
                         </div>
                     ))}

@@ -220,7 +220,7 @@ export default function AnalyticsSection({ productType, formData = {}, handleCha
                             htmlFor="certificate-upload"
                             className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all group"
                         >
-                            <Upload className="w-12 h-12 text-gray-400 group-hover: transition-colors mb-3" />
+                            <Upload className="w-12 h-12 text-gray-400 group-hover:text-gray-500 transition-colors mb-3" />
                             <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Cliquez pour uploader un certificat
                             </p>
@@ -247,7 +247,7 @@ export default function AnalyticsSection({ productType, formData = {}, handleCha
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => openPreview('cannabinoid')}
-                                    className="p-2 hover: dark:hover: rounded-lg transition-colors"
+                                    className="p-2 hover:bg-green-100 dark:hover:bg-green-800 rounded-lg transition-colors"
                                     title="Prévisualiser"
                                 >
                                     <Eye className="w-5 h-5 dark:" />
