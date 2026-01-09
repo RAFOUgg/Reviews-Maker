@@ -81,7 +81,7 @@ export default function HomePage() {
             <div className="relative max-w-7xl mx-auto px-4 py-12 space-y-12">
                 {/* Hero Section */}
                 <div className="glass liquid-glass--card">
-                    <HeroSection user={user} isAuthenticated={isAuthenticated} />
+                    <HeroSection user={user} isAuthenticated={isAuthenticated} title="Terpologie" />
                 </div>
 
                 {/* Create Review Section */}

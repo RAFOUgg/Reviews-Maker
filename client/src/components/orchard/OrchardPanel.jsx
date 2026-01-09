@@ -244,6 +244,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
 
     // Pages store
     const pagesEnabled = useOrchardPagesStore((state) => state.pagesEnabled);
+    const pages = useOrchardPagesStore((state) => state.pages);
     const loadDefaultPages = useOrchardPagesStore((state) => state.loadDefaultPages);
     const togglePagesMode = useOrchardPagesStore((state) => state.togglePagesMode);
 

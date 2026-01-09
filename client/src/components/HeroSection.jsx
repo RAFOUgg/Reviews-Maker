@@ -11,7 +11,7 @@ export default function HeroSection({ user, isAuthenticated }) {
         <div className="text-center space-y-6 animate-fade-in">
             <div className="relative inline-block">
                 <h1 className="text-7xl font-black text-white drop-shadow-2xl">
-                    Reviews-Maker
+                    Terpologie
                 </h1>
                 <div className="absolute -inset-4 bg-white/10 blur-3xl -z-10"></div>
             </div>

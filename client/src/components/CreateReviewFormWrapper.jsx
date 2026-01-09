@@ -13,9 +13,10 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Eye } from 'lucide-react'
+import { Eye, X } from 'lucide-react'
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout'
 import { ResponsiveCreateReviewLayout } from './ResponsiveCreateReviewLayout'
+import ReviewPreview from './ReviewPreview'
 import OrchardPanel from './orchard/OrchardPanel'
 
 const CreateReviewFormWrapper = ({
@@ -38,6 +39,7 @@ const CreateReviewFormWrapper = ({
 }) => {
     const [currentSection, setCurrentSection] = useState(0)
     const [showOrchard, setShowOrchard] = useState(false)
+    const [showPreview, setShowPreview] = useState(false)
     const layout = useResponsiveLayout()
     const scrollContainerRef = useRef(null)
 
@@ -84,7 +86,7 @@ const CreateReviewFormWrapper = ({
             {/* Aperçu Button - Mobile Optimized */}
             <div className={`flex justify-end mb-4 ${layout.isMobile ? 'px-0' : 'px-0'}`}>
                 <button
-                    onClick={() => setShowOrchard(!showOrchard)}
+                    onClick={() => setShowPreview(!showPreview)}
                     className={`flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 text-purple-300 rounded-lg font-medium transition-all ${
                         layout.isMobile 
                             ? 'px-3 py-2 text-xs'
@@ -92,7 +94,7 @@ const CreateReviewFormWrapper = ({
                     }`}
                 >
                     <Eye className={layout.isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
-                    <span>{layout.isMobile ? 'Aperçu' : 'Aperçu'}</span>
+                    <span>Aperçu Complet</span>
                 </button>
             </div>
 
@@ -151,6 +153,41 @@ const CreateReviewFormWrapper = ({
                         </div>
                     )}
                 </motion.div>
+            </AnimatePresence>
+
+            {/* Review Preview Modal - Full Screen */}
+            <AnimatePresence>
+                {showPreview && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 bg-black/50"
+                        onClick={() => setShowPreview(false)}
+                    >
+                        <motion.div
+                            initial={{ y: '100%' }}
+                            animate={{ y: 0 }}
+                            exit={{ y: '100%' }}
+                            className="absolute inset-0 bg-gray-950 overflow-y-auto"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Close Button */}
+                            <button
+                                onClick={() => setShowPreview(false)}
+                                className="sticky top-0 right-0 z-10 m-4 p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+                            >
+                                <X className="w-5 h-5 text-white" />
+                            </button>
+
+                            {/* Preview Component */}
+                            <ReviewPreview
+                                formData={formData}
+                                photos={photos}
+                            />
+                        </motion.div>
+                    </motion.div>
+                )}
             </AnimatePresence>
 
             {/* Orchard Preview Panel - Mobile Optimized */}
