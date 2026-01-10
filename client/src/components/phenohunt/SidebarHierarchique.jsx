@@ -44,7 +44,9 @@ export default function SidebarHierarchique() {
 
     const handleDragStart = (e, cultivar) => {
         setDraggedItem(cultivar);
+        // Envoyer les données du cultivar en JSON
         e.dataTransfer.effectAllowed = 'copy';
+        e.dataTransfer.setData('application/json', JSON.stringify(cultivar));
     };
 
     const handleAddCultivarToCanvas = (cultivar) => {

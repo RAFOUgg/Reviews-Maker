@@ -41,7 +41,8 @@ export default function CanevasPhenoHunt() {
         duplicateNode,
         addEdge: addEdgeToStore,
         saveTree,
-        getActiveTree
+        getActiveTree,
+        addNode
     } = usePhenoHuntStore();
 
     const { fitView } = useReactFlow();
@@ -63,8 +64,17 @@ export default function CanevasPhenoHunt() {
     const updateStoreFromLocal = useCallback((localNodes, localEdges) => {
         if (!activeTreeId) return;
 
+        // Mettre à jour les positions des nœuds
         localNodes.forEach(node => {
-            updateNode(node.id, { position: node.position });
+            updateNode(node.id, { 
+                position: node.position,
+                data: node.data
+            });
+        });
+
+        // Sauvegarder les edges
+        localEdges.forEach(edge => {
+            // Les edges sont déjà gérés par le store
         });
     }, [activeTreeId, updateNode]);
 
@@ -111,6 +121,39 @@ export default function CanevasPhenoHunt() {
     const handlePaneClick = useCallback(() => {
         selectNode(null);
     }, [selectNode]);
+
+    // Handlers pour drag & drop depuis le sidebar
+    const handleDragOver = useCallback((e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+    }, []);
+
+    const handleDrop = useCallback((e) => {
+        e.preventDefault();
+        
+        try {
+            const cultivarData = e.dataTransfer.getData('application/json');
+            if (!cultivarData) return;
+
+            const cultivar = JSON.parse(cultivarData);
+            
+            if (!activeTreeId) {
+                alert('⚠️ Veuillez d\'abord sélectionner ou créer un arbre généalogique');
+                return;
+            }
+
+            // Ajouter le nœud au canvas
+            addNode({
+                cultivarId: cultivar.id,
+                cultivarName: cultivar.name,
+                position: { x: Math.random() * 400, y: Math.random() * 400 },
+                genetics: cultivar.genetics || {},
+                phenoCode: cultivar.phenoCode
+            });
+        } catch (error) {
+            console.error('Erreur lors du drop:', error);
+        }
+    }, [addNode, activeTreeId]);
 
     // Keyboard shortcuts
     useEffect(() => {
@@ -193,7 +236,10 @@ export default function CanevasPhenoHunt() {
             </div>
 
             {/* Canvas */}
-            <div className="flex-1 relative">
+            <div className="flex-1 relative"
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+            >
                 <ReactFlow
                     nodes={nodes}
                     edges={edges}
@@ -210,8 +256,11 @@ export default function CanevasPhenoHunt() {
                     <Background
                         color="#334155"
                         variant="dots"
-                        gap={16}
-                        size={1}
+                        gap={20}
+                        size={1.5}
+                        style={{
+                            backgroundColor: '#0f172a'
+                        }}
                     />
                     <Controls
                         showInteractive={false}
@@ -233,12 +282,16 @@ export default function CanevasPhenoHunt() {
                 {/* Drop Zone Hint */}
                 {nodes.length === 0 && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <div className="text-center text-slate-400">
+                        <div className="text-center text-slate-400 bg-slate-950/60 p-6 rounded-lg">
+                            <div className="text-4xl mb-3">🌳</div>
                             <p className="text-lg font-medium mb-2">
+                                Commencez votre arbre généalogique
+                            </p>
+                            <p className="text-sm text-slate-500 mb-3">
                                 Glissez des cultivars depuis la sidebar
                             </p>
-                            <p className="text-sm text-slate-500">
-                                Connectez les nœuds pour créer votre arbre généalogique
+                            <p className="text-xs text-slate-600">
+                                💡 Connectez ensuite les nœuds pour créer les relations
                             </p>
                         </div>
                     </div>

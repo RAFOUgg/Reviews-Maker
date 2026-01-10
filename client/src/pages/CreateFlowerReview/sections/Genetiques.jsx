@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Dna, Leaf, Info, X } from 'lucide-react'
+import { ReactFlowProvider } from 'reactflow'
 import LiquidCard from '../../../components/LiquidCard'
 import PhenoCodeGenerator from '../../../components/genetics/PhenoCodeGenerator'
 import SidebarHierarchique from '../../../components/phenohunt/SidebarHierarchique'
@@ -227,9 +228,11 @@ export default function Genetiques({ formData, handleChange }) {
 
                                 {/* Canvas Principal (3/4) */}
                                 <div className="lg:col-span-3 flex flex-col gap-4">
-                                    <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                                        <CanevasPhenoHunt />
-                                    </div>
+                                    <ReactFlowProvider>
+                                        <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                            <CanevasPhenoHunt />
+                                        </div>
+                                    </ReactFlowProvider>
                                     
                                     {/* Boutons d'action */}
                                     <div className="flex gap-3">
