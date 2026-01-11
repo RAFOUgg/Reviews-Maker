@@ -73,7 +73,7 @@ export default function Genetiques({ formData, handleChange }) {
                 reviewId: formData.id || null
             }
         }
-        
+
         const newTree = {
             id: Date.now(),
             name: `Arbre - ${currentFlowerData.data.cultivarName}`,
@@ -81,7 +81,7 @@ export default function Genetiques({ formData, handleChange }) {
             edges: [],
             createdAt: new Date().toISOString()
         }
-        
+
         setTrees([newTree])
         setActiveTreeTab(0)
         setShowInitialModal(false)
@@ -215,8 +215,8 @@ export default function Genetiques({ formData, handleChange }) {
                         <button
                             onClick={() => setActiveTab('cultivars')}
                             className={`flex-1 px-4 py-3 text-sm font-semibold transition-all ${activeTab === 'cultivars'
-                                    ? 'bg-purple-600 text-white border-b-2 border-purple-600'
-                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                ? 'bg-purple-600 text-white border-b-2 border-purple-600'
+                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                                 }`}
                         >
                             Cultivars
@@ -224,8 +224,8 @@ export default function Genetiques({ formData, handleChange }) {
                         <button
                             onClick={() => setActiveTab('projets')}
                             className={`flex-1 px-4 py-3 text-sm font-semibold transition-all ${activeTab === 'projets'
-                                    ? 'bg-purple-600 text-white border-b-2 border-purple-600'
-                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                ? 'bg-purple-600 text-white border-b-2 border-purple-600'
+                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                                 }`}
                         >
                             Projets
@@ -291,7 +291,7 @@ export default function Genetiques({ formData, handleChange }) {
                                                     )}
                                                 </div>
                                                 <div className="flex gap-1">
-                                                    <button 
+                                                    <button
                                                         onClick={(e) => {
                                                             e.stopPropagation()
                                                             // TODO: Open review edit
@@ -332,8 +332,8 @@ export default function Genetiques({ formData, handleChange }) {
                             <div
                                 key={tree.id}
                                 className={`group flex items-center gap-2 px-4 py-3 cursor-pointer transition-all ${activeTreeTab === index
-                                        ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-t-2 border-purple-500'
-                                        : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-t-2 border-purple-500'
+                                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
                                     }`}
                                 onClick={() => setActiveTreeTab(index)}
                             >
