@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Leaf, Info, X } from 'lucide-react'
+import { Leaf, Info, Plus, Trash2 } from 'lucide-react'
 import { ReactFlowProvider } from 'reactflow'
 import LiquidCard from '../../../components/LiquidCard'
 import PhenoCodeGenerator from '../../../components/genetics/PhenoCodeGenerator'
@@ -9,13 +9,17 @@ import useGeneticsStore from '../../../store/useGeneticsStore'
 import { useStore } from '../../../store/useStore'
 
 export default function Genetiques({ formData, handleChange }) {
-    const [showCanvasEditor, setShowCanvasEditor] = useState(!formData.genetics?.geneticsTreeData)
-    const [showAdvancedFields, setShowAdvancedFields] = useState(false)
-    const [selectedTreeId, setSelectedTreeId] = useState(null)
+    // Canvas is ALWAYS visible - no collapse state
+    const [showPhenoForm, setShowPhenoForm] = useState(false)
     const genetics = formData.genetics || {}
     const { user } = useStore()
     const geneticsStore = useGeneticsStore()
     const hasTree = genetics.geneticsTreeData
+
+    // Get currently selected node from tree (if any)
+    const selectedNode = geneticsStore.selectedNodeId 
+        ? geneticsStore.nodes.find(n => n.id === geneticsStore.selectedNodeId)
+        : null
 
     const handleSyncGeneticsTree = () => {
         if (geneticsStore.selectedTreeId && geneticsStore.nodes.length > 0) {
@@ -34,7 +38,6 @@ export default function Genetiques({ formData, handleChange }) {
                     },
                     variety: mainNode?.cultivarName || genetics.variety
                 })
-                setShowCanvasEditor(false)
             }
         }
     }
@@ -48,107 +51,178 @@ export default function Genetiques({ formData, handleChange }) {
         handleChange('genetics', newGenetics)
     }
 
-    const handleParentageChange = (field, value) => {
+    const handleNodeMetadata = (field, value) => {
+        if (!selectedNode) return
+        
+        // Update selected node's metadata
+        const updatedNodes = geneticsStore.nodes.map(n =>
+            n.id === selectedNode.id
+                ? { ...n, data: { ...n.data, [field]: value } }
+                : n
+        )
+        
         handleChange('genetics', {
             ...genetics,
-            parentage: {
-                ...(genetics.parentage || {}),
-                [field]: value
+            geneticsTreeData: {
+                ...genetics.geneticsTreeData,
+                nodes: updatedNodes
             }
         })
     }
 
+    const addGeneticRelation = (type) => {
+        if (!selectedNode) return
+        
+        const relations = selectedNode.data?.relations || []
+        const newRelations = [...relations, { type, date: new Date().toISOString() }]
+        handleNodeMetadata('relations', newRelations)
+    }
+
+    const removeGeneticRelation = (index) => {
+        if (!selectedNode) return
+        
+        const relations = selectedNode.data?.relations || []
+        const newRelations = relations.filter((_, i) => i !== index)
+        handleNodeMetadata('relations', newRelations)
+    }
+
     return (
-        <LiquidCard title="🧬 Génétiques & Généalogie" bordered>
+        <LiquidCard title="🧬 Génétiques & Arbre Généalogique" bordered>
             <div className="space-y-6">
-                <div className="text-xs text-gray-500 bg-white/5 rounded-lg p-3 flex items-start gap-2">
-                    <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                    <p>Gérez votre généalogie via l'arbre généalogique de votre bibliothèque personnelle. Les formulaires classiques sont optionnels pour les détails supplémentaires.</p>
+                <div className="text-xs text-gray-600 dark:text-gray-300 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-3 flex items-start gap-2 border border-purple-200 dark:border-purple-700">
+                    <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-purple-600 dark:text-purple-400" />
+                    <p><strong>Système d'arbre généalogique</strong> : Construisez votre généalogie via le canvas. Sélectionnez un cultivar pour ajouter ses métadonnées généalogiques (relations, tags, codes phénotypes).</p>
                 </div>
 
-                {/* SECTION PRINCIPALE: ARBRE GÉNÉALOGIQUE */}
-                {hasTree ? (
-                    <div className="p-5 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-2 border-purple-300 dark:border-purple-700 rounded-lg">
-                        <div className="flex items-start justify-between mb-3">
-                            <div>
-                                <p className="text-sm font-bold text-purple-900 dark:text-purple-100 flex items-center gap-2">
-                                    <span className="text-lg">✓</span> Arbre lié: {genetics.geneticsTreeData.treeName}
-                                </p>
-                                <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
-                                    {genetics.geneticsTreeData.projectType} • {genetics.geneticsTreeData.nodes?.length || 0} nœuds
-                                </p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    handleChange('genetics', { ...genetics, geneticsTreeData: null })
-                                    setShowCanvasEditor(true)
-                                }}
-                                className="text-sm px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all"
-                            >
-                                Modifier
-                            </button>
+                {/* SECTION PRINCIPALE: CANVAS GENETIQUE (TOUJOURS VISIBLE) */}
+                <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        <Leaf className="w-4 h-4" />
+                        Arbre Généalogique
+                        {hasTree && <span className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-900 dark:text-purple-100 px-2 py-1 rounded-full">✓ Lié</span>}
+                    </h3>
+                    
+                    <ReactFlowProvider>
+                        <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm" style={{ height: '500px' }}>
+                            <UnifiedGeneticsCanvas treeId={null} readOnly={false} />
                         </div>
-                    </div>
-                ) : (
-                    <div className="p-6 bg-gray-50 dark:bg-gray-900/30 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg text-center">
-                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
-                            Aucun arbre généalogique sélectionné
-                        </p>
+                    </ReactFlowProvider>
+
+                    {hasTree && (
                         <button
                             type="button"
-                            onClick={() => setShowCanvasEditor(!showCanvasEditor)}
-                            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-lg transition-all inline-flex items-center gap-2"
+                            onClick={() => {
+                                handleChange('genetics', { ...genetics, geneticsTreeData: null })
+                            }}
+                            className="w-full text-sm px-3 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-lg transition-all border border-red-200 dark:border-red-800"
                         >
-                            <span>🌳</span>
-                            {showCanvasEditor ? 'Fermer' : 'Ouvrir'} l'Arbre Généalogique
+                            ✗ Réinitialiser l'arbre
                         </button>
-                    </div>
-                )}
+                    )}
+                </div>
 
-                {/* CANVAS EDITOR */}
-                {showCanvasEditor && (
+                {/* SECTION: METADONNEES GENEALOGIQUES DU CULTIVAR SELECTIONNE */}
+                {selectedNode && (
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="p-4 bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
+                        className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-700 rounded-lg space-y-4"
                     >
-                        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Sélectionner un arbre généalogique</h3>
-                        <ReactFlowProvider>
-                            <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-4" style={{ height: '600px' }}>
-                                <UnifiedGeneticsCanvas treeId={selectedTreeId} readOnly={false} />
-                            </div>
-                        </ReactFlowProvider>
+                        <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                            Métadonnées : {selectedNode.data?.cultivarName || 'Cultivar'}
+                        </h4>
 
-                        <div className="flex gap-3">
-                            <button
-                                type="button"
-                                onClick={handleSyncGeneticsTree}
-                                disabled={!geneticsStore.selectedTreeId}
-                                className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all"
-                            >
-                                ✓ Valider la sélection
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setShowCanvasEditor(false)}
-                                className="px-4 py-2 bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-semibold rounded-lg transition-all"
-                            >
-                                ✗ Fermer
-                            </button>
+                        {/* Breeder & Type */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                                <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Breeder</label>
+                                <input
+                                    type="text"
+                                    value={selectedNode.data?.breeder || ''}
+                                    onChange={(e) => handleNodeMetadata('breeder', e.target.value)}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                    placeholder="DNA Genetics..."
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Type</label>
+                                <select
+                                    value={selectedNode.data?.type || ''}
+                                    onChange={(e) => handleNodeMetadata('type', e.target.value)}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="">Sélectionner...</option>
+                                    <option value="indica">🌙 Indica</option>
+                                    <option value="sativa">☀️ Sativa</option>
+                                    <option value="hybrid">⚖️ Hybride</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Genetic Relations Tags */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Relation Généalogique</label>
+                            <div className="flex flex-wrap gap-2">
+                                {['clone élite', 'seed run', 'selfed (S1)', 'BX1', 'BX2', 'polyhybride'].map(tag => (
+                                    <button
+                                        key={tag}
+                                        type="button"
+                                        onClick={() => addGeneticRelation(tag)}
+                                        className={`px-3 py-1.5 text-xs rounded-full transition-all ${
+                                            selectedNode.data?.relations?.some(r => r.type === tag)
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-blue-500 hover:text-white'
+                                        }`}
+                                    >
+                                        {tag}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {selectedNode.data?.relations && selectedNode.data.relations.length > 0 && (
+                                <div className="mt-3 space-y-2">
+                                    <p className="text-xs text-gray-600 dark:text-gray-400">Relations sélectionnées:</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedNode.data.relations.map((rel, idx) => (
+                                            <span
+                                                key={idx}
+                                                className="inline-flex items-center gap-2 px-2 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-900 dark:text-blue-100 text-xs rounded-full"
+                                            >
+                                                {rel.type}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeGeneticRelation(idx)}
+                                                    className="hover:text-red-600"
+                                                >
+                                                    <Trash2 className="w-3 h-3" />
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Pheno Code */}
+                        <div className="pt-3 border-t border-blue-200 dark:border-blue-700">
+                            <PhenoCodeGenerator
+                                value={selectedNode.data?.codePheno || ''}
+                                onChange={(code) => handleNodeMetadata('codePheno', code)}
+                                userId={user?.id}
+                            />
                         </div>
                     </motion.div>
                 )}
 
-                {/* SECTION OPTIONNELLE: CHAMPS COMPLÉMENTAIRES */}
-                <motion.div
-                    initial={false}
-                    animate={{ height: showAdvancedFields ? 'auto' : 0, opacity: showAdvancedFields ? 1 : 0 }}
-                    className="overflow-hidden"
-                >
-                    <div className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-6">
-                        {/* Quick info fields */}
+                {/* FALLBACK: Basic Genetics Fields (si pas d'arbre) */}
+                {!hasTree && (
+                    <div className="p-4 bg-gray-50 dark:bg-gray-900/30 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            Créez d'abord un arbre généalogique via le canvas ci-dessus pour ajouter des détails généalogiques.
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Breeder</label>
@@ -157,7 +231,7 @@ export default function Genetiques({ formData, handleChange }) {
                                     value={genetics.breeder || ''}
                                     onChange={(e) => handleGeneticsChange('breeder', e.target.value)}
                                     className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
-                                    placeholder="DNA Genetics, Barney's Farm..."
+                                    placeholder="DNA Genetics..."
                                 />
                             </div>
 
@@ -168,13 +242,10 @@ export default function Genetiques({ formData, handleChange }) {
                                     value={genetics.variety || ''}
                                     onChange={(e) => handleGeneticsChange('variety', e.target.value)}
                                     className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
-                                    placeholder="OG Kush, GSC..."
+                                    placeholder="OG Kush..."
                                 />
                             </div>
-                        </div>
 
-                        {/* Type & Ratio */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Type</label>
                                 <select
@@ -207,58 +278,8 @@ export default function Genetiques({ formData, handleChange }) {
                                 </div>
                             )}
                         </div>
-
-                        {/* Pheno & Clone codes */}
-                        <PhenoCodeGenerator
-                            value={genetics.codePheno || ''}
-                            onChange={(code) => handleGeneticsChange('codePheno', code)}
-                            userId={user?.id}
-                        />
-
-                        {/* Genealogy */}
-                        <div className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
-                            <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-                                🧬 Généalogie (Parents & Lignée)
-                            </h4>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <input
-                                    type="text"
-                                    value={genetics.parentage?.mother || ''}
-                                    onChange={(e) => handleParentageChange('mother', e.target.value)}
-                                    className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
-                                    placeholder="Parent Mère ♀"
-                                />
-
-                                <input
-                                    type="text"
-                                    value={genetics.parentage?.father || ''}
-                                    onChange={(e) => handleParentageChange('father', e.target.value)}
-                                    className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
-                                    placeholder="Parent Père ♂"
-                                />
-
-                                <textarea
-                                    value={genetics.parentage?.lineage || ''}
-                                    onChange={(e) => handleParentageChange('lineage', e.target.value)}
-                                    className="md:col-span-2 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 resize-none"
-                                    placeholder="Lignée complète (ex: Purple Haze x OG Kush F2)"
-                                    rows={2}
-                                />
-                            </div>
-                        </div>
                     </div>
-                </motion.div>
-
-                {/* Toggle Advanced */}
-                <button
-                    type="button"
-                    onClick={() => setShowAdvancedFields(!showAdvancedFields)}
-                    className="w-full py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg transition-all flex items-center justify-center gap-2"
-                >
-                    <span>{showAdvancedFields ? '▼' : '▶'}</span>
-                    {showAdvancedFields ? 'Masquer' : 'Afficher'} les détails supplémentaires
-                </button>
+                )}
             </div>
         </LiquidCard>
     )
