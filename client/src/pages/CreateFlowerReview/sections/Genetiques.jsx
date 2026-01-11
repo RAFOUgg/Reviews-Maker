@@ -17,7 +17,7 @@ export default function Genetiques({ formData, handleChange }) {
     const hasTree = genetics.geneticsTreeData
 
     // Get currently selected node from tree (if any)
-    const selectedNode = geneticsStore.selectedNodeId 
+    const selectedNode = geneticsStore.selectedNodeId
         ? geneticsStore.nodes.find(n => n.id === geneticsStore.selectedNodeId)
         : null
 
@@ -53,14 +53,14 @@ export default function Genetiques({ formData, handleChange }) {
 
     const handleNodeMetadata = (field, value) => {
         if (!selectedNode) return
-        
+
         // Update selected node's metadata
         const updatedNodes = geneticsStore.nodes.map(n =>
             n.id === selectedNode.id
                 ? { ...n, data: { ...n.data, [field]: value } }
                 : n
         )
-        
+
         handleChange('genetics', {
             ...genetics,
             geneticsTreeData: {
@@ -72,7 +72,7 @@ export default function Genetiques({ formData, handleChange }) {
 
     const addGeneticRelation = (type) => {
         if (!selectedNode) return
-        
+
         const relations = selectedNode.data?.relations || []
         const newRelations = [...relations, { type, date: new Date().toISOString() }]
         handleNodeMetadata('relations', newRelations)
@@ -80,7 +80,7 @@ export default function Genetiques({ formData, handleChange }) {
 
     const removeGeneticRelation = (index) => {
         if (!selectedNode) return
-        
+
         const relations = selectedNode.data?.relations || []
         const newRelations = relations.filter((_, i) => i !== index)
         handleNodeMetadata('relations', newRelations)
@@ -101,7 +101,7 @@ export default function Genetiques({ formData, handleChange }) {
                         Arbre Généalogique
                         {hasTree && <span className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-900 dark:text-purple-100 px-2 py-1 rounded-full">✓ Lié</span>}
                     </h3>
-                    
+
                     <ReactFlowProvider>
                         <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm" style={{ height: '500px' }}>
                             <UnifiedGeneticsCanvas treeId={null} readOnly={false} />
@@ -170,11 +170,10 @@ export default function Genetiques({ formData, handleChange }) {
                                         key={tag}
                                         type="button"
                                         onClick={() => addGeneticRelation(tag)}
-                                        className={`px-3 py-1.5 text-xs rounded-full transition-all ${
-                                            selectedNode.data?.relations?.some(r => r.type === tag)
+                                        className={`px-3 py-1.5 text-xs rounded-full transition-all ${selectedNode.data?.relations?.some(r => r.type === tag)
                                                 ? 'bg-blue-600 text-white'
                                                 : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-blue-500 hover:text-white'
-                                        }`}
+                                            }`}
                                     >
                                         {tag}
                                     </button>
