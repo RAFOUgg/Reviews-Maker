@@ -37,7 +37,10 @@ const LiquidInput = React.forwardRef(({
   return (
     <div className={fullWidth ? 'w-full' : ''}>
       {label && (
-        <label className="block text-sm font-medium mb-2 text-gray-800 dark:text-white">
+        <label
+          className="block text-sm font-medium mb-2"
+          style={{ color: 'rgba(17,24,39,0.95)' }}
+        >
           {label}
         </label>
       )}
