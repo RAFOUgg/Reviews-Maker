@@ -15,12 +15,12 @@ export default function Genetiques({ formData, handleChange }) {
         { id: 1, name: 'Arbre1', nodes: [], edges: [] },
         { id: 2, name: 'Arbre2', nodes: [], edges: [] }
     ])
-    
+
     const genetics = formData.genetics || {}
     const { user } = useStore()
     const geneticsStore = useGeneticsStore()
 
-    const selectedNode = geneticsStore.selectedNodeId 
+    const selectedNode = geneticsStore.selectedNodeId
         ? geneticsStore.nodes.find(n => n.id === geneticsStore.selectedNodeId)
         : null
 
@@ -50,21 +50,19 @@ export default function Genetiques({ formData, handleChange }) {
                     <div className="flex border-b border-gray-300 dark:border-gray-600 bg-white/50 dark:bg-black/20">
                         <button
                             onClick={() => setActiveTab('cultivars')}
-                            className={`flex-1 px-4 py-3 text-sm font-semibold transition-all ${
-                                activeTab === 'cultivars'
+                            className={`flex-1 px-4 py-3 text-sm font-semibold transition-all ${activeTab === 'cultivars'
                                     ? 'bg-purple-600 text-white border-b-2 border-purple-600'
                                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-                            }`}
+                                }`}
                         >
                             Cultivars
                         </button>
                         <button
                             onClick={() => setActiveTab('projets')}
-                            className={`flex-1 px-4 py-3 text-sm font-semibold transition-all ${
-                                activeTab === 'projets'
+                            className={`flex-1 px-4 py-3 text-sm font-semibold transition-all ${activeTab === 'projets'
                                     ? 'bg-purple-600 text-white border-b-2 border-purple-600'
                                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-                            }`}
+                                }`}
                         >
                             Projets
                         </button>
@@ -133,11 +131,10 @@ export default function Genetiques({ formData, handleChange }) {
                         {trees.map((tree, index) => (
                             <div
                                 key={tree.id}
-                                className={`group flex items-center gap-2 px-4 py-3 cursor-pointer transition-all ${
-                                    activeTreeTab === index
+                                className={`group flex items-center gap-2 px-4 py-3 cursor-pointer transition-all ${activeTreeTab === index
                                         ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-t-2 border-purple-500'
                                         : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                                }`}
+                                    }`}
                                 onClick={() => setActiveTreeTab(index)}
                             >
                                 <span className="text-sm font-medium">{tree.name}</span>
@@ -154,7 +151,7 @@ export default function Genetiques({ formData, handleChange }) {
                                 )}
                             </div>
                         ))}
-                        
+
                         <button
                             onClick={addNewTree}
                             className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-all"
@@ -176,8 +173,8 @@ export default function Genetiques({ formData, handleChange }) {
                     {/* Canvas Area */}
                     <div className="flex-1 relative bg-gradient-to-br from-slate-900 to-slate-800 dark:from-black dark:to-gray-950">
                         <ReactFlowProvider>
-                            <UnifiedGeneticsCanvas 
-                                treeId={trees[activeTreeTab]?.id} 
+                            <UnifiedGeneticsCanvas
+                                treeId={trees[activeTreeTab]?.id}
                                 readOnly={false}
                             />
                         </ReactFlowProvider>
@@ -257,7 +254,7 @@ export default function Genetiques({ formData, handleChange }) {
                         <div className="pt-3 border-t border-blue-200 dark:border-blue-700">
                             <PhenoCodeGenerator
                                 value={selectedNode.data?.codePheno || ''}
-                                onChange={(code) => {}}
+                                onChange={(code) => { }}
                                 userId={user?.id}
                             />
                         </div>
