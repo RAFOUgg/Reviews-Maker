@@ -268,3 +268,6 @@ function CellContextMenu({
 
     // Render via portal to avoid clipping from parent containers with overflow
     return createPortal(menuContent, document.body);
+}
+
+export default CellContextMenu;
