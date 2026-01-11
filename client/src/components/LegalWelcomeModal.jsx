@@ -158,7 +158,7 @@ const LegalWelcomeModal = ({ onAccept, onDeny }) => {
                             <button
                                 key={lang.code}
                                 onClick={() => handleLanguageChange(lang.i18nCode)}
-                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${language === lang.i18nCode ? ' text-white border-2 ' : 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600' }`}
+                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${language === lang.i18nCode ? ' text-white border-2 ' : 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600'}`}
                             >
                                 <span className="mr-2">{lang.flag}</span>
                                 {lang.label}

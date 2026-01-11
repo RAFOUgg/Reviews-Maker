@@ -249,7 +249,7 @@ export default function ProfileSettingsPage() {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold whitespace-nowrap transition-all ${isActive ? 'liquid-btn liquid-btn--accent' : 'text-gray-700 hover:bg-white/5' }`}>
+                                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold whitespace-nowrap transition-all ${isActive ? 'liquid-btn liquid-btn--accent' : 'text-gray-700 hover:bg-white/5'}`}>
                                     <Icon className="w-5 h-5" />
                                     {tab.label}
                                 </button>

@@ -127,7 +127,7 @@ export default function LibraryPage() {
                             <button
                                 key={f}
                                 onClick={() => setFilter(f)}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === f ? 'bg-white shadow-md scale-105' : 'text-gray-500 hover:text-gray-700 hover:bg-white/30' }`}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === f ? 'bg-white shadow-md scale-105' : 'text-gray-500 hover:text-gray-700 hover:bg-white/30'}`}
                             >
                                 {f === 'all' ? 'Toutes' : f === 'public' ? 'Publiques' : 'Privées'}
                             </button>
@@ -185,7 +185,7 @@ export default function LibraryPage() {
                                                 <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">
                                                     {review.holderName}
                                                 </h3>
-                                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${review.isPublic ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700/50 dark:text-gray-300' }`}>
+                                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${review.isPublic ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700/50 dark:text-gray-300'}`}>
                                                     {review.isPublic ? 'Publique' : 'Privée'}
                                                 </span>
                                                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold border bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400">

@@ -111,7 +111,7 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                                                 key={tag}
                                                 type="button"
                                                 onClick={() => togglePhotoTag(index, tag)}
-                                                className={`px-2 py-0.5 text-xs rounded-full transition-all font-medium ${(photo.tags || []).includes(tag) ? 'bg-gradient-to-r text-white shadow-md' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600' }`}
+                                                className={`px-2 py-0.5 text-xs rounded-full transition-all font-medium ${(photo.tags || []).includes(tag) ? 'bg-gradient-to-r text-white shadow-md' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
                                             >
                                                 {tag}
                                             </button>
