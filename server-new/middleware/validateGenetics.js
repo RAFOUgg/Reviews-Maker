@@ -183,7 +183,7 @@ const validateNodeUpdate = (req, res, next) => {
     next();
 };
 
-module.exports = {
+export {
     validateTreeCreation,
     validateTreeUpdate,
     validateNodeCreation,

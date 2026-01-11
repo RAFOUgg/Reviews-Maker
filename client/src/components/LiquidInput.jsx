@@ -37,14 +37,7 @@ const LiquidInput = React.forwardRef(({
   return (
     <div className={fullWidth ? 'w-full' : ''}>
       {label && (
-        <label
-          className={
-            "block text-sm font-medium mb-2 " +
-            (type === 'password'
-              ? 'text-gray-800'
-              : 'text-[var(--text-primary,#111827)]')
-          }
-        >
+        <label className="block text-sm font-medium mb-2 text-gray-800 dark:text-white">
           {label}
         </label>
       )}
