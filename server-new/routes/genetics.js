@@ -18,16 +18,18 @@
  * DELETE /api/genetics/edges/:edgeId   - Supprimer une arête
  */
 
-const express = require("express");
-const router = express.Router();
-const prisma = require("../prisma");
-const {
+import express from 'express'
+import { PrismaClient } from '@prisma/client'
+import {
     validateTreeCreation,
     validateTreeUpdate,
     validateNodeCreation,
     validateNodeUpdate,
     validateEdgeCreation
-} = require("../middleware/validateGenetics");
+} from '../middleware/validateGenetics.js'
+
+const router = express.Router()
+const prisma = new PrismaClient()
 
 // Middleware d'authentification requis
 const requireAuth = (req, res, next) => {
@@ -544,4 +546,4 @@ router.delete("/edges/:edgeId", requireAuth, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router
