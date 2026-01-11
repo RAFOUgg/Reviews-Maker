@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Leaf, Info, Plus, Trash2, Edit2 } from 'lucide-react'
+import { Leaf, Info, Plus, Trash2, Edit2, FileText, FolderTree, Upload } from 'lucide-react'
 import { ReactFlowProvider } from 'reactflow'
 import LiquidCard from '../../../components/LiquidCard'
 import PhenoCodeGenerator from '../../../components/genetics/PhenoCodeGenerator'
@@ -9,12 +9,12 @@ import useGeneticsStore from '../../../store/useGeneticsStore'
 import { useStore } from '../../../store/useStore'
 
 export default function Genetiques({ formData, handleChange }) {
-    const [activeTab, setActiveTab] = useState('cultivars') // 'cultivars' or 'projets'
-    const [activeTreeTab, setActiveTreeTab] = useState(0) // Index of active tree
-    const [trees, setTrees] = useState([
-        { id: 1, name: 'Arbre1', nodes: [], edges: [] },
-        { id: 2, name: 'Arbre2', nodes: [], edges: [] }
-    ])
+    const [showInitialModal, setShowInitialModal] = useState(true) // Modal de choix initial
+    const [activeTab, setActiveTab] = useState('cultivars')
+    const [activeTreeTab, setActiveTreeTab] = useState(0)
+    const [trees, setTrees] = useState([])
+    const [userReviews, setUserReviews] = useState([]) // Reviews fleurs de l'utilisateur
+    const [loading, setLoading] = useState(false)
 
     const genetics = formData.genetics || {}
     const { user } = useStore()
@@ -24,12 +24,81 @@ export default function Genetiques({ formData, handleChange }) {
         ? geneticsStore.nodes.find(n => n.id === geneticsStore.selectedNodeId)
         : null
 
+    // Charger les reviews fleurs de l'utilisateur
+    useEffect(() => {
+        if (user?.id) {
+            fetchUserFlowerReviews()
+        }
+    }, [user?.id])
+
+    const fetchUserFlowerReviews = async () => {
+        setLoading(true)
+        try {
+            const response = await fetch(`/api/reviews?userId=${user.id}&type=flower`)
+            if (response.ok) {
+                const data = await response.json()
+                setUserReviews(data.reviews || [])
+            }
+        } catch (error) {
+            console.error('Error fetching reviews:', error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    // Actions du modal initial
+    const handleCreateEmptyTree = () => {
+        const newTree = {
+            id: Date.now(),
+            name: 'Nouvel Arbre',
+            nodes: [],
+            edges: [],
+            createdAt: new Date().toISOString()
+        }
+        setTrees([newTree])
+        setActiveTreeTab(0)
+        setShowInitialModal(false)
+    }
+
+    const handleCreateTreeFromCurrentFlower = () => {
+        const currentFlowerData = {
+            id: `node-${Date.now()}`,
+            type: 'cultivar',
+            position: { x: 250, y: 200 },
+            data: {
+                cultivarName: formData.generalInfo?.commercialName || 'Nouvelle Fleur',
+                breeder: formData.genetics?.breeder || '',
+                type: formData.genetics?.type || '',
+                photoUrl: formData.generalInfo?.photos?.[0] || null,
+                reviewId: formData.id || null
+            }
+        }
+        
+        const newTree = {
+            id: Date.now(),
+            name: `Arbre - ${currentFlowerData.data.cultivarName}`,
+            nodes: [currentFlowerData],
+            edges: [],
+            createdAt: new Date().toISOString()
+        }
+        
+        setTrees([newTree])
+        setActiveTreeTab(0)
+        setShowInitialModal(false)
+    }
+
+    const handleImportToExistingTree = () => {
+        // TODO: Afficher modal de sélection d'arbre existant
+        setShowInitialModal(false)
+    }
+
     const addNewTree = () => {
         const newTree = {
-            id: trees.length + 1,
-            name: `Arbre${trees.length + 1}`,
+            id: Date.now(),
+            name: `Arbre ${trees.length + 1}`,
             nodes: [],
-            edges: []
+            edges: [],
+            createdAt: new Date().toISOString()
         }
         setTrees([...trees, newTree])
         setActiveTreeTab(trees.length)
@@ -41,8 +110,103 @@ export default function Genetiques({ formData, handleChange }) {
         setActiveTreeTab(Math.max(0, index - 1))
     }
 
+    // Drag & Drop handler pour reviews
+    const handleDragStart = (e, review) => {
+        e.dataTransfer.setData('reviewData', JSON.stringify(review))
+        e.dataTransfer.effectAllowed = 'copy'
+    }
+
     return (
         <LiquidCard title="🧬 Génétiques & Arbre Généalogique" bordered>
+            {/* MODAL INITIAL DE CHOIX */}
+            <AnimatePresence>
+                {showInitialModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+                        onClick={() => setShowInitialModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4"
+                        >
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                                <FolderTree className="w-6 h-6 text-purple-600" />
+                                Gestion de l'Arbre Généalogique
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                                Comment souhaitez-vous procéder avec cette fiche technique ?
+                            </p>
+
+                            <div className="space-y-3">
+                                <button
+                                    onClick={handleCreateEmptyTree}
+                                    className="w-full p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-2 border-purple-200 dark:border-purple-700 rounded-lg hover:border-purple-400 transition-all text-left group"
+                                >
+                                    <div className="flex items-start gap-3">
+                                        <div className="p-2 bg-purple-600 text-white rounded-lg group-hover:scale-110 transition-transform">
+                                            <Plus className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-gray-900 dark:text-gray-100">Créer un arbre vide</p>
+                                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                                Commencez un nouvel arbre généalogique depuis zéro
+                                            </p>
+                                        </div>
+                                    </div>
+                                </button>
+
+                                <button
+                                    onClick={handleCreateTreeFromCurrentFlower}
+                                    className="w-full p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg hover:border-blue-400 transition-all text-left group"
+                                >
+                                    <div className="flex items-start gap-3">
+                                        <div className="p-2 bg-blue-600 text-white rounded-lg group-hover:scale-110 transition-transform">
+                                            <Leaf className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-gray-900 dark:text-gray-100">Créer un arbre à partir de cette fleur</p>
+                                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                                Utilisez cette fiche comme point de départ de l'arbre
+                                            </p>
+                                        </div>
+                                    </div>
+                                </button>
+
+                                <button
+                                    onClick={handleImportToExistingTree}
+                                    className="w-full p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-200 dark:border-green-700 rounded-lg hover:border-green-400 transition-all text-left group"
+                                >
+                                    <div className="flex items-start gap-3">
+                                        <div className="p-2 bg-green-600 text-white rounded-lg group-hover:scale-110 transition-transform">
+                                            <Upload className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-gray-900 dark:text-gray-100">Importer cette fleur à un arbre</p>
+                                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                                Ajoutez cette fiche à un arbre existant
+                                            </p>
+                                        </div>
+                                    </div>
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={() => setShowInitialModal(false)}
+                                className="w-full mt-4 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+                            >
+                                Annuler
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <div className="flex gap-4 h-[700px]">
                 {/* SIDEBAR GAUCHE */}
                 <div className="w-80 flex-shrink-0 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/50 dark:to-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden flex flex-col">
@@ -79,31 +243,67 @@ export default function Genetiques({ formData, handleChange }) {
                                     exit={{ opacity: 0, x: 20 }}
                                     className="space-y-3"
                                 >
-                                    {/* Exemple de cultivar card */}
-                                    {[1, 2].map((item) => (
-                                        <div
-                                            key={item}
-                                            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center gap-3 cursor-move hover:shadow-md transition-shadow"
-                                            draggable
-                                        >
-                                            <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg flex items-center justify-center overflow-hidden">
-                                                <span className="text-3xl">📷</span>
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
-                                                    ----
-                                                </p>
-                                            </div>
-                                            <div className="flex gap-1">
-                                                <button className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
-                                                    <Edit2 className="w-3.5 h-3.5 text-blue-600" />
-                                                </button>
-                                                <button className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
-                                                    <Trash2 className="w-3.5 h-3.5 text-red-600" />
-                                                </button>
-                                            </div>
+                                    {loading ? (
+                                        <div className="text-center py-8">
+                                            <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full mx-auto"></div>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">Chargement...</p>
                                         </div>
-                                    ))}
+                                    ) : userReviews.length === 0 ? (
+                                        <div className="text-center py-8">
+                                            <FileText className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                Aucune fiche technique fleur
+                                            </p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                                                Créez une fiche pour la voir ici
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        userReviews.map((review) => (
+                                            <div
+                                                key={review.id}
+                                                draggable
+                                                onDragStart={(e) => handleDragStart(e, review)}
+                                                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center gap-3 cursor-move hover:shadow-md hover:border-purple-400 dark:hover:border-purple-600 transition-all"
+                                            >
+                                                <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg flex items-center justify-center overflow-hidden">
+                                                    {review.generalInfo?.photos?.[0] ? (
+                                                        <img
+                                                            src={review.generalInfo.photos[0]}
+                                                            alt={review.generalInfo.commercialName}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <Leaf className="w-8 h-8 text-purple-600" />
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                                                        {review.generalInfo?.commercialName || 'Sans nom'}
+                                                    </p>
+                                                    <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                                                        {review.genetics?.variety || 'Variété non définie'}
+                                                    </p>
+                                                    {review.genetics?.breeder && (
+                                                        <p className="text-xs text-gray-500 dark:text-gray-500 truncate">
+                                                            {review.genetics.breeder}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div className="flex gap-1">
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            // TODO: Open review edit
+                                                        }}
+                                                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                                                    >
+                                                        <Edit2 className="w-3.5 h-3.5 text-blue-600" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
                                 </motion.div>
                             )}
 
