@@ -121,7 +121,7 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                             ))}
                         </div>
                         {photos.length < 4 && (
-                            <label className="flex items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover: hover: dark:hover: transition-all">
+                            <label className="flex items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-400 dark:hover:border-blue-400 bg-white/50 dark:bg-gray-800/30 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all">
                                 <Camera className="w-6 h-6 text-gray-400" />
                                 <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                     Ajouter une photo ({photos.length}/4)

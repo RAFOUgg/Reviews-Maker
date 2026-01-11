@@ -237,7 +237,7 @@ const LegalWelcomeModal = ({ onAccept, onDeny }) => {
                     <button
                         onClick={handleAccept}
                         disabled={!ageConfirmed || !consentGiven}
-                        className="flex-1 px-6 py-3 hover: disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white rounded-lg font-medium transition"
+                        className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white rounded-lg font-medium transition"
                     >
                         {t.actions?.continue || 'Continuer'}
                     </button>

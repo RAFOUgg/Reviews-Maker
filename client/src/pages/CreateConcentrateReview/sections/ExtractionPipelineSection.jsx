@@ -165,7 +165,7 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
 
                             <button
                                 onClick={addPurificationStep}
-                                className="w-full py-3 border-2 border-dashed border-white/30 rounded-lg hover:border-cyan-500 hover: transition-all flex items-center justify-center gap-2"
+                                className="w-full py-3 border-2 border-dashed border-white/30 rounded-lg hover:border-cyan-500 hover:bg-cyan-500/10 transition-all flex items-center justify-center gap-2"
                             >
                                 <Plus className="w-5 h-5" />
                                 Ajouter étape de purification

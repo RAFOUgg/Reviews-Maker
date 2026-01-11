@@ -899,7 +899,7 @@ export default function EditReviewPage() {
                         </div>
                         <button
                             onClick={() => setShowOrchardStudio(true)}
-                            className={`px-4 py-2 rounded-xl font-medium shadow-lg transition-all flex items-center gap-2 ${formData.orchardPreset ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500' : 'bg-gradient-to-r hover: hover:'} text-white`}
+                            className={`px-4 py-2 rounded-xl font-medium shadow-lg transition-all flex items-center gap-2 ${formData.orchardPreset ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500' : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500'} text-white`}
                         >
                             {formData.orchardPreset ? '✅ Aperçu défini' : '🎨 Définir aperçu'}
                         </button>

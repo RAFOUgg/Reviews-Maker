@@ -127,7 +127,7 @@ export default function LibraryPage() {
                             <button
                                 key={f}
                                 onClick={() => setFilter(f)}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === f ? 'bg-white shadow-md scale-105' : 'text-gray-500 hover: hover:bg-white/30' }`}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === f ? 'bg-white shadow-md scale-105' : 'text-gray-500 hover:text-gray-700 hover:bg-white/30' }`}
                             >
                                 {f === 'all' ? 'Toutes' : f === 'public' ? 'Publiques' : 'Privées'}
                             </button>
@@ -146,7 +146,7 @@ export default function LibraryPage() {
                         className="text-center py-16 bg-white/40 dark:bg-black/20 backdrop-blur-md rounded-2xl border border-white/20 shadow-xl"
                     >
                         <div className="max-w-sm mx-auto px-6">
-                            <div className="w-20 h-20 mx-auto dark: rounded-full flex items-center justify-center mb-6">
+                            <div className="w-20 h-20 mx-auto dark:bg-gray-700/40 bg-gray-100 rounded-full flex items-center justify-center mb-6">
                                 <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
@@ -177,18 +177,18 @@ export default function LibraryPage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95 }}
                                     transition={{ delay: index * 0.05 }}
-                                    className="group relative bg-white/60 dark:bg-gray-800/40 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/20 hover:shadow-xl hover:/30 transition-all hover:-translate-y-1"
+                                    className="group relative bg-white/60 dark:bg-gray-800/40 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/20 hover:shadow-xl hover:bg-white/80 transition-all hover:-translate-y-1"
                                 >
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-3 mb-2">
-                                                <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover: transition-colors">
+                                                <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">
                                                     {review.holderName}
                                                 </h3>
                                                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${review.isPublic ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700/50 dark:text-gray-300' }`}>
                                                     {review.isPublic ? 'Publique' : 'Privée'}
                                                 </span>
-                                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold border dark: dark:">
+                                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold border bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400">
                                                     {review.type}
                                                 </span>
                                             </div>

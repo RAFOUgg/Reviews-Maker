@@ -471,7 +471,7 @@ export default function ProfileSettingsPage() {
                                     Authentification à deux facteurs (2FA)
                                 </h3>
                                 <p className="text-gray-700 mb-4">Statut : {profile?.totpEnabled ? '✅ Activée' : '❌ Désactivée'}</p>
-                                <button className="px-6 py-3 text-white rounded-xl hover: transition-all font-bold">
+                                <button className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all font-bold">
                                     {profile?.totpEnabled ? 'Désactiver 2FA' : 'Activer 2FA'}
                                 </button>
                             </div>
@@ -479,7 +479,7 @@ export default function ProfileSettingsPage() {
                             <div className="rounded-2xl p-6 border-2">
                                 <h3 className="text-lg font-bold text-gray-900 mb-4">Sessions Actives</h3>
                                 <p className="text-gray-700 mb-4">Gérez les appareils connectés à votre compte</p>
-                                <button className="px-6 py-3 text-white rounded-xl hover: transition-all font-bold">
+                                <button className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl transition-all font-bold">
                                     Voir les sessions
                                 </button>
                             </div>
@@ -512,7 +512,7 @@ export default function ProfileSettingsPage() {
                                         setLanguage(e.target.value)
                                         changeLanguage(e.target.value)
                                     }}
-                                    className="w-full md:w-1/2 px-4 py-3 rounded-xl border-2 border-gray-300 focus: focus:ring-2 focus: transition-all text-gray-900 font-medium"
+                                    className="w-full md:w-1/2 px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900 font-medium"
                                 >
                                     {SUPPORTED_LANGUAGES.map((lang) => (
                                         <option key={lang.code} value={lang.code}>
@@ -529,15 +529,15 @@ export default function ProfileSettingsPage() {
                                     Notifications
                                 </h3>
                                 <div className="space-y-3">
-                                    <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover: transition-all cursor-pointer">
+                                    <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
                                         <span className="text-gray-900 font-medium">Notifications par email</span>
                                         <input type="checkbox" className="w-6 h-6" defaultChecked />
                                     </label>
-                                    <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover: transition-all cursor-pointer">
+                                    <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
                                         <span className="text-gray-900 font-medium">Nouveaux likes sur mes reviews</span>
                                         <input type="checkbox" className="w-6 h-6" defaultChecked />
                                     </label>
-                                    <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover: transition-all cursor-pointer">
+                                    <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
                                         <span className="text-gray-900 font-medium">Nouveaux commentaires</span>
                                         <input type="checkbox" className="w-6 h-6" />
                                     </label>

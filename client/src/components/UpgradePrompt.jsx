@@ -52,7 +52,7 @@ export default function UpgradePrompt({ feature, message, inline = false }) {
                                 <Link
                                     key={planType}
                                     to={`/settings/subscription?upgrade=${planType}`}
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r hover: hover: text-white rounded-lg font-semibold transition-all hover:scale-105 shadow-lg"
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-lg font-semibold transition-all hover:scale-105 shadow-lg"
                                 >
                                     <span>Passer à {plan.name}</span>
                                     <span className="text-sm opacity-90">{plan.price}€/mois</span>
@@ -62,7 +62,7 @@ export default function UpgradePrompt({ feature, message, inline = false }) {
 
                         <Link
                             to="/choose-account"
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border-2 dark: dark: rounded-lg font-semibold hover: dark:hover: transition-all"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
                         >
                             <span>Comparer les plans</span>
                         </Link>

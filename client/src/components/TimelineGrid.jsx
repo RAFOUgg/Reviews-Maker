@@ -261,7 +261,7 @@ export default function TimelineGrid({
                                     onClick={() => handleCellClick(cell.timestamp, index)}
                                     onMouseEnter={() => setHoveredCell(cell)}
                                     onMouseLeave={() => setHoveredCell(null)}
-                                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 rounded-sm cursor-pointer transition-all hover:ring-1 sm:hover:ring-2 hover: hover:scale-110 sm:hover:scale-125 ${getCellColor(cell.timestamp)} ${selectedCell === cell.timestamp ? 'ring-1 sm:ring-2 scale-110 sm:scale-125' : ''}`}
+                                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 rounded-sm cursor-pointer transition-all hover:ring-2 hover:ring-cyan-400 hover:scale-110 sm:hover:scale-125 ${getCellColor(cell.timestamp)} ${selectedCell === cell.timestamp ? 'ring-2 ring-cyan-500 scale-110 sm:scale-125' : ''}`}
                                     title={`${cell.label} - ${cell.date}`}
                                 />
                             ))}
