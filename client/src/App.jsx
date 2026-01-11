@@ -44,6 +44,7 @@ const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
 const PaymentPage = lazy(() => import('./pages/PaymentPage'))
 const PreferencesPage = lazy(() => import('./pages/PreferencesPage'))
 const PhenoHuntPage = lazy(() => import('./pages/PhenoHuntPage'))
+const GeneticsManagementPage = lazy(() => import('./pages/GeneticsManagementPage'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -137,6 +138,7 @@ function App() {
                                     <Route path="/preferences" element={<PreferencesPage />} />
                                     <Route path="/account" element={<SettingsPage />} />
                                     <Route path="/phenohunt" element={<PhenoHuntPage />} />
+                                    <Route path="/genetics" element={<GeneticsManagementPage />} />
 
                                     <Route path="/choose-account" element={<AccountChoicePage />} />
                                     <Route path="/profile-settings" element={<ProfileSettingsPage />} />

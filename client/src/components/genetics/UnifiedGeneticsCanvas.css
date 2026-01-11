@@ -1,0 +1,307 @@
+/* UnifiedGeneticsCanvas Component Styles */
+
+.unified-genetics-canvas {
+    width: 100%;
+    height: 100%;
+    background: #f5f5f5;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.unified-genetics-canvas .react-flow__pane {
+    background: linear-gradient(45deg, #fafafa 25%, transparent 25%, transparent 75%, #fafafa 75%, #fafafa),
+        linear-gradient(45deg, #fafafa 25%, transparent 25%, transparent 75%, #fafafa 75%, #fafafa);
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+    background-color: #f0f0f0;
+}
+
+/* Canvas Loading State */
+.canvas-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    gap: 16px;
+}
+
+.canvas-loading .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #e0e0e0;
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.canvas-loading p {
+    color: #666;
+    font-size: 14px;
+}
+
+/* Canvas Error State */
+.canvas-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: #fef2f2;
+    gap: 16px;
+    color: #991b1b;
+}
+
+.canvas-error p {
+    font-size: 14px;
+}
+
+.canvas-error button {
+    padding: 8px 16px;
+    background: #991b1b;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.canvas-error button:hover {
+    background: #7f1d1d;
+}
+
+/* Toolbar Panel */
+.canvas-toolbar {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+.canvas-toolbar-content {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.canvas-toolbar-content button {
+    padding: 6px 12px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.canvas-toolbar-content button:hover {
+    background: #4f46e5;
+}
+
+.canvas-toolbar-content button:active {
+    transform: scale(0.98);
+}
+
+.canvas-toolbar-content button.btn-secondary {
+    background: #6b7280;
+}
+
+.canvas-toolbar-content button.btn-secondary:hover {
+    background: #4b5563;
+}
+
+/* Node Info Panel */
+.node-info-panel {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-width: 250px;
+    z-index: 10;
+}
+
+.info-content h4 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    word-break: break-word;
+}
+
+.info-content p {
+    margin: 4px 0;
+    font-size: 12px;
+    color: #666;
+}
+
+.info-content p.notes {
+    background: #f3f4f6;
+    padding: 6px;
+    border-radius: 4px;
+    margin-top: 8px;
+    font-style: italic;
+}
+
+.info-content .btn-edit {
+    width: 100%;
+    padding: 6px;
+    margin-top: 8px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.info-content .btn-edit:hover {
+    background: #4f46e5;
+}
+
+/* React Flow Overrides */
+.unified-genetics-canvas .react-flow__node {
+    border-radius: 8px;
+    border-width: 2px;
+    transition: all 0.2s ease;
+}
+
+.unified-genetics-canvas .react-flow__node:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.unified-genetics-canvas .react-flow__node.selected {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+    border-color: #6366f1;
+}
+
+.unified-genetics-canvas .react-flow__edge {
+    stroke-width: 2;
+}
+
+.unified-genetics-canvas .react-flow__edge.selected {
+    stroke: #6366f1;
+    stroke-width: 3;
+}
+
+.unified-genetics-canvas .react-flow__edge-path {
+    stroke: #999;
+}
+
+.unified-genetics-canvas .react-flow__edge-label {
+    background: white;
+    color: #666;
+    font-size: 11px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    border: 1px solid #ddd;
+}
+
+/* Controls Overrides */
+.unified-genetics-canvas .react-flow__controls {
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    border: none;
+}
+
+.unified-genetics-canvas .react-flow__controls button {
+    background: white;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.unified-genetics-canvas .react-flow__controls button:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.unified-genetics-canvas .react-flow__controls button:active {
+    background: #e5e7eb;
+}
+
+/* MiniMap Overrides */
+.unified-genetics-canvas .react-flow__minimap {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Context Menus */
+.context-menu {
+    position: fixed;
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 160px;
+}
+
+.context-menu-item {
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #374151;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    transition: background 0.2s;
+}
+
+.context-menu-item:first-child {
+    border-radius: 6px 6px 0 0;
+}
+
+.context-menu-item:last-child {
+    border-radius: 0 0 6px 6px;
+}
+
+.context-menu-item:hover {
+    background: #f3f4f6;
+}
+
+.context-menu-item.danger {
+    color: #dc2626;
+}
+
+.context-menu-item.danger:hover {
+    background: #fee2e2;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .node-info-panel {
+        max-width: 180px;
+        padding: 8px;
+    }
+
+    .canvas-toolbar {
+        padding: 8px;
+    }
+
+    .canvas-toolbar-content {
+        gap: 4px;
+    }
+
+    .canvas-toolbar-content button {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+}

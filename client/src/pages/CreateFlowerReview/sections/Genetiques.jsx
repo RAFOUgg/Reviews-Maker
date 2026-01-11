@@ -4,41 +4,41 @@ import { Dna, Leaf, Info, X } from 'lucide-react'
 import { ReactFlowProvider } from 'reactflow'
 import LiquidCard from '../../../components/LiquidCard'
 import PhenoCodeGenerator from '../../../components/genetics/PhenoCodeGenerator'
-import SidebarHierarchique from '../../../components/phenohunt/SidebarHierarchique'
-import CanevasPhenoHunt from '../../../components/phenohunt/CanevasPhenoHunt'
-import { usePhenoHuntStore } from '../../../store/index'
+import UnifiedGeneticsCanvas from '../../../components/genetics/UnifiedGeneticsCanvas'
+import useGeneticsStore from '../../../store/useGeneticsStore'
 import { useStore } from '../../../store/useStore'
 
 export default function Genetiques({ formData, handleChange }) {
-    const [showPhenoHunt, setShowPhenoHunt] = useState(false)
+    const [showGeneticsCanvas, setShowGeneticsCanvas] = useState(false)
+    const [selectedTreeId, setSelectedTreeId] = useState(null)
     const genetics = formData.genetics || {}
     const { user } = useStore()
     
-    // PhenoHunt store
-    const {
-        trees,
-        activeTreeId,
-        nodes,
-        edges,
-        cultivars,
-        setActiveTree,
-        getActiveTreeData,
-        syncGeneticFormData
-    } = usePhenoHuntStore()
+    // Genetics store
+    const geneticsStore = useGeneticsStore()
 
-    // Synchroniser la sélection PhenoHunt avec le formulaire
-    const handleSyncPhenoHunt = () => {
-        if (activeTreeId) {
-            const activeTree = getActiveTreeData()
-            if (activeTree) {
+    // Synchroniser la sélection du canvas avec le formulaire
+    const handleSyncGeneticsTree = () => {
+        if (geneticsStore.selectedTreeId && geneticsStore.nodes.length > 0) {
+            // Récupérer les données du tree
+            const selectedTree = geneticsStore.trees.find(t => t.id === geneticsStore.selectedTreeId)
+            if (selectedTree) {
+                // Récupérer le cultivar principal (premier nœud)
+                const mainNode = geneticsStore.nodes[0]
                 handleChange('genetics', {
                     ...genetics,
-                    phenoHuntTreeId: activeTreeId,
-                    phenoHuntData: activeTree,
-                    // Récupérer le cultivar principal de l'arbre (premier nœud)
-                    variety: activeTree.nodes?.[0]?.label || genetics.variety
+                    geneticsTreeId: geneticsStore.selectedTreeId,
+                    geneticsTreeData: {
+                        treeId: selectedTree.id,
+                        treeName: selectedTree.name,
+                        projectType: selectedTree.projectType,
+                        nodes: geneticsStore.nodes,
+                        edges: geneticsStore.edges
+                    },
+                    // Récupérer le cultivar principal de l'arbre
+                    variety: mainNode?.cultivarName || genetics.variety
                 })
-                setShowPhenoHunt(false)
+                setShowGeneticsCanvas(false)
             }
         }
     }
@@ -51,16 +51,6 @@ export default function Genetiques({ formData, handleChange }) {
             ...(field === 'indicaRatio' && { sativaRatio: 100 - (value || 0) })
         }
         handleChange('genetics', newGenetics)
-    }
-
-    const handleParentageChange = (field, value) => {
-        handleChange('genetics', {
-            ...genetics,
-            parentage: {
-                ...(genetics.parentage || {}),
-                [field]: value
-            }
-        })
     }
 
     return (
@@ -87,20 +77,184 @@ export default function Genetiques({ formData, handleChange }) {
                             onChange={(e) => handleGeneticsChange('breeder', e.target.value)}
                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
                             placeholder="Ex: DNA Genetics, Barney's Farm..."
-                            list="breeder-suggestions"
                         />
-                        <datalist id="breeder-suggestions">
-                            {(cultivars || [])
-                                .map(c => c.breeder)
-                                .filter((v, i, a) => v && a.indexOf(v) === i)
-                                .map(breeder => (
-                                    <option key={breeder} value={breeder} />
-                                ))
-                            }
-                        </datalist>
                     </div>
 
                     {/* Variété */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Variété / Cultivar
+                        </label>
+                        <input
+                            type="text"
+                            value={genetics.variety || ''}
+                            onChange={(e) => handleGeneticsChange('variety', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
+                            placeholder="Ex: OG Kush, Girl Scout Cookies..."
+                        />
+                    </div>
+
+                    {/* Type génétique */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Type
+                        </label>
+                        <select
+                            value={genetics.type || ''}
+                            onChange={(e) => handleGeneticsChange('type', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
+                        >
+                            <option value="">Sélectionner...</option>
+                            <option value="indica">🌙 Indica</option>
+                            <option value="sativa">☀️ Sativa</option>
+                            <option value="hybrid">⚖️ Hybride</option>
+                            <option value="cbd-dominant">💊 CBD-dominant</option>
+                        </select>
+                    </div>
+
+                    {/* Ratios Indica/Sativa si Hybride */}
+                    {genetics.type === 'hybrid' && (
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Indica {genetics.indicaRatio || 50}% / Sativa {genetics.sativaRatio || 50}%
+                            </label>
+                            <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                step="5"
+                                value={genetics.indicaRatio || 50}
+                                onChange={(e) => handleGeneticsChange('indicaRatio', parseInt(e.target.value))}
+                                className="w-full h-2 bg-gray-300 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                            />
+                        </div>
+                    )}
+
+                    {/* Code phénotype */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Code Phénotype
+                            <span className="text-xs text-gray-500 ml-2">(ex: Pheno #3)</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={genetics.phenotype || ''}
+                            onChange={(e) => handleGeneticsChange('phenotype', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
+                            placeholder="Ex: Pheno #3, Selection A"
+                        />
+                    </div>
+
+                    {/* Code clone */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Code Clone
+                            <span className="text-xs text-gray-500 ml-2">(si applicable)</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={genetics.cloneCode || ''}
+                            onChange={(e) => handleGeneticsChange('cloneCode', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
+                            placeholder="Ex: Clone-2024-001"
+                        />
+                    </div>
+                </div>
+
+                {/* Code Phénotype Auto-Incrémenté CDC */}
+                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <PhenoCodeGenerator
+                        value={genetics.codePheno || ''}
+                        onChange={(code) => handleGeneticsChange('codePheno', code)}
+                        userId={user?.id}
+                    />
+                </div>
+
+                {/* Arbre Généalogique / Genetics Canvas */}
+                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                        type="button"
+                        onClick={() => setShowGeneticsCanvas(!showGeneticsCanvas)}
+                        className="w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-lg transition-all flex items-center justify-between group"
+                    >
+                        <span className="flex items-center gap-2">
+                            <span className="text-xl">🌳</span>
+                            Arbre Généalogique - Bibliothèque Personnelle
+                        </span>
+                        <span className="transform transition-transform group-hover:translate-x-1">
+                            {showGeneticsCanvas ? '▼' : '▶'}
+                        </span>
+                    </button>
+
+                    {showGeneticsCanvas && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mt-4 p-6 bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
+                        >
+                            {/* Canvas pour sélectionner un arbre */}
+                            <div className="space-y-4">
+                                <div className="text-sm text-gray-600 dark:text-gray-400">
+                                    Sélectionnez un arbre généalogique de votre bibliothèque pour lier à cette review.
+                                </div>
+                                
+                                <ReactFlowProvider>
+                                    <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden" style={{ height: '600px' }}>
+                                        <UnifiedGeneticsCanvas treeId={selectedTreeId} readOnly={false} />
+                                    </div>
+                                </ReactFlowProvider>
+                                    
+                                {/* Boutons d'action */}
+                                <div className="flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={handleSyncGeneticsTree}
+                                        disabled={!geneticsStore.selectedTreeId}
+                                        className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all"
+                                    >
+                                        ✓ Valider la sélection
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowGeneticsCanvas(false)}
+                                        className="px-4 py-2 bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-semibold rounded-lg transition-all"
+                                    >
+                                        ✗ Fermer
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </div>
+
+                {/* Affichage de l'arbre sélectionné */}
+                {genetics.geneticsTreeData && (
+                    <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <p className="text-sm font-semibold text-purple-900 dark:text-purple-100">
+                                    📌 Arbre lié: {genetics.geneticsTreeData.treeName}
+                                </p>
+                                <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
+                                    Type: {genetics.geneticsTreeData.projectType} | Nœuds: {genetics.geneticsTreeData.nodes?.length || 0}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => handleChange('genetics', { ...genetics, geneticsTreeData: null })}
+                                className="text-purple-600 hover:text-purple-900 dark:hover:text-purple-300"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </LiquidCard>
+    )
+}
+
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             Variété / Cultivar

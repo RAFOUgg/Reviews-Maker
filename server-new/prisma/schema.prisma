@@ -88,6 +88,7 @@ model User {
   reportsSubmitted    Report[] @relation("Reporter")
   reportsReceived     Report[] @relation("ReportedUser")
   cultivars           Cultivar[]
+  geneticTrees        GeneticTree[] @relation("userGeneticTrees")
   savedTemplates      SavedTemplate[]
   watermarks          Watermark[]
   savedData           SavedData[]
@@ -528,6 +529,9 @@ model Cultivar {
   
   // Notes personnelles
   notes       String?  // Notes privées de l'utilisateur
+  
+  // Relations
+  genNodes    GenNode[] // Nœuds dans les arbres généalogiques
   
   // Statistiques d'utilisation
   useCount    Int      @default(0) // Nombre de reviews utilisant ce cultivar
@@ -1239,4 +1243,92 @@ model UserPreset {
   @@index([userId, type])
   @@index([userId, pipelineType])
   @@map("user_presets")
+}
+
+// ==================== GENETICS/PHENOHUNT SYSTEM ====================
+
+// Modèle GeneticTree (arbres généalogiques complets)
+model GeneticTree {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation("userGeneticTrees", fields: [userId], references: [id], onDelete: Cascade)
+  name         String   // Nom du projet/arbre
+  description  String?  // Description optionnelle
+  projectType  String   @default("phenohunt") // "phenohunt", "selection", "crossing", "hunt"
+  isPublic     Boolean  @default(false)
+  shareCode    String?  @unique // Code unique pour partage public
+  sharedWith   String?  // JSON: array of userId who have access
+  
+  // Relations
+  nodes        GenNode[]
+  edges        GenEdge[]
+  
+  // Metadata
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([projectType])
+  @@index([isPublic])
+  @@map("genetic_trees")
+}
+
+// Modèle GenNode (nœuds du graphe généalogique)
+model GenNode {
+  id           String   @id @default(uuid())
+  treeId       String
+  tree         GeneticTree @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  
+  // Données du cultivar
+  cultivarId   String?  // Référence optionnelle à un Cultivar existant
+  cultivar     Cultivar? @relation(fields: [cultivarId], references: [id], onDelete: SetNull)
+  cultivarName String   // Nom du cultivar (copie pour performance)
+  
+  // Visualisation
+  position     String   // JSON: {x: number, y: number}
+  color        String   @default("#FF6B9D") // Couleur du nœud
+  image        String?  // URL image du cultivar
+  
+  // Données génétiques
+  genetics     String?  // JSON: {breeder, type, ratio, notes}
+  notes        String?  // Notes supplémentaires
+  
+  // Relations sortantes et entrantes
+  childEdges   GenEdge[] @relation("parentNode")
+  parentEdges  GenEdge[] @relation("childNode")
+  
+  // Metadata
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([treeId])
+  @@index([cultivarId])
+  @@map("gen_nodes")
+}
+
+// Modèle GenEdge (arêtes du graphe - relations parent/enfant)
+model GenEdge {
+  id               String   @id @default(uuid())
+  treeId           String
+  tree             GeneticTree @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  
+  parentNodeId     String
+  parentNode       GenNode  @relation("parentNode", fields: [parentNodeId], references: [id], onDelete: Cascade)
+  
+  childNodeId      String
+  childNode        GenNode  @relation("childNode", fields: [childNodeId], references: [id], onDelete: Cascade)
+  
+  // Métadonnées de relation
+  relationshipType String   @default("parent") // "parent", "pollen_donor", "sibling", "clone", "mutation"
+  notes            String?  // Notes supplémentaires
+  
+  // Metadata
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@index([treeId])
+  @@index([parentNodeId])
+  @@index([childNodeId])
+  @@unique([parentNodeId, childNodeId, relationshipType]) // Empêche les doublons
+  @@map("gen_edges")
 }

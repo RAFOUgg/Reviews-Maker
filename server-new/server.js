@@ -20,6 +20,7 @@ import kycRoutes from './routes/kyc.js'
 import paymentRoutes from './routes/payment.js'
 import accountRoutes from './routes/account.js'
 import cultivarsRoutes from './routes/cultivars.js'
+import geneticsRoutes from './routes/genetics.js'
 import pipelinesRoutes from './routes/pipelines.js'
 import flowerReviewsRoutes from './routes/flower-reviews.js'
 import hashReviewsRoutes from './routes/hash-reviews.js'
@@ -225,6 +226,7 @@ app.use('/api/kyc', kycRoutes)
 app.use('/api/payment', paymentRoutes)
 app.use('/api/account', accountRoutes)
 app.use('/api/cultivars', cultivarsRoutes)
+app.use('/api/genetics', geneticsRoutes)
 app.use('/api/pipelines', pipelinesRoutes)
 app.use('/api/library', libraryRoutes)
 app.use('/api/gallery', galleryRoutes)
