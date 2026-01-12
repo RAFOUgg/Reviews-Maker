@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { useStore } from '../store/useStore'
@@ -9,7 +9,7 @@ export default function UserProfileDropdown() {
     const buttonRef = useRef(null)
     const { user, logout } = useStore()
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (isOpen && buttonRef.current) {
             const rect = buttonRef.current.getBoundingClientRect()
             const adjustedTop = Math.max(rect.bottom + 8, 0) // Ensure dropdown doesn't flicker at incorrect positions
