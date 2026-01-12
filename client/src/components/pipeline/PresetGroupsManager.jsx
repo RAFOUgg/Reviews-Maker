@@ -57,7 +57,6 @@ const PresetGroupsManager = ({
             try {
                 setGroups(JSON.parse(storedGroups));
             } catch (e) {
-                console.error('Erreur chargement groupes:', e);
                 setGroups(getDefaultGroups());
             }
         } else {

@@ -215,28 +215,6 @@ async function updateReviewPipelineReference(reviewType, pipelineType, reviewId,
     const fieldName = fieldMap[reviewType]?.[pipelineType]
 
     if (!fieldName) {
-        console.warn(`No field mapping for reviewType=${reviewType}, pipelineType=${pipelineType}`)
-        return
-    }
-
-    // Déterminer la table
-    const tableMap = {
-        flower: 'flowerReview',
-        hash: 'hashReview',
-        concentrate: 'concentrateReview',
-        edible: 'edibleReview'
-    }
-
-    const tableName = tableMap[reviewType]
-    if (!tableName) return
-
-    try {
-        await prisma[tableName].updateMany({
-            where: { reviewId },
-            data: { [fieldName]: pipelineGithubId }
-        })
-    } catch (error) {
-        console.error('Error updating pipeline reference:', error)
     }
 }
 

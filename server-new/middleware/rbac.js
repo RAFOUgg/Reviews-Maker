@@ -153,7 +153,6 @@ function requireSubscription(allowedPlans = []) {
 
             next();
         } catch (error) {
-            console.error('Erreur vérification subscription:', error);
             return res.status(500).json({
                 error: 'internal_error',
                 message: 'Erreur lors de la vérification de l\'abonnement',
@@ -188,7 +187,6 @@ async function attachUserMetadata(req, res, next) {
 
         next();
     } catch (error) {
-        console.error('Erreur chargement metadata user:', error);
         next(); // Continue même en cas d'erreur
     } finally {
         await prisma.$disconnect();

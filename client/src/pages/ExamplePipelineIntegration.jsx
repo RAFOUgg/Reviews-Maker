@@ -81,8 +81,6 @@ const ExamplePipelineIntegration = () => {
             ...prev,
             culturePipeline: newPipelineData
         }));
-
-        console.log('Pipeline culture mis à jour:', newPipelineData);
     };
 
     // Handler: Mise à jour du pipeline de curing
@@ -91,15 +89,11 @@ const ExamplePipelineIntegration = () => {
             ...prev,
             curingPipeline: newPipelineData
         }));
-
-        console.log('Pipeline curing mis à jour:', newPipelineData);
     };
 
     // Handler: Sauvegarde complète
     const handleSave = async () => {
         try {
-            console.log('Sauvegarde des données:', formData);
-
             // Exemple d'appel API
             // const response = await fetch('/api/reviews', {
             //   method: 'POST',
@@ -109,7 +103,6 @@ const ExamplePipelineIntegration = () => {
 
             alert('Review sauvegardée avec succès !');
         } catch (error) {
-            console.error('Erreur de sauvegarde:', error);
             alert('Erreur lors de la sauvegarde');
         }
     };

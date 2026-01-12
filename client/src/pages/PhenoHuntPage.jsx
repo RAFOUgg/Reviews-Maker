@@ -35,7 +35,6 @@ export default function PhenoHuntPage() {
                     setCultivarLibrary(cultivars);
                 }
             } catch (error) {
-                console.error('Erreur lors du chargement des cultivars:', error);
             } finally {
                 setIsLoading(false);
             }

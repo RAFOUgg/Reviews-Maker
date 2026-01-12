@@ -24,8 +24,6 @@ export default function EditReviewPage() {
     const toast = useToast();
 
     // 🔍 Debug: Log l'ID immédiatement
-    console.log('🆔 EditReviewPage - ID from useParams:', id, typeof id);
-
     const [review, setReview] = useState(null);
     const [loading, setLoading] = useState(true);
     const [structure, setStructure] = useState(null);
@@ -41,30 +39,17 @@ export default function EditReviewPage() {
 
     const fetchReview = async () => {
         try {
-            console.log('🔍 Fetching review:', id);
-            console.log('👤 Current user:', user);
-
             const response = await fetch(`/api/reviews/${id}`, {
                 credentials: 'include' // ✅ Important pour envoyer les cookies de session
             });
-
-            console.log('📡 Response status:', response.status);
-
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                console.error('❌ Fetch error:', errorData);
                 throw new Error(errorData.message || 'Review non trouvée');
             }
 
             const data = await response.json();
-            console.log('✅ Review data:', data);
-
             // Vérifier ownership
             if (data.authorId !== user?.id) {
-                console.warn('⚠️ Ownership check failed:', {
-                    reviewAuthorId: data.authorId,
-                    currentUserId: user?.id
-                });
                 toast.error('Vous ne pouvez pas éditer cette review');
                 navigate('/');
                 return;
@@ -79,7 +64,6 @@ export default function EditReviewPage() {
                     try {
                         return JSON.parse(value);
                     } catch (e) {
-                        console.warn('⚠️ Failed to parse JSON:', { value, error: e.message });
                         return defaultValue;
                     }
                 }
@@ -190,36 +174,10 @@ export default function EditReviewPage() {
                     });
                 });
             } catch (err) {
-                console.warn('⚠️ Failed to auto-fill form keys from parsedData:', err);
             }
-
-            console.log('📊 Parsed form data (before merge):', parsedData);
-            console.log('🔍 Merged formData keys:', Object.keys(mergedFormData));
-            console.log('🔍 Sample merged values:', {
-                holderName: mergedFormData.holderName,
-                overallRating: mergedFormData.overallRating,
-                note: mergedFormData.note,
-                categoryRatings: mergedFormData.categoryRatings,
-                densite: mergedFormData.densite || mergedFormData['densiteTexture'] || mergedFormData['densite'],
-                parfum: mergedFormData.parfum,
-                gout: mergedFormData.gout
-            });
-
             // DEBUG: dump filled form keys and relevant smell/taste/effects fields to help mapping
             try {
-                console.log('🔎 filledFormData keys:', Object.keys(filledFormData || {}).sort());
-                console.log('🔎 tastes/aromas/effects and ratings sample:', {
-                    tastes: filledFormData.tastes,
-                    aromas: filledFormData.aromas,
-                    effects: filledFormData.effects,
-                    categoryRatings: filledFormData.categoryRatings,
-                    ratings: filledFormData.ratings,
-                    aromasIntensity: filledFormData.aromasIntensity,
-                    tastesIntensity: filledFormData.tastesIntensity,
-                    effectsIntensity: filledFormData.effectsIntensity
-                });
             } catch (e) {
-                console.warn('⚠️ Failed to dump filledFormData debug info', e);
             }
 
             // Use the filled version (keys auto-populated from parsedData / extraData)
@@ -231,29 +189,20 @@ export default function EditReviewPage() {
 
             setLoading(false);
         } catch (error) {
-            console.error('💥 Error loading review:', error);
             toast.error(`Erreur lors du chargement de la review: ${error.message}`);
             navigate('/');
         }
     };
 
     useEffect(() => {
-        console.log('🔄 EditReviewPage useEffect triggered', {
-            id,
-            isAuthenticated,
-            user: user ? { id: user.id, username: user.username } : null
-        });
-
         // ✅ Vérifier que l'ID est valide
         if (!id || id === 'undefined' || id === 'null') {
-            console.error('❌ Invalid review ID:', id);
             toast.error('ID de review invalide');
             navigate('/');
             return;
         }
 
         if (!isAuthenticated) {
-            console.log('⚠️ User not authenticated, redirecting...');
             toast.warning('Vous devez être connecté pour éditer une review');
             navigate('/');
             return;
@@ -261,7 +210,6 @@ export default function EditReviewPage() {
 
         // ✅ Attendre que l'utilisateur soit chargé avant de fetcher la review
         if (!user) {
-            console.log('⏳ Waiting for user data...');
             return;
         }
 
@@ -386,9 +334,6 @@ export default function EditReviewPage() {
 
             // ✅ Calculer categoryRatings AVANT d'envoyer les données
             const categoryRatingsData = calculateCategoryRatings();
-
-            console.log('📊 Category Ratings Calculated (Edit):', categoryRatingsData);
-
             // ⚠️ Liste des champs à exclure (champs calculés, métadonnées, ou gérés séparément)
             const excludedKeys = [
                 'note', 'overallRating', 'categoryRatings', // Notes calculées
@@ -444,9 +389,6 @@ export default function EditReviewPage() {
             submitData.append('categoryRatings', JSON.stringify(categoryRatingsData));
             submitData.append('overallRating', categoryRatingsData.overall);
             submitData.append('note', categoryRatingsData.overall); // Fallback
-
-            console.log('📤 Sending overallRating (Edit):', categoryRatingsData.overall);
-
             // Add new images (append raw File objects)
             const imagesToSend = images;
             imagesToSend.forEach(img => {
@@ -478,7 +420,6 @@ export default function EditReviewPage() {
                     // Not JSON — server returned HTML or plain text
                 }
                 const errorMessage = parsed?.message || text || 'Erreur lors de la mise à jour';
-                console.error('PUT /api/reviews/:id error response:', { status: response.status, body: text });
                 throw new Error(errorMessage);
             }
 

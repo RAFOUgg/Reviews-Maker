@@ -36,7 +36,6 @@ const ConsentModal = ({ isOpen, onAccept, onDecline }) => {
                 setLoading(false);
             }
         } catch (err) {
-            console.error('Erreur consentement:', err);
             alert(t('consent.errorNetwork', 'Erreur réseau, veuillez réessayer'));
             setLoading(false);
         }

@@ -68,9 +68,6 @@ export async function exportCuringEvolutionToGIF(evolutionData, options = {}) {
         if (maxLength === 0) {
             throw new Error('No evolution data to export')
         }
-
-        console.log(`📸 Generating ${maxLength} frames for curing evolution GIF`)
-
         // Générer chaque frame
         for (let i = 0; i < maxLength; i++) {
             // Créer le rendu pour cette frame
@@ -94,111 +91,6 @@ export async function exportCuringEvolutionToGIF(evolutionData, options = {}) {
             if (onProgress) {
                 onProgress(Math.round((i + 1) / maxLength * 100))
             }
-
-            console.log(`📸 Frame ${i + 1}/${maxLength} captured`)
-        }
-
-        // Encoder le GIF
-        return new Promise((resolve, reject) => {
-            gif.on('finished', (blob) => {
-                console.log('✅ Curing evolution GIF complete:', blob.size, 'bytes')
-                document.body.removeChild(container)
-                resolve(blob)
-            })
-
-            gif.on('error', (error) => {
-                console.error('❌ GIF encoding error:', error)
-                document.body.removeChild(container)
-                reject(error)
-            })
-
-            if (onProgress) {
-                gif.on('progress', (percent) => {
-                    onProgress(Math.round(50 + percent * 50)) // 50-100%
-                })
-            }
-
-            gif.render()
-        })
-    } catch (error) {
-        document.body.removeChild(container)
-        throw error
-    }
-}
-
-/**
- * Rendre une frame d'évolution (HTML/SVG)
- * @param {Object} evolutionData - Données complètes
- * @param {number} frameIndex - Index de la frame actuelle
- * @param {number} width - Largeur
- * @param {number} height - Hauteur
- * @returns {string} - HTML de la frame
- */
-function renderEvolutionFrame(evolutionData, frameIndex, width, height) {
-    const metrics = ['visual', 'odor', 'taste', 'effects']
-    const colors = {
-        visual: '#3b82f6',
-        odor: '#a855f7',
-        taste: '#10b981',
-        effects: '#f59e0b'
-    }
-    const labels = {
-        visual: 'Visuel',
-        odor: 'Odeurs',
-        taste: 'Goûts',
-        effects: 'Effets'
-    }
-
-    // Obtenir les données jusqu'à frameIndex
-    const currentData = {}
-    metrics.forEach(metric => {
-        currentData[metric] = (evolutionData[metric] || []).slice(0, frameIndex + 1)
-    })
-
-    // Calculer les statistiques actuelles
-    const currentValues = {}
-    metrics.forEach(metric => {
-        const data = currentData[metric]
-        if (data.length > 0) {
-            currentValues[metric] = data[data.length - 1].value
-        }
-    })
-
-    // Créer le SVG avec graphiques
-    const svgGraphs = metrics.map(metric => {
-        const data = currentData[metric]
-        if (!data || data.length === 0) return ''
-
-        const graphWidth = width / 2 - 40
-        const graphHeight = 120
-        const points = data.map((point, idx) => {
-            const x = (idx / Math.max(data.length - 1, 1)) * graphWidth
-            const y = graphHeight - (point.value / 10) * graphHeight
-            return `${x},${y}`
-        }).join(' ')
-
-        const currentValue = data[data.length - 1].value
-
-        return `
-            <polyline
-                points="${points}"
-                fill="none"
-                stroke="${colors[metric]}"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            />
-            <circle
-                cx="${(data.length - 1) / Math.max(data.length - 1, 1) * graphWidth}"
-                cy="${graphHeight - (currentValue / 10) * graphHeight}"
-                r="6"
-                fill="${colors[metric]}"
-                stroke="#fff"
-                stroke-width="2"
-            />
-        `
-    })
-
     return `
         <div style="
             width: ${width}px;
@@ -319,11 +211,6 @@ export function useCuringGIFExport() {
 
             return blob
         } catch (error) {
-            console.error('Export GIF curing failed:', error)
-            throw error
-        } finally {
-            setIsExporting(false)
-            setProgress(0)
         }
     }
 

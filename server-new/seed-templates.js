@@ -65,24 +65,19 @@ const templates = [
 ];
 
 async function main() {
-    console.log('🌱 Seeding templates...');
-
     for (const tpl of templates) {
         await prisma.template.upsert({
             where: { id: tpl.id },
             update: tpl,
             create: tpl
         });
-        console.log(`✅ ${tpl.name}`);
     }
 
     const count = await prisma.template.count({ where: { category: 'predefined' } });
-    console.log(`\n✅ Total predefined templates: ${count}`);
 }
 
 main()
     .catch((e) => {
-        console.error('❌ Error:', e);
         process.exit(1);
     })
     .finally(async () => {

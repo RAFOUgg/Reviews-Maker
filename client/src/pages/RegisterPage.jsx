@@ -106,7 +106,6 @@ export default function RegisterPage() {
             // Rediriger vers la vérification email
             navigate(`/verify-email?email=${encodeURIComponent(formData.email)}&type=register`);
         } catch (error) {
-            console.error('Register error:', error);
             setApiError('Erreur de connexion au serveur');
         } finally {
             setIsLoading(false);

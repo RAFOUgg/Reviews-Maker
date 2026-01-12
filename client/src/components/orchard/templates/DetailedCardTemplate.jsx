@@ -21,20 +21,6 @@ import {
  */
 export default function DetailedCardTemplate({ config, reviewData, dimensions }) {
     // 🔍 Debug - Afficher les données reçues
-    console.log('📋 DetailedCardTemplate - Données reçues:', {
-        hasConfig: !!config,
-        hasReviewData: !!reviewData,
-        reviewDataKeys: reviewData ? Object.keys(reviewData) : [],
-        title: reviewData?.title,
-        holderName: reviewData?.holderName,
-        rating: reviewData?.rating,
-        categoryRatings: reviewData?.categoryRatings,
-        aromas: reviewData?.aromas,
-        effects: reviewData?.effects,
-        contentModulesEnabled: config?.contentModules ? 
-            Object.entries(config.contentModules).filter(([k, v]) => v).map(([k]) => k) : [],
-    });
-
     if (!config || !reviewData) {
         return (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 p-8">

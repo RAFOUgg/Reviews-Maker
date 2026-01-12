@@ -18,17 +18,6 @@ export const useLegalConsent = () => {
             setConsentData(consent)
             return true
         } catch (error) {
-            console.error('Error saving legal consent:', error)
-            return false
-        }
-    }, [])
-
-    const revokeConsent = useCallback(() => {
-        setHasConsent(false)
-        setConsentData(null)
-        return true
-    }, [])
-
     return {
         hasConsent,
         consentData,

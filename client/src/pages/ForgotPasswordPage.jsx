@@ -44,7 +44,6 @@ export default function ForgotPasswordPage() {
 
             setSuccess(true);
         } catch (error) {
-            console.error('Forgot password error:', error);
             setError('Erreur de connexion au serveur');
         } finally {
             setIsLoading(false);

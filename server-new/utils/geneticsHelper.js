@@ -34,7 +34,6 @@ async function getGeneticTreeWithAccess(treeId, userId) {
 
         return { data: tree };
     } catch (error) {
-        console.error("Error fetching genetic tree:", error);
         return { error: "Failed to fetch tree", status: 500 };
     }
 }
@@ -77,7 +76,6 @@ async function getTreeNodesWithCultivars(treeId, userId) {
 
         return { data: nodes };
     } catch (error) {
-        console.error("Error fetching tree nodes:", error);
         return { error: "Failed to fetch nodes", status: 500 };
     }
 }
@@ -103,7 +101,6 @@ async function validateCultivarReference(cultivarId, userId) {
 
         return { valid: true, data: cultivar };
     } catch (error) {
-        console.error("Error validating cultivar:", error);
         return { valid: false, error: "Failed to validate cultivar" };
     }
 }
@@ -165,7 +162,6 @@ async function formatGeneticsForExport(treeId, userId) {
             }
         };
     } catch (error) {
-        console.error("Error formatting genetics for export:", error);
         return { error: "Failed to format genetics data", status: 500 };
     }
 }
@@ -238,7 +234,6 @@ async function getUserGeneticsStats(userId) {
             }
         };
     } catch (error) {
-        console.error("Error fetching genetics stats:", error);
         return { error: "Failed to fetch statistics", status: 500 };
     }
 }

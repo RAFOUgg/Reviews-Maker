@@ -27,13 +27,9 @@ const SUBSCRIPTION_PRICES = {
 };
 
 async function migrateAccountTypes() {
-    console.log('🔄 Migration des types de comptes...\n');
-
     try {
         // 1. Récupérer tous les utilisateurs
         const users = await prisma.user.findMany();
-        console.log(`📊 ${users.length} utilisateurs à migrer\n`);
-
         let migratedCount = 0;
         let errors = [];
 
@@ -45,7 +41,6 @@ async function migrateAccountTypes() {
                     const parsed = JSON.parse(user.roles || '{"roles":["consumer"]}');
                     roles = parsed.roles || ['consumer'];
                 } catch (e) {
-                    console.warn(`⚠️  User ${user.id}: roles invalides, défaut à amateur`);
                 }
 
                 // Migrer chaque rôle
@@ -78,21 +73,14 @@ async function migrateAccountTypes() {
                             : 'inactive'
                     }
                 });
-
-                console.log(`✅ ${user.username || user.id}: ${roles.join('+')} -> ${finalRole}`);
                 migratedCount++;
 
             } catch (err) {
                 const error = `❌ Erreur user ${user.id}: ${err.message}`;
-                console.error(error);
                 errors.push(error);
             }
         }
-
-        console.log(`\n✅ Migration terminée: ${migratedCount}/${users.length} utilisateurs migrés`);
-
         if (errors.length > 0) {
-            console.log(`\n⚠️  ${errors.length} erreur(s):`);
             errors.forEach(e => console.log(e));
         }
 
@@ -101,20 +89,15 @@ async function migrateAccountTypes() {
             by: ['roles'],
             _count: true
         });
-
-        console.log('\n📊 Répartition finale:');
         for (const stat of stats) {
             try {
                 const parsed = JSON.parse(stat.roles);
                 const role = parsed.roles?.[0] || 'inconnu';
-                console.log(`   ${role}: ${stat._count} utilisateurs`);
             } catch (e) {
-                console.log(`   Format invalide: ${stat._count} utilisateurs`);
             }
         }
 
     } catch (error) {
-        console.error('❌ Erreur fatale:', error);
         throw error;
     } finally {
         await prisma.$disconnect();
@@ -124,10 +107,8 @@ async function migrateAccountTypes() {
 // Exécuter migration
 migrateAccountTypes()
     .then(() => {
-        console.log('\n✅ Migration réussie!');
         process.exit(0);
     })
     .catch((error) => {
-        console.error('\n❌ Échec migration:', error);
         process.exit(1);
     });

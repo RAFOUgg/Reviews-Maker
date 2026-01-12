@@ -69,7 +69,6 @@ const useGeneticsStore = create(
                 } catch (error) {
                     const errorMsg = error.message || 'Failed to fetch genetic trees';
                     set({ treeError: errorMsg, treeLoading: false });
-                    console.error('Fetch trees error:', error);
                     return { error: errorMsg };
                 }
             },
@@ -110,7 +109,6 @@ const useGeneticsStore = create(
                 } catch (error) {
                     const errorMsg = error.message || 'Failed to load tree';
                     set({ treeError: errorMsg, canvasLoading: false });
-                    console.error('Load tree error:', error);
                     return { error: errorMsg };
                 }
             },

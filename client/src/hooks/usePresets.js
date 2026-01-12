@@ -78,7 +78,6 @@ export const usePresets = (pipelineType = 'culture') => {
                     // Synchroniser avec localStorage pour backup
                     localStorage.setItem(`presets_${pipelineType}_server`, JSON.stringify(grouped));
                 } else {
-                    console.warn('❌ Erreur chargement préréglages serveur, fallback localStorage');
                     loadFromLocalStorage();
                 }
             } else {
@@ -86,7 +85,6 @@ export const usePresets = (pipelineType = 'culture') => {
                 loadFromLocalStorage();
             }
         } catch (err) {
-            console.error('❌ Erreur chargement préréglages:', err);
             setError(err.message);
             loadFromLocalStorage();
         } finally {
@@ -110,7 +108,6 @@ export const usePresets = (pipelineType = 'culture') => {
                 pipeline: pipelinePresets
             });
         } catch (err) {
-            console.error('❌ Erreur lecture localStorage:', err);
             setPresets({ field: [], grouped: [], pipeline: [] });
         }
     };
@@ -181,7 +178,6 @@ export const usePresets = (pipelineType = 'culture') => {
                 return newPreset;
             }
         } catch (err) {
-            console.error('❌ Erreur création préréglage:', err);
             setError(err.message);
             throw err;
         }
@@ -248,7 +244,6 @@ export const usePresets = (pipelineType = 'culture') => {
                 return { ...preset, ...updates };
             }
         } catch (err) {
-            console.error('❌ Erreur mise à jour préréglage:', err);
             setError(err.message);
             throw err;
         }
@@ -291,7 +286,6 @@ export const usePresets = (pipelineType = 'culture') => {
                 [preset.type]: prev[preset.type].filter(p => p.id !== id)
             }));
         } catch (err) {
-            console.error('❌ Erreur suppression préréglage:', err);
             setError(err.message);
             throw err;
         }

@@ -96,7 +96,6 @@ export const useReviewCompletion = (initialType = PRODUCT_TYPES.FLEUR) => {
     const resetForm = useCallback((newType = initialType) => {
         setReviewData(createEmptyReview(newType))
         // Debug instrumentation - trace unexpected resets
-        console.debug('useReviewCompletion.resetForm called for type', newType);
         console.trace();
 
         setErrors({})

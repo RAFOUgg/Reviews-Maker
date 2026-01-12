@@ -15,7 +15,6 @@ export function useUsageStats() {
             setStats(response.data);
             setError(null);
         } catch (err) {
-            console.error('[useUsageStats] Error fetching stats:', err);
             setError(err.response?.data?.message || 'Erreur lors du chargement des statistiques');
         } finally {
             setLoading(false);
@@ -39,7 +38,6 @@ export async function incrementExportCount(format = 'png', quality = 'standard')
         });
         return response.data;
     } catch (err) {
-        console.error('[incrementExportCount] Error:', err);
         throw err;
     }
 }
@@ -51,7 +49,6 @@ export async function getTodayExportCount() {
         });
         return response.data.count;
     } catch (err) {
-        console.error('[getTodayExportCount] Error:', err);
         return 0;
     }
 }

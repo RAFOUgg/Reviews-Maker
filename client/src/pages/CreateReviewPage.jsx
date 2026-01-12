@@ -169,7 +169,6 @@ export default function CreateReviewPage() {
                                 });
                             });
                         } catch (err) {
-                            console.warn('⚠️ Failed to auto-fill form keys from review:', err);
                         }
 
                         setFormData(loadedFormData);
@@ -183,7 +182,6 @@ export default function CreateReviewPage() {
                             }
                         } catch (err) {
                             // Do not break edit flow on unexpected errors
-                            console.warn('⚠️ Failed to set structure from review.type:', err);
                         }
 
                         // Charger les images existantes
@@ -211,7 +209,6 @@ export default function CreateReviewPage() {
     const handleInputChange = (field, value) => {
         // Instrumentation: don't allow accidental nulls from keyboard shortcuts
         if (value === null) {
-            console.warn(`handleInputChange: ignoring null value for field ${field}`);
             console.trace();
             // convert explicit 'null' to empty string to avoid breaking default behavior
             value = '';
@@ -225,7 +222,6 @@ export default function CreateReviewPage() {
     useEffect(() => {
         const nullKeys = Object.keys(formData).filter(k => formData[k] === null);
         if (nullKeys.length > 0) {
-            console.warn('CreateReviewPage: formData contains null keys:', nullKeys);
             console.trace();
         }
     }, [formData]);
@@ -300,9 +296,6 @@ export default function CreateReviewPage() {
 
             // ✅ Calculer categoryRatings AVANT d'envoyer les données
             const categoryRatingsData = calculateCategoryRatings();
-
-            console.log('📊 Category Ratings Calculated:', categoryRatingsData);
-
             // ⚠️ IMPORTANT: Ne pas envoyer 'note' ou 'overallRating' depuis formData
             // On utilisera uniquement les valeurs calculées
             const excludedKeys = ['note', 'overallRating', 'categoryRatings'];
@@ -325,9 +318,6 @@ export default function CreateReviewPage() {
             submitData.append('note', categoryRatingsData.overall); // Fallback pour compatibilité
             submitData.append('isPublic', saveModalData.isPublic);
             submitData.append('title', saveModalData.title);
-
-            console.log('📤 Sending overallRating:', categoryRatingsData.overall);
-
             // Pour l'édition, gérer les images existantes
             if (isEditing) {
                 const existingImages = images.filter(img => img.existing).map(img => img.url);

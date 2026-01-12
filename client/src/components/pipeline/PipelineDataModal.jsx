@@ -228,7 +228,6 @@ function PipelineDataModal({
         try {
             await deletePreset(presetId);
         } catch (err) {
-            console.error('❌ Erreur suppression préréglage:', err);
             alert('❌ Erreur lors de la suppression');
         }
     };
@@ -714,7 +713,6 @@ function PipelineDataModal({
                                             const data = e.dataTransfer.getData('application/json');
                                             if (data) {
                                                 const dropped = JSON.parse(data);
-                                                console.log('🎯 Drop dans modal:', dropped);
                                                 // Si c'est un groupe préréglage (multi-fields)
                                                 if (dropped.type === 'grouped-preset') {
                                                     const fields = dropped.data?.fields || dropped.fields || {};
@@ -730,7 +728,6 @@ function PipelineDataModal({
                                                 }
                                             }
                                         } catch (err) {
-                                            console.error('Erreur drop:', err);
                                         }// Erreur silencieuse
                                         onDrop && onDrop(e);
                                     }}

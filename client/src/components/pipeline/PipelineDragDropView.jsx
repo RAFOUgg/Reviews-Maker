@@ -640,7 +640,6 @@ const PipelineDragDropView = ({
             if (type === 'warning') return toast.warning ? toast.warning(msg) : toast.info(msg);
             return toast.success(msg);
         } catch (e) {
-            console.warn('Toast error', e);
         }
     };
     const [expandedSections, setExpandedSections] = useState({});
@@ -701,7 +700,6 @@ const PipelineDragDropView = ({
         if (type && type !== 'unknown') {
             const oldKey = 'pipeline-grouped-presets-unknown';
             if (localStorage.getItem(oldKey) !== null) {
-                console.log(`🧹 Nettoyage: suppression de ${oldKey}`);
                 localStorage.removeItem(oldKey);
             }
         }
@@ -918,21 +916,16 @@ const PipelineDragDropView = ({
     const handleDeleteFieldsFromCells = (fieldsToDelete) => {
         const targets = cellContextMenu?.selectedCells || [];
         if (targets.length === 0 || fieldsToDelete.length === 0) return;
-
-        console.log(`🗑️ handleDeleteFieldsFromCells: fields=${fieldsToDelete.join(',')}, targets=${targets.join(',')}`);
-
         setConfirmState({
             open: true,
             title: 'Effacer les champs sélectionnés',
             message: `Effacer ${fieldsToDelete.length} champ(s) de ${targets.length} cellule(s) ?`,
             onConfirm: () => {
-                console.log(`  → Confirmation: début de suppression`);
                 const allChanges = [];
                 targets.forEach(ts => {
                     const prev = getCellData(ts) || {};
                     fieldsToDelete.forEach(field => {
                         if (prev[field] !== undefined) {
-                            console.log(`    ✓ Supprime ${field} de ${ts} (valeur: ${prev[field]})`);
                             allChanges.push({ timestamp: ts, field, previousValue: prev[field] });
                             onDataChange(ts, field, null);
                         }
@@ -942,11 +935,9 @@ const PipelineDragDropView = ({
                 if (allChanges.length > 0) {
                     pushAction({ id: Date.now(), type: 'deleteFields', changes: allChanges });
                     showToast(`${fieldsToDelete.length} champ(s) effacé(s)`, 'success');
-                    console.log(`  → Toast: ${fieldsToDelete.length} champ(s) effacé(s)`);
                 }
                 setCellContextMenu(null); // Fermer le menu contextuel
                 setConfirmState(prev => ({ ...prev, open: false }));
-                console.log(`✅ Suppression terminée`);
             }
         });
     };
@@ -964,10 +955,6 @@ const PipelineDragDropView = ({
 
     // Ouvrir modal cellule
     const handleCellClick = (e, cellId) => {
-        console.log('🖱️ Clic sur cellule:', cellId);
-        console.log('📊 Ctrl/Cmd pressé:', e.ctrlKey || e.metaKey);
-        console.log('📋 Cellules sélectionnées avant:', selectedCells);
-
         // Détecter Ctrl+click pour sélection multiple (au lieu de massAssignMode)
         const isMultiSelectClick = e.ctrlKey || e.metaKey;
 
@@ -976,25 +963,20 @@ const PipelineDragDropView = ({
             // Mode sélection multiple - TOGGLE la cellule
             setSelectedCells(prev => {
                 const isAlreadySelected = prev.includes(cellId);
-                console.log('  → Cellule déjà sélectionnée:', isAlreadySelected);
-
                 if (isAlreadySelected) {
                     // Retirer de la sélection
                     const newSelection = prev.filter(id => id !== cellId);
-                    console.log('  → Retirée, nouvelle sélection:', newSelection);
                     selectedCellsRef.current = newSelection;
                     return newSelection;
                 } else {
                     // Ajouter à la sélection
                     const newSelection = [...prev, cellId];
-                    console.log('  → Ajoutée, nouvelle sélection:', newSelection);
                     selectedCellsRef.current = newSelection;
                     return newSelection;
                 }
             });
         } else {
             // Mode normal: ouvrir modal
-            console.log('📝 Ouverture modal pour:', cellId);
             const nextSelection = selectedCells.length > 1 ? selectedCells : [cellId];
             setSelectedCells(nextSelection);
             selectedCellsRef.current = nextSelection;
@@ -1012,12 +994,7 @@ const PipelineDragDropView = ({
 
     // Sauvegarder données depuis modal
     const handleModalSave = (data) => {
-        console.log('💾 Début sauvegarde - data reçue:', data);
-        console.log('💾 selectedCells STATE:', selectedCells);
-        console.log('💾 selectedCells REF:', selectedCellsRef.current);
-
         if (!data || !data.timestamp) {
-            console.error('❌ Erreur: pas de timestamp dans les données');
             return;
         }
 
@@ -1026,21 +1003,9 @@ const PipelineDragDropView = ({
         const currentSelection = selectedCellsRef.current || [];
         const hasSelection = currentSelection.length > 0;
         const timestampInSelection = currentSelection.includes(data.timestamp);
-
-        console.log('💾 Debug sélection:');
-        console.log('  → selectedCells STATE:', selectedCells);
-        console.log('  → selectedCellsRef.current:', selectedCellsRef.current);
-        console.log('  → currentSelection:', currentSelection);
-        console.log('  → hasSelection:', hasSelection);
-        console.log('  → data.timestamp:', data.timestamp);
-        console.log('  → timestampInSelection:', timestampInSelection);
-
         const targetTimestamps = (hasSelection && timestampInSelection)
             ? currentSelection
             : [data.timestamp];
-
-        console.log(`🎯 Application des données à ${targetTimestamps.length} cellule(s):`, targetTimestamps);
-
         const allChanges = [];
 
         // ✅ APPLIQUER LES DONNÉES À TOUTES LES CELLULES CIBLES
@@ -1054,12 +1019,10 @@ const PipelineDragDropView = ({
                 // Mode DROP: sauvegarder uniquement le(s) champ(s) droppé(s)
                 if (droppedItem.content.type === 'multi' && Array.isArray(droppedItem.content.items)) {
                     // Multi-items drop: sauvegarder tous les items droppés
-                    console.log(`  ✓ Multi-items drop sur ${targetTimestamp}:`, droppedItem.content.items.length, 'champs');
                     droppedItem.content.items.forEach(item => {
                         const fieldKey = item.id || item.key || item.type;
                         if (data.data && data.data[fieldKey] !== undefined) {
                             changes.push({ timestamp: targetTimestamp, field: fieldKey, previousValue: prevData[fieldKey] });
-                            console.log(`    → ${fieldKey} =`, data.data[fieldKey]);
                             onDataChange(targetTimestamp, fieldKey, data.data[fieldKey]);
                         }
                     });
@@ -1068,22 +1031,18 @@ const PipelineDragDropView = ({
                     const fieldKey = droppedItem.content.id || droppedItem.content.key || droppedItem.content.type;
                     if (data.data && data.data[fieldKey] !== undefined) {
                         changes.push({ timestamp: targetTimestamp, field: fieldKey, previousValue: prevData[fieldKey] });
-                        console.log(`  ✓ Single drop sur ${targetTimestamp}: ${fieldKey} =`, data.data[fieldKey]);
                         onDataChange(targetTimestamp, fieldKey, data.data[fieldKey]);
                     }
                 }
             } else {
                 // Mode EDIT: sauvegarder toutes les données modifiées
-                console.log(`  ✓ Édition sur ${targetTimestamp}:`, Object.keys(data.data || {}).length, 'champs');
                 Object.entries(data.data || {}).forEach(([key, value]) => {
                     // Treat empty string/null/undefined as deletion
                     if (value === undefined || value === null || value === '') {
                         changes.push({ timestamp: targetTimestamp, field: key, previousValue: prevData[key] });
-                        console.log(`    → Suppression: ${key}`);
                         onDataChange(targetTimestamp, key, null);
                     } else {
                         changes.push({ timestamp: targetTimestamp, field: key, previousValue: prevData[key] });
-                        console.log(`    → ${key} =`, value);
                         onDataChange(targetTimestamp, key, value);
                     }
                 });
@@ -1103,8 +1062,6 @@ const PipelineDragDropView = ({
                 lastModified: data.lastModified || new Date().toISOString()
             });
         }
-
-        console.log(`✅ Sauvegarde terminée: ${targetTimestamps.length} cellule(s) modifiée(s)`);
         setIsModalOpen(false);
         setDroppedItem(null);
     };
@@ -1205,7 +1162,6 @@ const PipelineDragDropView = ({
 
     // Handlers drag & drop
     const handleDragStart = (e, content) => {
-        console.log('🎯 Début du drag:', content);
         setDraggedContent(content);
         e.dataTransfer.effectAllowed = 'copy';
         e.dataTransfer.dropEffect = 'copy';
@@ -1232,15 +1188,11 @@ const PipelineDragDropView = ({
         setHoveredCell(null);
 
         try {
-            console.log('✅ handleDrop CDC: draggedContent=', draggedContent, 'timestamp=', timestamp);
-
             if (!draggedContent) {
-                console.log('✅ handleDrop: Pas de draggedContent, sortir');
                 return;
             }
 
             if (!timestamp) {
-                console.warn('⚠️ handleDrop: timestamp invalide ou manquant');
                 return;
             }
 
@@ -1252,8 +1204,6 @@ const PipelineDragDropView = ({
 
             // ✅ BUG FIX #3: MULTI-ITEMS DROP - Ouvrir modal avec tous les items sélectionnés
             if (draggedContent.type === 'multi-items' && Array.isArray(draggedContent.items)) {
-                console.log('✅ handleDrop: Multi-items drop avec', draggedContent.items.length, 'items');
-
                 // Vérifier conflits pour chaque item
                 if (hasExistingData) {
                     const conflictingItems = draggedContent.items.filter(item => {
@@ -1295,12 +1245,10 @@ const PipelineDragDropView = ({
 
             // GROUPED PRESET: Appliquer directement sans ouvrir le modal
             if (draggedContent.type === 'grouped' && draggedContent.group) {
-                console.log('✅ handleDrop: Application groupe préréglage:', draggedContent.group);
                 const group = draggedContent.group;
                 const fields = group.fields || [];
 
                 if (fields.length === 0) {
-                    console.warn('⚠️ handleDrop: Groupe vide, rien à appliquer');
                     setDraggedContent(null);
                     return;
                 }
@@ -1309,14 +1257,10 @@ const PipelineDragDropView = ({
                 const targetCells = selectedCellsRef.current.length > 0
                     ? selectedCellsRef.current
                     : [timestamp];
-
-                console.log(`✅ Application groupe sur ${targetCells.length} cellule(s)`);
-
                 // Appliquer chaque champ du groupe à toutes les cellules cibles
                 targetCells.forEach(ts => {
                     fields.forEach(f => {
                         if (f.key && f.value !== undefined && f.value !== '') {
-                            console.log(`  → Applique ${f.key} = ${f.value} sur ${ts}`);
                             onDataChange(ts, f.key, f.value);
                         }
                     });
@@ -1332,8 +1276,6 @@ const PipelineDragDropView = ({
             }
 
             // Sinon, ouvrir PipelineDataModal avec l'item droppé
-            console.log('✅ handleDrop: Ouverture PipelineDataModal');
-
             // ✅ BUG FIX #5: Vérifier conflit pour item simple
             if (hasExistingData) {
                 const fieldKey = draggedContent.id || draggedContent.key || draggedContent.type;
@@ -1365,7 +1307,6 @@ const PipelineDragDropView = ({
             setDraggedContent(null);
 
         } catch (error) {
-            console.error('❌ Erreur handleDrop:', error);
         }
     };
 
@@ -1634,7 +1575,6 @@ const PipelineDragDropView = ({
             if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'load-preset', changes: allChanges });
             showToast(`✓ Préréglage "${preset.name}" chargé`);
         } catch (e) {
-            console.error('Erreur lors du chargement du préréglage', e);
         }
     };
 
@@ -1927,8 +1867,6 @@ const PipelineDragDropView = ({
                                                                     return null;
                                                                 })
                                                                 .filter(Boolean);
-
-                                                            console.log('🎯 Multi-drag:', selectedItems.length, 'items depuis', multiSelectedItems.length, 'keys');
                                                             e.dataTransfer.setData('application/multi-items', JSON.stringify(selectedItems));
                                                             setDraggedContent({ type: 'multi', items: selectedItems });
                                                         }
@@ -2750,18 +2688,15 @@ const PipelineDragDropView = ({
                     onClose={() => setCellContextMenu(null)}
                     onDeleteAll={() => {
                         const targets = cellContextMenu?.selectedCells || [];
-                        console.log(`💥 handleDeleteAll: targets=${targets.join(',')}`);
                         setConfirmState({
                             open: true,
                             title: 'Effacer toutes les données',
                             message: `Effacer toutes les données de ${targets.length} cellule(s) ?`,
                             onConfirm: () => {
-                                console.log(`  ✓ Confirmation: début de suppression complète`);
                                 const allChanges = [];
                                 targets.forEach(ts => {
                                     const prev = getCellData(ts) || {};
                                     const keys = Object.keys(prev).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k));
-                                    console.log(`    ✔️ Supprime ${keys.length} champs de ${ts}: ${keys.join(',')}`);
                                     keys.forEach(k => {
                                         allChanges.push({ timestamp: ts, field: k, previousValue: prev[k] });
                                         onDataChange(ts, k, null);
@@ -2769,12 +2704,10 @@ const PipelineDragDropView = ({
                                 });
                                 if (allChanges.length > 0) {
                                     pushAction({ id: Date.now(), type: 'contextMenuDeleteAll', changes: allChanges });
-                                    console.log(`  ✓ Toast: ${allChanges.length} donnée(s) effacée(s)`);
                                 }
                                 setConfirmState(prev => ({ ...prev, open: false }));
                                 setCellContextMenu(null);
                                 showToast('Données effacées', 'success');
-                                console.log(`✅ Suppression complète terminée`);
                             }
                         });
                     }}

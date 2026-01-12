@@ -104,7 +104,6 @@ export default function ResetPasswordPage() {
 
             setSuccess(true);
         } catch (error) {
-            console.error('Reset password error:', error);
             setApiError('Erreur de connexion au serveur');
         } finally {
             setIsLoading(false);

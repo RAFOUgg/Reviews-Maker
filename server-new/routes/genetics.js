@@ -69,7 +69,6 @@ router.get("/trees", requireAuth, async (req, res) => {
 
         res.json(trees);
     } catch (error) {
-        console.error("Error fetching genetic trees:", error);
         res.status(500).json({ error: "Failed to fetch genetic trees" });
     }
 });
@@ -98,7 +97,6 @@ router.post("/trees", requireAuth, validateTreeCreation, async (req, res) => {
 
         res.status(201).json(tree);
     } catch (error) {
-        console.error("Error creating genetic tree:", error);
         res.status(500).json({ error: "Failed to create genetic tree" });
     }
 });
@@ -149,7 +147,6 @@ router.get("/trees/:id", async (req, res) => {
 
         res.json(tree);
     } catch (error) {
-        console.error("Error fetching genetic tree:", error);
         res.status(500).json({ error: "Failed to fetch genetic tree" });
     }
 });
@@ -187,7 +184,6 @@ router.put("/trees/:id", requireAuth, validateTreeUpdate, async (req, res) => {
 
         res.json(updated);
     } catch (error) {
-        console.error("Error updating genetic tree:", error);
         res.status(500).json({ error: "Failed to update genetic tree" });
     }
 });
@@ -216,7 +212,6 @@ router.delete("/trees/:id", requireAuth, async (req, res) => {
 
         res.json({ message: "Tree deleted successfully" });
     } catch (error) {
-        console.error("Error deleting genetic tree:", error);
         res.status(500).json({ error: "Failed to delete genetic tree" });
     }
 });
@@ -264,7 +259,6 @@ router.get("/trees/:id/nodes", async (req, res) => {
 
         res.json(nodes);
     } catch (error) {
-        console.error("Error fetching nodes:", error);
         res.status(500).json({ error: "Failed to fetch nodes" });
     }
 });
@@ -320,7 +314,6 @@ router.post("/trees/:id/nodes", requireAuth, validateNodeCreation, async (req, r
             genetics: node.genetics ? JSON.parse(node.genetics) : null
         });
     } catch (error) {
-        console.error("Error creating node:", error);
         res.status(500).json({ error: "Failed to create node" });
     }
 });
@@ -371,7 +364,6 @@ router.put("/nodes/:nodeId", requireAuth, validateNodeUpdate, async (req, res) =
             genetics: updated.genetics ? JSON.parse(updated.genetics) : null
         });
     } catch (error) {
-        console.error("Error updating node:", error);
         res.status(500).json({ error: "Failed to update node" });
     }
 });
@@ -402,7 +394,6 @@ router.delete("/nodes/:nodeId", requireAuth, async (req, res) => {
 
         res.json({ message: "Node deleted successfully" });
     } catch (error) {
-        console.error("Error deleting node:", error);
         res.status(500).json({ error: "Failed to delete node" });
     }
 });
@@ -447,7 +438,6 @@ router.get("/trees/:id/edges", async (req, res) => {
 
         res.json(edges);
     } catch (error) {
-        console.error("Error fetching edges:", error);
         res.status(500).json({ error: "Failed to fetch edges" });
     }
 });
@@ -511,7 +501,6 @@ router.post("/trees/:id/edges", requireAuth, validateEdgeCreation, async (req, r
             throw error;
         }
     } catch (error) {
-        console.error("Error creating edge:", error);
         res.status(500).json({ error: "Failed to create edge" });
     }
 });
@@ -541,7 +530,6 @@ router.delete("/edges/:edgeId", requireAuth, async (req, res) => {
 
         res.json({ message: "Edge deleted successfully" });
     } catch (error) {
-        console.error("Error deleting edge:", error);
         res.status(500).json({ error: "Failed to delete edge" });
     }
 });

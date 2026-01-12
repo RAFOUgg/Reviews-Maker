@@ -364,21 +364,6 @@ export default function ContentPanel({ reviewData, placedFields, onFieldSelect }
     const [allOpen, setAllOpen] = useState(false);
 
     // Debug: afficher les données reçues
-    console.log('📦 ContentPanel - Données complètes:', {
-        hasData: !!reviewData,
-        keysCount: reviewData ? Object.keys(reviewData).length : 0,
-        keys: reviewData ? Object.keys(reviewData).slice(0, 30) : [],
-        sampleData: reviewData ? {
-            holderName: reviewData.holderName,
-            rating: reviewData.rating,
-            aromasCount: reviewData.aromas?.length,
-            effectsCount: reviewData.effects?.length,
-            categoryRatingsKeys: reviewData.categoryRatings ? Object.keys(reviewData.categoryRatings) : [],
-            densite: reviewData.densite,
-            trichome: reviewData.trichome
-        } : null
-    });
-
     // Extraire les IDs des champs déjà placés
     const placedFieldIds = useMemo(() => {
         return (placedFields || []).reduce((acc, f) => {

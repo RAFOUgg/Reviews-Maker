@@ -27,7 +27,6 @@ function parseRoles(rolesJson) {
         }
         return ['consumer'];
     } catch (error) {
-        console.error('[parseRoles] Error:', rolesJson, error);
         return ['consumer'];
     }
 }
@@ -71,8 +70,6 @@ function getNewAccountType(roles) {
  * Fonction principale de migration
  */
 async function migrateAccountTypes() {
-    console.log('\n🔄 Démarrage migration types de comptes...\n');
-
     // Récupérer tous les utilisateurs
     const users = await prisma.user.findMany({
         select: {
@@ -82,9 +79,6 @@ async function migrateAccountTypes() {
             createdAt: true
         }
     });
-
-    console.log(`📊 Total utilisateurs: ${users.length}\n`);
-
     const stats = {
         amateur: 0,
         influencer: 0,
@@ -119,53 +113,26 @@ async function migrateAccountTypes() {
             else if (newType === 'producer') stats.producer++;
             else if (newType === 'influencer') stats.influencer++;
             else stats.amateur++;
-
-            console.log(`✅ ${user.username}: ${currentRoles.join(',')} → ${migration.newRoles[0]}`);
-
         } catch (error) {
             stats.errors++;
             errors.push({ user: user.username, error: error.message });
-            console.error(`❌ Erreur pour ${user.username}:`, error.message);
         }
     }
 
     // Afficher résultats
-    console.log('\n' + '='.repeat(60));
-    console.log('📈 RÉSUMÉ DE LA MIGRATION');
-    console.log('='.repeat(60));
-    console.log(`✅ Amateur (gratuit):        ${stats.amateur.toString().padStart(5)}`);
-    console.log(`✅ Influencer (15.99€):      ${stats.influencer.toString().padStart(5)}`);
-    console.log(`✅ Producer (29.99€):        ${stats.producer.toString().padStart(5)}`);
-    console.log(`⚠️  Beta Tester (temporaire): ${stats.beta.toString().padStart(5)}`);
-    console.log(`❌ Erreurs:                  ${stats.errors.toString().padStart(5)}`);
-    console.log('-'.repeat(60));
-    console.log(`📊 TOTAL:                    ${users.length.toString().padStart(5)}`);
-    console.log('='.repeat(60) + '\n');
-
     if (errors.length > 0) {
-        console.log('⚠️  ERREURS DÉTAILLÉES:');
         errors.forEach(err => {
-            console.log(`   - ${err.user}: ${err.error}`);
         });
-        console.log('');
     }
 
     // Vérification post-migration
-    console.log('🔍 Vérification post-migration...\n');
-
     const verification = await prisma.user.groupBy({
         by: ['subscriptionType'],
         _count: true
     });
-
-    console.log('Distribution subscriptionType:');
     verification.forEach(group => {
         const type = group.subscriptionType || 'amateur (null)';
-        console.log(`   ${type}: ${group._count}`);
     });
-
-    console.log('\n✅ Migration terminée avec succès!\n');
-
     return stats;
 }
 
@@ -173,8 +140,6 @@ async function migrateAccountTypes() {
  * Rollback de la migration (restauration anciens rôles)
  */
 async function rollbackMigration() {
-    console.log('\n⚠️  ROLLBACK: Restauration anciens types de comptes...\n');
-
     const users = await prisma.user.findMany({
         select: {
             id: true,
@@ -213,15 +178,9 @@ async function rollbackMigration() {
                     updatedAt: new Date()
                 }
             });
-
-            console.log(`✅ ${user.username}: restauré vers ${oldRoles[0]}`);
-
         } catch (error) {
-            console.error(`❌ Erreur rollback pour ${user.username}:`, error.message);
         }
     }
-
-    console.log('\n✅ Rollback terminé\n');
 }
 
 // Exécution selon argument
@@ -230,14 +189,12 @@ const command = process.argv[2];
 if (command === 'rollback') {
     rollbackMigration()
         .catch(error => {
-            console.error('❌ Erreur rollback:', error);
             process.exit(1);
         })
         .finally(() => prisma.$disconnect());
 } else {
     migrateAccountTypes()
         .catch(error => {
-            console.error('❌ Erreur migration:', error);
             process.exit(1);
         })
         .finally(() => prisma.$disconnect());

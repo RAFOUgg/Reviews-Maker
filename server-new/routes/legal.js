@@ -88,7 +88,6 @@ router.post('/verify-age', async (req, res) => {
         if (typeof req.logIn === 'function') {
             req.logIn(updatedUser, (err) => {
                 if (err) {
-                    console.error('Erreur mise à jour session après vérif âge:', err);
                     return res.status(500).json({
                         error: 'session_update_failed',
                         message: 'Impossible de mettre à jour la session',
@@ -123,7 +122,6 @@ router.post('/verify-age', async (req, res) => {
             });
         }
     } catch (error) {
-        console.error('Erreur vérification âge:', error);
         res.status(500).json({
             error: 'internal_error',
             message: 'Erreur lors de la vérification de l\'âge',
@@ -173,7 +171,6 @@ router.post('/accept-consent', async (req, res) => {
         if (typeof req.logIn === 'function') {
             req.logIn(updatedUser, (err) => {
                 if (err) {
-                    console.error('Erreur mise à jour session après consentement:', err);
                     return res.status(500).json({
                         error: 'session_update_failed',
                         message: 'Impossible de mettre à jour la session',
@@ -194,7 +191,6 @@ router.post('/accept-consent', async (req, res) => {
             });
         }
     } catch (error) {
-        console.error('Erreur enregistrement consentement:', error);
         res.status(500).json({
             error: 'internal_error',
             message: 'Erreur lors de l\'enregistrement du consentement',
@@ -251,7 +247,6 @@ router.get('/status', async (req, res) => {
             isCompliant: user.legalAge && user.consentRDR,
         });
     } catch (error) {
-        console.error('Erreur récupération statut légal:', error);
         res.status(500).json({
             error: 'internal_error',
             message: 'Erreur lors de la récupération du statut',
@@ -451,7 +446,6 @@ router.post('/consent', async (req, res) => {
         if (typeof req.logIn === 'function') {
             req.logIn(updatedUser, (err) => {
                 if (err) {
-                    console.error('Erreur mise à jour session après consentement (consent):', err);
                     return res.status(500).json({
                         error: 'session_update_failed',
                         message: 'Impossible de mettre à jour la session',
@@ -480,7 +474,6 @@ router.post('/consent', async (req, res) => {
             });
         }
     } catch (error) {
-        console.error('Erreur enregistrement consentement:', error);
         res.status(500).json({
             error: 'internal_error',
             message: 'Erreur lors de l\'enregistrement du consentement',
@@ -508,7 +501,6 @@ router.get('/user-preferences', async (req, res) => {
             consentRDR: req.user.consentRDR || false
         });
     } catch (error) {
-        console.error('Erreur récupération préférences:', error);
         res.status(500).json({
             error: 'internal_error',
             message: 'Erreur lors de la récupération des préférences',
@@ -560,7 +552,6 @@ router.post('/update-preferences', async (req, res) => {
             language: updatedUser.preferredLanguage
         });
     } catch (error) {
-        console.error('Erreur mise à jour préférences:', error);
         res.status(500).json({
             error: 'internal_error',
             message: 'Erreur lors de la mise à jour des préférences',

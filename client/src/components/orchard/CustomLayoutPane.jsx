@@ -250,13 +250,6 @@ export default function CustomLayoutPane({ reviewData, layout, onLayoutChange, i
     }, [layout]);
 
     // Debug
-    console.log('🎨 CustomLayoutPane:', {
-        hasReviewData: !!reviewData,
-        keysCount: reviewData ? Object.keys(reviewData).length : 0,
-        placedCount: placedFields.length,
-        isCanvasOver
-    });
-
     const handleRemove = useCallback((fieldId) => {
         const updated = placedFields.filter(pf => pf.id !== fieldId);
         setPlacedFields(updated);

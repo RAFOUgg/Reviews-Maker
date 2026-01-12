@@ -127,62 +127,6 @@ const UnifiedPipeline = ({
                 // Nouveau - vérifier qu'il n'existe pas déjà avec le même nom
                 const duplicateCheck = presets.find(p => p.name === preset.name && p.id !== preset.id)
                 if (duplicateCheck) {
-                    console.warn('Un préréglage avec ce nom existe déjà')
-                    return
-                }
-                newPresets = [...presets, preset]
-            }
-        }
-
-        setPresets(newPresets)
-    }
-
-    // Handler chargement préréglage
-    const handleLoadPreset = (presetId) => {
-        const preset = presets.find(p => p.id === presetId)
-        if (!preset) return
-
-        // Appliquer les données du préréglage
-        // (logique à implémenter selon besoin)
-        console.log('Chargement preset:', preset)
-    }
-
-    return (
-        <LiquidCard
-            title={config.title}
-            subtitle={config.description}
-            bordered
-        >
-            {/* Instructions utilisateur */}
-            <div className="mb-4 bg-gradient-to-r dark:/20 dark:/20 border dark: rounded-xl p-4">
-                <h4 className="text-sm font-semibold dark: mb-2 flex items-center gap-2">
-                    🌱 {config.title} : Timeline interactive
-                </h4>
-                <ul className="text-xs dark: space-y-1 list-disc list-inside">
-                    <li>📍 <strong>Glissez</strong> les contenus depuis le panneau latéral vers les cases de la timeline</li>
-                    <li>🖱️ <strong>Drag & drop</strong> : Sélectionnez un contenu à gauche et déposez-le sur une case</li>
-                    <li>📝 <strong>Édition</strong> : Cliquez sur une case pour modifier ses données</li>
-                    <li>💾 <strong>Préréglages</strong> : Sauvegardez des configurations réutilisables</li>
-                    <li>📊 <strong>Clic droit</strong> sur un contenu : définir valeurs ou assigner à une plage</li>
-                </ul>
-            </div>
-
-            {/* Composant Pipeline unifié */}
-            <PipelineDragDropView
-                type={type}
-                sidebarContent={config.sidebarContent}
-                timelineConfig={timelineConfig}
-                timelineData={timelineData}
-                onConfigChange={handleConfigChange}
-                onDataChange={handleDataChange}
-                presets={presets}
-                onSavePreset={handleSavePreset}
-                onLoadPreset={handleLoadPreset}
-                intervalTypes={config.intervalTypes}
-                phases={config.phases}
-            />
-        </LiquidCard>
-    );
 };
 
 export default UnifiedPipeline;

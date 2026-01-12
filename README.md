@@ -1,89 +1,226 @@
-# Reviews-Maker
+# Reviews-Maker - MVP Beta 🚀
 
-Plateforme web complète pour créer, gérer et partager des avis sur des produits cannabis.
+Plateforme web complète pour créer, gérer et partager des reviews détaillées sur des produits cannabis avec support complet des pipelines de culture et maturation.
+
+## ✨ Fonctionnalités Principales
+
+- **Création de Reviews** : Fleurs, Hash, Concentrés, Comestibles
+- **Pipelines Interactives** : Timeline drag & drop pour documenter culture et curing
+- **Export Pro** : PNG, PDF, SVG, JSON, CSV avec templates personnalisés
+- **Génétiques (PhenoHunt)** : Arbre généalogique de cultivars
+- **Galerie Publique** : Partage et découverte de reviews
+- **Authentification** : Discord OAuth + Email/Password
+- **Système d'Abonnement** : Amateur, Producteur, Influenceur
+- **Vérification KYC** : Documents d'identité pour producteurs
 
 ## 🚀 Stack Technique
 
-- **Frontend** : React 18 + Vite, TailwindCSS, React Router v6
-- **Backend** : Node.js + Express, SQLite3
-- **Auth** : Discord OAuth2 + Email/Password, JWT tokens
-- **Déploiement** : PM2, Nginx reverse proxy
+- **Frontend** : React 18 + Vite, TailwindCSS, React Router v6, Zustand
+- **Backend** : Node.js + Express, Prisma + SQLite3
+- **Auth** : Passport.js (Discord, Google, Facebook OAuth2)
+- **Déploiement** : PM2, Nginx reverse proxy, Docker-ready
 
-## 📦 Quick Start
+## 🛠️ Installation Locale
 
-### Installation
+### Prérequis
+- Node.js 18+ 
+- npm ou yarn
+- SQLite3 (inclus avec Prisma)
+
+### Quick Start
 
 ```bash
-# Client
+# 1. Clone du repo
+git clone <repo-url>
+cd Reviews-Maker
+
+# 2. Frontend
 cd client
 npm install
 npm run dev
+# Ouvre http://localhost:5173
 
-# Server
+# 3. Backend (nouveau terminal)
 cd server-new
 npm install
-npm start
+cp .env.example .env
+npm run prisma:generate
+npm run prisma:migrate
+npm run dev
+# Serveur sur http://localhost:3001
 ```
 
-### Configuration
-
-Copier `.env.example` vers `.env` et configurer :
+### Configuration (.env)
 
 ```env
-# Discord OAuth (optionnel)
-DISCORD_CLIENT_ID=...
-DISCORD_CLIENT_SECRET=...
+# Frontend
+VITE_API_URL=http://localhost:3001
 
-# Email (requis pour signup email)
-EMAIL_USER=...
-EMAIL_PASS=...
+# Backend
+NODE_ENV=development
+PORT=3001
+DATABASE_URL=file:../db/reviews.sqlite
 
-# Database
-DB_PATH=../db/reviews.sqlite
+# Discord OAuth
+DISCORD_CLIENT_ID=your_client_id
+DISCORD_CLIENT_SECRET=your_secret
+DISCORD_REDIRECT_URI=http://localhost:3001/api/auth/discord/callback
+
+# Session
+SESSION_SECRET=your_secret_key
+SESSION_DOMAIN=localhost
+
+# Upload
+MAX_FILE_SIZE=10485760
 ```
 
-## 🌐 Déploiement Production
+## 📁 Structure du Projet
 
-Voir [docs/COMMANDES_DEPLOIEMENT.md](docs/COMMANDES_DEPLOIEMENT.md) pour le workflow complet.
+Voir [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) pour la documentation complète de l'architecture.
+
+**Résumé** :
+- `/client` → Frontend React (Vite)
+- `/server-new` → Backend Express + Prisma
+- `/data` → Données statiques JSON
+- `/scripts` → Scripts de déploiement
+- `/db` → Base de données SQLite
+
+## 🚀 Déploiement Production
+
+### VPS (Recommandé)
 
 ```bash
-# VPS
+# SSH vers le VPS
 ssh vps-lafoncedalle
-cd /home/ubuntu/Reviews-Maker
-git pull origin feat/templates-backend
-cd client && npm run build
-sudo cp -r dist/* /var/www/reviews-maker/client/
-pm2 restart reviews-maker
+
+# Déploiement automatisé
+./scripts/deploy-vps.sh
+
+# Gestion du serveur
+./scripts/manage-server-vps.sh
+./scripts/restart-server-vps.sh
 ```
 
 ## 📚 Documentation
 
-- **[QUICKSTART.md](docs/QUICKSTART.md)** - Guide démarrage rapide
-- **[INTEGRATION_COMPLETE_2025-12-12.md](docs/INTEGRATION_COMPLETE_2025-12-12.md)** - Documentation technique complète
-- **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - Résolution problèmes courants
-- **[CHANGELOG.md](docs/CHANGELOG.md)** - Historique des versions
+- **[PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)** - Architecture complète
+- **[.github/instructions/](./github/instructions/)** - Guides développement
+- **[scripts/README.md](scripts/README.md)** - Documentation scripts
 
-### Fonctionnalités
+## 🎯 Fonctionnalités MVP Beta
 
-- **Reviews** : 3 types de produits (Hash, Concentrés, Edibles)
-- **Comptes** : Amateur, Influenceur Basic/Pro, Producteur
-- **Galerie** : Orchard avec filtres avancés, exports personnalisés
-- **Authentification** : Discord OAuth + Email/Password
-- **Système de thèmes** : Light/Dark mode complet
+### ✅ Produits Supportés
+- **Fleurs (Buds)** - Avec pipelines culture complet
+- **Hash** - Avec pipeline séparation/purification
+- **Concentrés (Rosin, BHO)** - Avec méthodes extraction
+- **Comestibles** - Avec recettes structurées
 
-## 🏗️ Architecture
+### ✅ Pipelines Interactives
+- **Timeline drag & drop** - Joours/Semaines/Phases
+- **Édition multi-cellules** - Sélection et application groupée
+- **Préréglages** - Sauvegarde et chargement rapide
+- **Déroulé analytique** - Suivi complet du processus
 
+### ✅ Exports
+- **Formats** : PNG, JPEG, PDF (1:1, 16:9, A4, 9:16)
+- **Templates** : Compact, Détaillé, Complète, Influenceur
+- **Personnalisation** : Thèmes, couleurs, filigrane (Producteur)
+- **Partage** : Réseaux sociaux + Email
+
+### ✅ Authentification & Sécurité
+- **OAuth2** : Discord, Google, Facebook (optionnel)
+- **Email/Password** : Authentification classique
+- **Session** : Express-session + SQLite3
+- **KYC** : Vérification d'identité (Producteur)
+- **Age Gate** : Vérification légale (21+)
+
+### ✅ Galerie Publique
+- **Découverte** : Filtres avancés par type, notes, récence
+- **Interactions** : Likes, commentaires, partages
+- **Modération** : Signalement et revue par Admin
+
+## 🔧 Commandes Utiles
+
+```bash
+# Développement
+npm run dev                    # Frontend + Backend (concurrent)
+
+# Build & Test
+npm run build                  # Production build
+npm run lint                   # ESLint check
+
+# Base de données
+npm run prisma:studio         # Prisma UI
+npm run prisma:migrate        # Appliquer migrations
+npm run seed                  # Seed données initiales
+
+# Maintenance
+./scripts/db-backup.sh        # Backup BD
+./scripts/db-restore.sh       # Restore BD
 ```
-client/               # Application React (Vite)
-  src/
-    components/       # Composants réutilisables
-    pages/           # Pages de routing
-    services/        # API calls, auth, state
-    v2/              # Nouvelle architecture modulaire
 
-server-new/          # Backend Express
-  routes/            # API endpoints
-  services/          # Business logic
+## 🐛 Troubleshooting
+
+### Port déjà utilisé
+```bash
+# Port 5173 (Vite)
+lsof -i :5173 | kill -9 [PID]
+
+# Port 3001 (Express)
+lsof -i :3001 | kill -9 [PID]
+```
+
+### Problèmes de BD
+```bash
+# Réinitialiser Prisma
+rm -rf server-new/prisma/migrations
+npm run prisma:generate
+npm run prisma:migrate dev --name init
+```
+
+### Logs de debug
+Les `console.log` ont été supprimés pour le MVP.
+Utiliser l'onglet Network des DevTools pour déboguer les API.
+
+## 📊 Monitoring Production
+
+```bash
+# Vérifier le statut du serveur
+pm2 status
+
+# Voir les logs
+pm2 logs reviews-maker
+
+# Redémarrer
+pm2 restart reviews-maker
+
+# Arrêter
+pm2 stop reviews-maker
+```
+
+## 🤝 Contribution
+
+1. Créer une branche feature (`git checkout -b feat/ma-feature`)
+2. Commit avec messages clairs (`git commit -m "feat: description"`)
+3. Push et créer une Pull Request
+4. Vérifier que les tests passent
+
+## 📄 License
+
+Propriétaire - Tous droits réservés
+
+## 📞 Support
+
+Pour les problèmes :
+1. Consulter la [documentation](PROJECT_STRUCTURE.md)
+2. Vérifier les logs : `pm2 logs`
+3. Contacter l'équipe de développement
+
+---
+
+**Status** : MVP Beta Ready 🚀  
+**Dernière mise à jour** : 2026-01-13  
+**Version** : 1.0.0-beta
   middleware/        # Auth, validation
   
 db/                  # SQLite database + images

@@ -217,7 +217,6 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
                     extra = reviewData.extraData;
                 }
             } catch (e) {
-                console.warn('extractCategoryRatings: Failed to parse extraData', e);
             }
 
             // Fusionner extra avec reviewData pour chercher les champs
@@ -326,7 +325,6 @@ export function extractExtraData(extraData, reviewData = null) {
             extra = extraData;
         }
     } catch (e) {
-        console.warn('extractExtraData: Failed to parse extraData', e);
     }
 
     // Fusionner avec les champs de reviewData directement
@@ -442,9 +440,6 @@ export function extractExtraData(extraData, reviewData = null) {
             }
             return { key, label, icon, category, value: displayValue };
         });
-
-    console.log('📦 extractExtraData - Found:', results.length, 'fields from merged data');
-
     return results;
 }
 

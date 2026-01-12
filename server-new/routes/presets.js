@@ -40,7 +40,6 @@ router.get('/', requireAuth, async (req, res) => {
 
         res.json(presets);
     } catch (error) {
-        console.error('❌ Erreur récupération préréglages:', error);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
@@ -73,7 +72,6 @@ router.post('/', requireAuth, async (req, res) => {
 
         res.json(preset);
     } catch (error) {
-        console.error('❌ Erreur création préréglage:', error);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
@@ -109,7 +107,6 @@ router.put('/:id', requireAuth, async (req, res) => {
 
         res.json(updated);
     } catch (error) {
-        console.error('❌ Erreur mise à jour préréglage:', error);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
@@ -138,7 +135,6 @@ router.delete('/:id', requireAuth, async (req, res) => {
 
         res.json({ success: true });
     } catch (error) {
-        console.error('❌ Erreur suppression préréglage:', error);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });

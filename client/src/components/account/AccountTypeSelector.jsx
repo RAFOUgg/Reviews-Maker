@@ -23,7 +23,6 @@ const AccountTypeSelector = ({ isOpen, onComplete, currentType = 'consumer', ini
                 const data = await response.json();
                 setAccountTypes(data.types);
             } catch (err) {
-                console.error('Erreur chargement types de comptes:', err);
                 setError('Erreur de chargement des options');
             }
         };
@@ -64,7 +63,6 @@ const AccountTypeSelector = ({ isOpen, onComplete, currentType = 'consumer', ini
 
             onComplete({ accountType: data.accountType });
         } catch (err) {
-            console.error('Erreur changement type compte:', err);
             setError('Erreur réseau, veuillez réessayer');
             setLoading(false);
         }

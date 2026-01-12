@@ -120,7 +120,6 @@ export default function EmailVerificationPage() {
                 navigate('/welcome'); // Page de bienvenue après inscription
             }
         } catch (error) {
-            console.error('Verify error:', error);
             setError('Erreur de connexion au serveur');
         } finally {
             setIsLoading(false);
@@ -153,7 +152,6 @@ export default function EmailVerificationPage() {
             setCanResend(false);
             inputRefs.current[0]?.focus();
         } catch (error) {
-            console.error('Resend error:', error);
             setError('Erreur de connexion au serveur');
         } finally {
             setIsLoading(false);

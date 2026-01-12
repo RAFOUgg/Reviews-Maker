@@ -50,7 +50,6 @@ function parseRoles(rolesJson) {
 
         return ['consumer'];
     } catch (error) {
-        console.error('[parseRoles] Error parsing roles:', rolesJson, error);
         return ['consumer'];
     }
 }
@@ -252,7 +251,6 @@ export async function getAccountInfo(userId) {
             },
         });
     } catch (error) {
-        console.error('[getAccountInfo] Error with includes, falling back to basic query:', error.message);
         // Fallback to basic query without includes if relations fail
         user = await prisma.user.findUnique({
             where: { id: userId },

@@ -132,7 +132,6 @@ export default function GalleryPage() {
         }));
         setReviews(mockReviews);
       } catch (error) {
-        console.error('Erreur chargement reviews:', error);
       } finally {
         setLoading(false);
       }

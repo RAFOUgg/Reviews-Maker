@@ -12,28 +12,32 @@ package-lock.json
 .env.production
 .env.development
 *.local
-server-new/.env.save
+.env.save
+.env.bak*
 
 # Build outputs
 client/dist/
 client/build/
 dist/
 build/
+dist.tar.gz
 
 # Database & Uploads
 db/*.sqlite
 db/*.sqlite-shm
 db/*.sqlite-wal
 db/review_images/*
+db/kyc_documents/*
 db/*.db
 db/*.db-shm
 db/*.db-wal
 !db/review_images/.gitkeep
+!db/kyc_documents/.gitkeep
 db/backups/*
 !db/backups/.gitkeep
 *.bak
 
-# Logs
+# Logs & Debug
 logs/
 *.log
 npm-debug.log*
@@ -41,10 +45,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
-# PM2
 .pm2/
-ecosystem.config.js
 
 # OS files
 .DS_Store
@@ -57,6 +58,8 @@ desktop.ini
 *.swp
 *.swo
 *~
+*.sublime-project
+*.sublime-workspace
 
 # Prisma
 server-new/prisma/migrations/*/migration.sql.backup
@@ -65,9 +68,16 @@ server-new/prisma/migrations/*/migration.sql.backup
 coverage/
 .nyc_output/
 
-# Archives (optionnel)
+# Temporary files
+*.tmp
+*.temp
+server-new/uploads/temp/
+
+# Archives & backups
 archive/
-server-new/.env.save
-server-new/.env.bak*
-db/*.sqlite
-db/sessions.db*
+*.tar.gz
+*.zip
+db/backups/
+
+# Platform specific
+server-new/node_modules/.bin/

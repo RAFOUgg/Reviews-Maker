@@ -64,7 +64,6 @@ export default function PaymentPage() {
             // Rediriger vers l'inscription avec le type de compte
             navigate(`/register?type=${accountType}&paid=true`);
         } catch (err) {
-            console.error('Payment error:', err);
             setError('Erreur lors du paiement. Veuillez réessayer.');
         } finally {
             setIsLoading(false);

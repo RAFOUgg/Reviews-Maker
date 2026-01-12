@@ -203,7 +203,6 @@ export function calculateCategoryRatings(formData, productType) {
         if (normIndex.has(targetNorm)) {
             // Found exact normalized match
             // console.debug to keep logs readable during development
-            console.debug(`lookupField: normalized exact match for "${key}" -> ${targetNorm}`);
             return normIndex.get(targetNorm);
         }
 
@@ -211,11 +210,9 @@ export function calculateCategoryRatings(formData, productType) {
         const plural = key.endsWith('s') ? key : `${key}s`;
         const singular = key.endsWith('s') ? key.replace(/s$/, '') : key;
         if (normalize(plural) !== targetNorm && normIndex.has(normalize(plural))) {
-            console.debug(`lookupField: normalized plural match for "${key}" -> ${normalize(plural)}`);
             return normIndex.get(normalize(plural));
         }
         if (normalize(singular) !== targetNorm && normIndex.has(normalize(singular))) {
-            console.debug(`lookupField: normalized singular match for "${key}" -> ${normalize(singular)}`);
             return normIndex.get(normalize(singular));
         }
 
@@ -223,15 +220,11 @@ export function calculateCategoryRatings(formData, productType) {
         const allNormKeys = Array.from(normIndex.keys());
         const fuzzy = allNormKeys.find(nk => nk === targetNorm || nk.includes(targetNorm) || targetNorm.includes(nk));
         if (fuzzy) {
-            console.debug(`lookupField: fuzzy normalized match for "${key}" -> ${fuzzy}`);
             return normIndex.get(fuzzy);
         }
 
         return undefined;
     };
-
-    console.log('🔍 calculateCategoryRatings:', { productType /* formData omitted for brevity */ });
-
     // Calculer la note pour chaque catégorie
     Object.keys(mapping).forEach(category => {
         const categoryConfig = mapping[category];
@@ -240,7 +233,6 @@ export function calculateCategoryRatings(formData, productType) {
         const validValues = fields
             .map(fieldKey => {
                 const value = lookupField(formData, fieldKey);
-                console.log(`  📊 ${category}.${fieldKey} = ${value}`);
                 return value;
             })
             .filter(v => v !== undefined && v !== null && v !== '' && !isNaN(v))
@@ -249,10 +241,8 @@ export function calculateCategoryRatings(formData, productType) {
         if (validValues.length > 0) {
             const average = validValues.reduce((sum, v) => sum + v, 0) / validValues.length;
             ratings[category] = Math.round(average * 2) / 2; // Arrondi à 0.5 près
-            console.log(`  ✅ ${category} = ${ratings[category]} (${validValues.length} champs)`);
         } else {
             ratings[category] = 0;
-            console.log(`  ⚠️ ${category} = 0 (aucune valeur valide)`);
         }
     });
 
@@ -261,9 +251,6 @@ export function calculateCategoryRatings(formData, productType) {
     const overallRating = categoryValues.length > 0
         ? Math.round((categoryValues.reduce((sum, v) => sum + v, 0) / categoryValues.length) * 2) / 2
         : 0;
-
-    console.log('🎯 Résultat final:', { ...ratings, overall: overallRating });
-
     return { ...ratings, overall: overallRating };
 }
 
