@@ -1971,10 +1971,8 @@ const PipelineDragDropView = ({
 
             {/* TIMELINE PRINCIPALE */}
             <div className="flex-1 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden flex flex-col">
-                {/* HEADER CONFIGURATION + MESSAGES D'AIDE - MASQUÉ SUR MOBILE */}
-                {!isMobile && (
-                    <>
-                        <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-transparent dark:bg-transparent">
+                {/* HEADER CONFIGURATION */}
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-transparent dark:bg-transparent">
                             <div className="flex items-center justify-between mb-3">
                                 <h3 className="font-bold text-gray-900 dark:text-white text-lg flex items-center gap-2">
                                     <span>📊</span>
