@@ -1,9 +1,11 @@
 /**
  * ItemContextMenu - Menu contextuel pour pré-configuration des items pipeline
  * Position naturelle à côté du clic, responsive, fonctionnel
+ * Rendu via React Portal pour éviter le clipping parent overflow
  */
 
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Check, Plus, Minus, Zap } from 'lucide-react';
 
 const ItemContextMenu = ({ item, position, anchorRect, onClose, isConfigured, cells = [], onAssignNow, onAssignRange, onAssignAll }) => {
@@ -187,11 +189,11 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, isConfigured, ce
         return <input type="text" value={value || ''} onChange={(e) => setValue(e.target.value)} className={inputCls} placeholder={item.placeholder || 'Entrer une valeur...'} autoFocus />;
     };
 
-    return (
+    const menuContent = (
         <div
             ref={menuRef}
             className="fixed z-[9999] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
-            style={{ opacity: isVisible ? 1 : 0, transition: 'opacity 0.15s ease-out', width: '320px', maxWidth: 'calc(100vw - 16px)', maxHeight: 'calc(100vh - 16px)' }}
+            style={{ opacity: isVisible ? 1 : 0, transition: 'opacity 0.15s ease-out', width: '320px', maxWidth: 'calc(100vw - 16px)', maxHeight: 'calc(100vh - 16px)', pointerEvents: 'auto' }}
         >
             {/* Header */}
             <div className="flex items-center justify-between px-3 py-2.5 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-800 border-b border-gray-200 dark:border-gray-700">
@@ -265,6 +267,8 @@ const ItemContextMenu = ({ item, position, anchorRect, onClose, isConfigured, ce
             </div>
         </div>
     );
+
+    return createPortal(menuContent, document.body);
 };
 
 export default ItemContextMenu;
