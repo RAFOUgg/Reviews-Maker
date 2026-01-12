@@ -65,22 +65,22 @@ export const ResponsiveCreateReviewLayout = ({
                 setShouldUseCarousel(true);
                 return;
             }
-            
+
             if (containerRef.current && sectionEmojis.length > 0) {
                 // Chaque emoji prend environ 50px (px-4 py-2 + gap-2)
                 const estimatedWidth = (sectionEmojis.length * 50) + ((sectionEmojis.length - 1) * 8);
                 const availableWidth = containerRef.current.offsetWidth - 32; // padding x2
-                
+
                 // Si pas assez de place, utiliser carousel
                 setShouldUseCarousel(estimatedWidth > availableWidth);
             }
         };
 
         detectCarouselNeeded();
-        
+
         const timer = setTimeout(detectCarouselNeeded, 100);
         window.addEventListener('resize', detectCarouselNeeded);
-        
+
         return () => {
             clearTimeout(timer);
             window.removeEventListener('resize', detectCarouselNeeded);
@@ -161,9 +161,9 @@ export const ResponsiveCreateReviewLayout = ({
                             <div className={layout.isMobile ? 'space-y-2' : 'space-y-3'}>
                                 {/* Emoji Carousel - Galerie tournante optimisée mobile */}
                                 {sectionEmojis.length > 0 && (
-                                    <div className="w-full">
-                                        {layout.isMobile ? (
-                                            // Mobile: Drag-to-scroll carousel with 5 items visible + fade effect
+                                    <div className="w-full" ref={containerRef}>
+                                        {shouldUseCarousel ? (
+                                            // Carousel mode: Drag-to-scroll with 5 items visible + fade effect
                                             <div
                                                 ref={carouselRef}
                                                 onMouseDown={handleMouseDown}
@@ -227,8 +227,8 @@ export const ResponsiveCreateReviewLayout = ({
                                                 </div>
                                             </div>
                                         ) : (
-                                            // Desktop: Show all emojis in a wrap
-                                            <div className="flex gap-2 flex-1 justify-center flex-wrap">
+                                            // Desktop: Show all emojis in a wrap (si assez d'espace)
+                                            <div className="flex gap-2 flex-1 justify-center flex-wrap px-4">
                                                 {sectionEmojis.map((emoji, idx) => (
                                                     <motion.button
                                                         key={idx}
@@ -297,42 +297,14 @@ export const ResponsiveCreateReviewLayout = ({
                     }`}>
                     <div className={layout.isMobile ? 'px-3 py-3' : 'px-6 md:px-8 py-6'}>
                         <div className={layout.isMobile ? 'w-full' : 'max-w-6xl mx-auto'}>
-                            <div className="flex items-center justify-between gap-2">
-                                {/* Bouton Précédent - Desktop only */}
-                                {!layout.isMobile && (
-                                    <button
-                                        onClick={handlePrevious}
-                                        disabled={currentSection === 0}
-                                        className={`flex items-center justify-center rounded-lg font-medium transition-all flex-shrink-0 px-4 py-2.5 text-base gap-2 ${currentSection === 0
-                                            ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
-                                            : 'bg-gray-800 hover:bg-gray-700 text-white active:scale-95'
-                                            }`}
-                                    >
-                                        ← Précédent
-                                    </button>
-                                )}
-
+                            <div className="flex items-center justify-center gap-2">
                                 {/* Section Indicator */}
-                                <div className={`text-center ${!layout.isMobile ? 'flex-1' : 'flex-1'}`}>
+                                <div className="text-center">
                                     <div className={`font-medium ${layout.isMobile ? 'text-xs text-gray-400' : 'text-sm text-gray-400'
                                         }`}>
                                         {currentSection + 1}/{totalSections}
                                     </div>
                                 </div>
-
-                                {/* Bouton Suivant - Desktop only */}
-                                {!layout.isMobile && (
-                                    <button
-                                        onClick={handleNext}
-                                        disabled={currentSection === totalSections - 1}
-                                        className={`flex items-center justify-center rounded-lg font-medium transition-all flex-shrink-0 px-4 py-2.5 text-base gap-2 ${currentSection === totalSections - 1
-                                            ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
-                                            : 'bg-purple-600 hover:bg-purple-700 text-white active:scale-95'
-                                            }`}
-                                    >
-                                        Suivant →
-                                    </button>
-                                )}
                             </div>
                         </div>
                     </div>
