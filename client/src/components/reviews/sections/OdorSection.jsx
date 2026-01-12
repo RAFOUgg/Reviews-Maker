@@ -17,6 +17,7 @@ export default function OdorSection({ productType, formData = {}, handleChange }
     const [fidelity, setFidelity] = useState(data?.fidelity || 5);
     // Synchroniser avec parent
     useEffect(() => {
+        if (!handleChange) return;
         handleChange('odeurs', {
             dominantNotes,
             secondaryNotes,
@@ -24,7 +25,7 @@ export default function OdorSection({ productType, formData = {}, handleChange }
             complexity,
             fidelity
         });
-    }, [dominantNotes, secondaryNotes, intensity, complexity, fidelity]);
+    }, [dominantNotes, secondaryNotes, intensity, complexity, fidelity, handleChange]);
 
     return (
         <div className="space-y-8 p-6 bg-gray-900/90 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-700/50">

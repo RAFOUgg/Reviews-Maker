@@ -20,6 +20,7 @@ export default function AnalyticsSection({ productType, formData = {}, handleCha
 
     // Synchroniser avec parent
     useEffect(() => {
+        if (!handleChange) return;
         handleChange('analytics', {
             thc: thc ? parseFloat(thc) : null,
             cbd: cbd ? parseFloat(cbd) : null,
@@ -28,7 +29,7 @@ export default function AnalyticsSection({ productType, formData = {}, handleCha
             certificateFile: uploadedFile,
             terpeneFile: terpeneFile
         });
-    }, [thc, cbd, cbg, cbc, uploadedFile, terpeneFile]);
+    }, [thc, cbd, cbg, cbc, uploadedFile, terpeneFile, handleChange]);
 
     const handleFileUpload = (e, type = 'cannabinoid') => {
         const file = e.target.files?.[0];

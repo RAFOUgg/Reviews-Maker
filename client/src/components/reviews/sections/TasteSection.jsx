@@ -18,6 +18,7 @@ export default function TasteSection({ productType, formData = {}, handleChange 
 
     // Synchroniser avec parent
     useEffect(() => {
+        if (!handleChange) return;
         handleChange('gouts', {
             intensity,
             aggressiveness,
@@ -25,7 +26,7 @@ export default function TasteSection({ productType, formData = {}, handleChange 
             inhalationNotes,
             exhalationNotes
         });
-    }, [intensity, aggressiveness, dryPuffNotes, inhalationNotes, exhalationNotes]);
+    }, [intensity, aggressiveness, dryPuffNotes, inhalationNotes, exhalationNotes, handleChange]);
 
     const toggleDryPuffNote = (noteId) => {
         setDryPuffNotes(prev => {

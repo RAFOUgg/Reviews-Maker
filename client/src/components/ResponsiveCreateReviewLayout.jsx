@@ -32,7 +32,9 @@ export const ResponsiveCreateReviewLayout = ({
     const [emojiCarouselIndex, setEmojiCarouselIndex] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState(0);
+    const [shouldUseCarousel, setShouldUseCarousel] = useState(false);
     const carouselRef = useRef(null);
+    const containerRef = useRef(null);
 
     // Nombre de sections visibles dans le carrousel
     const VISIBLE_ITEMS = 5;

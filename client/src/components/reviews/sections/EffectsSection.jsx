@@ -52,7 +52,7 @@ export default function EffectsSection({ productType, formData = {}, handleChang
             effetsSecondaires,
             usagesPreferes
         });
-    }, [onset, intensity, duration, selectedEffects, methodeConsommation, dosageUtilise, dosageUnite, dureeEffetsHeures, dureeEffetsMinutes, debutEffets, dureeEffetsCategorie, profilsEffets, effetsSecondaires, usagesPreferes]);
+    }, [onset, intensity, duration, selectedEffects, methodeConsommation, dosageUtilise, dosageUnite, dureeEffetsHeures, dureeEffetsMinutes, debutEffets, dureeEffetsCategorie, profilsEffets, effetsSecondaires, usagesPreferes, handleChange]);
 
     const toggleEffect = (effectId) => {
         setSelectedEffects(prev => {

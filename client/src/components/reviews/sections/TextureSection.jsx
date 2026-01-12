@@ -104,7 +104,7 @@ export default function TextureSection({ productType, formData = {}, handleChang
         }
 
         handleChange('texture', textureData);
-    }, [hardness, density, malleability, elasticity, stickiness, melting, residue, friability, viscosity, productType]);
+    }, [hardness, density, malleability, elasticity, stickiness, melting, residue, friability, viscosity, productType, handleChange]);
 
     return (
         <div className="space-y-8 p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50">
