@@ -42,7 +42,6 @@ export const ResponsiveCreateReviewLayout = ({
 
     const handlePrevious = () => {
         if (layout.isMobile) {
-            // Sur mobile, le footer n'a pas les boutons prev/next
             return;
         }
         if (currentSection > 0) {
@@ -52,13 +51,41 @@ export const ResponsiveCreateReviewLayout = ({
 
     const handleNext = () => {
         if (layout.isMobile) {
-            // Sur mobile, le footer n'a pas les boutons prev/next
             return;
         }
         if (currentSection < totalSections - 1) {
             onSectionChange(currentSection + 1);
         }
     };
+
+    // Détecte si l'espace n'est pas suffisant pour afficher tous les émojis
+    useEffect(() => {
+        const detectCarouselNeeded = () => {
+            if (layout.isMobile) {
+                setShouldUseCarousel(true);
+                return;
+            }
+            
+            if (containerRef.current && sectionEmojis.length > 0) {
+                // Chaque emoji prend environ 50px (px-4 py-2 + gap-2)
+                const estimatedWidth = (sectionEmojis.length * 50) + ((sectionEmojis.length - 1) * 8);
+                const availableWidth = containerRef.current.offsetWidth - 32; // padding x2
+                
+                // Si pas assez de place, utiliser carousel
+                setShouldUseCarousel(estimatedWidth > availableWidth);
+            }
+        };
+
+        detectCarouselNeeded();
+        
+        const timer = setTimeout(detectCarouselNeeded, 100);
+        window.addEventListener('resize', detectCarouselNeeded);
+        
+        return () => {
+            clearTimeout(timer);
+            window.removeEventListener('resize', detectCarouselNeeded);
+        };
+    }, [layout.isMobile, sectionEmojis.length]);
 
     // Auto-position carousel to keep selected section visible
     useEffect(() => {
@@ -182,8 +209,8 @@ export const ResponsiveCreateReviewLayout = ({
                                                                     transition={{ duration: 0.3, ease: 'easeOut' }}
                                                                     onClick={() => onSectionChange(index)}
                                                                     className={`flex-shrink-0 px-3.5 py-3 rounded-xl transition-all text-2xl font-medium ${index === currentSection
-                                                                            ? 'bg-gradient-to-br from-purple-500 to-purple-600 ring-2 ring-purple-300 shadow-lg shadow-purple-500/50'
-                                                                            : 'bg-gray-700/40 hover:bg-gray-700/60'
+                                                                        ? 'bg-gradient-to-br from-purple-500 to-purple-600 ring-2 ring-purple-300 shadow-lg shadow-purple-500/50'
+                                                                        : 'bg-gray-700/40 hover:bg-gray-700/60'
                                                                         }`}
                                                                     style={{
                                                                         filter: isCenter

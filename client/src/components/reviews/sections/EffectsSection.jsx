@@ -11,7 +11,7 @@ import WhiteSlider from '../../ui/WhiteSlider';
  */
 export default function EffectsSection({ productType, formData = {}, handleChange }) {
     const data = formData.effets || {};
-    
+
     // EFFETS RESSENTIS
     const [onset, setOnset] = useState(data?.onset || 5);
     const [intensity, setIntensity] = useState(data?.intensity || 5);
