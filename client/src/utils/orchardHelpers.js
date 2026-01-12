@@ -224,15 +224,7 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
             // reviewData a priorité car il contient les valeurs directes de formData
             const dataSource = { ...extra, ...reviewData };
 
-            console.log('🔍 extractCategoryRatings - DataSource sample:', {
-                densite: dataSource.densite,
-                trichome: dataSource.trichome,
-                aromasIntensity: dataSource.aromasIntensity,
-                durete: dataSource.durete,
-                montee: dataSource.montee,
-                hasReviewData: !!reviewData,
-                reviewDataKeys: reviewData ? Object.keys(reviewData).slice(0, 20) : []
-            });
+
 
             // TOUJOURS reconstruire chaque catégorie depuis les champs plats
             // car même si ratings[catKey] existe comme nombre, on veut les sous-détails
@@ -252,19 +244,9 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
                 // Si on a reconstruit des sous-champs, les utiliser
                 if (Object.keys(reconstructed).length > 0) {
                     ratings[catKey] = reconstructed;
-                    console.log(`  ✅ ${catKey} reconstructed:`, reconstructed);
                 }
                 // Sinon garder la valeur existante (nombre ou objet)
             }
-
-            console.log('🔍 extractCategoryRatings - Rebuilt ratings:', {
-                fromExtraData: Object.keys(extra).length,
-                fromReviewData: Object.keys(reviewData).length,
-                reconstructedCategories: Object.keys(ratings),
-                ratingsPreview: Object.entries(ratings).map(([k, v]) =>
-                    `${k}: ${typeof v === 'object' ? Object.keys(v).length + ' fields' : v}`
-                )
-            });
         }
 
         const categories = [
@@ -322,17 +304,9 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
             });
         }
 
-        console.log('📊 extractCategoryRatings - Result:', result.map(r => ({
-            cat: r.key,
-            value: r.value,
-            subCount: r.count,
-            subs: r.subDetails?.map(s => `${s.key}=${s.value}`).join(', ')
-        })));
-
         return result;
     } catch (error) {
-        console.error('❌ Error in extractCategoryRatings:', error);
-        return []; // Retourner un tableau vide en cas d'erreur
+        return [];
     }
 }
 

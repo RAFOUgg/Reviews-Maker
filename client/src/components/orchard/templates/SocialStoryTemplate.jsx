@@ -14,26 +14,6 @@ import {
  * Informations essentielles en un coup d'œil
  */
 export default function SocialStoryTemplate({ config, reviewData, dimensions }) {
-    // 🔍 Debug - Afficher toutes les données reçues
-    console.log('📱 SocialStoryTemplate - Données reçues:', {
-        hasConfig: !!config,
-        hasReviewData: !!reviewData,
-        reviewDataKeys: reviewData ? Object.keys(reviewData) : [],
-        title: reviewData?.title,
-        holderName: reviewData?.holderName,
-        rating: reviewData?.rating,
-        categoryRatingsRaw: reviewData?.categoryRatings,
-        categoryRatingsKeys: reviewData?.categoryRatings ? Object.keys(reviewData.categoryRatings) : [],
-        aromas: reviewData?.aromas,
-        effects: reviewData?.effects,
-        thcLevel: reviewData?.thcLevel,
-        cbdLevel: reviewData?.cbdLevel,
-        imageUrl: reviewData?.imageUrl,
-        mainImageUrl: reviewData?.mainImageUrl,
-        contentModulesEnabled: config?.contentModules ? 
-            Object.entries(config.contentModules).filter(([k, v]) => v).map(([k]) => k) : [],
-    });
-
     if (!config || !reviewData) {
         return (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br p-8">
@@ -50,22 +30,7 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
     const effects = asArray(reviewData.effects).slice(0, 3);
     const { filled, value } = formatRating(reviewData.rating || 0, 5);
 
-    // 🔍 Debug - Données extraites
-    console.log('📱 SocialStoryTemplate - Données extraites:', {
-        categoryRatings,
-        aromas,
-        effects,
-        rating: { filled, value },
-        contentModules: {
-            rating: contentModules.rating,
-            categoryRatings: contentModules.categoryRatings,
-            effects: contentModules.effects,
-            aromas: contentModules.aromas,
-            thcLevel: contentModules.thcLevel,
-        }
-    });
-
-    const mainImage = reviewData.mainImageUrl || reviewData.imageUrl || 
+    const mainImage = reviewData.mainImageUrl || reviewData.imageUrl ||
         (Array.isArray(reviewData.images) && reviewData.images[0]);
 
     // Animation variants
@@ -89,15 +54,15 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
     const renderBranding = () => {
         if (!branding?.enabled || !branding?.logoUrl) return null;
         return (
-            <motion.div 
+            <motion.div
                 {...fadeUp}
                 transition={{ delay: 0.6 }}
                 className="absolute top-6 right-6"
                 style={{ opacity: branding.opacity || 0.9 }}
             >
-                <img 
-                    src={branding.logoUrl} 
-                    alt="Logo" 
+                <img
+                    src={branding.logoUrl}
+                    alt="Logo"
                     style={{ width: '50px', height: '50px', objectFit: 'contain' }}
                 />
             </motion.div>
@@ -115,26 +80,26 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
             {/* Background Image with overlay */}
             {contentModules.image && mainImage && (
                 <div className="absolute inset-0">
-                    <img 
-                        src={mainImage} 
-                        alt="" 
+                    <img
+                        src={mainImage}
+                        alt=""
                         className="w-full h-full object-cover"
                         style={{ filter: 'blur(20px) brightness(0.4)', transform: 'scale(1.1)' }}
                     />
-                    <div 
-                        className="absolute inset-0" 
-                        style={{ 
+                    <div
+                        className="absolute inset-0"
+                        style={{
                             background: `linear-gradient(180deg, 
                                 transparent 0%, 
                                 ${colorWithOpacity(colors.accent, 30)} 50%, 
                                 ${colors.background} 100%
-                            )` 
+                            )`
                         }}
                     />
                 </div>
             )}
 
-            <motion.div 
+            <motion.div
                 className="relative z-10 flex-1 flex flex-col p-6"
                 variants={stagger}
                 initial="initial"
@@ -143,9 +108,9 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
                 {/* Header - Type & Category */}
                 <motion.div {...fadeUp} className="flex justify-between items-start mb-4">
                     {contentModules.type && reviewData.type && (
-                        <span 
+                        <span
                             className="px-4 py-2 rounded-full"
-                            style={{ 
+                            style={{
                                 ...glassStyle,
                                 fontSize: `${typography.textSize - 2}px`,
                                 color: 'white',
@@ -161,11 +126,11 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
 
                 {/* Main Image */}
                 {contentModules.image && mainImage && (
-                    <motion.div 
+                    <motion.div
                         {...fadeUp}
                         transition={{ delay: 0.1 }}
                         className="flex-shrink-0 mx-auto mb-6 shadow-2xl"
-                        style={{ 
+                        style={{
                             borderRadius: `${image.borderRadius}px`,
                             overflow: 'hidden',
                             width: '85%',
@@ -179,11 +144,11 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
 
                 {/* Title */}
                 {contentModules.title && (reviewData.title || reviewData.holderName) && (
-                    <motion.h1 
+                    <motion.h1
                         {...fadeUp}
                         transition={{ delay: 0.2 }}
                         className="text-center mb-4"
-                        style={{ 
+                        style={{
                             fontSize: `${typography.titleSize + 4}px`,
                             fontWeight: typography.titleWeight,
                             color: colors.title,
@@ -197,17 +162,17 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
 
                 {/* Rating - Big and Bold */}
                 {contentModules.rating && reviewData.rating !== undefined && (
-                    <motion.div 
+                    <motion.div
                         {...fadeUp}
                         transition={{ delay: 0.3 }}
                         className="text-center mb-6"
                     >
                         <div className="flex justify-center gap-1 mb-2">
                             {[...Array(5)].map((_, i) => (
-                                <motion.svg 
-                                    key={i} 
-                                    width="36" 
-                                    height="36" 
+                                <motion.svg
+                                    key={i}
+                                    width="36"
+                                    height="36"
                                     viewBox="0 0 24 24"
                                     fill={i < filled ? colors.accent : 'rgba(255,255,255,0.3)'}
                                     initial={{ scale: 0, rotate: -180 }}
@@ -218,7 +183,7 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
                                 </motion.svg>
                             ))}
                         </div>
-                        <span style={{ 
+                        <span style={{
                             fontSize: `${typography.titleSize}px`,
                             fontWeight: '800',
                             color: colors.accent,
@@ -231,13 +196,13 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
 
                 {/* Quick Stats */}
                 {(contentModules.thcLevel || contentModules.cbdLevel) && (
-                    <motion.div 
+                    <motion.div
                         {...fadeUp}
                         transition={{ delay: 0.4 }}
                         className="flex justify-center gap-4 mb-6"
                     >
                         {contentModules.thcLevel && reviewData.thcLevel && (
-                            <div 
+                            <div
                                 className="px-6 py-3 rounded-2xl text-center"
                                 style={glassStyle}
                             >
@@ -248,7 +213,7 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
                             </div>
                         )}
                         {contentModules.cbdLevel && reviewData.cbdLevel && (
-                            <div 
+                            <div
                                 className="px-6 py-3 rounded-2xl text-center"
                                 style={glassStyle}
                             >
@@ -263,7 +228,7 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
 
                 {/* Category Ratings (compact) */}
                 {contentModules.categoryRatings && categoryRatings.length > 0 && (
-                    <motion.div 
+                    <motion.div
                         {...fadeUp}
                         transition={{ delay: 0.45 }}
                         className="flex justify-center gap-6 mb-6"
@@ -281,13 +246,13 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
 
                 {/* Effects (compact tags) */}
                 {contentModules.effects && effects.length > 0 && (
-                    <motion.div 
+                    <motion.div
                         {...fadeUp}
                         transition={{ delay: 0.5 }}
                         className="flex flex-wrap justify-center gap-2 mb-4"
                     >
                         {effects.map((e, i) => (
-                            <span 
+                            <span
                                 key={i}
                                 className="px-4 py-2 rounded-full"
                                 style={{
@@ -305,13 +270,13 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
 
                 {/* Aromas (compact) */}
                 {contentModules.aromas && aromas.length > 0 && (
-                    <motion.div 
+                    <motion.div
                         {...fadeUp}
                         transition={{ delay: 0.55 }}
                         className="flex flex-wrap justify-center gap-2"
                     >
                         {aromas.map((a, i) => (
-                            <span 
+                            <span
                                 key={i}
                                 className="px-4 py-2 rounded-full"
                                 style={{
@@ -331,7 +296,7 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
                 <div className="flex-1" />
 
                 {/* Footer - Author & Swipe indicator */}
-                <motion.div 
+                <motion.div
                     {...fadeUp}
                     transition={{ delay: 0.6 }}
                     className="text-center"
@@ -343,7 +308,7 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
                             </strong>
                         </div>
                     )}
-                    
+
                     {/* Swipe indicator */}
                     <motion.div
                         animate={{ y: [0, 8, 0] }}

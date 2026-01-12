@@ -21,7 +21,7 @@ const CanevasPhenoHunt = () => {
     const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
 
     const handleNodeDragStop = (event, node) => {
-        console.log('Node dragged:', node);
+        // Node drag handled
     };
 
     const saveTreeChanges = async () => {
@@ -36,9 +36,8 @@ const CanevasPhenoHunt = () => {
             if (!response.ok) {
                 throw new Error('Failed to save tree changes');
             }
-            console.log('Tree changes saved successfully');
         } catch (error) {
-            console.error('Error saving tree changes:', error);
+            // Error silently caught
         }
     };
 

@@ -69,9 +69,9 @@ export const ResponsiveCreateReviewLayout = ({
         }
     }, [currentSection]);
 
-    // Drag handlers
+    // Drag handlers - Smooth scroll horizontal
     const handleMouseDown = (e) => {
-        if (!layout.isMobile || sectionEmojis.length <= VISIBLE_ITEMS) return;
+        if (sectionEmojis.length <= VISIBLE_ITEMS) return;
         setIsDragging(true);
         setDragStart(e.clientX || e.touches?.[0]?.clientX);
     };
@@ -83,14 +83,14 @@ export const ResponsiveCreateReviewLayout = ({
         const dragEnd = e.clientX || e.changedTouches?.[0]?.clientX;
         const diff = dragStart - dragEnd;
 
-        // Threshold pour le drag
-        const threshold = 50;
+        // Threshold pour le drag (plus sensible)
+        const threshold = 30;
 
         if (diff > threshold && emojiCarouselIndex < maxIndex) {
-            // Drag vers la gauche (scroll à droite)
+            // Drag vers la gauche → scroll à droite
             setEmojiCarouselIndex(Math.min(maxIndex, emojiCarouselIndex + 1));
         } else if (diff < -threshold && emojiCarouselIndex > 0) {
-            // Drag vers la droite (scroll à gauche)
+            // Drag vers la droite → scroll à gauche
             setEmojiCarouselIndex(Math.max(0, emojiCarouselIndex - 1));
         }
     };
@@ -105,8 +105,8 @@ export const ResponsiveCreateReviewLayout = ({
             <div className="relative z-10 flex flex-col flex-1">
                 {/* Header - Responsive Padding & Safe Area */}
                 <div className={`sticky top-0 z-40 bg-gray-900/95 backdrop-blur-xl border-b border-gray-700/50 ${layout.isMobile
-                        ? 'px-3 py-3 safe-area-inset-top'
-                        : 'px-6 md:px-8 py-6'
+                    ? 'px-3 py-3 safe-area-inset-top'
+                    : 'px-6 md:px-8 py-6'
                     }`}>
                     <div className={layout.isMobile ? 'w-full' : 'max-w-6xl mx-auto'}>
                         {/* Title & Subtitle */}
@@ -134,7 +134,7 @@ export const ResponsiveCreateReviewLayout = ({
                                 {sectionEmojis.length > 0 && (
                                     <div className="w-full">
                                         {layout.isMobile ? (
-                                            // Mobile: Drag-to-scroll carousel with 5 items visible
+                                            // Mobile: Drag-to-scroll carousel with 5 items visible + fade effect
                                             <div
                                                 ref={carouselRef}
                                                 onMouseDown={handleMouseDown}
@@ -142,46 +142,60 @@ export const ResponsiveCreateReviewLayout = ({
                                                 onMouseLeave={handleMouseUp}
                                                 onTouchStart={handleMouseDown}
                                                 onTouchEnd={handleMouseUp}
-                                                className={`flex items-center justify-center gap-2 py-2 px-1 transition-all ${isDragging ? 'cursor-grabbing' : 'cursor-grab'
-                                                    }`}
+                                                className={`relative flex items-center justify-center gap-1 py-4 px-0 transition-all overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                                             >
-                                                <AnimatePresence mode="wait">
-                                                    {Array.from({ length: Math.min(VISIBLE_ITEMS, sectionEmojis.length) }).map((_, displayOffset) => {
-                                                        const index = emojiCarouselIndex + displayOffset;
-                                                        if (index >= sectionEmojis.length) return null;
+                                                {/* Gradient fade left */}
+                                                <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-900 to-transparent z-10 pointer-events-none" />
 
-                                                        // Calculate position (center is 0, sides are -2 to 2)
-                                                        const centerOffset = displayOffset - 2;
-                                                        const isCenter = centerOffset === 0;
+                                                {/* Gradient fade right */}
+                                                <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-900 to-transparent z-10 pointer-events-none" />
 
-                                                        // Fade calculation for side items
-                                                        let opacity = 1;
-                                                        if (Math.abs(centerOffset) === 1) opacity = 0.5; // Adjacent
-                                                        if (Math.abs(centerOffset) === 2) opacity = 0.25; // Outer
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <AnimatePresence mode="wait">
+                                                        {Array.from({ length: Math.min(VISIBLE_ITEMS, sectionEmojis.length) }).map((_, displayOffset) => {
+                                                            const index = emojiCarouselIndex + displayOffset;
+                                                            if (index >= sectionEmojis.length) return null;
 
-                                                        return (
-                                                            <motion.button
-                                                                key={index}
-                                                                initial={{ opacity: 0, scale: 0.8 }}
-                                                                animate={{
-                                                                    opacity: isCenter ? 1 : opacity,
-                                                                    scale: isCenter ? 1.1 : 1
-                                                                }}
-                                                                exit={{ opacity: 0, scale: 0.8 }}
-                                                                onClick={() => onSectionChange(index)}
-                                                                className={`flex-shrink-0 px-3 py-2.5 rounded-lg transition-all text-xl ${index === currentSection
-                                                                        ? 'bg-purple-600 ring-2 ring-purple-400'
-                                                                        : 'bg-gray-700/30 hover:bg-gray-700/50'
-                                                                    }`}
-                                                                style={{
-                                                                    filter: isCenter ? 'drop-shadow(0 0 12px rgba(168, 85, 247, 0.4))' : 'none'
-                                                                }}
-                                                            >
-                                                                <span>{sectionEmojis[index]}</span>
-                                                            </motion.button>
-                                                        );
-                                                    })}
-                                                </AnimatePresence>
+                                                            // Position dans le carousel (center is 0, sides are -2 to 2)
+                                                            const centerOffset = displayOffset - 2;
+                                                            const isCenter = centerOffset === 0;
+
+                                                            // Calcul opacité avec effect fade progressif
+                                                            const opacityMap = {
+                                                                0: 1,      // Center: 100% opaque
+                                                                1: 0.6,    // Adjacent: 60%
+                                                                2: 0.3     // Outer: 30%
+                                                            };
+                                                            const opacity = opacityMap[Math.abs(centerOffset)];
+
+                                                            return (
+                                                                <motion.button
+                                                                    key={index}
+                                                                    initial={{ opacity: 0.3, scale: 0.85 }}
+                                                                    animate={{
+                                                                        opacity: opacity,
+                                                                        scale: isCenter ? 1.15 : 1
+                                                                    }}
+                                                                    exit={{ opacity: 0, scale: 0.85 }}
+                                                                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                                                                    onClick={() => onSectionChange(index)}
+                                                                    className={`flex-shrink-0 px-3.5 py-3 rounded-xl transition-all text-2xl font-medium ${index === currentSection
+                                                                            ? 'bg-gradient-to-br from-purple-500 to-purple-600 ring-2 ring-purple-300 shadow-lg shadow-purple-500/50'
+                                                                            : 'bg-gray-700/40 hover:bg-gray-700/60'
+                                                                        }`}
+                                                                    style={{
+                                                                        filter: isCenter
+                                                                            ? 'drop-shadow(0 0 16px rgba(168, 85, 247, 0.5))'
+                                                                            : 'none'
+                                                                    }}
+                                                                    whileHover={{ y: -2 }}
+                                                                >
+                                                                    <span>{sectionEmojis[index]}</span>
+                                                                </motion.button>
+                                                            );
+                                                        })}
+                                                    </AnimatePresence>
+                                                </div>
                                             </div>
                                         ) : (
                                             // Desktop: Show all emojis in a wrap
@@ -191,8 +205,8 @@ export const ResponsiveCreateReviewLayout = ({
                                                         key={idx}
                                                         onClick={() => onSectionChange(idx)}
                                                         className={`px-4 py-2 rounded-lg transition-all ${idx === currentSection
-                                                                ? 'bg-purple-600 ring-2 ring-purple-400 scale-110'
-                                                                : 'bg-gray-700/50 hover:bg-gray-700'
+                                                            ? 'bg-purple-600 ring-2 ring-purple-400 scale-110'
+                                                            : 'bg-gray-700/50 hover:bg-gray-700'
                                                             }`}
                                                     >
                                                         <span className="text-lg">{emoji}</span>
@@ -241,8 +255,8 @@ export const ResponsiveCreateReviewLayout = ({
 
                 {/* Main Content - Flex-grow to push footer down */}
                 <main className={`relative z-20 flex-1 overflow-y-auto ${layout.isMobile
-                        ? 'px-3 py-4'
-                        : 'px-6 md:px-8 py-8'
+                    ? 'px-3 py-4'
+                    : 'px-6 md:px-8 py-8'
                     }`}>
                     <div className={layout.isMobile ? 'w-full' : 'max-w-6xl mx-auto'}>
                         {children}
@@ -261,8 +275,8 @@ export const ResponsiveCreateReviewLayout = ({
                                         onClick={handlePrevious}
                                         disabled={currentSection === 0}
                                         className={`flex items-center justify-center rounded-lg font-medium transition-all flex-shrink-0 px-4 py-2.5 text-base gap-2 ${currentSection === 0
-                                                ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
-                                                : 'bg-gray-800 hover:bg-gray-700 text-white active:scale-95'
+                                            ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
+                                            : 'bg-gray-800 hover:bg-gray-700 text-white active:scale-95'
                                             }`}
                                     >
                                         ← Précédent
@@ -283,8 +297,8 @@ export const ResponsiveCreateReviewLayout = ({
                                         onClick={handleNext}
                                         disabled={currentSection === totalSections - 1}
                                         className={`flex items-center justify-center rounded-lg font-medium transition-all flex-shrink-0 px-4 py-2.5 text-base gap-2 ${currentSection === totalSections - 1
-                                                ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
-                                                : 'bg-purple-600 hover:bg-purple-700 text-white active:scale-95'
+                                            ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
+                                            : 'bg-purple-600 hover:bg-purple-700 text-white active:scale-95'
                                             }`}
                                     >
                                         Suivant →

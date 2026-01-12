@@ -46,16 +46,6 @@ function normalizeReviewData(reviewData) {
     // ============================================================================
     const dataSource = { ...parsedExtra, ...normalized };
 
-    console.log('🔧 OrchardPanel normalizeReviewData - DataSource sample:', {
-        densite: dataSource.densite,
-        trichome: dataSource.trichome,
-        aromasIntensity: dataSource.aromasIntensity,
-        durete: dataSource.durete,
-        montee: dataSource.montee,
-        categoryRatingsType: typeof normalized.categoryRatings,
-        categoryRatingsValue: normalized.categoryRatings
-    });
-
     // Définition des champs par catégorie
     const categoryFieldsMap = {
         visual: ['densite', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines', 'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus'],
@@ -99,7 +89,6 @@ function normalizeReviewData(reviewData) {
 
     if (foundAnyField) {
         normalized.categoryRatings = reconstructed;
-        console.log('🔧 OrchardPanel: Reconstructed categoryRatings from flat fields:', reconstructed);
     } else if (existingCategoryRatings && typeof existingCategoryRatings === 'object') {
         // Garder les categoryRatings existantes si on n'a pas trouvé de champs plats
         normalized.categoryRatings = existingCategoryRatings;
@@ -202,29 +191,6 @@ function normalizeReviewData(reviewData) {
         normalized.author = normalized.author.username || normalized.author.name || 'Anonyme';
     }
 
-    console.log('🎯 OrchardPanel: Normalized reviewData', {
-        original: reviewData,
-        normalized,
-        hasRating: normalized.rating !== undefined,
-        hasCategoryRatings: !!normalized.categoryRatings,
-        categoryRatingsKeys: normalized.categoryRatings ? Object.keys(normalized.categoryRatings) : [],
-        categoryRatingsPreview: normalized.categoryRatings ?
-            Object.entries(normalized.categoryRatings).map(([k, v]) =>
-                `${k}: ${typeof v === 'object' ? Object.keys(v).length + ' fields' : v}`
-            ) : [],
-        hasAromas: Array.isArray(normalized.aromas) && normalized.aromas.length > 0,
-        aromasCount: Array.isArray(normalized.aromas) ? normalized.aromas.length : 0,
-        hasEffects: Array.isArray(normalized.effects) && normalized.effects.length > 0,
-        effectsCount: Array.isArray(normalized.effects) ? normalized.effects.length : 0,
-        title: normalized.title,
-        holderName: normalized.holderName,
-        rating: normalized.rating,
-        type: normalized.type,
-        imageUrl: normalized.imageUrl,
-        mainImageUrl: normalized.mainImageUrl,
-        imagesCount: Array.isArray(normalized.images) ? normalized.images.length : 0,
-    });
-
     return normalized;
 }
 
@@ -308,17 +274,8 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                 )
             );
 
-            console.log('📄 Analyse pagination:', {
-                ratio: config.ratio,
-                pagesEnabled,
-                pagesCount: pages.length,
-                needsPagination,
-                hasData: !!(reviewData.categoryRatings || reviewData.aromas?.length)
-            });
-
             // Auto-activer si nécessaire et pas encore activé
             if (needsPagination && !pagesEnabled) {
-                console.log('🔄 Auto-activation du mode pages - Contenu dense détecté');
                 const timer = setTimeout(() => {
                     togglePagesMode();
                 }, 150);
@@ -369,7 +326,6 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
 
     const handleDragStart = useCallback((event) => {
         const { active } = event;
-        console.log('🚀 DragStart:', active.id, active.data?.current?.field);
         setActiveDragId(active.id);
     }, []);
 
@@ -382,7 +338,6 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
     const handleDragEnd = useCallback((event) => {
         const { active, over } = event;
         console.log('🏁 DragEnd:', { activeId: active.id, overId: over?.id });
-
         setActiveDragId(null);
         setIsCanvasOver(false);
 
@@ -400,8 +355,6 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                 // Position en pourcentage
                 const x = Math.max(5, Math.min(75, ((clientX - rect.left) / rect.width) * 100));
                 const y = Math.max(5, Math.min(75, ((clientY - rect.top) / rect.height) * 100));
-
-                console.log('📍 Drop position:', { x, y, field: field.id });
 
                 // Ajouter le champ au layout
                 const alreadyPlaced = customLayout.find(pf => pf.id === field.id);
@@ -500,7 +453,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                                 console.log('📄 Toggle pages mode:', !pagesEnabled, 'Current ratio:', config.ratio);
                                 togglePagesMode();
                             }}
-                            className={`px-3 py-2 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition-all border-2 ${pagesEnabled ? 'bg-gradient-to-r text-white shadow-lg border-indigo-400 dark:border-indigo-500' : 'bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-300 dark:border-gray-600' }`}
+                            className={`px-3 py-2 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition-all border-2 ${pagesEnabled ? 'bg-gradient-to-r text-white shadow-lg border-indigo-400 dark:border-indigo-500' : 'bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-300 dark:border-gray-600'}`}
                             title={pagesEnabled ? 'Désactiver le mode pages' : 'Activer le mode pages'}
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -518,10 +471,9 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => {
-                                console.log('🔄 Toggle mode:', !isCustomMode ? 'CUSTOM' : 'TEMPLATE');
                                 setIsCustomMode(!isCustomMode);
                             }}
-                            className={`px-3 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all border-2 ${isCustomMode ? 'bg-gradient-to-r text-white shadow-lg dark:' : 'bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-600' }`}
+                            className={`px-3 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all border-2 ${isCustomMode ? 'bg-gradient-to-r text-white shadow-lg dark:' : 'bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-600'}`}
                             title={isCustomMode ? 'Mode Template' : 'Mode Personnalisé (Drag & Drop)'}
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -567,7 +519,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => setShowPreview(!showPreview)}
-                            className={`p-2 rounded-lg transition-colors ${showPreview ? ' dark: dark:' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300' }`}
+                            className={`p-2 rounded-lg transition-colors ${showPreview ? ' dark: dark:' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
                             title={showPreview ? 'Masquer l\'aperçu' : 'Afficher l\'aperçu'}
                         >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -615,15 +567,6 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
 
                 {/* Content */}
                 <div className="flex-1 overflow-hidden">
-                    {/* Debug Info */}
-                    {console.log('🎯 OrchardPanel Render:', {
-                        showPreview,
-                        isCustomMode,
-                        pagesEnabled,
-                        ratio: config?.ratio,
-                        reviewType: reviewData?.type
-                    })}
-
                     <AnimatePresence mode="wait">
                         {!showPreview ? (
                             // CONFIG SEULEMENT (aperçu masqué)
@@ -689,7 +632,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                                 className="flex h-full"
                             >
                                 {/* Configuration Pane - Left - Responsive width */}
-                                <div className={`border-r border-gray-200 dark:border-gray-800 overflow-y-auto flex-shrink-0 ${pagesEnabled ? 'w-72 xl:w-80' : 'w-96 xl:w-[28rem]' }`}>
+                                <div className={`border-r border-gray-200 dark:border-gray-800 overflow-y-auto flex-shrink-0 ${pagesEnabled ? 'w-72 xl:w-80' : 'w-96 xl:w-[28rem]'}`}>
                                     <ConfigPane />
                                 </div>
 
