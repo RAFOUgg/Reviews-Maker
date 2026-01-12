@@ -1655,7 +1655,7 @@ const PipelineDragDropView = ({
 
         // SECONDES (max 900s avec pagination)
         if (intervalType === 'seconde' && totalSeconds) {
-            const count = Math.min(totalSeconds, 900); // Max 900s
+            const count = Math.min(totalSeconds, 900); // Max     900s
             return Array.from({ length: count }, (_, i) => ({
                 id: `sec-${i}`, // ID stable
                 timestamp: `sec-${i}`,
@@ -1948,7 +1948,7 @@ const PipelineDragDropView = ({
                                                             anchorRect: e.currentTarget.getBoundingClientRect()
                                                         });
                                                     }}
-                                                    className="relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700 ${isSelected ? 'ring-2 ring-blue-500' : ''}"
+                                                    className="relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                                                     style={{ touchAction: 'none' }}
                                                 >
                                                     <span className="text-base">{item.icon}</span>
@@ -2223,8 +2223,7 @@ const PipelineDragDropView = ({
                         </p>
                     </div>
                 )}
-            </>
-                )}
+            </div>
 
             {/* TIMELINE GRID - Inside Pipeline Culture container */}
             <div className="flex-1 overflow-auto p-4">
@@ -2455,177 +2454,6 @@ const PipelineDragDropView = ({
                 )}
             </div>
         </div>
-    )
-}
-
-{/* Modal grouped preset */ }
-<GroupedPresetModal
-    isOpen={showGroupedPresetModal}
-    onClose={() => setShowGroupedPresetModal(false)}
-    groups={groupedPresets}
-    setGroups={setGroupedPresets}
-    sidebarContent={sidebarContent}
-    type={type}
-/>
-
-{/* Modal save/load pipeline presets */ }
-<SavePipelineModal
-    isOpen={showSavePipelineModal}
-    onClose={() => setShowSavePipelineModal(false)}
-    timelineConfig={timelineConfig}
-    timelineData={timelineData}
-    onSavePreset={(p) => { /* noop - preserved for external hooks */ }}
-    onLoadPreset={(p) => applyPipelinePreset(p)}
-/>
-
-{/* Modal d'édition de cellule */ }
-<PipelineDataModal
-    isOpen={isModalOpen}
-    onClose={() => {
-        setIsModalOpen(false);
-        setDroppedItem(null);
-    }}
-    cellData={getCellData(currentCellTimestamp)}
-    sidebarSections={sidebarContent}
-    onSave={handleModalSave}
-    timestamp={currentCellTimestamp}
-    intervalLabel={cells.find(c => c.timestamp === currentCellTimestamp)?.label || ''}
-    droppedItem={droppedItem}
-    pipelineType={type}
-    onFieldDelete={handleFieldDelete}
-    groupedPresets={groupedPresets}
-    selectedCells={selectedCells}
-/>
-
-{/* Modal configuration préréglage complet retirée (CDC) */ }
-
-{/* Tooltip au survol */ }
-<PipelineCellTooltip
-    cellData={tooltipData.cellData}
-    sectionLabel={tooltipData.section}
-    visible={tooltipData.visible}
-    position={tooltipData.position}
-/>
-
-{/* Menu contextuel stylisé pour config individuelle et assignation rapide - Utilise ItemContextMenu */ }
-{
-    contextMenu && (
-        <ItemContextMenu
-            item={contextMenu.item}
-            position={contextMenu.position}
-            anchorRect={contextMenu.anchorRect}
-            onClose={() => setContextMenu(null)}
-            isConfigured={false}
-            cells={cells}
-            onAssignNow={(key, val) => {
-                // Assignation à toutes les cases sélectionnées ou à toutes si aucune sélection
-                const targets = selectedCells.length > 0 ? selectedCells : cells.map(c => c.timestamp);
-                const changes = [];
-                targets.forEach(ts => {
-                    const prev = getCellData(ts) || {};
-                    const prevValue = prev[key];
-                    changes.push({ timestamp: ts, field: key, previousValue: prevValue });
-                    onDataChange(ts, key, val);
-                });
-                if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-assign-now', changes });
-                showToast(`${contextMenu.item.label} assigné à ${targets.length} case(s)`, 'success');
-            }}
-            onAssignRange={(key, startTs, endTs, val) => {
-                // Assigner à une plage de cases
-                const startIdx = cells.findIndex(c => c.timestamp === startTs);
-                const endIdx = cells.findIndex(c => c.timestamp === endTs);
-                if (startIdx === -1 || endIdx === -1) return;
-                const minIdx = Math.min(startIdx, endIdx);
-                const maxIdx = Math.max(startIdx, endIdx);
-                const targets = cells.slice(minIdx, maxIdx + 1).map(c => c.timestamp);
-                const changes = [];
-                targets.forEach(ts => {
-                    const prev = getCellData(ts) || {};
-                    changes.push({ timestamp: ts, field: key, previousValue: prev[key] });
-                    onDataChange(ts, key, val);
-                });
-                if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-assign-range', changes });
-                showToast(`${contextMenu.item.label} assigné à ${targets.length} case(s)`, 'success');
-            }}
-            onAssignAll={(key, val) => {
-                // Assigner à toutes les cases
-                const changes = [];
-                cells.forEach(cell => {
-                    const prev = getCellData(cell.timestamp) || {};
-                    changes.push({ timestamp: cell.timestamp, field: key, previousValue: prev[key] });
-                    onDataChange(cell.timestamp, key, val);
-                });
-                if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-assign-all', changes });
-                showToast(`${contextMenu.item.label} assigné à toutes les cases`, 'success');
-            }}
-        />
-    )
-}
-
-{/* Cell Context Menu - Menu contextuel sur cellule */ }
-<CellContextMenu
-    isOpen={cellContextMenu !== null}
-    position={cellContextMenu?.position || { x: 0, y: 0 }}
-    cellTimestamp={cellContextMenu?.timestamp}
-    selectedCells={cellContextMenu?.selectedCells || []}
-    cellData={cellContextMenu?.timestamp ? getCellData(cellContextMenu.timestamp) : null}
-    sidebarContent={sidebarContent}
-    onClose={() => setCellContextMenu(null)}
-    onDeleteAll={() => {
-        const targets = cellContextMenu?.selectedCells || [];
-        console.log(`💥 handleDeleteAll: targets=${targets.join(',')}`);
-        setConfirmState({
-            open: true,
-            title: 'Effacer toutes les données',
-            message: `Effacer toutes les données de ${targets.length} cellule(s) ?`,
-            onConfirm: () => {
-                console.log(`  → Confirmation: début de suppression complète`);
-                const allChanges = [];
-                targets.forEach(ts => {
-                    const prev = getCellData(ts) || {};
-                    const keys = Object.keys(prev).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k));
-                    console.log(`    ✓ Supprime ${keys.length} champs de ${ts}: ${keys.join(',')}`);
-                    keys.forEach(k => {
-                        allChanges.push({ timestamp: ts, field: k, previousValue: prev[k] });
-                        onDataChange(ts, k, null);
-                    });
-                });
-                if (allChanges.length > 0) {
-                    pushAction({ id: Date.now(), type: 'contextMenuDeleteAll', changes: allChanges });
-                    console.log(`  → Toast: ${allChanges.length} donnée(s) effacée(s)`);
-                }
-                setConfirmState(prev => ({ ...prev, open: false }));
-                setCellContextMenu(null);
-                showToast('Données effacées', 'success');
-                console.log(`✅ Suppression complète terminée`);
-            }
-        });
-    }}
-    onDeleteFields={handleDeleteFieldsFromCells}
-    onCopy={handleCopyCellData}
-    onPaste={handlePasteCellData}
-    hasCopiedData={copiedCellData !== null}
-/>
-
-{/* Modal de confirmation pour suppressions */ }
-<ConfirmModal
-    open={confirmState.open}
-    title={confirmState.title}
-    message={confirmState.message}
-    confirmLabel="Supprimer"
-    cancelLabel="Annuler"
-    onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))}
-    onConfirm={() => {
-        const callback = confirmState.onConfirm;
-        setConfirmState(prev => ({ ...prev, open: false }));
-        if (typeof callback === 'function') {
-            callback();
-        }
-    }}
-/>
-
-{/* Toast succès retiré (CDC) */ }
-        </div >
     );
 };
 
