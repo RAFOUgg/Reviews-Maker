@@ -8,14 +8,14 @@ import { Link } from 'react-router-dom'
 
 export default function HeroSection({ user, isAuthenticated }) {
     return (
-        <div className="text-center space-y-6 animate-fade-in">
+        <div className="text-center space-y-3 md:space-y-6 animate-fade-in px-3 md:px-0">
             <div className="relative inline-block">
-                <h1 className="text-7xl font-black text-white drop-shadow-2xl">
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white drop-shadow-2xl leading-tight">
                     Terpologie
                 </h1>
                 <div className="absolute -inset-4 bg-white/10 blur-3xl -z-10"></div>
             </div>
-            <p className="text-xl text-white/80 font-light">
+            <p className="text-sm md:text-lg lg:text-xl text-white/80 font-light px-2">
                 Créez et partagez vos avis sur les produits cannabis
             </p>
             {isAuthenticated && user ? (

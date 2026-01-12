@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 
@@ -8,8 +7,10 @@ import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
  * OPTIMISÉ MOBILE FIRST
  * 
  * Gère:
- * - Navigation sections (Prev/Next buttons TOUJOURS visibles)
- * - Carousel d'émojis sections (galerie tournante sur mobile)
+ * - Carousel d'émojis sections avec drag-to-scroll (mobile)
+ * - 5 sections visibles à la fois (mobile)
+ * - Section du milieu à 100% opacité
+ * - Effet fade pour sections des côtés
  * - Padding et spacing adaptatif (mobile-first)
  * - Full-width sur mobile avec safe-area padding
  * - Max-width sur desktop
@@ -29,29 +30,70 @@ export const ResponsiveCreateReviewLayout = ({
 }) => {
     const layout = useResponsiveLayout();
     const [emojiCarouselIndex, setEmojiCarouselIndex] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState(0);
+    const carouselRef = useRef(null);
+
+    // Nombre de sections visibles dans le carrousel
+    const VISIBLE_ITEMS = 5;
+    const maxIndex = Math.max(0, sectionEmojis.length - VISIBLE_ITEMS);
 
     const handlePrevious = () => {
+        if (layout.isMobile) {
+            // Sur mobile, le footer n'a pas les boutons prev/next
+            return;
+        }
         if (currentSection > 0) {
             onSectionChange(currentSection - 1);
-            setEmojiCarouselIndex(Math.max(0, currentSection - 2));
         }
     };
 
     const handleNext = () => {
+        if (layout.isMobile) {
+            // Sur mobile, le footer n'a pas les boutons prev/next
+            return;
+        }
         if (currentSection < totalSections - 1) {
             onSectionChange(currentSection + 1);
-            setEmojiCarouselIndex(Math.min(Math.max(0, sectionEmojis.length - 3), currentSection + 1));
         }
     };
 
-    // Auto-scroll carousel when section changes
+    // Auto-position carousel to keep selected section visible
     useEffect(() => {
-        if (currentSection > 1) {
-            setEmojiCarouselIndex(Math.max(0, currentSection - 1));
-        } else {
-            setEmojiCarouselIndex(0);
+        if (currentSection < emojiCarouselIndex) {
+            // Section est avant le carousel visible
+            setEmojiCarouselIndex(Math.max(0, currentSection - 2));
+        } else if (currentSection > emojiCarouselIndex + VISIBLE_ITEMS - 1) {
+            // Section est après le carousel visible
+            setEmojiCarouselIndex(Math.min(maxIndex, currentSection - 2));
         }
     }, [currentSection]);
+
+    // Drag handlers
+    const handleMouseDown = (e) => {
+        if (!layout.isMobile || sectionEmojis.length <= VISIBLE_ITEMS) return;
+        setIsDragging(true);
+        setDragStart(e.clientX || e.touches?.[0]?.clientX);
+    };
+
+    const handleMouseUp = (e) => {
+        if (!isDragging) return;
+        setIsDragging(false);
+
+        const dragEnd = e.clientX || e.changedTouches?.[0]?.clientX;
+        const diff = dragStart - dragEnd;
+
+        // Threshold pour le drag
+        const threshold = 50;
+
+        if (diff > threshold && emojiCarouselIndex < maxIndex) {
+            // Drag vers la gauche (scroll à droite)
+            setEmojiCarouselIndex(Math.min(maxIndex, emojiCarouselIndex + 1));
+        } else if (diff < -threshold && emojiCarouselIndex > 0) {
+            // Drag vers la droite (scroll à gauche)
+            setEmojiCarouselIndex(Math.max(0, emojiCarouselIndex - 1));
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 relative flex flex-col">
@@ -62,26 +104,23 @@ export const ResponsiveCreateReviewLayout = ({
 
             <div className="relative z-10 flex flex-col flex-1">
                 {/* Header - Responsive Padding & Safe Area */}
-                <div className={`sticky top-0 z-40 bg-gray-900/95 backdrop-blur-xl border-b border-gray-700/50 ${
-                    layout.isMobile 
-                        ? 'px-3 py-3 safe-area-inset-top' 
+                <div className={`sticky top-0 z-40 bg-gray-900/95 backdrop-blur-xl border-b border-gray-700/50 ${layout.isMobile
+                        ? 'px-3 py-3 safe-area-inset-top'
                         : 'px-6 md:px-8 py-6'
-                }`}>
+                    }`}>
                     <div className={layout.isMobile ? 'w-full' : 'max-w-6xl mx-auto'}>
                         {/* Title & Subtitle */}
                         {(title || subtitle) && (
                             <div className={layout.isMobile ? 'mb-3' : 'mb-4'}>
                                 {title && (
-                                    <h1 className={`font-bold text-gray-100 ${
-                                        layout.isMobile ? 'text-lg' : 'text-3xl'
-                                    }`}>
+                                    <h1 className={`font-bold text-gray-100 ${layout.isMobile ? 'text-lg' : 'text-3xl'
+                                        }`}>
                                         {title}
                                     </h1>
                                 )}
                                 {subtitle && (
-                                    <p className={`text-gray-400 mt-0.5 ${
-                                        layout.isMobile ? 'text-xs' : 'text-sm'
-                                    }`}>
+                                    <p className={`text-gray-400 mt-0.5 ${layout.isMobile ? 'text-xs' : 'text-sm'
+                                        }`}>
                                         {subtitle}
                                     </p>
                                 )}
@@ -93,44 +132,50 @@ export const ResponsiveCreateReviewLayout = ({
                             <div className={layout.isMobile ? 'space-y-2' : 'space-y-3'}>
                                 {/* Emoji Carousel - Galerie tournante optimisée mobile */}
                                 {sectionEmojis.length > 0 && (
-                                    <div className={`flex items-center justify-center gap-1 ${
-                                        layout.isMobile ? '-mx-3' : ''
-                                    }`}>
-                                        {/* Left Arrow - Mobile optimized */}
-                                        {emojiCarouselIndex > 0 && (
-                                            <button
-                                                onClick={() => setEmojiCarouselIndex(Math.max(0, emojiCarouselIndex - 1))}
-                                                className={`flex-shrink-0 p-1 hover:bg-gray-700/50 rounded transition ${
-                                                    layout.isMobile ? '' : ''
-                                                }`}
-                                            >
-                                                <ChevronLeft className={`text-purple-400 ${
-                                                    layout.isMobile ? 'w-4 h-4' : 'w-5 h-5'
-                                                }`} />
-                                            </button>
-                                        )}
-
-                                        {/* Emoji buttons */}
+                                    <div className="w-full">
                                         {layout.isMobile ? (
-                                            // Mobile: Show 3 emojis
-                                            <div className="flex gap-1 flex-1 justify-center">
+                                            // Mobile: Drag-to-scroll carousel with 5 items visible
+                                            <div
+                                                ref={carouselRef}
+                                                onMouseDown={handleMouseDown}
+                                                onMouseUp={handleMouseUp}
+                                                onMouseLeave={handleMouseUp}
+                                                onTouchStart={handleMouseDown}
+                                                onTouchEnd={handleMouseUp}
+                                                className={`flex items-center justify-center gap-2 py-2 px-1 transition-all ${isDragging ? 'cursor-grabbing' : 'cursor-grab'
+                                                    }`}
+                                            >
                                                 <AnimatePresence mode="wait">
-                                                    {[0, 1, 2].map((offset) => {
-                                                        const index = emojiCarouselIndex + offset;
+                                                    {Array.from({ length: Math.min(VISIBLE_ITEMS, sectionEmojis.length) }).map((_, displayOffset) => {
+                                                        const index = emojiCarouselIndex + displayOffset;
                                                         if (index >= sectionEmojis.length) return null;
+
+                                                        // Calculate position (center is 0, sides are -2 to 2)
+                                                        const centerOffset = displayOffset - 2;
+                                                        const isCenter = centerOffset === 0;
+
+                                                        // Fade calculation for side items
+                                                        let opacity = 1;
+                                                        if (Math.abs(centerOffset) === 1) opacity = 0.5; // Adjacent
+                                                        if (Math.abs(centerOffset) === 2) opacity = 0.25; // Outer
 
                                                         return (
                                                             <motion.button
                                                                 key={index}
                                                                 initial={{ opacity: 0, scale: 0.8 }}
-                                                                animate={{ opacity: 1, scale: 1 }}
+                                                                animate={{
+                                                                    opacity: isCenter ? 1 : opacity,
+                                                                    scale: isCenter ? 1.1 : 1
+                                                                }}
                                                                 exit={{ opacity: 0, scale: 0.8 }}
                                                                 onClick={() => onSectionChange(index)}
-                                                                className={`px-2.5 py-2 rounded-lg transition-all text-base ${
-                                                                    index === currentSection
-                                                                        ? 'bg-purple-600 ring-2 ring-purple-400 scale-110'
-                                                                        : 'bg-gray-700/50 hover:bg-gray-700'
-                                                                }`}
+                                                                className={`flex-shrink-0 px-3 py-2.5 rounded-lg transition-all text-xl ${index === currentSection
+                                                                        ? 'bg-purple-600 ring-2 ring-purple-400'
+                                                                        : 'bg-gray-700/30 hover:bg-gray-700/50'
+                                                                    }`}
+                                                                style={{
+                                                                    filter: isCenter ? 'drop-shadow(0 0 12px rgba(168, 85, 247, 0.4))' : 'none'
+                                                                }}
                                                             >
                                                                 <span>{sectionEmojis[index]}</span>
                                                             </motion.button>
@@ -139,32 +184,21 @@ export const ResponsiveCreateReviewLayout = ({
                                                 </AnimatePresence>
                                             </div>
                                         ) : (
-                                            // Desktop: Show all emojis
+                                            // Desktop: Show all emojis in a wrap
                                             <div className="flex gap-2 flex-1 justify-center flex-wrap">
                                                 {sectionEmojis.map((emoji, idx) => (
                                                     <motion.button
                                                         key={idx}
                                                         onClick={() => onSectionChange(idx)}
-                                                        className={`px-4 py-2 rounded-lg transition-all ${
-                                                            idx === currentSection
+                                                        className={`px-4 py-2 rounded-lg transition-all ${idx === currentSection
                                                                 ? 'bg-purple-600 ring-2 ring-purple-400 scale-110'
                                                                 : 'bg-gray-700/50 hover:bg-gray-700'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         <span className="text-lg">{emoji}</span>
                                                     </motion.button>
                                                 ))}
                                             </div>
-                                        )}
-
-                                        {/* Right Arrow - Mobile optimized */}
-                                        {layout.isMobile && emojiCarouselIndex < Math.max(0, sectionEmojis.length - 3) && (
-                                            <button
-                                                onClick={() => setEmojiCarouselIndex(Math.min(Math.max(0, sectionEmojis.length - 3), emojiCarouselIndex + 1))}
-                                                className="flex-shrink-0 p-1 hover:bg-gray-700/50 rounded transition"
-                                            >
-                                                <ChevronRight className="w-4 h-4 text-purple-400" />
-                                            </button>
                                         )}
                                     </div>
                                 )}
@@ -189,7 +223,7 @@ export const ResponsiveCreateReviewLayout = ({
                                             </span>
                                         </div>
                                     )}
-                                    
+
                                     {/* Progress Bar */}
                                     <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
                                         <motion.div
@@ -206,67 +240,56 @@ export const ResponsiveCreateReviewLayout = ({
                 </div>
 
                 {/* Main Content - Flex-grow to push footer down */}
-                <main className={`relative z-20 flex-1 overflow-y-auto ${
-                    layout.isMobile 
-                        ? 'px-3 py-4' 
+                <main className={`relative z-20 flex-1 overflow-y-auto ${layout.isMobile
+                        ? 'px-3 py-4'
                         : 'px-6 md:px-8 py-8'
-                }`}>
+                    }`}>
                     <div className={layout.isMobile ? 'w-full' : 'max-w-6xl mx-auto'}>
                         {children}
                     </div>
                 </main>
 
                 {/* Navigation Footer - Persistent & safe-area aware */}
-                <div className={`bg-gradient-to-t from-gray-900 via-gray-900 to-transparent border-t border-gray-700/50 backdrop-blur-xl z-40 ${
-                    layout.isMobile ? 'safe-area-inset-bottom' : ''
-                }`}>
+                <div className={`bg-gradient-to-t from-gray-900 via-gray-900 to-transparent border-t border-gray-700/50 backdrop-blur-xl z-40 ${layout.isMobile ? 'safe-area-inset-bottom' : ''
+                    }`}>
                     <div className={layout.isMobile ? 'px-3 py-3' : 'px-6 md:px-8 py-6'}>
                         <div className={layout.isMobile ? 'w-full' : 'max-w-6xl mx-auto'}>
                             <div className="flex items-center justify-between gap-2">
-                                {/* Bouton Précédent - Mobile optimized */}
-                                <button
-                                    onClick={handlePrevious}
-                                    disabled={currentSection === 0}
-                                    className={`flex items-center justify-center rounded-lg font-medium transition-all flex-shrink-0 ${
-                                        currentSection === 0
-                                            ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
-                                            : 'bg-gray-800 hover:bg-gray-700 text-white active:scale-95'
-                                        } ${
-                                        layout.isMobile 
-                                            ? 'p-2.5 text-sm' 
-                                            : 'px-4 py-2.5 text-base gap-2'
-                                    }`}
-                                >
-                                    <ChevronLeft className={layout.isMobile ? 'w-5 h-5' : 'w-5 h-5'} />
-                                    {!layout.isMobile && 'Précédent'}
-                                </button>
-
-                                {/* Section Indicator - Mobile */}
-                                {layout.isMobile && (
-                                    <div className="text-center flex-1">
-                                        <div className="text-xs text-gray-400 font-medium">
-                                            {currentSection + 1}/{totalSections}
-                                        </div>
-                                    </div>
+                                {/* Bouton Précédent - Desktop only */}
+                                {!layout.isMobile && (
+                                    <button
+                                        onClick={handlePrevious}
+                                        disabled={currentSection === 0}
+                                        className={`flex items-center justify-center rounded-lg font-medium transition-all flex-shrink-0 px-4 py-2.5 text-base gap-2 ${currentSection === 0
+                                                ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
+                                                : 'bg-gray-800 hover:bg-gray-700 text-white active:scale-95'
+                                            }`}
+                                    >
+                                        ← Précédent
+                                    </button>
                                 )}
 
-                                {/* Bouton Suivant - Mobile optimized */}
-                                <button
-                                    onClick={handleNext}
-                                    disabled={currentSection === totalSections - 1}
-                                    className={`flex items-center justify-center rounded-lg font-medium transition-all flex-shrink-0 ${
-                                        currentSection === totalSections - 1
-                                            ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
-                                            : 'bg-purple-600 hover:bg-purple-700 text-white active:scale-95'
-                                        } ${
-                                        layout.isMobile 
-                                            ? 'p-2.5 text-sm' 
-                                            : 'px-4 py-2.5 text-base gap-2'
-                                    }`}
-                                >
-                                    {!layout.isMobile && 'Suivant'}
-                                    <ChevronRight className={layout.isMobile ? 'w-5 h-5' : 'w-5 h-5'} />
-                                </button>
+                                {/* Section Indicator */}
+                                <div className={`text-center ${!layout.isMobile ? 'flex-1' : 'flex-1'}`}>
+                                    <div className={`font-medium ${layout.isMobile ? 'text-xs text-gray-400' : 'text-sm text-gray-400'
+                                        }`}>
+                                        {currentSection + 1}/{totalSections}
+                                    </div>
+                                </div>
+
+                                {/* Bouton Suivant - Desktop only */}
+                                {!layout.isMobile && (
+                                    <button
+                                        onClick={handleNext}
+                                        disabled={currentSection === totalSections - 1}
+                                        className={`flex items-center justify-center rounded-lg font-medium transition-all flex-shrink-0 px-4 py-2.5 text-base gap-2 ${currentSection === totalSections - 1
+                                                ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
+                                                : 'bg-purple-600 hover:bg-purple-700 text-white active:scale-95'
+                                            }`}
+                                    >
+                                        Suivant →
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
