@@ -32,6 +32,7 @@ export const ResponsiveCreateReviewLayout = ({
     const [emojiCarouselIndex, setEmojiCarouselIndex] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState(0);
+    const [dragOffset, setDragOffset] = useState(0);
     const [shouldUseCarousel, setShouldUseCarousel] = useState(false);
     const carouselRef = useRef(null);
     const containerRef = useRef(null);
@@ -41,18 +42,12 @@ export const ResponsiveCreateReviewLayout = ({
     const maxIndex = Math.max(0, sectionEmojis.length - VISIBLE_ITEMS);
 
     const handlePrevious = () => {
-        if (layout.isMobile) {
-            return;
-        }
         if (currentSection > 0) {
             onSectionChange(currentSection - 1);
         }
     };
 
     const handleNext = () => {
-        if (layout.isMobile) {
-            return;
-        }
         if (currentSection < totalSections - 1) {
             onSectionChange(currentSection + 1);
         }
@@ -98,16 +93,25 @@ export const ResponsiveCreateReviewLayout = ({
         }
     }, [currentSection]);
 
-    // Drag handlers - Smooth scroll horizontal
+    // Drag handlers - Smooth scroll horizontal with live animation
     const handleMouseDown = (e) => {
         if (sectionEmojis.length <= VISIBLE_ITEMS) return;
         setIsDragging(true);
         setDragStart(e.clientX || e.touches?.[0]?.clientX);
+        setDragOffset(0);
+    };
+
+    const handleMouseMove = (e) => {
+        if (!isDragging) return;
+        const currentPos = e.clientX || e.touches?.[0]?.clientX;
+        const offset = dragStart - currentPos;
+        setDragOffset(offset);
     };
 
     const handleMouseUp = (e) => {
         if (!isDragging) return;
         setIsDragging(false);
+        setDragOffset(0);
 
         const dragEnd = e.clientX || e.changedTouches?.[0]?.clientX;
         const diff = dragStart - dragEnd;
@@ -167,9 +171,11 @@ export const ResponsiveCreateReviewLayout = ({
                                             <div
                                                 ref={carouselRef}
                                                 onMouseDown={handleMouseDown}
+                                                onMouseMove={handleMouseMove}
                                                 onMouseUp={handleMouseUp}
                                                 onMouseLeave={handleMouseUp}
                                                 onTouchStart={handleMouseDown}
+                                                onTouchMove={handleMouseMove}
                                                 onTouchEnd={handleMouseUp}
                                                 className={`relative flex items-center justify-center gap-1 py-4 px-0 transition-all overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                                             >
@@ -200,13 +206,19 @@ export const ResponsiveCreateReviewLayout = ({
                                                             return (
                                                                 <motion.button
                                                                     key={index}
-                                                                    initial={{ opacity: 0.3, scale: 0.85 }}
+                                                                    initial={{ opacity: 0.3, scale: 0.85, x: 50 }}
                                                                     animate={{
                                                                         opacity: opacity,
-                                                                        scale: isCenter ? 1.15 : 1
+                                                                        scale: isCenter ? 1.15 : 1,
+                                                                        x: isDragging ? dragOffset * 0.1 : 0
                                                                     }}
-                                                                    exit={{ opacity: 0, scale: 0.85 }}
-                                                                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                                                                    exit={{ opacity: 0, scale: 0.85, x: -50 }}
+                                                                    transition={{
+                                                                        duration: isDragging ? 0 : 0.3,
+                                                                        ease: 'easeOut',
+                                                                        opacity: { duration: 0.3 },
+                                                                        scale: { duration: 0.3 }
+                                                                    }}
                                                                     onClick={() => onSectionChange(index)}
                                                                     className={`flex-shrink-0 px-3.5 py-3 rounded-xl transition-all text-2xl font-medium ${index === currentSection
                                                                         ? 'bg-gradient-to-br from-purple-500 to-purple-600 ring-2 ring-purple-300 shadow-lg shadow-purple-500/50'
@@ -282,29 +294,53 @@ export const ResponsiveCreateReviewLayout = ({
                     </div>
                 </div>
 
-                {/* Main Content - Flex-grow to push footer down */}
+                {/* Main Content - Flex-grow to push footer down, with padding-bottom for fixed footer */}
                 <main className={`relative z-20 flex-1 overflow-y-auto ${layout.isMobile
-                    ? 'px-3 py-4'
-                    : 'px-6 md:px-8 py-8'
+                    ? 'px-3 py-4 pb-20'
+                    : 'px-6 md:px-8 py-8 pb-24'
                     }`}>
                     <div className={layout.isMobile ? 'w-full' : 'max-w-6xl mx-auto'}>
                         {children}
                     </div>
                 </main>
 
-                {/* Navigation Footer - Persistent & safe-area aware */}
-                <div className={`bg-gradient-to-t from-gray-900 via-gray-900 to-transparent border-t border-gray-700/50 backdrop-blur-xl z-40 ${layout.isMobile ? 'safe-area-inset-bottom' : ''
+                {/* Navigation Footer - Fixed at bottom, always visible */}
+                <div className={`fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-900 via-gray-900 to-transparent border-t border-gray-700/50 backdrop-blur-xl z-50 ${layout.isMobile ? 'safe-area-inset-bottom' : ''
                     }`}>
-                    <div className={layout.isMobile ? 'px-3 py-3' : 'px-6 md:px-8 py-6'}>
+                    <div className={layout.isMobile ? 'px-3 py-2' : 'px-6 md:px-8 py-4'}>
                         <div className={layout.isMobile ? 'w-full' : 'max-w-6xl mx-auto'}>
-                            <div className="flex items-center justify-center gap-2">
+                            <div className="flex items-center justify-between gap-2">
+                                {/* Bouton Précédent */}
+                                <button
+                                    onClick={handlePrevious}
+                                    disabled={currentSection === 0}
+                                    className={`flex items-center justify-center rounded-lg font-medium transition-all flex-shrink-0 ${layout.isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2.5 text-base'} gap-2 ${currentSection === 0
+                                        ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
+                                        : 'bg-gray-800 hover:bg-gray-700 text-white active:scale-95'
+                                        }`}
+                                >
+                                    ←
+                                </button>
+
                                 {/* Section Indicator */}
-                                <div className="text-center">
+                                <div className="text-center flex-1">
                                     <div className={`font-medium ${layout.isMobile ? 'text-xs text-gray-400' : 'text-sm text-gray-400'
                                         }`}>
                                         {currentSection + 1}/{totalSections}
                                     </div>
                                 </div>
+
+                                {/* Bouton Suivant */}
+                                <button
+                                    onClick={handleNext}
+                                    disabled={currentSection === totalSections - 1}
+                                    className={`flex items-center justify-center rounded-lg font-medium transition-all flex-shrink-0 ${layout.isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2.5 text-base'} gap-2 ${currentSection === totalSections - 1
+                                        ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
+                                        : 'bg-purple-600 hover:bg-purple-700 text-white active:scale-95'
+                                        }`}
+                                >
+                                    →
+                                </button>
                             </div>
                         </div>
                     </div>

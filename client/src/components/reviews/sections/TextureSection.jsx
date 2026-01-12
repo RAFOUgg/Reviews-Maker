@@ -76,6 +76,11 @@ export default function TextureSection({ productType, formData = {}, handleChang
     const [friability, setFriability] = useState(data?.friability || 5);
     const [viscosity, setViscosity] = useState(data?.viscosity || 5);
 
+    // Score de pureté calculé pour Hash / Concentrés (moyenne simple melting/residue)
+    const purityScore = (productType === 'Hash' || productType === 'Concentré')
+        ? Math.round((Number(melting || 0) + Number(residue || 0)) / 2)
+        : null;
+
     // Synchroniser avec parent
     useEffect(() => {
         const textureData = {
