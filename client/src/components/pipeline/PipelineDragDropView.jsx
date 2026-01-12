@@ -2242,7 +2242,7 @@ const PipelineDragDropView = ({
                             📊 <strong>Autres cases</strong> : Drag & drop des paramètres depuis le panneau latéral
                         </p>
 
-                        <div ref={gridRef} className="grid grid-cols-7 gap-2 select-none relative">
+                        <div ref={gridRef} className="grid grid-cols-6 gap-2 select-none relative auto-rows-min">
                             {/* Visual selection frame overlay */}
                             {selectedCells.length > 1 && !isSelecting && (() => {
                                 // Compute aggregate bounding box of selected cells using DOM measurements
@@ -2453,6 +2453,18 @@ const PipelineDragDropView = ({
                     </div>
                 )}
             </div>
+
+            {/* CELL CONTEXT MENU - RENDU GLOBAL */}
+            {cellContextMenu && (
+                <CellContextMenu
+                    position={cellContextMenu.position}
+                    onCopy={handleCopyCellData}
+                    onPaste={handlePasteCellData}
+                    onClear={handleClearSelectedData}
+                    onClose={() => setCellContextMenu(null)}
+                    canPaste={!!copiedCellData}
+                />
+            )}
         </div>
     );
 };
