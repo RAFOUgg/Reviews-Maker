@@ -29,7 +29,7 @@ export const ResponsiveCreateReviewLayout = ({
     sectionEmojis = [], // Array d'émojis pour chaque section
 }) => {
     const layout = useResponsiveLayout();
-    const [emojiCarouselIndex, setEmojiCarouselIndex] = useState(0);
+    const [scrollPosition, setScrollPosition] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState(0);
     const [dragOffset, setDragOffset] = useState(0);
@@ -39,7 +39,9 @@ export const ResponsiveCreateReviewLayout = ({
 
     // Nombre de sections visibles dans le carrousel
     const VISIBLE_ITEMS = 5;
-    const maxIndex = Math.max(0, sectionEmojis.length - VISIBLE_ITEMS);
+    const ITEM_WIDTH = 70; // px (emoji button width + gap)
+    // Permet de scroller jusqu'à montrer la dernière section au centre
+    const maxScroll = Math.max(0, (sectionEmojis.length - Math.ceil(VISIBLE_ITEMS / 2)) * ITEM_WIDTH);
 
     const handlePrevious = () => {
         if (currentSection > 0) {
@@ -82,16 +84,17 @@ export const ResponsiveCreateReviewLayout = ({
         };
     }, [layout.isMobile, sectionEmojis.length]);
 
-    // Auto-position carousel to keep selected section visible
+    // Auto-position carousel to center selected section
     useEffect(() => {
-        if (currentSection < emojiCarouselIndex) {
-            // Section est avant le carousel visible
-            setEmojiCarouselIndex(Math.max(0, currentSection - 2));
-        } else if (currentSection > emojiCarouselIndex + VISIBLE_ITEMS - 1) {
-            // Section est après le carousel visible
-            setEmojiCarouselIndex(Math.min(maxIndex, currentSection - 2));
+        // Centrer la section courante au milieu du carousel
+        // scrollPosition = index * ITEM_WIDTH met la section 'index' au centre
+        const targetScroll = Math.max(0, Math.min(maxScroll, currentSection * ITEM_WIDTH));
+
+        // Smooth animation vers la position cible
+        if (!isDragging) {
+            setScrollPosition(targetScroll);
         }
-    }, [currentSection]);
+    }, [currentSection, isDragging, maxScroll]);
 
     // Drag handlers - Smooth scroll horizontal with live animation
     const handleMouseDown = (e) => {
@@ -111,21 +114,31 @@ export const ResponsiveCreateReviewLayout = ({
     const handleMouseUp = (e) => {
         if (!isDragging) return;
         setIsDragging(false);
-        setDragOffset(0);
 
         const dragEnd = e.clientX || e.changedTouches?.[0]?.clientX;
         const diff = dragStart - dragEnd;
 
-        // Threshold pour le drag (plus sensible)
-        const threshold = 30;
+        // Calcul de la nouvelle position de scroll basée sur le drag
+        let newScroll = scrollPosition + diff;
 
-        if (diff > threshold && emojiCarouselIndex < maxIndex) {
-            // Drag vers la gauche → scroll à droite
-            setEmojiCarouselIndex(Math.min(maxIndex, emojiCarouselIndex + 1));
-        } else if (diff < -threshold && emojiCarouselIndex > 0) {
-            // Drag vers la droite → scroll à gauche
-            setEmojiCarouselIndex(Math.max(0, emojiCarouselIndex - 1));
-        }
+        // Limiter le scroll entre 0 et maxScroll
+        newScroll = Math.max(0, Math.min(maxScroll, newScroll));
+
+        // Snap vers la section la plus proche quand on lâche
+        // Déterminer la section qui sera centrée après snap
+        const centerIndex = Math.floor(VISIBLE_ITEMS / 2);
+        // Quelle section est "presque centrée" maintenant?
+        const scrolledIndex = newScroll / ITEM_WIDTH;
+        const snapIndex = Math.round(scrolledIndex);
+
+        // Calculer le scroll pour mettre cette section au centre
+        // scrollPosition=0 => section 0 au centre
+        // scrollPosition=ITEM_WIDTH => section 1 au centre
+        // scrollPosition=(n-2)*ITEM_WIDTH => section n au centre (pour n >= 2 et n < length)
+        const snappedScroll = Math.max(0, Math.min(maxScroll, snapIndex * ITEM_WIDTH));
+
+        setScrollPosition(snappedScroll);
+        setDragOffset(0);
     };
 
     return (
@@ -185,23 +198,26 @@ export const ResponsiveCreateReviewLayout = ({
                                                 {/* Gradient fade right */}
                                                 <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-900 to-transparent z-10 pointer-events-none" />
 
-                                                <div className="flex items-center justify-center gap-2">
+                                                <div className="flex items-center justify-center gap-2" style={{
+                                                    transform: `translateX(-${scrollPosition + dragOffset}px)`,
+                                                    transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                                                }}>
                                                     <AnimatePresence mode="wait">
-                                                        {Array.from({ length: Math.min(VISIBLE_ITEMS, sectionEmojis.length) }).map((_, displayOffset) => {
-                                                            const index = emojiCarouselIndex + displayOffset;
-                                                            if (index >= sectionEmojis.length) return null;
-
-                                                            // Position dans le carousel (center is 0, sides are -2 to 2)
-                                                            const centerOffset = displayOffset - 2;
-                                                            const isCenter = centerOffset === 0;
+                                                        {sectionEmojis.map((emoji, index) => {
+                                                            // Calculer l'offset visuel par rapport au centre
+                                                            // scrollPosition = index * ITEM_WIDTH met cette section au centre
+                                                            const scrolledCenterIndex = (scrollPosition + dragOffset) / ITEM_WIDTH;
+                                                            const offset = index - scrolledCenterIndex;
+                                                            const isCenter = Math.abs(offset) < 0.5;
 
                                                             // Calcul opacité avec effect fade progressif
+                                                            const absOffset = Math.abs(Math.round(offset));
                                                             const opacityMap = {
                                                                 0: 1,      // Center: 100% opaque
                                                                 1: 0.6,    // Adjacent: 60%
                                                                 2: 0.3     // Outer: 30%
                                                             };
-                                                            const opacity = opacityMap[Math.abs(centerOffset)];
+                                                            const opacity = opacityMap[Math.min(absOffset, 2)];
 
                                                             return (
                                                                 <motion.button

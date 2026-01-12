@@ -657,6 +657,19 @@ const PipelineDragDropView = ({
         setSelectedCells([]);
     }, [timelineConfig]);
 
+    // État pour détecter le mode mobile
+    const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
+
+    // Écouter les changements de taille d'écran
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentCellTimestamp, setCurrentCellTimestamp] = useState(null);
     const [tooltipData, setTooltipData] = useState({ visible: false, cellData: null, position: { x: 0, y: 0 }, section: '' });
@@ -1795,8 +1808,9 @@ const PipelineDragDropView = ({
     const completionPercent = cells.length > 0 ? Math.round((filledCells / cells.length) * 100) : 0;
 
     return (
-        <div className="flex gap-6 h-[750px]">
-            {/* PANNEAU LATÉRAL HIÉRARCHISÉ */}
+        <div className={`flex gap-6 h-[750px] ${isMobile ? 'flex-col' : ''}`}>
+            {/* PANNEAU LATÉRAL HIÉRARCHISÉ - MASQUÉ SUR MOBILE */}
+            {!isMobile && (
             <div className="w-80 flex-shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-y-auto">
                 {/* Section Préréglages en haut */}
                 {/* Préréglages retirés pour conformité CDC */}
@@ -1953,10 +1967,13 @@ const PipelineDragDropView = ({
                     ))}
                 </div>
             </div>
+            )}
 
             {/* TIMELINE PRINCIPALE */}
             <div className="flex-1 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden flex flex-col">
-                {/* HEADER CONFIGURATION */}
+                {/* HEADER CONFIGURATION + MESSAGES D'AIDE - MASQUÉ SUR MOBILE */}
+                {!isMobile && (
+                <>
                 <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-transparent dark:bg-transparent">
                     <div className="flex items-center justify-between mb-3">
                         <h3 className="font-bold text-gray-900 dark:text-white text-lg flex items-center gap-2">
@@ -2208,6 +2225,8 @@ const PipelineDragDropView = ({
                         </p>
                     </div>
                 )}
+                </>
+                )}
 
                 {/* TIMELINE GRID - Inside Pipeline Culture container */}
                 <div className="flex-1 overflow-auto p-4">
@@ -2438,6 +2457,7 @@ const PipelineDragDropView = ({
                     )}
                 </div>
             </div>
+            )}
 
             {/* Modal grouped preset */}
             <GroupedPresetModal
