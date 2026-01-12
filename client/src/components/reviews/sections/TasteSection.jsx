@@ -70,15 +70,14 @@ export default function TasteSection({ productType, formData = {}, handleChange 
                         {icon}
                         {title}
                     </label>
-                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${notes.length >= maxCount ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : `}bg-${color}-100 dark:bg-${color}-900/30 text-${color}-600 dark:text-${color}-400`
-                        }`}>
+                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${notes.length >= maxCount ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'}`}>
                         {notes.length}/{maxCount}
                     </span>
                 </div>
 
                 {/* Notes sélectionnées */}
                 {notes.length > 0 && (
-                    <div className={`flex flex-wrap gap-2 p-3 bg-${color}-50 dark:bg-${color}-900/10 rounded-lg`}>
+                    <div className="flex flex-wrap gap-2 p-3 bg-blue-50 dark:bg-blue-900/10 rounded-lg">
                         {notes.map(noteId => {
                             const note = allNotes.find(n => n.id === noteId);
                             if (!note) return null;
@@ -86,7 +85,7 @@ export default function TasteSection({ productType, formData = {}, handleChange 
                                 <button
                                     key={noteId}
                                     onClick={() => toggleNote(noteId)}
-                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all bg-gradient-to-br text-white hover:shadow-lg`}
+                                    className="px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all bg-gradient-to-br text-white hover:shadow-lg hover:scale-105"
                                     style={{
                                         backgroundImage: `linear-gradient(to bottom right, ${note.familyColor}, ${note.familyColor}dd)`
                                     }}

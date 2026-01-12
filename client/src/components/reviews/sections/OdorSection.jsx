@@ -42,7 +42,7 @@ export default function OdorSection({ productType, formData = {}, handleChange }
 
             {/* Fidélité cultivars (Hash/Concentrés uniquement) */}
             {(productType === 'Hash' || productType === 'Concentré') && (
-                <div className="p-4 bg-gradient-to-br dark:/20 dark:/20 rounded-xl">
+                <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl">
                     <LiquidSlider
                         label="Fidélité aux cultivars"
                         min={1}
@@ -93,7 +93,7 @@ export default function OdorSection({ productType, formData = {}, handleChange }
                     />
                 </div>
 
-                <div className="p-4 bg-gradient-to-br dark:/20 dark:/20 rounded-xl">
+                <div className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-xl">
                     <LiquidSlider
                         label="🌈 Complexité aromatique"
                         min={0}
