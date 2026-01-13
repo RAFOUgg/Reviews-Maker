@@ -1,6 +1,6 @@
 import React from 'react';
 import { Lock, Star, Zap, Crown } from 'lucide-react';
-import { LiquidGlass } from '../ui';
+import { LiquidGlass } from './ui';
 
 /**
  * FeatureGate - Composant pour restreindre l'accès aux fonctionnalités
@@ -84,4 +84,5 @@ export const FeatureGate = ({
 };
 
 export default FeatureGate;
+
 

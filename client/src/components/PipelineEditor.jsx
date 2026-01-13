@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Check, Calendar, Thermometer, Droplets, Clock } from 'lucide-react';
-import { LiquidGlass } from '../ui';
+import { LiquidGlass } from './ui';
 
 /**
  * PipelineEditor - Modale pour éditer les données d'une cellule de pipeline
@@ -110,4 +110,5 @@ const PipelineEditor = ({
 };
 
 export default PipelineEditor;
+
 

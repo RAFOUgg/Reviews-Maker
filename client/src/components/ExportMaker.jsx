@@ -6,9 +6,9 @@ import {
     Grid, Layout, Maximize2, FileImage, File, Save, X, ChevronsRight,
     Share2, Info, CheckCircle, Film
 } from 'lucide-react';
-import { LiquidGlass } from '../ui';
+import { LiquidGlass } from './ui';
 import { useAccountType } from '../../hooks/useAccountType';
-import { FeatureGate } from '../account';
+import { FeatureGate } from './account';
 import DragDropExport from './DragDropExport';
 import WatermarkEditor from './WatermarkEditor';
 import { exportPipelineToGIF, downloadGIF } from '../../utils/GIFExporter';
@@ -397,4 +397,5 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 };
 
 export default ExportMaker;
+
 
