@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import OAuthButtons from '../components/OAuthButtons'
-import AgeVerificationModal from '../components/AgeVerificationModal'
-import LiquidButton from '../components/LiquidButton'
-import LiquidInput from '../components/LiquidInput'
-import { authService } from '../services/apiService'
-import { useStore } from '../store/useStore'
+import OAuthButtons from '../../components/OAuthButtons'
+import AgeVerificationModal from '../../components/AgeVerificationModal'
+import LiquidButton from '../../components/LiquidButton'
+import LiquidInput from '../../components/LiquidInput'
+import { authService } from '../../services/apiService'
+import { useStore } from '../../store/useStore'
 import { Mail, Lock, ArrowRight, LogIn, UserPlus } from 'lucide-react'
 
 export default function LoginPage() {

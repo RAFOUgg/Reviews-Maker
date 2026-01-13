@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import TemplatePicker from '../components/TemplatePicker'
-import TemplatePreview from '../components/TemplatePreview'
+import TemplatePicker from '../../components/TemplatePicker'
+import TemplatePreview from '../../components/TemplatePreview'
 
 export default function TemplatesDemo({ reviewData = null }) {
     const [selected, setSelected] = useState(null)

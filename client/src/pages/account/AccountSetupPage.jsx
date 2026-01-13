@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useStore } from '../store/useStore'
+import { useStore } from '../../store/useStore'
 import { CreditCard, FileCheck, CheckCircle2, AlertCircle, Upload } from 'lucide-react'
-import LiquidCard from '../components/LiquidCard'
-import LiquidButton from '../components/LiquidButton'
+import LiquidCard from '../../components/LiquidCard'
+import LiquidButton from '../../components/LiquidButton'
 
 /**
  * AccountSetupPage - Configuration compte payant (Influenceur/Producteur)

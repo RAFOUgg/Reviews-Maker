@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useStore } from '../store/useStore'
+import { useStore } from '../../store/useStore'
 
 export default function StatsPage() {
     const navigate = useNavigate()

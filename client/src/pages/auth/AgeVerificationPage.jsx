@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Calendar, MapPin, AlertTriangle } from 'lucide-react'
-import { useStore } from '../store/useStore'
-import { useToast } from '../components/ToastContainer'
-import { usersService } from '../services/apiService'
+import { useStore } from '../../store/useStore'
+import { useToast } from '../../components/ToastContainer'
+import { usersService } from '../../services/apiService'
 
 /**
  * Page de vérification d'âge légal - Conforme CDC

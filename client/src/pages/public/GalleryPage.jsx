@@ -5,8 +5,8 @@ import {
   Calendar, TrendingUp
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useStore } from '../store/useStore';
-import LiquidCard from '../components/LiquidCard';
+import { useStore } from '../../store/useStore';
+import LiquidCard from '../../components/LiquidCard';
 
 // Types de produits avec icônes
 const PRODUCT_TYPES = [

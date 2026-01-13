@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useStore } from '../store/useStore';
-import UsageQuotas from '../components/UsageQuotas';
+import { useStore } from '../../store/useStore';
+import UsageQuotas from '../../components/UsageQuotas';
 
 export default function PreferencesPage() {
     const user = useStore((s) => s.user);
