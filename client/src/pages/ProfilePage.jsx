@@ -5,7 +5,9 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore'
-import { LiquidButton, LiquidCard, LiquidInput } from '../components/liquid'
+import LiquidButton from '../components/LiquidButton'
+import LiquidCard from '../components/LiquidCard'
+import LiquidInput from '../components/LiquidInput'
 import { Award, FileText, Heart, MessageCircle, Download, TrendingUp, Calendar, Star } from 'lucide-react'
 
 /**

@@ -11,7 +11,7 @@ import FertilizationPipeline from '../components/FertilizationPipeline';
 import SubstratMixer from '../components/SubstratMixer';
 import RecipeSection from '../components/RecipeSection';
 import GlobalRating from '../components/GlobalRating';
-import OrchardPanel from '../components/orchard/OrchardPanel';
+import OrchardPanel from '../components/OrchardPanel';
 import { AnimatePresence } from 'framer-motion';
 import { productStructures } from '../utils/productStructures';
 import { parseImages } from '../utils/imageUtils';

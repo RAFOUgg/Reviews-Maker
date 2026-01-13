@@ -4,11 +4,11 @@ import {
     Settings, CheckCircle2, AlertTriangle
 } from 'lucide-react';
 // OLD SYSTEM (keep for backward compat)
-import PipelineTimeline from '../../pipeline/PipelineTimeline';
-import PipelineEditor from '../../pipeline/PipelineEditor';
+import PipelineTimeline from './PipelineTimeline';
+import PipelineEditor from './PipelineEditor';
 // NEW SYSTEM (Phase 4.1 - CDC compliant)
-import PipelineGitHubGrid from '../../pipeline/PipelineGitHubGrid';
-import { LiquidGlass } from '../../ui';
+import PipelineGitHubGrid from './PipelineGitHubGrid';
+import LiquidGlass from './LiquidGlass';
 
 const ExtractionPipelineSection = ({ data = {}, onChange }) => {
     // NEW SYSTEM: Use PipelineGitHubGrid (Phase 4.1)

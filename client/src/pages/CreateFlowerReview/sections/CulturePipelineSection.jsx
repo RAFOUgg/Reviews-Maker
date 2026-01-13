@@ -5,7 +5,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { LiquidCard } from '../../../components/liquid';
-import CulturePipelineDragDrop from '../../../components/pipeline/CulturePipelineDragDrop';
+import CulturePipelineDragDrop from '../../../components/CulturePipelineDragDrop';
 
 const CulturePipelineSection = ({ data = {}, onChange }) => {
     // ✅ Ref pour maintenir la dernière version des données (évite le batching)

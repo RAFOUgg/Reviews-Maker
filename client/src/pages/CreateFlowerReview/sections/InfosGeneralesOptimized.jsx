@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Camera, X, Upload } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { CollapsibleMobileSection, MobileFormGroup } from '../../../components/layout/MobileReviewLayout';
-import { ResponsiveInput } from '../../../components/ui/ResponsiveSectionComponents';
+import { CollapsibleMobileSection, MobileFormGroup } from '../../../components/MobileReviewLayout';
+import { ResponsiveInput } from '../../../components/ResponsiveSectionComponents';
 import { useResponsiveLayout } from '../../../hooks/useResponsiveLayout';
 import { useMobileFormSection } from '../../../hooks/useMobileFormSection';
-import MultiSelectPills from '../../../components/ui/MultiSelectPills';
+import MultiSelectPills from '../../../components/MultiSelectPills';
 
 /**
  * InfosGeneralesOptimized - Optimisée mobile

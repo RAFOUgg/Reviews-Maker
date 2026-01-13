@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { parseImages } from '../utils/imageUtils'
-import TemplateRenderer from '../components/orchard/TemplateRenderer'
+import TemplateRenderer from '../components/TemplateRenderer'
 import ReviewFullDisplay from '../components/ReviewFullDisplay'
 import { useStore } from '../store/useStore'
 import { useToast } from '../components/ToastContainer'
-import ExportMaker from '../components/export/ExportMaker'
+import ExportMaker from '../components/ExportMaker'
 import { templatesService } from '../services/apiService'
 import { Download } from 'lucide-react'
 

@@ -7,8 +7,8 @@ import CreateReviewFormWrapper from '../../components/CreateReviewFormWrapper'
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
 import RecipePipelineSection from './sections/RecipePipelineSection'
-import TasteSection from '../../components/reviews/sections/TasteSection'
-import EffectsSection from '../../components/reviews/sections/EffectsSection'
+import TasteSection from '../../components/TasteSection'
+import EffectsSection from '../../components/EffectsSection'
 
 // Import hooks
 import { useEdibleForm } from './hooks/useEdibleForm'
