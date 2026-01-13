@@ -110,4 +110,9 @@ export const useStore = create((set, get) => ({
         try {
             const review = await reviewsService.getById(id)
             return review
-        } catch (error) {
+        } catch (error) {
+            console.error('Error fetching review:', error)
+            throw error
+        }
+    }
+}))
