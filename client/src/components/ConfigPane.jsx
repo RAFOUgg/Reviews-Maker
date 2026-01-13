@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion';
 import { useOrchardStore } from '../store/orchardStore';
-import TemplateSelector from './controls/TemplateSelector';
-import TypographyControls from './controls/TypographyControls';
-import ColorPaletteControls from './controls/ColorPaletteControls';
-import ContentModuleControls from './controls/ContentModuleControls';
-import ImageBrandingControls from './controls/ImageBrandingControls';
+import TemplateSelector from './TemplateSelector';
+import TypographyControls from './TypographyControls';
+import ColorPaletteControls from './ColorPaletteControls';
+import ContentModuleControls from './ContentModuleControls';
+import ImageBrandingControls from './ImageBrandingControls';
 import PresetManager from './PresetManager';
 
 const PANELS = [
