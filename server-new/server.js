@@ -60,11 +60,78 @@ const normalizeDatabaseUrl = () => {
         try {
             fs.mkdirSync(path.dirname(resolved), { recursive: true })
         } catch (err) {
-        }
-        if (!discordRedirect.endsWith('/api/auth/discord/callback')) {
-            console.warn('[CONFIG] DISCORD_REDIRECT_URI should end with /api/auth/discord/callback; please verify the URL configured in the Discord Developer Portal')
+            // Silently fail if directory already exists
         }
     }
-} catch (err) {
-    // Avoid throwing for invalid URLs — just log
+}
+
+// Initialize database connection and normalize path if needed
+normalizeDatabaseUrl()
+const prisma = new PrismaClient()
+
+// Build session options
+const sessionOptions = buildSessionOptions(Store)
+
+// Set up middleware
+app.use(express.json({ limit: '50mb' }))
+app.use(express.urlencoded({ limit: '50mb', extended: true }))
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true
+}))
+app.use(session(sessionOptions))
+app.use(passport.initialize())
+app.use(passport.session())
+app.use(logAuthRequest)
+
+// API Routes
+app.use('/api/auth', authRoutes)
+app.use('/api/reviews', reviewRoutes)
+app.use('/api/users', userRoutes)
+app.use('/api/templates', templatesRoutes)
+app.use('/api/legal', legalRoutes)
+app.use('/api/kyc', kycRoutes)
+app.use('/api/payment', paymentRoutes)
+app.use('/api/account', accountRoutes)
+app.use('/api/cultivars', cultivarsRoutes)
+app.use('/api/genetics', geneticsRoutes)
+app.use('/api/pipelines', pipelinesRoutes)
+app.use('/api/flower-reviews', flowerReviewsRoutes)
+app.use('/api/hash-reviews', hashReviewsRoutes)
+app.use('/api/concentrate-reviews', concentrateReviewsRoutes)
+app.use('/api/edible-reviews', edibleReviewsRoutes)
+app.use('/api/library', libraryRoutes)
+app.use('/api/gallery', galleryRoutes)
+app.use('/api/stats', statsRoutes)
+app.use('/api/pipeline-github', pipelineGithubRoutes)
+app.use('/api/usage', usageRoutes)
+app.use('/api/presets', presetsRoutes)
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() })
+})
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+    console.log('\n⛔ Shutting down gracefully...')
+    await prisma.$disconnect()
+    process.exit(0)
+})
+
+process.on('SIGTERM', async () => {
+    console.log('\n⛔ Received SIGTERM, shutting down...')
+    await prisma.$disconnect()
+    process.exit(0)
+})
+
+// Start server
+const PORT = process.env.PORT || 3000
+app.listen(PORT, () => {
+    console.log(`🚀 Express server running on port ${PORT}`)
+    console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`)
+    console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`)
+    console.log(`\n✅ Ready to accept requests!\n`)
+})
+
 export { prisma }
