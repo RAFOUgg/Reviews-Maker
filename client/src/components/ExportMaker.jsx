@@ -6,7 +6,7 @@ import {
     Grid, Layout, Maximize2, FileImage, File, Save, X, ChevronsRight,
     Share2, Info, CheckCircle, Film
 } from 'lucide-react';
-import { LiquidGlass } from './ui';
+import LiquidGlass from './LiquidGlass';
 import { useAccountType } from '../../hooks/useAccountType';
 import { FeatureGate } from './account';
 import DragDropExport from './DragDropExport';

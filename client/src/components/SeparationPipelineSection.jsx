@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 // NEW SYSTEM Phase 3 - Separation Pipeline
 import SeparationPipelineDragDrop from './SeparationPipelineDragDrop';
-import { LiquidGlass } from './ui';
+import LiquidGlass from './LiquidGlass';
 
 const SeparationPipelineSection = ({ data = {}, onChange }) => {
     // Adapter les handlers pour PipelineDragDropView
