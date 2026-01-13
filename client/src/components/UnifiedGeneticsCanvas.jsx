@@ -36,7 +36,6 @@ import EdgeContextMenu from './EdgeContextMenu';
 import NodeFormModal from './NodeFormModal';
 import EdgeFormModal from './EdgeFormModal';
 import TreeToolbar from './TreeToolbar';
-import './UnifiedGeneticsCanvas.css';
 
 const nodeTypes = {
     cultivar: CultivarNode
