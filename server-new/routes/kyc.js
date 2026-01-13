@@ -148,4 +148,211 @@ router.post('/upload', requireAuth, upload.single('document'), async (req, res) 
         })
 
     } catch (error) {
+        console.error('❌ Erreur upload KYC:', error)
+
+        // Nettoyer le fichier en cas d'erreur
+        if (req.file) {
+            try {
+                await fs.unlink(req.file.path)
+            } catch (unlinkErr) {
+                console.error('Erreur suppression fichier:', unlinkErr)
+            }
+        }
+
+        res.status(500).json({
+            error: 'upload_failed',
+            message: 'Erreur lors de l\'upload du document'
+        })
+    }
+})
+
+/**
+ * GET /api/kyc/documents
+ * Récupérer la liste des documents uploadés
+ */
+router.get('/documents', requireAuth, async (req, res) => {
+    try {
+        const userId = req.user.id
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                kycDocuments: true,
+                kycStatus: true,
+                accountType: true
+            }
+        })
+
+        if (!user) {
+            return res.status(404).json({
+                error: 'user_not_found',
+                message: 'Utilisateur non trouvé'
+            })
+        }
+
+        if (user.accountType !== 'producer' && user.accountType !== 'influencer') {
+            return res.status(403).json({
+                error: 'forbidden',
+                message: 'eKYC réservé aux comptes Producteur et Influenceur'
+            })
+        }
+
+        const documents = user.kycDocuments ? JSON.parse(user.kycDocuments) : []
+
+        res.json({
+            status: user.kycStatus || 'none',
+            documents: documents.map(doc => ({
+                id: doc.id,
+                type: doc.type,
+                filename: doc.filename,
+                originalName: doc.originalName,
+                size: doc.size,
+                uploadedAt: doc.uploadedAt,
+                status: doc.status
+            }))
+        })
+
+    } catch (error) {
+        console.error('❌ Erreur récupération documents KYC:', error)
+        res.status(500).json({
+            error: 'fetch_failed',
+            message: 'Erreur lors de la récupération des documents'
+        })
+    }
+})
+
+/**
+ * DELETE /api/kyc/document/:documentId
+ * Supprimer un document
+ */
+router.delete('/document/:documentId', requireAuth, async (req, res) => {
+    try {
+        const userId = req.user.id
+        const { documentId } = req.params
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                kycDocuments: true,
+                accountType: true
+            }
+        })
+
+        if (!user) {
+            return res.status(404).json({
+                error: 'user_not_found',
+                message: 'Utilisateur non trouvé'
+            })
+        }
+
+        if (user.accountType !== 'producer' && user.accountType !== 'influencer') {
+            return res.status(403).json({
+                error: 'forbidden',
+                message: 'eKYC réservé aux comptes Producteur et Influenceur'
+            })
+        }
+
+        const documents = user.kycDocuments ? JSON.parse(user.kycDocuments) : []
+        const docIndex = documents.findIndex(d => d.id === documentId)
+
+        if (docIndex === -1) {
+            return res.status(404).json({
+                error: 'document_not_found',
+                message: 'Document non trouvé'
+            })
+        }
+
+        const docToDelete = documents[docIndex]
+
+        // Supprimer le fichier physique
+        try {
+            await fs.unlink(docToDelete.path)
+        } catch (unlinkErr) {
+            console.error('Erreur suppression fichier:', unlinkErr)
+        }
+
+        // Retirer de la liste
+        documents.splice(docIndex, 1)
+
+        // Mettre à jour le statut si plus de documents
+        const newStatus = documents.length === 0 ? 'none' : user.kycStatus
+
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                kycDocuments: JSON.stringify(documents),
+                kycStatus: newStatus
+            }
+        })
+
+        res.json({
+            success: true,
+            message: 'Document supprimé'
+        })
+
+    } catch (error) {
+        console.error('❌ Erreur suppression document KYC:', error)
+        res.status(500).json({
+            error: 'delete_failed',
+            message: 'Erreur lors de la suppression du document'
+        })
+    }
+})
+
+/**
+ * GET /api/kyc/document/:documentId/view
+ * Voir un document (retourne le fichier)
+ */
+router.get('/document/:documentId/view', requireAuth, async (req, res) => {
+    try {
+        const userId = req.user.id
+        const { documentId } = req.params
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                kycDocuments: true
+            }
+        })
+
+        if (!user) {
+            return res.status(404).json({
+                error: 'user_not_found',
+                message: 'Utilisateur non trouvé'
+            })
+        }
+
+        const documents = user.kycDocuments ? JSON.parse(user.kycDocuments) : []
+        const document = documents.find(d => d.id === documentId)
+
+        if (!document) {
+            return res.status(404).json({
+                error: 'document_not_found',
+                message: 'Document non trouvé'
+            })
+        }
+
+        // Vérifier que le fichier existe
+        try {
+            await fs.access(document.path)
+        } catch {
+            return res.status(404).json({
+                error: 'file_not_found',
+                message: 'Fichier physique introuvable'
+            })
+        }
+
+        // Servir le fichier
+        res.sendFile(document.path)
+
+    } catch (error) {
+        console.error('❌ Erreur visualisation document KYC:', error)
+        res.status(500).json({
+            error: 'view_failed',
+            message: 'Erreur lors de la visualisation du document'
+        })
+    }
+})
+
 export default router
