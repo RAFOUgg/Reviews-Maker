@@ -3,13 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, closestCenter } from '@dnd-kit/core';
 import { useOrchardStore } from '../../../store/orchardStore';
-import ConfigPane from './ConfigPane';
-import PreviewPane from './PreviewPane';
+import ConfigPane from '../config/ConfigPane';
+import PreviewPane from '../preview/PreviewPane';
 import PagedPreviewPane from './PagedPreviewPane';
-import CustomLayoutPane from './CustomLayoutPane';
-import ContentPanel from './ContentPanel';
+import CustomLayoutPane from '../config/CustomLayoutPane';
+import ContentPanel from '../config/ContentPanel';
 import PageManager from './PageManager';
-import ExportModal from './ExportModal';
+import ExportModal from '../../export/ExportModal';
 import { useOrchardPagesStore } from '../../../store/orchardPagesStore';
 
 /**

@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import LiquidGlass from '../ui/LiquidGlass';
 import { useAccountType } from '../../hooks/useAccountType';
-import { FeatureGate } from './FeatureGate';
+import { FeatureGate } from '../account/FeatureGate';
 import DragDropExport from './DragDropExport';
 import WatermarkEditor from './WatermarkEditor';
 import { exportPipelineToGIF, downloadGIF } from '../../utils/GIFExporter';

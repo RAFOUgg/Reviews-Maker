@@ -8,9 +8,9 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Beaker, FlaskConical, ChevronDown, Plus, X } from 'lucide-react';
 import LiquidCard from '../../../../components/ui/LiquidCard';
-import { EXTRACTION_METHODS, getExtractionMethod } from '../../../../../data/extractionMethods';
-import { PURIFICATION_METHODS, getPurificationMethodById } from '../../../../../data/purificationMethods';
-import { INTERVAL_TYPES } from '../../../types/pipelineTypes';
+import { EXTRACTION_METHODS, getExtractionMethod } from '../../../../data/extractionMethods';
+import { PURIFICATION_METHODS, getPurificationMethodById } from '../../../../data/purificationMethods';
+import { INTERVAL_TYPES } from '../../../../types/pipelineTypes';
 
 const ExtractionPipelineSection = ({ data = {}, onChange }) => {
     const [config, setConfig] = useState({

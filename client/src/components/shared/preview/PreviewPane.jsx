@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useOrchardStore } from '../../../store/orchardStore';
-import TemplateRenderer from './TemplateRenderer';
+import TemplateRenderer from '../../export/TemplateRenderer';
 
 export default function PreviewPane() {
     const previewRef = useRef(null);

@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Timer, Thermometer, Droplets, Package, ChevronDown, AlertCircle } from 'lucide-react';
 import LiquidCard from '../ui/LiquidCard';
-import { INTERVAL_TYPES } from '../types/pipelineTypes';
+import { INTERVAL_TYPES } from '../../types/pipelineTypes';
 import CuringPipelineDragDrop from '../pipelines/legacy/CuringPipelineDragDrop';
 
 const CONTAINER_TYPES = [

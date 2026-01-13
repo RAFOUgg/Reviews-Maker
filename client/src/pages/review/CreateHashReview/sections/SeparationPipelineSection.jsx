@@ -10,8 +10,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Waves, Snowflake, Hand, Settings, ChevronDown } from 'lucide-react';
 import LiquidCard from '../../../../components/ui/LiquidCard';
-import { SEPARATION_METHODS, MESH_SIZES, getMethodById } from '../../../../../data/separationMethods';
-import { INTERVAL_TYPES } from '../../../types/pipelineTypes';
+import { SEPARATION_METHODS, MESH_SIZES, getMethodById } from '../../../../data/separationMethods';
+import { INTERVAL_TYPES } from '../../../../types/pipelineTypes';
 
 const SeparationPipelineSection = ({ data = {}, onChange }) => {
     const [config, setConfig] = useState({

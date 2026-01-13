@@ -5,8 +5,8 @@ import { ReactFlowProvider } from 'reactflow'
 import LiquidCard from '../../../../components/ui/LiquidCard'
 import PhenoCodeGenerator from '../../../../components/forms/helpers/PhenoCodeGenerator'
 import UnifiedGeneticsCanvas from '../../../../components/genetics/UnifiedGeneticsCanvas'
-import useGeneticsStore from '../../../store/useGeneticsStore'
-import { useStore } from '../../../store/useStore'
+import useGeneticsStore from '../../../../store/useGeneticsStore'
+import { useStore } from '../../../../store/useStore'
 
 export default function Genetiques({ formData, handleChange }) {
     const [showInitialModal, setShowInitialModal] = useState(true) // Modal de choix initial

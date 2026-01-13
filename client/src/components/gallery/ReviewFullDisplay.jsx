@@ -1,4 +1,4 @@
-import { extractCategoryRatings, extractExtraData, extractPipelines, extractSubstrat, formatDate } from '../utils/orchardHelpers'
+import { extractCategoryRatings, extractExtraData, extractPipelines, extractSubstrat, formatDate } from '../../utils/orchardHelpers'
 
 export default function ReviewFullDisplay({ review }) {
     if (!review) return null

@@ -6,7 +6,7 @@ import {
   Plus, Minus, Lock
 } from 'lucide-react';
 import { useAccountType } from '../../hooks/useAccountType';
-import { FeatureGate } from './FeatureGate';
+import { FeatureGate } from '../account/FeatureGate';
 
 /**
  * WatermarkEditor - Éditeur de filigrane personnalisé
