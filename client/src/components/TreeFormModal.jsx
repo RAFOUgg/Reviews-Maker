@@ -6,7 +6,6 @@
 
 import React, { useState } from 'react';
 import useGeneticsStore from '../store/useGeneticsStore';
-import './FormModal.css';
 
 const TreeFormModal = ({ isEdit, onClose }) => {
     const store = useGeneticsStore();

@@ -6,7 +6,6 @@
 
 import React, { useState } from 'react';
 import useGeneticsStore from '../store/useGeneticsStore';
-import './FormModal.css';
 
 const NodeFormModal = ({ isEdit, onClose }) => {
     const store = useGeneticsStore();
@@ -176,6 +175,7 @@ const NodeFormModal = ({ isEdit, onClose }) => {
 };
 
 export default NodeFormModal;
+
 
 
 

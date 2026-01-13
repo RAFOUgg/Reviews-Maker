@@ -6,7 +6,6 @@
 
 import React, { useState } from 'react';
 import useGeneticsStore from '../store/useGeneticsStore';
-import './FormModal.css';
 
 const EdgeFormModal = ({ onClose }) => {
     const store = useGeneticsStore();
@@ -196,6 +195,7 @@ const EdgeFormModal = ({ onClose }) => {
 };
 
 export default EdgeFormModal;
+
 
 
 

@@ -1,6 +1,5 @@
 import React, { useRef, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import '../../assets/liquid-glass.css';
 
 /**
  * LiquidGlass - Composant de base pour l'effet de verre liquide Apple-style
@@ -45,6 +44,7 @@ export const LiquidGlass = ({
 };
 
 export default LiquidGlass;
+
 
 
 
