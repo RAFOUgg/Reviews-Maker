@@ -230,21 +230,22 @@ const PipelineCore = ({
                     </div>
                 ) : (
                     // Mode timeline: Grille dense style GitHub
-                    <div
-                        className="grid gap-1"
-                        style={{
-                            gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`,
-                            maxWidth: '100%',
-                            overflowX: 'auto'
-                        }}
-                    >
-                        {Array.from({ length: totalCells }, (_, idx) => {
-                            const cellData = cells[idx];
-                            const intensity = getCellIntensity(cellData);
-                            return renderCell
-                                ? renderCell(idx, cellData, intensity)
-                                : defaultRenderCell(idx, cellData, intensity);
-                        })}
+                    <div className="w-full overflow-x-auto -mx-6 px-6">
+                        <div
+                            className="grid gap-1 inline-grid"
+                            style={{
+                                gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`,
+                                minWidth: '100%'
+                            }}
+                        >
+                            {Array.from({ length: totalCells }, (_, idx) => {
+                                const cellData = cells[idx];
+                                const intensity = getCellIntensity(cellData);
+                                return renderCell
+                                    ? renderCell(idx, cellData, intensity)
+                                    : defaultRenderCell(idx, cellData, intensity);
+                            })}
+                        </div>
                     </div>
                 )}
             </div>
