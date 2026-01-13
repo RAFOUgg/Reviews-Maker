@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import PipelineDragDropView from '../views/PipelineDragDropView'
 import { CURING_SIDEBAR_CONTENT } from '../../../config/curingSidebarContent'
-import CuringEvolutionGraph from './CuringEvolutionGraph'
+import CuringEvolutionGraph from '../../shared/charts/CuringEvolutionGraph'
 import { exportCuringEvolutionToGIF } from '../../../utils/CuringGIFExporter'
 import { Download, TrendingUp, Film } from 'lucide-react'
 

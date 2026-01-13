@@ -20,8 +20,8 @@
  */
 
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import ConfirmModal from './ConfirmModal';
-import { useToast } from './ToastContainer';
+import ConfirmModal from '../../shared/ConfirmModal';
+import { useToast } from '../../shared/ToastContainer';
 import CellContextMenu from './CellContextMenu';
 
 // Emojis disponibles pour les groupes
@@ -608,10 +608,10 @@ function SavePipelineModal({ isOpen, onClose, timelineConfig, timelineData, onSa
 }
 
 import { ChevronDown, ChevronRight, Plus, Settings, Save, Upload, CheckSquare, Square, Check } from 'lucide-react';
-import PipelineDataModal from './PipelineDataModal';
-import PipelineCellBadge from './PipelineCellBadge';
+import PipelineDataModal from '../core/PipelineDataModal';
+import PipelineCellBadge from '../core/PipelineCellBadge';
 import CellEmojiOverlay from './CellEmojiOverlay';
-import PipelineCellTooltip from './PipelineCellTooltip';
+import PipelineCellTooltip from '../core/PipelineCellTooltip';
 import MassAssignModal from './MassAssignModal';
 import ItemContextMenu from './ItemContextMenu';
 

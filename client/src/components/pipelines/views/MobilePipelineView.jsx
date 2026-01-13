@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
-import PipelineCellModal from './PipelineCellModal';
+import PipelineCellModal from '../core/PipelineCellModal';
 import { CULTURE_PHASES } from './PipelineWithSidebar';
 
 /**

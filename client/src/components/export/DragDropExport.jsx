@@ -6,7 +6,7 @@ import {
   ChevronDown, ChevronUp, Lock, Unlock
 } from 'lucide-react';
 import { useAccountType } from '../../hooks/useAccountType';
-import { FeatureGate } from './FeatureGate';
+import { FeatureGate } from '../account/FeatureGate';
 
 // Données des sections disponibles pour drag & drop
 const AVAILABLE_SECTIONS = {

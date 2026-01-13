@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
 import { useOrchardStore } from '../../../store/orchardStore';
 import { useOrchardPagesStore } from '../../../store/orchardPagesStore';
-import TemplateRenderer from './TemplateRenderer';
+import TemplateRenderer from '../../export/TemplateRenderer';
 
 /**
  * Composant d'affichage avec pagination pour le mode multi-pages

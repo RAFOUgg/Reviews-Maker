@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import FieldRenderer from './FieldRendererClean';
+import FieldRenderer from '../../forms/FieldRendererClean';
 import { DRAGGABLE_FIELDS } from './ContentPanel';
 
 export default function CustomTemplate({ config, reviewData, dimensions }) {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import PipelineWithSidebar from './PipelineWithSidebar';
+import { CULTURE_PHASES } from './PipelineWithSidebar';
 import MobilePipelineView from './MobilePipelineView';
 
 /**

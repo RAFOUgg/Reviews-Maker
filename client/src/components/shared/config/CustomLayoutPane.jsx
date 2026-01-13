@@ -9,7 +9,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
 import { DRAGGABLE_FIELDS } from './ContentPanel';
-import FieldRenderer from './FieldRendererClean';
+import FieldRenderer from '../../forms/FieldRendererClean';
 
 // Helper pour récupérer la définition d'un champ
 const getFieldDefFromId = (id) => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, Trash2, Copy } from 'lucide-react';
-import LiquidButton from './LiquidButton';
+import LiquidButton from '../../ui/LiquidButton';
 import { CULTURE_VALUES } from '../../../data/formValues';
 
 /**

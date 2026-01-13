@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { RefreshCw, Check, Edit2 } from 'lucide-react'
-import LiquidCard from './LiquidCard'
+import LiquidCard from '../../ui/LiquidCard'
 
 /**
  * PhenoCodeGenerator - Générateur automatique de codes phénotype CDC conforme
