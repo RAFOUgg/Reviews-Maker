@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { useStore } from '../../store/useStore'
+import { useStore } from '../../../store/useStore'
 import { useToast } from '../../../components/shared/ToastContainer'
-import { hashReviewsService } from '../../services/apiService'
+import { hashReviewsService } from '../../../services/apiService'
 import CreateReviewFormWrapper from '../../../components/account/CreateReviewFormWrapper'
 
 // Import sections
