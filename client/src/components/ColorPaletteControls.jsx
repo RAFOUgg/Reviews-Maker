@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useOrchardStore } from '../../../store/orchardStore';
-import { COLOR_PALETTES } from '../../../store/orchardConstants';
+import { useOrchardStore } from '../../store/'orchardStore';
+import { COLOR_PALETTES } from '../../store/'orchardConstants';
 
 export default function ColorPaletteControls() {
     const config = useOrchardStore((state) => state.config);
@@ -189,3 +189,4 @@ export default function ColorPaletteControls() {
         </div>
     );
 }
+

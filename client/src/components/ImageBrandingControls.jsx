@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useOrchardStore } from '../../../store/orchardStore';
+import { useOrchardStore } from '../../store/'orchardStore';
 
 const IMAGE_FILTERS = [
     { id: 'none', name: 'Aucun', preview: '🎨' },
@@ -249,3 +249,4 @@ export default function ImageBrandingControls() {
         </div>
     );
 }
+

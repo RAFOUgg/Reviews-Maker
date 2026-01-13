@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import PipelineDragDropView from './PipelineDragDropView'
-import { CURING_VALUES } from '../../../data/formValues'
+import { CURING_VALUES } from '../../data/'formValues'
 
 /**
  * CuringMaturationTimeline - Version CDC conforme avec drag & drop
@@ -233,4 +233,5 @@ export default function CuringMaturationTimeline({ data, onChange }) {
         </div>
     )
 }
+
 

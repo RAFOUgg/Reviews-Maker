@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit2, Trash2, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
-import { useMobileFormSection } from '../../../hooks/useMobileFormSection';
+import { useMobileFormSection } from '../../hooks/'useMobileFormSection';
 
 /**
  * MobilePipelineOptimized - Pipeline totalement optimisé mobile
@@ -330,3 +330,4 @@ const MobilePipelineOptimized = ({
 };
 
 export default MobilePipelineOptimized;
+

@@ -5,7 +5,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import useGeneticsStore from '../../../store/useGeneticsStore';
+import useGeneticsStore from '../../store/'useGeneticsStore';
 import './ContextMenu.css';
 
 const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly }) => {
@@ -100,3 +100,4 @@ const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly }) => {
 };
 
 export default EdgeContextMenu;
+

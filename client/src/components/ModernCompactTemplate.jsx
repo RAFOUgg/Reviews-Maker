@@ -12,7 +12,7 @@ import {
     extractExtraData,
     getResponsiveAdjustments,
     colorWithOpacity,
-} from '../../../utils/orchardHelpers';
+} from '../../utils/'orchardHelpers';
 
 /**
  * ModernCompactTemplate - Template moderne et compact
@@ -357,3 +357,4 @@ ModernCompactTemplate.propTypes = {
     reviewData: PropTypes.object.isRequired,
     dimensions: PropTypes.object.isRequired,
 };
+

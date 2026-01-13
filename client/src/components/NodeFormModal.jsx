@@ -5,7 +5,7 @@
  */
 
 import React, { useState } from 'react';
-import useGeneticsStore from '../../../store/useGeneticsStore';
+import useGeneticsStore from '../../store/'useGeneticsStore';
 import './FormModal.css';
 
 const NodeFormModal = ({ isEdit, onClose }) => {
@@ -176,3 +176,4 @@ const NodeFormModal = ({ isEdit, onClose }) => {
 };
 
 export default NodeFormModal;
+
