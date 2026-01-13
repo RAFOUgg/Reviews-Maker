@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { LiquidInput, LiquidSelect } from './liquid'
+import LiquidInput from './LiquidInput'
+import LiquidSelect from './LiquidSelect'
 
 /**
  * FrequencyField - Champ pour saisir une fréquence (valeur + période)

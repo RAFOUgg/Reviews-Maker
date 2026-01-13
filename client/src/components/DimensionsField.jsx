@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { LiquidInput } from './liquid'
+import LiquidInput from './LiquidInput'
 
 /**
  * DimensionsField - Champ pour saisir dimensions L×l×H

@@ -7,7 +7,7 @@
 import PropTypes from 'prop-types'
 import { useNavigate } from 'react-router-dom'
 import { parseImages } from '../utils/imageUtils'
-import TemplateRenderer from './orchard/TemplateRenderer'
+import TemplateRenderer from './TemplateRenderer'
 
 export default function HomeReviewCard({
     review,

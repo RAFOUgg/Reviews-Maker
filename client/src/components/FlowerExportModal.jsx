@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Download, Share2, X } from 'lucide-react'
-import FlowerCompactTemplate from './templates/FlowerCompactTemplate'
-import FlowerDetailedTemplate from './templates/FlowerDetailedTemplate'
-import FlowerCompleteTemplate from './templates/FlowerCompleteTemplate'
+import FlowerCompactTemplate from './FlowerCompactTemplate'
+import FlowerDetailedTemplate from './FlowerDetailedTemplate'
+import FlowerCompleteTemplate from './FlowerCompleteTemplate'
 import ModuleBuilder from './ModuleBuilder'
 
 /**

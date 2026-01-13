@@ -17,7 +17,7 @@ import { Eye, X } from 'lucide-react'
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout'
 import { ResponsiveCreateReviewLayout } from './ResponsiveCreateReviewLayout'
 import ReviewPreview from './ReviewPreview'
-import OrchardPanel from './orchard/OrchardPanel'
+import OrchardPanel from './OrchardPanel'
 
 const CreateReviewFormWrapper = ({
     productType = 'flower',
