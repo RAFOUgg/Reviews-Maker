@@ -24,18 +24,18 @@ const CreateReviewFormWrapper = ({
     sections = [],
     sectionComponents = {},
     formData = {},
-    handleChange = () => {},
+    handleChange = () => { },
     photos = [],
-    handlePhotoUpload = () => {},
-    removePhoto = () => {},
-    onSave = async () => {},
-    onSubmit = async () => {},
+    handlePhotoUpload = () => { },
+    removePhoto = () => { },
+    onSave = async () => { },
+    onSubmit = async () => { },
     title = 'Créer une review',
     subtitle = 'Documentez votre produit en détail',
     loading = false,
     saving = false,
-    onLoadingChange = () => {},
-    onSavingChange = () => {}
+    onLoadingChange = () => { },
+    onSavingChange = () => { }
 }) => {
     const [currentSection, setCurrentSection] = useState(0)
     const [showOrchard, setShowOrchard] = useState(false)
@@ -87,11 +87,10 @@ const CreateReviewFormWrapper = ({
             <div className={`flex justify-end mb-4 ${layout.isMobile ? 'px-0' : 'px-0'}`}>
                 <button
                     onClick={() => setShowPreview(!showPreview)}
-                    className={`flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 text-purple-300 rounded-lg font-medium transition-all ${
-                        layout.isMobile 
+                    className={`flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 text-purple-300 rounded-lg font-medium transition-all ${layout.isMobile
                             ? 'px-3 py-2 text-xs'
                             : 'px-4 py-2 text-sm'
-                    }`}
+                        }`}
                 >
                     <Eye className={layout.isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
                     <span>Aperçu Complet</span>
@@ -112,9 +111,8 @@ const CreateReviewFormWrapper = ({
                         {currentSectionData?.icon}
                     </span>
                     <div className="flex-1 min-w-0">
-                        <h2 className={`font-semibold text-gray-100 ${
-                            layout.isMobile ? 'text-base' : 'text-xl'
-                        }`}>
+                        <h2 className={`font-semibold text-gray-100 ${layout.isMobile ? 'text-base' : 'text-xl'
+                            }`}>
                             {currentSectionData?.title}
                             {currentSectionData?.required && <span className="text-red-500 ml-2">*</span>}
                         </h2>
@@ -146,9 +144,8 @@ const CreateReviewFormWrapper = ({
                             productType={productType}
                         />
                     ) : (
-                        <div className={`text-center text-gray-400 py-8 ${
-                            layout.isMobile ? 'text-xs' : 'text-sm'
-                        }`}>
+                        <div className={`text-center text-gray-400 py-8 ${layout.isMobile ? 'text-xs' : 'text-sm'
+                            }`}>
                             Composant non trouvé pour {currentSectionData?.id}
                         </div>
                     )}

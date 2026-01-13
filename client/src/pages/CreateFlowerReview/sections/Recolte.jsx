@@ -141,7 +141,7 @@ export default function Recolte({ formData, handleChange }) {
                             </div>
 
                             {/* Validation somme = 100% */}
-                            <div className={`px-4 py-3 rounded-lg flex items-center justify-between ${trichomesValid ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-500' : 'bg-red-50 dark:bg-red-900/20 border-2 border-red-500' }`}>
+                            <div className={`px-4 py-3 rounded-lg flex items-center justify-between ${trichomesValid ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-500' : 'bg-red-50 dark:bg-red-900/20 border-2 border-red-500'}`}>
                                 <span className="text-sm font-medium">
                                     {trichomesValid ? '✅ Total' : '⚠️ Total'}
                                 </span>

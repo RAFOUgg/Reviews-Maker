@@ -68,8 +68,8 @@ export default function EffetsOptimized({ formData, handleChange }) {
         const updated = selectedEffects.includes(effect)
             ? selectedEffects.filter(e => e !== effect)
             : selectedEffects.length < 8
-            ? [...selectedEffects, effect]
-            : selectedEffects;
+                ? [...selectedEffects, effect]
+                : selectedEffects;
 
         setSelectedEffects(updated);
         handleChange('effets', updated);
@@ -129,11 +129,10 @@ export default function EffetsOptimized({ formData, handleChange }) {
                             <button
                                 key={mode}
                                 onClick={() => setFilterMode(mode)}
-                                className={`px-2 py-1 text-xs rounded-lg transition ${
-                                    filterMode === mode
+                                className={`px-2 py-1 text-xs rounded-lg transition ${filterMode === mode
                                         ? 'bg-purple-600 text-white'
                                         : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                                }`}
+                                    }`}
                             >
                                 {mode === 'tous' ? 'Tous' : mode === 'positif' ? 'Positifs' : 'Négatifs'}
                             </button>
@@ -151,11 +150,10 @@ export default function EffetsOptimized({ formData, handleChange }) {
                     <div key={catKey}>
                         <button
                             onClick={() => toggleCategory(catKey)}
-                            className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg transition ${
-                                expandedCategories[catKey]
+                            className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg transition ${expandedCategories[catKey]
                                     ? 'bg-slate-700/70 text-white'
                                     : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                            }`}
+                                }`}
                         >
                             <span className={`text-sm font-semibold flex items-center gap-2`}>
                                 <span>{category.icon}</span>
@@ -184,28 +182,28 @@ export default function EffetsOptimized({ formData, handleChange }) {
                                     {category.effects
                                         .filter(shouldShowEffect)
                                         .map(effect => (
-                                        <motion.button
-                                            key={effect}
-                                            onClick={() => toggleEffect(effect)}
-                                            disabled={!selectedEffects.includes(effect) && selectedEffects.length >= 8}
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            className={`
+                                            <motion.button
+                                                key={effect}
+                                                onClick={() => toggleEffect(effect)}
+                                                disabled={!selectedEffects.includes(effect) && selectedEffects.length >= 8}
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                className={`
                                                 px-2 py-1.5 rounded-lg text-xs font-medium transition-all
                                                 ${selectedEffects.includes(effect)
-                                                    ? `bg-${category.color}-600 text-white ring-2 ring-${category.color}-400`
-                                                    : `bg-slate-700 text-slate-300 hover:bg-slate-600`
-                                                }
+                                                        ? `bg-${category.color}-600 text-white ring-2 ring-${category.color}-400`
+                                                        : `bg-slate-700 text-slate-300 hover:bg-slate-600`
+                                                    }
                                                 ${!selectedEffects.includes(effect) && selectedEffects.length >= 8
-                                                    ? 'opacity-40 cursor-not-allowed'
-                                                    : ''
-                                                }
+                                                        ? 'opacity-40 cursor-not-allowed'
+                                                        : ''
+                                                    }
                                             `}
-                                        >
-                                            {selectedEffects.includes(effect) && '✓ '}
-                                            {effect}
-                                        </motion.button>
-                                    ))}
+                                            >
+                                                {selectedEffects.includes(effect) && '✓ '}
+                                                {effect}
+                                            </motion.button>
+                                        ))}
                                 </motion.div>
                             )}
                         </AnimatePresence>

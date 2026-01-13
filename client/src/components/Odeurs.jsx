@@ -111,8 +111,8 @@ export default function Odeurs({ data, onChange, errors = {} }) {
                                                 onClick={() => toggleAroma(field, aroma.id)}
                                                 disabled={!isSelected && selected.length >= max}
                                                 className={`px-3 py-1 text-sm rounded-lg transition-colors ${isSelected
-                                                        ? 'bg-primary-500 text-white'
-                                                        : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
+                                                    ? 'bg-primary-500 text-white'
+                                                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
                                                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                                             >
                                                 {aroma.label}

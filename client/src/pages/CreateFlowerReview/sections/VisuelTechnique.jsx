@@ -12,7 +12,7 @@ const VISUAL_FIELDS = [
     { key: 'graines', label: 'Graines (10=aucune)', max: 10 }
 ]
 
-export default function VisuelTechnique({ formData = {}, handleChange = () => {} }) {
+export default function VisuelTechnique({ formData = {}, handleChange = () => { } }) {
     const handleColorChange = (colors) => {
         if (handleChange && typeof handleChange === 'function') {
             handleChange('selectedColors', colors)

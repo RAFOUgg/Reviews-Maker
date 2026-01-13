@@ -144,11 +144,10 @@ export default function InfosGeneralesOptimized({
                                     {/* Tags selection */}
                                     <motion.button
                                         onClick={() => setSelectedPhotoIdx(selectedPhotoIdx === idx ? null : idx)}
-                                        className={`w-full text-left px-2 py-1 mt-1 rounded-lg text-xs font-medium transition ${
-                                            selectedPhotoIdx === idx
+                                        className={`w-full text-left px-2 py-1 mt-1 rounded-lg text-xs font-medium transition ${selectedPhotoIdx === idx
                                                 ? 'bg-purple-600 text-white'
                                                 : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                                        }`}
+                                            }`}
                                     >
                                         Tags ({(photo.tags || []).length})
                                     </motion.button>
@@ -167,11 +166,10 @@ export default function InfosGeneralesOptimized({
                                                 <button
                                                     key={tag}
                                                     onClick={() => togglePhotoTag(idx, tag)}
-                                                    className={`px-2 py-1 rounded text-[10px] font-medium transition ${
-                                                        (photo.tags || []).includes(tag)
+                                                    className={`px-2 py-1 rounded text-[10px] font-medium transition ${(photo.tags || []).includes(tag)
                                                             ? 'bg-blue-600 text-white'
                                                             : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {(photo.tags || []).includes(tag) && '✓ '}
                                                     {tag}

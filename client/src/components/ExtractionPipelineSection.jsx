@@ -64,8 +64,8 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
                                     key={m.id}
                                     onClick={() => handleProcessChange('method', m.id)}
                                     className={`flex-1 p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${processData.method === m.id
-                                            ? 'bg-amber-600/20 border-amber-500 text-amber-400'
-                                            : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+                                        ? 'bg-amber-600/20 border-amber-500 text-amber-400'
+                                        : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
                                         }`}
                                 >
                                     <m.icon className="w-5 h-5" />

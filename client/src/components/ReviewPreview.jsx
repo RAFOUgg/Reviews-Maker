@@ -47,7 +47,7 @@ export default function ReviewPreview({ formData = {}, photos = [] }) {
 
     const InfoRow = ({ label, value, className = '' }) => {
         if (value === undefined || value === null || value === '') return null
-        
+
         let displayValue = value
         if (typeof value === 'boolean') {
             displayValue = value ? 'Oui' : 'Non'
@@ -80,13 +80,13 @@ export default function ReviewPreview({ formData = {}, photos = [] }) {
     // Helper pour rendre tous les champs d'un objet
     const renderAllFields = (obj, excludeKeys = []) => {
         if (!obj || typeof obj !== 'object') return null
-        
+
         const entries = Object.entries(obj).filter(([key]) => !excludeKeys.includes(key))
-        
+
         if (entries.length === 0) return <span className="text-gray-500 italic">Aucune donnée</span>
-        
+
         return entries.map(([key, value]) => (
-            <InfoRow 
+            <InfoRow
                 key={key}
                 label={key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').toLowerCase()}
                 value={value}

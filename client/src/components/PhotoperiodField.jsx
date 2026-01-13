@@ -92,8 +92,8 @@ const PhotoperiodField = ({ value, onChange, presets = [] }) => {
                             key={idx}
                             onClick={() => applyPreset(preset)}
                             className={`px-3 py-1.5 text-xs rounded-lg transition ${photoperiod.on === preset.value.on && photoperiod.off === preset.value.off
-                                    ? 'bg-purple-600 text-white'
-                                    : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                                 }`}
                         >
                             {preset.label}

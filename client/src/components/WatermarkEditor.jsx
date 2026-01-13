@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import { 
+import {
   Image, Type, Move, RotateCcw, Trash2, Download,
   AlignLeft, AlignCenter, AlignRight, Eye, EyeOff,
   Plus, Minus, Lock
@@ -64,13 +64,13 @@ const WatermarkEditor = ({
 
   const handleMouseMove = useCallback((e) => {
     if (!isDragging) return;
-    
+
     const deltaX = ((e.clientX - dragStart.x) / previewSize.width) * 100;
     const deltaY = ((e.clientY - dragStart.y) / previewSize.height) * 100;
-    
+
     const newX = Math.min(100, Math.max(0, currentWatermark.position.x + deltaX));
     const newY = Math.min(100, Math.max(0, currentWatermark.position.y + deltaY));
-    
+
     handleChange('position', { x: newX, y: newY });
     setDragStart({ x: e.clientX, y: e.clientY });
   }, [isDragging, dragStart, currentWatermark.position, previewSize]);
@@ -101,14 +101,14 @@ const WatermarkEditor = ({
         <div className="flex gap-2 mb-4">
           <button
             onClick={() => handleChange('type', 'text')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-all ${ currentWatermark.type === 'text' ? ' text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300' }`}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-all ${currentWatermark.type === 'text' ? ' text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
           >
             <Type className="w-4 h-4" />
             Texte
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-all ${ currentWatermark.type === 'image' ? ' text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300' }`}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-all ${currentWatermark.type === 'image' ? ' text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
           >
             <Image className="w-4 h-4" />
             Image
@@ -141,9 +141,9 @@ const WatermarkEditor = ({
         {/* Preview image */}
         {currentWatermark.type === 'image' && currentWatermark.imageUrl && (
           <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-            <img 
-              src={currentWatermark.imageUrl} 
-              alt="Watermark preview" 
+            <img
+              src={currentWatermark.imageUrl}
+              alt="Watermark preview"
               className="max-h-20 mx-auto"
             />
             <button
@@ -216,7 +216,7 @@ const WatermarkEditor = ({
                   <button
                     key={color}
                     onClick={() => handleChange('color', color)}
-                    className={`w-8 h-8 rounded-full border-2 transition-all ${ currentWatermark.color === color ? ' scale-110' : 'border-gray-300' }`}
+                    className={`w-8 h-8 rounded-full border-2 transition-all ${currentWatermark.color === color ? ' scale-110' : 'border-gray-300'}`}
                     style={{ backgroundColor: color }}
                   />
                 ))}
@@ -240,7 +240,7 @@ const WatermarkEditor = ({
                 <button
                   key={pos.name}
                   onClick={() => handleChange('position', { x: pos.x, y: pos.y })}
-                  className={`px-2 py-1 text-xs rounded transition-all ${ Math.abs(currentWatermark.position.x - pos.x) < 5 && Math.abs(currentWatermark.position.y - pos.y) < 5 ? ' text-white' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600' }`}
+                  className={`px-2 py-1 text-xs rounded transition-all ${Math.abs(currentWatermark.position.x - pos.x) < 5 && Math.abs(currentWatermark.position.y - pos.y) < 5 ? ' text-white' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
                 >
                   {pos.name}
                 </button>
@@ -253,7 +253,7 @@ const WatermarkEditor = ({
             <span className="text-sm text-gray-700 dark:text-gray-300">Afficher le filigrane</span>
             <button
               onClick={() => handleChange('visible', !currentWatermark.visible)}
-              className={`p-2 rounded-lg transition-all ${ currentWatermark.visible ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400' }`}
+              className={`p-2 rounded-lg transition-all ${currentWatermark.visible ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}
             >
               {currentWatermark.visible ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
             </button>

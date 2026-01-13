@@ -101,11 +101,10 @@ export default function GoutsOptimized({ formData, handleChange }) {
                                 disabled={!selectedDry.includes(taste) && selectedDry.length >= 7}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                                    selectedDry.includes(taste)
+                                className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${selectedDry.includes(taste)
                                         ? 'bg-blue-600 text-white ring-2 ring-blue-400'
                                         : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                                } ${!selectedDry.includes(taste) && selectedDry.length >= 7 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                    } ${!selectedDry.includes(taste) && selectedDry.length >= 7 ? 'opacity-40 cursor-not-allowed' : ''}`}
                             >
                                 {taste}
                             </motion.button>
@@ -137,11 +136,10 @@ export default function GoutsOptimized({ formData, handleChange }) {
                                 disabled={!selectedInhale.includes(taste) && selectedInhale.length >= 7}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                                    selectedInhale.includes(taste)
+                                className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${selectedInhale.includes(taste)
                                         ? 'bg-green-600 text-white ring-2 ring-green-400'
                                         : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                                } ${!selectedInhale.includes(taste) && selectedInhale.length >= 7 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                    } ${!selectedInhale.includes(taste) && selectedInhale.length >= 7 ? 'opacity-40 cursor-not-allowed' : ''}`}
                             >
                                 {taste}
                             </motion.button>
@@ -173,11 +171,10 @@ export default function GoutsOptimized({ formData, handleChange }) {
                                 disabled={!selectedExhale.includes(taste) && selectedExhale.length >= 7}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                                    selectedExhale.includes(taste)
+                                className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${selectedExhale.includes(taste)
                                         ? 'bg-amber-600 text-white ring-2 ring-amber-400'
                                         : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                                } ${!selectedExhale.includes(taste) && selectedExhale.length >= 7 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                    } ${!selectedExhale.includes(taste) && selectedExhale.length >= 7 ? 'opacity-40 cursor-not-allowed' : ''}`}
                             >
                                 {taste}
                             </motion.button>

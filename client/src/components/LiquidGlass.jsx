@@ -18,7 +18,7 @@ export const LiquidGlass = ({
   ...props
 }) => {
   const { theme } = useStore();
-  
+
   // Styles dynamiques basés sur les props
   const baseStyles = {
     '--lg-blur': `${blur}px`,
@@ -34,7 +34,7 @@ export const LiquidGlass = ({
       {...props}
     >
       {children}
-      
+
       {/* Effet de brillance au survol (optionnel) */}
       {hover && (
         <div className="liquid-glass-shimmer" aria-hidden="true" />

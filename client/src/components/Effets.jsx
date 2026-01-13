@@ -212,7 +212,7 @@ export default function Effets({ data, onChange, errors = {} }) {
                                                 type="button"
                                                 onClick={() => toggleEffect(effect.id)}
                                                 disabled={!isSelected && selected.length >= 8}
-                                                className={`inline-flex items-center gap-1 px-3 py-1 text-sm rounded-lg transition-colors ${isSelected ? getSentimentColor(effect.sentiment) : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600' } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                                className={`inline-flex items-center gap-1 px-3 py-1 text-sm rounded-lg transition-colors ${isSelected ? getSentimentColor(effect.sentiment) : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'} disabled:opacity-50 disabled:cursor-not-allowed`}
                                             >
                                                 <span>{getSentimentIcon(effect.sentiment)}</span>
                                                 {effect.label}

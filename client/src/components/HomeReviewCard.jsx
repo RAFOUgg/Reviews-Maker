@@ -173,7 +173,7 @@ export default function HomeReviewCard({
                 )}
 
                 {/* Rating badge flottant - toujours visible */}
-                <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-xl bg-gradient-to-r ${rating >= 9 ? 'from-green-500 to-emerald-600' : rating >= 7 ? 'from-yellow-500 to-amber-600' : rating >= 5 ? 'from-orange-500 to-red-600' : 'from-red-500 ' } backdrop-blur-xl shadow-xl flex items-center gap-1`}>
+                <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-xl bg-gradient-to-r ${rating >= 9 ? 'from-green-500 to-emerald-600' : rating >= 7 ? 'from-yellow-500 to-amber-600' : rating >= 5 ? 'from-orange-500 to-red-600' : 'from-red-500 '} backdrop-blur-xl shadow-xl flex items-center gap-1`}>
                     <span className="text-white font-black text-lg">{rating}</span>
                     <span className="text-white/90 text-xs font-bold">/10</span>
                 </div>
@@ -183,7 +183,7 @@ export default function HomeReviewCard({
             <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-0 flex flex-col gap-2 z-20">
                 <button
                     onClick={(e) => onLike(review.id, e)}
-                    className={`flex flex-col items-center justify-center w-14 h-14 rounded-l-2xl shadow-2xl transition-all duration-300 group/like ${review.userLikeState === 'like' ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-green-500/50 scale-110' : 'bg-gray-800/95 backdrop-blur-xl text-gray-400 hover:bg-gradient-to-br hover:from-green-500 hover:to-emerald-600 hover:text-white hover:scale-110' }`}
+                    className={`flex flex-col items-center justify-center w-14 h-14 rounded-l-2xl shadow-2xl transition-all duration-300 group/like ${review.userLikeState === 'like' ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-green-500/50 scale-110' : 'bg-gray-800/95 backdrop-blur-xl text-gray-400 hover:bg-gradient-to-br hover:from-green-500 hover:to-emerald-600 hover:text-white hover:scale-110'}`}
                 >
                     <svg className="w-5 h-5 group-hover/like:scale-125 transition-transform" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
@@ -192,7 +192,7 @@ export default function HomeReviewCard({
                 </button>
                 <button
                     onClick={(e) => onDislike(review.id, e)}
-                    className={`flex flex-col items-center justify-center w-14 h-14 rounded-l-2xl shadow-2xl transition-all duration-300 group/dislike ${review.userLikeState === 'dislike' ? 'bg-gradient-to-br from-red-500 text-white shadow-red-500/50 scale-110' : 'bg-gray-800/95 backdrop-blur-xl text-gray-400 hover:bg-gradient-to-br hover:from-red-500 hover: hover:text-white hover:scale-110' }`}
+                    className={`flex flex-col items-center justify-center w-14 h-14 rounded-l-2xl shadow-2xl transition-all duration-300 group/dislike ${review.userLikeState === 'dislike' ? 'bg-gradient-to-br from-red-500 text-white shadow-red-500/50 scale-110' : 'bg-gray-800/95 backdrop-blur-xl text-gray-400 hover:bg-gradient-to-br hover:from-red-500 hover: hover:text-white hover:scale-110'}`}
                 >
                     <svg className="w-5 h-5 group-hover/dislike:scale-125 transition-transform rotate-180" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />

@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { 
-  GripVertical, Plus, Trash2, Eye, EyeOff, 
+import {
+  GripVertical, Plus, Trash2, Eye, EyeOff,
   Type, Image, BarChart3, Sparkles, Settings,
   ChevronDown, ChevronUp, Lock, Unlock
 } from 'lucide-react';
@@ -109,7 +109,7 @@ const DragDropExport = ({
   // Ajouter une section
   const handleAddSection = useCallback((section) => {
     if (section.producerOnly && !isProducer) return;
-    
+
     const newSection = {
       ...section,
       visible: true,
@@ -122,7 +122,7 @@ const DragDropExport = ({
   const handleRemoveSection = useCallback((index) => {
     const section = selectedSections[index];
     if (section.required) return;
-    
+
     const newSections = selectedSections.filter((_, i) => i !== index);
     onSectionsChange?.(newSections);
   }, [selectedSections, onSectionsChange]);
@@ -170,7 +170,7 @@ const DragDropExport = ({
           <div className="text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide">
             Sections incluses (glisser pour réorganiser)
           </div>
-          
+
           {selectedSections.length === 0 ? (
             <div className="text-center py-8 text-gray-400">
               Glissez des sections ici pour les inclure dans l'export
@@ -189,27 +189,27 @@ const DragDropExport = ({
                 >
                   {/* Grip handle */}
                   <GripVertical className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  
+
                   {/* Icon & Name */}
                   <span className="text-xl">{section.icon}</span>
                   <span className="flex-1 font-medium text-gray-800 dark:text-gray-200 text-sm">
                     {section.name}
                   </span>
-                  
+
                   {/* Required badge */}
                   {section.required && (
                     <span className="px-2 py-0.5 dark: dark: text-xs rounded-full">
                       Requis
                     </span>
                   )}
-                  
+
                   {/* Producer badge */}
                   {section.producerOnly && (
                     <span className="px-2 py-0.5 dark: dark: text-xs rounded-full">
                       Pro
                     </span>
                   )}
-                  
+
                   {/* Actions */}
                   <div className="flex items-center gap-1">
                     <button
@@ -262,7 +262,7 @@ const DragDropExport = ({
                 key={section.id}
                 onClick={() => handleAddSection(section)}
                 disabled={section.producerOnly && !isProducer}
-                className={`flex items-center gap-2 p-3 rounded-lg border-2 border-dashed transition-all text-left ${section.producerOnly && !isProducer ? 'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed' : 'border-gray-300 dark:border-gray-600 hover: hover: dark:hover: cursor-pointer' }`}
+                className={`flex items-center gap-2 p-3 rounded-lg border-2 border-dashed transition-all text-left ${section.producerOnly && !isProducer ? 'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed' : 'border-gray-300 dark:border-gray-600 hover: hover: dark:hover: cursor-pointer'}`}
               >
                 <Plus className="w-4 h-4 text-gray-400" />
                 <span className="text-lg">{section.icon}</span>

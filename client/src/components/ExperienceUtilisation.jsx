@@ -5,7 +5,7 @@ import { EXPERIENCE_VALUES } from '../data/formValues'
  * ExperienceUtilisation - Section pour documenter les tests de consommation
  * Correspond à la section "Expérience d'utilisation durant les tests" du cahier des charges
  */
-export default function ExperienceUtilisation({ formData = {}, handleChange = () => {} }) {
+export default function ExperienceUtilisation({ formData = {}, handleChange = () => { } }) {
     const data = formData.experience || {};
     const [filter, setFilter] = useState('tous')
 
