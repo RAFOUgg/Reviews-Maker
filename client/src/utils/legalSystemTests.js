@@ -69,6 +69,62 @@ const LegalSystemTests = {
         console.group('🔍 Test 5: Forcer l\'affichage')
 
         localStorage.removeItem('terpologie_legal_consent')
+        console.log('✅ Consentement supprimé')
+        console.log('   Rechargez la page pour voir la modal')
+
+        console.groupEnd()
+    },
+
+        // Test 6: Vérifier la validité du consentement
+        validateConsent() {
+    console.group('🔍 Test 6: Validation du consentement')
+
+    const consent = localStorage.getItem('terpologie_legal_consent')
+    if (!consent) {
+        console.log('❌ Aucun consentement')
+        console.groupEnd()
+        return
+    }
+
+    try {
+        const data = JSON.parse(consent)
+        const checks = {
+            'Pays': data.country ? '✅' : '❌',
+            'Langue': data.language ? '✅' : '❌',
+            'Âge confirmé': data.ageConfirmed ? '✅' : '❌',
+            'Règles acceptées': data.rulesAccepted ? '✅' : '❌',
+            'Confidentialité acceptée': data.privacyAccepted ? '✅' : '❌',
+            'Timestamp': data.timestamp ? '✅' : '❌'
+        }
+
+        console.table(checks)
+
+        const allValid = Object.values(checks).every(v => v === '✅')
+        if (allValid) {
+            console.log('✅ Consentement valide')
+        } else {
+            console.log('❌ Consentement incomplet')
+        }
+    } catch (e) {
+        console.error('❌ Erreur:', e)
+    }
+
+    console.groupEnd()
+},
+
+// Exécuter tous les tests
+runAll() {
+    console.clear()
+    console.log('🚀 Exécution des tests du système légal\n')
+
+    this.testConfigFiles()
+    setTimeout(() => this.testLocalStorage(), 500)
+    setTimeout(() => this.testAPIEndpoints(), 1000)
+    setTimeout(() => this.validateConsent(), 1500)
+
+    console.log('\n💡 Autres commandes disponibles:')
+    console.log('   LegalSystemTests.simulateExpiration() - Expire le consentement')
+    console.log('   LegalSystemTests.forceDisplay() - Force l\'affichage de la modal')
 }
 }
 

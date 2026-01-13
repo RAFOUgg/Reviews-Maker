@@ -114,5 +114,110 @@ export const useStore = create((set, get) => ({
             console.error('Error fetching review:', error)
             throw error
         }
+    },
+
+    createReview: async (formData) => {
+        set({ loading: true, error: null })
+        try {
+            const review = await reviewsService.create(formData)
+            set((state) => ({
+                reviews: [review, ...state.reviews],
+                loading: false,
+                _reviewsCache: {} // Invalider le cache
+            }))
+            return review
+        } catch (error) {
+            set({ error: error.message, loading: false })
+            throw error
+        }
+    },
+
+    updateReview: async (id, formData) => {
+        set({ loading: true, error: null })
+        try {
+            const updated = await reviewsService.update(id, formData)
+            set((state) => ({
+                reviews: state.reviews.map(r => r.id === id ? updated : r),
+                loading: false,
+                _reviewsCache: {} // Invalider le cache
+            }))
+            return updated
+        } catch (error) {
+            set({ error: error.message, loading: false })
+            throw error
+        }
+    },
+
+    deleteReview: async (id) => {
+        set({ loading: true, error: null })
+        try {
+            await reviewsService.delete(id)
+            set((state) => ({
+                reviews: state.reviews.filter(r => r.id !== id),
+                loading: false,
+                _reviewsCache: {} // Invalider le cache
+            }))
+        } catch (error) {
+            set({ error: error.message, loading: false })
+            throw error
+        }
+    },
+
+    likeReview: async (id) => {
+        try {
+            const result = await reviewsService.like(id)
+            set((state) => ({
+                reviews: state.reviews.map(r => {
+                    if (r.id !== id) return r
+                    return {
+                        ...r,
+                        likesCount: result.action === 'removed'
+                            ? r.likesCount - 1
+                            : result.action === 'added'
+                                ? r.likesCount + 1
+                                : r.dislikesCount > 0 && result.action === 'updated'
+                                    ? r.likesCount + 1
+                                    : r.likesCount,
+                        dislikesCount: result.action === 'updated' && r.dislikesCount > 0
+                            ? r.dislikesCount - 1
+                            : r.dislikesCount,
+                        userLikeState: result.action === 'removed' ? null : 'like'
+                    }
+                })
+            }))
+            return result
+        } catch (error) {
+            console.error('Error liking review:', error)
+            throw error
+        }
+    },
+
+    dislikeReview: async (id) => {
+        try {
+            const result = await reviewsService.dislike(id)
+            set((state) => ({
+                reviews: state.reviews.map(r => {
+                    if (r.id !== id) return r
+                    return {
+                        ...r,
+                        dislikesCount: result.action === 'removed'
+                            ? r.dislikesCount - 1
+                            : result.action === 'added'
+                                ? r.dislikesCount + 1
+                                : r.likesCount > 0 && result.action === 'updated'
+                                    ? r.dislikesCount + 1
+                                    : r.dislikesCount,
+                        likesCount: result.action === 'updated' && r.likesCount > 0
+                            ? r.likesCount - 1
+                            : r.likesCount,
+                        userLikeState: result.action === 'removed' ? null : 'dislike'
+                    }
+                })
+            }))
+            return result
+        } catch (error) {
+            console.error('Error disliking review:', error)
+            throw error
+        }
     }
 }))

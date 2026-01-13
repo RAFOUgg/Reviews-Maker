@@ -38,6 +38,7 @@ function normalizeReviewData(reviewData) {
             normalized.extraData = parsedExtra;
         }
     } catch (err) {
+        console.warn('Failed to normalize extraData for OrchardPanel', err);
     }
 
     // ============================================================================
@@ -239,6 +240,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                         : reviewData.orchardCustomLayout;
                     setCustomLayout(Array.isArray(parsed) ? parsed : []);
                 } catch (err) {
+                    console.warn('Failed to parse orchardCustomLayout', err);
                 }
             }
 
@@ -335,6 +337,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
 
     const handleDragEnd = useCallback((event) => {
         const { active, over } = event;
+        console.log('🏁 DragEnd:', { activeId: active.id, overId: over?.id });
         setActiveDragId(null);
         setIsCanvasOver(false);
 
@@ -447,6 +450,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => {
+                                console.log('📄 Toggle pages mode:', !pagesEnabled, 'Current ratio:', config.ratio);
                                 togglePagesMode();
                             }}
                             className={`px-3 py-2 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition-all border-2 ${pagesEnabled ? 'bg-gradient-to-r text-white shadow-lg border-indigo-400 dark:border-indigo-500' : 'bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-300 dark:border-gray-600'}`}

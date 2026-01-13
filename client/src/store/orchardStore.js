@@ -15,6 +15,8 @@ const CURRENT_STORAGE_VERSION = 7; // Incrémenté pour forcer reset - BUILD DEC
 const STORAGE_KEY = 'orchard-storage';
 
 // FORCE IMMEDIATE RESET - Dec 2 2025
+console.log('🚀 Orchard Store Loading - Version 7 - Forcing localStorage check...');
+
 try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -24,12 +26,25 @@ try {
         // Les modules peuvent être dans state.config.contentModules ou config.contentModules
         const stateConfig = parsed?.state?.config || parsed?.config || {};
         const modulesCount = Object.keys(stateConfig?.contentModules || {}).length;
+
+        console.log('🔍 Orchard Storage Check:', {
+            storedVersion,
+            currentVersion: CURRENT_STORAGE_VERSION,
+            modulesCount,
+            needsReset: storedVersion < CURRENT_STORAGE_VERSION || modulesCount < 50
+        });
+
         // TOUJOURS reset si version < 7 OU moins de 70 modules
         if (storedVersion < CURRENT_STORAGE_VERSION || modulesCount < 70) {
+            console.warn('🗑️ FORCING localStorage reset - old version or incomplete modules');
+            console.warn('   Stored version:', storedVersion, '| Current:', CURRENT_STORAGE_VERSION);
+            console.warn('   Modules count:', modulesCount, '(need 70+)');
             localStorage.removeItem(STORAGE_KEY);
+            console.warn('✅ localStorage DELETED - will recreate with 80+ modules');
         }
     }
 } catch (e) {
+    console.warn('Orchard storage check failed, forcing removal:', e);
     try { localStorage.removeItem(STORAGE_KEY); } catch { }
 }
 
@@ -450,9 +465,13 @@ export const useOrchardStore = create(
             version: CURRENT_STORAGE_VERSION,
             // Migration pour les changements de version
             migrate: (persistedState, version) => {
+                console.warn('🔄 Orchard Storage Migration:', { from: version, to: CURRENT_STORAGE_VERSION, hasState: !!persistedState });
+
                 // Si version < 7, reset COMPLET des contentModules et moduleOrder
                 if (version < CURRENT_STORAGE_VERSION) {
+                    console.warn('📦 v7 Migration: Forcing COMPLETE contentModules reset to 80+ modules');
                     const modulesCount = Object.keys(DEFAULT_CONFIG.contentModules).length;
+                    console.warn('   Will create', modulesCount, 'modules');
                     return {
                         ...persistedState,
                         config: {
@@ -473,6 +492,13 @@ export const useOrchardStore = create(
                 // Compter les modules
                 const savedModulesCount = Object.keys(persistedState.config?.contentModules || {}).length;
                 const defaultModulesCount = Object.keys(DEFAULT_CONFIG.contentModules).length;
+
+                console.log('🔄 Orchard Storage Merge:', {
+                    savedModulesCount,
+                    defaultModulesCount,
+                    forceDefault: savedModulesCount < 50 // Moins de 50 = vieux format
+                });
+
                 // TOUJOURS utiliser les modules par défaut si moins de 70 modules
                 // Car l'ancien format avait seulement 13 modules
                 const contentModules = savedModulesCount < 70
@@ -482,6 +508,10 @@ export const useOrchardStore = create(
                 const moduleOrder = (persistedState.config?.moduleOrder?.length || 0) < 70
                     ? [...DEFAULT_CONFIG.moduleOrder]
                     : persistedState.config.moduleOrder;
+
+                console.warn('   Using contentModules:', Object.keys(contentModules).length, 'modules');
+                console.warn('   Using moduleOrder:', moduleOrder.length, 'items');
+
                 return {
                     ...currentState,
                     ...persistedState,

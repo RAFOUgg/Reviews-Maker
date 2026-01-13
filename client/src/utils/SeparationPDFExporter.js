@@ -294,6 +294,10 @@ export function useSeparationPDFExport() {
             await exportSeparationToPDF(separationData, options)
             return true
         } catch (error) {
+            console.error('Export PDF failed:', error)
+            throw error
+        } finally {
+            setIsExporting(false)
         }
     }
 

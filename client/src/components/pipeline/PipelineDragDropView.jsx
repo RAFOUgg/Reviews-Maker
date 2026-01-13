@@ -640,6 +640,7 @@ const PipelineDragDropView = ({
             if (type === 'warning') return toast.warning ? toast.warning(msg) : toast.info(msg);
             return toast.success(msg);
         } catch (e) {
+            console.warn('Toast error', e);
         }
     };
     const [expandedSections, setExpandedSections] = useState({});
@@ -700,13 +701,13 @@ const PipelineDragDropView = ({
         if (type && type !== 'unknown') {
             const oldKey = 'pipeline-grouped-presets-unknown';
             if (localStorage.getItem(oldKey) !== null) {
+                console.log(`🧹 Nettoyage: suppression de ${oldKey}`);
                 localStorage.removeItem(oldKey);
             }
         }
     }, [type]);
 
     const [showGroupedPresetModal, setShowGroupedPresetModal] = useState(false);
-    const [showMobileSidebarDrawer, setShowMobileSidebarDrawer] = useState(false); // For mobile users to access drag items
     const [contextMenu, setContextMenu] = useState(null); // { item, position }
     // Multi-select sidebar state (global)
     const [multiSelectedItems, setMultiSelectedItems] = useState([]);
@@ -916,16 +917,21 @@ const PipelineDragDropView = ({
     const handleDeleteFieldsFromCells = (fieldsToDelete) => {
         const targets = cellContextMenu?.selectedCells || [];
         if (targets.length === 0 || fieldsToDelete.length === 0) return;
+
+        console.log(`🗑️ handleDeleteFieldsFromCells: fields=${fieldsToDelete.join(',')}, targets=${targets.join(',')}`);
+
         setConfirmState({
             open: true,
             title: 'Effacer les champs sélectionnés',
             message: `Effacer ${fieldsToDelete.length} champ(s) de ${targets.length} cellule(s) ?`,
             onConfirm: () => {
+                console.log(`  → Confirmation: début de suppression`);
                 const allChanges = [];
                 targets.forEach(ts => {
                     const prev = getCellData(ts) || {};
                     fieldsToDelete.forEach(field => {
                         if (prev[field] !== undefined) {
+                            console.log(`    ✓ Supprime ${field} de ${ts} (valeur: ${prev[field]})`);
                             allChanges.push({ timestamp: ts, field, previousValue: prev[field] });
                             onDataChange(ts, field, null);
                         }
@@ -935,9 +941,11 @@ const PipelineDragDropView = ({
                 if (allChanges.length > 0) {
                     pushAction({ id: Date.now(), type: 'deleteFields', changes: allChanges });
                     showToast(`${fieldsToDelete.length} champ(s) effacé(s)`, 'success');
+                    console.log(`  → Toast: ${fieldsToDelete.length} champ(s) effacé(s)`);
                 }
                 setCellContextMenu(null); // Fermer le menu contextuel
                 setConfirmState(prev => ({ ...prev, open: false }));
+                console.log(`✅ Suppression terminée`);
             }
         });
     };
@@ -955,6 +963,10 @@ const PipelineDragDropView = ({
 
     // Ouvrir modal cellule
     const handleCellClick = (e, cellId) => {
+        console.log('🖱️ Clic sur cellule:', cellId);
+        console.log('📊 Ctrl/Cmd pressé:', e.ctrlKey || e.metaKey);
+        console.log('📋 Cellules sélectionnées avant:', selectedCells);
+
         // Détecter Ctrl+click pour sélection multiple (au lieu de massAssignMode)
         const isMultiSelectClick = e.ctrlKey || e.metaKey;
 
@@ -963,20 +975,25 @@ const PipelineDragDropView = ({
             // Mode sélection multiple - TOGGLE la cellule
             setSelectedCells(prev => {
                 const isAlreadySelected = prev.includes(cellId);
+                console.log('  → Cellule déjà sélectionnée:', isAlreadySelected);
+
                 if (isAlreadySelected) {
                     // Retirer de la sélection
                     const newSelection = prev.filter(id => id !== cellId);
+                    console.log('  → Retirée, nouvelle sélection:', newSelection);
                     selectedCellsRef.current = newSelection;
                     return newSelection;
                 } else {
                     // Ajouter à la sélection
                     const newSelection = [...prev, cellId];
+                    console.log('  → Ajoutée, nouvelle sélection:', newSelection);
                     selectedCellsRef.current = newSelection;
                     return newSelection;
                 }
             });
         } else {
             // Mode normal: ouvrir modal
+            console.log('📝 Ouverture modal pour:', cellId);
             const nextSelection = selectedCells.length > 1 ? selectedCells : [cellId];
             setSelectedCells(nextSelection);
             selectedCellsRef.current = nextSelection;
@@ -994,7 +1011,12 @@ const PipelineDragDropView = ({
 
     // Sauvegarder données depuis modal
     const handleModalSave = (data) => {
+        console.log('💾 Début sauvegarde - data reçue:', data);
+        console.log('💾 selectedCells STATE:', selectedCells);
+        console.log('💾 selectedCells REF:', selectedCellsRef.current);
+
         if (!data || !data.timestamp) {
+            console.error('❌ Erreur: pas de timestamp dans les données');
             return;
         }
 
@@ -1003,9 +1025,21 @@ const PipelineDragDropView = ({
         const currentSelection = selectedCellsRef.current || [];
         const hasSelection = currentSelection.length > 0;
         const timestampInSelection = currentSelection.includes(data.timestamp);
+
+        console.log('💾 Debug sélection:');
+        console.log('  → selectedCells STATE:', selectedCells);
+        console.log('  → selectedCellsRef.current:', selectedCellsRef.current);
+        console.log('  → currentSelection:', currentSelection);
+        console.log('  → hasSelection:', hasSelection);
+        console.log('  → data.timestamp:', data.timestamp);
+        console.log('  → timestampInSelection:', timestampInSelection);
+
         const targetTimestamps = (hasSelection && timestampInSelection)
             ? currentSelection
             : [data.timestamp];
+
+        console.log(`🎯 Application des données à ${targetTimestamps.length} cellule(s):`, targetTimestamps);
+
         const allChanges = [];
 
         // ✅ APPLIQUER LES DONNÉES À TOUTES LES CELLULES CIBLES
@@ -1019,10 +1053,12 @@ const PipelineDragDropView = ({
                 // Mode DROP: sauvegarder uniquement le(s) champ(s) droppé(s)
                 if (droppedItem.content.type === 'multi' && Array.isArray(droppedItem.content.items)) {
                     // Multi-items drop: sauvegarder tous les items droppés
+                    console.log(`  ✓ Multi-items drop sur ${targetTimestamp}:`, droppedItem.content.items.length, 'champs');
                     droppedItem.content.items.forEach(item => {
                         const fieldKey = item.id || item.key || item.type;
                         if (data.data && data.data[fieldKey] !== undefined) {
                             changes.push({ timestamp: targetTimestamp, field: fieldKey, previousValue: prevData[fieldKey] });
+                            console.log(`    → ${fieldKey} =`, data.data[fieldKey]);
                             onDataChange(targetTimestamp, fieldKey, data.data[fieldKey]);
                         }
                     });
@@ -1031,18 +1067,22 @@ const PipelineDragDropView = ({
                     const fieldKey = droppedItem.content.id || droppedItem.content.key || droppedItem.content.type;
                     if (data.data && data.data[fieldKey] !== undefined) {
                         changes.push({ timestamp: targetTimestamp, field: fieldKey, previousValue: prevData[fieldKey] });
+                        console.log(`  ✓ Single drop sur ${targetTimestamp}: ${fieldKey} =`, data.data[fieldKey]);
                         onDataChange(targetTimestamp, fieldKey, data.data[fieldKey]);
                     }
                 }
             } else {
                 // Mode EDIT: sauvegarder toutes les données modifiées
+                console.log(`  ✓ Édition sur ${targetTimestamp}:`, Object.keys(data.data || {}).length, 'champs');
                 Object.entries(data.data || {}).forEach(([key, value]) => {
                     // Treat empty string/null/undefined as deletion
                     if (value === undefined || value === null || value === '') {
                         changes.push({ timestamp: targetTimestamp, field: key, previousValue: prevData[key] });
+                        console.log(`    → Suppression: ${key}`);
                         onDataChange(targetTimestamp, key, null);
                     } else {
                         changes.push({ timestamp: targetTimestamp, field: key, previousValue: prevData[key] });
+                        console.log(`    → ${key} =`, value);
                         onDataChange(targetTimestamp, key, value);
                     }
                 });
@@ -1062,6 +1102,8 @@ const PipelineDragDropView = ({
                 lastModified: data.lastModified || new Date().toISOString()
             });
         }
+
+        console.log(`✅ Sauvegarde terminée: ${targetTimestamps.length} cellule(s) modifiée(s)`);
         setIsModalOpen(false);
         setDroppedItem(null);
     };
@@ -1162,6 +1204,7 @@ const PipelineDragDropView = ({
 
     // Handlers drag & drop
     const handleDragStart = (e, content) => {
+        console.log('🎯 Début du drag:', content);
         setDraggedContent(content);
         e.dataTransfer.effectAllowed = 'copy';
         e.dataTransfer.dropEffect = 'copy';
@@ -1188,11 +1231,15 @@ const PipelineDragDropView = ({
         setHoveredCell(null);
 
         try {
+            console.log('✅ handleDrop CDC: draggedContent=', draggedContent, 'timestamp=', timestamp);
+
             if (!draggedContent) {
+                console.log('✅ handleDrop: Pas de draggedContent, sortir');
                 return;
             }
 
             if (!timestamp) {
+                console.warn('⚠️ handleDrop: timestamp invalide ou manquant');
                 return;
             }
 
@@ -1204,6 +1251,8 @@ const PipelineDragDropView = ({
 
             // ✅ BUG FIX #3: MULTI-ITEMS DROP - Ouvrir modal avec tous les items sélectionnés
             if (draggedContent.type === 'multi-items' && Array.isArray(draggedContent.items)) {
+                console.log('✅ handleDrop: Multi-items drop avec', draggedContent.items.length, 'items');
+
                 // Vérifier conflits pour chaque item
                 if (hasExistingData) {
                     const conflictingItems = draggedContent.items.filter(item => {
@@ -1245,10 +1294,12 @@ const PipelineDragDropView = ({
 
             // GROUPED PRESET: Appliquer directement sans ouvrir le modal
             if (draggedContent.type === 'grouped' && draggedContent.group) {
+                console.log('✅ handleDrop: Application groupe préréglage:', draggedContent.group);
                 const group = draggedContent.group;
                 const fields = group.fields || [];
 
                 if (fields.length === 0) {
+                    console.warn('⚠️ handleDrop: Groupe vide, rien à appliquer');
                     setDraggedContent(null);
                     return;
                 }
@@ -1257,10 +1308,14 @@ const PipelineDragDropView = ({
                 const targetCells = selectedCellsRef.current.length > 0
                     ? selectedCellsRef.current
                     : [timestamp];
+
+                console.log(`✅ Application groupe sur ${targetCells.length} cellule(s)`);
+
                 // Appliquer chaque champ du groupe à toutes les cellules cibles
                 targetCells.forEach(ts => {
                     fields.forEach(f => {
                         if (f.key && f.value !== undefined && f.value !== '') {
+                            console.log(`  → Applique ${f.key} = ${f.value} sur ${ts}`);
                             onDataChange(ts, f.key, f.value);
                         }
                     });
@@ -1276,6 +1331,8 @@ const PipelineDragDropView = ({
             }
 
             // Sinon, ouvrir PipelineDataModal avec l'item droppé
+            console.log('✅ handleDrop: Ouverture PipelineDataModal');
+
             // ✅ BUG FIX #5: Vérifier conflit pour item simple
             if (hasExistingData) {
                 const fieldKey = draggedContent.id || draggedContent.key || draggedContent.type;
@@ -1307,6 +1364,7 @@ const PipelineDragDropView = ({
             setDraggedContent(null);
 
         } catch (error) {
+            console.error('❌ Erreur handleDrop:', error);
         }
     };
 
@@ -1575,6 +1633,7 @@ const PipelineDragDropView = ({
             if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'load-preset', changes: allChanges });
             showToast(`✓ Préréglage "${preset.name}" chargé`);
         } catch (e) {
+            console.error('Erreur lors du chargement du préréglage', e);
         }
     };
 
@@ -1750,8 +1809,7 @@ const PipelineDragDropView = ({
 
     return (
         <div className={`flex gap-6 h-[750px] ${isMobile ? 'flex-col' : ''}`}>
-            {/* PANNEAU LATÉRAL HIÉRARCHISÉ */}
-            {/* Sur desktop: visible (w-80) | Sur mobile: caché mais accessible via bouton */}
+            {/* PANNEAU LATÉRAL HIÉRARCHISÉ - MASQUÉ SUR MOBILE */}
             {!isMobile && (
                 <div className="w-80 flex-shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-y-auto">
                     {/* Section Préréglages en haut */}
@@ -1867,6 +1925,8 @@ const PipelineDragDropView = ({
                                                                     return null;
                                                                 })
                                                                 .filter(Boolean);
+
+                                                            console.log('🎯 Multi-drag:', selectedItems.length, 'items depuis', multiSelectedItems.length, 'keys');
                                                             e.dataTransfer.setData('application/multi-items', JSON.stringify(selectedItems));
                                                             setDraggedContent({ type: 'multi', items: selectedItems });
                                                         }
@@ -1919,17 +1979,6 @@ const PipelineDragDropView = ({
                             Pipeline {type === 'culture' ? 'Culture' : 'Curing/Maturation'}
                         </h3>
                         <div className="flex items-center gap-2">
-                            {/* Mobile: Button to show sidebar drawer with drag items */}
-                            {isMobile && (
-                                <button
-                                    onClick={() => setShowMobileSidebarDrawer(!showMobileSidebarDrawer)}
-                                    className="group flex items-center gap-2 px-3 py-2 rounded-xl font-medium text-sm transition-all duration-200 bg-purple-100 dark:bg-purple-900/40 border border-purple-300 dark:border-purple-700 hover:bg-purple-200 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 shadow-sm hover:shadow"
-                                    title="Afficher les contenus à glisser (mobile)"
-                                >
-                                    <span>📦</span>
-                                    <span>Contenus</span>
-                                </button>
-                            )}
                             {/* Undo button */}
                             <button
                                 onClick={() => undoLastAction()}
@@ -2174,403 +2223,236 @@ const PipelineDragDropView = ({
                         </p>
                     </div>
                 )}
-
-                {/* TIMELINE GRID - Inside Pipeline Culture container */}
-                <div className="flex-1 overflow-auto p-4">
-                    {cells.length === 0 ? (
-                        <div className="flex items-center justify-center h-full">
-                            <div className="text-center text-gray-500 dark:text-gray-400">
-                                <Settings className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                                <p className="text-sm">⚠️ Configurez la période pour voir la timeline</p>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            <p className="text-sm text-gray-600 dark:text-gray-400 italic">
-                                💡 <strong>Première case</strong> : Configuration générale (mode, espace, etc.)
-                                <br />
-                                📊 <strong>Autres cases</strong> : Drag & drop des paramètres depuis le panneau latéral
-                            </p>
-
-                            <div ref={gridRef} className="grid grid-cols-6 gap-2 select-none relative auto-rows-min" style={{ position: 'relative' }}>
-                                {/* Visual selection frame overlay */}
-                                {selectedCells.length > 1 && !isSelecting && (() => {
-                                    // Compute aggregate bounding box of selected cells using DOM measurements
-                                    const refs = selectedCells.map(ts => cellRefs.current[ts]).filter(Boolean);
-                                    if (!refs || refs.length === 0) return null;
-                                    const gridBox = gridRef.current && gridRef.current.getBoundingClientRect();
-                                    if (!gridBox) return null;
-
-                                    const boxes = refs.map(el => {
-                                        const r = el.getBoundingClientRect();
-                                        return {
-                                            left: r.left,
-                                            top: r.top,
-                                            right: r.right,
-                                            bottom: r.bottom
-                                        };
-                                    });
-
-                                    const leftPx = Math.min(...boxes.map(b => b.left)) - gridBox.left + (gridRef.current ? gridRef.current.scrollLeft : 0);
-                                    const topPx = Math.min(...boxes.map(b => b.top)) - gridBox.top + (gridRef.current ? gridRef.current.scrollTop : 0);
-                                    const rightPx = Math.max(...boxes.map(b => b.right)) - gridBox.left + (gridRef.current ? gridRef.current.scrollLeft : 0);
-                                    const bottomPx = Math.max(...boxes.map(b => b.bottom)) - gridBox.top + (gridRef.current ? gridRef.current.scrollTop : 0);
-
-                                    const widthPx = rightPx - leftPx;
-                                    const heightPx = bottomPx - topPx;
-
-                                    return (
-                                        <div
-                                            className="absolute pointer-events-none z-40 border-4 rounded-2xl shadow-lg animate-fade-in"
-                                            style={{
-                                                top: `${topPx}px`,
-                                                left: `${leftPx}px`,
-                                                width: `${widthPx}px`,
-                                                height: `${heightPx}px`,
-                                                boxSizing: 'border-box',
-                                                transition: 'all 0.08s',
-                                                borderStyle: 'dashed',
-                                                background: 'rgba(80,180,255,0.07)'
-                                            }}
-                                        />
-                                    );
-                                })()}
-                                {/* Selection rectangle (live) */}
-                                {/* Selection marquee (rendered always, animated via opacity/transform) */}
-                                <div
-                                    className="absolute z-50 pointer-events-none border-4 rounded-2xl shadow-lg"
-                                    style={{
-                                        top: selectionRect.y,
-                                        left: selectionRect.x,
-                                        width: selectionRect.width,
-                                        height: selectionRect.height,
-                                        boxSizing: 'border-box',
-                                        borderStyle: 'dashed',
-                                        background: 'rgba(80,180,255,0.06)',
-                                        opacity: selectionRect.visible ? 1 : 0,
-                                        transform: selectionRect.visible ? 'scale(1)' : 'scale(0.98)',
-                                        transition: 'opacity 150ms ease-out, transform 150ms ease-out'
-                                    }}
-                                />
-
-                                {cells.map((cell, idx) => {
-                                    const hasData = hasCellData(cell.timestamp);
-                                    const cellData = getCellData(cell.timestamp);
-                                    const isFirst = idx === 0;
-                                    const isSelected = selectedCells.includes(cell.timestamp);
-                                    const isHovered = hoveredCell === cell.timestamp;
-
-                                    // Construire classes CSS pour la cellule
-                                    let cellClass = `relative p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[80px]`;
-
-                                    // Gradient d'intensité GitHub-style selon nombre de données
-                                    if (hasData) {
-                                        const dataCount = Object.keys(cellData).filter(k =>
-                                            !['timestamp', 'date', 'label', 'phase', 'day', 'week', 'hours', 'seconds', 'note', '_meta'].includes(k)
-                                        ).length;
-                                        const intensity = Math.min(dataCount / 10, 1);
-                                        const intensityIndex = Math.floor(intensity * 4); // 0-4
-
-                                        // Palette verte progressive (GitHub-style)
-                                        const gradients = [
-                                            'border-green-400 bg-green-100/40 dark:border-green-600 dark:bg-green-950/30',
-                                            'border-green-500 bg-green-200/50 dark:border-green-500 dark:bg-green-900/40',
-                                            'border-green-600 bg-green-300/60 dark:border-green-400 dark:bg-green-800/50',
-                                            'border-green-700 bg-green-400/70 dark:border-green-300 dark:bg-green-700/60',
-                                            'border-green-800 bg-green-500/80 dark:border-green-200 dark:bg-green-600/70'
-                                        ];
-                                        cellClass += ' ' + gradients[intensityIndex];
-                                    } else {
-                                        cellClass += ' border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800';
-                                    }
-
-                                    // Selected par clic simple (modal)
-                                    cellClass += selectedCell === cell.timestamp
-                                        ? ' ring-2 ring-violet-500 shadow-lg'
-                                        : ' hover:border-violet-400 hover:shadow-md';
-
-                                    // Selected en mode masse (multi-sélection)
-                                    cellClass += isSelected
-                                        ? ' ring-4 ring-blue-500 dark:ring-blue-400 bg-blue-500/10'
-                                        : '';
-
-                                    // Hover pendant drag
-                                    cellClass += isHovered && draggedContent
-                                        ? ' ring-4 ring-violet-500 dark:ring-violet-400 scale-105 shadow-2xl animate-pulse'
-                                        : '';
-
-                                    // Span 2 colonnes pour première cellule
-                                    if (isFirst) {
-                                        cellClass += ' col-span-2';
-                                    }
-
-                                    return (
-                                        <div
-                                            key={cell.timestamp}
-                                            onDragOver={(e) => handleDragOver(e, cell.timestamp)}
-                                            onDragLeave={handleDragLeave}
-                                            onDrop={(e) => handleDrop(e, cell.timestamp)}
-                                            onClick={(e) => handleCellClick(e, cell.timestamp)}
-                                            onContextMenu={(e) => handleCellContextMenu(e, cell.timestamp)}
-                                            onMouseEnter={(e) => { handleCellHover(e, cell.timestamp); }}
-                                            onMouseLeave={handleCellLeave}
-                                            onMouseDown={(e) => { if (e.button === 0) startSelection(e, idx, cell.timestamp); }}
-                                            onMouseUp={(e) => { /* handled globally to compute rectangle on mouseup */ }}
-                                            ref={(el) => { cellRefs.current[cell.timestamp] = el; }}
-                                            className={cellClass}
-                                            style={{ userSelect: 'none' }}
-                                        >
-                                            {/* Indicateur visuel drop */}
-                                            {isHovered && draggedContent && (
-                                                <div className="absolute inset-0 rounded-lg flex items-center justify-center z-20 pointer-events-none">
-                                                    <div className="text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                                                        📌 Déposer ici
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Affichage 4 emojis superposables CDC-conforme */}
-                                            {hasData && (
-                                                <CellEmojiOverlay
-                                                    cellData={cellData}
-                                                    sidebarContent={sidebarContent}
-                                                    onShowDetails={() => {
-                                                        setCurrentCellTimestamp(cell.timestamp);
-                                                        setIsModalOpen(true);
-                                                    }}
-                                                />
-                                            )}
-
-                                            {/* Label cellule */}
-                                            <div className="relative z-10">
-                                                <div className="text-xs font-bold text-gray-900 dark:text-white mb-1">
-                                                    {massAssignMode && isSelected && '✓ '}
-                                                    {isFirst ? '⚙️ ' : ''}{cell.label}
-                                                </div>
-                                                <div className="text-[10px] text-gray-600 dark:text-gray-400">
-                                                    {cell.date || cell.week || (cell.phase ? `(${cell.duration || 7}j)` : '')}
-                                                </div>
-                                                {isFirst && (
-                                                    <div className="mt-1 text-[10px] dark: font-semibold">
-                                                        Config générale
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-
-                                {/* Bouton + pour ajouter des cellules */}
-                                {cells.length > 0 && (timelineConfig.type === 'seconde' || timelineConfig.type === 'heure' || timelineConfig.type === 'jour' || timelineConfig.type === 'semaine' || timelineConfig.type === 'date') && (
-                                    <div
-                                        className="p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all cursor-pointer flex items-center justify-center min-h-[80px]"
-                                        onClick={() => {
-                                            // Ajouter une cellule selon le type
-                                            if (timelineConfig.type === 'seconde' && timelineConfig.totalSeconds) {
-                                                const current = timelineConfig.totalSeconds || cells.length;
-                                                if (current < 900) {
-                                                    onConfigChange('totalSeconds', current + 1);
-                                                }
-                                            } else if (timelineConfig.type === 'heure' && timelineConfig.totalHours) {
-                                                const current = timelineConfig.totalHours || cells.length;
-                                                if (current < 336) {
-                                                    onConfigChange('totalHours', current + 1);
-                                                }
-                                            } else if (timelineConfig.type === 'jour') {
-                                                const currentDays = timelineConfig.totalDays || cells.length;
-                                                if (currentDays < 365) {
-                                                    onConfigChange('totalDays', currentDays + 1);
-                                                }
-                                            } else if (timelineConfig.type === 'semaine') {
-                                                const currentWeeks = timelineConfig.totalWeeks || cells.length;
-                                                if (currentWeeks < 52) {
-                                                    onConfigChange('totalWeeks', currentWeeks + 1);
-                                                }
-                                            } else if (timelineConfig.type === 'date' && timelineConfig.end) {
-                                                // Ajouter 1 jour à la date de fin
-                                                const endDate = new Date(timelineConfig.end);
-                                                if (isNaN(endDate)) return;
-                                                endDate.setDate(endDate.getDate() + 1);
-                                                onConfigChange('end', endDate.toISOString().split('T')[0]);
-                                            }
-                                        }}
-                                        title="Ajouter une cellule"
-                                    >
-                                        <Plus className="w-6 h-6 text-gray-400" />
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
-                {/* END TIMELINE PRINCIPALE */}
             </div>
 
-            {/* MOBILE SIDEBAR DRAWER - Accessible via button in header */}
-            {isMobile && showMobileSidebarDrawer && (
-                <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex flex-col">
-                    {/* Header with close button */}
-                    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
-                        <h3 className="font-bold text-gray-900 dark:text-white text-lg flex items-center gap-2">
-                            <span>📦</span>
-                            Contenus à glisser
-                        </h3>
-                        <button
-                            onClick={() => setShowMobileSidebarDrawer(false)}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                            title="Fermer"
-                        >
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    {/* Scrollable content - same as desktop sidebar */}
-                    <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-900 p-3">
-                        <div className="space-y-2">
-                            {/* Pré-configuration section */}
-                            <div className="mb-3">
-                                <div className="font-semibold text-xs text-gray-400 dark:text-gray-300 mb-1">Pré-configuration</div>
-                                <button
-                                    className="w-full mt-1 mb-2 group relative flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl font-medium shadow-md hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300 overflow-hidden"
-                                    onClick={() => {
-                                        setShowGroupedPresetModal(true);
-                                        setShowMobileSidebarDrawer(false);
-                                    }}
-                                >
-                                    <Plus className="w-4 h-4" />
-                                    <span>Groupe de préréglages</span>
-                                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                                </button>
-                                {groupedPresets.length > 0 && (
-                                    <div className="flex flex-wrap gap-2">
-                                        {groupedPresets.map((group, idx) => (
-                                            <div
-                                                key={group.name + idx}
-                                                draggable="true"
-                                                onDragStart={e => {
-                                                    e.dataTransfer.setData('application/grouped-preset', JSON.stringify(group));
-                                                    e.dataTransfer.effectAllowed = 'copy';
-                                                    setDraggedContent({ type: 'grouped', group });
-                                                }}
-                                                onDragEnd={() => setDraggedContent(null)}
-                                                className="px-3 py-2 rounded-lg bg-purple-50 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 text-xs font-bold cursor-grab hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all"
-                                                title={`${group.description || ''}\n${(group.fields || []).map(f => `${f.key}: ${f.value}`).join('\n')}`}
-                                            >
-                                                <span className="mr-1">{group.emoji || '🌱'}</span>{group.name}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Sidebar content sections */}
-                            {(sidebarContent || []).map((section) => (
-                                <div key={section.id} className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                                    <button
-                                        onClick={() => toggleSection(section.id)}
-                                        className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-800/50 hover:from-gray-100 hover:to-gray-200 dark:hover:from-gray-700 dark:hover:to-gray-700/50 transition-colors"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-lg">{section.icon}</span>
-                                            <span className="font-semibold text-sm text-gray-900 dark:text-white">
-                                                {section.label === 'MODE PIPELINE' ? 'Pré-configuration' : section.label}
-                                            </span>
-                                        </div>
-                                        {expandedSections[section.id] ? (
-                                            <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                                        ) : (
-                                            <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                                        )}
-                                    </button>
-
-                                    {expandedSections[section.id] && (
-                                        <div className="p-2 bg-white dark:bg-gray-900 space-y-1">
-                                            {section.items?.map((item) => {
-                                                const itemKey = item.key || item.id;
-                                                const isSelected = multiSelectedItems.includes(itemKey);
-                                                let isDragging = false;
-
-                                                const handleSidebarItemClick = (e) => {
-                                                    if (isDragging) {
-                                                        isDragging = false;
-                                                        return;
-                                                    }
-
-                                                    if (e.ctrlKey || e.metaKey) {
-                                                        setMultiSelectedItems(prev =>
-                                                            prev.includes(itemKey)
-                                                                ? prev.filter(k => k !== itemKey)
-                                                                : [...prev, itemKey]
-                                                        );
-                                                    } else {
-                                                        setMultiSelectedItems([]);
-                                                    }
-                                                };
-
-                                                return (
-                                                    <div
-                                                        key={itemKey}
-                                                        draggable="true"
-                                                        onDragStart={(e) => {
-                                                            isDragging = true;
-                                                            if (!isSelected || multiSelectedItems.length === 1) {
-                                                                handleDragStart(e, item);
-                                                                setMultiSelectedItems([]);
-                                                            } else {
-                                                                const selectedItems = multiSelectedItems
-                                                                    .map(k => {
-                                                                        for (const sec of sidebarContent) {
-                                                                            const found = sec.items?.find(i => (i.key || i.id) === k);
-                                                                            if (found) return found;
-                                                                        }
-                                                                        return null;
-                                                                    })
-                                                                    .filter(Boolean);
-
-                                                                e.dataTransfer.setData('application/multi-items', JSON.stringify(selectedItems));
-                                                                setDraggedContent({ type: 'multi', items: selectedItems });
-                                                            }
-                                                        }}
-                                                        onDragEnd={(e) => {
-                                                            e.currentTarget.classList.remove('dragging');
-                                                            setDraggedContent(null);
-                                                            setMultiSelectedItems([]);
-                                                        }}
-                                                        onClick={handleSidebarItemClick}
-                                                        onContextMenu={(e) => {
-                                                            e.preventDefault();
-                                                            setContextMenu({
-                                                                item,
-                                                                position: {
-                                                                    x: e.clientX,
-                                                                    y: e.clientY
-                                                                },
-                                                                anchorRect: e.currentTarget.getBoundingClientRect()
-                                                            });
-                                                        }}
-                                                        className="relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                                        style={{ touchAction: 'none' }}
-                                                    >
-                                                        <span className="text-base">{item.icon}</span>
-                                                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex-1">
-                                                            {item.label}
-                                                        </span>
-                                                        <span className="text-xs transition-colors text-gray-400 group-hover:text-gray-600">
-                                                            ⋮⋮
-                                                        </span>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
+            {/* TIMELINE GRID - Inside Pipeline Culture container */}
+            <div className="flex-1 overflow-auto p-4">
+                {cells.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                        <div className="text-center text-gray-500 dark:text-gray-400">
+                            <Settings className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">⚠️ Configurez la période pour voir la timeline</p>
                         </div>
                     </div>
-                </div>
-            )}
+                ) : (
+                    <div className="space-y-3">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 italic">
+                            💡 <strong>Première case</strong> : Configuration générale (mode, espace, etc.)
+                            <br />
+                            📊 <strong>Autres cases</strong> : Drag & drop des paramètres depuis le panneau latéral
+                        </p>
+
+                        <div ref={gridRef} className="grid grid-cols-6 gap-2 select-none relative auto-rows-min" style={{ position: 'relative' }}>
+                            {/* Visual selection frame overlay */}
+                            {selectedCells.length > 1 && !isSelecting && (() => {
+                                // Compute aggregate bounding box of selected cells using DOM measurements
+                                const refs = selectedCells.map(ts => cellRefs.current[ts]).filter(Boolean);
+                                if (!refs || refs.length === 0) return null;
+                                const gridBox = gridRef.current && gridRef.current.getBoundingClientRect();
+                                if (!gridBox) return null;
+
+                                const boxes = refs.map(el => {
+                                    const r = el.getBoundingClientRect();
+                                    return {
+                                        left: r.left,
+                                        top: r.top,
+                                        right: r.right,
+                                        bottom: r.bottom
+                                    };
+                                });
+
+                                const leftPx = Math.min(...boxes.map(b => b.left)) - gridBox.left + (gridRef.current ? gridRef.current.scrollLeft : 0);
+                                const topPx = Math.min(...boxes.map(b => b.top)) - gridBox.top + (gridRef.current ? gridRef.current.scrollTop : 0);
+                                const rightPx = Math.max(...boxes.map(b => b.right)) - gridBox.left + (gridRef.current ? gridRef.current.scrollLeft : 0);
+                                const bottomPx = Math.max(...boxes.map(b => b.bottom)) - gridBox.top + (gridRef.current ? gridRef.current.scrollTop : 0);
+
+                                const widthPx = rightPx - leftPx;
+                                const heightPx = bottomPx - topPx;
+
+                                return (
+                                    <div
+                                        className="absolute pointer-events-none z-40 border-4 rounded-2xl shadow-lg animate-fade-in"
+                                        style={{
+                                            top: `${topPx}px`,
+                                            left: `${leftPx}px`,
+                                            width: `${widthPx}px`,
+                                            height: `${heightPx}px`,
+                                            boxSizing: 'border-box',
+                                            transition: 'all 0.08s',
+                                            borderStyle: 'dashed',
+                                            background: 'rgba(80,180,255,0.07)'
+                                        }}
+                                    />
+                                );
+                            })()}
+                            {/* Selection rectangle (live) */}
+                            {/* Selection marquee (rendered always, animated via opacity/transform) */}
+                            <div
+                                className="absolute z-50 pointer-events-none border-4 rounded-2xl shadow-lg"
+                                style={{
+                                    top: selectionRect.y,
+                                    left: selectionRect.x,
+                                    width: selectionRect.width,
+                                    height: selectionRect.height,
+                                    boxSizing: 'border-box',
+                                    borderStyle: 'dashed',
+                                    background: 'rgba(80,180,255,0.06)',
+                                    opacity: selectionRect.visible ? 1 : 0,
+                                    transform: selectionRect.visible ? 'scale(1)' : 'scale(0.98)',
+                                    transition: 'opacity 150ms ease-out, transform 150ms ease-out'
+                                }}
+                            />
+
+                            {cells.map((cell, idx) => {
+                                const hasData = hasCellData(cell.timestamp);
+                                const cellData = getCellData(cell.timestamp);
+                                const isFirst = idx === 0;
+                                const isSelected = selectedCells.includes(cell.timestamp);
+                                const isHovered = hoveredCell === cell.timestamp;
+
+                                // Construire classes CSS pour la cellule
+                                let cellClass = `relative p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[80px]`;
+
+                                // Gradient d'intensité GitHub-style selon nombre de données
+                                if (hasData) {
+                                    const dataCount = Object.keys(cellData).filter(k =>
+                                        !['timestamp', 'date', 'label', 'phase', 'day', 'week', 'hours', 'seconds', 'note', '_meta'].includes(k)
+                                    ).length;
+                                    const intensity = Math.min(dataCount / 10, 1);
+                                    const intensityIndex = Math.floor(intensity * 4); // 0-4
+
+                                    // Palette verte progressive (GitHub-style)
+                                    const gradients = [
+                                        'border-green-400 bg-green-100/40 dark:border-green-600 dark:bg-green-950/30',
+                                        'border-green-500 bg-green-200/50 dark:border-green-500 dark:bg-green-900/40',
+                                        'border-green-600 bg-green-300/60 dark:border-green-400 dark:bg-green-800/50',
+                                        'border-green-700 bg-green-400/70 dark:border-green-300 dark:bg-green-700/60',
+                                        'border-green-800 bg-green-500/80 dark:border-green-200 dark:bg-green-600/70'
+                                    ];
+                                    cellClass += ' ' + gradients[intensityIndex];
+                                } else {
+                                    cellClass += ' border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800';
+                                }
+
+                                // Selected par clic simple (modal)
+                                cellClass += selectedCell === cell.timestamp
+                                    ? ' ring-2 ring-violet-500 shadow-lg'
+                                    : ' hover:border-violet-400 hover:shadow-md';
+
+                                // Selected en mode masse (multi-sélection)
+                                cellClass += isSelected
+                                    ? ' ring-4 ring-blue-500 dark:ring-blue-400 bg-blue-500/10'
+                                    : '';
+
+                                // Hover pendant drag
+                                cellClass += isHovered && draggedContent
+                                    ? ' ring-4 ring-violet-500 dark:ring-violet-400 scale-105 shadow-2xl animate-pulse'
+                                    : '';
+
+                                // Span 2 colonnes pour première cellule
+                                if (isFirst) {
+                                    cellClass += ' col-span-2';
+                                }
+
+                                return (
+                                    <div
+                                        key={cell.timestamp}
+                                        onDragOver={(e) => handleDragOver(e, cell.timestamp)}
+                                        onDragLeave={handleDragLeave}
+                                        onDrop={(e) => handleDrop(e, cell.timestamp)}
+                                        onClick={(e) => handleCellClick(e, cell.timestamp)}
+                                        onContextMenu={(e) => handleCellContextMenu(e, cell.timestamp)}
+                                        onMouseEnter={(e) => { handleCellHover(e, cell.timestamp); }}
+                                        onMouseLeave={handleCellLeave}
+                                        onMouseDown={(e) => { if (e.button === 0) startSelection(e, idx, cell.timestamp); }}
+                                        onMouseUp={(e) => { /* handled globally to compute rectangle on mouseup */ }}
+                                        ref={(el) => { cellRefs.current[cell.timestamp] = el; }}
+                                        className={cellClass}
+                                        style={{ userSelect: 'none' }}
+                                    >
+                                        {/* Indicateur visuel drop */}
+                                        {isHovered && draggedContent && (
+                                            <div className="absolute inset-0 rounded-lg flex items-center justify-center z-20 pointer-events-none">
+                                                <div className="text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                                                    📌 Déposer ici
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Affichage 4 emojis superposables CDC-conforme */}
+                                        {hasData && (
+                                            <CellEmojiOverlay
+                                                cellData={cellData}
+                                                sidebarContent={sidebarContent}
+                                                onShowDetails={() => {
+                                                    setCurrentCellTimestamp(cell.timestamp);
+                                                    setIsModalOpen(true);
+                                                }}
+                                            />
+                                        )}
+
+                                        {/* Label cellule */}
+                                        <div className="relative z-10">
+                                            <div className="text-xs font-bold text-gray-900 dark:text-white mb-1">
+                                                {massAssignMode && isSelected && '✓ '}
+                                                {isFirst ? '⚙️ ' : ''}{cell.label}
+                                            </div>
+                                            <div className="text-[10px] text-gray-600 dark:text-gray-400">
+                                                {cell.date || cell.week || (cell.phase ? `(${cell.duration || 7}j)` : '')}
+                                            </div>
+                                            {isFirst && (
+                                                <div className="mt-1 text-[10px] dark: font-semibold">
+                                                    Config générale
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                            {/* Bouton + pour ajouter des cellules */}
+                            {cells.length > 0 && (timelineConfig.type === 'seconde' || timelineConfig.type === 'heure' || timelineConfig.type === 'jour' || timelineConfig.type === 'semaine' || timelineConfig.type === 'date') && (
+                                <div
+                                    className="p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all cursor-pointer flex items-center justify-center min-h-[80px]"
+                                    onClick={() => {
+                                        // Ajouter une cellule selon le type
+                                        if (timelineConfig.type === 'seconde' && timelineConfig.totalSeconds) {
+                                            const current = timelineConfig.totalSeconds || cells.length;
+                                            if (current < 900) {
+                                                onConfigChange('totalSeconds', current + 1);
+                                            }
+                                        } else if (timelineConfig.type === 'heure' && timelineConfig.totalHours) {
+                                            const current = timelineConfig.totalHours || cells.length;
+                                            if (current < 336) {
+                                                onConfigChange('totalHours', current + 1);
+                                            }
+                                        } else if (timelineConfig.type === 'jour') {
+                                            const currentDays = timelineConfig.totalDays || cells.length;
+                                            if (currentDays < 365) {
+                                                onConfigChange('totalDays', currentDays + 1);
+                                            }
+                                        } else if (timelineConfig.type === 'semaine') {
+                                            const currentWeeks = timelineConfig.totalWeeks || cells.length;
+                                            if (currentWeeks < 52) {
+                                                onConfigChange('totalWeeks', currentWeeks + 1);
+                                            }
+                                        } else if (timelineConfig.type === 'date' && timelineConfig.end) {
+                                            // Ajouter 1 jour à la date de fin
+                                            const endDate = new Date(timelineConfig.end);
+                                            if (isNaN(endDate)) return;
+                                            endDate.setDate(endDate.getDate() + 1);
+                                            onConfigChange('end', endDate.toISOString().split('T')[0]);
+                                        }
+                                    }}
+                                    title="Ajouter une cellule"
+                                >
+                                    <Plus className="w-6 h-6 text-gray-400" />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
 
             {/* Modal grouped preset */}
             <GroupedPresetModal
@@ -2688,15 +2570,18 @@ const PipelineDragDropView = ({
                     onClose={() => setCellContextMenu(null)}
                     onDeleteAll={() => {
                         const targets = cellContextMenu?.selectedCells || [];
+                        console.log(`💥 handleDeleteAll: targets=${targets.join(',')}`);
                         setConfirmState({
                             open: true,
                             title: 'Effacer toutes les données',
                             message: `Effacer toutes les données de ${targets.length} cellule(s) ?`,
                             onConfirm: () => {
+                                console.log(`  ✓ Confirmation: début de suppression complète`);
                                 const allChanges = [];
                                 targets.forEach(ts => {
                                     const prev = getCellData(ts) || {};
                                     const keys = Object.keys(prev).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k));
+                                    console.log(`    ✔️ Supprime ${keys.length} champs de ${ts}: ${keys.join(',')}`);
                                     keys.forEach(k => {
                                         allChanges.push({ timestamp: ts, field: k, previousValue: prev[k] });
                                         onDataChange(ts, k, null);
@@ -2704,10 +2589,12 @@ const PipelineDragDropView = ({
                                 });
                                 if (allChanges.length > 0) {
                                     pushAction({ id: Date.now(), type: 'contextMenuDeleteAll', changes: allChanges });
+                                    console.log(`  ✓ Toast: ${allChanges.length} donnée(s) effacée(s)`);
                                 }
                                 setConfirmState(prev => ({ ...prev, open: false }));
                                 setCellContextMenu(null);
                                 showToast('Données effacées', 'success');
+                                console.log(`✅ Suppression complète terminée`);
                             }
                         });
                     }}

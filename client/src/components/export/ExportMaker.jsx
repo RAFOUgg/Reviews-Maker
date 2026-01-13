@@ -66,6 +66,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             link.href = canvas.toDataURL(`image/${exportFormat}`);
             link.click();
         } catch (err) {
+            console.error(err);
         } finally {
             setExporting(false);
         }
@@ -102,6 +103,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             const filename = `review-${reviewData.name || 'export'}-pipeline-${Date.now()}.gif`;
             downloadGIF(blob, filename);
         } catch (error) {
+            console.error('❌ Export GIF failed:', error);
             alert('Erreur lors de l\'export GIF. Voir console pour détails.');
         } finally {
             setExportingGIF(false);

@@ -313,6 +313,8 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                     timelineConfig={timelineConfig}
                     timelineData={data.curingTimeline || []}
                     onConfigChange={(key, value) => {
+                        console.log('🔧 CuringMaturation onConfigChange:', key, value);
+
                         // Mettre à jour le state local IMMÉDIATEMENT
                         setTimelineConfig(prev => ({
                             ...prev,

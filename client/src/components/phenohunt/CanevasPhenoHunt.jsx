@@ -151,6 +151,7 @@ export default function CanevasPhenoHunt() {
                 phenoCode: cultivar.phenoCode
             });
         } catch (error) {
+            console.error('Erreur lors du drop:', error);
         }
     }, [addNode, activeTreeId]);
 

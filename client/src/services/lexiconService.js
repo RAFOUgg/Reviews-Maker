@@ -25,6 +25,14 @@ export const saveHistoryForField = (fieldKey, value) => {
         const truncated = arr.slice(-20)
         localStorage.setItem(key, JSON.stringify(truncated))
     } catch (e) {
+        console.warn('saveHistoryForField failed', e)
+    }
+}
+
+export const getHistoryForField = (fieldKey) => {
+    try {
+        const key = HISTORY_PREFIX + fieldKey
+        const raw = localStorage.getItem(key)
         return raw ? JSON.parse(raw) : []
     } catch (e) {
         return []

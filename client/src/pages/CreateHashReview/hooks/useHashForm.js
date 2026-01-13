@@ -24,6 +24,14 @@ export function useHashForm(reviewId = null) {
             setFormData(review)
         } catch (error) {
             toast.error('Impossible de charger la review')
+            console.error(error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleChange = (field, value) => {
+        setFormData(prev => ({ ...prev, [field]: value }))
     }
 
     return {

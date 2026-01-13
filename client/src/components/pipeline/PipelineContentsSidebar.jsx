@@ -244,8 +244,10 @@ const PipelineContentsSidebar = ({
                 <PresetsPanel
                     sidebarContent={schema}
                     onPresetsSelected={(selected) => {
+                        console.log('Préréglages sélectionnés:', selected);
                     }}
                     onDragPreset={(preset) => {
+                        console.log('Drag preset:', preset);
                         onDragStart(preset);
                     }}
                 />

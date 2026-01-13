@@ -46,6 +46,16 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     const extraData = extractExtraData(reviewData.extraData, reviewData).slice(0, limits.maxInfoCards);
 
     // Debug log pour voir les données
+    console.log('🎨 ModernCompactTemplate render:', {
+        rating: reviewData.rating,
+        categoryRatingsInput: reviewData.categoryRatings,
+        categoryRatingsExtracted: categoryRatings,
+        effects: effects,
+        aromas: aromas,
+        hasImage: !!reviewData.mainImageUrl || !!reviewData.imageUrl,
+        contentModulesEnabled: Object.entries(contentModules).filter(([k, v]) => v).map(([k]) => k).slice(0, 10)
+    });
+
     // Image principale
     const mainImage = reviewData.mainImageUrl || reviewData.imageUrl || 
         (Array.isArray(reviewData.images) && reviewData.images[0]);

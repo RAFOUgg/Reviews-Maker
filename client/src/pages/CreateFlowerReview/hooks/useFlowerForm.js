@@ -24,6 +24,32 @@ export function useFlowerForm(reviewId = null) {
             setFormData(review)
         } catch (error) {
             toast.error('Impossible de charger la review')
+            console.error(error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleChange = (field, value) => {
+        setFormData(prev => ({ ...prev, [field]: value }))
+    }
+
+    const saveReview = async () => {
+        try {
+            setSaving(true)
+            if (reviewId) {
+                await flowerReviewsService.update(reviewId, formData)
+                toast.success('Review mise à jour')
+            } else {
+                const created = await flowerReviewsService.create(formData)
+                toast.success('Review créée')
+                return created
+            }
+        } catch (error) {
+            toast.error('Erreur lors de la sauvegarde')
+            throw error
+        } finally {
+            setSaving(false)
         }
     }
 

@@ -107,6 +107,7 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
                 setAllowedCountries(normalizedCountries);
                 setAllowedRegions((prev) => ({ ...prev, ...regions }));
             } catch (err) {
+                console.warn('Impossible de charger les pays autorisés, fallback local utilisé:', err);
             }
         };
 
@@ -159,6 +160,7 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
 
             onVerified(data);
         } catch (err) {
+            console.error('Erreur vérification âge:', err);
             setError(t('ageVerification.errorNetwork', 'Erreur réseau, veuillez réessayer'));
             setLoading(false);
         }

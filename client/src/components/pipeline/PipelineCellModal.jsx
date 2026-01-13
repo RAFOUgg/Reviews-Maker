@@ -418,6 +418,7 @@ const PipelineCellModal = ({
                                 variant="ghost"
                                 onClick={() => {
                                     // TODO: Copier vers d'autres cases
+                                    console.log('Copier vers...');
                                 }}
                             >
                                 <Copy className="w-4 h-4 mr-2" />

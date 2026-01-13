@@ -49,6 +49,7 @@ const TreeToolbar = ({ treeId }) => {
             a.click();
             URL.revokeObjectURL(url);
         } catch (error) {
+            console.error('Export error:', error);
             alert('Erreur lors de l\'export: ' + error.message);
         }
     };

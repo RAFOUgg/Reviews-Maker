@@ -63,6 +63,9 @@ export async function exportPipelineToGIF(
     const maxFrames = 50
     const frameStep = Math.max(1, Math.ceil(frames.length / maxFrames))
     const selectedFrames = frames.filter((_, idx) => idx % frameStep === 0).slice(0, maxFrames)
+
+    console.log(`📸 Capturing ${selectedFrames.length} frames (${frames.length} total cells)`)
+
     // Capturer chaque frame
     for (let i = 0; i < selectedFrames.length; i++) {
         const frame = selectedFrames[i]
@@ -83,6 +86,41 @@ export async function exportPipelineToGIF(
         if (onProgress) {
             onProgress(Math.round((i + 1) / selectedFrames.length * 100))
         }
+
+        console.log(`📸 Frame ${i + 1}/${selectedFrames.length} captured`)
+    }
+
+    // Encoder le GIF
+    return new Promise((resolve, reject) => {
+        gif.on('finished', (blob) => {
+            console.log('✅ GIF encoding complete:', blob.size, 'bytes')
+            resolve(blob)
+        })
+
+        gif.on('error', (error) => {
+            console.error('❌ GIF encoding error:', error)
+            reject(error)
+        })
+
+        if (onProgress) {
+            gif.on('progress', (percent) => {
+                onProgress(Math.round(percent * 100))
+            })
+        }
+
+        gif.render()
+    })
+}
+
+/**
+ * Préparer la liste des frames à capturer
+ * @param {Object} pipelineData - Données du pipeline
+ * @returns {Array<{cellIndex: number, data: Object}>} - Liste des frames
+ */
+function prepareFrames(pipelineData) {
+    const { cells, config } = pipelineData
+    const totalCells = getTotalCells(config)
+
     const frames = []
 
     for (let i = 0; i < totalCells; i++) {
@@ -238,6 +276,11 @@ export function useGIFExport() {
 
             return blob
         } catch (error) {
+            console.error('Export GIF failed:', error)
+            throw error
+        } finally {
+            setIsExporting(false)
+            setProgress(0)
         }
     }
 

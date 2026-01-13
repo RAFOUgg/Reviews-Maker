@@ -103,6 +103,8 @@ export default function ExportModal({ onClose }) {
         // Get original dimensions from the template canvas
         const originalWidth = parseInt(container.dataset.width || container.style.width) || container.offsetWidth;
         const originalHeight = parseInt(container.dataset.height || container.style.height) || container.offsetHeight;
+
+        console.log('📸 Export PNG - Original dimensions:', { originalWidth, originalHeight });
         setExportProgress(20);
         setExportStatus('📦 Préparation du contenu...');
 
@@ -160,6 +162,9 @@ export default function ExportModal({ onClose }) {
         await new Promise(resolve => setTimeout(resolve, 800)); const finalWidth = selectedScope === 'openGraph' ? 1200 : originalWidth;
         const finalHeight = selectedScope === 'openGraph' ? 630 : originalHeight;
         const pixelRatio = selectedScope === 'openGraph' ? 3 : exportOptions.pngScale;
+
+        console.log('📸 Capturing with:', { finalWidth, finalHeight, pixelRatio, transparent: exportOptions.pngTransparent });
+
         setExportProgress(80);
         setExportStatus('📸 Capture en cours...');
 
@@ -189,7 +194,9 @@ export default function ExportModal({ onClose }) {
             link.click();
 
             setExportProgress(100);
+            console.log('✅ Export PNG success');
         } catch (error) {
+            console.error('❌ Export PNG failed:', error);
             throw error;
         } finally {
             // Cleanup
@@ -200,6 +207,9 @@ export default function ExportModal({ onClose }) {
     const exportJPEG = async (container) => {
         const originalWidth = parseInt(container.dataset.width || container.style.width) || container.offsetWidth;
         const originalHeight = parseInt(container.dataset.height || container.style.height) || container.offsetHeight;
+
+        console.log('📸 Export JPEG - Original dimensions:', { originalWidth, originalHeight });
+
         const exportContainer = document.createElement('div');
         exportContainer.style.position = 'fixed';
         exportContainer.style.left = '-99999px';
@@ -242,6 +252,9 @@ export default function ExportModal({ onClose }) {
 
         const finalWidth = selectedScope === 'openGraph' ? 1200 : originalWidth;
         const finalHeight = selectedScope === 'openGraph' ? 630 : originalHeight;
+
+        console.log('📸 Capturing JPEG with:', { finalWidth, finalHeight, quality: exportOptions.jpegQuality });
+
         try {
             const dataUrl = await toJpeg(target, {
                 cacheBust: true,
@@ -262,7 +275,10 @@ export default function ExportModal({ onClose }) {
             link.download = `review-${reviewData.title || 'export'}-${selectedScope === 'openGraph' ? 'og-' : ''}${Date.now()}.jpg`;
             link.href = dataUrl;
             link.click();
+
+            console.log('✅ Export JPEG success');
         } catch (error) {
+            console.error('❌ Export JPEG failed:', error);
             throw error;
         } finally {
             setTimeout(() => exportContainer.remove(), 1000);

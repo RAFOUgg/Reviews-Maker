@@ -58,6 +58,91 @@ export function useAuth() {
                 }
             }
         } catch (error) {
+            console.error('Erreur chargement statut légal:', error)
+        } finally {
+            setLoading(false)
+        }
+    }, [isAuthenticated])
+
+    // Charger les infos du compte
+    const loadAccountInfo = useCallback(async () => {
+        if (!isAuthenticated) return
+
+        try {
+            const response = await fetch('/api/account/info', {
+                credentials: 'include',
+            })
+
+            if (response.ok) {
+                const data = await response.json()
+                setAccountInfo(data)
+            }
+        } catch (error) {
+            console.error('Erreur chargement infos compte:', error)
+        }
+    }, [isAuthenticated])
+
+    // Vérifier l'authentification et le statut légal au chargement
+    useEffect(() => {
+        const init = async () => {
+            await checkAuth()
+            await loadLegalStatus()
+        }
+        init()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    // Recharger le statut légal quand l'authentification change
+    useEffect(() => {
+        if (isAuthenticated) {
+            loadLegalStatus()
+        }
+    }, [isAuthenticated, loadLegalStatus])
+
+    // Callbacks pour les modales
+    const handleAgeVerified = useCallback(async () => {
+        setNeedsAgeVerification(false)
+        setNeedsConsent(true)
+        await loadLegalStatus()
+    }, [loadLegalStatus])
+
+    const handleConsentAccepted = useCallback(async () => {
+        setNeedsConsent(false)
+        await loadLegalStatus()
+    }, [loadLegalStatus])
+
+    const handleAccountTypeSelected = useCallback(async () => {
+        setNeedsAccountTypeSelection(false)
+        localStorage.setItem('accountTypeSelected', 'true')
+        await loadAccountInfo()
+    }, [loadAccountInfo])
+
+    const handleConsentDeclined = useCallback(() => {
+        window.location.href = '/legal-required'
+    }, [])
+
+    const handleAgeRejected = useCallback((message) => {
+        window.location.href = `/underage?message=${encodeURIComponent(message)}`
+    }, [])
+
+    const loginWithDiscord = () => {
+        authService.loginWithDiscord()
+    }
+
+    const loginWithGoogle = () => {
+        window.location.href = '/api/auth/google'
+    }
+
+    const logout = useCallback(async () => {
+        await storeLogout()
+        localStorage.removeItem('accountTypeSelected')
+        setLegalStatus(null)
+        setAccountInfo(null)
+        setNeedsAgeVerification(false)
+        setNeedsConsent(false)
+        setNeedsAccountTypeSelection(false)
+    }, [storeLogout])
+
     return {
         user,
         isAuthenticated,
