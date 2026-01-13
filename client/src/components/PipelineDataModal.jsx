@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, BookmarkPlus, Bookmark, CheckSquare, Square } from 'lucide-react';
 import ConfirmModal from './ConfirmModal';
-import usePresets from '../../hooks/usePresets';
+import usePresets from '../hooks/usePresets';
 import { GroupedPresetModal } from './PipelineDragDropView';
 
 /**

@@ -1,7 +1,7 @@
 import React from 'react';
 import { ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useMobileFormSection } from '../../hooks/useMobileFormSection';
+import { useMobileFormSection } from '../hooks/useMobileFormSection';
 
 /**
  * ResponsiveSection - Conteneur section adaptatif mobile

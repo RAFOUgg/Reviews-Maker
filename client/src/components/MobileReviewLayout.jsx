@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { useResponsiveLayout } from '../../hooks/useResponsiveLayout';
-import { useMobileFormSection } from '../../hooks/useMobileFormSection';
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
+import { useMobileFormSection } from '../hooks/useMobileFormSection';
 
 /**
  * MobileReviewLayout - Wrapper pour adapter les pages de review au mobile

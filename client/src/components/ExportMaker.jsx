@@ -7,7 +7,7 @@ import {
     Share2, Info, CheckCircle, Film
 } from 'lucide-react';
 import LiquidGlass from './LiquidGlass';
-import { useAccountType } from '../../hooks/useAccountType';
+import { useAccountType } from '../hooks/useAccountType';
 import { FeatureGate } from './account';
 import DragDropExport from './DragDropExport';
 import WatermarkEditor from './WatermarkEditor';

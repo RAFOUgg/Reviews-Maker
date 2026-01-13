@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
-import { useResponsiveLayout } from '../../hooks/useResponsiveLayout';
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 
 /**
  * MobilePipelineCellEditor - Éditeur de cellule pipeline optimisé mobile

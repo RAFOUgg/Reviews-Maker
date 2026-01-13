@@ -5,7 +5,7 @@ import {
   AlignLeft, AlignCenter, AlignRight, Eye, EyeOff,
   Plus, Minus, Lock
 } from 'lucide-react';
-import { useAccountType } from '../../hooks/useAccountType';
+import { useAccountType } from '../hooks/useAccountType';
 import { FeatureGate } from './account';
 
 /**
