@@ -81,7 +81,7 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
                                     <button
                                         key={id}
                                         onClick={() => updateConfig('method', id)}
-                                        className={`p-4 rounded-lg border-2 transition-all ${config.method === id ? ' shadow-lg' : 'border-gray-600 hover: bg-gray-800/50' }`}
+                                        className={`p-4 rounded-lg border-2 transition-all ${config.method === id ? ' shadow-lg' : 'border-gray-600 hover: bg-gray-800/50'}`}
                                     >
                                         <div className="text-4xl mb-2">{method.icon}</div>
                                         <div className="text-base font-bold text-white">{method.name}</div>
@@ -169,7 +169,7 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
                                             <button
                                                 key={mesh.size}
                                                 onClick={() => toggleMeshSize(mesh.size)}
-                                                className={`p-3 rounded-lg border-2 transition-all ${(config.meshSizes || []).includes(mesh.size) ? 'border-green-500 bg-green-500/20' : 'border-white/20 hover:border-white/40' }`}
+                                                className={`p-3 rounded-lg border-2 transition-all ${(config.meshSizes || []).includes(mesh.size) ? 'border-green-500 bg-green-500/20' : 'border-white/20 hover:border-white/40'}`}
                                             >
                                                 <div className="text-sm font-bold">{mesh.label}</div>
                                                 <div className="text-xs opacity-60 mt-1">{mesh.grade}</div>

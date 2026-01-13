@@ -6,9 +6,9 @@ import LiquidGlass from '../ui/LiquidGlass';
  * FeatureGate - Composant pour restreindre l'accès aux fonctionnalités
  * Affiche un overlay ou un message si l'utilisateur n'a pas le niveau requis
  */
-export const FeatureGate = ({ 
-  children, 
-  hasAccess, 
+export const FeatureGate = ({
+  children,
+  hasAccess,
   upgradeType = 'all', // 'producer', 'influencer_pro', 'all'
   featureName = 'cette fonctionnalité',
   showOverlay = true,
@@ -66,14 +66,14 @@ export const FeatureGate = ({
           <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r ${config.gradient} flex items-center justify-center shadow-lg`}>
             <Icon className="w-8 h-8 text-white" />
           </div>
-          
+
           <h3 className="text-xl font-bold text-white mb-2">{config.title}</h3>
           <p className="text-gray-300 mb-6 text-sm">
             {featureName ? `L'accès à ${featureName} est restreint.` : config.message}
-            <br/>
+            <br />
             Passer à la vitesse supérieure !
           </p>
-          
+
           <button className={`px-6 py-2 rounded-lg bg-gradient-to-r ${config.gradient} text-white font-bold hover:brightness-110 transition-all shadow-lg`}>
             {config.btnText}
           </button>

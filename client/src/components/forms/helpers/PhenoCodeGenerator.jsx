@@ -88,7 +88,7 @@ export default function PhenoCodeGenerator({ value = '', onChange, userId }) {
                     <button
                         type="button"
                         onClick={handleToggleCustom}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${customMode ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600' }`}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${customMode ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
                     >
                         <Edit2 className="w-3 h-3 inline mr-1" />
                         {customMode ? 'Mode manuel' : 'Mode auto'}
@@ -108,7 +108,7 @@ export default function PhenoCodeGenerator({ value = '', onChange, userId }) {
                                         key={p.value}
                                         type="button"
                                         onClick={() => setPrefix(p.value)}
-                                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${prefix === p.value ? 'bg-gradient-to-r text-white shadow-md' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:' }`}
+                                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${prefix === p.value ? 'bg-gradient-to-r text-white shadow-md' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:'}`}
                                         title={p.description}
                                     >
                                         {p.label}

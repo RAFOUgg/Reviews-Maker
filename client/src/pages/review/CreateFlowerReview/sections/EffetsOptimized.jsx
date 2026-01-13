@@ -130,8 +130,8 @@ export default function EffetsOptimized({ formData, handleChange }) {
                                 key={mode}
                                 onClick={() => setFilterMode(mode)}
                                 className={`px-2 py-1 text-xs rounded-lg transition ${filterMode === mode
-                                        ? 'bg-purple-600 text-white'
-                                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                                    ? 'bg-purple-600 text-white'
+                                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                                     }`}
                             >
                                 {mode === 'tous' ? 'Tous' : mode === 'positif' ? 'Positifs' : 'Négatifs'}
@@ -151,8 +151,8 @@ export default function EffetsOptimized({ formData, handleChange }) {
                         <button
                             onClick={() => toggleCategory(catKey)}
                             className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg transition ${expandedCategories[catKey]
-                                    ? 'bg-slate-700/70 text-white'
-                                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                                ? 'bg-slate-700/70 text-white'
+                                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                                 }`}
                         >
                             <span className={`text-sm font-semibold flex items-center gap-2`}>

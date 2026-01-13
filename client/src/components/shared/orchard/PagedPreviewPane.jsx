@@ -293,7 +293,7 @@ export default function PagedPreviewPane() {
                                         setDirection(index > currentPageIndex ? 1 : -1);
                                         setCurrentPage(index);
                                     }}
-                                    className={`relative overflow-hidden transition-all duration-300 rounded-xl ${isActive ? 'w-20 h-16 bg-gradient-to-br shadow-lg shadow-purple-500/50 ring-4 dark:' : 'w-14 h-12 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 hover: hover: dark:hover:/30 dark:hover:/30 hover:scale-110 shadow-md' }`}
+                                    className={`relative overflow-hidden transition-all duration-300 rounded-xl ${isActive ? 'w-20 h-16 bg-gradient-to-br shadow-lg shadow-purple-500/50 ring-4 dark:' : 'w-14 h-12 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 hover: hover: dark:hover:/30 dark:hover:/30 hover:scale-110 shadow-md'}`}
                                 >
                                     {/* Page content */}
                                     <div className="absolute inset-0 flex flex-col items-center justify-center p-2">

@@ -210,9 +210,8 @@ const MobilePipelineView = ({
                                     key={index}
                                     onClick={() => handleCellClick(index)}
                                     disabled={readonly}
-                                    className={`${getIntensityColor(intensity)} flex-shrink-0 relative group ${
-                                        isSelected ? 'ring-2 ring-purple-500' : ''
-                                    }`}
+                                    className={`${getIntensityColor(intensity)} flex-shrink-0 relative group ${isSelected ? 'ring-2 ring-purple-500' : ''
+                                        }`}
                                     whileTap={{ scale: 0.9 }}
                                 >
                                     {/* Contenu de la cellule */}
