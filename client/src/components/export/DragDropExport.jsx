@@ -5,7 +5,7 @@ import {
   Type, Image, BarChart3, Sparkles, Settings,
   ChevronDown, ChevronUp, Lock, Unlock
 } from 'lucide-react';
-import { useAccountType } from '../../hooks/useAccountType';
+import { useAccountType } from '../../../hooks/useAccountType';
 import { FeatureGate } from '../account/FeatureGate';
 
 // Données des sections disponibles pour drag & drop
