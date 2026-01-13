@@ -70,7 +70,7 @@ normalizeDatabaseUrl()
 const prisma = new PrismaClient()
 
 // Build session options
-const sessionOptions = buildSessionOptions(Store)
+const sessionOptions = buildSessionOptions(session)
 
 // Set up middleware
 app.use(express.json({ limit: '50mb' }))
