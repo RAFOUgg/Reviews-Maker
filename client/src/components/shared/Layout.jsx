@@ -1,5 +1,5 @@
 import { Outlet, Link } from 'react-router-dom'
-import { useAuth } from '../../../hooks/useAuth'
+import { useAuth } from '../../../hooks/useAuth.js'
 import UserProfileDropdown from '../account/UserProfileDropdown'
 // import ThemeSwitcher from './ThemeSwitcher' // REMOVED
 
