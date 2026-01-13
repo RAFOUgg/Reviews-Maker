@@ -21,7 +21,7 @@
 
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import ConfirmModal from './ConfirmModal';
-import { useToast } from '../ToastContainer';
+import { useToast } from './ToastContainer';
 import CellContextMenu from './CellContextMenu';
 
 // Emojis disponibles pour les groupes
