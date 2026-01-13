@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
-import MobilePipelineView from './pipeline/MobilePipelineView'
+import MobilePipelineView from './MobilePipelineView'
 
 /**
  * ReviewPreview - Affichage simple et complet de TOUS les éléments de la review
