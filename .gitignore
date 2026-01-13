@@ -22,6 +22,10 @@ dist/
 build/
 dist.tar.gz
 
+# Deploy scripts (local modifications)
+deploy.sh
+scripts/deploy-vps.sh
+
 # Database & Uploads
 db/*.sqlite
 db/*.sqlite-shm
