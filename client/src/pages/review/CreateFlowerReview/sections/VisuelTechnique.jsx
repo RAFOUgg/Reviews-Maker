@@ -1,6 +1,6 @@
 import React from 'react'
-import LiquidCard from '../../../components/LiquidCard'
-import ColorWheelPicker from '../../../components/ColorWheelPicker'
+import LiquidCard from '../../../../components/ui/LiquidCard'
+import ColorWheelPicker from '../../../../components/shared/charts/ColorWheelPicker'
 
 const VISUAL_FIELDS = [
     { key: 'couleur', label: 'Couleur', max: 10 },

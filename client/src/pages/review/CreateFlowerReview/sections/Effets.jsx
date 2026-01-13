@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import LiquidCard from '../../../components/LiquidCard'
+import LiquidCard from '../../../../components/ui/LiquidCard'
 
 export default function Effets({ formData, handleChange }) {
     const [effects, setEffects] = useState([])

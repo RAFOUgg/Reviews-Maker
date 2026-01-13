@@ -2,12 +2,12 @@ import { useEffect, lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { I18nextProvider } from 'react-i18next'
 import i18n from './i18n/i18n'
-import Layout from './components/Layout'
-import HomePage from './pages/HomePage'
-import LoginPage from './pages/LoginPage'
-import AuthCallback from './components/AuthCallback'
-import ToastContainer from './components/ToastContainer'
-import ErrorBoundary from './components/ErrorBoundary'
+import Layout from './components/shared/Layout'
+import HomePage from './pages/public/HomePage'
+import LoginPage from './pages/auth/LoginPage'
+import AuthCallback from './components/account/AuthCallback'
+import ToastContainer from './components/shared/ToastContainer'
+import ErrorBoundary from './components/shared/ErrorBoundary'
 import { useStore } from './store/useStore'
 import { useAuth } from './hooks/useAuth'
 import RDRBanner from './components/legal/RDRBanner'
@@ -15,36 +15,36 @@ import AgeVerification from './components/legal/AgeVerification'
 import ConsentModal from './components/legal/ConsentModal'
 import DisclaimerRDRModal from './components/legal/DisclaimerRDRModal'
 import AccountSelector from './components/account/AccountSelector'
-import LegalConsentGate from './components/LegalConsentGate'
+import LegalConsentGate from './components/legal/LegalConsentGate'
 import { initializeTheme } from './store/themeStore'
 import AnimatedMeshGradient from './components/ui/AnimatedMeshGradient'
 
 // Lazy-loaded pages (code splitting)
-const ReviewDetailPage = lazy(() => import('./pages/ReviewDetailPage'))
-const CreateReviewPage = lazy(() => import('./pages/CreateReviewPage'))
-const CreateFlowerReview = lazy(() => import('./pages/CreateFlowerReview'))
-const CreateHashReview = lazy(() => import('./pages/CreateHashReview'))
-const CreateConcentrateReview = lazy(() => import('./pages/CreateConcentrateReview'))
-const CreateEdibleReview = lazy(() => import('./pages/CreateEdibleReview'))
-const EditReviewPage = lazy(() => import('./pages/EditReviewPage'))
-const LibraryPage = lazy(() => import('./pages/LibraryPage'))
-const GalleryPage = lazy(() => import('./pages/GalleryPage'))
-const StatsPage = lazy(() => import('./pages/StatsPage'))
-const SettingsPage = lazy(() => import('./pages/SettingsPage'))
-const ProfilePage = lazy(() => import('./pages/ProfilePage'))
-const ProfileSettingsPage = lazy(() => import('./pages/ProfileSettingsPage'))
-const AccountSetupPage = lazy(() => import('./pages/AccountSetupPage'))
-const AccountChoicePage = lazy(() => import('./pages/AccountChoicePage'))
-const AgeVerificationPage = lazy(() => import('./pages/AgeVerificationPage'))
+const ReviewDetailPage = lazy(() => import('./pages/public/ReviewDetailPage'))
+const CreateReviewPage = lazy(() => import('./pages/review/CreateReviewPage'))
+const CreateFlowerReview = lazy(() => import('./pages/review/CreateFlowerReview'))
+const CreateHashReview = lazy(() => import('./pages/review/CreateHashReview'))
+const CreateConcentrateReview = lazy(() => import('./pages/review/CreateConcentrateReview'))
+const CreateEdibleReview = lazy(() => import('./pages/review/CreateEdibleReview'))
+const EditReviewPage = lazy(() => import('./pages/review/EditReviewPage'))
+const LibraryPage = lazy(() => import('./pages/review/LibraryPage'))
+const GalleryPage = lazy(() => import('./pages/public/GalleryPage'))
+const StatsPage = lazy(() => import('./pages/account/StatsPage'))
+const SettingsPage = lazy(() => import('./pages/account/SettingsPage'))
+const ProfilePage = lazy(() => import('./pages/account/ProfilePage'))
+const ProfileSettingsPage = lazy(() => import('./pages/account/ProfileSettingsPage'))
+const AccountSetupPage = lazy(() => import('./pages/account/AccountSetupPage'))
+const AccountChoicePage = lazy(() => import('./pages/account/AccountChoicePage'))
+const AgeVerificationPage = lazy(() => import('./pages/auth/AgeVerificationPage'))
 const DisclaimerRDR = lazy(() => import('./components/legal/DisclaimerRDR'))
-const RegisterPage = lazy(() => import('./pages/RegisterPage'))
-const EmailVerificationPage = lazy(() => import('./pages/EmailVerificationPage'))
-const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
-const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
-const PaymentPage = lazy(() => import('./pages/PaymentPage'))
-const PreferencesPage = lazy(() => import('./pages/PreferencesPage'))
-const PhenoHuntPage = lazy(() => import('./pages/PhenoHuntPage'))
-const GeneticsManagementPage = lazy(() => import('./pages/GeneticsManagementPage'))
+const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'))
+const EmailVerificationPage = lazy(() => import('./pages/auth/EmailVerificationPage'))
+const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'))
+const PaymentPage = lazy(() => import('./pages/account/PaymentPage'))
+const PreferencesPage = lazy(() => import('./pages/account/PreferencesPage'))
+const PhenoHuntPage = lazy(() => import('./pages/public/PhenoHuntPage'))
+const GeneticsManagementPage = lazy(() => import('./pages/public/GeneticsManagementPage'))
 
 // Loading fallback component
 const PageLoader = () => (

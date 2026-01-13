@@ -1,20 +1,20 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useStore } from '../../store/useStore'
-import { useToast } from '../../components/ToastContainer'
+import { useToast } from '../../../components/shared/ToastContainer'
 import { hashReviewsService } from '../../services/apiService'
-import CreateReviewFormWrapper from '../../components/CreateReviewFormWrapper'
+import CreateReviewFormWrapper from '../../../components/account/CreateReviewFormWrapper'
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
 import SeparationPipelineSection from '../../components/SeparationPipelineSection'
-import AnalyticsSection from '../../components/AnalyticsSection'
-import VisualSection from '../../components/VisualSection'
-import OdorSection from '../../components/OdorSection'
-import TextureSection from '../../components/TextureSection'
-import TasteSection from '../../components/TasteSection'
-import EffectsSection from '../../components/EffectsSection'
+import AnalyticsSection from '../../../components/sections/AnalyticsSection'
+import VisualSection from '../../../components/sections/VisualSection'
+import OdorSection from '../../../components/sections/OdorSection'
+import TextureSection from '../../../components/sections/TextureSection'
+import TasteSection from '../../../components/sections/TasteSection'
+import EffectsSection from '../../../components/sections/EffectsSection'
 
-import CuringMaturationSection from '../../components/CuringMaturationSection'
+import CuringMaturationSection from '../../../components/sections/CuringMaturationSection'
 
 // Import hooks
 import { useHashForm } from './hooks/useHashForm'

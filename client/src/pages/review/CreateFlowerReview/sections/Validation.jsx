@@ -1,6 +1,6 @@
 import React from 'react'
-import LiquidCard from '../../../components/LiquidCard'
-import LiquidButton from '../../../components/LiquidButton'
+import LiquidCard from '../../../../components/ui/LiquidCard'
+import LiquidButton from '../../../../components/ui/LiquidButton'
 import { Save, Send } from 'lucide-react'
 
 export default function Validation({ formData, saving, onSave, onSubmit }) {

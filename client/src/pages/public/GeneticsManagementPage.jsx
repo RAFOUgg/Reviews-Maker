@@ -16,8 +16,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ReactFlowProvider } from 'reactflow';
 import useGeneticsStore from '../../store/useGeneticsStore';
-import UnifiedGeneticsCanvas from '../../components/UnifiedGeneticsCanvas';
-import TreeFormModal from '../../components/TreeFormModal';
+import UnifiedGeneticsCanvas from '../../components/genetics/UnifiedGeneticsCanvas';
+import TreeFormModal from '../../components/genetics/TreeFormModal';
 import './GeneticsManagementPage.css';
 
 const GeneticsManagementPage = () => {

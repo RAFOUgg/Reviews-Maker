@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import PipelineWithSidebar from '../../components/PipelineWithSidebar';
+import PipelineWithSidebar from '../../components/pipelines/views/PipelineWithSidebar';
 import { CONTENT_SCHEMAS } from '../../components/PipelineContentsSidebar';
-import LiquidCard from '../../components/LiquidCard';
+import LiquidCard from '../../components/ui/LiquidCard';
 
 /**
  * EXEMPLE D'INTÉGRATION - Pipeline Culture Fleurs

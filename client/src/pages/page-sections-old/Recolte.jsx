@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Scale, Droplet, Scissors, TrendingUp, Award } from 'lucide-react'
-import LiquidCard from '../../../components/LiquidCard'
+import LiquidCard from '../../components/ui/LiquidCard'
 import SegmentedControl from '../../../components/ui/SegmentedControl'
 
 /**

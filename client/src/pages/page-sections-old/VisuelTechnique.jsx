@@ -1,5 +1,5 @@
 import React from 'react'
-import LiquidCard from '../../../components/LiquidCard'
+import LiquidCard from '../../components/ui/LiquidCard'
 import ColorWheelPicker from '../../../components/ui/ColorWheelPicker'
 
 const VISUAL_FIELDS = [

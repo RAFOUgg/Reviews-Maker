@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Calendar, MapPin, AlertTriangle } from 'lucide-react'
 import { useStore } from '../../store/useStore'
-import { useToast } from '../../components/ToastContainer'
+import { useToast } from '../../components/shared/ToastContainer'
 import { usersService } from '../../services/apiService'
 
 /**

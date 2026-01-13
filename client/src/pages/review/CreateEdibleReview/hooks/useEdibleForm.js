@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { edibleReviewsService } from '../../../services/apiService'
-import { useToast } from '../../../components/ToastContainer'
+import { useToast } from '../../../../components/shared/ToastContainer'
 
 export function useEdibleForm(reviewId = null) {
     const toast = useToast()

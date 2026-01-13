@@ -1,14 +1,14 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useStore } from '../../store/useStore'
-import { useToast } from '../../components/ToastContainer'
+import { useToast } from '../../../components/shared/ToastContainer'
 import { edibleReviewsService } from '../../services/apiService'
-import CreateReviewFormWrapper from '../../components/CreateReviewFormWrapper'
+import CreateReviewFormWrapper from '../../../components/account/CreateReviewFormWrapper'
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
 import RecipePipelineSection from './sections/RecipePipelineSection'
-import TasteSection from '../../components/TasteSection'
-import EffectsSection from '../../components/EffectsSection'
+import TasteSection from '../../../components/sections/TasteSection'
+import EffectsSection from '../../../components/sections/EffectsSection'
 
 // Import hooks
 import { useEdibleForm } from './hooks/useEdibleForm'

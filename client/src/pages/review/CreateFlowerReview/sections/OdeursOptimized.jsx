@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CollapsibleMobileSection, MobileFormGroup } from '../../../components/layout/MobileReviewLayout';
-import { ResponsiveSlider, ResponsiveGrid } from '../../../components/ResponsiveSectionComponents';
+import { ResponsiveSlider, ResponsiveGrid } from '../../../../components/forms/helpers/ResponsiveSectionComponents';
 import { useResponsiveLayout } from '../../../hooks/useResponsiveLayout';
 import { useMobileFormSection } from '../../../hooks/useMobileFormSection';
 

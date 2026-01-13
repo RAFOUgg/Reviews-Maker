@@ -1,5 +1,5 @@
 import React from 'react'
-import LiquidCard from '../../../components/LiquidCard'
+import LiquidCard from '../../components/ui/LiquidCard'
 
 export default function Experience({ formData, handleChange }) {
     return (

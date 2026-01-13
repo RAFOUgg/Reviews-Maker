@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { CollapsibleMobileSection, MobileFormGroup } from '../../../components/MobileReviewLayout';
-import { ResponsiveSlider } from '../../../components/ResponsiveSectionComponents';
+import { CollapsibleMobileSection, MobileFormGroup } from '../../../../components/forms/helpers/MobileReviewLayout';
+import { ResponsiveSlider } from '../../../../components/forms/helpers/ResponsiveSectionComponents';
 import { useResponsiveLayout } from '../../../hooks/useResponsiveLayout';
 import { useMobileFormSection } from '../../../hooks/useMobileFormSection';
-import ColorWheelPicker from '../../../components/ColorWheelPicker';
+import ColorWheelPicker from '../../../../components/shared/charts/ColorWheelPicker';
 
 /**
  * VisuelTechniqueSection - Optimisée pour mobile et desktop

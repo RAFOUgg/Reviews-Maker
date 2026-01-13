@@ -1,5 +1,5 @@
 import React from 'react'
-import UnifiedPipeline from '../../../components/UnifiedPipeline'
+import UnifiedPipeline from '../../../../components/shared/orchard/UnifiedPipeline'
 
 /**
  * Section Pipeline Culture pour CreateFlowerReview

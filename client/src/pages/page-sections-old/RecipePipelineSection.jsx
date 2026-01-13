@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChefHat, Plus, X, ChevronDown, Cannabis } from 'lucide-react';
-import LiquidCard from '../../../components/LiquidCard';
+import LiquidCard from '../../components/ui/LiquidCard';
 
 const UNITS = ['g', 'kg', 'ml', 'L', 'c. à soupe', 'c. à café', 'pincée', 'pcs', 'autre'];
 const PREPARATION_ACTIONS = [

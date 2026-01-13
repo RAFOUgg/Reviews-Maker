@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useStore } from '../../store/useStore';
-import LiquidCard from '../../components/LiquidCard';
+import LiquidCard from '../../components/ui/LiquidCard';
 
 // Types de produits avec icônes
 const PRODUCT_TYPES = [

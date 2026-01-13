@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { flowerReviewsService } from '../../../services/apiService'
-import { useToast } from '../../../components/ToastContainer'
+import { useToast } from '../../../../components/shared/ToastContainer'
 
 /**
  * Custom hook pour gérer le formulaire CreateFlowerReview

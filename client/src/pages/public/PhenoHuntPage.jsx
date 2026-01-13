@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ReactFlowProvider } from 'reactflow';
 import { usePhenoHuntStore } from '../../store/index';
 import SidebarHierarchique from '../../components/SidebarHierarchique';
-import CanevasPhenoHunt from '../../components/CanevasPhenoHunt';
+import CanevasPhenoHunt from '../../components/genetics/CanevasPhenoHunt';
 import { Plus, Settings, Download, Upload, Home } from 'lucide-react';
 
 /**

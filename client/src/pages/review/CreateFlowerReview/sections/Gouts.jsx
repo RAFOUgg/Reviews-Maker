@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import LiquidCard from '../../../components/LiquidCard'
+import LiquidCard from '../../../../components/ui/LiquidCard'
 
 export default function Gouts({ formData, handleChange }) {
     const [tastes, setTastes] = useState([])

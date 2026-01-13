@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useToast } from '../../../components/ToastContainer'
+import { useToast } from '../../../../components/shared/ToastContainer'
 
 /**
  * Custom hook pour gérer l'upload de photos

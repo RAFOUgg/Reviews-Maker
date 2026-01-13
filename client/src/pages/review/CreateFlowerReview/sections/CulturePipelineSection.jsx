@@ -4,7 +4,7 @@
  */
 
 import React, { useRef, useEffect } from 'react';
-import LiquidCard from '../../../components/LiquidCard';
+import LiquidCard from '../../../../components/ui/LiquidCard';
 import CulturePipelineDragDrop from '../../../components/CulturePipelineDragDrop';
 
 const CulturePipelineSection = ({ data = {}, onChange }) => {

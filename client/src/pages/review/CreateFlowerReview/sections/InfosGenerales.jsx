@@ -1,8 +1,8 @@
 import React from 'react'
 import { Camera, X } from 'lucide-react'
-import LiquidCard from '../../../components/LiquidCard'
-import LiquidButton from '../../../components/LiquidButton'
-import MultiSelectPills from '../../../components/MultiSelectPills'
+import LiquidCard from '../../../../components/ui/LiquidCard'
+import LiquidButton from '../../../../components/ui/LiquidButton'
+import MultiSelectPills from '../../../../components/shared/ui-helpers/MultiSelectPills'
 
 const PHOTO_TAGS = ['Macro', 'Full plant', 'Bud sec', 'Trichomes', 'Drying', 'Curing']
 
