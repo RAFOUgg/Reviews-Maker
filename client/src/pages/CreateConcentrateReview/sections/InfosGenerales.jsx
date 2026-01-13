@@ -1,6 +1,7 @@
 import React from 'react'
 import { Camera } from 'lucide-react'
-import { LiquidInput, LiquidSelect } from '../../../components/liquid'
+import LiquidInput from '../../../components/LiquidInput'
+import LiquidSelect from '../../../components/LiquidSelect'
 
 const CONCENTRATE_TYPES = [
     'Rosin',

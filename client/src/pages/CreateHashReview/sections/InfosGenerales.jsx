@@ -1,6 +1,6 @@
 import React from 'react'
 import { Camera } from 'lucide-react'
-import { LiquidInput } from '../../../components/liquid'
+import LiquidInput from '../../../components/LiquidInput'
 
 export default function InfosGenerales({ formData, handleChange, photos, handlePhotoUpload, removePhoto }) {
     return (
