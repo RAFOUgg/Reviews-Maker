@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import useGeneticsStore from '../../store/useGeneticsStore';
+import useGeneticsStore from '../store/useGeneticsStore';
 import './TreeToolbar.css';
 
 const TreeToolbar = ({ treeId }) => {
@@ -117,5 +117,6 @@ const TreeToolbar = ({ treeId }) => {
 };
 
 export default TreeToolbar;
+
 
 

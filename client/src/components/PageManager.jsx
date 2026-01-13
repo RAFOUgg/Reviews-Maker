@@ -4,7 +4,7 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from 
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import PropTypes from 'prop-types';
-import { useOrchardPagesStore } from '../../store/orchardPagesStore';
+import { useOrchardPagesStore } from '../store/orchardPagesStore';
 
 /**
  * Composant pour une page triable dans la liste
@@ -286,4 +286,5 @@ export default function PageManager() {
         </div>
     );
 }
+
 

@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toPng, toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
-import { useOrchardStore } from '../../store/orchardStore';
-import { useStore } from '../../store/useStore';
+import { useOrchardStore } from '../store/orchardStore';
+import { useStore } from '../store/useStore';
 import { preloadFonts, preloadSpecificFont } from '../../utils/fontPreloader.js';
 import {
     getExportFormatsForUI,
@@ -719,4 +719,5 @@ export default function ExportModal({ onClose }) {
         </>
     );
 }
+
 

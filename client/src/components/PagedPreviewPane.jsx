@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
-import { useOrchardStore } from '../../store/orchardStore';
-import { useOrchardPagesStore } from '../../store/orchardPagesStore';
+import { useOrchardStore } from '../store/orchardStore';
+import { useOrchardPagesStore } from '../store/orchardPagesStore';
 import TemplateRenderer from './TemplateRenderer';
 
 /**
@@ -368,4 +368,5 @@ export default function PagedPreviewPane() {
         </div>
     );
 }
+
 

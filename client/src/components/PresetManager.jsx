@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useOrchardStore } from '../../store/orchardStore';
+import { useOrchardStore } from '../store/orchardStore';
 
 export default function PresetManager() {
     const presets = useOrchardStore((state) => state.presets);
@@ -249,4 +249,5 @@ export default function PresetManager() {
         </div>
     );
 }
+
 

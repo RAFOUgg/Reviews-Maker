@@ -29,7 +29,7 @@ import ReactFlow, {
     MarkerType
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import useGeneticsStore from '../../store/useGeneticsStore';
+import useGeneticsStore from '../store/useGeneticsStore';
 import CultivarNode from './nodes/CultivarNode';
 import NodeContextMenu from './menus/NodeContextMenu';
 import EdgeContextMenu from './menus/EdgeContextMenu';
@@ -309,4 +309,5 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
 };
 
 export default UnifiedGeneticsCanvas;
+
 

@@ -1,10 +1,10 @@
 import PropTypes from 'prop-types';
-import { useOrchardStore } from '../../store/orchardStore';
-import ModernCompactTemplate from './templates/ModernCompactTemplate';
-import DetailedCardTemplate from './templates/DetailedCardTemplate';
-import BlogArticleTemplate from './templates/BlogArticleTemplate';
-import SocialStoryTemplate from './templates/SocialStoryTemplate';
-import CustomTemplate from './templates/CustomTemplate';
+import { useOrchardStore } from '../store/orchardStore';
+import ModernCompactTemplate from './ModernCompactTemplate';
+import DetailedCardTemplate from './DetailedCardTemplate';
+import BlogArticleTemplate from './BlogArticleTemplate';
+import SocialStoryTemplate from './SocialStoryTemplate';
+import CustomTemplate from './CustomTemplate';
 
 // Mapping des templates
 const TEMPLATES = {

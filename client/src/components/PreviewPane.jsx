@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useOrchardStore } from '../../store/orchardStore';
+import { useOrchardStore } from '../store/orchardStore';
 import TemplateRenderer from './TemplateRenderer';
 
 export default function PreviewPane() {
@@ -77,4 +77,5 @@ export default function PreviewPane() {
         </div>
     );
 }
+
 

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useOrchardStore } from '../../store/orchardStore';
+import { useOrchardStore } from '../store/orchardStore';
 import TemplateSelector from './controls/TemplateSelector';
 import TypographyControls from './controls/TypographyControls';
 import ColorPaletteControls from './controls/ColorPaletteControls';
@@ -81,4 +81,5 @@ export default function ConfigPane() {
         </div>
     );
 }
+
 

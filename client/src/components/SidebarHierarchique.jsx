@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { usePhenoHuntStore } from '../../store/index';
+import { usePhenoHuntStore } from '../store/index';
 import { Plus, Trash2, Copy, ChevronDown, ChevronRight, Leaf, FolderOpen } from 'lucide-react';
 
 /**
@@ -205,4 +205,5 @@ function ActionButton({ icon: Icon, title, onClick, className }) {
         </button>
     );
 }
+
 

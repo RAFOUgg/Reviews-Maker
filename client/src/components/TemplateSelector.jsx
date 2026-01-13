@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useOrchardStore, DEFAULT_TEMPLATES } from '../../store/orchardStore';
+import { useOrchardStore, DEFAULT_TEMPLATES } from '../store/orchardStore';
 
 export default function TemplateSelector() {
     const config = useOrchardStore((state) => state.config);
@@ -119,5 +119,6 @@ export default function TemplateSelector() {
         </div>
     );
 }
+
 
 

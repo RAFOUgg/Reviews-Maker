@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, closestCenter } from '@dnd-kit/core';
-import { useOrchardStore } from '../../store/orchardStore';
+import { useOrchardStore } from '../store/orchardStore';
 import ConfigPane from './ConfigPane';
 import PreviewPane from './PreviewPane';
 import PagedPreviewPane from './PagedPreviewPane';
@@ -10,7 +10,7 @@ import CustomLayoutPane from './CustomLayoutPane';
 import ContentPanel from './ContentPanel';
 import PageManager from './PageManager';
 import ExportModal from './ExportModal';
-import { useOrchardPagesStore } from '../../store/orchardPagesStore';
+import { useOrchardPagesStore } from '../store/orchardPagesStore';
 
 /**
  * Normalise les données d'une review pour s'assurer que tous les champs
@@ -677,4 +677,5 @@ OrchardPanel.propTypes = {
     onClose: PropTypes.func.isRequired,
     onPresetApplied: PropTypes.func // Callback optionnel pour sauvegarder le preset dans le parent
 };
+
 

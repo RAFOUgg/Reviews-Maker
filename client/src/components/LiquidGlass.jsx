@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { useStore } from '../../store/useStore';
+import { useStore } from '../store/useStore';
 import '../../assets/liquid-glass.css';
 
 /**
@@ -45,4 +45,5 @@ export const LiquidGlass = ({
 };
 
 export default LiquidGlass;
+
 
