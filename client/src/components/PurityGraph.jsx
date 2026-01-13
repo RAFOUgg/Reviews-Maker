@@ -373,3 +373,4 @@ function StatsCard({ icon, label, value, color = 'text-white', compact = false }
 
 export default PurityComparisonGraph
 
+

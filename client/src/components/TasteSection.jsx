@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TASTE_FAMILIES, getAllTasteNotes, TASTE_INTENSITY_LEVELS, AGGRESSIVENESS_LEVELS } from '../../data/tasteNotes';
+import { TASTE_FAMILIES, getAllTasteNotes, TASTE_INTENSITY_LEVELS, AGGRESSIVENESS_LEVELS } from '../data/tasteNotes';
 import { Coffee, Sparkles, ArrowDown, ArrowUp, Wind, Plus, X } from 'lucide-react';
 import WhiteSlider from './WhiteSlider';
 
@@ -244,5 +244,7 @@ export default function TasteSection({ productType, formData = {}, handleChange 
         </div>
     );
 }
+
+
 
 

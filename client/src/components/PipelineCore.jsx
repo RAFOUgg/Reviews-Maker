@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Info, TrendingUp, Download } from 'lucide-react';
 import { LiquidCard } from './liquid';
 import PipelineCellEditor from './PipelineCellEditor';
-import { INTERVAL_TYPES } from '../../types/pipelineTypes';
+import { INTERVAL_TYPES } from '../types/pipelineTypes';
 
 /**
  * PipelineCore - Timeline universelle GitHub-style
@@ -297,5 +297,7 @@ const PipelineCore = ({
 };
 
 export default PipelineCore;
+
+
 
 

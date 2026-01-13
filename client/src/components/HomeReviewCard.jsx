@@ -303,3 +303,4 @@ HomeReviewCard.propTypes = {
     onAuthorClick: PropTypes.func.isRequired
 }
 
+

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { GOUTS_NOTES } from '../../data/flowerData'
+import { GOUTS_NOTES } from '../data/flowerData'
 import { Search, X } from 'lucide-react'
 
 /**
@@ -212,5 +212,7 @@ export default function Gouts({ data, onChange, errors = {} }) {
         </div>
     )
 }
+
+
 
 

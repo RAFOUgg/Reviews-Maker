@@ -129,3 +129,4 @@ const PipelineCellBadge = ({ cellData, sectionId }) => {
 
 export default PipelineCellBadge;
 
+

@@ -84,3 +84,4 @@ ProductTypeCards.propTypes = {
     onCreateReview: PropTypes.func.isRequired
 }
 
+

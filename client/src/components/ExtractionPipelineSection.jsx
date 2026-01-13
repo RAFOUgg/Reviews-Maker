@@ -116,3 +116,4 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
 
 export default ExtractionPipelineSection;
 
+

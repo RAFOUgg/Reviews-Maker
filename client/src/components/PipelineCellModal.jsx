@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, Trash2, Copy } from 'lucide-react';
 import { LiquidButton } from './liquid';
-import { CULTURE_VALUES } from '../../data/formValues';
+import { CULTURE_VALUES } from '../data/formValues';
 
 /**
  * PipelineCellModal - Modal contextuel d'édition d'une case
@@ -440,5 +440,7 @@ const PipelineCellModal = ({
 };
 
 export default PipelineCellModal;
+
+
 
 

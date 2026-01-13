@@ -273,3 +273,4 @@ WatermarkEditor.propTypes = {
 
 export default WatermarkEditor;
 
+

@@ -11,7 +11,7 @@ import { useAccountType } from '../hooks/useAccountType';
 import { FeatureGate } from './account';
 import DragDropExport from './DragDropExport';
 import WatermarkEditor from './WatermarkEditor';
-import { exportPipelineToGIF, downloadGIF } from '../../utils/GIFExporter';
+import { exportPipelineToGIF, downloadGIF } from '../utils/GIFExporter';
 
 /**
  * ExportMaker - Gestionnaire final d'exports
@@ -397,5 +397,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 };
 
 export default ExportMaker;
+
+
 
 

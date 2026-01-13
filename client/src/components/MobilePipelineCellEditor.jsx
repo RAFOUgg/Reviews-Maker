@@ -286,3 +286,4 @@ const MobilePipelineCellEditor = ({
 
 export default MobilePipelineCellEditor;
 
+

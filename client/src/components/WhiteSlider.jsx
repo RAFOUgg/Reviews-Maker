@@ -81,3 +81,4 @@ WhiteSlider.propTypes = {
     className: PropTypes.string
 }
 
+

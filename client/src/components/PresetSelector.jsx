@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookTemplate, GitCompare, X, Check, Info } from 'lucide-react';
-import { VISUAL_PRESETS, PRESET_CATEGORIES, getPreset } from '../../data/visualPresets';
+import { VISUAL_PRESETS, PRESET_CATEGORIES, getPreset } from '../data/visualPresets';
 
 /**
  * PresetSelector - Composant pour sélectionner des presets visuels
@@ -214,4 +214,6 @@ const getColorHex = (colorId) => {
 };
 
 export default PresetSelector;
+
+
 

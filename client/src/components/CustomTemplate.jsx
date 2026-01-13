@@ -129,3 +129,4 @@ CustomTemplate.propTypes = {
     dimensions: PropTypes.object.isRequired
 };
 
+

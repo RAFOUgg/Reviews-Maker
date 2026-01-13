@@ -11,7 +11,7 @@ import {
     extractExtraData,
     colorWithOpacity,
     getResponsiveAdjustments,
-} from '../../utils/orchardHelpers';
+} from '../utils/orchardHelpers';
 
 /**
  * BlogArticleTemplate - Template article de blog professionnel
@@ -419,5 +419,7 @@ BlogArticleTemplate.propTypes = {
     reviewData: PropTypes.object.isRequired,
     dimensions: PropTypes.object,
 };
+
+
 
 

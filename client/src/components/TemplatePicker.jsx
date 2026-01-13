@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { listTemplates, copyTemplate } from '../../lib/templateApi'
+import { listTemplates, copyTemplate } from '../lib/templateApi'
 
 export default function TemplatePicker({ onSelect }) {
   const [templates, setTemplates] = useState([])
@@ -27,4 +27,7 @@ export default function TemplatePicker({ onSelect }) {
     </div>
   )
 }
+
+
+
 

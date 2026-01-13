@@ -78,3 +78,4 @@ lightType: data.environment?.lightType || 'led',
 
 export default CulturePipelineSection;
 
+

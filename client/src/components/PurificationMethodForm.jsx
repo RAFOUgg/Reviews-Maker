@@ -10,7 +10,7 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Save, AlertCircle, Beaker, Droplet, Flame, Wind, Zap } from 'lucide-react'
-import { PURIFICATION_SIDEBAR_CONTENT, shouldShowField } from '../../config/purificationSidebarContent'
+import { PURIFICATION_SIDEBAR_CONTENT, shouldShowField } from '../config/purificationSidebarContent'
 import FieldRenderer from './FieldRenderer'
 
 /**
@@ -283,4 +283,7 @@ export function PurificationMethodModal({ isOpen, onClose, onSave, initialData =
 }
 
 export default PurificationMethodModal
+
+
+
 

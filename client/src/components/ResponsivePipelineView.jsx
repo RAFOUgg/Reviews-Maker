@@ -34,3 +34,4 @@ const ResponsivePipelineView = (props) => {
 
 export default ResponsivePipelineView;
 
+

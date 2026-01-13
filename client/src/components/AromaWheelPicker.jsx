@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import PropTypes from 'prop-types'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Search, Filter } from 'lucide-react'
-import { AROMA_CATEGORIES, AROMAS, getAromasByCategory, getSubcategories } from '../../data/aromasWheel'
+import { AROMA_CATEGORIES, AROMAS, getAromasByCategory, getSubcategories } from '../data/aromasWheel'
 
 /**
  * AromaWheelPicker - Sélecteur d'arômes CATA (Check-All-That-Apply)
@@ -296,4 +296,6 @@ AromaWheelPicker.propTypes = {
     helper: PropTypes.string,
     className: PropTypes.string
 }
+
+
 

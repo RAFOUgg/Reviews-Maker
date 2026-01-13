@@ -506,3 +506,4 @@ ContentPanel.propTypes = {
     onFieldSelect: PropTypes.func
 };
 
+

@@ -361,3 +361,4 @@ export default function KYCUploader({ userId, accountType }) {
     )
 }
 
+

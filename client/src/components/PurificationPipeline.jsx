@@ -162,3 +162,4 @@ PurificationPipeline.propTypes = {
     extractionPipeline: PropTypes.array
 };
 
+

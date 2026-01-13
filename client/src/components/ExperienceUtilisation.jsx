@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { EXPERIENCE_VALUES } from '../../data/formValues'
+import { EXPERIENCE_VALUES } from '../data/formValues'
 
 /**
  * ExperienceUtilisation - Section pour documenter les tests de consommation
@@ -271,4 +271,6 @@ export default function ExperienceUtilisation({ formData = {}, handleChange = ()
         </div>
     )
 }
+
+
 

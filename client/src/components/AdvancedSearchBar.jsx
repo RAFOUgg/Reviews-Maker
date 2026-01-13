@@ -164,3 +164,4 @@ AdvancedSearchBar.propTypes = {
     placeholder: PropTypes.string
 }
 
+

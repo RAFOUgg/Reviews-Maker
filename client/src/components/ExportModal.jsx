@@ -4,14 +4,14 @@ import { toPng, toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { useOrchardStore } from '../store/orchardStore';
 import { useStore } from '../store/useStore';
-import { preloadFonts, preloadSpecificFont } from '../../utils/fontPreloader.js';
+import { preloadFonts, preloadSpecificFont } from '../utils/fontPreloader.js';
 import {
     getExportFormatsForUI,
     getMaxExportQuality,
     canExportFormat,
     getAccountFeatures,
     ACCOUNT_TYPES
-} from '../../config/exportConfig';
+} from '../config/exportConfig';
 
 export default function ExportModal({ onClose }) {
     const reviewData = useOrchardStore((state) => state.reviewData);
@@ -719,5 +719,8 @@ export default function ExportModal({ onClose }) {
         </>
     );
 }
+
+
+
 
 

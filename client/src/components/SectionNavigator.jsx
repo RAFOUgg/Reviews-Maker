@@ -40,3 +40,4 @@ SectionNavigator.propTypes = {
     onSectionClick: PropTypes.func.isRequired
 }
 
+

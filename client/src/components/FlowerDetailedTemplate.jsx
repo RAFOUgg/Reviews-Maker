@@ -96,3 +96,4 @@ export default function FlowerDetailedTemplate({ review, customModules, isDark =
     )
 }
 
+

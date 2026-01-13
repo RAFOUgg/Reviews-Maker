@@ -112,3 +112,4 @@ export default function CategoryRatings({ value, onChange, categories, formData 
     );
 }
 
+

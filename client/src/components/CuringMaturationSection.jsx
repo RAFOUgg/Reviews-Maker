@@ -7,8 +7,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Timer, Thermometer, Droplets, Package, ChevronDown, AlertCircle } from 'lucide-react';
-import LiquidCard from '../../LiquidCard';
-import { INTERVAL_TYPES } from '../../../types/pipelineTypes';
+import LiquidCard from './LiquidCard';
+import { INTERVAL_TYPES } from '../types/pipelineTypes';
 import CuringPipelineDragDrop from './CuringPipelineDragDrop';
 
 const CONTAINER_TYPES = [
@@ -368,5 +368,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
 };
 
 export default CuringMaturationSection;
+
+
 
 

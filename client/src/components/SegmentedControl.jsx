@@ -92,3 +92,4 @@ SegmentedControl.propTypes = {
     disabled: PropTypes.bool
 }
 
+

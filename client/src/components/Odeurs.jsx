@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ODEURS_NOTES } from '../../data/flowerData'
+import { ODEURS_NOTES } from '../data/flowerData'
 import { Search, X } from 'lucide-react'
 
 /**
@@ -176,5 +176,7 @@ export default function Odeurs({ data, onChange, errors = {} }) {
         </div>
     )
 }
+
+
 
 

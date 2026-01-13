@@ -223,3 +223,4 @@ export const CuringMultiGraph = ({ evolutionData = {}, currentValues = {} }) => 
 
 export default CuringEvolutionGraph
 
+
