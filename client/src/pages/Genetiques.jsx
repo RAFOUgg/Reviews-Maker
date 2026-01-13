@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Leaf, Info, Plus, Trash2, Edit2, FileText, FolderTree, Upload } from 'lucide-react'
 import { ReactFlowProvider } from 'reactflow'
 import LiquidCard from '../../../components/LiquidCard'
-import PhenoCodeGenerator from '../../../components/genetics/PhenoCodeGenerator'
-import UnifiedGeneticsCanvas from '../../../components/genetics/UnifiedGeneticsCanvas'
+import PhenoCodeGenerator from '../../../components/PhenoCodeGenerator'
+import UnifiedGeneticsCanvas from '../../../components/UnifiedGeneticsCanvas'
 import useGeneticsStore from '../../../store/useGeneticsStore'
 import { useStore } from '../../../store/useStore'
 
@@ -464,3 +464,4 @@ export default function Genetiques({ formData, handleChange }) {
         </LiquidCard>
     )
 }
+
