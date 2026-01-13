@@ -60,6 +60,49 @@ export function validateJSON(value, defaultValue = null) {
     try {
         return JSON.parse(value)
     } catch (error) {
+        console.error('Invalid JSON:', error)
+        return defaultValue
+    }
+}
+
+/**
+ * Valide un booléen
+ * @param {any} value - Valeur à valider
+ * @param {boolean} defaultValue - Valeur par défaut
+ * @returns {boolean} - Booléen validé
+ */
+export function validateBoolean(value, defaultValue = false) {
+    if (typeof value === 'boolean') {
+        return value
+    }
+
+    if (typeof value === 'string') {
+        return value.toLowerCase() === 'true'
+    }
+
+    return defaultValue
+}
+
+/**
+ * Valide un tableau de chaînes
+ * @param {any} value - Valeur à valider
+ * @param {number} maxLength - Nombre maximum d'éléments
+ * @returns {string[]|null} - Tableau validé ou null
+ */
+export function validateStringArray(value, maxLength = 100) {
+    const parsed = validateJSON(value, null)
+
+    if (!Array.isArray(parsed)) {
+        return null
+    }
+
+    // Vérifier que tous les éléments sont des chaînes
+    if (!parsed.every(item => typeof item === 'string')) {
+        return null
+    }
+
+    // Limiter la taille du tableau
+    return parsed.slice(0, maxLength)
 }
 
 /**
