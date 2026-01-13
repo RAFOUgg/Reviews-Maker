@@ -6,7 +6,6 @@
 
 import React from 'react';
 import { Handle, Position } from 'reactflow';
-import './CultivarNode.css';
 
 const CultivarNode = ({ data, selected }) => {
     return (

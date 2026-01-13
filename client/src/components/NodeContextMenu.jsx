@@ -6,7 +6,6 @@
 
 import React, { useEffect, useRef } from 'react';
 import useGeneticsStore from '../store/useGeneticsStore';
-import './ContextMenu.css';
 
 const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly }) => {
     const store = useGeneticsStore();
