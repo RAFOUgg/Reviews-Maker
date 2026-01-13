@@ -128,3 +128,4 @@ CustomTemplate.propTypes = {
     reviewData: PropTypes.object.isRequired,
     dimensions: PropTypes.object.isRequired
 };
+

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { EFFETS } from '../../data/'flowerData'
+import { EFFETS } from '../../data/flowerData'
 import { Search, X, Filter } from 'lucide-react'
 
 /**
@@ -234,4 +234,5 @@ export default function Effets({ data, onChange, errors = {} }) {
         </div>
     )
 }
+
 

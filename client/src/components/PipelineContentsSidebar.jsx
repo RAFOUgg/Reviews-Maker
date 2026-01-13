@@ -336,3 +336,4 @@ const PipelineContentsSidebar = ({
 };
 
 export default PipelineContentsSidebar;
+

@@ -296,3 +296,4 @@ export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
         </div>
     )
 }
+

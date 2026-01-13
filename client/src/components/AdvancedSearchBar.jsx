@@ -163,3 +163,4 @@ AdvancedSearchBar.propTypes = {
     onSearch: PropTypes.func.isRequired,
     placeholder: PropTypes.string
 }
+

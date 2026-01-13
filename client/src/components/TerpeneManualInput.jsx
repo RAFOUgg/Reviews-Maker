@@ -113,3 +113,4 @@ export default function TerpeneManualInput({ data = {}, onChange }) {
         </LiquidCard>
     )
 }
+

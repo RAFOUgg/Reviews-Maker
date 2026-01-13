@@ -110,3 +110,4 @@ export default function PipelineCuring({ data, onChange }) {
         </div>
     )
 }
+

@@ -47,3 +47,4 @@ CategoryRatingSummary.propTypes = {
     }).isRequired,
     productType: PropTypes.oneOf(['Fleur', 'Hash', 'Concentré', 'Comestible'])
 }
+

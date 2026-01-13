@@ -151,3 +151,4 @@ export default function LegalNoticeModal({ isOpen, onClose }) {
         document.body
     )
 }
+

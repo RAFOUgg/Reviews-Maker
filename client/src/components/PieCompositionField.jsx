@@ -143,3 +143,4 @@ const PieCompositionField = ({ value, onChange, components = [] }) => {
 }
 
 export default PieCompositionField
+

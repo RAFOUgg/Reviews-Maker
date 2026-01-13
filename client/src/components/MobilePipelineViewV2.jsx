@@ -299,3 +299,4 @@ const MobilePipelineViewV2 = ({
 };
 
 export default MobilePipelineViewV2;
+

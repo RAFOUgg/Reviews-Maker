@@ -77,3 +77,4 @@ lightType: data.environment?.lightType || 'led',
                     temperature: data.environment?.temperature || 24,
 
 export default CulturePipelineSection;
+

@@ -208,3 +208,4 @@ export default function TagCloud({
 
 // Export des couleurs pour réutilisation
 export { TAG_COLORS, GRADIENT_COLORS };
+

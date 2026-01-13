@@ -3,7 +3,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useOrchardStore } from '../../store/'orchardStore';
+import { useOrchardStore } from '../../store/orchardStore';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONFIGURATION COMPLÈTE DES MODULES PAR CATÉGORIE
@@ -735,4 +735,5 @@ export default function ContentModuleControls() {
         </div>
     );
 }
+
 

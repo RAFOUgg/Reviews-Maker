@@ -214,3 +214,4 @@ const getColorHex = (colorId) => {
 };
 
 export default PresetSelector;
+

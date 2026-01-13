@@ -309,3 +309,4 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
 };
 
 export default UnifiedGeneticsCanvas;
+

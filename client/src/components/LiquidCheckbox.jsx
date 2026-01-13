@@ -118,3 +118,4 @@ const LiquidCheckbox = forwardRef(({
 LiquidCheckbox.displayName = 'LiquidCheckbox';
 
 export default LiquidCheckbox;
+

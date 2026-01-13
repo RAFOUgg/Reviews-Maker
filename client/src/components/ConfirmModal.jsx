@@ -27,3 +27,4 @@ const ConfirmModal = ({ open, title = 'Confirmer', message = '', confirmLabel = 
 };
 
 export default ConfirmModal;
+

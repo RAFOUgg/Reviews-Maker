@@ -58,3 +58,4 @@ HeroSection.propTypes = {
     }),
     isAuthenticated: PropTypes.bool.isRequired
 }
+

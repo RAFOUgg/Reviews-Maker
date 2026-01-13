@@ -313,3 +313,4 @@ FieldRendererClean.propTypes = {
     value: PropTypes.any,
     compact: PropTypes.bool
 };
+

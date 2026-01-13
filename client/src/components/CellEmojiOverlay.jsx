@@ -149,3 +149,4 @@ const CellEmojiOverlay = ({ cellData, sidebarContent, onShowDetails }) => {
 };
 
 export default CellEmojiOverlay;
+

@@ -241,3 +241,4 @@ export default function Genetiques({ data, onChange, errors = {} }) {
         </div>
     )
 }
+

@@ -677,3 +677,4 @@ OrchardPanel.propTypes = {
     onClose: PropTypes.func.isRequired,
     onPresetApplied: PropTypes.func // Callback optionnel pour sauvegarder le preset dans le parent
 };
+

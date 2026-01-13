@@ -83,3 +83,4 @@ ProductTypeCards.propTypes = {
     isAuthenticated: PropTypes.bool.isRequired,
     onCreateReview: PropTypes.func.isRequired
 }
+

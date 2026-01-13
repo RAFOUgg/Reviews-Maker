@@ -195,3 +195,4 @@ export default function AnalyticsPDF({ data, onChange, errors = {} }) {
         </div>
     )
 }
+

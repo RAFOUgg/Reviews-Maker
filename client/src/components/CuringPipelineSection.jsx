@@ -117,3 +117,4 @@ const CuringPipelineSection = ({ data = {}, onChange }) => {
 
 export default CuringPipelineSection;
 
+

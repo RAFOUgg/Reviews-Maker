@@ -46,3 +46,4 @@ const PipelineCell = ({
 };
 
 export default PipelineCell;
+

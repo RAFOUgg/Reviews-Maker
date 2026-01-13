@@ -12,3 +12,4 @@ const LegalConsentGate = ({ children }) => {
 }
 
 export default LegalConsentGate
+

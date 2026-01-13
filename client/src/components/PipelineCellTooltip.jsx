@@ -86,3 +86,4 @@ const PipelineCellTooltip = ({ cellData, sectionLabel, visible, position }) => {
 };
 
 export default PipelineCellTooltip;
+

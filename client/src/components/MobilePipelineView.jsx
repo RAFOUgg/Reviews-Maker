@@ -309,3 +309,4 @@ const MobilePipelineView = ({
 };
 
 export default MobilePipelineView;
+

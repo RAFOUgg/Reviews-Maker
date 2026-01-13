@@ -297,3 +297,4 @@ export default function PresetsPanel({ sidebarContent, onPresetsSelected, onDrag
         </div>
     )
 }
+

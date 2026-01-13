@@ -266,3 +266,4 @@ export const ResponsiveSlider = ({
 };
 
 export default ResponsiveSection;
+

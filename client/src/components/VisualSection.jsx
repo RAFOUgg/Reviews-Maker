@@ -5,7 +5,7 @@ import {
     VISUAL_QUALITY_LEVELS,
     INVERTED_LABELS,
     TRANSPARENCY_LEVELS
-} from '../../data/'visualOptions';
+} from '../../data/visualOptions';
 import WhiteSlider from './WhiteSlider';
 
 /**
@@ -277,5 +277,6 @@ export default function VisualSection({ productType, formData = {}, handleChange
         </div>
     );
 }
+
 
 

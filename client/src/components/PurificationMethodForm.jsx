@@ -283,3 +283,4 @@ export function PurificationMethodModal({ isOpen, onClose, onSave, initialData =
 }
 
 export default PurificationMethodModal
+

@@ -325,3 +325,4 @@ CustomLayoutPane.propTypes = {
     onLayoutChange: PropTypes.func,
     isCanvasOver: PropTypes.bool
 };
+

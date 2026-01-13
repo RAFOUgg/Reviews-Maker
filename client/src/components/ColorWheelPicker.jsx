@@ -330,3 +330,4 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 5 }) => {
 };
 
 export default ColorWheelPicker;
+

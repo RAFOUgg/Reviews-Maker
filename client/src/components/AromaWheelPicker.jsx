@@ -296,3 +296,4 @@ AromaWheelPicker.propTypes = {
     helper: PropTypes.string,
     className: PropTypes.string
 }
+

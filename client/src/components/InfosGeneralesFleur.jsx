@@ -255,3 +255,4 @@ export default function InfosGeneralesFleur({ data, onChange, errors = {} }) {
         </div>
     )
 }
+

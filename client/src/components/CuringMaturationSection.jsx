@@ -369,3 +369,4 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
 
 export default CuringMaturationSection;
 
+

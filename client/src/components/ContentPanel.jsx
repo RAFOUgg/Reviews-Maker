@@ -505,3 +505,4 @@ ContentPanel.propTypes = {
     placedFields: PropTypes.array,
     onFieldSelect: PropTypes.func
 };
+

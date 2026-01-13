@@ -138,3 +138,4 @@ export default function ThemeModal({ isOpen, onClose, currentTheme, onThemeChang
         document.body
     )
 }
+

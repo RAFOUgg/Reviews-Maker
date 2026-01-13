@@ -74,3 +74,4 @@ const MultiContentAssignModal = ({ isOpen, onClose, contents = [], targetCells =
 };
 
 export default MultiContentAssignModal;
+

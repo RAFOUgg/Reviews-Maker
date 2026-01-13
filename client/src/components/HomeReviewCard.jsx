@@ -302,3 +302,4 @@ HomeReviewCard.propTypes = {
     onDislike: PropTypes.func.isRequired,
     onAuthorClick: PropTypes.func.isRequired
 }
+

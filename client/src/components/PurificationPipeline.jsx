@@ -161,3 +161,4 @@ PurificationPipeline.propTypes = {
     availableMethods: PropTypes.arrayOf(PropTypes.string),
     extractionPipeline: PropTypes.array
 };
+

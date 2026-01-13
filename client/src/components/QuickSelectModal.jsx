@@ -64,3 +64,4 @@ export default function QuickSelectModal({ open, onClose, items = [], onApply, m
         </div>
     )
 }
+

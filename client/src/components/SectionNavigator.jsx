@@ -39,3 +39,4 @@ SectionNavigator.propTypes = {
     currentIndex: PropTypes.number.isRequired,
     onSectionClick: PropTypes.func.isRequired
 }
+

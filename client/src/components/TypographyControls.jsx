@@ -1,4 +1,4 @@
-import { useOrchardStore } from '../../store/'orchardStore';
+import { useOrchardStore } from '../../store/orchardStore';
 
 const FONT_FAMILIES = [
     'Inter',
@@ -153,4 +153,5 @@ export default function TypographyControls() {
         </div>
     );
 }
+
 

@@ -131,3 +131,4 @@ export default function PipelineWithCultivars({ value, onChange, choices = [], c
         </div>
     );
 }
+

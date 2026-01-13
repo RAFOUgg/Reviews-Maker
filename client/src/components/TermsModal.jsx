@@ -128,3 +128,4 @@ export default function TermsModal({ isOpen, onClose, onAccept }) {
         document.body
     )
 }
+

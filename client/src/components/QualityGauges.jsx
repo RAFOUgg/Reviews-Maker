@@ -368,3 +368,4 @@ export default function QualityGauges({
 
     return null;
 }
+

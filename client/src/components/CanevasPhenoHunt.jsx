@@ -340,3 +340,4 @@ function NodeInfoPanel({ node }) {
         </div>
     );
 }
+

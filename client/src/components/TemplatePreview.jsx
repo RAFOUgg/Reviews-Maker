@@ -36,3 +36,4 @@ export default function TemplatePreview({ template, reviewData }) {
     </div>
   )
 }
+

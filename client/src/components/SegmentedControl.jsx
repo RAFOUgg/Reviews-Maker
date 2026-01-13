@@ -91,3 +91,4 @@ SegmentedControl.propTypes = {
     showEmoji: PropTypes.bool,
     disabled: PropTypes.bool
 }
+

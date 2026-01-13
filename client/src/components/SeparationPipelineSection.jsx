@@ -63,3 +63,4 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
 };
 
 export default SeparationPipelineSection;
+

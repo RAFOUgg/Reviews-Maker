@@ -125,3 +125,4 @@ TemplateRenderer.propTypes = {
     activeModules: PropTypes.arrayOf(PropTypes.string),
     pageMode: PropTypes.bool
 };
+

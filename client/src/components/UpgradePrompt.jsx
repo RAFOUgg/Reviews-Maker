@@ -72,3 +72,4 @@ export default function UpgradePrompt({ feature, message, inline = false }) {
         </div>
     );
 }
+

@@ -12,7 +12,7 @@ import {
     extractExtraData,
     colorWithOpacity,
     getResponsiveAdjustments,
-} from '../../utils/'orchardHelpers';
+} from '../../utils/orchardHelpers';
 
 /**
  * DetailedCardTemplate - Template fiche technique complète et professionnelle
@@ -550,4 +550,5 @@ DetailedCardTemplate.propTypes = {
     reviewData: PropTypes.object.isRequired,
     dimensions: PropTypes.object.isRequired,
 };
+
 

@@ -38,3 +38,4 @@ export default function SubstratViewer({ data }) {
 
     return <div className="text-sm text-gray-700">{String(parsed)}</div>;
 }
+

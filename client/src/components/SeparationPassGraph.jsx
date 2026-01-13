@@ -324,3 +324,4 @@ export const SeparationYieldComparison = ({ passes = [], batchSize = 0 }) => {
 }
 
 export default SeparationPassGraph
+

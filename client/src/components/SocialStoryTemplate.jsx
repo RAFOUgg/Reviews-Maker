@@ -6,7 +6,7 @@ import {
     formatRating,
     extractCategoryRatings,
     colorWithOpacity,
-} from '../../utils/'orchardHelpers';
+} from '../../utils/orchardHelpers';
 
 /**
  * SocialStoryTemplate - Template optimisé pour les stories Instagram/TikTok
@@ -330,4 +330,5 @@ SocialStoryTemplate.propTypes = {
     reviewData: PropTypes.object.isRequired,
     dimensions: PropTypes.object,
 };
+
 

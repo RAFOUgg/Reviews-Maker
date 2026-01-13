@@ -50,3 +50,4 @@ const LiquidCard = ({
 };
 
 export default LiquidCard;
+

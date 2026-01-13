@@ -80,3 +80,4 @@ WhiteSlider.propTypes = {
     inverted: PropTypes.bool,
     className: PropTypes.string
 }
+

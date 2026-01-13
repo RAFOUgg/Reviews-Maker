@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import PipelineDragDropView from './PipelineDragDropView'
-import { CULTURE_VALUES } from '../../data/'formValues'
+import { CULTURE_VALUES } from '../../data/formValues'
 
 /**
  * CulturePipelineTimeline - Version CDC conforme avec drag & drop
@@ -436,5 +436,6 @@ export default function CulturePipelineTimeline({ data, onChange }) {
         </div>
     )
 }
+
 
 

@@ -134,3 +134,4 @@ export default function ModuleBuilder({ review, templateId, onModulesChange, isD
         </div>
     )
 }
+

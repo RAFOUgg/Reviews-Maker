@@ -146,3 +146,4 @@ export default function CompletionBar({ formData, currentSection, productStructu
         </div>
     )
 }
+
