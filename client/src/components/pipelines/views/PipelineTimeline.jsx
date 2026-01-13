@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import PipelineCell from './PipelineCell';
+import PipelineCell from '../core/PipelineCell';
 
 /**
  * PipelineTimeline - Visualisation style GitHub contributions

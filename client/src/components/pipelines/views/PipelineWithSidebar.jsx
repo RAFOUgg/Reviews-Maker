@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Save, Download, Upload, Info, FolderPlus } from 'lucide-react';
 import PipelineContentsSidebar from '../../shared/orchard/PipelineContentsSidebar';
 import PipelineGridView from './PipelineGridView';
-import PipelineDataModal from './PipelineDataModal';
-import PresetGroupsManager from './PresetGroupsManager';
-import LiquidCard from './LiquidCard'
-import LiquidButton from './LiquidButton';
+import PipelineDataModal from '../core/PipelineDataModal';
+import PresetGroupsManager from '../../shared/config/PresetGroupsManager';
+import LiquidCard from '../../ui/LiquidCard'
+import LiquidButton from '../../ui/LiquidButton';
 
 /**
  * PipelineWithSidebar - Composant principal du système PipeLine CDC

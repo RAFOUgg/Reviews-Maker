@@ -4,8 +4,8 @@ import {
     Plus, Edit2, Trash2, Copy, FolderPlus, Check, X,
     ChevronDown, ChevronRight, Save, Download, Upload
 } from 'lucide-react';
-import LiquidButton from './LiquidButton'
-import LiquidInput from './LiquidInput';
+import LiquidButton from '../../ui/LiquidButton'
+import LiquidInput from '../../ui/LiquidInput';
 
 /**
  * PresetGroupsManager - Gestionnaire avancé de groupes de pré-réglages
