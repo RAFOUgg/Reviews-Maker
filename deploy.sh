@@ -35,7 +35,7 @@ echo ""
 # 2. Client - dépendances
 echo -e "${GREEN}[2/5] Installation dépendances client...${NC}"
 cd client
-npm install --production 2>&1 | grep -E "(added|up to date|removed)" || true
+npm install 2>&1 | grep -E "(added|up to date|removed)" || true
 echo -e "${GREEN}✅ Client dépendances installées${NC}"
 echo ""
 
