@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import LiquidCard from './LiquidCard';
-import LiquidInput from './LiquidInput';
-import LiquidSelect from './LiquidSelect';
+import LiquidCard from '../ui/LiquidCard';
+import LiquidInput from '../ui/LiquidInput';
+import LiquidSelect from '../ui/LiquidSelect';
 import { Dna, Leaf, Info } from 'lucide-react';
 
 /**

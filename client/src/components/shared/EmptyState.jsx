@@ -2,7 +2,7 @@
  * Composant EmptyState réutilisable
  * Affiche un message quand aucune donnée n'est disponible
  */
-import Button from './Button'
+import Button from '../ui/Button'
 
 export default function EmptyState({
     icon = '📭',

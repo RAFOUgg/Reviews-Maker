@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, Edit2, Trash2, BarChart3, Download } from 'lucide-react'
-import PipelineDragDropView from './PipelineDragDropView'
+import PipelineDragDropView from '../views/PipelineDragDropView'
 import { PURIFICATION_SIDEBAR_CONTENT } from '../../../config/purificationSidebarContent'
 import { PurityComparisonGraph, PurityEvolutionLine, MethodComparisonGraph } from './PurityGraph'
 import { PurificationMethodModal } from './PurificationMethodForm'

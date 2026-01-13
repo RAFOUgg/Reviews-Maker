@@ -4,7 +4,7 @@ import ModernCompactTemplate from '../templates/ModernCompactTemplate';
 import DetailedCardTemplate from '../templates/DetailedCardTemplate';
 import BlogArticleTemplate from '../templates/BlogArticleTemplate';
 import SocialStoryTemplate from '../templates/SocialStoryTemplate';
-import CustomTemplate from '../templates/CustomTemplate';
+import CustomTemplate from '../shared/config/CustomTemplate';
 
 // Mapping des templates
 const TEMPLATES = {

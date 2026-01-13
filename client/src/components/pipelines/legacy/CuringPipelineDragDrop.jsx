@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import PipelineDragDropView from './PipelineDragDropView'
+import PipelineDragDropView from '../views/PipelineDragDropView'
 import { CURING_SIDEBAR_CONTENT } from '../../../config/curingSidebarContent'
 import CuringEvolutionGraph from './CuringEvolutionGraph'
 import { exportCuringEvolutionToGIF } from '../../../utils/CuringGIFExporter'

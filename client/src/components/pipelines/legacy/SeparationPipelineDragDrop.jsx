@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, Trash2, BarChart3 } from 'lucide-react'
-import PipelineDragDropView from './PipelineDragDropView'
+import PipelineDragDropView from '../views/PipelineDragDropView'
 import { SEPARATION_SIDEBAR_CONTENT, SEPARATION_PASS_STRUCTURE } from '../../../config/separationSidebarContent'
 import SeparationPassGraph, { SeparationYieldComparison } from './SeparationPassGraph'
 

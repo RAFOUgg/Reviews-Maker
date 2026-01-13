@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import PipelineDragDropView from './PipelineDragDropView'
+import PipelineDragDropView from '../views/PipelineDragDropView'
 import { CURING_VALUES } from '../../../data/formValues'
 
 /**

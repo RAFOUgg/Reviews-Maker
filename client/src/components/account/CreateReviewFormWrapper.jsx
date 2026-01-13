@@ -17,7 +17,7 @@ import { Eye, X } from 'lucide-react'
 import { useResponsiveLayout } from '../../hooks/useResponsiveLayout'
 import { ResponsiveCreateReviewLayout } from '../forms/helpers/ResponsiveCreateReviewLayout'
 import ReviewPreview from '../gallery/ReviewPreview'
-import OrchardPanel from './OrchardPanel'
+import OrchardPanel from '../shared/orchard/OrchardPanel'
 
 const CreateReviewFormWrapper = ({
     productType = 'flower',
@@ -88,8 +88,8 @@ const CreateReviewFormWrapper = ({
                 <button
                     onClick={() => setShowPreview(!showPreview)}
                     className={`flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 text-purple-300 rounded-lg font-medium transition-all ${layout.isMobile
-                            ? 'px-3 py-2 text-xs'
-                            : 'px-4 py-2 text-sm'
+                        ? 'px-3 py-2 text-xs'
+                        : 'px-4 py-2 text-sm'
                         }`}
                 >
                     <Eye className={layout.isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4'} />

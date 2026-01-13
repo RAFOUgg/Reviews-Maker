@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Flower2 } from 'lucide-react';
-import LiquidSlider from './LiquidSlider';
-import AromaWheelPicker from './AromaWheelPicker';
+import LiquidSlider from '../ui/LiquidSlider';
+import AromaWheelPicker from '../shared/charts/AromaWheelPicker';
 
 /**
  * Section Odeurs pour Hash/Concentrés/Fleurs

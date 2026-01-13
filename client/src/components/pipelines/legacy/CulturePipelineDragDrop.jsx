@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import PipelineDragDropView from './PipelineDragDropView'
+import PipelineDragDropView from '../views/PipelineDragDropView'
 import { CULTURE_SIDEBAR_CONTENT } from '../../../config/cultureSidebarContent'
 import { CULTURE_PHASES } from '../../../config/pipelinePhases'
 

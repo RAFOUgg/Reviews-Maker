@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
-import { CollapsibleMobileSection, MobileFormGroup } from '../../../components/layout/MobileReviewLayout';
+import { CollapsibleMobileSection, MobileFormGroup } from '../../../../components/forms/helpers/MobileReviewLayout';
 import { ResponsiveSlider } from '../../../../components/forms/helpers/ResponsiveSectionComponents';
 import { useResponsiveLayout } from '../../../hooks/useResponsiveLayout';
 import { useMobileFormSection } from '../../../hooks/useMobileFormSection';
