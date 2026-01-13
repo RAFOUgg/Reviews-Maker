@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import LiquidGlass from './LiquidGlass';
 import { useAccountType } from '../hooks/useAccountType';
-import { FeatureGate } from './account';
+import { FeatureGate } from './FeatureGate';
 import DragDropExport from './DragDropExport';
 import WatermarkEditor from './WatermarkEditor';
 import { exportPipelineToGIF, downloadGIF } from '../utils/GIFExporter';
@@ -397,6 +397,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 };
 
 export default ExportMaker;
+
 
 
 
