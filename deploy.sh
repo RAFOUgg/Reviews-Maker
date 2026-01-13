@@ -25,6 +25,9 @@ echo ""
 
 cd "$PROJECT_DIR"
 
+# Nettoyer les modifications locales du deploy.sh
+git stash > /dev/null 2>&1 || true
+
 # 1. Pull
 echo -e "${GREEN}[1/5] Pull des dernières modifications...${NC}"
 git fetch origin
