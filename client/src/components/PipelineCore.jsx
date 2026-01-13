@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Info, TrendingUp, Download } from 'lucide-react';
-import { LiquidCard } from './liquid';
+import LiquidCard from './LiquidCard';
 import PipelineCellEditor from './PipelineCellEditor';
 import { INTERVAL_TYPES } from '../types/pipelineTypes';
 
@@ -297,6 +297,7 @@ const PipelineCore = ({
 };
 
 export default PipelineCore;
+
 
 
 

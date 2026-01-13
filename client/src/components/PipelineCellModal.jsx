@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, Trash2, Copy } from 'lucide-react';
-import { LiquidButton } from './liquid';
+import LiquidButton from './LiquidButton';
 import { CULTURE_VALUES } from '../data/formValues';
 
 /**
@@ -440,6 +440,7 @@ const PipelineCellModal = ({
 };
 
 export default PipelineCellModal;
+
 
 
 

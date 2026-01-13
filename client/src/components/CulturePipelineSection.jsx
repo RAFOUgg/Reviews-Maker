@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { Sprout } from 'lucide-react';
-import { LiquidCard } from './liquid';
+import LiquidCard from './LiquidCard';
 import CulturePipelineDragDrop from './CulturePipelineDragDrop';
 
 const CulturePipelineSection = ({ data = {}, onChange }) => {
@@ -77,5 +77,6 @@ lightType: data.environment?.lightType || 'led',
                     temperature: data.environment?.temperature || 24,
 
 export default CulturePipelineSection;
+
 
 

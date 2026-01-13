@@ -1,5 +1,6 @@
 import React from 'react'
-import { LiquidInput, LiquidSelect } from './liquid'
+import LiquidInput from './LiquidInput'
+import LiquidSelect from './LiquidSelect'
 import {
     DimensionsField,
     FrequencyField,
@@ -486,6 +487,7 @@ const FieldRenderer = ({ field, value, onChange, allData = {}, configMode = fals
 }
 
 export default FieldRenderer
+
 
 
 

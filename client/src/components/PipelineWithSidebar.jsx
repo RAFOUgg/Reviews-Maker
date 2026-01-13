@@ -5,7 +5,8 @@ import PipelineContentsSidebar from './PipelineContentsSidebar';
 import PipelineGridView from './PipelineGridView';
 import PipelineDataModal from './PipelineDataModal';
 import PresetGroupsManager from './PresetGroupsManager';
-import { LiquidCard, LiquidButton } from './liquid';
+import LiquidCard from './LiquidCard'
+import LiquidButton from './LiquidButton';
 
 /**
  * PipelineWithSidebar - Composant principal du système PipeLine CDC
@@ -460,6 +461,7 @@ return (
 };
 
 export default PipelineWithSidebar;
+
 
 
 
