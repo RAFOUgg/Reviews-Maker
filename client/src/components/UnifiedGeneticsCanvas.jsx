@@ -30,12 +30,12 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import useGeneticsStore from '../store/useGeneticsStore';
-import CultivarNode from './nodes/CultivarNode';
-import NodeContextMenu from './menus/NodeContextMenu';
-import EdgeContextMenu from './menus/EdgeContextMenu';
-import NodeFormModal from './modals/NodeFormModal';
-import EdgeFormModal from './modals/EdgeFormModal';
-import TreeToolbar from './toolbar/TreeToolbar';
+import CultivarNode from './CultivarNode';
+import NodeContextMenu from './NodeContextMenu';
+import EdgeContextMenu from './EdgeContextMenu';
+import NodeFormModal from './NodeFormModal';
+import EdgeFormModal from './EdgeFormModal';
+import TreeToolbar from './TreeToolbar';
 import './UnifiedGeneticsCanvas.css';
 
 const nodeTypes = {
