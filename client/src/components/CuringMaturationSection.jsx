@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Timer, Thermometer, Droplets, Package, ChevronDown, AlertCircle } from 'lucide-react';
 import LiquidCard from '../../LiquidCard';
 import { INTERVAL_TYPES } from '../../../types/pipelineTypes';
-import CuringPipelineDragDrop from '../../pipeline/CuringPipelineDragDrop';
+import CuringPipelineDragDrop from './CuringPipelineDragDrop';
 
 const CONTAINER_TYPES = [
     { id: 'air_libre', label: 'Air libre', icon: '🌬️' },
@@ -368,3 +368,4 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
 };
 
 export default CuringMaturationSection;
+

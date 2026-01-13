@@ -1,7 +1,7 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import ColorWheelPicker from '../../ui/ColorWheelPicker'
-import WeedPreview from '../../ui/WeedPreview'
+import ColorWheelPicker from './ColorWheelPicker'
+import WeedPreview from './WeedPreview'
 
 /**
  * Section 5: Visuel Technique
@@ -171,3 +171,4 @@ export default function VisuelTechnique({ data, onChange, errors = {} }) {
         </div>
     )
 }
+

@@ -6,7 +6,7 @@ import {
     INVERTED_LABELS,
     TRANSPARENCY_LEVELS
 } from '../../../data/visualOptions';
-import WhiteSlider from '../../ui/WhiteSlider';
+import WhiteSlider from './WhiteSlider';
 
 /**
  * Section Visuel & Technique
@@ -277,3 +277,4 @@ export default function VisualSection({ productType, formData = {}, handleChange
         </div>
     );
 }
+

@@ -3,10 +3,10 @@ import {
     Thermometer, Droplets, Clock, Wind, Archive
 } from 'lucide-react';
 // OLD SYSTEM (keep for backward compat)
-import PipelineTimeline from '../../pipeline/PipelineTimeline';
-import PipelineEditor from '../../pipeline/PipelineEditor';
+import PipelineTimeline from './PipelineTimeline';
+import PipelineEditor from './PipelineEditor';
 // NEW SYSTEM (Phase 4.1 - CDC compliant)
-import PipelineGitHubGrid from '../../pipeline/PipelineGitHubGrid';
+import PipelineGitHubGrid from './PipelineGitHubGrid';
 import { LiquidGlass } from '../../ui';
 
 const CuringPipelineSection = ({ data = {}, onChange }) => {
@@ -116,3 +116,4 @@ const CuringPipelineSection = ({ data = {}, onChange }) => {
 };
 
 export default CuringPipelineSection;
+

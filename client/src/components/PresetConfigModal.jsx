@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ConfirmModal from '../../ui/ConfirmModal';
+import ConfirmModal from './ConfirmModal';
 import { X, Save, BookmarkPlus, List } from 'lucide-react';
 
 /**
@@ -539,3 +539,4 @@ const PresetConfigModal = ({
 };
 
 export default PresetConfigModal;
+

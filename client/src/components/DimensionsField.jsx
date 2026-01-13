@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { LiquidInput } from '../../liquid'
+import { LiquidInput } from './liquid'
 
 /**
  * DimensionsField - Champ pour saisir dimensions L×l×H
@@ -72,3 +72,4 @@ const DimensionsField = ({ value, onChange, unit = 'cm' }) => {
 }
 
 export default DimensionsField
+

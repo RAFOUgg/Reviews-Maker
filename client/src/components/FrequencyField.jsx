@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { LiquidInput, LiquidSelect } from '../../liquid'
+import { LiquidInput, LiquidSelect } from './liquid'
 
 /**
  * FrequencyField - Champ pour saisir une fréquence (valeur + période)
@@ -98,3 +98,4 @@ const FrequencyField = ({ value, onChange, presets = [] }) => {
 }
 
 export default FrequencyField
+

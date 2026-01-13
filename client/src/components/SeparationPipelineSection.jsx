@@ -4,7 +4,7 @@ import {
     Droplets, Grid3x3, RefreshCw, Zap
 } from 'lucide-react';
 // NEW SYSTEM Phase 3 - Separation Pipeline
-import SeparationPipelineDragDrop from '../../pipeline/SeparationPipelineDragDrop';
+import SeparationPipelineDragDrop from './SeparationPipelineDragDrop';
 import { LiquidGlass } from '../../ui';
 
 const SeparationPipelineSection = ({ data = {}, onChange }) => {

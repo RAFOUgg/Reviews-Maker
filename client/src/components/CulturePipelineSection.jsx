@@ -5,8 +5,8 @@
 
 import React from 'react';
 import { Sprout } from 'lucide-react';
-import { LiquidCard } from '../../liquid';
-import CulturePipelineDragDrop from '../../pipeline/CulturePipelineDragDrop';
+import { LiquidCard } from './liquid';
+import CulturePipelineDragDrop from './CulturePipelineDragDrop';
 
 const CulturePipelineSection = ({ data = {}, onChange }) => {
     // Adapter les handlers pour PipelineDragDropView

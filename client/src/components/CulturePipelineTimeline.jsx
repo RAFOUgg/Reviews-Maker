@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import PipelineDragDropView from '../../pipeline/PipelineDragDropView'
+import PipelineDragDropView from './PipelineDragDropView'
 import { CULTURE_VALUES } from '../../../data/formValues'
 
 /**
@@ -436,3 +436,4 @@ export default function CulturePipelineTimeline({ data, onChange }) {
         </div>
     )
 }
+

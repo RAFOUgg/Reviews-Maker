@@ -4,7 +4,7 @@ import {
     Plus, Edit2, Trash2, Copy, FolderPlus, Check, X,
     ChevronDown, ChevronRight, Save, Download, Upload
 } from 'lucide-react';
-import { LiquidButton, LiquidInput } from '../liquid';
+import { LiquidButton, LiquidInput } from './liquid';
 
 /**
  * PresetGroupsManager - Gestionnaire avancé de groupes de pré-réglages
@@ -732,3 +732,4 @@ const EditGroupModal = ({ isOpen, onClose, group, onUpdate, categories, availabl
 };
 
 export default PresetGroupsManager;
+

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LiquidCard, LiquidInput, LiquidSelect } from '../../liquid';
+import { LiquidCard, LiquidInput, LiquidSelect } from './liquid';
 import { Dna, Leaf, Info } from 'lucide-react';
 
 /**
@@ -230,3 +230,4 @@ export default function GeneticsSection({
         </LiquidCard>
     );
 }
+

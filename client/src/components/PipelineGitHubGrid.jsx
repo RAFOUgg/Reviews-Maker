@@ -5,7 +5,7 @@ import {
     ChevronDown, Info, Thermometer, Droplets, Package,
     Sun, Moon, Sprout, Download
 } from 'lucide-react';
-import { LiquidCard, LiquidButton } from '../liquid';
+import { LiquidCard, LiquidButton } from './liquid';
 
 /**
  * PipelineGitHubGrid - Système de Pipeline GitHub-style CDC-compliant
@@ -681,3 +681,4 @@ const PipelineGitHubGrid = ({
 };
 
 export default PipelineGitHubGrid;
+

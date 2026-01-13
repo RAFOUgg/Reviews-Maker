@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LiquidInput } from '../../liquid'
+import { LiquidInput } from './liquid'
 
 /**
  * AutocompleteField - Champ avec auto-complétion
@@ -175,3 +175,4 @@ const AutocompleteField = ({
 }
 
 export default AutocompleteField
+

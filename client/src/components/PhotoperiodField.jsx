@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { LiquidInput } from '../../liquid'
+import { LiquidInput } from './liquid'
 
 /**
  * PhotoperiodField - Champ pour saisir photopériode (heures ON/OFF)
@@ -106,3 +106,4 @@ const PhotoperiodField = ({ value, onChange, presets = [] }) => {
 }
 
 export default PhotoperiodField
+

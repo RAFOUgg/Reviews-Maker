@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, Trash2, Info, ChevronDown, ChevronUp } from 'lucide-react';
-import { LiquidCard, LiquidButton } from '../liquid';
+import { LiquidCard, LiquidButton } from './liquid';
 
 /**
  * PipelineCellEditor - Modal d'édition de cellule pipeline
@@ -400,3 +400,4 @@ const PipelineCellEditor = ({
 };
 
 export default PipelineCellEditor;
+

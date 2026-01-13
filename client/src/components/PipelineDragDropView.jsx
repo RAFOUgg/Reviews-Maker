@@ -20,7 +20,7 @@
  */
 
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import ConfirmModal from '../ui/ConfirmModal';
+import ConfirmModal from './ConfirmModal';
 import { useToast } from '../ToastContainer';
 import CellContextMenu from './CellContextMenu';
 
@@ -2610,3 +2610,4 @@ const PipelineDragDropView = ({
 
 export { GroupedPresetModal };
 export default PipelineDragDropView;
+

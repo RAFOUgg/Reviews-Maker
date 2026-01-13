@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Hand, Sparkles } from 'lucide-react';
-import WhiteSlider from '../../ui/WhiteSlider';
+import WhiteSlider from './WhiteSlider';
 
 /**
  * Niveaux de qualité pour les sliders de texture
@@ -301,3 +301,4 @@ export default function TextureSection({ productType, formData = {}, handleChang
         </div>
     );
 }
+

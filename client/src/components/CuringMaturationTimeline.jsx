@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import PipelineDragDropView from '../../pipeline/PipelineDragDropView'
+import PipelineDragDropView from './PipelineDragDropView'
 import { CURING_VALUES } from '../../../data/formValues'
 
 /**
@@ -233,3 +233,4 @@ export default function CuringMaturationTimeline({ data, onChange }) {
         </div>
     )
 }
+
