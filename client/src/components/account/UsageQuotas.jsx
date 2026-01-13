@@ -1,6 +1,6 @@
 import { useStore } from '../../store/useStore';
 import { usePermissions } from '../../services/permissionsService';
-import { useUsageStats } from '../../../hooks/useUsageStats';
+import { useUsageStats } from '../../hooks/useUsageStats';
 import { Link } from 'react-router-dom';
 
 export default function UsageQuotas({ compact = false }) {

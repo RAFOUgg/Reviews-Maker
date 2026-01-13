@@ -14,7 +14,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Eye, X } from 'lucide-react'
-import { useResponsiveLayout } from '../../../hooks/useResponsiveLayout'
+import { useResponsiveLayout } from '../../hooks/useResponsiveLayout'
 import { ResponsiveCreateReviewLayout } from '../forms/helpers/ResponsiveCreateReviewLayout'
 import ReviewPreview from '../gallery/ReviewPreview'
 import OrchardPanel from '../shared/orchard/OrchardPanel'
