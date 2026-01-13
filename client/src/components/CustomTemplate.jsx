@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
-import FieldRenderer from '../FieldRendererClean';
-import { DRAGGABLE_FIELDS } from '../ContentPanel';
+import FieldRenderer from './FieldRendererClean';
+import { DRAGGABLE_FIELDS } from './ContentPanel';
 
 export default function CustomTemplate({ config, reviewData, dimensions }) {
     const { moduleOrder = [], contentModules = {}, typography = {}, colors = {} } = config;
