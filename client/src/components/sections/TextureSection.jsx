@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Hand, Sparkles } from 'lucide-react';
-import WhiteSlider from './WhiteSlider';
+import WhiteSlider from '../ui/WhiteSlider';
 
 /**
  * Niveaux de qualité pour les sliders de texture

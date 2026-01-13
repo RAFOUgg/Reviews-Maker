@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { hashReviewsService } from '../../../services/apiService'
+import { hashReviewsService } from '../../../../services/apiService'
 import { useToast } from '../../../../components/shared/ToastContainer'
 
 /**

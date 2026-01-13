@@ -18,8 +18,8 @@ import OdorSection from '../../../components/sections/OdorSection'
 import TextureSection from '../../../components/sections/TextureSection'
 import TasteSection from '../../../components/sections/TasteSection'
 import EffectsSection from '../../../components/sections/EffectsSection'
-import ExperienceUtilisation from '../../components/ExperienceUtilisation'
-import CuringMaturationTimeline from '../../components/CuringMaturationTimeline'
+import ExperienceUtilisation from '../../../components/forms/ExperienceUtilisation'
+import CuringMaturationTimeline from '../../../components/pipelines/legacy/CuringMaturationTimeline'
 
 // Import hooks
 import { useFlowerForm } from './hooks/useFlowerForm'

@@ -6,7 +6,7 @@ import {
     INVERTED_LABELS,
     TRANSPARENCY_LEVELS
 } from '../data/visualOptions';
-import WhiteSlider from './WhiteSlider';
+import WhiteSlider from '../ui/WhiteSlider';
 
 /**
  * Section Visuel & Technique

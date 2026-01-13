@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { EFFECTS_CATEGORIES, getAllEffects, getEffectsByFilter, ONSET_LEVELS, INTENSITY_LEVELS, DURATION_OPTIONS } from '../data/effectsCategories';
 import { EXPERIENCE_VALUES } from '../data/formValues';
 import { Zap, Sparkles, Clock, Filter, Plus, X, Beaker, ChevronDown } from 'lucide-react';
-import WhiteSlider from './WhiteSlider';
+import WhiteSlider from '../ui/WhiteSlider';
 
 /**
  * Section Effets Ressentis + Expérience d'Utilisation (FUSIONNÉE)

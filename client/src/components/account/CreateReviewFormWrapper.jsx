@@ -15,8 +15,8 @@ import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Eye, X } from 'lucide-react'
 import { useResponsiveLayout } from '../../hooks/useResponsiveLayout'
-import { ResponsiveCreateReviewLayout } from './ResponsiveCreateReviewLayout'
-import ReviewPreview from './ReviewPreview'
+import { ResponsiveCreateReviewLayout } from '../forms/helpers/ResponsiveCreateReviewLayout'
+import ReviewPreview from '../gallery/ReviewPreview'
 import OrchardPanel from './OrchardPanel'
 
 const CreateReviewFormWrapper = ({

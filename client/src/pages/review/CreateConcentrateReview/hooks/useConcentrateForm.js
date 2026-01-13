@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { concentrateReviewsService } from '../../../services/apiService'
+import { concentrateReviewsService } from '../../../../services/apiService'
 import { useToast } from '../../../../components/shared/ToastContainer'
 
 export function useConcentrateForm(reviewId = null) {

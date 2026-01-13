@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../store/useStore'
 import { useTranslation } from 'react-i18next'
-import { SUPPORTED_LANGUAGES, changeLanguage } from '../i18n/i18n'
+import { SUPPORTED_LANGUAGES, changeLanguage } from '../../i18n/i18n'
 
 export default function SettingsPage() {
     const navigate = useNavigate()

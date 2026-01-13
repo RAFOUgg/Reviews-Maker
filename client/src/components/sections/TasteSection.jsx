@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TASTE_FAMILIES, getAllTasteNotes, TASTE_INTENSITY_LEVELS, AGGRESSIVENESS_LEVELS } from '../data/tasteNotes';
 import { Coffee, Sparkles, ArrowDown, ArrowUp, Wind, Plus, X } from 'lucide-react';
-import WhiteSlider from './WhiteSlider';
+import WhiteSlider from '../ui/WhiteSlider';
 
 /**
  * Section Goûts pour Hash/Concentrés/Fleurs

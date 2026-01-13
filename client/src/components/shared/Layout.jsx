@@ -1,6 +1,6 @@
 import { Outlet, Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
-import UserProfileDropdown from './UserProfileDropdown'
+import UserProfileDropdown from '../account/UserProfileDropdown'
 // import ThemeSwitcher from './ThemeSwitcher' // REMOVED
 
 export default function Layout() {

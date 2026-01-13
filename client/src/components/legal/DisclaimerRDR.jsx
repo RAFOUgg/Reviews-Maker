@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, CheckCircle, X } from 'lucide-react'
 import { useStore } from '../../store/useStore'
-import { useToast } from '../ToastContainer'
+import { useToast } from '../shared/ToastContainer'
 import { usersService } from '../../services/apiService'
 
 /**
