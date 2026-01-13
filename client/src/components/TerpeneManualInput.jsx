@@ -1,6 +1,6 @@
 import React from 'react'
 import { FlaskConical } from 'lucide-react'
-import LiquidCard from '../LiquidCard'
+import LiquidCard from './LiquidCard'
 
 /**
  * TerpeneManualInput - Saisie manuelle des terpènes principaux CDC conforme
@@ -113,5 +113,6 @@ export default function TerpeneManualInput({ data = {}, onChange }) {
         </LiquidCard>
     )
 }
+
 
 
