@@ -8,7 +8,7 @@ import PipelineTimeline from './PipelineTimeline';
 import PipelineEditor from './PipelineEditor';
 // NEW SYSTEM (Phase 4.1 - CDC compliant)
 import PipelineGitHubGrid from './PipelineGitHubGrid';
-import { LiquidGlass } from '../../ui';
+import { LiquidGlass } from '../ui';
 
 const RecipePipelineSection = ({ data = {}, onChange }) => {
     // NEW SYSTEM: Use PipelineGitHubGrid (Phase 4.1)
@@ -111,5 +111,6 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
 };
 
 export default RecipePipelineSection;
+
 
 
