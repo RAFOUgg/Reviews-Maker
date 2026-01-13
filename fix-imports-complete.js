@@ -76,21 +76,21 @@ let filesModified = 0;
 
 function walkDir(dir) {
     const files = fs.readdirSync(dir);
-    
+
     files.forEach(file => {
         const filePath = path.join(dir, file);
         const stat = fs.statSync(filePath);
-        
+
         if (stat.isDirectory()) {
             walkDir(filePath);
         } else if (file.endsWith('.jsx') || file.endsWith('.js')) {
             let content = fs.readFileSync(filePath, 'utf8');
             const originalContent = content;
-            
+
             importMappings.forEach(({ old, new: newVal }) => {
                 content = content.split(old).join(newVal);
             });
-            
+
             if (content !== originalContent) {
                 fs.writeFileSync(filePath, content, 'utf8');
                 filesModified++;

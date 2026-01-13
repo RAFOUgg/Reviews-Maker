@@ -13,24 +13,24 @@ let importIssues = [];
 function getAllFilesRecursive(dir) {
     const files = [];
     const items = fs.readdirSync(dir);
-    
+
     items.forEach(file => {
         const filePath = path.join(dir, file);
         const stat = fs.statSync(filePath);
-        
+
         if (stat.isDirectory()) {
             files.push(...getAllFilesRecursive(filePath));
         } else if (file.endsWith('.jsx') || file.endsWith('.js')) {
             files.push(filePath);
         }
     });
-    
+
     return files;
 }
 
 function extractImports(content, filePath) {
     const imports = [];
-    
+
     // Match: from './path' or from "./path"
     const staticImportRegex = /from\s+['"](.\/[^'"]+)['"]/g;
     let match;
@@ -41,7 +41,7 @@ function extractImports(content, filePath) {
             line: content.substring(0, match.index).split('\n').length
         });
     }
-    
+
     // Match: import('./path') or import("./path")
     const dynamicImportRegex = /import\s*\(\s*['"](.\/[^'"]+)['"]\s*\)/g;
     while ((match = dynamicImportRegex.exec(content)) !== null) {
@@ -51,14 +51,14 @@ function extractImports(content, filePath) {
             line: content.substring(0, match.index).split('\n').length
         });
     }
-    
+
     return imports;
 }
 
 function resolveImportPath(importPath, fromFile) {
     const fromDir = path.dirname(fromFile);
     const resolvedPath = path.resolve(fromDir, importPath);
-    
+
     // Check with .jsx, .js, or as directory/index
     const checkPaths = [
         resolvedPath + '.jsx',
@@ -67,26 +67,26 @@ function resolveImportPath(importPath, fromFile) {
         path.join(resolvedPath, 'index.js'),
         resolvedPath
     ];
-    
+
     for (const checkPath of checkPaths) {
         if (fs.existsSync(checkPath)) {
             return checkPath;
         }
     }
-    
+
     return null;
 }
 
 function check() {
     console.log('📋 Verification des imports...\n');
-    
+
     const jsFiles = getAllFilesRecursive(srcPath);
-    
+
     jsFiles.forEach(filePath => {
         filesChecked++;
         const content = fs.readFileSync(filePath, 'utf8');
         const imports = extractImports(content, filePath);
-        
+
         imports.forEach(imp => {
             const resolved = resolveImportPath(imp.path, filePath);
             if (!resolved && !imp.path.startsWith('./node_modules')) {
@@ -99,7 +99,7 @@ function check() {
             }
         });
     });
-    
+
     if (importIssues.length === 0) {
         console.log(`✅ TOUS les imports sont corrects! (${filesChecked} fichiers verifie`);
     } else {
