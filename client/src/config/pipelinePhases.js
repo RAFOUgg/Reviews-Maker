@@ -20,7 +20,14 @@ export const CULTURE_PHASES = {
     ]
 }
 
-export const CURING_PHASES = null // Pas de phases prédéfinies, juste dates
+export const CURING_PHASES = {
+    phases: [
+        { id: 'drying', label: 'Séchage', order: 0, duration: 7 },
+        { id: 'early-cure', label: 'Début curing', order: 1, duration: 14 },
+        { id: 'maturation', label: 'Maturation/Affinage', order: 2, duration: 30 },
+        { id: 'final', label: 'Fin', order: 3, duration: 30 }
+    ]
+}
 
 export const SEPARATION_PHASES = null // Pas de phases, basé sur le temps
 

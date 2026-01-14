@@ -1,19 +1,25 @@
-import React, { useState } from 'react';
-import {
-    FlaskConical, Scale, Filter, Thermometer, Clock,
-    Droplets, Grid3x3, RefreshCw, Zap
-} from 'lucide-react';
-// NEW SYSTEM Phase 3 - Separation Pipeline
-import SeparationPipelineDragDrop from './SeparationPipelineDragDrop';
-import LiquidGlass from './LiquidGlass';
+import React, { useRef } from 'react';
+import SeparationPipelineDragDrop from '../legacy/SeparationPipelineDragDrop';
 
 const SeparationPipelineSection = ({ data = {}, onChange }) => {
-    // Adapter les handlers pour PipelineDragDropView
+    // Reference to timeline data for external access
+    const timelineDataRef = useRef(data.separationTimelineData || []);
+
+    // Update ref when data changes
+    React.useEffect(() => {
+        timelineDataRef.current = data.separationTimelineData || [];
+    }, [data.separationTimelineData]);
+
+    // Config change handler
     const handleConfigChange = (key, value) => {
-        const updatedConfig = { ...(data.separationTimelineConfig || {}), [key]: value };
+        const updatedConfig = {
+            ...(data.separationTimelineConfig || {}),
+            [key]: value
+        };
         onChange({ ...data, separationTimelineConfig: updatedConfig });
     };
 
+    // Data change handler
     const handleDataChange = (timestamp, field, value) => {
         const currentData = data.separationTimelineData || [];
         const existingIndex = currentData.findIndex(cell => cell.timestamp === timestamp);
@@ -22,9 +28,7 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
         if (existingIndex >= 0) {
             updatedData = [...currentData];
             if (value === null || value === undefined) {
-                // Remove field but KEEP metadata (timestamp, date, label, phase)
                 const { [field]: removed, ...rest } = updatedData[existingIndex];
-                // Restore essential structural fields
                 updatedData[existingIndex] = {
                     timestamp: updatedData[existingIndex].timestamp,
                     ...(updatedData[existingIndex].date && { date: updatedData[existingIndex].date }),
@@ -43,22 +47,11 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center gap-3 mb-4">
-                <FlaskConical className="w-6 h-6 text-purple-400" />
-                <div>
-                    <h3 className="text-xl font-bold">Pipeline Séparation Hash</h3>
-                    <p className="text-sm text-gray-400">Ice-Water, Dry-Sift, multi-passes</p>
-                </div>
-            </div>
-
-            <SeparationPipelineDragDrop
-                timelineConfig={data.separationTimelineConfig || { type: 'heure', totalHours: 24 }}
-                timelineData={data.separationTimelineData || []}
-                onConfigChange={handleConfigChange}
-                onDataChange={handleDataChange}
-            />
-        </div>
+        <SeparationPipelineDragDrop
+            timelineData={data.separationTimelineData || []}
+            onConfigChange={handleConfigChange}
+            onDataChange={handleDataChange}
+        />
     );
 };
 
