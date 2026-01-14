@@ -1808,12 +1808,11 @@ const PipelineDragDropView = ({
     const completionPercent = cells.length > 0 ? Math.round((filledCells / cells.length) * 100) : 0;
 
     return (
-        <div className="flex flex-col gap-4 h-full w-full">
+        <div className="flex flex-col gap-4 w-full overflow-hidden" style={{ display: 'flex', flexDirection: 'column' }}>
             {/* PANNEAU LATÉRAL HIÉRARCHISÉ - MASQUÉ SUR MOBILE */}
             {!isMobile && (
                 <div className="w-full max-h-[300px] flex-shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-y-auto">
                     {/* Section Préréglages en haut */}
-                    {/* Préréglages retirés pour conformité CDC */}
 
                     {/* Header Contenus */}
                     <div className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm p-4 border-b border-gray-200 dark:border-gray-700 z-10">
