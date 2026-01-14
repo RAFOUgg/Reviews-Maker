@@ -2186,273 +2186,273 @@ const PipelineDragDropView = ({
                         />
                     </div>
                 </div>
-            </div>
 
-            {/* Messages d'aide selon type d'intervalle */}
-            {timelineConfig.type === 'date' && (!timelineConfig.start || !timelineConfig.end) && (
-                <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
-                    <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
-                    <p className="text-xs text-yellow-800 dark:text-yellow-300">
-                        Mode Dates : Date début ET date fin sont obligatoires
-                    </p>
-                </div>
-            )}
-
-            {timelineConfig.type === 'seconde' && (!timelineConfig.totalSeconds || timelineConfig.totalSeconds > 900) && (
-                <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
-                    <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
-                    <p className="text-xs text-yellow-800 dark:text-yellow-300">
-                        Maximum 900 secondes (pagination automatique si dépassement)
-                    </p>
-                </div>
-            )}
-
-            {timelineConfig.type === 'heure' && (!timelineConfig.totalHours || timelineConfig.totalHours > 336) && (
-                <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
-                    <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
-                    <p className="text-xs text-yellow-800 dark:text-yellow-300">
-                        Maximum 336 heures (14 jours)
-                    </p>
-                </div>
-            )}
-
-            {timelineConfig.type === 'jour' && (!timelineConfig.totalDays || timelineConfig.totalDays > 365) && (
-                <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
-                    <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
-                    <p className="text-xs text-yellow-800 dark:text-yellow-300">
-                        Maximum 365 jours (pagination automatique si dépassement)
-                    </p>
-                </div>
-            )}
-
-            {/* TIMELINE GRID - Directement sous la configuration dans le même container */}
-            {cells.length === 0 ? (
-                <div className="flex items-center justify-center p-8">
-                    <div className="text-center text-gray-500 dark:text-gray-400">
-                        <Settings className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">⚠️ Configurez la période pour voir la timeline</p>
+                {/* Messages d'aide selon type d'intervalle */}
+                {timelineConfig.type === 'date' && (!timelineConfig.start || !timelineConfig.end) && (
+                    <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
+                        <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                        <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                            Mode Dates : Date début ET date fin sont obligatoires
+                        </p>
                     </div>
-                </div>
-            ) : (
-                <div className="p-4 space-y-3">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 italic">
-                        💡 <strong>Première case</strong> : Configuration générale (mode, espace, etc.)
-                        <br />
-                        📊 <strong>Autres cases</strong> : Drag & drop des paramètres depuis le panneau latéral
-                    </p>
+                )}
 
-                    <div className="overflow-auto w-full">
-                        <div ref={gridRef} className="grid grid-cols-6 gap-2 select-none relative auto-rows-min inline-grid" style={{ position: 'relative', minWidth: '100%' }}>
-                            {/* Visual selection frame overlay */}
-                            {selectedCells.length > 1 && !isSelecting && (() => {
-                                // Compute aggregate bounding box of selected cells using DOM measurements
-                                const refs = selectedCells.map(ts => cellRefs.current[ts]).filter(Boolean);
-                                if (!refs || refs.length === 0) return null;
-                                const gridBox = gridRef.current && gridRef.current.getBoundingClientRect();
-                                if (!gridBox) return null;
+                {timelineConfig.type === 'seconde' && (!timelineConfig.totalSeconds || timelineConfig.totalSeconds > 900) && (
+                    <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
+                        <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                        <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                            Maximum 900 secondes (pagination automatique si dépassement)
+                        </p>
+                    </div>
+                )}
 
-                                const boxes = refs.map(el => {
-                                    const r = el.getBoundingClientRect();
-                                    return {
-                                        left: r.left,
-                                        top: r.top,
-                                        right: r.right,
-                                        bottom: r.bottom
-                                    };
-                                });
+                {timelineConfig.type === 'heure' && (!timelineConfig.totalHours || timelineConfig.totalHours > 336) && (
+                    <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
+                        <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                        <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                            Maximum 336 heures (14 jours)
+                        </p>
+                    </div>
+                )}
 
-                                const leftPx = Math.min(...boxes.map(b => b.left)) - gridBox.left + (gridRef.current ? gridRef.current.scrollLeft : 0);
-                                const topPx = Math.min(...boxes.map(b => b.top)) - gridBox.top + (gridRef.current ? gridRef.current.scrollTop : 0);
-                                const rightPx = Math.max(...boxes.map(b => b.right)) - gridBox.left + (gridRef.current ? gridRef.current.scrollLeft : 0);
-                                const bottomPx = Math.max(...boxes.map(b => b.bottom)) - gridBox.top + (gridRef.current ? gridRef.current.scrollTop : 0);
+                {timelineConfig.type === 'jour' && (!timelineConfig.totalDays || timelineConfig.totalDays > 365) && (
+                    <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
+                        <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                        <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                            Maximum 365 jours (pagination automatique si dépassement)
+                        </p>
+                    </div>
+                )}
 
-                                const widthPx = rightPx - leftPx;
-                                const heightPx = bottomPx - topPx;
-
-                                return (
-                                    <div
-                                        className="absolute pointer-events-none z-40 border-4 rounded-2xl shadow-lg animate-fade-in"
-                                        style={{
-                                            top: `${topPx}px`,
-                                            left: `${leftPx}px`,
-                                            width: `${widthPx}px`,
-                                            height: `${heightPx}px`,
-                                            boxSizing: 'border-box',
-                                            transition: 'all 0.08s',
-                                            borderStyle: 'dashed',
-                                            background: 'rgba(80,180,255,0.07)'
-                                        }}
-                                    />
-                                );
-                            })()}
-                            {/* Selection rectangle (live) */}
-                            {/* Selection marquee (rendered always, animated via opacity/transform) */}
-                            <div
-                                className="absolute z-50 pointer-events-none border-4 rounded-2xl shadow-lg"
-                                style={{
-                                    top: selectionRect.y,
-                                    left: selectionRect.x,
-                                    width: selectionRect.width,
-                                    height: selectionRect.height,
-                                    boxSizing: 'border-box',
-                                    borderStyle: 'dashed',
-                                    background: 'rgba(80,180,255,0.06)',
-                                    opacity: selectionRect.visible ? 1 : 0,
-                                    transform: selectionRect.visible ? 'scale(1)' : 'scale(0.98)',
-                                    transition: 'opacity 150ms ease-out, transform 150ms ease-out'
-                                }}
-                            />
-
-                            {cells.map((cell, idx) => {
-                                const hasData = hasCellData(cell.timestamp);
-                                const cellData = getCellData(cell.timestamp);
-                                const isFirst = idx === 0;
-                                const isSelected = selectedCells.includes(cell.timestamp);
-                                const isHovered = hoveredCell === cell.timestamp;
-
-                                // Construire classes CSS pour la cellule
-                                let cellClass = `relative p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[80px]`;
-
-                                // Gradient d'intensité GitHub-style selon nombre de données
-                                if (hasData) {
-                                    const dataCount = Object.keys(cellData).filter(k =>
-                                        !['timestamp', 'date', 'label', 'phase', 'day', 'week', 'hours', 'seconds', 'note', '_meta'].includes(k)
-                                    ).length;
-                                    const intensity = Math.min(dataCount / 10, 1);
-                                    const intensityIndex = Math.floor(intensity * 4); // 0-4
-
-                                    // Palette verte progressive (GitHub-style)
-                                    const gradients = [
-                                        'border-green-400 bg-green-100/40 dark:border-green-600 dark:bg-green-950/30',
-                                        'border-green-500 bg-green-200/50 dark:border-green-500 dark:bg-green-900/40',
-                                        'border-green-600 bg-green-300/60 dark:border-green-400 dark:bg-green-800/50',
-                                        'border-green-700 bg-green-400/70 dark:border-green-300 dark:bg-green-700/60',
-                                        'border-green-800 bg-green-500/80 dark:border-green-200 dark:bg-green-600/70'
-                                    ];
-                                    cellClass += ' ' + gradients[intensityIndex];
-                                } else {
-                                    cellClass += ' border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800';
-                                }
-
-                                // Selected par clic simple (modal)
-                                cellClass += selectedCell === cell.timestamp
-                                    ? ' ring-2 ring-violet-500 shadow-lg'
-                                    : ' hover:border-violet-400 hover:shadow-md';
-
-                                // Selected en mode masse (multi-sélection)
-                                cellClass += isSelected
-                                    ? ' ring-4 ring-blue-500 dark:ring-blue-400 bg-blue-500/10'
-                                    : '';
-
-                                // Hover pendant drag
-                                cellClass += isHovered && draggedContent
-                                    ? ' ring-4 ring-violet-500 dark:ring-violet-400 scale-105 shadow-2xl animate-pulse'
-                                    : '';
-
-                                // Span 2 colonnes pour première cellule
-                                if (isFirst) {
-                                    cellClass += ' col-span-2';
-                                }
-
-                                return (
-                                    <div
-                                        key={cell.timestamp}
-                                        onDragOver={(e) => handleDragOver(e, cell.timestamp)}
-                                        onDragLeave={handleDragLeave}
-                                        onDrop={(e) => handleDrop(e, cell.timestamp)}
-                                        onClick={(e) => handleCellClick(e, cell.timestamp)}
-                                        onContextMenu={(e) => handleCellContextMenu(e, cell.timestamp)}
-                                        onMouseEnter={(e) => { handleCellHover(e, cell.timestamp); }}
-                                        onMouseLeave={handleCellLeave}
-                                        onMouseDown={(e) => { if (e.button === 0) startSelection(e, idx, cell.timestamp); }}
-                                        onMouseUp={(e) => { /* handled globally to compute rectangle on mouseup */ }}
-                                        ref={(el) => { cellRefs.current[cell.timestamp] = el; }}
-                                        className={cellClass}
-                                        style={{ userSelect: 'none' }}
-                                    >
-                                        {/* Indicateur visuel drop */}
-                                        {isHovered && draggedContent && (
-                                            <div className="absolute inset-0 rounded-lg flex items-center justify-center z-20 pointer-events-none">
-                                                <div className="text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                                                    📌 Déposer ici
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Affichage 4 emojis superposables CDC-conforme */}
-                                        {hasData && (
-                                            <CellEmojiOverlay
-                                                cellData={cellData}
-                                                sidebarContent={sidebarContent}
-                                                onShowDetails={() => {
-                                                    setCurrentCellTimestamp(cell.timestamp);
-                                                    setIsModalOpen(true);
-                                                }}
-                                            />
-                                        )}
-
-                                        {/* Label cellule */}
-                                        <div className="relative z-10">
-                                            <div className="text-xs font-bold text-gray-900 dark:text-white mb-1">
-                                                {massAssignMode && isSelected && '✓ '}
-                                                {isFirst ? '⚙️ ' : ''}{cell.label}
-                                            </div>
-                                            <div className="text-[10px] text-gray-600 dark:text-gray-400">
-                                                {cell.date || cell.week || (cell.phase ? `(${cell.duration || 7}j)` : '')}
-                                            </div>
-                                            {isFirst && (
-                                                <div className="mt-1 text-[10px] dark: font-semibold">
-                                                    Config générale
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-
-                            {/* Bouton + pour ajouter des cellules */}
-                            {cells.length > 0 && (timelineConfig.type === 'seconde' || timelineConfig.type === 'heure' || timelineConfig.type === 'jour' || timelineConfig.type === 'semaine' || timelineConfig.type === 'date') && (
-                                <div
-                                    className="p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all cursor-pointer flex items-center justify-center min-h-[80px]"
-                                    onClick={() => {
-                                        // Ajouter une cellule selon le type
-                                        if (timelineConfig.type === 'seconde' && timelineConfig.totalSeconds) {
-                                            const current = timelineConfig.totalSeconds || cells.length;
-                                            if (current < 900) {
-                                                onConfigChange('totalSeconds', current + 1);
-                                            }
-                                        } else if (timelineConfig.type === 'heure' && timelineConfig.totalHours) {
-                                            const current = timelineConfig.totalHours || cells.length;
-                                            if (current < 336) {
-                                                onConfigChange('totalHours', current + 1);
-                                            }
-                                        } else if (timelineConfig.type === 'jour') {
-                                            const currentDays = timelineConfig.totalDays || cells.length;
-                                            if (currentDays < 365) {
-                                                onConfigChange('totalDays', currentDays + 1);
-                                            }
-                                        } else if (timelineConfig.type === 'semaine') {
-                                            const currentWeeks = timelineConfig.totalWeeks || cells.length;
-                                            if (currentWeeks < 52) {
-                                                onConfigChange('totalWeeks', currentWeeks + 1);
-                                            }
-                                        } else if (timelineConfig.type === 'date' && timelineConfig.end) {
-                                            // Ajouter 1 jour à la date de fin
-                                            const endDate = new Date(timelineConfig.end);
-                                            if (isNaN(endDate)) return;
-                                            endDate.setDate(endDate.getDate() + 1);
-                                            onConfigChange('end', endDate.toISOString().split('T')[0]);
-                                        }
-                                    }}
-                                    title="Ajouter une cellule"
-                                >
-                                    <Plus className="w-6 h-6 text-gray-400" />
-                                </div>
-                            )}
+                {/* TIMELINE GRID - Directement sous la configuration dans le même container */}
+                {cells.length === 0 ? (
+                    <div className="flex items-center justify-center p-8">
+                        <div className="text-center text-gray-500 dark:text-gray-400">
+                            <Settings className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">⚠️ Configurez la période pour voir la timeline</p>
                         </div>
                     </div>
-                </div>
-            )}
+                ) : (
+                    <div className="p-4 space-y-3">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 italic">
+                            💡 <strong>Première case</strong> : Configuration générale (mode, espace, etc.)
+                            <br />
+                            📊 <strong>Autres cases</strong> : Drag & drop des paramètres depuis le panneau latéral
+                        </p>
+
+                        <div className="overflow-auto w-full">
+                            <div ref={gridRef} className="grid grid-cols-6 gap-2 select-none relative auto-rows-min inline-grid" style={{ position: 'relative', minWidth: '100%' }}>
+                                {/* Visual selection frame overlay */}
+                                {selectedCells.length > 1 && !isSelecting && (() => {
+                                    // Compute aggregate bounding box of selected cells using DOM measurements
+                                    const refs = selectedCells.map(ts => cellRefs.current[ts]).filter(Boolean);
+                                    if (!refs || refs.length === 0) return null;
+                                    const gridBox = gridRef.current && gridRef.current.getBoundingClientRect();
+                                    if (!gridBox) return null;
+
+                                    const boxes = refs.map(el => {
+                                        const r = el.getBoundingClientRect();
+                                        return {
+                                            left: r.left,
+                                            top: r.top,
+                                            right: r.right,
+                                            bottom: r.bottom
+                                        };
+                                    });
+
+                                    const leftPx = Math.min(...boxes.map(b => b.left)) - gridBox.left + (gridRef.current ? gridRef.current.scrollLeft : 0);
+                                    const topPx = Math.min(...boxes.map(b => b.top)) - gridBox.top + (gridRef.current ? gridRef.current.scrollTop : 0);
+                                    const rightPx = Math.max(...boxes.map(b => b.right)) - gridBox.left + (gridRef.current ? gridRef.current.scrollLeft : 0);
+                                    const bottomPx = Math.max(...boxes.map(b => b.bottom)) - gridBox.top + (gridRef.current ? gridRef.current.scrollTop : 0);
+
+                                    const widthPx = rightPx - leftPx;
+                                    const heightPx = bottomPx - topPx;
+
+                                    return (
+                                        <div
+                                            className="absolute pointer-events-none z-40 border-4 rounded-2xl shadow-lg animate-fade-in"
+                                            style={{
+                                                top: `${topPx}px`,
+                                                left: `${leftPx}px`,
+                                                width: `${widthPx}px`,
+                                                height: `${heightPx}px`,
+                                                boxSizing: 'border-box',
+                                                transition: 'all 0.08s',
+                                                borderStyle: 'dashed',
+                                                background: 'rgba(80,180,255,0.07)'
+                                            }}
+                                        />
+                                    );
+                                })()}
+                                {/* Selection rectangle (live) */}
+                                {/* Selection marquee (rendered always, animated via opacity/transform) */}
+                                <div
+                                    className="absolute z-50 pointer-events-none border-4 rounded-2xl shadow-lg"
+                                    style={{
+                                        top: selectionRect.y,
+                                        left: selectionRect.x,
+                                        width: selectionRect.width,
+                                        height: selectionRect.height,
+                                        boxSizing: 'border-box',
+                                        borderStyle: 'dashed',
+                                        background: 'rgba(80,180,255,0.06)',
+                                        opacity: selectionRect.visible ? 1 : 0,
+                                        transform: selectionRect.visible ? 'scale(1)' : 'scale(0.98)',
+                                        transition: 'opacity 150ms ease-out, transform 150ms ease-out'
+                                    }}
+                                />
+
+                                {cells.map((cell, idx) => {
+                                    const hasData = hasCellData(cell.timestamp);
+                                    const cellData = getCellData(cell.timestamp);
+                                    const isFirst = idx === 0;
+                                    const isSelected = selectedCells.includes(cell.timestamp);
+                                    const isHovered = hoveredCell === cell.timestamp;
+
+                                    // Construire classes CSS pour la cellule
+                                    let cellClass = `relative p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[80px]`;
+
+                                    // Gradient d'intensité GitHub-style selon nombre de données
+                                    if (hasData) {
+                                        const dataCount = Object.keys(cellData).filter(k =>
+                                            !['timestamp', 'date', 'label', 'phase', 'day', 'week', 'hours', 'seconds', 'note', '_meta'].includes(k)
+                                        ).length;
+                                        const intensity = Math.min(dataCount / 10, 1);
+                                        const intensityIndex = Math.floor(intensity * 4); // 0-4
+
+                                        // Palette verte progressive (GitHub-style)
+                                        const gradients = [
+                                            'border-green-400 bg-green-100/40 dark:border-green-600 dark:bg-green-950/30',
+                                            'border-green-500 bg-green-200/50 dark:border-green-500 dark:bg-green-900/40',
+                                            'border-green-600 bg-green-300/60 dark:border-green-400 dark:bg-green-800/50',
+                                            'border-green-700 bg-green-400/70 dark:border-green-300 dark:bg-green-700/60',
+                                            'border-green-800 bg-green-500/80 dark:border-green-200 dark:bg-green-600/70'
+                                        ];
+                                        cellClass += ' ' + gradients[intensityIndex];
+                                    } else {
+                                        cellClass += ' border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800';
+                                    }
+
+                                    // Selected par clic simple (modal)
+                                    cellClass += selectedCell === cell.timestamp
+                                        ? ' ring-2 ring-violet-500 shadow-lg'
+                                        : ' hover:border-violet-400 hover:shadow-md';
+
+                                    // Selected en mode masse (multi-sélection)
+                                    cellClass += isSelected
+                                        ? ' ring-4 ring-blue-500 dark:ring-blue-400 bg-blue-500/10'
+                                        : '';
+
+                                    // Hover pendant drag
+                                    cellClass += isHovered && draggedContent
+                                        ? ' ring-4 ring-violet-500 dark:ring-violet-400 scale-105 shadow-2xl animate-pulse'
+                                        : '';
+
+                                    // Span 2 colonnes pour première cellule
+                                    if (isFirst) {
+                                        cellClass += ' col-span-2';
+                                    }
+
+                                    return (
+                                        <div
+                                            key={cell.timestamp}
+                                            onDragOver={(e) => handleDragOver(e, cell.timestamp)}
+                                            onDragLeave={handleDragLeave}
+                                            onDrop={(e) => handleDrop(e, cell.timestamp)}
+                                            onClick={(e) => handleCellClick(e, cell.timestamp)}
+                                            onContextMenu={(e) => handleCellContextMenu(e, cell.timestamp)}
+                                            onMouseEnter={(e) => { handleCellHover(e, cell.timestamp); }}
+                                            onMouseLeave={handleCellLeave}
+                                            onMouseDown={(e) => { if (e.button === 0) startSelection(e, idx, cell.timestamp); }}
+                                            onMouseUp={(e) => { /* handled globally to compute rectangle on mouseup */ }}
+                                            ref={(el) => { cellRefs.current[cell.timestamp] = el; }}
+                                            className={cellClass}
+                                            style={{ userSelect: 'none' }}
+                                        >
+                                            {/* Indicateur visuel drop */}
+                                            {isHovered && draggedContent && (
+                                                <div className="absolute inset-0 rounded-lg flex items-center justify-center z-20 pointer-events-none">
+                                                    <div className="text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                                                        📌 Déposer ici
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Affichage 4 emojis superposables CDC-conforme */}
+                                            {hasData && (
+                                                <CellEmojiOverlay
+                                                    cellData={cellData}
+                                                    sidebarContent={sidebarContent}
+                                                    onShowDetails={() => {
+                                                        setCurrentCellTimestamp(cell.timestamp);
+                                                        setIsModalOpen(true);
+                                                    }}
+                                                />
+                                            )}
+
+                                            {/* Label cellule */}
+                                            <div className="relative z-10">
+                                                <div className="text-xs font-bold text-gray-900 dark:text-white mb-1">
+                                                    {massAssignMode && isSelected && '✓ '}
+                                                    {isFirst ? '⚙️ ' : ''}{cell.label}
+                                                </div>
+                                                <div className="text-[10px] text-gray-600 dark:text-gray-400">
+                                                    {cell.date || cell.week || (cell.phase ? `(${cell.duration || 7}j)` : '')}
+                                                </div>
+                                                {isFirst && (
+                                                    <div className="mt-1 text-[10px] dark: font-semibold">
+                                                        Config générale
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+
+                                {/* Bouton + pour ajouter des cellules */}
+                                {cells.length > 0 && (timelineConfig.type === 'seconde' || timelineConfig.type === 'heure' || timelineConfig.type === 'jour' || timelineConfig.type === 'semaine' || timelineConfig.type === 'date') && (
+                                    <div
+                                        className="p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all cursor-pointer flex items-center justify-center min-h-[80px]"
+                                        onClick={() => {
+                                            // Ajouter une cellule selon le type
+                                            if (timelineConfig.type === 'seconde' && timelineConfig.totalSeconds) {
+                                                const current = timelineConfig.totalSeconds || cells.length;
+                                                if (current < 900) {
+                                                    onConfigChange('totalSeconds', current + 1);
+                                                }
+                                            } else if (timelineConfig.type === 'heure' && timelineConfig.totalHours) {
+                                                const current = timelineConfig.totalHours || cells.length;
+                                                if (current < 336) {
+                                                    onConfigChange('totalHours', current + 1);
+                                                }
+                                            } else if (timelineConfig.type === 'jour') {
+                                                const currentDays = timelineConfig.totalDays || cells.length;
+                                                if (currentDays < 365) {
+                                                    onConfigChange('totalDays', currentDays + 1);
+                                                }
+                                            } else if (timelineConfig.type === 'semaine') {
+                                                const currentWeeks = timelineConfig.totalWeeks || cells.length;
+                                                if (currentWeeks < 52) {
+                                                    onConfigChange('totalWeeks', currentWeeks + 1);
+                                                }
+                                            } else if (timelineConfig.type === 'date' && timelineConfig.end) {
+                                                // Ajouter 1 jour à la date de fin
+                                                const endDate = new Date(timelineConfig.end);
+                                                if (isNaN(endDate)) return;
+                                                endDate.setDate(endDate.getDate() + 1);
+                                                onConfigChange('end', endDate.toISOString().split('T')[0]);
+                                            }
+                                        }}
+                                        title="Ajouter une cellule"
+                                    >
+                                        <Plus className="w-6 h-6 text-gray-400" />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
 
             {/* Modal grouped preset */}
             <GroupedPresetModal
