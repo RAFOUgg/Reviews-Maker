@@ -426,106 +426,106 @@ const PipelineWithSidebar = ({
                         </div>
                     </div>
 
-                {/* Main grid container: Sidebar + Grid in horizontal layout below config */}
-                <div className="flex flex-1 gap-3 sm:gap-4 min-h-[400px]">
-                    {/* Sidebar gauche - responsive width */}
-                    <div className="w-full sm:w-80 flex-shrink-0 bg-gray-50 rounded-lg p-2 sm:p-3 overflow-y-auto">
-                        <PipelineContentsSidebar
-                            contentSchema={contentSchema}
-                            onDragStart={handleDragStart}
-                            pipelineType={pipelineType}
-                            readonly={readonly}
-                        />
-                    </div>
+                    {/* Main grid container: Sidebar + Grid in horizontal layout below config */}
+                    <div className="flex flex-1 gap-3 sm:gap-4 min-h-[400px]">
+                        {/* Sidebar gauche - responsive width */}
+                        <div className="w-full sm:w-80 flex-shrink-0 bg-gray-50 rounded-lg p-2 sm:p-3 overflow-y-auto">
+                            <PipelineContentsSidebar
+                                contentSchema={contentSchema}
+                                onDragStart={handleDragStart}
+                                pipelineType={pipelineType}
+                                readonly={readonly}
+                            />
+                        </div>
 
-                    {/* Grille de cases - takes remaining space */}
-                    <div className="flex-1 bg-white/50 rounded-lg overflow-hidden">
-                        <PipelineGridView
-                            cells={cells}
-                            config={config}
-                            cellIndices={getPageCells()}
-                            onCellClick={handleCellClick}
-                            onDropOnCell={handleDropOnCell}
-                            draggedContent={draggedContent}
-                            selectedCells={selectedCells}
-                            readonly={readonly}
-                            onAddCells={handleAddCells}
-                            canAddMore={config.duration < (INTERVAL_TYPES[config.intervalType].max || 365)}
-                        />
+                        {/* Grille de cases - takes remaining space */}
+                        <div className="flex-1 bg-white/50 rounded-lg overflow-hidden">
+                            <PipelineGridView
+                                cells={cells}
+                                config={config}
+                                cellIndices={getPageCells()}
+                                onCellClick={handleCellClick}
+                                onDropOnCell={handleDropOnCell}
+                                draggedContent={draggedContent}
+                                selectedCells={selectedCells}
+                                readonly={readonly}
+                                onAddCells={handleAddCells}
+                                canAddMore={config.duration < (INTERVAL_TYPES[config.intervalType].max || 365)}
+                            />
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Modal d'édition */}
-            <AnimatePresence>
-                {isModalOpen && selectedCell !== null && (
-                    <PipelineDataModal
-                        isOpen={isModalOpen}
-                        onClose={() => {
-                            setIsModalOpen(false);
-                            setSelectedCell(null);
-                            setDroppedItemForModal(null);
-                        }}
-                        cellData={cells[selectedCell] || {}}
-                        sidebarSections={contentSchema}
-                        onSave={(payload) => {
-                            const cellIndex = payload.timestamp || selectedCell;
-                            const cellData = payload.data || payload;
-                            handleSaveCell(cellIndex, cellData);
-                        }}
-                        timestamp={selectedCell}
-                        intervalLabel={`Jour ${selectedCell + 1}`}
-                        droppedItem={droppedItemForModal}
-                        pipelineType={pipelineType}
-                    />
-                )}
-
-                {/* Gestionnaire de groupes de pré-réglages */}
-                <PresetGroupsManager
-                    isOpen={showPresetsManager}
-                    onClose={() => setShowPresetsManager(false)}
-                    pipelineType={pipelineType}
-                    sidebarSections={contentSchema}
-                    onApplyGroup={(groupFields) => {
-                        // Appliquer le groupe à la case sélectionnée ou aux cases multi-sélectionnées
-                        if (selectedCells.length > 0) {
-                            handleApplyToSelection(groupFields);
-                        } else if (selectedCell !== null) {
-                            handleSaveCell(selectedCell, { ...cells[selectedCell], ...groupFields });
-                        }
-                        setShowPresetsManager(false);
-                    }}
-                />
-            </AnimatePresence>
-
-            {/* Boutons d'action si multi-sélection */}
-            {selectedCells.length > 0 && (
-                <div className="fixed bottom-6 right-6 bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-2xl">
-                    <div className="flex items-center gap-4">
-                        <span className="text-white font-medium">
-                            {selectedCells.length} case(s) sélectionnée(s)
-                        </span>
-                        <LiquidButton
-                            size="sm"
-                            onClick={() => {
-                                // Ouvrir modal pour données à appliquer
-                                setSelectedCell(selectedCells[0]);
-                                setIsModalOpen(true);
+                {/* Modal d'édition */}
+                <AnimatePresence>
+                    {isModalOpen && selectedCell !== null && (
+                        <PipelineDataModal
+                            isOpen={isModalOpen}
+                            onClose={() => {
+                                setIsModalOpen(false);
+                                setSelectedCell(null);
+                                setDroppedItemForModal(null);
                             }}
-                        >
-                            Appliquer des données
-                        </LiquidButton>
-                        <LiquidButton
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setSelectedCells([])}
-                        >
-                            Annuler
-                        </LiquidButton>
+                            cellData={cells[selectedCell] || {}}
+                            sidebarSections={contentSchema}
+                            onSave={(payload) => {
+                                const cellIndex = payload.timestamp || selectedCell;
+                                const cellData = payload.data || payload;
+                                handleSaveCell(cellIndex, cellData);
+                            }}
+                            timestamp={selectedCell}
+                            intervalLabel={`Jour ${selectedCell + 1}`}
+                            droppedItem={droppedItemForModal}
+                            pipelineType={pipelineType}
+                        />
+                    )}
+
+                    {/* Gestionnaire de groupes de pré-réglages */}
+                    <PresetGroupsManager
+                        isOpen={showPresetsManager}
+                        onClose={() => setShowPresetsManager(false)}
+                        pipelineType={pipelineType}
+                        sidebarSections={contentSchema}
+                        onApplyGroup={(groupFields) => {
+                            // Appliquer le groupe à la case sélectionnée ou aux cases multi-sélectionnées
+                            if (selectedCells.length > 0) {
+                                handleApplyToSelection(groupFields);
+                            } else if (selectedCell !== null) {
+                                handleSaveCell(selectedCell, { ...cells[selectedCell], ...groupFields });
+                            }
+                            setShowPresetsManager(false);
+                        }}
+                    />
+                </AnimatePresence>
+
+                {/* Boutons d'action si multi-sélection */}
+                {selectedCells.length > 0 && (
+                    <div className="fixed bottom-6 right-6 bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-2xl">
+                        <div className="flex items-center gap-4">
+                            <span className="text-white font-medium">
+                                {selectedCells.length} case(s) sélectionnée(s)
+                            </span>
+                            <LiquidButton
+                                size="sm"
+                                onClick={() => {
+                                    // Ouvrir modal pour données à appliquer
+                                    setSelectedCell(selectedCells[0]);
+                                    setIsModalOpen(true);
+                                }}
+                            >
+                                Appliquer des données
+                            </LiquidButton>
+                            <LiquidButton
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setSelectedCells([])}
+                            >
+                                Annuler
+                            </LiquidButton>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )}
+            </div>
         </LiquidCard>
     );
 };
