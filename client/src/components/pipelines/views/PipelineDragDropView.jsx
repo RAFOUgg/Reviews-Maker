@@ -2453,68 +2453,67 @@ const PipelineDragDropView = ({
                     </div>
                 </div>
             )}
-        </div>
 
-            {/* Modal grouped preset */ }
-    <GroupedPresetModal
-        isOpen={showGroupedPresetModal}
-        onClose={() => setShowGroupedPresetModal(false)}
-        groups={groupedPresets}
-        setGroups={setGroupedPresets}
-        sidebarContent={sidebarContent}
-        type={type}
-    />
+            {/* Modal grouped preset */}
+            <GroupedPresetModal
+                isOpen={showGroupedPresetModal}
+                onClose={() => setShowGroupedPresetModal(false)}
+                groups={groupedPresets}
+                setGroups={setGroupedPresets}
+                sidebarContent={sidebarContent}
+                type={type}
+            />
 
-    {/* Modal save/load pipeline presets */ }
-    <SavePipelineModal
-        isOpen={showSavePipelineModal}
-        onClose={() => setShowSavePipelineModal(false)}
-        timelineConfig={timelineConfig}
-        timelineData={timelineData}
-        onSavePreset={(p) => { /* noop - preserved for external hooks */ }}
-        onLoadPreset={(p) => applyPipelinePreset(p)}
-    />
+            {/* Modal save/load pipeline presets */}
+            <SavePipelineModal
+                isOpen={showSavePipelineModal}
+                onClose={() => setShowSavePipelineModal(false)}
+                timelineConfig={timelineConfig}
+                timelineData={timelineData}
+                onSavePreset={(p) => { /* noop - preserved for external hooks */ }}
+                onLoadPreset={(p) => applyPipelinePreset(p)}
+            />
 
-    {/* Modal d'édition de cellule */ }
-    <PipelineDataModal
-        isOpen={isModalOpen}
-        onClose={() => {
-            setIsModalOpen(false);
-            setDroppedItem(null);
-        }}
-        cellData={getCellData(currentCellTimestamp)}
-        sidebarSections={sidebarContent}
-        onSave={handleModalSave}
-        timestamp={currentCellTimestamp}
-        intervalLabel={cells.find(c => c.timestamp === currentCellTimestamp)?.label || ''}
-        droppedItem={droppedItem}
-        pipelineType={type}
-        onFieldDelete={handleFieldDelete}
-        groupedPresets={groupedPresets}
-        selectedCells={selectedCells}
-    />
+            {/* Modal d'édition de cellule */}
+            <PipelineDataModal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setDroppedItem(null);
+                }}
+                cellData={getCellData(currentCellTimestamp)}
+                sidebarSections={sidebarContent}
+                onSave={handleModalSave}
+                timestamp={currentCellTimestamp}
+                intervalLabel={cells.find(c => c.timestamp === currentCellTimestamp)?.label || ''}
+                droppedItem={droppedItem}
+                pipelineType={type}
+                onFieldDelete={handleFieldDelete}
+                groupedPresets={groupedPresets}
+                selectedCells={selectedCells}
+            />
 
-    {/* Modal configuration préréglage complet retirée (CDC) */ }
+            {/* Modal configuration préréglage complet retirée (CDC) */}
 
-    {/* Tooltip au survol */ }
-    <PipelineCellTooltip
-        cellData={tooltipData.cellData}
-        sectionLabel={tooltipData.section}
-        visible={tooltipData.visible}
-        position={tooltipData.position}
-    />
+            {/* Tooltip au survol */}
+            <PipelineCellTooltip
+                cellData={tooltipData.cellData}
+                sectionLabel={tooltipData.section}
+                visible={tooltipData.visible}
+                position={tooltipData.position}
+            />
 
-    {/* Menu contextuel stylisé pour config individuelle et assignation rapide - Utilise ItemContextMenu */ }
-    {
-        contextMenu && (
-            <ItemContextMenu
-                item={contextMenu.item}
-                position={contextMenu.position}
-                anchorRect={contextMenu.anchorRect}
-                onClose={() => setContextMenu(null)}
-                isConfigured={false}
-                cells={cells}
-                onAssignNow={(key, val) => {
+            {/* Menu contextuel stylé pour config individuelle et assignation rapide - Utilise ItemContextMenu */}
+            {
+                contextMenu && (
+                    <ItemContextMenu
+                        item={contextMenu.item}
+                        position={contextMenu.position}
+                        anchorRect={contextMenu.anchorRect}
+                        onClose={() => setContextMenu(null)}
+                        isConfigured={false}
+                        cells={cells}
+                        onAssignNow={(key, val) => {
                     // Assignation à toutes les cases sélectionnées ou à toutes si aucune sélection
                     const targets = selectedCells.length > 0 ? selectedCells : cells.map(c => c.timestamp);
                     const changes = [];
@@ -2555,22 +2554,22 @@ const PipelineDragDropView = ({
                     if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-assign-all', changes });
                     showToast(`${contextMenu.item.label} assigné à toutes les cases`, 'success');
                 }}
-            />
-        )
-    }
+                />
+            )
+        }
 
-    {/* CELL CONTEXT MENU - RENDU GLOBAL */ }
-    {
-        cellContextMenu && (
-            <CellContextMenu
-                isOpen={cellContextMenu !== null}
-                position={cellContextMenu?.position || { x: 0, y: 0 }}
-                cellTimestamp={cellContextMenu?.timestamp}
-                selectedCells={cellContextMenu?.selectedCells || []}
-                cellData={cellContextMenu?.timestamp ? getCellData(cellContextMenu.timestamp) : null}
-                sidebarContent={sidebarContent}
-                onClose={() => setCellContextMenu(null)}
-                onDeleteAll={() => {
+            {/* Menu contextuel cellule */}
+            {
+                cellContextMenu && (
+                    <CellContextMenu
+                        isOpen={cellContextMenu !== null}
+                        position={cellContextMenu?.position || { x: 0, y: 0 }}
+                        cellTimestamp={cellContextMenu?.timestamp}
+                        selectedCells={cellContextMenu?.selectedCells || []}
+                        cellData={cellContextMenu?.timestamp ? getCellData(cellContextMenu.timestamp) : null}
+                        sidebarContent={sidebarContent}
+                        onClose={() => setCellContextMenu(null)}
+                        onDeleteAll={() => {
                     const targets = cellContextMenu?.selectedCells || [];
                     console.log(`💥 handleDeleteAll: targets=${targets.join(',')}`);
                     setConfirmState({
@@ -2600,15 +2599,15 @@ const PipelineDragDropView = ({
                         }
                     });
                 }}
-                onDeleteFields={handleDeleteFieldsFromCells}
-                onCopy={handleCopyCellData}
-                onPaste={handlePasteCellData}
-                hasCopiedData={copiedCellData !== null}
-            />
-        )
-    }
-            </div >
-            );
+                        onDeleteFields={handleDeleteFieldsFromCells}
+                        onCopy={handleCopyCellData}
+                        onPaste={handlePasteCellData}
+                        hasCopiedData={copiedCellData !== null}
+                    />
+                )
+            }
+        </div>
+    );
 };
 
 export { GroupedPresetModal };
