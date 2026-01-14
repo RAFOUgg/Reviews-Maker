@@ -1972,58 +1972,58 @@ const PipelineDragDropView = ({
             {/* TIMELINE PRINCIPALE */}
             <div className="flex-1 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden flex flex-col">
                 {/* HEADER CONFIGURATION */}
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-transparent dark:bg-transparent">
-                    <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-bold text-gray-900 dark:text-white text-lg flex items-center gap-2">
-                            <span>📊</span>
-                            Pipeline {type === 'culture' ? 'Culture' : 'Curing/Maturation'}
+                <div className="p-3 md:p-4 border-b border-gray-200 dark:border-gray-700 bg-transparent dark:bg-transparent flex-shrink-0 max-h-[280px] overflow-y-auto">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 md:mb-3">
+                        <h3 className="font-bold text-gray-900 dark:text-white text-base md:text-lg flex items-center gap-2 truncate">
+                            <span className="flex-shrink-0">📊</span>
+                            <span className="truncate">Pipeline {type === 'culture' ? 'Culture' : 'Curing'}</span>
                         </h3>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
                             {/* Undo button */}
                             <button
                                 onClick={() => undoLastAction()}
                                 disabled={historyPointer < 0}
-                                className={`group flex items-center gap-2 px-3 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${historyPointer < 0
+                                className={`group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl font-medium text-xs md:text-sm transition-all duration-200 ${historyPointer < 0
                                     ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-300 dark:border-gray-700'
                                     : 'bg-gray-100 dark:bg-gray-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 border border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 text-gray-700 dark:text-gray-300 hover:text-blue-700 dark:hover:text-blue-300 shadow-sm hover:shadow'
                                     }`}
                                 title="Annuler la dernière action (Ctrl+Z)"
                             >
-                                <svg className="w-4 h-4 transform group-hover:-rotate-45 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="w-3 h-3 md:w-4 md:h-4 transform group-hover:-rotate-45 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                                 </svg>
-                                <span>Annuler</span>
+                                <span className="hidden md:inline">Annuler</span>
                             </button>
 
                             {/* Redo button */}
                             <button
                                 onClick={() => redoLastAction()}
                                 disabled={historyPointer >= actionsHistory.length - 1}
-                                className={`group flex items-center gap-2 px-3 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${historyPointer >= actionsHistory.length - 1
+                                className={`group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl font-medium text-xs md:text-sm transition-all duration-200 ${historyPointer >= actionsHistory.length - 1
                                     ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-300 dark:border-gray-700'
                                     : 'bg-gray-100 dark:bg-gray-800 hover:bg-green-100 dark:hover:bg-green-900/40 border border-gray-300 dark:border-gray-600 hover:border-green-400 dark:hover:border-green-500 text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-300 shadow-sm hover:shadow'
                                     }`}
                                 title="Refaire la dernière action (Ctrl+Shift+Z / Ctrl+Y)"
                             >
-                                <svg className="w-4 h-4 transform group-hover:rotate-45 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="w-3 h-3 md:w-4 md:h-4 transform group-hover:rotate-45 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10a8 8 0 01-8 8v2m0-2a8 8 0 100-16v2m0 0h10a8 8 0 018 8v2M21 10l-6-6m6 6l-6 6" />
                                 </svg>
-                                <span>Refaire</span>
+                                <span className="hidden md:inline">Refaire</span>
                             </button>
                         </div>
                     </div>
 
                     {/* Configuration inline - Dynamique selon type d'intervalle */}
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mt-3 md:mt-3">
                         <div>
-                            <label className="text-xs font-medium text-gray-900 mb-1 block">
-                                Type d'intervalles
+                            <label className="text-xs font-medium text-gray-900 dark:text-gray-300 mb-1 block truncate">
+                                Type intervalle
                             </label>
                             <select
                                 value={timelineConfig.type || 'phase'}
                                 onChange={(e) => onConfigChange('type', e.target.value)}
                                 disabled={timelineData.length > 0}
-                                className={`w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 ${timelineData.length > 0 ? 'opacity-50 cursor-not-allowed' : ''
+                                className={`w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm focus:ring-2 focus:ring-blue-500 ${timelineData.length > 0 ? 'opacity-50 cursor-not-allowed' : ''
                                     }`}
                                 title={timelineData.length > 0 ? '⚠️ Impossible de changer la trame : des données sont déjà renseignées' : 'Choisir le type d\'intervalles'}
                             >
@@ -2035,18 +2035,18 @@ const PipelineDragDropView = ({
                                 <option value="phase">🌱 Phases</option>
                             </select>
                             {timelineData.length > 0 && (
-                                <p className="text-xs text-orange-600 dark:text-orange-400 mt-1 flex items-center gap-1">
-                                    <span>⚠️</span>
-                                    <span>Trame verrouillée ({timelineData.length} cellule{timelineData.length > 1 ? 's' : ''} remplie{timelineData.length > 1 ? 's' : ''})</span>
+                                <p className="text-xs text-orange-600 dark:text-orange-400 mt-1 flex items-center gap-1 line-clamp-2">
+                                    <span className="flex-shrink-0">⚠️</span>
+                                    <span className="truncate">Trame verrouillée ({timelineData.length} cell{timelineData.length > 1 ? 's' : ''})</span>
                                 </p>
                             )}
                         </div>
 
                         {/* SECONDES - Max 900s */}
                         {timelineConfig.type === 'seconde' && (
-                            <div className="col-span-3">
-                                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                                    Nombre de secondes (max 900s)
+                            <div className="col-span-2 md:col-span-3">
+                                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                    Secondes (max 900)
                                 </label>
                                 <input
                                     type="number"
@@ -2054,17 +2054,17 @@ const PipelineDragDropView = ({
                                     max="900"
                                     value={timelineConfig.totalSeconds || ''}
                                     onChange={(e) => onConfigChange('totalSeconds', parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                                    placeholder="Ex: 300"
+                                    className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                    placeholder="300"
                                 />
                             </div>
                         )}
 
                         {/* HEURES - Max 336h */}
                         {timelineConfig.type === 'heure' && (
-                            <div className="col-span-3">
-                                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                                    Nombre d'heures (max 336h)
+                            <div className="col-span-2 md:col-span-3">
+                                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                    Heures (max 336)
                                 </label>
                                 <input
                                     type="number"
@@ -2072,17 +2072,17 @@ const PipelineDragDropView = ({
                                     max="336"
                                     value={timelineConfig.totalHours || ''}
                                     onChange={(e) => onConfigChange('totalHours', parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                                    placeholder="Ex: 72"
+                                    className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                    placeholder="72"
                                 />
                             </div>
                         )}
 
                         {/* JOURS - Max 365 jours */}
                         {timelineConfig.type === 'jour' && (
-                            <div className="col-span-3">
-                                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                                    Nombre de jours (max 365)
+                            <div className="col-span-2 md:col-span-3">
+                                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                    Jours (max 365)
                                 </label>
                                 <input
                                     type="number"
@@ -2090,8 +2090,8 @@ const PipelineDragDropView = ({
                                     max="365"
                                     value={timelineConfig.totalDays || ''}
                                     onChange={(e) => onConfigChange('totalDays', parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                                    placeholder="Ex: 90"
+                                    className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                    placeholder="90"
                                 />
                             </div>
                         )}
@@ -2099,35 +2099,35 @@ const PipelineDragDropView = ({
                         {/* DATES - Date début + Date fin avec calcul automatique */}
                         {timelineConfig.type === 'date' && (
                             <>
-                                <div>
-                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                                        Date début *
+                                <div className="col-span-1">
+                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                        Début *
                                     </label>
                                     <input
                                         type="date"
                                         value={timelineConfig.start || ''}
                                         onChange={(e) => onConfigChange('start', e.target.value)}
-                                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                        className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                                     />
                                 </div>
-                                <div>
-                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                                        Date fin *
+                                <div className="col-span-1">
+                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                        Fin *
                                     </label>
                                     <input
                                         type="date"
                                         value={timelineConfig.end || ''}
                                         onChange={(e) => onConfigChange('end', e.target.value)}
-                                        className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                        className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                                     />
                                 </div>
                                 {timelineConfig.start && timelineConfig.end && (
-                                    <div>
-                                        <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                                            Durée calculée
+                                    <div className="col-span-1">
+                                        <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                            Durée
                                         </label>
-                                        <div className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-900 dark:text-white">
-                                            {Math.ceil((new Date(timelineConfig.end) - new Date(timelineConfig.start)) / (1000 * 60 * 60 * 24)) + 1} jours
+                                        <div className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm font-medium text-gray-900 dark:text-white truncate">
+                                            {Math.ceil((new Date(timelineConfig.end) - new Date(timelineConfig.start)) / (1000 * 60 * 60 * 24)) + 1}j
                                         </div>
                                     </div>
                                 )}
@@ -2136,9 +2136,9 @@ const PipelineDragDropView = ({
 
                         {/* SEMAINES - Nombre de semaines */}
                         {timelineConfig.type === 'semaine' && (
-                            <div className="col-span-3">
-                                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                                    Nombre de semaines
+                            <div className="col-span-2 md:col-span-3">
+                                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                    Semaines (max 52)
                                 </label>
                                 <input
                                     type="number"
@@ -2146,15 +2146,15 @@ const PipelineDragDropView = ({
                                     max="52"
                                     value={timelineConfig.totalWeeks || ''}
                                     onChange={(e) => onConfigChange('totalWeeks', parseInt(e.target.value))}
-                                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                                    placeholder="Ex: 12"
+                                    className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                    placeholder="12"
                                 />
                             </div>
                         )}
 
                         {/* PHASES - Prédéfinies selon type de pipeline */}
                         {timelineConfig.type === 'phase' && (
-                            <div className="col-span-3">
+                            <div className="col-span-2 md:col-span-3">
                                 <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                                     Phases prédéfinies
                                 </label>
@@ -2224,22 +2224,21 @@ const PipelineDragDropView = ({
 
                     {/* TIMELINE GRID - Directement sous la configuration dans le même container */}
                     {cells.length === 0 ? (
-                        <div className="flex items-center justify-center p-8">
+                        <div className="flex-1 flex items-center justify-center p-4 md:p-8">
                             <div className="text-center text-gray-500 dark:text-gray-400">
-                                <Settings className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                                <p className="text-sm">⚠️ Configurez la période pour voir la timeline</p>
+                                <Settings className="w-8 md:w-12 h-8 md:h-12 mx-auto mb-2 opacity-50" />
+                                <p className="text-xs md:text-sm">⚠️ Configurez la période pour voir la timeline</p>
                             </div>
                         </div>
                     ) : (
-                        <div className="mt-4 space-y-3">
-                            <p className="text-sm text-gray-600 dark:text-gray-400 italic">
-                                💡 <strong>Première case</strong> : Configuration générale (mode, espace, etc.)
-                                <br />
-                                📊 <strong>Autres cases</strong> : Drag & drop des paramètres depuis le panneau latéral
+                        <div className="flex-1 flex flex-col overflow-hidden">
+                            <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 italic px-3 md:px-4 pt-3 md:pt-4 pb-2 md:pb-3 flex-shrink-0 line-clamp-2">
+                                💡 <span className="hidden sm:inline"><strong>Première case</strong> : Config générale </span><span className="sm:hidden"><strong>1ère case</strong>: Config </span>|
+                                <span className="hidden sm:inline"> 📊 <strong>Autres cases</strong> : Drag & drop paramètres</span><span className="sm:hidden"> 📊 Drag & drop</span>
                             </p>
 
-                            <div className="overflow-auto w-full">
-                                <div ref={gridRef} className="grid grid-cols-6 gap-2 select-none relative auto-rows-min inline-grid" style={{ position: 'relative', minWidth: '100%' }}>
+                            <div className="flex-1 overflow-auto">
+                                <div ref={gridRef} className="grid gap-1 sm:gap-2 select-none relative auto-rows-min inline-grid px-3 md:px-4 pb-3 md:pb-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', position: 'relative', minWidth: '100%' }}>
                                     {/* Visual selection frame overlay */}
                                     {selectedCells.length > 1 && !isSelecting && (() => {
                                         // Compute aggregate bounding box of selected cells using DOM measurements
@@ -2308,7 +2307,7 @@ const PipelineDragDropView = ({
                                         const isHovered = hoveredCell === cell.timestamp;
 
                                         // Construire classes CSS pour la cellule
-                                        let cellClass = `relative p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[80px]`;
+                                        let cellClass = `relative p-1.5 sm:p-2 md:p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[60px] sm:min-h-[70px] md:min-h-[80px]`;
 
                                         // Gradient d'intensité GitHub-style selon nombre de données
                                         if (hasData) {
@@ -2390,16 +2389,16 @@ const PipelineDragDropView = ({
 
                                                 {/* Label cellule */}
                                                 <div className="relative z-10">
-                                                    <div className="text-xs font-bold text-gray-900 dark:text-white mb-1">
+                                                    <div className="text-[10px] sm:text-xs md:text-xs font-bold text-gray-900 dark:text-white mb-0.5 sm:mb-1 truncate">
                                                         {massAssignMode && isSelected && '✓ '}
-                                                        {isFirst ? '⚙️ ' : ''}{cell.label}
+                                                        {isFirst ? '⚙️ ' : ''}<span className="truncate inline-block max-w-full">{cell.label}</span>
                                                     </div>
-                                                    <div className="text-[10px] text-gray-600 dark:text-gray-400">
+                                                    <div className="text-[8px] sm:text-[9px] md:text-[10px] text-gray-600 dark:text-gray-400 truncate">
                                                         {cell.date || cell.week || (cell.phase ? `(${cell.duration || 7}j)` : '')}
                                                     </div>
                                                     {isFirst && (
-                                                        <div className="mt-1 text-[10px] dark: font-semibold">
-                                                            Config générale
+                                                        <div className="mt-0.5 sm:mt-1 text-[8px] sm:text-[9px] md:text-[10px] dark:text-gray-300 font-semibold truncate">
+                                                            Config
                                                         </div>
                                                     )}
                                                 </div>
@@ -2410,7 +2409,7 @@ const PipelineDragDropView = ({
                                     {/* Bouton + pour ajouter des cellules */}
                                     {cells.length > 0 && (timelineConfig.type === 'seconde' || timelineConfig.type === 'heure' || timelineConfig.type === 'jour' || timelineConfig.type === 'semaine' || timelineConfig.type === 'date') && (
                                         <div
-                                            className="p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all cursor-pointer flex items-center justify-center min-h-[80px]"
+                                            className="p-1.5 sm:p-2 md:p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all cursor-pointer flex items-center justify-center min-h-[60px] sm:min-h-[70px] md:min-h-[80px]"
                                             onClick={() => {
                                                 // Ajouter une cellule selon le type
                                                 if (timelineConfig.type === 'seconde' && timelineConfig.totalSeconds) {
@@ -2443,7 +2442,7 @@ const PipelineDragDropView = ({
                                             }}
                                             title="Ajouter une cellule"
                                         >
-                                            <Plus className="w-6 h-6 text-gray-400" />
+                                            <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-400" />
                                         </div>
                                     )}
                                 </div>
