@@ -6,15 +6,14 @@ import CreateReviewFormWrapper from '../../../components/account/CreateReviewFor
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
-import SeparationPipelineSection from '../../../components/pipelines/sections/SeparationPipelineSection'
+import SeparationPipelineAdapter from '../../../components/pipelines/adapters/SeparationPipelineAdapter'
 import AnalyticsSection from '../../../components/sections/AnalyticsSection'
 import VisualSection from '../../../components/sections/VisualSection'
 import OdorSection from '../../../components/sections/OdorSection'
 import TextureSection from '../../../components/sections/TextureSection'
 import TasteSection from '../../../components/sections/TasteSection'
 import EffectsSection from '../../../components/sections/EffectsSection'
-
-import CuringMaturationSection from '../../../components/sections/CuringMaturationSection'
+import CuringMaturationAdapter from '../../../components/pipelines/adapters/CuringMaturationAdapter'
 
 // Import hooks
 import { useHashForm } from './hooks/useHashForm'
@@ -49,14 +48,14 @@ export default function CreateHashReview() {
     // Map des sections aux composants
     const sectionComponents = {
         infos: InfosGenerales,
-        separation: SeparationPipelineSection,
+        separation: SeparationPipelineAdapter,
         analytics: AnalyticsSection,
         visual: VisualSection,
         odeurs: OdorSection,
         texture: TextureSection,
         gouts: TasteSection,
         effets: EffectsSection,
-        curing: CuringMaturationSection
+        curing: CuringMaturationAdapter
     }
 
     const handleSave = async () => {
