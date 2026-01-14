@@ -4,9 +4,7 @@
  */
 
 import React from 'react';
-import { Sprout } from 'lucide-react';
-import LiquidCard from './LiquidCard';
-import CulturePipelineDragDrop from './CulturePipelineDragDrop';
+import CulturePipelineDragDrop from '../legacy/CulturePipelineDragDrop';
 
 const CulturePipelineSection = ({ data = {}, onChange }) => {
     // Adapter les handlers pour PipelineDragDropView
@@ -46,35 +44,20 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center gap-3 mb-4">
-                <Sprout className="w-6 h-6 text-green-400" />
-                <h2 className="text-2xl font-semibold text-white">Pipeline Culture - Phase 1</h2>
-            </div>
-
-            <CulturePipelineDragDrop
-                timelineConfig={data.cultureTimelineConfig || { type: 'phase' }}
-                timelineData={data.cultureTimelineData || []}
-                onConfigChange={handleConfigChange}
-                onDataChange={handleDataChange}
-                initialData={{
-                    mode: data.mode,
-                    spaceType: data.spaceType,
-                    substrat: data.substrat,
-                    lightType: data.lightType
-                }}
-            />
-        </div>
+        <CulturePipelineDragDrop
+            timelineConfig={data.cultureTimelineConfig || { type: 'phase' }}
+            timelineData={data.cultureTimelineData || []}
+            onConfigChange={handleConfigChange}
+            onDataChange={handleDataChange}
+            initialData={{
+                mode: data.mode,
+                spaceType: data.spaceType,
+                substrat: data.substrat,
+                lightType: data.lightType
+            }}
+        />
     );
 };
-
-export default CulturePipelineSection;
-lightType: data.environment?.lightType || 'led',
-    lightPower: data.environment?.lightPower || 200,
-        lightDistance: data.environment?.lightDistance || 40,
-            lightSchedule: data.environment?.lightSchedule || '18/6',
-                spectrum: data.environment?.spectrum || 'full',
-                    temperature: data.environment?.temperature || 24,
 
 export default CulturePipelineSection;
 

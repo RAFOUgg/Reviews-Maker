@@ -4,7 +4,6 @@
  */
 
 import React, { useRef, useEffect } from 'react';
-import LiquidCard from '../../../../components/ui/LiquidCard';
 import CulturePipelineDragDrop from '../../../../components/pipelines/legacy/CulturePipelineDragDrop';
 
 const CulturePipelineSection = ({ data = {}, onChange }) => {
@@ -85,20 +84,18 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
     };
 
     return (
-        <LiquidCard title="🌱 Pipeline Culture Phase 1" bordered>
-            <CulturePipelineDragDrop
-                timelineConfig={data.cultureTimelineConfig || { type: 'phase', totalDays: 90 }}
-                timelineData={data.cultureTimelineData || []}
-                onConfigChange={handleConfigChange}
-                onDataChange={handleDataChange}
-                initialData={{
-                    mode: data.mode,
-                    spaceType: data.spaceType,
-                    substrat: data.substrat,
-                    lightType: data.lightType
-                }}
-            />
-        </LiquidCard>
+        <CulturePipelineDragDrop
+            timelineConfig={data.cultureTimelineConfig || { type: 'phase', totalDays: 90 }}
+            timelineData={data.cultureTimelineData || []}
+            onConfigChange={handleConfigChange}
+            onDataChange={handleDataChange}
+            initialData={{
+                mode: data.mode,
+                spaceType: data.spaceType,
+                substrat: data.substrat,
+                lightType: data.lightType
+            }}
+        />
     );
 };
 
