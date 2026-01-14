@@ -51,7 +51,7 @@ echo ""
 # 4. Serveur - dépendances
 echo -e "${GREEN}[4/5] Installation dépendances serveur...${NC}"
 cd ../server-new
-npm install --production 2>&1 | grep -E "(added|up to date|removed)" || true
+npm install 2>&1 | grep -E "(added|up to date|removed)" || true
 echo -e "${GREEN}✅ Serveur dépendances installées${NC}"
 echo ""
 
