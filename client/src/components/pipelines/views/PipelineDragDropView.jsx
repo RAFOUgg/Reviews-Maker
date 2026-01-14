@@ -2514,49 +2514,49 @@ const PipelineDragDropView = ({
                         isConfigured={false}
                         cells={cells}
                         onAssignNow={(key, val) => {
-                    // Assignation à toutes les cases sélectionnées ou à toutes si aucune sélection
-                    const targets = selectedCells.length > 0 ? selectedCells : cells.map(c => c.timestamp);
-                    const changes = [];
-                    targets.forEach(ts => {
-                        const prev = getCellData(ts) || {};
-                        const prevValue = prev[key];
-                        changes.push({ timestamp: ts, field: key, previousValue: prevValue });
-                        onDataChange(ts, key, val);
-                    });
-                    if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-assign-now', changes });
-                    showToast(`${contextMenu.item.label} assigné à ${targets.length} case(s)`, 'success');
-                }}
-                onAssignRange={(key, startTs, endTs, val) => {
-                    // Assigner à une plage de cases
-                    const startIdx = cells.findIndex(c => c.timestamp === startTs);
-                    const endIdx = cells.findIndex(c => c.timestamp === endTs);
-                    if (startIdx === -1 || endIdx === -1) return;
-                    const minIdx = Math.min(startIdx, endIdx);
-                    const maxIdx = Math.max(startIdx, endIdx);
-                    const targets = cells.slice(minIdx, maxIdx + 1).map(c => c.timestamp);
-                    const changes = [];
-                    targets.forEach(ts => {
-                        const prev = getCellData(ts) || {};
-                        changes.push({ timestamp: ts, field: key, previousValue: prev[key] });
-                        onDataChange(ts, key, val);
-                    });
-                    if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-assign-range', changes });
-                    showToast(`${contextMenu.item.label} assigné à ${targets.length} case(s)`, 'success');
-                }}
-                onAssignAll={(key, val) => {
-                    // Assigner à toutes les cases
-                    const changes = [];
-                    cells.forEach(cell => {
-                        const prev = getCellData(cell.timestamp) || {};
-                        changes.push({ timestamp: cell.timestamp, field: key, previousValue: prev[key] });
-                        onDataChange(cell.timestamp, key, val);
-                    });
-                    if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-assign-all', changes });
-                    showToast(`${contextMenu.item.label} assigné à toutes les cases`, 'success');
-                }}
-                />
-            )
-        }
+                            // Assignation à toutes les cases sélectionnées ou à toutes si aucune sélection
+                            const targets = selectedCells.length > 0 ? selectedCells : cells.map(c => c.timestamp);
+                            const changes = [];
+                            targets.forEach(ts => {
+                                const prev = getCellData(ts) || {};
+                                const prevValue = prev[key];
+                                changes.push({ timestamp: ts, field: key, previousValue: prevValue });
+                                onDataChange(ts, key, val);
+                            });
+                            if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-assign-now', changes });
+                            showToast(`${contextMenu.item.label} assigné à ${targets.length} case(s)`, 'success');
+                        }}
+                        onAssignRange={(key, startTs, endTs, val) => {
+                            // Assigner à une plage de cases
+                            const startIdx = cells.findIndex(c => c.timestamp === startTs);
+                            const endIdx = cells.findIndex(c => c.timestamp === endTs);
+                            if (startIdx === -1 || endIdx === -1) return;
+                            const minIdx = Math.min(startIdx, endIdx);
+                            const maxIdx = Math.max(startIdx, endIdx);
+                            const targets = cells.slice(minIdx, maxIdx + 1).map(c => c.timestamp);
+                            const changes = [];
+                            targets.forEach(ts => {
+                                const prev = getCellData(ts) || {};
+                                changes.push({ timestamp: ts, field: key, previousValue: prev[key] });
+                                onDataChange(ts, key, val);
+                            });
+                            if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-assign-range', changes });
+                            showToast(`${contextMenu.item.label} assigné à ${targets.length} case(s)`, 'success');
+                        }}
+                        onAssignAll={(key, val) => {
+                            // Assigner à toutes les cases
+                            const changes = [];
+                            cells.forEach(cell => {
+                                const prev = getCellData(cell.timestamp) || {};
+                                changes.push({ timestamp: cell.timestamp, field: key, previousValue: prev[key] });
+                                onDataChange(cell.timestamp, key, val);
+                            });
+                            if (changes.length > 0) pushAction({ id: Date.now(), type: 'contextMenu-assign-all', changes });
+                            showToast(`${contextMenu.item.label} assigné à toutes les cases`, 'success');
+                        }}
+                    />
+                )
+            }
 
             {/* Menu contextuel cellule */}
             {
@@ -2570,35 +2570,35 @@ const PipelineDragDropView = ({
                         sidebarContent={sidebarContent}
                         onClose={() => setCellContextMenu(null)}
                         onDeleteAll={() => {
-                    const targets = cellContextMenu?.selectedCells || [];
-                    console.log(`💥 handleDeleteAll: targets=${targets.join(',')}`);
-                    setConfirmState({
-                        open: true,
-                        title: 'Effacer toutes les données',
-                        message: `Effacer toutes les données de ${targets.length} cellule(s) ?`,
-                        onConfirm: () => {
-                            console.log(`  ✓ Confirmation: début de suppression complète`);
-                            const allChanges = [];
-                            targets.forEach(ts => {
-                                const prev = getCellData(ts) || {};
-                                const keys = Object.keys(prev).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k));
-                                console.log(`    ✔️ Supprime ${keys.length} champs de ${ts}: ${keys.join(',')}`);
-                                keys.forEach(k => {
-                                    allChanges.push({ timestamp: ts, field: k, previousValue: prev[k] });
-                                    onDataChange(ts, k, null);
-                                });
+                            const targets = cellContextMenu?.selectedCells || [];
+                            console.log(`💥 handleDeleteAll: targets=${targets.join(',')}`);
+                            setConfirmState({
+                                open: true,
+                                title: 'Effacer toutes les données',
+                                message: `Effacer toutes les données de ${targets.length} cellule(s) ?`,
+                                onConfirm: () => {
+                                    console.log(`  ✓ Confirmation: début de suppression complète`);
+                                    const allChanges = [];
+                                    targets.forEach(ts => {
+                                        const prev = getCellData(ts) || {};
+                                        const keys = Object.keys(prev).filter(k => !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k));
+                                        console.log(`    ✔️ Supprime ${keys.length} champs de ${ts}: ${keys.join(',')}`);
+                                        keys.forEach(k => {
+                                            allChanges.push({ timestamp: ts, field: k, previousValue: prev[k] });
+                                            onDataChange(ts, k, null);
+                                        });
+                                    });
+                                    if (allChanges.length > 0) {
+                                        pushAction({ id: Date.now(), type: 'contextMenuDeleteAll', changes: allChanges });
+                                        console.log(`  ✓ Toast: ${allChanges.length} donnée(s) effacée(s)`);
+                                    }
+                                    setConfirmState(prev => ({ ...prev, open: false }));
+                                    setCellContextMenu(null);
+                                    showToast('Données effacées', 'success');
+                                    console.log(`✅ Suppression complète terminée`);
+                                }
                             });
-                            if (allChanges.length > 0) {
-                                pushAction({ id: Date.now(), type: 'contextMenuDeleteAll', changes: allChanges });
-                                console.log(`  ✓ Toast: ${allChanges.length} donnée(s) effacée(s)`);
-                            }
-                            setConfirmState(prev => ({ ...prev, open: false }));
-                            setCellContextMenu(null);
-                            showToast('Données effacées', 'success');
-                            console.log(`✅ Suppression complète terminée`);
-                        }
-                    });
-                }}
+                        }}
                         onDeleteFields={handleDeleteFieldsFromCells}
                         onCopy={handleCopyCellData}
                         onPaste={handlePasteCellData}
