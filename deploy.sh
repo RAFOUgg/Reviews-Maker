@@ -57,11 +57,19 @@ echo ""
 
 # 5. Redémarrage
 echo -e "${YELLOW}[5/5] 🔄 Redémarrage avec PM2...${NC}"
-if command -v pm2 &> /dev/null; then
+
+# Utiliser PM2 local du projet si disponible
+PM2_BIN="${PROJECT_DIR}/server-new/node_modules/.bin/pm2"
+
+if [ -f "$PM2_BIN" ]; then
+    $PM2_BIN restart reviews-maker || $PM2_BIN start ecosystem.config.cjs --name reviews-maker
+    echo -e "${GREEN}✅ Serveur redémarré avec PM2 local${NC}"
+elif command -v pm2 &> /dev/null; then
     pm2 restart reviews-maker || pm2 start ecosystem.config.cjs
-    echo -e "${GREEN}✅ Serveur redémarré${NC}"
+    echo -e "${GREEN}✅ Serveur redémarré avec PM2 global${NC}"
 else
     echo -e "${RED}⚠️  PM2 non trouvé - redémarrage manuel nécessaire${NC}"
+    echo -e "${YELLOW}   Installez PM2: npm install -g pm2${NC}"
 fi
 echo ""
 
