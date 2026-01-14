@@ -1808,7 +1808,7 @@ const PipelineDragDropView = ({
     const completionPercent = cells.length > 0 ? Math.round((filledCells / cells.length) * 100) : 0;
 
     return (
-        <div className={`flex flex-col gap-6 h-auto ${isMobile ? '' : ''}`}>
+        <div className={`flex-col gap-6 h-auto ${isMobile ? '' : ''}`}>
             {/* PANNEAU LATÉRAL HIÉRARCHISÉ - MASQUÉ SUR MOBILE */}
             {!isMobile && (
                 <div className="w-full sm:w-80 flex-shrink-0 max-h-[200px] sm:max-h-[250px] md:max-h-[300px] bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-y-auto">
