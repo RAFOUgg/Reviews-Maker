@@ -426,10 +426,10 @@ const PipelineWithSidebar = ({
                         </div>
                     </div>
 
-                    {/* Main grid container: Sidebar + Grid in horizontal layout below config */}
-                    <div className="flex flex-1 gap-3 sm:gap-4 min-h-[400px]">
-                        {/* Sidebar gauche - responsive width */}
-                        <div className="w-full sm:w-80 flex-shrink-0 bg-gray-50 rounded-lg p-2 sm:p-3 overflow-y-auto">
+                    {/* Main grid container: Sidebar + Grid VERTICAL layout below config */}
+                    <div className="flex flex-col gap-3 sm:gap-4 flex-1">
+                        {/* Sidebar gauche - scrollable, positioned above grid */}
+                        <div className="w-full max-h-[150px] sm:max-h-[200px] md:max-h-[250px] flex-shrink-0 bg-gray-50 rounded-lg p-2 sm:p-3 overflow-y-auto">
                             <PipelineContentsSidebar
                                 contentSchema={contentSchema}
                                 onDragStart={handleDragStart}
@@ -438,7 +438,7 @@ const PipelineWithSidebar = ({
                             />
                         </div>
 
-                        {/* Grille de cases - takes remaining space */}
+                        {/* Grille de cases - takes remaining space BELOW sidebar */}
                         <div className="flex-1 bg-white/50 rounded-lg overflow-hidden">
                             <PipelineGridView
                                 cells={cells}
