@@ -2607,7 +2607,9 @@ const PipelineDragDropView = ({
                     hasCopiedData={copiedCellData !== null}
                 />
             )}
-        </div> {/* Fin liquid wrapper principal */ }
+
+            {/* Fin du wrapper liquid */}
+        </div>
     );
 };
 
