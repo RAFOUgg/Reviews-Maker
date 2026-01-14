@@ -1,99 +1,75 @@
 /**
  * CuringMaturationSection - Section wrapper pour Pipeline Curing/Maturation
- * Architecture unifiée CDC - Rend directement CuringPipelineDragDrop
+ * Architecture unifiée CDC - Rend directement PipelineDragDropView (NO legacy wrapper!)
  * Compatible tous types de produits (Fleurs, Hash, Concentrés, Comestibles)
  */
 
-import { useRef, useEffect } from 'react';
-import CuringPipelineDragDrop from '../pipelines/legacy/CuringPipelineDragDrop';
-
-const CONTAINER_TYPES = [
-    { id: 'air_libre', label: 'Air libre', icon: '🌬️' },
-    { id: 'verre', label: 'Verre', icon: '🫙' },
-    { id: 'plastique', label: 'Plastique', icon: '🥡' },
-    { id: 'metal', label: 'Métal', icon: '🥫' },
-    { id: 'papier', label: 'Papier', icon: '📄' },
-    { id: 'autre', label: 'Autre', icon: '📦' }
-];
-
-const PACKAGING_TYPES = [
-    { id: 'cellophane', label: 'Cellophane', icon: '📦' },
-    { id: 'papier_cuisson', label: 'Papier cuisson', icon: '📄' },
-    { id: 'aluminium', label: 'Aluminium', icon: '✨' },
-    { id: 'paper_hash', label: 'Paper hash', icon: '📜' },
-    { id: 'sac_vide', label: 'Sac à vide', icon: '🗜️' },
-    { id: 'sous_vide_complet', label: 'Sous vide (machine)', icon: '🔒' },
-    { id: 'sous_vide_partiel', label: 'Sous vide (manuel)', icon: '✋' },
-    { id: 'congelation', label: 'Congélation', icon: '❄️' },
-    { id: 'autre', label: 'Autre', icon: '📦' }
-];
-
-const OPACITY_LEVELS = [
-    { id: 'opaque', label: 'Opaque', icon: '⬛' },
-    { id: 'semi_opaque', label: 'Semi-opaque', icon: '🔲' },
-    { id: 'transparent', label: 'Transparent', icon: '⬜' },
-    { id: 'ambre', label: 'Ambré', icon: '🟧' }
-];
-
+import { useMemo } from 'react';
+import PipelineDragDropView from '../pipelines/views/PipelineDragDropView';
+import { CURING_SIDEBAR_CONTENT } from '../../config/curingSidebarContent';
 
 const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }) => {
-    // Ref pour maintenir la dernière version des données
-    const timelineDataRef = useRef(data.curingTimeline || []);
+    // Construire la config timeline
+    const timelineConfig = useMemo(() => ({
+        type: data.curingTimelineConfig?.type || 'phase',
+        mode: data.curingTimelineConfig?.mode || 'phases',
+        startDate: data.curingTimelineConfig?.startDate || '',
+        endDate: data.curingTimelineConfig?.endDate || '',
+        duration: data.curingTimelineConfig?.duration || null,
+        totalSeconds: data.curingTimelineConfig?.totalSeconds || null,
+        curingType: data.curingType || 'cold',
+        temperature: data.temperature || 5,
+        humidity: data.humidity || 60
+    }), [data]);
 
-    // Synchroniser la ref quand data change de l'extérieur
-    useEffect(() => {
-        timelineDataRef.current = data.curingTimeline || [];
-    }, [data.curingTimeline]);
+    // Convertir les données du timeline
+    const sidebarArray = useMemo(() => {
+        const categories = {
+            'Température': CURING_SIDEBAR_CONTENT.Temperature || [],
+            'Humidité': CURING_SIDEBAR_CONTENT.Humidity || [],
+            'Visuel': CURING_SIDEBAR_CONTENT.Visual || [],
+            'Odeurs': CURING_SIDEBAR_CONTENT.Odors || [],
+            'Goûts': CURING_SIDEBAR_CONTENT.Tastes || [],
+            'Effets': CURING_SIDEBAR_CONTENT.Effects || []
+        };
+        return Object.entries(categories).map(([name, fields]) => ({
+            name,
+            fields: fields.map(field => ({
+                id: field.id,
+                label: field.label,
+                type: field.type,
+                icon: field.icon,
+                unit: field.unit
+            }))
+        }));
+    }, []);
 
     // Handler pour changements de configuration
     const handleConfigChange = (key, value) => {
-        const updatedConfig = { ...(data.curingTimelineConfig || {}), [key]: value };
-        onChange({ ...data, curingTimelineConfig: updatedConfig });
+        const updatedConfig = {
+            ...timelineConfig,
+            [key]: value
+        };
+        onChange({
+            ...data,
+            curingTimelineConfig: updatedConfig,
+            [key]: value // Aussi update les props directs (temperature, humidity, etc)
+        });
     };
 
     // Handler pour changements de données de cellules
-    const handleDataChange = (timestamp, field, value) => {
-        const currentData = timelineDataRef.current;
-        const existingIndex = currentData.findIndex(cell => cell.timestamp === timestamp);
-
-        let updatedData;
-        if (existingIndex >= 0) {
-            updatedData = [...currentData];
-            if (value === null || value === undefined) {
-                // Suppression: retirer le champ mais garder timestamp/metadata
-                const { [field]: removed, ...rest } = updatedData[existingIndex];
-                updatedData[existingIndex] = {
-                    timestamp: updatedData[existingIndex].timestamp,
-                    ...(updatedData[existingIndex].date && { date: updatedData[existingIndex].date }),
-                    ...(updatedData[existingIndex].label && { label: updatedData[existingIndex].label }),
-                    ...(updatedData[existingIndex].phase && { phase: updatedData[existingIndex].phase }),
-                    ...rest
-                };
-
-                // Si cellule vide, la supprimer complètement
-                const cellKeys = Object.keys(updatedData[existingIndex]).filter(k =>
-                    !['timestamp', 'label', 'date', 'phase', '_meta'].includes(k)
-                );
-                if (cellKeys.length === 0) {
-                    updatedData.splice(existingIndex, 1);
-                }
-            } else {
-                // Mise à jour
-                updatedData[existingIndex] = { ...updatedData[existingIndex], [field]: value };
-            }
-        } else {
-            // Nouvelle cellule
-            updatedData = [...currentData, { timestamp, [field]: value }];
-        }
-
-        // Synchroniser ref et propager
-        timelineDataRef.current = updatedData;
-        onChange({ ...data, curingTimeline: updatedData });
+    const handleDataChange = (cellData) => {
+        onChange({
+            ...data,
+            curingTimeline: cellData
+        });
     };
 
     return (
-        <CuringPipelineDragDrop
-            timelineConfig={data.curingTimelineConfig || { type: 'phase' }}
+        <PipelineDragDropView
+            type="curing"
+            sidebarContent={sidebarArray}
+            timelineConfig={timelineConfig}
             timelineData={data.curingTimeline || []}
             onConfigChange={handleConfigChange}
             onDataChange={handleDataChange}
