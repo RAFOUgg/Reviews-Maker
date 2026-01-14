@@ -16,7 +16,8 @@ import { SEPARATION_SIDEBAR_CONTENT } from '../../../config/separationSidebarCon
 import { SEPARATION_PHASES } from '../../../config/pipelinePhases';
 
 const SeparationPipelineDragDrop = ({
-    timelineData,
+    timelineConfig = {},
+    timelineData = [],
     onConfigChange,
     onDataChange
 }) => {
@@ -28,6 +29,7 @@ const SeparationPipelineDragDrop = ({
             description="Traçabilité complète du processus de séparation des trichomes"
             sidebarContent={SEPARATION_SIDEBAR_CONTENT}
             phases={SEPARATION_PHASES}
+            timelineConfig={timelineConfig}
             timelineData={timelineData}
             onConfigChange={onConfigChange}
             onDataChange={onDataChange}

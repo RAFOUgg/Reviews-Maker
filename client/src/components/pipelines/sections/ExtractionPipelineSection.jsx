@@ -48,6 +48,7 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
 
     return (
         <ExtractionPipelineDragDrop
+            timelineConfig={data.extractionTimelineConfig || {}}
             timelineData={data.extractionTimelineData || []}
             onConfigChange={handleConfigChange}
             onDataChange={handleDataChange}

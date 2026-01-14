@@ -48,6 +48,7 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
 
     return (
         <SeparationPipelineDragDrop
+            timelineConfig={data.separationTimelineConfig || {}}
             timelineData={data.separationTimelineData || []}
             onConfigChange={handleConfigChange}
             onDataChange={handleDataChange}

@@ -16,7 +16,8 @@ import { EXTRACTION_SIDEBAR_CONTENT } from '../../../config/extractionSidebarCon
 import { EXTRACTION_PHASES } from '../../../config/pipelinePhases';
 
 const ExtractionPipelineDragDrop = ({
-    timelineData,
+    timelineConfig = {},
+    timelineData = [],
     onConfigChange,
     onDataChange
 }) => {
@@ -28,6 +29,7 @@ const ExtractionPipelineDragDrop = ({
             description="Traçabilité complète du processus d'extraction et purification"
             sidebarContent={EXTRACTION_SIDEBAR_CONTENT}
             phases={EXTRACTION_PHASES}
+            timelineConfig={timelineConfig}
             timelineData={timelineData}
             onConfigChange={onConfigChange}
             onDataChange={onDataChange}
