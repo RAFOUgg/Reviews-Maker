@@ -19,7 +19,7 @@ import TextureSection from '../../../components/sections/TextureSection'
 import TasteSection from '../../../components/sections/TasteSection'
 import EffectsSection from '../../../components/sections/EffectsSection'
 import ExperienceUtilisation from '../../../components/forms/ExperienceUtilisation'
-import CuringMaturationTimeline from '../../../components/pipelines/legacy/CuringMaturationTimeline'
+import CuringMaturationSection from '../../../components/sections/CuringMaturationSection'
 
 // Import hooks
 import { useFlowerForm } from './hooks/useFlowerForm'
@@ -318,9 +318,10 @@ export default function CreateFlowerReview() {
                         </div>
                     )}
                     {currentSection === 9 && (
-                        <CuringMaturationTimeline
+                        <CuringMaturationSection
                             data={formData.curing || {}}
                             onChange={(curingData) => handleChange('curing', curingData)}
+                            productType="flower"
                         />
                     )}
                 </motion.div>
