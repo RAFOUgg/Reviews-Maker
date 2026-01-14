@@ -1808,10 +1808,10 @@ const PipelineDragDropView = ({
     const completionPercent = cells.length > 0 ? Math.round((filledCells / cells.length) * 100) : 0;
 
     return (
-        <div className={`flex-col gap-6 h-auto ${isMobile ? '' : ''}`}>
+        <div className="flex flex-col gap-4 h-full w-full">
             {/* PANNEAU LATÉRAL HIÉRARCHISÉ - MASQUÉ SUR MOBILE */}
             {!isMobile && (
-                <div className="w-full sm:w-80 flex-shrink-0 max-h-[200px] sm:max-h-[250px] md:max-h-[300px] bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-y-auto">
+                <div className="w-full max-h-[300px] flex-shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-y-auto">
                     {/* Section Préréglages en haut */}
                     {/* Préréglages retirés pour conformité CDC */}
 
@@ -1970,7 +1970,7 @@ const PipelineDragDropView = ({
             )}
 
             {/* TIMELINE PRINCIPALE */}
-            <div className="flex-1 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden flex flex-col">
+            <div className="flex-1 min-h-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden flex flex-col">
                 {/* HEADER CONFIGURATION */}
                 <div className="p-3 md:p-4 border-b border-gray-200 dark:border-gray-700 bg-transparent dark:bg-transparent flex-shrink-0 max-h-[280px] overflow-y-auto">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 md:mb-3">
