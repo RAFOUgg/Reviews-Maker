@@ -229,6 +229,57 @@ const PipelineWithSidebar = ({
         return allCellIndices.slice(start, end);
     };
 
+    // Handler: Exporter les données
+    const handleExport = () => {
+        const exportData = {
+            pipelineType,
+            productType,
+            config,
+            cells,
+            exportedAt: new Date().toISOString()
+        };
+
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `pipeline-${pipelineType}-${Date.now()}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+    };
+
+    // Handler: Importer les données
+    const handleImport = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const importData = JSON.parse(event.target.result);
+                    if (importData.config && importData.cells) {
+                        setConfig(importData.config);
+                        setCells(importData.cells);
+                        onChange({
+                            ...value,
+                            ...importData
+                        });
+                    }
+                } catch (err) {
+                    console.error('Erreur lors de l\'import:', err);
+                    alert('Erreur lors de l\'import du fichier');
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    };
+
     return (
         <LiquidCard className="w-full">
             {/* En-tête */}
@@ -264,127 +315,145 @@ const PipelineWithSidebar = ({
                         </LiquidButton>
                     </div>
                 </div>
-
-                {/* Configuration de la trame */}
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Type d'intervalle
-                        </label>
-                        <select
-                            value={config.intervalType}
-                            onChange={(e) => handleConfigChange('intervalType', e.target.value)}
-                            disabled={readonly}
-                            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                        >
-                            {Object.entries(INTERVAL_TYPES).map(([key, type]) => (
-                                <option key={key} value={key}>{type.label}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {config.intervalType === 'dates' ? (
-                        <>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Date début *
-                                </label>
-                                <input
-                                    type="date"
-                                    value={config.startDate || ''}
-                                    onChange={(e) => handleConfigChange('startDate', e.target.value)}
-                                    disabled={readonly}
-                                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Date fin *
-                                </label>
-                                <input
-                                    type="date"
-                                    value={config.endDate || ''}
-                                    onChange={(e) => handleConfigChange('endDate', e.target.value)}
-                                    disabled={readonly}
-                                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                                />
-                            </div>
-                        </>
-                    ) : config.intervalType !== 'phases' && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Durée ({INTERVAL_TYPES[config.intervalType].unit})
-                            </label>
-                            <input
-                                type="number"
-                                value={config.duration}
-                                onChange={(e) => handleConfigChange('duration', parseInt(e.target.value) || 1)}
-                                min="1"
-                                max={INTERVAL_TYPES[config.intervalType].max}
-                                disabled={readonly}
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                            />
-                        </div>
-                    )}
-                </div>
-
-                {/* Info et pagination */}
-                <div className="flex items-center justify-between text-sm text-gray-400">
-                    <div className="flex items-center gap-2">
-                        <Info className="w-4 h-4" />
-                        <span>{totalCells} cases au total</span>
-                        {selectedCells.length > 0 && (
-                            <span className="ml-4">
-                                {selectedCells.length} sélectionnée(s)
-                            </span>
-                        )}
-                    </div>
-
-                    {totalPages > 1 && (
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
-                                disabled={currentPage === 0}
-                                className="px-3 py-1 bg-gray-800 rounded disabled:opacity-50"
-                            >
-                                ←
-                            </button>
-                            <span>Page {currentPage + 1} / {totalPages}</span>
-                            <button
-                                onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
-                                disabled={currentPage === totalPages - 1}
-                                className="px-3 py-1 bg-gray-800 rounded disabled:opacity-50"
-                            >
-                                →
-                            </button>
-                        </div>
-                    )}
-                </div>
             </div>
 
-            {/* Layout principal: Sidebar + Grille */}
-            <div className="flex h-[600px]">
-                {/* Sidebar gauche */}
-                <PipelineContentsSidebar
-                    contentSchema={contentSchema}
-                    onDragStart={handleDragStart}
-                    pipelineType={pipelineType}
-                    readonly={readonly}
-                />
+            {/* Layout principal: Configuration + Grille (vertical stack) */}
+            <div className="flex flex-col gap-4 h-auto">
+                {/* Configuration section avec scrollable container */}
+                <div className="flex-shrink-0 max-h-[200px] sm:max-h-[250px] md:max-h-[280px] overflow-y-auto bg-white/50 rounded-lg p-3 sm:p-4">
+                    <div className="space-y-3">
+                        {/* Interval type + Duration */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
+                            <div>
+                                <label className="text-xs sm:text-sm font-medium text-gray-700">Type</label>
+                                <select
+                                    value={config.intervalType}
+                                    onChange={(e) => handleConfigChange('intervalType', e.target.value)}
+                                    className="w-full mt-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border rounded"
+                                >
+                                    {Object.entries(INTERVAL_TYPES).map(([key, val]) => (
+                                        <option key={key} value={key}>{val.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs sm:text-sm font-medium text-gray-700">Durée</label>
+                                <input
+                                    type="number"
+                                    value={config.duration}
+                                    onChange={(e) => handleConfigChange('duration', parseInt(e.target.value) || 1)}
+                                    max={INTERVAL_TYPES[config.intervalType].max}
+                                    className="w-full mt-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border rounded"
+                                />
+                            </div>
+                            {config.intervalType === 'dates' && (
+                                <>
+                                    <div>
+                                        <label className="text-xs sm:text-sm font-medium text-gray-700">Début</label>
+                                        <input
+                                            type="date"
+                                            value={config.startDate || ''}
+                                            onChange={(e) => handleConfigChange('startDate', e.target.value)}
+                                            className="w-full mt-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border rounded"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs sm:text-sm font-medium text-gray-700">Fin</label>
+                                        <input
+                                            type="date"
+                                            value={config.endDate || ''}
+                                            onChange={(e) => handleConfigChange('endDate', e.target.value)}
+                                            className="w-full mt-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border rounded"
+                                        />
+                                    </div>
+                                </>
+                            )}
+                        </div>
 
-                {/* Grille de cases */}
-                <PipelineGridView
-                    cells={cells}
-                    config={config}
-                    cellIndices={getPageCells()}
-                    onCellClick={handleCellClick}
-                    onDropOnCell={handleDropOnCell}
-                    draggedContent={draggedContent}
-                    selectedCells={selectedCells}
-                    readonly={readonly}
-                    onAddCells={handleAddCells}
-                    canAddMore={config.duration < (INTERVAL_TYPES[config.intervalType].max || 365)}
-                />
+                        {/* Action buttons (compact on mobile) */}
+                        <div className="flex flex-wrap gap-2 pt-2 border-t">
+                            <button
+                                onClick={() => setShowPresetsManager(true)}
+                                className="flex-1 min-w-[100px] px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                            >
+                                Préréglages
+                            </button>
+                            <button
+                                onClick={handleExport}
+                                className="flex-1 min-w-[100px] px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                            >
+                                Exporter
+                            </button>
+                            <button
+                                onClick={handleImport}
+                                className="flex-1 min-w-[100px] px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-purple-500 text-white rounded hover:bg-purple-600"
+                            >
+                                Importer
+                            </button>
+                        </div>
+
+                        {/* Info et pagination */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-2 border-t text-xs sm:text-sm text-gray-600">
+                            <div className="flex items-center gap-1">
+                                <Info className="w-3 h-3 sm:w-4 sm:h-4" />
+                                <span>{totalCells} cases</span>
+                                {selectedCells.length > 0 && (
+                                    <span className="ml-2 text-blue-600">
+                                        {selectedCells.length} sélect.
+                                    </span>
+                                )}
+                            </div>
+
+                            {totalPages > 1 && (
+                                <div className="flex items-center gap-1 text-xs">
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                                        disabled={currentPage === 0}
+                                        className="px-1.5 py-0.5 bg-gray-300 rounded disabled:opacity-50"
+                                    >
+                                        ←
+                                    </button>
+                                    <span className="px-1">{currentPage + 1}/{totalPages}</span>
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+                                        disabled={currentPage === totalPages - 1}
+                                        className="px-1.5 py-0.5 bg-gray-300 rounded disabled:opacity-50"
+                                    >
+                                        →
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                {/* Main grid container: Sidebar + Grid in horizontal layout below config */}
+                <div className="flex flex-1 gap-3 sm:gap-4 min-h-[400px]">
+                    {/* Sidebar gauche - responsive width */}
+                    <div className="w-full sm:w-80 flex-shrink-0 bg-gray-50 rounded-lg p-2 sm:p-3 overflow-y-auto">
+                        <PipelineContentsSidebar
+                            contentSchema={contentSchema}
+                            onDragStart={handleDragStart}
+                            pipelineType={pipelineType}
+                            readonly={readonly}
+                        />
+                    </div>
+
+                    {/* Grille de cases - takes remaining space */}
+                    <div className="flex-1 bg-white/50 rounded-lg overflow-hidden">
+                        <PipelineGridView
+                            cells={cells}
+                            config={config}
+                            cellIndices={getPageCells()}
+                            onCellClick={handleCellClick}
+                            onDropOnCell={handleDropOnCell}
+                            draggedContent={draggedContent}
+                            selectedCells={selectedCells}
+                            readonly={readonly}
+                            onAddCells={handleAddCells}
+                            canAddMore={config.duration < (INTERVAL_TYPES[config.intervalType].max || 365)}
+                        />
+                    </div>
+                </div>
             </div>
 
             {/* Modal d'édition */}
@@ -456,6 +525,7 @@ const PipelineWithSidebar = ({
                     </div>
                 </div>
             )}
+        </div>
         </LiquidCard>
     );
 };
