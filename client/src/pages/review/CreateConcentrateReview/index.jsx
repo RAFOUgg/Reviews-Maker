@@ -6,7 +6,7 @@ import CreateReviewFormWrapper from '../../../components/account/CreateReviewFor
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
-import ExtractionPipelineSection from './sections/ExtractionPipelineSection'
+import ExtractionPipelineSection from '../../../components/pipelines/sections/ExtractionPipelineSection'
 import AnalyticsSection from '../../../components/sections/AnalyticsSection'
 import VisualSection from '../../../components/sections/VisualSection'
 import OdorSection from '../../../components/sections/OdorSection'

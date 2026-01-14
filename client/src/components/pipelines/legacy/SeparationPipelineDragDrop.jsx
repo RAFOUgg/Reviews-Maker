@@ -11,7 +11,7 @@
  */
 
 import React from 'react';
-import PipelineDragDropView from '../PipelineDragDropView';
+import PipelineDragDropView from '../views/PipelineDragDropView';
 import { SEPARATION_SIDEBAR_CONTENT } from '../../../config/separationSidebarContent';
 import { SEPARATION_PHASES } from '../../../config/pipelinePhases';
 

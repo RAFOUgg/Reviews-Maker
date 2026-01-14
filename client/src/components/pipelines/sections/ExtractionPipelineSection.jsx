@@ -56,22 +56,5 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
 };
 
 export default ExtractionPipelineSection;
-                        </div >
-                    </div >
-                </div >
-            </LiquidGlass >
-
-    {/* NEW: GitHub-style Pipeline Grid (Phase 4.1) */ }
-    < PipelineGitHubGrid
-value = { data.pipelineGithub }
-onChange = { handlePipelineChange }
-type = "extraction"
-productType = "concentrate"
-    />
-        </div >
-    );
-};
-
-export default ExtractionPipelineSection;
 
 
