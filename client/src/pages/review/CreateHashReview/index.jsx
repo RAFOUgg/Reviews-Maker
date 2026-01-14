@@ -6,14 +6,13 @@ import CreateReviewFormWrapper from '../../../components/account/CreateReviewFor
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
-import SeparationPipelineAdapter from '../../../components/pipelines/adapters/SeparationPipelineAdapter'
+import { SeparationPipelineAdapter, CuringMaturationAdapter } from '../../../components/pipelines/adapters'
 import AnalyticsSection from '../../../components/sections/AnalyticsSection'
 import VisualSection from '../../../components/sections/VisualSection'
 import OdorSection from '../../../components/sections/OdorSection'
 import TextureSection from '../../../components/sections/TextureSection'
 import TasteSection from '../../../components/sections/TasteSection'
 import EffectsSection from '../../../components/sections/EffectsSection'
-import CuringMaturationAdapter from '../../../components/pipelines/adapters/CuringMaturationAdapter'
 
 // Import hooks
 import { useHashForm } from './hooks/useHashForm'
