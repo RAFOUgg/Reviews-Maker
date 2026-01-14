@@ -52,6 +52,11 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
             timelineData={data.extractionTimelineData || []}
             onConfigChange={handleConfigChange}
             onDataChange={handleDataChange}
+            initialData={{
+                extractionMethod: data.extractionMethod,
+                solvent: data.solvent,
+                purificationMethods: data.purificationMethods
+            }}
         />
     );
 };

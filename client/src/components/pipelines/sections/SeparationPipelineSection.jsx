@@ -52,6 +52,11 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
             timelineData={data.separationTimelineData || []}
             onConfigChange={handleConfigChange}
             onDataChange={handleDataChange}
+            initialData={{
+                separationType: data.separationType,
+                batchSize: data.batchSize,
+                numberOfPasses: data.numberOfPasses
+            }}
         />
     );
 };
