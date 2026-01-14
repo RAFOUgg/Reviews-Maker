@@ -2165,83 +2165,81 @@ const PipelineDragDropView = ({
                         )}
                     </div>
 
-                </div>
-
-                {/* Progress bar - Full width spanning entire config area */}
-                <div className="mt-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Progression</div>
-                        <div className="flex items-center gap-3">
-                            <div className="text-xs text-gray-500 dark:text-gray-400" title={`${filledCells}/${cells.length} cases`}>{filledCells}/{cells.length}</div>
-                            <div className="text-sm font-bold text-purple-600 dark:text-purple-400">{Math.round(completionPercent)}%</div>
+                    {/* Progress bar - Full width spanning entire config area */}
+                    <div className="mt-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Progression</div>
+                            <div className="flex items-center gap-3">
+                                <div className="text-xs text-gray-500 dark:text-gray-400" title={`${filledCells}/${cells.length} cases`}>{filledCells}/{cells.length}</div>
+                                <div className="text-sm font-bold text-purple-600 dark:text-purple-400">{Math.round(completionPercent)}%</div>
+                            </div>
+                        </div>
+                        <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3 overflow-hidden border border-gray-200 dark:border-gray-700 shadow-inner">
+                            <div
+                                className="h-3 rounded-full bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 transition-all duration-500 ease-out"
+                                style={{ width: `${Math.max(0, Math.min(100, completionPercent))}%` }}
+                                aria-valuenow={completionPercent}
+                                aria-valuemin={0}
+                                aria-valuemax={100}
+                            />
                         </div>
                     </div>
-                    <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3 overflow-hidden border border-gray-200 dark:border-gray-700 shadow-inner">
-                        <div
-                            className="h-3 rounded-full bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 transition-all duration-500 ease-out"
-                            style={{ width: `${Math.max(0, Math.min(100, completionPercent))}%` }}
-                            aria-valuenow={completionPercent}
-                            aria-valuemin={0}
-                            aria-valuemax={100}
-                        />
-                    </div>
-                </div>
 
-                {/* Messages d'aide selon type d'intervalle */}
-                {timelineConfig.type === 'date' && (!timelineConfig.start || !timelineConfig.end) && (
-                    <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
-                        <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
-                        <p className="text-xs text-yellow-800 dark:text-yellow-300">
-                            Mode Dates : Date début ET date fin sont obligatoires
-                        </p>
-                    </div>
-                )}
-
-                {timelineConfig.type === 'seconde' && (!timelineConfig.totalSeconds || timelineConfig.totalSeconds > 900) && (
-                    <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
-                        <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
-                        <p className="text-xs text-yellow-800 dark:text-yellow-300">
-                            Maximum 900 secondes (pagination automatique si dépassement)
-                        </p>
-                    </div>
-                )}
-
-                {timelineConfig.type === 'heure' && (!timelineConfig.totalHours || timelineConfig.totalHours > 336) && (
-                    <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
-                        <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
-                        <p className="text-xs text-yellow-800 dark:text-yellow-300">
-                            Maximum 336 heures (14 jours)
-                        </p>
-                    </div>
-                )}
-
-                {timelineConfig.type === 'jour' && (!timelineConfig.totalDays || timelineConfig.totalDays > 365) && (
-                    <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
-                        <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
-                        <p className="text-xs text-yellow-800 dark:text-yellow-300">
-                            Maximum 365 jours (pagination automatique si dépassement)
-                        </p>
-                    </div>
-                )}
-
-                {/* TIMELINE GRID - Directement sous la configuration dans le même container */}
-                {cells.length === 0 ? (
-                    <div className="flex items-center justify-center p-8">
-                        <div className="text-center text-gray-500 dark:text-gray-400">
-                            <Settings className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">⚠️ Configurez la période pour voir la timeline</p>
+                    {/* Messages d'aide selon type d'intervalle */}
+                    {timelineConfig.type === 'date' && (!timelineConfig.start || !timelineConfig.end) && (
+                        <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
+                            <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                            <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                                Mode Dates : Date début ET date fin sont obligatoires
+                            </p>
                         </div>
-                    </div>
-                ) : (
-                    <div className="p-4 space-y-3">
-                        <p className="text-sm text-gray-600 dark:text-gray-400 italic">
-                            💡 <strong>Première case</strong> : Configuration générale (mode, espace, etc.)
-                            <br />
-                            📊 <strong>Autres cases</strong> : Drag & drop des paramètres depuis le panneau latéral
-                        </p>
+                    )}
 
-                        <div className="overflow-auto w-full">
-                            <div ref={gridRef} className="grid grid-cols-6 gap-2 select-none relative auto-rows-min inline-grid" style={{ position: 'relative', minWidth: '100%' }}>
+                    {timelineConfig.type === 'seconde' && (!timelineConfig.totalSeconds || timelineConfig.totalSeconds > 900) && (
+                        <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
+                            <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                            <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                                Maximum 900 secondes (pagination automatique si dépassement)
+                            </p>
+                        </div>
+                    )}
+
+                    {timelineConfig.type === 'heure' && (!timelineConfig.totalHours || timelineConfig.totalHours > 336) && (
+                        <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
+                            <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                            <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                                Maximum 336 heures (14 jours)
+                            </p>
+                        </div>
+                    )}
+
+                    {timelineConfig.type === 'jour' && (!timelineConfig.totalDays || timelineConfig.totalDays > 365) && (
+                        <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center gap-2">
+                            <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                            <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                                Maximum 365 jours (pagination automatique si dépassement)
+                            </p>
+                        </div>
+                    )}
+
+                    {/* TIMELINE GRID - Directement sous la configuration dans le même container */}
+                    {cells.length === 0 ? (
+                        <div className="flex items-center justify-center p-8">
+                            <div className="text-center text-gray-500 dark:text-gray-400">
+                                <Settings className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                                <p className="text-sm">⚠️ Configurez la période pour voir la timeline</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="mt-4 space-y-3">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 italic">
+                                💡 <strong>Première case</strong> : Configuration générale (mode, espace, etc.)
+                                <br />
+                                📊 <strong>Autres cases</strong> : Drag & drop des paramètres depuis le panneau latéral
+                            </p>
+
+                            <div className="overflow-auto w-full">
+                                <div ref={gridRef} className="grid grid-cols-6 gap-2 select-none relative auto-rows-min inline-grid" style={{ position: 'relative', minWidth: '100%' }}>
                                 {/* Visual selection frame overlay */}
                                 {selectedCells.length > 1 && !isSelecting && (() => {
                                     // Compute aggregate bounding box of selected cells using DOM measurements
@@ -2452,6 +2450,7 @@ const PipelineDragDropView = ({
                         </div>
                     </div>
                 )}
+                </div>
             </div>
 
             {/* Modal grouped preset */}
