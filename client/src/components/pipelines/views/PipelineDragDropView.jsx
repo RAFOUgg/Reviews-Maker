@@ -1808,374 +1808,389 @@ const PipelineDragDropView = ({
     const completionPercent = cells.length > 0 ? Math.round((filledCells / cells.length) * 100) : 0;
 
     return (
-        <div className="flex flex-col gap-4 w-full overflow-hidden" style={{ display: 'flex', flexDirection: 'column' }}>
-            {/* PANNEAU LATÉRAL HIÉRARCHISÉ - MASQUÉ SUR MOBILE */}
-            {!isMobile && (
-                <div className="w-full max-h-[300px] flex-shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-y-auto">
-                    {/* Section Préréglages en haut */}
-
-                    {/* Header Contenus */}
-                    <div className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm p-4 border-b border-gray-200 dark:border-gray-700 z-10">
-                        <h3 className="font-bold text-gray-900 dark:text-white text-lg">📦 Contenus</h3>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                            Glissez les éléments vers les cases →
-                        </p>
-                    </div>
-
-                    <div className="p-3 space-y-2">
-                        {/* Pré-configuration section (was MODE PIPELINE) */}
-                        <div className="mb-3">
-                            <div className="font-semibold text-xs text-gray-400 dark:text-gray-300 mb-1">Pré-configuration</div>
-                            <button
-                                className="w-full mt-1 mb-2 group relative flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl font-medium shadow-md hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300 overflow-hidden"
-                                onClick={() => setShowGroupedPresetModal(true)}
-                            >
-                                <Plus className="w-4 h-4" />
-                                <span>Groupe de préréglages</span>
-                                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                            </button>
-                            {groupedPresets.length > 0 && (
-                                <div className="flex flex-wrap gap-2">
-                                    {groupedPresets.map((group, idx) => (
-                                        <div
-                                            key={group.name + idx}
-                                            draggable="true"
-                                            onDragStart={e => {
-                                                e.dataTransfer.setData('application/grouped-preset', JSON.stringify(group));
-                                                e.dataTransfer.effectAllowed = 'copy';
-                                                setDraggedContent({ type: 'grouped', group });
-                                            }}
-                                            onDragEnd={() => setDraggedContent(null)}
-                                            className="px-3 py-2 rounded-lg bg-purple-50 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 text-xs font-bold cursor-grab hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all"
-                                            title={`${group.description || ''}\n${(group.fields || []).map(f => `${f.key}: ${f.value}`).join('\n')}`}
-                                        >
-                                            <span className="mr-1">{group.emoji || '🌱'}</span>{group.name}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+        <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-4 min-h-[600px] max-h-[85vh] overflow-hidden">
+            {/* LAYOUT FLEX-ROW : Sidebar gauche + Timeline droite */}
+            <div className="flex flex-row gap-4 h-full">
+                {/* PANNEAU LATÉRAL GAUCHE - MASQUÉ SUR MOBILE */}
+                {!isMobile && (
+                    <div className="w-80 flex-shrink-0 flex flex-col bg-white/50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        {/* Header Contenus */}
+                        <div className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm p-4 border-b border-gray-200 dark:border-gray-700 z-10 flex-shrink-0">
+                            <h3 className="font-bold text-gray-900 dark:text-white text-lg">📦 Contenus</h3>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                Glissez les éléments vers les cases →
+                            </p>
                         </div>
-                        {(sidebarContent || []).map((section) => (
-                            <div key={section.id} className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+
+                        <div className="p-3 space-y-2 overflow-y-auto flex-1">
+                            {/* Pré-configuration section (was MODE PIPELINE) */}
+                            <div className="mb-3">
+                                <div className="font-semibold text-xs text-gray-400 dark:text-gray-300 mb-1">Pré-configuration</div>
                                 <button
-                                    onClick={() => toggleSection(section.id)}
-                                    className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-800/50 hover:from-gray-100 hover:to-gray-200 dark:hover:from-gray-700 dark:hover:to-gray-700/50 transition-colors"
+                                    className="w-full mt-1 mb-2 group relative flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl font-medium shadow-md hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300 overflow-hidden"
+                                    onClick={() => setShowGroupedPresetModal(true)}
                                 >
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-lg">{section.icon}</span>
-                                        <span className="font-semibold text-sm text-gray-900 dark:text-white">
-                                            {section.label === 'MODE PIPELINE' ? 'Pré-configuration' : section.label}
-                                        </span>
+                                    <Plus className="w-4 h-4" />
+                                    <span>Groupe de préréglages</span>
+                                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                                </button>
+                                {groupedPresets.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                        {groupedPresets.map((group, idx) => (
+                                            <div
+                                                key={group.name + idx}
+                                                draggable="true"
+                                                onDragStart={e => {
+                                                    e.dataTransfer.setData('application/grouped-preset', JSON.stringify(group));
+                                                    e.dataTransfer.effectAllowed = 'copy';
+                                                    setDraggedContent({ type: 'grouped', group });
+                                                }}
+                                                onDragEnd={() => setDraggedContent(null)}
+                                                className="px-3 py-2 rounded-lg bg-purple-50 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 text-xs font-bold cursor-grab hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all"
+                                                title={`${group.description || ''}\n${(group.fields || []).map(f => `${f.key}: ${f.value}`).join('\n')}`}
+                                            >
+                                                <span className="mr-1">{group.emoji || '🌱'}</span>{group.name}
+                                            </div>
+                                        ))}
                                     </div>
-                                    {expandedSections[section.id] ? (
-                                        <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                                    ) : (
-                                        <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                )}
+                            </div>
+                            {(sidebarContent || []).map((section) => (
+                                <div key={section.id} className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                                    <button
+                                        onClick={() => toggleSection(section.id)}
+                                        className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-800/50 hover:from-gray-100 hover:to-gray-200 dark:hover:from-gray-700 dark:hover:to-gray-700/50 transition-colors"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-lg">{section.icon}</span>
+                                            <span className="font-semibold text-sm text-gray-900 dark:text-white">
+                                                {section.label === 'MODE PIPELINE' ? 'Pré-configuration' : section.label}
+                                            </span>
+                                        </div>
+                                        {expandedSections[section.id] ? (
+                                            <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                        ) : (
+                                            <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                        )}
+                                    </button>
+
+                                    {expandedSections[section.id] && (
+                                        <div className="p-2 bg-white dark:bg-gray-900 space-y-1">
+                                            {section.items?.map((item) => {
+                                                const itemKey = item.key || item.id;
+                                                const isSelected = multiSelectedItems.includes(itemKey);
+                                                let isDragging = false;
+
+                                                const handleSidebarItemClick = (e) => {
+                                                    // Ne rien faire si on est en train de drag
+                                                    if (isDragging) {
+                                                        isDragging = false;
+                                                        return;
+                                                    }
+
+                                                    if (e.ctrlKey || e.metaKey) {
+                                                        // Multi-sélection UNIQUEMENT avec Ctrl/Cmd
+                                                        setMultiSelectedItems(prev =>
+                                                            prev.includes(itemKey)
+                                                                ? prev.filter(k => k !== itemKey)
+                                                                : [...prev, itemKey]
+                                                        );
+                                                    } else {
+                                                        // Clic simple : DÉSÉLECTIONNER TOUT (pas de sélection visuelle)
+                                                        // Seul le drag or drop peut utiliser l'item
+                                                        setMultiSelectedItems([]);
+                                                    }
+                                                };
+
+                                                return (
+                                                    <div
+                                                        key={itemKey}
+                                                        draggable="true"
+                                                        onDragStart={(e) => {
+                                                            isDragging = true;
+                                                            // Si l'item n'est pas dans la sélection multiple, drag uniquement cet item
+                                                            if (!isSelected || multiSelectedItems.length === 1) {
+                                                                handleDragStart(e, item);
+                                                                setMultiSelectedItems([]); // Clear selection après drag
+                                                            } else {
+                                                                // Multi-items drag - Chercher dans TOUTES les sections
+                                                                const selectedItems = multiSelectedItems
+                                                                    .map(k => {
+                                                                        // Chercher l'item dans toutes les sections
+                                                                        for (const sec of sidebarContent) {
+                                                                            const found = sec.items?.find(i => (i.key || i.id) === k);
+                                                                            if (found) return found;
+                                                                        }
+                                                                        return null;
+                                                                    })
+                                                                    .filter(Boolean);
+
+                                                                console.log('🎯 Multi-drag:', selectedItems.length, 'items depuis', multiSelectedItems.length, 'keys');
+                                                                e.dataTransfer.setData('application/multi-items', JSON.stringify(selectedItems));
+                                                                setDraggedContent({ type: 'multi', items: selectedItems });
+                                                            }
+                                                        }}
+                                                        onDragEnd={(e) => {
+                                                            e.currentTarget.classList.remove('dragging');
+                                                            setDraggedContent(null);
+                                                            setMultiSelectedItems([]);
+                                                        }}
+                                                        onClick={handleSidebarItemClick}
+                                                        onContextMenu={(e) => {
+                                                            e.preventDefault();
+                                                            setContextMenu({
+                                                                item,
+                                                                position: {
+                                                                    x: e.clientX,
+                                                                    y: e.clientY
+                                                                },
+                                                                anchorRect: e.currentTarget.getBoundingClientRect()
+                                                            });
+                                                        }}
+                                                        className="relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                                        style={{ touchAction: 'none' }}
+                                                    >
+                                                        <span className="text-base">{item.icon}</span>
+                                                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex-1">
+                                                            {item.label}
+                                                        </span>
+                                                        <span className="text-xs transition-colors text-gray-400 group-hover:text-gray-600">
+                                                            ⋮⋮
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* TIMELINE PRINCIPALE DROITE */}
+                <div className="flex-1 min-w-0 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
+                    {/* HEADER CONFIGURATION */}
+                    <div className="p-3 md:p-4 border-b border-gray-200 dark:border-gray-700 bg-transparent dark:bg-transparent flex-shrink-0 max-h-[280px] overflow-y-auto">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 md:mb-3">
+                            <h3 className="font-bold text-gray-900 dark:text-white text-base md:text-lg flex items-center gap-2 truncate">
+                                <span className="flex-shrink-0">📊</span>
+                                <span className="truncate">Pipeline {type === 'culture' ? 'Culture' : 'Curing'}</span>
+                            </h3>
+                            <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
+                                {/* Undo button */}
+                                <button
+                                    onClick={() => undoLastAction()}
+                                    disabled={historyPointer < 0}
+                                    className={`group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl font-medium text-xs md:text-sm transition-all duration-200 ${historyPointer < 0
+                                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-300 dark:border-gray-700'
+                                        : 'bg-gray-100 dark:bg-gray-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 border border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 text-gray-700 dark:text-gray-300 hover:text-blue-700 dark:hover:text-blue-300 shadow-sm hover:shadow'
+                                        }`}
+                                    title="Annuler la dernière action (Ctrl+Z)"
+                                >
+                                    <svg className="w-3 h-3 md:w-4 md:h-4 transform group-hover:-rotate-45 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                    </svg>
+                                    <span className="hidden md:inline">Annuler</span>
                                 </button>
 
-                                {expandedSections[section.id] && (
-                                    <div className="p-2 bg-white dark:bg-gray-900 space-y-1">
-                                        {section.items?.map((item) => {
-                                            const itemKey = item.key || item.id;
-                                            const isSelected = multiSelectedItems.includes(itemKey);
-                                            let isDragging = false;
+                                {/* Redo button */}
+                                <button
+                                    onClick={() => redoLastAction()}
+                                    disabled={historyPointer >= actionsHistory.length - 1}
+                                    className={`group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl font-medium text-xs md:text-sm transition-all duration-200 ${historyPointer >= actionsHistory.length - 1
+                                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-300 dark:border-gray-700'
+                                        : 'bg-gray-100 dark:bg-gray-800 hover:bg-green-100 dark:hover:bg-green-900/40 border border-gray-300 dark:border-gray-600 hover:border-green-400 dark:hover:border-green-500 text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-300 shadow-sm hover:shadow'
+                                        }`}
+                                    title="Refaire la dernière action (Ctrl+Shift+Z / Ctrl+Y)"
+                                >
+                                    <svg className="w-3 h-3 md:w-4 md:h-4 transform group-hover:rotate-45 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10a8 8 0 01-8 8v2m0-2a8 8 0 100-16v2m0 0h10a8 8 0 018 8v2M21 10l-6-6m6 6l-6 6" />
+                                    </svg>
+                                    <span className="hidden md:inline">Refaire</span>
+                                </button>
+                            </div>
+                        </div>
 
-                                            const handleSidebarItemClick = (e) => {
-                                                // Ne rien faire si on est en train de drag
-                                                if (isDragging) {
-                                                    isDragging = false;
-                                                    return;
-                                                }
-
-                                                if (e.ctrlKey || e.metaKey) {
-                                                    // Multi-sélection UNIQUEMENT avec Ctrl/Cmd
-                                                    setMultiSelectedItems(prev =>
-                                                        prev.includes(itemKey)
-                                                            ? prev.filter(k => k !== itemKey)
-                                                            : [...prev, itemKey]
-                                                    );
-                                                } else {
-                                                    // Clic simple : DÉSÉLECTIONNER TOUT (pas de sélection visuelle)
-                                                    // Seul le drag or drop peut utiliser l'item
-                                                    setMultiSelectedItems([]);
-                                                }
-                                            };
-
-                                            return (
-                                                <div
-                                                    key={itemKey}
-                                                    draggable="true"
-                                                    onDragStart={(e) => {
-                                                        isDragging = true;
-                                                        // Si l'item n'est pas dans la sélection multiple, drag uniquement cet item
-                                                        if (!isSelected || multiSelectedItems.length === 1) {
-                                                            handleDragStart(e, item);
-                                                            setMultiSelectedItems([]); // Clear selection après drag
-                                                        } else {
-                                                            // Multi-items drag - Chercher dans TOUTES les sections
-                                                            const selectedItems = multiSelectedItems
-                                                                .map(k => {
-                                                                    // Chercher l'item dans toutes les sections
-                                                                    for (const sec of sidebarContent) {
-                                                                        const found = sec.items?.find(i => (i.key || i.id) === k);
-                                                                        if (found) return found;
-                                                                    }
-                                                                    return null;
-                                                                })
-                                                                .filter(Boolean);
-
-                                                            console.log('🎯 Multi-drag:', selectedItems.length, 'items depuis', multiSelectedItems.length, 'keys');
-                                                            e.dataTransfer.setData('application/multi-items', JSON.stringify(selectedItems));
-                                                            setDraggedContent({ type: 'multi', items: selectedItems });
-                                                        }
-                                                    }}
-                                                    onDragEnd={(e) => {
-                                                        e.currentTarget.classList.remove('dragging');
-                                                        setDraggedContent(null);
-                                                        setMultiSelectedItems([]);
-                                                    }}
-                                                    onClick={handleSidebarItemClick}
-                                                    onContextMenu={(e) => {
-                                                        e.preventDefault();
-                                                        setContextMenu({
-                                                            item,
-                                                            position: {
-                                                                x: e.clientX,
-                                                                y: e.clientY
-                                                            },
-                                                            anchorRect: e.currentTarget.getBoundingClientRect()
-                                                        });
-                                                    }}
-                                                    className="relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                                    style={{ touchAction: 'none' }}
-                                                >
-                                                    <span className="text-base">{item.icon}</span>
-                                                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex-1">
-                                                        {item.label}
-                                                    </span>
-                                                    <span className="text-xs transition-colors text-gray-400 group-hover:text-gray-600">
-                                                        ⋮⋮
-                                                    </span>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                        {/* Configuration inline - Dynamique selon type d'intervalle */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mt-3 md:mt-3">
+                            <div>
+                                <label className="text-xs font-medium text-gray-900 dark:text-gray-300 mb-1 block truncate">
+                                    Type intervalle
+                                </label>
+                                <select
+                                    value={timelineConfig.type || 'phase'}
+                                    onChange={(e) => onConfigChange('type', e.target.value)}
+                                    disabled={timelineData.length > 0}
+                                    className={`w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm focus:ring-2 focus:ring-blue-500 ${timelineData.length > 0 ? 'opacity-50 cursor-not-allowed' : ''
+                                        }`}
+                                    title={timelineData.length > 0 ? '⚠️ Impossible de changer la trame : des données sont déjà renseignées' : 'Choisir le type d\'intervalles'}
+                                >
+                                    <option value="seconde">⏱️ Secondes</option>
+                                    <option value="heure">🕐 Heures</option>
+                                    <option value="jour">🗓️ Jours</option>
+                                    <option value="date">📅 Dates</option>
+                                    <option value="semaine">📆 Semaines</option>
+                                    <option value="phase">🌱 Phases</option>
+                                </select>
+                                {timelineData.length > 0 && (
+                                    <p className="text-xs text-orange-600 dark:text-orange-400 mt-1 flex items-center gap-1 line-clamp-2">
+                                        <span className="flex-shrink-0">⚠️</span>
+                                        <span className="truncate">Trame verrouillée ({timelineData.length} cell{timelineData.length > 1 ? 's' : ''})</span>
+                                    </p>
                                 )}
                             </div>
-                        ))}
-                    </div>
-                </div>
-            )}
 
-            {/* TIMELINE PRINCIPALE */}
-            <div className="flex-1 min-h-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden flex flex-col">
-                {/* HEADER CONFIGURATION */}
-                <div className="p-3 md:p-4 border-b border-gray-200 dark:border-gray-700 bg-transparent dark:bg-transparent flex-shrink-0 max-h-[280px] overflow-y-auto">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 md:mb-3">
-                        <h3 className="font-bold text-gray-900 dark:text-white text-base md:text-lg flex items-center gap-2 truncate">
-                            <span className="flex-shrink-0">📊</span>
-                            <span className="truncate">Pipeline {type === 'culture' ? 'Culture' : 'Curing'}</span>
-                        </h3>
-                        <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
-                            {/* Undo button */}
-                            <button
-                                onClick={() => undoLastAction()}
-                                disabled={historyPointer < 0}
-                                className={`group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl font-medium text-xs md:text-sm transition-all duration-200 ${historyPointer < 0
-                                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-300 dark:border-gray-700'
-                                    : 'bg-gray-100 dark:bg-gray-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 border border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 text-gray-700 dark:text-gray-300 hover:text-blue-700 dark:hover:text-blue-300 shadow-sm hover:shadow'
-                                    }`}
-                                title="Annuler la dernière action (Ctrl+Z)"
-                            >
-                                <svg className="w-3 h-3 md:w-4 md:h-4 transform group-hover:-rotate-45 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                                </svg>
-                                <span className="hidden md:inline">Annuler</span>
-                            </button>
+                            {/* SECONDES - Max 900s */}
+                            {timelineConfig.type === 'seconde' && (
+                                <div className="col-span-2 md:col-span-3">
+                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                        Secondes (max 900)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="900"
+                                        value={timelineConfig.totalSeconds || ''}
+                                        onChange={(e) => onConfigChange('totalSeconds', parseInt(e.target.value))}
+                                        className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                        placeholder="300"
+                                    />
+                                </div>
+                            )}
 
-                            {/* Redo button */}
-                            <button
-                                onClick={() => redoLastAction()}
-                                disabled={historyPointer >= actionsHistory.length - 1}
-                                className={`group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl font-medium text-xs md:text-sm transition-all duration-200 ${historyPointer >= actionsHistory.length - 1
-                                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-300 dark:border-gray-700'
-                                    : 'bg-gray-100 dark:bg-gray-800 hover:bg-green-100 dark:hover:bg-green-900/40 border border-gray-300 dark:border-gray-600 hover:border-green-400 dark:hover:border-green-500 text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-300 shadow-sm hover:shadow'
-                                    }`}
-                                title="Refaire la dernière action (Ctrl+Shift+Z / Ctrl+Y)"
-                            >
-                                <svg className="w-3 h-3 md:w-4 md:h-4 transform group-hover:rotate-45 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10a8 8 0 01-8 8v2m0-2a8 8 0 100-16v2m0 0h10a8 8 0 018 8v2M21 10l-6-6m6 6l-6 6" />
-                                </svg>
-                                <span className="hidden md:inline">Refaire</span>
-                            </button>
-                        </div>
-                    </div>
+                            {/* HEURES - Max 336h */}
+                            {timelineConfig.type === 'heure' && (
+                                <div className="col-span-2 md:col-span-3">
+                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                        Heures (max 336)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="336"
+                                        value={timelineConfig.totalHours || ''}
+                                        onChange={(e) => onConfigChange('totalHours', parseInt(e.target.value))}
+                                        className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                        placeholder="72"
+                                    />
+                                </div>
+                            )}
 
-                    {/* Configuration inline - Dynamique selon type d'intervalle */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mt-3 md:mt-3">
-                        <div>
-                            <label className="text-xs font-medium text-gray-900 dark:text-gray-300 mb-1 block truncate">
-                                Type intervalle
-                            </label>
-                            <select
-                                value={timelineConfig.type || 'phase'}
-                                onChange={(e) => onConfigChange('type', e.target.value)}
-                                disabled={timelineData.length > 0}
-                                className={`w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm focus:ring-2 focus:ring-blue-500 ${timelineData.length > 0 ? 'opacity-50 cursor-not-allowed' : ''
-                                    }`}
-                                title={timelineData.length > 0 ? '⚠️ Impossible de changer la trame : des données sont déjà renseignées' : 'Choisir le type d\'intervalles'}
-                            >
-                                <option value="seconde">⏱️ Secondes</option>
-                                <option value="heure">🕐 Heures</option>
-                                <option value="jour">🗓️ Jours</option>
-                                <option value="date">📅 Dates</option>
-                                <option value="semaine">📆 Semaines</option>
-                                <option value="phase">🌱 Phases</option>
-                            </select>
-                            {timelineData.length > 0 && (
-                                <p className="text-xs text-orange-600 dark:text-orange-400 mt-1 flex items-center gap-1 line-clamp-2">
-                                    <span className="flex-shrink-0">⚠️</span>
-                                    <span className="truncate">Trame verrouillée ({timelineData.length} cell{timelineData.length > 1 ? 's' : ''})</span>
-                                </p>
+                            {/* JOURS - Max 365 jours */}
+                            {timelineConfig.type === 'jour' && (
+                                <div className="col-span-2 md:col-span-3">
+                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                        Jours (max 365)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="365"
+                                        value={timelineConfig.totalDays || ''}
+                                        onChange={(e) => onConfigChange('totalDays', parseInt(e.target.value))}
+                                        className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                        placeholder="90"
+                                    />
+                                </div>
+                            )}
+
+                            {/* DATES - Date début + Date fin avec calcul automatique */}
+                            {timelineConfig.type === 'date' && (
+                                <>
+                                    <div className="col-span-1">
+                                        <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                            Début *
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={timelineConfig.start || ''}
+                                            onChange={(e) => onConfigChange('start', e.target.value)}
+                                            className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                        />
+                                    </div>
+                                    <div className="col-span-1">
+                                        <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                            Fin *
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={timelineConfig.end || ''}
+                                            onChange={(e) => onConfigChange('end', e.target.value)}
+                                            className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                        />
+                                    </div>
+                                    {timelineConfig.start && timelineConfig.end && (
+                                        <div className="col-span-1">
+                                            <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                                Durée
+                                            </label>
+                                            <div className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm font-medium text-gray-900 dark:text-white truncate">
+                                                {Math.ceil((new Date(timelineConfig.end) - new Date(timelineConfig.start)) / (1000 * 60 * 60 * 24)) + 1}j
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            {/* SEMAINES - Nombre de semaines */}
+                            {timelineConfig.type === 'semaine' && (
+                                <div className="col-span-2 md:col-span-3">
+                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                        Semaines (max 52)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="52"
+                                        value={timelineConfig.totalWeeks || ''}
+                                        onChange={(e) => onConfigChange('totalWeeks', parseInt(e.target.value))}
+                                        className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                        placeholder="12"
+                                    />
+                                </div>
+                            )}
+
+                            {/* PHASES - Prédéfinies selon type de pipeline */}
+                            {timelineConfig.type === 'phase' && (
+                                <div className="col-span-2 md:col-span-3">
+                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                                        Phases prédéfinies
+                                    </label>
+                                    <div className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-900 dark:text-white">
+                                        {type === 'culture' ? '12 phases (Graine → Récolte)' : '4 phases (Séchage → Affinage)'}
+                                    </div>
+                                </div>
                             )}
                         </div>
 
-                        {/* SECONDES - Max 900s */}
-                        {timelineConfig.type === 'seconde' && (
-                            <div className="col-span-2 md:col-span-3">
-                                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
-                                    Secondes (max 900)
-                                </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="900"
-                                    value={timelineConfig.totalSeconds || ''}
-                                    onChange={(e) => onConfigChange('totalSeconds', parseInt(e.target.value))}
-                                    className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                                    placeholder="300"
-                                />
-                            </div>
-                        )}
-
-                        {/* HEURES - Max 336h */}
-                        {timelineConfig.type === 'heure' && (
-                            <div className="col-span-2 md:col-span-3">
-                                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
-                                    Heures (max 336)
-                                </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="336"
-                                    value={timelineConfig.totalHours || ''}
-                                    onChange={(e) => onConfigChange('totalHours', parseInt(e.target.value))}
-                                    className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                                    placeholder="72"
-                                />
-                            </div>
-                        )}
-
-                        {/* JOURS - Max 365 jours */}
-                        {timelineConfig.type === 'jour' && (
-                            <div className="col-span-2 md:col-span-3">
-                                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
-                                    Jours (max 365)
-                                </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="365"
-                                    value={timelineConfig.totalDays || ''}
-                                    onChange={(e) => onConfigChange('totalDays', parseInt(e.target.value))}
-                                    className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                                    placeholder="90"
-                                />
-                            </div>
-                        )}
-
-                        {/* DATES - Date début + Date fin avec calcul automatique */}
-                        {timelineConfig.type === 'date' && (
-                            <>
-                                <div className="col-span-1">
-                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
-                                        Début *
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={timelineConfig.start || ''}
-                                        onChange={(e) => onConfigChange('start', e.target.value)}
-                                        className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                                    />
-                                </div>
-                                <div className="col-span-1">
-                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
-                                        Fin *
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={timelineConfig.end || ''}
-                                        onChange={(e) => onConfigChange('end', e.target.value)}
-                                        className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                                    />
-                                </div>
-                                {timelineConfig.start && timelineConfig.end && (
-                                    <div className="col-span-1">
-                                        <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
-                                            Durée
-                                        </label>
-                                        <div className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm font-medium text-gray-900 dark:text-white truncate">
-                                            {Math.ceil((new Date(timelineConfig.end) - new Date(timelineConfig.start)) / (1000 * 60 * 60 * 24)) + 1}j
-                                        </div>
-                                    </div>
-                                )}
-                            </>
-                        )}
-
-                        {/* SEMAINES - Nombre de semaines */}
-                        {timelineConfig.type === 'semaine' && (
-                            <div className="col-span-2 md:col-span-3">
-                                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
-                                    Semaines (max 52)
-                                </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="52"
-                                    value={timelineConfig.totalWeeks || ''}
-                                    onChange={(e) => onConfigChange('totalWeeks', parseInt(e.target.value))}
-                                    className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                                    placeholder="12"
-                                />
-                            </div>
-                        )}
-
-                        {/* PHASES - Prédéfinies selon type de pipeline */}
-                        {timelineConfig.type === 'phase' && (
-                            <div className="col-span-2 md:col-span-3">
-                                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                                    Phases prédéfinies
-                                </label>
-                                <div className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-900 dark:text-white">
-                                    {type === 'culture' ? '12 phases (Graine → Récolte)' : '4 phases (Séchage → Affinage)'}
+                        {/* Progress bar - Full width spanning entire config area */}
+                        <div className="mt-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Progression</div>
+                                <div className="flex items-center gap-3">
+                                    <div className="text-xs text-gray-500 dark:text-gray-400" title={`${filledCells}/${cells.length} cases`}>{filledCells}/{cells.length}</div>
+                                    <div className="text-sm font-bold text-purple-600 dark:text-purple-400">{Math.round(completionPercent)}%</div>
                                 </div>
                             </div>
-                        )}
-                    </div>
-
-                    {/* Progress bar - Full width spanning entire config area */}
-                    <div className="mt-4">
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Progression</div>
-                            <div className="flex items-center gap-3">
-                                <div className="text-xs text-gray-500 dark:text-gray-400" title={`${filledCells}/${cells.length} cases`}>{filledCells}/{cells.length}</div>
-                                <div className="text-sm font-bold text-purple-600 dark:text-purple-400">{Math.round(completionPercent)}%</div>
+                            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3 overflow-hidden border border-gray-200 dark:border-gray-700 shadow-inner">
+                                <div
+                                    className="h-3 rounded-full bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 transition-all duration-500 ease-out"
+                                    style={{ width: `${Math.max(0, Math.min(100, completionPercent))}%` }}
+                                    aria-valuenow={completionPercent}
+                                    aria-valuemin={0}
+                                    aria-valuemax={100}
+                                />
                             </div>
                         </div>
-                        <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3 overflow-hidden border border-gray-200 dark:border-gray-700 shadow-inner">
+                    </div>
+
+                    {/* Progression Bar - Outside config scrollable area */}
+                    <div className="px-3 md:px-4 py-2 md:py-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 bg-gray-50/50 dark:bg-gray-800/30">
+                        <div className="text-xs text-gray-600 dark:text-gray-400 mb-1.5">Progression: {filledCells}/{cells.length} ({completionPercent}%)</div>
+                        <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 overflow-hidden border border-gray-200 dark:border-gray-700 shadow-inner">
                             <div
-                                className="h-3 rounded-full bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 transition-all duration-500 ease-out"
+                                className="h-2 rounded-full bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 transition-all duration-500 ease-out"
                                 style={{ width: `${Math.max(0, Math.min(100, completionPercent))}%` }}
                                 aria-valuenow={completionPercent}
                                 aria-valuemin={0}
@@ -2183,280 +2198,267 @@ const PipelineDragDropView = ({
                             />
                         </div>
                     </div>
-                </div>
 
-                {/* Progression Bar - Outside config scrollable area */}
-                <div className="px-3 md:px-4 py-2 md:py-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 bg-gray-50/50 dark:bg-gray-800/30">
-                    <div className="text-xs text-gray-600 dark:text-gray-400 mb-1.5">Progression: {filledCells}/{cells.length} ({completionPercent}%)</div>
-                    <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 overflow-hidden border border-gray-200 dark:border-gray-700 shadow-inner">
-                        <div
-                            className="h-2 rounded-full bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 transition-all duration-500 ease-out"
-                            style={{ width: `${Math.max(0, Math.min(100, completionPercent))}%` }}
-                            aria-valuenow={completionPercent}
-                            aria-valuemin={0}
-                            aria-valuemax={100}
-                        />
-                    </div>
-                </div>
-
-                {/* Warning Messages - Outside config */}
-                {(timelineConfig.type === 'date' && (!timelineConfig.start || !timelineConfig.end)) ||
-                    (timelineConfig.type === 'seconde' && (!timelineConfig.totalSeconds || timelineConfig.totalSeconds > 900)) ||
-                    (timelineConfig.type === 'heure' && (!timelineConfig.totalHours || timelineConfig.totalHours > 336)) ||
-                    (timelineConfig.type === 'jour' && (!timelineConfig.totalDays || timelineConfig.totalDays > 365)) ? (
-                    <div className="px-3 md:px-4 py-2 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-700 flex-shrink-0">
-                        {timelineConfig.type === 'date' && (!timelineConfig.start || !timelineConfig.end) && (
-                            <p className="text-xs text-yellow-800 dark:text-yellow-300 flex items-center gap-1">
-                                <span>⚠️</span> Dates début ET fin obligatoires
-                            </p>
-                        )}
-                        {timelineConfig.type === 'seconde' && (!timelineConfig.totalSeconds || timelineConfig.totalSeconds > 900) && (
-                            <p className="text-xs text-yellow-800 dark:text-yellow-300 flex items-center gap-1">
-                                <span>⚠️</span> Max 900s
-                            </p>
-                        )}
-                        {timelineConfig.type === 'heure' && (!timelineConfig.totalHours || timelineConfig.totalHours > 336) && (
-                            <p className="text-xs text-yellow-800 dark:text-yellow-300 flex items-center gap-1">
-                                <span>⚠️</span> Max 336h (14j)
-                            </p>
-                        )}
-                        {timelineConfig.type === 'jour' && (!timelineConfig.totalDays || timelineConfig.totalDays > 365) && (
-                            <p className="text-xs text-yellow-800 dark:text-yellow-300 flex items-center gap-1">
-                                <span>⚠️</span> Max 365j
-                            </p>
-                        )}
-                    </div>
-                ) : null}
-
-                {/* TIMELINE GRID - Directement sous la configuration dans le même container */}
-                {cells.length === 0 ? (
-                    <div className="flex-1 flex items-center justify-center p-4 md:p-8">
-                        <div className="text-center text-gray-500 dark:text-gray-400">
-                            <Settings className="w-8 md:w-12 h-8 md:h-12 mx-auto mb-2 opacity-50" />
-                            <p className="text-xs md:text-sm">⚠️ Configurez la période pour voir la timeline</p>
+                    {/* Warning Messages - Outside config */}
+                    {(timelineConfig.type === 'date' && (!timelineConfig.start || !timelineConfig.end)) ||
+                        (timelineConfig.type === 'seconde' && (!timelineConfig.totalSeconds || timelineConfig.totalSeconds > 900)) ||
+                        (timelineConfig.type === 'heure' && (!timelineConfig.totalHours || timelineConfig.totalHours > 336)) ||
+                        (timelineConfig.type === 'jour' && (!timelineConfig.totalDays || timelineConfig.totalDays > 365)) ? (
+                        <div className="px-3 md:px-4 py-2 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-700 flex-shrink-0">
+                            {timelineConfig.type === 'date' && (!timelineConfig.start || !timelineConfig.end) && (
+                                <p className="text-xs text-yellow-800 dark:text-yellow-300 flex items-center gap-1">
+                                    <span>⚠️</span> Dates début ET fin obligatoires
+                                </p>
+                            )}
+                            {timelineConfig.type === 'seconde' && (!timelineConfig.totalSeconds || timelineConfig.totalSeconds > 900) && (
+                                <p className="text-xs text-yellow-800 dark:text-yellow-300 flex items-center gap-1">
+                                    <span>⚠️</span> Max 900s
+                                </p>
+                            )}
+                            {timelineConfig.type === 'heure' && (!timelineConfig.totalHours || timelineConfig.totalHours > 336) && (
+                                <p className="text-xs text-yellow-800 dark:text-yellow-300 flex items-center gap-1">
+                                    <span>⚠️</span> Max 336h (14j)
+                                </p>
+                            )}
+                            {timelineConfig.type === 'jour' && (!timelineConfig.totalDays || timelineConfig.totalDays > 365) && (
+                                <p className="text-xs text-yellow-800 dark:text-yellow-300 flex items-center gap-1">
+                                    <span>⚠️</span> Max 365j
+                                </p>
+                            )}
                         </div>
-                    </div>
-                ) : (
-                    <div className="flex-1 flex flex-col overflow-hidden">
-                        <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 italic px-3 md:px-4 pt-3 md:pt-4 pb-2 md:pb-3 flex-shrink-0 line-clamp-2">
-                            💡 <span className="hidden sm:inline"><strong>Première case</strong> : Config générale </span><span className="sm:hidden"><strong>1ère case</strong>: Config </span>|
-                            <span className="hidden sm:inline"> 📊 <strong>Autres cases</strong> : Drag & drop paramètres</span><span className="sm:hidden"> 📊 Drag & drop</span>
-                        </p>
+                    ) : null}
 
-                        <div className="flex-1 overflow-auto">
-                            <div ref={gridRef} className="grid gap-1 sm:gap-2 select-none relative auto-rows-min inline-grid px-3 md:px-4 pb-3 md:pb-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', position: 'relative', minWidth: '100%' }}>
-                                {/* Visual selection frame overlay */}
-                                {selectedCells.length > 1 && !isSelecting && (() => {
-                                    // Compute aggregate bounding box of selected cells using DOM measurements
-                                    const refs = selectedCells.map(ts => cellRefs.current[ts]).filter(Boolean);
-                                    if (!refs || refs.length === 0) return null;
-                                    const gridBox = gridRef.current && gridRef.current.getBoundingClientRect();
-                                    if (!gridBox) return null;
-
-                                    const boxes = refs.map(el => {
-                                        const r = el.getBoundingClientRect();
-                                        return {
-                                            left: r.left,
-                                            top: r.top,
-                                            right: r.right,
-                                            bottom: r.bottom
-                                        };
-                                    });
-
-                                    const leftPx = Math.min(...boxes.map(b => b.left)) - gridBox.left + (gridRef.current ? gridRef.current.scrollLeft : 0);
-                                    const topPx = Math.min(...boxes.map(b => b.top)) - gridBox.top + (gridRef.current ? gridRef.current.scrollTop : 0);
-                                    const rightPx = Math.max(...boxes.map(b => b.right)) - gridBox.left + (gridRef.current ? gridRef.current.scrollLeft : 0);
-                                    const bottomPx = Math.max(...boxes.map(b => b.bottom)) - gridBox.top + (gridRef.current ? gridRef.current.scrollTop : 0);
-
-                                    const widthPx = rightPx - leftPx;
-                                    const heightPx = bottomPx - topPx;
-
-                                    return (
-                                        <div
-                                            className="absolute pointer-events-none z-40 border-4 rounded-2xl shadow-lg animate-fade-in"
-                                            style={{
-                                                top: `${topPx}px`,
-                                                left: `${leftPx}px`,
-                                                width: `${widthPx}px`,
-                                                height: `${heightPx}px`,
-                                                boxSizing: 'border-box',
-                                                transition: 'all 0.08s',
-                                                borderStyle: 'dashed',
-                                                background: 'rgba(80,180,255,0.07)'
-                                            }}
-                                        />
-                                    );
-                                })()}
-                                {/* Selection rectangle (live) */}
-                                {/* Selection marquee (rendered always, animated via opacity/transform) */}
-                                <div
-                                    className="absolute z-50 pointer-events-none border-4 rounded-2xl shadow-lg"
-                                    style={{
-                                        top: selectionRect.y,
-                                        left: selectionRect.x,
-                                        width: selectionRect.width,
-                                        height: selectionRect.height,
-                                        boxSizing: 'border-box',
-                                        borderStyle: 'dashed',
-                                        background: 'rgba(80,180,255,0.06)',
-                                        opacity: selectionRect.visible ? 1 : 0,
-                                        transform: selectionRect.visible ? 'scale(1)' : 'scale(0.98)',
-                                        transition: 'opacity 150ms ease-out, transform 150ms ease-out'
-                                    }}
-                                />
-
-                                {cells.map((cell, idx) => {
-                                    const hasData = hasCellData(cell.timestamp);
-                                    const cellData = getCellData(cell.timestamp);
-                                    const isFirst = idx === 0;
-                                    const isSelected = selectedCells.includes(cell.timestamp);
-                                    const isHovered = hoveredCell === cell.timestamp;
-
-                                    // Construire classes CSS pour la cellule
-                                    let cellClass = `relative p-1.5 sm:p-2 md:p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[60px] sm:min-h-[70px] md:min-h-[80px]`;
-
-                                    // Gradient d'intensité GitHub-style selon nombre de données
-                                    if (hasData) {
-                                        const dataCount = Object.keys(cellData).filter(k =>
-                                            !['timestamp', 'date', 'label', 'phase', 'day', 'week', 'hours', 'seconds', 'note', '_meta'].includes(k)
-                                        ).length;
-                                        const intensity = Math.min(dataCount / 10, 1);
-                                        const intensityIndex = Math.floor(intensity * 4); // 0-4
-
-                                        // Palette verte progressive (GitHub-style)
-                                        const gradients = [
-                                            'border-green-400 bg-green-100/40 dark:border-green-600 dark:bg-green-950/30',
-                                            'border-green-500 bg-green-200/50 dark:border-green-500 dark:bg-green-900/40',
-                                            'border-green-600 bg-green-300/60 dark:border-green-400 dark:bg-green-800/50',
-                                            'border-green-700 bg-green-400/70 dark:border-green-300 dark:bg-green-700/60',
-                                            'border-green-800 bg-green-500/80 dark:border-green-200 dark:bg-green-600/70'
-                                        ];
-                                        cellClass += ' ' + gradients[intensityIndex];
-                                    } else {
-                                        cellClass += ' border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800';
-                                    }
-
-                                    // Selected par clic simple (modal)
-                                    cellClass += selectedCell === cell.timestamp
-                                        ? ' ring-2 ring-violet-500 shadow-lg'
-                                        : ' hover:border-violet-400 hover:shadow-md';
-
-                                    // Selected en mode masse (multi-sélection)
-                                    cellClass += isSelected
-                                        ? ' ring-4 ring-blue-500 dark:ring-blue-400 bg-blue-500/10'
-                                        : '';
-
-                                    // Hover pendant drag
-                                    cellClass += isHovered && draggedContent
-                                        ? ' ring-4 ring-violet-500 dark:ring-violet-400 scale-105 shadow-2xl animate-pulse'
-                                        : '';
-
-                                    // Span 2 colonnes pour première cellule
-                                    if (isFirst) {
-                                        cellClass += ' col-span-2';
-                                    }
-
-                                    return (
-                                        <div
-                                            key={cell.timestamp}
-                                            onDragOver={(e) => handleDragOver(e, cell.timestamp)}
-                                            onDragLeave={handleDragLeave}
-                                            onDrop={(e) => handleDrop(e, cell.timestamp)}
-                                            onClick={(e) => handleCellClick(e, cell.timestamp)}
-                                            onContextMenu={(e) => handleCellContextMenu(e, cell.timestamp)}
-                                            onMouseEnter={(e) => { handleCellHover(e, cell.timestamp); }}
-                                            onMouseLeave={handleCellLeave}
-                                            onMouseDown={(e) => { if (e.button === 0) startSelection(e, idx, cell.timestamp); }}
-                                            onMouseUp={(e) => { /* handled globally to compute rectangle on mouseup */ }}
-                                            ref={(el) => { cellRefs.current[cell.timestamp] = el; }}
-                                            className={cellClass}
-                                            style={{ userSelect: 'none' }}
-                                        >
-                                            {/* Indicateur visuel drop */}
-                                            {isHovered && draggedContent && (
-                                                <div className="absolute inset-0 rounded-lg flex items-center justify-center z-20 pointer-events-none">
-                                                    <div className="text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                                                        📌 Déposer ici
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Affichage 4 emojis superposables CDC-conforme */}
-                                            {hasData && (
-                                                <CellEmojiOverlay
-                                                    cellData={cellData}
-                                                    sidebarContent={sidebarContent}
-                                                    onShowDetails={() => {
-                                                        setCurrentCellTimestamp(cell.timestamp);
-                                                        setIsModalOpen(true);
-                                                    }}
-                                                />
-                                            )}
-
-                                            {/* Label cellule */}
-                                            <div className="relative z-10">
-                                                <div className="text-[10px] sm:text-xs md:text-xs font-bold text-gray-900 dark:text-white mb-0.5 sm:mb-1 truncate">
-                                                    {massAssignMode && isSelected && '✓ '}
-                                                    {isFirst ? '⚙️ ' : ''}<span className="truncate inline-block max-w-full">{cell.label}</span>
-                                                </div>
-                                                <div className="text-[8px] sm:text-[9px] md:text-[10px] text-gray-600 dark:text-gray-400 truncate">
-                                                    {cell.date || cell.week || (cell.phase ? `(${cell.duration || 7}j)` : '')}
-                                                </div>
-                                                {isFirst && (
-                                                    <div className="mt-0.5 sm:mt-1 text-[8px] sm:text-[9px] md:text-[10px] dark:text-gray-300 font-semibold truncate">
-                                                        Config
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-
-                                {/* Bouton + pour ajouter des cellules */}
-                                {cells.length > 0 && (timelineConfig.type === 'seconde' || timelineConfig.type === 'heure' || timelineConfig.type === 'jour' || timelineConfig.type === 'semaine' || timelineConfig.type === 'date') && (
-                                    <div
-                                        className="p-1.5 sm:p-2 md:p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all cursor-pointer flex items-center justify-center min-h-[60px] sm:min-h-[70px] md:min-h-[80px]"
-                                        onClick={() => {
-                                            // Ajouter une cellule selon le type
-                                            if (timelineConfig.type === 'seconde' && timelineConfig.totalSeconds) {
-                                                const current = timelineConfig.totalSeconds || cells.length;
-                                                if (current < 900) {
-                                                    onConfigChange('totalSeconds', current + 1);
-                                                }
-                                            } else if (timelineConfig.type === 'heure' && timelineConfig.totalHours) {
-                                                const current = timelineConfig.totalHours || cells.length;
-                                                if (current < 336) {
-                                                    onConfigChange('totalHours', current + 1);
-                                                }
-                                            } else if (timelineConfig.type === 'jour') {
-                                                const currentDays = timelineConfig.totalDays || cells.length;
-                                                if (currentDays < 365) {
-                                                    onConfigChange('totalDays', currentDays + 1);
-                                                }
-                                            } else if (timelineConfig.type === 'semaine') {
-                                                const currentWeeks = timelineConfig.totalWeeks || cells.length;
-                                                if (currentWeeks < 52) {
-                                                    onConfigChange('totalWeeks', currentWeeks + 1);
-                                                }
-                                            } else if (timelineConfig.type === 'date' && timelineConfig.end) {
-                                                // Ajouter 1 jour à la date de fin
-                                                const endDate = new Date(timelineConfig.end);
-                                                if (isNaN(endDate)) return;
-                                                endDate.setDate(endDate.getDate() + 1);
-                                                onConfigChange('end', endDate.toISOString().split('T')[0]);
-                                            }
-                                        }}
-                                        title="Ajouter une cellule"
-                                    >
-                                        <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-400" />
-                                    </div>
-                                )}
+                    {/* TIMELINE GRID - Directement sous la configuration dans le même container */}
+                    {cells.length === 0 ? (
+                        <div className="flex-1 flex items-center justify-center p-4 md:p-8">
+                            <div className="text-center text-gray-500 dark:text-gray-400">
+                                <Settings className="w-8 md:w-12 h-8 md:h-12 mx-auto mb-2 opacity-50" />
+                                <p className="text-xs md:text-sm">⚠️ Configurez la période pour voir la timeline</p>
                             </div>
                         </div>
-                    </div>
-                )}
-            </div>
+                    ) : (
+                        <div className="flex-1 flex flex-col overflow-hidden">
+                            <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 italic px-3 md:px-4 pt-3 md:pt-4 pb-2 md:pb-3 flex-shrink-0 line-clamp-2">
+                                💡 <span className="hidden sm:inline"><strong>Première case</strong> : Config générale </span><span className="sm:hidden"><strong>1ère case</strong>: Config </span>|
+                                <span className="hidden sm:inline"> 📊 <strong>Autres cases</strong> : Drag & drop paramètres</span><span className="sm:hidden"> 📊 Drag & drop</span>
+                            </p>
 
+                            <div className="flex-1 overflow-auto">
+                                <div ref={gridRef} className="grid gap-1 sm:gap-2 select-none relative auto-rows-min inline-grid px-3 md:px-4 pb-3 md:pb-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', position: 'relative', minWidth: '100%' }}>
+                                    {/* Visual selection frame overlay */}
+                                    {selectedCells.length > 1 && !isSelecting && (() => {
+                                        // Compute aggregate bounding box of selected cells using DOM measurements
+                                        const refs = selectedCells.map(ts => cellRefs.current[ts]).filter(Boolean);
+                                        if (!refs || refs.length === 0) return null;
+                                        const gridBox = gridRef.current && gridRef.current.getBoundingClientRect();
+                                        if (!gridBox) return null;
+
+                                        const boxes = refs.map(el => {
+                                            const r = el.getBoundingClientRect();
+                                            return {
+                                                left: r.left,
+                                                top: r.top,
+                                                right: r.right,
+                                                bottom: r.bottom
+                                            };
+                                        });
+
+                                        const leftPx = Math.min(...boxes.map(b => b.left)) - gridBox.left + (gridRef.current ? gridRef.current.scrollLeft : 0);
+                                        const topPx = Math.min(...boxes.map(b => b.top)) - gridBox.top + (gridRef.current ? gridRef.current.scrollTop : 0);
+                                        const rightPx = Math.max(...boxes.map(b => b.right)) - gridBox.left + (gridRef.current ? gridRef.current.scrollLeft : 0);
+                                        const bottomPx = Math.max(...boxes.map(b => b.bottom)) - gridBox.top + (gridRef.current ? gridRef.current.scrollTop : 0);
+
+                                        const widthPx = rightPx - leftPx;
+                                        const heightPx = bottomPx - topPx;
+
+                                        return (
+                                            <div
+                                                className="absolute pointer-events-none z-40 border-4 rounded-2xl shadow-lg animate-fade-in"
+                                                style={{
+                                                    top: `${topPx}px`,
+                                                    left: `${leftPx}px`,
+                                                    width: `${widthPx}px`,
+                                                    height: `${heightPx}px`,
+                                                    boxSizing: 'border-box',
+                                                    transition: 'all 0.08s',
+                                                    borderStyle: 'dashed',
+                                                    background: 'rgba(80,180,255,0.07)'
+                                                }}
+                                            />
+                                        );
+                                    })()}
+                                    {/* Selection rectangle (live) */}
+                                    {/* Selection marquee (rendered always, animated via opacity/transform) */}
+                                    <div
+                                        className="absolute z-50 pointer-events-none border-4 rounded-2xl shadow-lg"
+                                        style={{
+                                            top: selectionRect.y,
+                                            left: selectionRect.x,
+                                            width: selectionRect.width,
+                                            height: selectionRect.height,
+                                            boxSizing: 'border-box',
+                                            borderStyle: 'dashed',
+                                            background: 'rgba(80,180,255,0.06)',
+                                            opacity: selectionRect.visible ? 1 : 0,
+                                            transform: selectionRect.visible ? 'scale(1)' : 'scale(0.98)',
+                                            transition: 'opacity 150ms ease-out, transform 150ms ease-out'
+                                        }}
+                                    />
+
+                                    {cells.map((cell, idx) => {
+                                        const hasData = hasCellData(cell.timestamp);
+                                        const cellData = getCellData(cell.timestamp);
+                                        const isFirst = idx === 0;
+                                        const isSelected = selectedCells.includes(cell.timestamp);
+                                        const isHovered = hoveredCell === cell.timestamp;
+
+                                        // Construire classes CSS pour la cellule
+                                        let cellClass = `relative p-1.5 sm:p-2 md:p-3 rounded-lg border-2 transition-all cursor-pointer min-h-[60px] sm:min-h-[70px] md:min-h-[80px]`;
+
+                                        // Gradient d'intensité GitHub-style selon nombre de données
+                                        if (hasData) {
+                                            const dataCount = Object.keys(cellData).filter(k =>
+                                                !['timestamp', 'date', 'label', 'phase', 'day', 'week', 'hours', 'seconds', 'note', '_meta'].includes(k)
+                                            ).length;
+                                            const intensity = Math.min(dataCount / 10, 1);
+                                            const intensityIndex = Math.floor(intensity * 4); // 0-4
+
+                                            // Palette verte progressive (GitHub-style)
+                                            const gradients = [
+                                                'border-green-400 bg-green-100/40 dark:border-green-600 dark:bg-green-950/30',
+                                                'border-green-500 bg-green-200/50 dark:border-green-500 dark:bg-green-900/40',
+                                                'border-green-600 bg-green-300/60 dark:border-green-400 dark:bg-green-800/50',
+                                                'border-green-700 bg-green-400/70 dark:border-green-300 dark:bg-green-700/60',
+                                                'border-green-800 bg-green-500/80 dark:border-green-200 dark:bg-green-600/70'
+                                            ];
+                                            cellClass += ' ' + gradients[intensityIndex];
+                                        } else {
+                                            cellClass += ' border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800';
+                                        }
+
+                                        // Selected par clic simple (modal)
+                                        cellClass += selectedCell === cell.timestamp
+                                            ? ' ring-2 ring-violet-500 shadow-lg'
+                                            : ' hover:border-violet-400 hover:shadow-md';
+
+                                        // Selected en mode masse (multi-sélection)
+                                        cellClass += isSelected
+                                            ? ' ring-4 ring-blue-500 dark:ring-blue-400 bg-blue-500/10'
+                                            : '';
+
+                                        // Hover pendant drag
+                                        cellClass += isHovered && draggedContent
+                                            ? ' ring-4 ring-violet-500 dark:ring-violet-400 scale-105 shadow-2xl animate-pulse'
+                                            : '';
+
+                                        // Span 2 colonnes pour première cellule
+                                        if (isFirst) {
+                                            cellClass += ' col-span-2';
+                                        }
+
+                                        return (
+                                            <div
+                                                key={cell.timestamp}
+                                                onDragOver={(e) => handleDragOver(e, cell.timestamp)}
+                                                onDragLeave={handleDragLeave}
+                                                onDrop={(e) => handleDrop(e, cell.timestamp)}
+                                                onClick={(e) => handleCellClick(e, cell.timestamp)}
+                                                onContextMenu={(e) => handleCellContextMenu(e, cell.timestamp)}
+                                                onMouseEnter={(e) => { handleCellHover(e, cell.timestamp); }}
+                                                onMouseLeave={handleCellLeave}
+                                                onMouseDown={(e) => { if (e.button === 0) startSelection(e, idx, cell.timestamp); }}
+                                                onMouseUp={(e) => { /* handled globally to compute rectangle on mouseup */ }}
+                                                ref={(el) => { cellRefs.current[cell.timestamp] = el; }}
+                                                className={cellClass}
+                                                style={{ userSelect: 'none' }}
+                                            >
+                                                {/* Indicateur visuel drop */}
+                                                {isHovered && draggedContent && (
+                                                    <div className="absolute inset-0 rounded-lg flex items-center justify-center z-20 pointer-events-none">
+                                                        <div className="text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                                                            📌 Déposer ici
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Affichage 4 emojis superposables CDC-conforme */}
+                                                {hasData && (
+                                                    <CellEmojiOverlay
+                                                        cellData={cellData}
+                                                        sidebarContent={sidebarContent}
+                                                        onShowDetails={() => {
+                                                            setCurrentCellTimestamp(cell.timestamp);
+                                                            setIsModalOpen(true);
+                                                        }}
+                                                    />
+                                                )}
+
+                                                {/* Label cellule */}
+                                                <div className="relative z-10">
+                                                    <div className="text-[10px] sm:text-xs md:text-xs font-bold text-gray-900 dark:text-white mb-0.5 sm:mb-1 truncate">
+                                                        {massAssignMode && isSelected && '✓ '}
+                                                        {isFirst ? '⚙️ ' : ''}<span className="truncate inline-block max-w-full">{cell.label}</span>
+                                                    </div>
+                                                    <div className="text-[8px] sm:text-[9px] md:text-[10px] text-gray-600 dark:text-gray-400 truncate">
+                                                        {cell.date || cell.week || (cell.phase ? `(${cell.duration || 7}j)` : '')}
+                                                    </div>
+                                                    {isFirst && (
+                                                        <div className="mt-0.5 sm:mt-1 text-[8px] sm:text-[9px] md:text-[10px] dark:text-gray-300 font-semibold truncate">
+                                                            Config
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+
+                                    {/* Bouton + pour ajouter des cellules */}
+                                    {cells.length > 0 && (timelineConfig.type === 'seconde' || timelineConfig.type === 'heure' || timelineConfig.type === 'jour' || timelineConfig.type === 'semaine' || timelineConfig.type === 'date') && (
+                                        <div
+                                            className="p-1.5 sm:p-2 md:p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all cursor-pointer flex items-center justify-center min-h-[60px] sm:min-h-[70px] md:min-h-[80px]"
+                                            onClick={() => {
+                                                // Ajouter une cellule selon le type
+                                                if (timelineConfig.type === 'seconde' && timelineConfig.totalSeconds) {
+                                                    const current = timelineConfig.totalSeconds || cells.length;
+                                                    if (current < 900) {
+                                                        onConfigChange('totalSeconds', current + 1);
+                                                    }
+                                                } else if (timelineConfig.type === 'heure' && timelineConfig.totalHours) {
+                                                    const current = timelineConfig.totalHours || cells.length;
+                                                    if (current < 336) {
+                                                        onConfigChange('totalHours', current + 1);
+                                                    }
+                                                } else if (timelineConfig.type === 'jour') {
+                                                    const currentDays = timelineConfig.totalDays || cells.length;
+                                                    if (currentDays < 365) {
+                                                        onConfigChange('totalDays', currentDays + 1);
+                                                    }
+                                                } else if (timelineConfig.type === 'semaine') {
+                                                    const currentWeeks = timelineConfig.totalWeeks || cells.length;
+                                                    if (currentWeeks < 52) {
+                                                        onConfigChange('totalWeeks', currentWeeks + 1);
+                                                    }
+                                                } else if (timelineConfig.type === 'date' && timelineConfig.end) {
+                                                    // Ajouter 1 jour à la date de fin
+                                                    const endDate = new Date(timelineConfig.end);
+                                                    if (isNaN(endDate)) return;
+                                                    endDate.setDate(endDate.getDate() + 1);
+                                                    onConfigChange('end', endDate.toISOString().split('T')[0]);
+                                                }
+                                            }}
+                                            title="Ajouter une cellule"
+                                        >
+                                            <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-400" />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div> {/* Fin Timeline droite */}
+            </div> {/* Fin flex-row layout */}
+
+            {/* MODALS ET TOOLTIPS (dans liquid wrapper mais hors flex-row) */}
             {/* Modal grouped preset */}
             <GroupedPresetModal
                 isOpen={showGroupedPresetModal}
@@ -2605,7 +2607,7 @@ const PipelineDragDropView = ({
                     hasCopiedData={copiedCellData !== null}
                 />
             )}
-        </div>
+        </div> {/* Fin liquid wrapper principal */ }
     );
 };
 
