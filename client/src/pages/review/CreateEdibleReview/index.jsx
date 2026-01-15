@@ -201,10 +201,4 @@ export default function CreateEdibleReview() {
             </AnimatePresence>
         </ResponsiveCreateReviewLayout>
     )
-            title="Créer une review Comestible"
-            subtitle="Documentez votre produit comestible"
-            loading={loading}
-            saving={saving}
-        />
-    )
 }
