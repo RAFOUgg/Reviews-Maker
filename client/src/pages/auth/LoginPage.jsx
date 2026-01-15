@@ -146,6 +146,35 @@ export default function LoginPage() {
                                 </LiquidButton>
                             </form>
 
+                            {/* 🔧 DEV Quick Login Button */}
+                            {import.meta.env.DEV && (
+                                <div className="pt-2 border-t border-gray-200">
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            try {
+                                                const res = await fetch('/api/auth/dev/quick-login', {
+                                                    method: 'POST',
+                                                    credentials: 'include'
+                                                })
+                                                if (res.ok) {
+                                                    const data = await res.json()
+                                                    setUser(data.user)
+                                                    navigate('/')
+                                                } else {
+                                                    setError('Quick login failed')
+                                                }
+                                            } catch (e) {
+                                                setError(e.message)
+                                            }
+                                        }}
+                                        className="w-full py-2 px-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold text-sm hover:opacity-90 transition"
+                                    >
+                                        🚀 Dev Quick Login (test@example.com)
+                                    </button>
+                                </div>
+                            )}
+
                             {/* Mot de passe oublié */}
                             <div className="text-center">
                                 <button

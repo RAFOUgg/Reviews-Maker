@@ -182,6 +182,27 @@ router.post('/email/login', asyncHandler(async (req, res) => {
     res.json(sanitizeUser(user))
 }))
 
+// 🔧 DEV ONLY: Quick login for local testing - no DB needed
+// POST /api/auth/dev/quick-login - Connexion rapide en développement
+if (process.env.NODE_ENV === 'development') {
+    router.post('/dev/quick-login', (req, res) => {
+        // In dev mode, just return success - middleware handles auth
+        res.json({
+            success: true,
+            message: 'Dev mode: no login needed, all routes are accessible',
+            user: {
+                id: 'dev-test-user-id',
+                email: 'test@example.com',
+                username: 'DevTestUser',
+                tier: 'PRODUCTEUR',
+                emailVerified: true,
+                legalAge: true,
+                consentRDR: true
+            }
+        })
+    })
+}
+
 // GET /api/auth/ping - Debug route to validate proxy path and headers
 router.get('/ping', (req, res) => {
     const headers = {

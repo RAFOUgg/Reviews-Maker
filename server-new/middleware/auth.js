@@ -5,8 +5,25 @@ const prisma = new PrismaClient()
 /**
  * Middleware pour vérifier l'authentification
  * Utilise passport et express-session pour les sessions persistantes
+ * En développement, bypass l'auth pour tester facilement
  */
 export const requireAuth = (req, res, next) => {
+    // ✅ DEV MODE: Bypass auth check - always provide a dev user
+    if (process.env.NODE_ENV === 'development') {
+        req.user = {
+            id: 'dev-test-user-id',
+            email: 'test@example.com',
+            username: 'DevTestUser',
+            tier: 'PRODUCTEUR',  // Donner accès à toutes les features en dev
+            emailVerified: true,
+            legalAge: true,
+            consentRDR: true
+        }
+        req.isAuthenticated = () => true
+        return next()
+    }
+
+    // PRODUCTION: Check real authentication
     if (typeof req.isAuthenticated !== 'function' || !req.isAuthenticated()) {
         return res.status(401).json({
             error: 'unauthorized',
@@ -18,8 +35,22 @@ export const requireAuth = (req, res, next) => {
 
 /**
  * Middleware optionnel : vérifie l'auth mais continue si non-authentifié
+ * En DEV, injecte toujours un utilisateur mock
  */
 export const optionalAuth = (req, res, next) => {
+    // In dev mode, always provide a user
+    if (process.env.NODE_ENV === 'development' && !req.user) {
+        req.user = {
+            id: 'dev-test-user-id',
+            email: 'test@example.com',
+            username: 'DevTestUser',
+            tier: 'PRODUCTEUR',
+            emailVerified: true,
+            legalAge: true,
+            consentRDR: true
+        }
+        req.isAuthenticated = () => true
+    }
     // Passport attache automatiquement req.user et req.isAuthenticated()
     next()
 }
