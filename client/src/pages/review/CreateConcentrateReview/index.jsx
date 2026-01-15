@@ -2,7 +2,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useStore } from '../../../store/useStore'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { concentrateReviewsService } from '../../../services/apiService'
-import CreateReviewFormWrapper from '../../../components/account/CreateReviewFormWrapper'
+import ResponsiveCreateReviewLayout from '../../../components/layout/ResponsiveCreateReviewLayout'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useState } from 'react'
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
@@ -19,7 +21,7 @@ import { useConcentrateForm } from './hooks/useConcentrateForm'
 import { usePhotoUpload } from './hooks/usePhotoUpload'
 
 /**
- * CreateConcentrateReview - Utilise le wrapper unifié
+ * CreateConcentrateReview - Review complète pour Concentré
  * Types: Rosin, BHO, PHO, CO2, Live Resin, etc.
  */
 export default function CreateConcentrateReview() {
@@ -27,6 +29,7 @@ export default function CreateConcentrateReview() {
     const toast = useToast()
     const { id } = useParams()
     const { isAuthenticated } = useStore()
+    const [currentSection, setCurrentSection] = useState(0)
 
     const { formData, handleChange, loading, saving, setSaving } = useConcentrateForm(id)
     const { photos, handlePhotoUpload, removePhoto } = usePhotoUpload()
@@ -43,16 +46,16 @@ export default function CreateConcentrateReview() {
         { id: 'curing', icon: '🔥', title: 'Curing & Maturation' }
     ]
 
-    const sectionComponents = {
-        infos: InfosGenerales,
-        extraction: ExtractionPipelineAdapter,
-        analytics: AnalyticsSection,
-        visual: VisualSection,
-        odeurs: OdorSection,
-        texture: TextureSection,
-        gouts: TasteSection,
-        effets: EffectsSection,
-        curing: CuringMaturationAdapter
+    const handlePrevious = () => {
+        if (currentSection > 0) {
+            setCurrentSection(currentSection - 1)
+        }
+    }
+
+    const handleNext = () => {
+        if (currentSection < sections.length - 1) {
+            setCurrentSection(currentSection + 1)
+        }
     }
 
     const handleSave = async () => {
@@ -152,12 +155,12 @@ export default function CreateConcentrateReview() {
     }
 
     return (
-        <CreateReviewFormWrapper
-            productType="concentrate"
+        <ResponsiveCreateReviewLayout
             sections={sections}
-            sectionComponents={sectionComponents}
+            currentSection={currentSection}
+            onPrevious={handlePrevious}
+            onNext={handleNext}
             formData={formData}
-            handleChange={handleChange}
             photos={photos}
             handlePhotoUpload={handlePhotoUpload}
             removePhoto={removePhoto}
@@ -167,6 +170,78 @@ export default function CreateConcentrateReview() {
             subtitle="Documentez votre rosin, BHO ou autre concentré"
             loading={loading}
             saving={saving}
-        />
+        >
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={currentSection}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    {currentSection === 0 && (
+                        <InfosGenerales
+                            formData={formData}
+                            handleChange={handleChange}
+                            photos={photos}
+                            handlePhotoUpload={handlePhotoUpload}
+                            removePhoto={removePhoto}
+                        />
+                    )}
+                    {currentSection === 1 && (
+                        <ExtractionPipelineAdapter
+                            productType="concentrate"
+                            data={formData.extractionPipeline || {}}
+                            onChange={(data) => handleChange('extractionPipeline', data)}
+                        />
+                    )}
+                    {currentSection === 2 && (
+                        <AnalyticsSection
+                            data={formData.analytics || {}}
+                            onChange={(analyticsData) => handleChange('analytics', analyticsData)}
+                        />
+                    )}
+                    {currentSection === 3 && (
+                        <VisualSection
+                            productType="Concentrate"
+                            data={formData.visuel || {}}
+                            onChange={(visuelData) => handleChange('visuel', visuelData)}
+                        />
+                    )}
+                    {currentSection === 4 && (
+                        <OdorSection
+                            data={formData.odeurs || {}}
+                            onChange={(odeursData) => handleChange('odeurs', odeursData)}
+                        />
+                    )}
+                    {currentSection === 5 && (
+                        <TextureSection
+                            productType="Concentrate"
+                            data={formData.texture || {}}
+                            onChange={(textureData) => handleChange('texture', textureData)}
+                        />
+                    )}
+                    {currentSection === 6 && (
+                        <TasteSection
+                            data={formData.gouts || {}}
+                            onChange={(goutsData) => handleChange('gouts', goutsData)}
+                        />
+                    )}
+                    {currentSection === 7 && (
+                        <EffectsSection
+                            data={formData.effets || {}}
+                            onChange={(data) => handleChange('effets', data)}
+                        />
+                    )}
+                    {currentSection === 8 && (
+                        <CuringMaturationAdapter
+                            productType="concentrate"
+                            data={formData.curing || {}}
+                            onChange={(data) => handleChange('curing', data)}
+                        />
+                    )}
+                </motion.div>
+            </AnimatePresence>
+        </ResponsiveCreateReviewLayout>
     )
 }

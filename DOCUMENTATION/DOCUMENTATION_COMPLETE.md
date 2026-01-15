@@ -34,25 +34,31 @@
 |----|----------|-------|--------|-------------|
 | 7 | [FRONTEND_REACT.md](FRONTEND_REACT.md) | 35+ | ✅ NEW | Architecture React, Zustand stores, Hooks, Services, Components clés |
 
+### Tier 4: Component Documentation Center (CDC) ⭐
+
+| # | Document | Pages | Status | Contenu Clé |
+|----|----------|-------|--------|-------------|
+| 8 | [CDC/COMPONENTS/FertilizationPipeline.md](CDC/COMPONENTS/FertilizationPipeline.md) | 22+ | ✅ NEW | Documentation complète composant FertilizationPipeline: Props, State, Logique, UI, Exemples, Troubleshooting |
+
 ### Documentation Existante (Maintenue)
 
 | # | Document | Pages | Status | Contenu |
 |----|----------|-------|--------|---------|
-| 8 | [ARCHITECTURE.md](ARCHITECTURE.md) | 20+ | ✅ | Diagrammes, flux de données, architecture générale |
-| 9 | [BACKEND_API.md](API.md) | 15+ | ✅ | API endpoints (version basique) |
-| 10 | [FRONTEND_OVERVIEW.md](FRONTEND_OVERVIEW.md) | 12+ | ✅ | Stack React overview |
-| 11 | [CONVENTIONS.md](CONVENTIONS.md) | 18+ | ✅ | Standards de code, patterns |
-| 12 | [DEVELOPMENT.md](DEVELOPMENT.md) | 12+ | ✅ | Workflows, bonnes pratiques |
-| 13 | [STACK.md](STACK.md) | 15+ | ✅ | Technologies utilisées |
-| 14 | [SECURITY.md](SECURITY.md) | 12+ | ✅ | Policies, best practices |
-| 15 | [FEATURES.md](FEATURES.md) | 10+ | ✅ | Listage complet features |
-| 16 | [DEPLOYMENT.md](DEPLOYMENT.md) | 8+ | ✅ | Guide déploiement général |
-| 17 | [GETTING_STARTED.md](GETTING_STARTED.md) | 8+ | ✅ | Setup initial |
-| 18 | [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md) | 10+ | ✅ | Quick reference |
-| 19 | [FOLDER_STRUCTURE.md](FOLDER_STRUCTURE.md) | 25+ | ✅ | Organisation fichiers |
-| 20 | [CODEBASE_OVERVIEW.md](CODEBASE_OVERVIEW.md) | 12+ | ✅ | Overview codebase |
+| 9 | [ARCHITECTURE.md](ARCHITECTURE.md) | 20+ | ✅ | Diagrammes, flux de données, architecture générale |
+| 10 | [BACKEND_API.md](API.md) | 15+ | ✅ | API endpoints (version basique) |
+| 11 | [FRONTEND_OVERVIEW.md](FRONTEND_OVERVIEW.md) | 12+ | ✅ | Stack React overview |
+| 12 | [CONVENTIONS.md](CONVENTIONS.md) | 18+ | ✅ | Standards de code, patterns |
+| 13 | [DEVELOPMENT.md](DEVELOPMENT.md) | 12+ | ✅ | Workflows, bonnes pratiques |
+| 14 | [STACK.md](STACK.md) | 15+ | ✅ | Technologies utilisées |
+| 15 | [SECURITY.md](SECURITY.md) | 12+ | ✅ | Policies, best practices |
+| 16 | [FEATURES.md](FEATURES.md) | 10+ | ✅ | Listage complet features |
+| 17 | [DEPLOYMENT.md](DEPLOYMENT.md) | 8+ | ✅ | Guide déploiement général |
+| 18 | [GETTING_STARTED.md](GETTING_STARTED.md) | 8+ | ✅ | Setup initial |
+| 19 | [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md) | 10+ | ✅ | Quick reference |
+| 20 | [FOLDER_STRUCTURE.md](FOLDER_STRUCTURE.md) | 25+ | ✅ | Organisation fichiers |
+| 21 | [CODEBASE_OVERVIEW.md](CODEBASE_OVERVIEW.md) | 12+ | ✅ | Overview codebase |
 
-**Total: 27+ documents documentés**
+**Total: 28+ documents documentés**
 
 ---
 
@@ -64,6 +70,7 @@
 Frontend:          ✅ COMPLET
   ├─ Architecture React
   ├─ Components (25+ components)
+  │   └─ FertilizationPipeline (CDC doc ✅)
   ├─ Hooks (7+ custom hooks)
   ├─ State management (Zustand)
   ├─ Services & API calls
@@ -116,11 +123,12 @@ Infrastructure:    ✅ COMPLET
 
 ### Métriques Contenu
 
-- **Total Pages:** 250+
-- **Total Mots:** 100,000+
-- **Code Examples:** 300+
+- **Total Pages:** 272+
+- **Total Mots:** 105,000+
+- **Code Examples:** 310+
 - **Diagrammes:** 40+
 - **Endpoints Documentés:** 60+
+- **Components Documentés:** 1+ (FertilizationPipeline)
 - **Data Models:** 15+
 - **API Responses:** 100+ exemples
 - **Configurations:** 20+ exemples
@@ -232,6 +240,8 @@ Tous les documents + comprendre interconnexions
 ✅ "Comment intégrer l'export?"
 ✅ "Comment utiliser Zustand?"
 ✅ "Quels sont les components disponibles?"
+✅ "Comment fonctionne FertilizationPipeline?"
+✅ "Comment gérer une routine d'engraissage?"
 
 // Backend
 ✅ "Quels sont les endpoints disponibles?"
@@ -293,6 +303,26 @@ Tous les documents + comprendre interconnexions
 - Cas d'usage documentaire complet
 
 **Utile pour:** Tous les devs, Product managers
+
+---
+
+### 8. CDC/COMPONENTS/FertilizationPipeline.md (22 pages) ⭐
+
+**Sections:**
+- Vue d'ensemble & objectif
+- Props & PropTypes détaillés
+- Structure interne (State management)
+- Logique métier (validations conditionnelles)
+- Fonctions principales (addStep, removeStep, moveStep)
+- Structure UI complète
+- Intégration système (CultivationPipelineForm, ReviewForm)
+- Exemples d'usage (3 scénarios)
+- Limitations & considérations
+- Dépannage (troubleshooting guide)
+- Évolution & roadmap v2
+- Références & ressources
+
+**Utile pour:** Frontend devs, Component development
 
 ---
 
@@ -488,6 +518,7 @@ DATA_MODELS.md
 ✅ KYC system documentation
 ✅ GitHub-style pipeline visualization
 ✅ Cas d'usage documentaire complet
+✅ Component documentation détaillée (FertilizationPipeline)
 
 ---
 
