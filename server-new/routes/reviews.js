@@ -52,6 +52,11 @@ const requireAuth = (req, res, next) => {
 
 // GET /api/reviews - Liste toutes les reviews (publiques + privées de l'user)
 router.get('/', asyncHandler(async (req, res) => {
+    // DEV MODE BYPASS: Return mock data to skip database access
+    if (process.env.NODE_ENV === 'development') {
+        return res.json([])
+    }
+
     const { type, search, sortBy = 'createdAt', order = 'desc', publicOnly, hasOrchard, userId } = req.query
 
     // Valider les paramètres de tri

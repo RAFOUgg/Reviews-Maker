@@ -71,6 +71,20 @@ passport.serializeUser((user, done) => {
 
 // Deserialization (récupère l'utilisateur complet depuis l'id)
 passport.deserializeUser(async (id, done) => {
+    // ✅ DEV MODE: Return mock user without DB access
+    if (process.env.NODE_ENV === 'development') {
+        const mockUser = {
+            id: 'dev-test-user-id',
+            email: 'test@example.com',
+            username: 'DevTestUser',
+            tier: 'PRODUCTEUR',
+            emailVerified: true,
+            legalAge: true,
+            consentRDR: true
+        }
+        return done(null, mockUser)
+    }
+
     try {
         const user = await prisma.user.findUnique({
             where: { id }

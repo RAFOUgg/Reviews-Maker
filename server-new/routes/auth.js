@@ -263,6 +263,36 @@ router.get('/discord/callback', (req, res, next) => {
 
 // GET /api/auth/me - Récupérer l'utilisateur actuel
 router.get('/me', asyncHandler(async (req, res) => {
+    // ✅ DEV MODE: Return mock user data without DB access
+    if (process.env.NODE_ENV === 'development') {
+        const mockUser = {
+            id: 'dev-test-user-id',
+            email: 'test@example.com',
+            username: 'DevTestUser',
+            tier: 'PRODUCTEUR',
+            emailVerified: true,
+            legalAge: true,
+            consentRDR: true
+        }
+
+        const limits = getUserLimits(mockUser)
+        return res.json({
+            ...mockUser,
+            limits: {
+                accountType: limits.accountType,
+                daily: limits.limits.daily,
+                templates: limits.limits.templates,
+                watermarks: limits.limits.watermarks,
+                reviews: limits.limits.reviews,
+                savedData: limits.limits.savedData,
+                dpi: limits.dpi,
+                formats: limits.formats,
+                features: limits.features
+            }
+        })
+    }
+
+    // PRODUCTION: Require real authentication
     if (typeof req.isAuthenticated !== 'function' || !req.isAuthenticated()) {
         throw Errors.UNAUTHORIZED()
     }

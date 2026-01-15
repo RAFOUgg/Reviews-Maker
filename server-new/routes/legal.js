@@ -204,6 +204,20 @@ router.post('/accept-consent', async (req, res) => {
  */
 router.get('/status', async (req, res) => {
     try {
+        // ✅ DEV MODE: Return mock legal status without DB
+        if (process.env.NODE_ENV === 'development') {
+            return res.json({
+                birthdate: null,
+                country: null,
+                region: null,
+                legalAge: true,
+                consentRDR: true,
+                consentDate: new Date().toISOString(),
+                minimumAge: null,
+                isCompliant: true,
+            })
+        }
+
         if (!req.user) {
             return res.status(401).json({
                 error: 'unauthorized',
