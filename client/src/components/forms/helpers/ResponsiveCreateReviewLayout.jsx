@@ -40,8 +40,9 @@ export const ResponsiveCreateReviewLayout = ({
     // Nombre de sections visibles dans le carrousel
     const VISIBLE_ITEMS = 5;
     const ITEM_WIDTH = 70; // px (emoji button width + gap)
+    const CONTAINER_CENTER = VISIBLE_ITEMS / 2; // Position du centre (2.5 = centre entre index 2 et 3)
     // Permet de scroller jusqu'à montrer la dernière section au centre
-    const maxScroll = Math.max(0, (sectionEmojis.length - Math.ceil(VISIBLE_ITEMS / 2)) * ITEM_WIDTH);
+    const maxScroll = Math.max(0, (sectionEmojis.length - CONTAINER_CENTER) * ITEM_WIDTH);
 
     const handlePrevious = () => {
         if (currentSection > 0) {
@@ -94,7 +95,7 @@ export const ResponsiveCreateReviewLayout = ({
         if (!isDragging) {
             setScrollPosition(targetScroll);
         }
-    }, [currentSection, isDragging, maxScroll]);
+    }, [currentSection, isDragging, maxScroll, ITEM_WIDTH]);
 
     // Drag handlers - Smooth scroll horizontal with live animation
     const handleMouseDown = (e) => {
@@ -125,20 +126,18 @@ export const ResponsiveCreateReviewLayout = ({
         newScroll = Math.max(0, Math.min(maxScroll, newScroll));
 
         // Snap vers la section la plus proche quand on lâche
-        // Déterminer la section qui sera centrée après snap
-        const centerIndex = Math.floor(VISIBLE_ITEMS / 2);
-        // Quelle section est "presque centrée" maintenant?
+        // Calculer l'index qui sera centré après snap
         const scrolledIndex = newScroll / ITEM_WIDTH;
         const snapIndex = Math.round(scrolledIndex);
 
         // Calculer le scroll pour mettre cette section au centre
-        // scrollPosition=0 => section 0 au centre
-        // scrollPosition=ITEM_WIDTH => section 1 au centre
-        // scrollPosition=(n-2)*ITEM_WIDTH => section n au centre (pour n >= 2 et n < length)
         const snappedScroll = Math.max(0, Math.min(maxScroll, snapIndex * ITEM_WIDTH));
 
         setScrollPosition(snappedScroll);
         setDragOffset(0);
+
+        // Déclencher le changement de section
+        onSectionChange(snapIndex);
     };
 
     return (
@@ -192,11 +191,11 @@ export const ResponsiveCreateReviewLayout = ({
                                                 onTouchEnd={handleMouseUp}
                                                 className={`relative flex items-center justify-center gap-1 py-4 px-0 transition-all overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                                             >
-                                                {/* Gradient fade left */}
-                                                <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-900 to-transparent z-10 pointer-events-none" />
+                                                {/* Gradient fade left - plus prononcé */}
+                                                <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-gray-900 via-gray-900/70 to-transparent z-10 pointer-events-none" />
 
-                                                {/* Gradient fade right */}
-                                                <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-900 to-transparent z-10 pointer-events-none" />
+                                                {/* Gradient fade right - plus prononcé */}
+                                                <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-gray-900 via-gray-900/70 to-transparent z-10 pointer-events-none" />
 
                                                 <div className="flex items-center justify-center gap-2" style={{
                                                     transform: `translateX(-${scrollPosition + dragOffset}px)`,
@@ -209,15 +208,23 @@ export const ResponsiveCreateReviewLayout = ({
                                                             const scrolledCenterIndex = (scrollPosition + dragOffset) / ITEM_WIDTH;
                                                             const offset = index - scrolledCenterIndex;
                                                             const isCenter = Math.abs(offset) < 0.5;
+                                                            const isAdjacent = Math.abs(offset) < 1.5;
 
                                                             // Calcul opacité avec effect fade progressif
-                                                            const absOffset = Math.abs(Math.round(offset));
-                                                            const opacityMap = {
-                                                                0: 1,      // Center: 100% opaque
-                                                                1: 0.6,    // Adjacent: 60%
-                                                                2: 0.3     // Outer: 30%
-                                                            };
-                                                            const opacity = opacityMap[Math.min(absOffset, 2)];
+                                                            const absOffset = Math.abs(offset);
+                                                            let opacity = 0.2; // Par défaut pour loin
+                                                            let scale = 0.9;
+
+                                                            if (absOffset < 0.5) {
+                                                                opacity = 1;      // Center: 100% opaque
+                                                                scale = 1.25;     // Mais gros au centre
+                                                            } else if (absOffset < 1.5) {
+                                                                opacity = 0.7;    // Adjacent: 70%
+                                                                scale = 1;
+                                                            } else if (absOffset < 2.5) {
+                                                                opacity = 0.4;    // Far: 40%
+                                                                scale = 0.95;
+                                                            }
 
                                                             return (
                                                                 <motion.button
@@ -225,15 +232,15 @@ export const ResponsiveCreateReviewLayout = ({
                                                                     initial={{ opacity: 0.3, scale: 0.85, x: 50 }}
                                                                     animate={{
                                                                         opacity: opacity,
-                                                                        scale: isCenter ? 1.15 : 1,
+                                                                        scale: scale,
                                                                         x: isDragging ? dragOffset * 0.1 : 0
                                                                     }}
                                                                     exit={{ opacity: 0, scale: 0.85, x: -50 }}
                                                                     transition={{
                                                                         duration: isDragging ? 0 : 0.3,
                                                                         ease: 'easeOut',
-                                                                        opacity: { duration: 0.3 },
-                                                                        scale: { duration: 0.3 }
+                                                                        opacity: { duration: 0.2 },
+                                                                        scale: { duration: 0.2 }
                                                                     }}
                                                                     onClick={() => onSectionChange(index)}
                                                                     className={`flex-shrink-0 px-3.5 py-3 rounded-xl transition-all text-2xl font-medium ${index === currentSection
@@ -242,8 +249,8 @@ export const ResponsiveCreateReviewLayout = ({
                                                                         }`}
                                                                     style={{
                                                                         filter: isCenter
-                                                                            ? 'drop-shadow(0 0 16px rgba(168, 85, 247, 0.5))'
-                                                                            : 'none'
+                                                                            ? 'drop-shadow(0 0 20px rgba(168, 85, 247, 0.6)) drop-shadow(0 0 8px rgba(168, 85, 247, 0.4))'
+                                                                            : isAdjacent ? 'drop-shadow(0 0 8px rgba(168, 85, 247, 0.2))' : 'none'
                                                                     }}
                                                                     whileHover={{ y: -2 }}
                                                                 >
