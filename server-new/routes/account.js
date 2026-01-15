@@ -28,6 +28,26 @@ router.get('/info', asyncHandler(async (req, res) => {
         });
     }
 
+    // ✅ DEV MODE: Return mock account info without DB access
+    if (process.env.NODE_ENV === 'development') {
+        return res.json({
+            id: 'dev-test-user-id',
+            email: 'test@example.com',
+            username: 'DevTestUser',
+            tier: 'PRODUCTEUR',
+            emailVerified: true,
+            legalAge: true,
+            consentRDR: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            accountLimits: {
+                reviewsPerMonth: 100,
+                exportsPerMonth: 500,
+                templateStorage: 50,
+            }
+        })
+    }
+
     const accountInfo = await getAccountInfo(req.user.id);
 
     res.json(accountInfo);
