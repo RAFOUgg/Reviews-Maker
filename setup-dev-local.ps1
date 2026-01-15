@@ -1,105 +1,110 @@
-@echo off
-REM ====================
-REM SETUP DEV LOCAL (Windows)
-REM ====================
-REM Setup complet pour développement local sans VPS
-REM Crée .env, initialise DB avec user test, lance backend + frontend
+# ====================
+# SETUP DEV LOCAL (Windows PowerShell)
+# ====================
+# Setup complet pour développement local sans VPS
 
-setlocal enabledelayedexpansion
+Write-Host ""
+Write-Host "🚀 Setup développement local Reviews-Maker" -ForegroundColor Cyan
+Write-Host "==========================================" -ForegroundColor Cyan
 
-echo.
-echo 🚀 Setup développement local Reviews-Maker
-echo ==========================================
+# Check if we're in the right directory
+if (-not (Test-Path "server-new/server.js")) {
+    Write-Host "❌ Erreur: Exécute ce script depuis la racine du projet" -ForegroundColor Red
+    exit 1
+}
 
-REM Check if we're in the right directory
-if not exist "server-new\server.js" (
-    echo ❌ Erreur: Exécute ce script depuis la racine du projet
-    exit /b 1
-)
+# 1. Create .env if it doesn't exist
+Write-Host ""
+Write-Host "📝 Configuration du fichier .env..." -ForegroundColor Yellow
 
-REM 1. Copy .env.example to .env if it doesn't exist
-echo.
-echo 📝 Configuration du fichier .env...
-if not exist "server-new\.env" (
-    copy server-new\.env.example server-new\.env
-    echo ✅ .env créé
+if (-not (Test-Path "server-new/.env")) {
+    Write-Host "  Création de server-new/.env"
     
-    REM Generate SESSION_SECRET (using Node)
-    for /f "delims=" %%i in ('node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"') do set SESSION_SECRET=%%i
+    $secret = & node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
     
-    REM Update SESSION_SECRET in .env (using PowerShell for better handling)
-    powershell -Command "(Get-Content 'server-new\.env') -replace 'your_generated_secret_here_64_characters_minimum', '%SESSION_SECRET%' | Set-Content 'server-new\.env'"
-    echo ✅ SESSION_SECRET généré
-) else (
-    echo ⚠️  .env existe déjà
-)
+    $envContent = @"
+# Discord OAuth2
+DISCORD_CLIENT_ID=1435040931375091825
+DISCORD_CLIENT_SECRET=9OSG60zxCD7gM4B3d3fnsXRKuphdj-cR
+DISCORD_REDIRECT_URI=http://localhost:3000/api/auth/discord/callback
 
-REM 2. Install dependencies if needed
-echo.
-echo 📦 Installation des dépendances...
-if not exist "server-new\node_modules" (
-    cd server-new
-    call npm install
-    cd ..
-    echo ✅ Dépendances serveur installées
-)
+# Google OAuth
+GOOGLE_CLIENT_ID=732826204124-5fsssadqh8j86hgp3f0uegrfgq1kfeva.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=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
+GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
 
-if not exist "client\node_modules" (
-    cd client
-    call npm install
-    cd ..
-    echo ✅ Dépendances client installées
-)
+# Session
+SESSION_SECRET=$secret
+NODE_ENV=development
 
-REM 3. Setup Prisma
-echo.
-echo 🗄️  Configuration Prisma...
-cd server-new
-call npm run prisma:generate
-call npm run prisma:migrate
-cd ..
-echo ✅ Prisma configuré
+# Database
+DATABASE_URL=file:./reviews.sqlite
 
-REM 4. Seed test user (optional)
-if exist "server-new\seed-test-user.js" (
-    echo.
-    echo 👤 Création de l'utilisateur de test...
-    cd server-new
-    node seed-test-user.js
-    cd ..
-    echo ✅ Utilisateur de test créé
-) else (
-    echo.
-    echo ⚠️  Script seed-test-user.js non trouvé (optionnel)
-)
+# Server
+PORT=3000
 
-REM 5. Final instructions
-echo.
-echo ========================================
-echo ✅ Setup complété!
-echo ========================================
-echo.
-echo 📌 Pour lancer l'app en local:
-echo.
-echo Terminal 1 - Backend:
-echo   cd server-new
-echo   npm run dev
-echo.
-echo Terminal 2 - Frontend:
-echo   cd client
-echo   npm run dev
-echo.
-echo Puis ouvre: http://localhost:5173
-echo.
-echo 🔑 Credentials de test:
-echo   Email: test@example.com
-echo   Mot de passe: test123456
-echo.
-echo 💡 Tips:
-echo   - Les données sont stockées dans db/reviews.sqlite
-echo   - Réinitialiser la DB: rm db/reviews.sqlite ^&^& npm run prisma:migrate
-echo   - Consulter la DB: cd server-new ^&^& npm run prisma:studio
-echo.
-echo ========================================
+# Frontend URL
+FRONTEND_URL=http://localhost:5173
+"@
+    
+    Set-Content -Path "server-new/.env" -Value $envContent -Encoding UTF8
+    Write-Host "✅ .env créé" -ForegroundColor Green
+} else {
+    Write-Host "⚠️  .env existe déjà" -ForegroundColor Yellow
+}
 
-pause
+# 2. Install backend dependencies
+Write-Host ""
+Write-Host "📦 Installation des dépendances serveur..." -ForegroundColor Yellow
+
+if (-not (Test-Path "server-new/node_modules")) {
+    Push-Location "server-new"
+    npm install
+    Pop-Location
+    Write-Host "✅ Dépendances serveur installées" -ForegroundColor Green
+} else {
+    Write-Host "⚠️  node_modules/serveur existe déjà" -ForegroundColor Yellow
+}
+
+# 3. Install frontend dependencies
+Write-Host ""
+Write-Host "📦 Installation des dépendances client..." -ForegroundColor Yellow
+
+if (-not (Test-Path "client/node_modules")) {
+    Push-Location "client"
+    npm install
+    Pop-Location
+    Write-Host "✅ Dépendances client installées" -ForegroundColor Green
+} else {
+    Write-Host "⚠️  node_modules/client existe déjà" -ForegroundColor Yellow
+}
+
+# 4. Setup database
+Write-Host ""
+Write-Host "🗄️  Initialisation de la base de données..." -ForegroundColor Yellow
+
+Push-Location "server-new"
+npm run prisma:generate
+npm run prisma:migrate
+Pop-Location
+Write-Host "✅ Base de données initialisée" -ForegroundColor Green
+
+# 5. Summary
+Write-Host ""
+Write-Host "════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host "✅ Setup terminé avec succès!" -ForegroundColor Green
+Write-Host "════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "🚀 Démarrage des serveurs:" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Terminal 1 - Backend:" -ForegroundColor Yellow
+Write-Host "  cd server-new && node --watch server.js" -ForegroundColor Gray
+Write-Host ""
+Write-Host "Terminal 2 - Frontend:" -ForegroundColor Yellow
+Write-Host "  cd client && npm run dev" -ForegroundColor Gray
+Write-Host ""
+Write-Host "Puis ouvre: http://localhost:5174/login" -ForegroundColor Cyan
+Write-Host "Clique sur '🚀 Dev Quick Login'" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "🎉 Bonne développement!" -ForegroundColor Green
+Write-Host ""
