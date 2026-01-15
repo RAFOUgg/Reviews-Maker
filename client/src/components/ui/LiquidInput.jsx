@@ -19,8 +19,8 @@ const LiquidInput = React.forwardRef(({
   // Style spécial pour les inputs password pour meilleure lisibilité
   const baseInputClasses = `
     liquid-glass w-full px-4 py-3 rounded-xl
-    border border-[var(--border-primary)]
-    focus:border-[var(--accent-primary)] focus:ring-2 focus:ring-[var(--accent-primary)]/20
+    border border-gray-300 dark:border-gray-600
+    focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
     transition-smooth outline-none
     ${Icon && iconPosition === 'left' ? 'pl-12' : ''}
     ${Icon && iconPosition === 'right' ? 'pr-12' : ''}
@@ -30,7 +30,7 @@ const LiquidInput = React.forwardRef(({
   // Pour les champs password: fond blanc, texte noir, points noirs
   const passwordClasses = type === 'password'
     ? 'bg-white text-gray-900 placeholder:text-gray-500'
-    : 'text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]';
+    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400';
 
   const inputClasses = `${baseInputClasses} ${passwordClasses} ${className}`;
 
@@ -38,8 +38,7 @@ const LiquidInput = React.forwardRef(({
     <div className={fullWidth ? 'w-full' : ''}>
       {label && (
         <label
-          className="block text-sm font-medium mb-2"
-          style={{ color: 'rgba(17,24,39,0.95)' }}
+          className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300"
         >
           {label}
         </label>
