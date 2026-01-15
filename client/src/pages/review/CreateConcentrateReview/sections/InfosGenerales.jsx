@@ -1,7 +1,6 @@
 import React from 'react'
 import { Camera } from 'lucide-react'
-import LiquidInput from '../../../../components/ui/LiquidInput'
-import LiquidSelect from '../../../../components/ui/LiquidSelect'
+import LiquidCard from '../../../../components/ui/LiquidCard'
 
 const CONCENTRATE_TYPES = [
     'Rosin',
@@ -25,54 +24,82 @@ const CONCENTRATE_TYPES = [
 export default function InfosGenerales({ formData, handleChange, photos, handlePhotoUpload, removePhoto }) {
     return (
         <div className="space-y-6">
-            {/* Nom commercial */}
-            <LiquidInput
-                label="Nom commercial"
-                type="text"
-                value={formData.nomCommercial || ''}
-                onChange={(e) => handleChange('nomCommercial', e.target.value)}
-                placeholder="Nom du produit"
-                required
-            />
+            <LiquidCard title="📋 Informations générales" bordered>
+                <div className="space-y-4">
+                    {/* Nom commercial */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Nom commercial *
+                        </label>
+                        <input
+                            type="text"
+                            value={formData.nomCommercial || ''}
+                            onChange={(e) => handleChange('nomCommercial', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                            placeholder="Nom du produit"
+                        />
+                    </div>
 
-            {/* Type de concentré */}
-            <LiquidSelect
-                label="Type de concentré"
-                value={formData.type || ''}
-                onChange={(e) => handleChange('type', e.target.value)}
-                options={[
-                    { value: '', label: 'Sélectionnez un type' },
-                    ...CONCENTRATE_TYPES.map(type => ({ value: type, label: type }))
-                ]}
-            />
+                    {/* Type de concentré */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Type de concentré
+                        </label>
+                        <select
+                            value={formData.type || ''}
+                            onChange={(e) => handleChange('type', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                        >
+                            <option value="">Sélectionnez un type</option>
+                            {CONCENTRATE_TYPES.map(type => (
+                                <option key={type} value={type}>{type}</option>
+                            ))}
+                        </select>
+                    </div>
 
-            {/* Hashmaker */}
-            <LiquidInput
-                label="Hashmaker / Extracteur"
-                type="text"
-                value={formData.hashmaker || ''}
-                onChange={(e) => handleChange('hashmaker', e.target.value)}
-                placeholder="Nom de l'extracteur"
-            />
+                    {/* Hashmaker */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Hashmaker / Extracteur
+                        </label>
+                        <input
+                            type="text"
+                            value={formData.hashmaker || ''}
+                            onChange={(e) => handleChange('hashmaker', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                            placeholder="Nom de l'extracteur"
+                        />
+                    </div>
 
-            {/* Laboratoire */}
-            <LiquidInput
-                label="Laboratoire de production"
-                type="text"
-                value={formData.laboratoire || ''}
-                onChange={(e) => handleChange('laboratoire', e.target.value)}
-                placeholder="Nom du laboratoire"
-            />
+                    {/* Laboratoire */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Laboratoire de production
+                        </label>
+                        <input
+                            type="text"
+                            value={formData.laboratoire || ''}
+                            onChange={(e) => handleChange('laboratoire', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                            placeholder="Nom du laboratoire"
+                        />
+                    </div>
 
-            {/* Cultivars utilisés */}
-            <LiquidInput
-                label="Cultivar(s) utilisés"
-                type="text"
-                value={formData.cultivars || ''}
-                onChange={(e) => handleChange('cultivars', e.target.value)}
-                placeholder="Cultivars utilisés (séparés par des virgules)"
-                hint="Exemple: Gelato, Wedding Cake, Purple Punch"
-            />
+                    {/* Cultivars utilisés */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Cultivar(s) utilisés
+                        </label>
+                        <input
+                            type="text"
+                            value={formData.cultivars || ''}
+                            onChange={(e) => handleChange('cultivars', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+                            placeholder="Cultivars utilisés (séparés par des virgules)"
+                        />
+                    </div>
+                </div>
+            </LiquidCard>
 
             {/* Photos */}
             <div>
