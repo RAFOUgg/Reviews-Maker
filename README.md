@@ -22,56 +22,71 @@ Plateforme web complète pour créer, gérer et partager des reviews détaillée
 
 ## 🛠️ Installation Locale
 
+### ⚡ Quick Start (5 minutes)
+
+**Windows:**
+```bash
+.\setup-dev-local.ps1  # Setup automatique
+```
+
+**Mac/Linux:**
+```bash
+bash setup-dev-local.sh  # Setup automatique
+```
+
+Cela va:
+- ✅ Créer `.env` 
+- ✅ Générer `SESSION_SECRET`
+- ✅ Installer les dépendances
+- ✅ Initialiser la DB
+- ✅ Créer l'utilisateur de test
+
+Ensuite:
+
+```bash
+# Terminal 1 - Backend
+cd server-new && npm run dev
+
+# Terminal 2 - Frontend
+cd client && npm run dev
+
+# Ouvre http://localhost:5173
+```
+
+👉 **Documentation complète:** [DEV_LOCAL_SETUP.md](./DEV_LOCAL_SETUP.md)
+
+### 🔑 Credentials de Test (auto-créés)
+```
+Email: test@example.com
+Mot de passe: test123456
+```
+
 ### Prérequis
 - Node.js 18+ 
 - npm ou yarn
 - SQLite3 (inclus avec Prisma)
 
-### Quick Start
-
-```bash
-# 1. Clone du repo
-git clone <repo-url>
-cd Reviews-Maker
-
-# 2. Frontend
-cd client
-npm install
-npm run dev
-# Ouvre http://localhost:5173
-
-# 3. Backend (nouveau terminal)
-cd server-new
-npm install
-cp .env.example .env
-npm run prisma:generate
-npm run prisma:migrate
-npm run dev
-# Serveur sur http://localhost:3001
-```
-
 ### Configuration (.env)
+
+Le `.env` est créé automatiquement, mais tu peux l'éditer:
 
 ```env
 # Frontend
-VITE_API_URL=http://localhost:3001
+FRONTEND_URL=http://localhost:5173
 
 # Backend
 NODE_ENV=development
-PORT=3001
+PORT=3000
 DATABASE_URL=file:../db/reviews.sqlite
 
-# Discord OAuth
-DISCORD_CLIENT_ID=your_client_id
-DISCORD_CLIENT_SECRET=your_secret
-DISCORD_REDIRECT_URI=http://localhost:3001/api/auth/discord/callback
-
 # Session
-SESSION_SECRET=your_secret_key
-SESSION_DOMAIN=localhost
+SESSION_SECRET=<auto-généré>
+SESSION_SECURE=false
 
-# Upload
-MAX_FILE_SIZE=10485760
+# OAuth (optionnel pour dev)
+DISCORD_CLIENT_ID=
+DISCORD_CLIENT_SECRET=
+# ...
 ```
 
 ## 📁 Structure du Projet
