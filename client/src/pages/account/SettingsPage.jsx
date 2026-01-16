@@ -22,9 +22,11 @@ export default function SettingsPage() {
         const saved = localStorage.getItem('userPreferences')
         return saved ? JSON.parse(saved) : {
             defaultVisibility: 'public',
-            exportFormat: 'png',
             showNotifications: true,
-            compactView: false
+            autoSaveDrafts: true,
+            shareOnSocial: false,
+            showDetailedStats: true,
+            privateProfile: false
         }
     })
 
@@ -107,9 +109,9 @@ export default function SettingsPage() {
                     </div>
                 )}
 
-                {/* Account Info Card */}
+                {/* Account Info Card with Language */}
                 <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/30 dark:to-indigo-800/30 rounded-xl p-8 shadow-lg border border-indigo-200 dark:border-indigo-700 mb-6">
-                    <div className="grid md:grid-cols-3 gap-6">
+                    <div className="grid md:grid-cols-4 gap-6">
                         {/* Avatar & Identity */}
                         <div className="md:col-span-1 flex flex-col items-center text-center">
                             <img
@@ -135,22 +137,43 @@ export default function SettingsPage() {
                             </div>
                         </div>
 
+                        {/* Language Selection (Compact) */}
+                        <div className="md:col-span-1 flex flex-col justify-center">
+                            <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-3">Langue</p>
+                            <div className="flex flex-wrap gap-2">
+                                {SUPPORTED_LANGUAGES.map((lang) => (
+                                    <button
+                                        key={lang.code}
+                                        onClick={() => handleLanguageChange(lang.i18nCode)}
+                                        className={`px-3 py-2 rounded-lg font-semibold text-sm transition-all ${
+                                            language === lang.i18nCode
+                                                ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-md'
+                                                : 'bg-white/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700'
+                                        }`}
+                                        title={lang.label}
+                                    >
+                                        {lang.flag}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
                         {/* Actions */}
                         <div className="md:col-span-1 flex flex-col justify-center gap-3">
                             {['admin', 'producteur', 'influenceur'].includes(user.accountType?.toLowerCase()) && (
                                 <button
                                     onClick={() => navigate('/manage-subscription')}
-                                    className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition-colors"
+                                    className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition-colors text-sm"
                                 >
-                                    💳 Gérer l'abonnement
+                                    💳 Abonnement
                                 </button>
                             )}
                             {user.accountType?.toLowerCase() === 'amateur' && (
                                 <button
                                     onClick={() => navigate('/manage-subscription')}
-                                    className="w-full px-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-semibold rounded-lg shadow-md transition-all text-center"
+                                    className="w-full px-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-semibold rounded-lg shadow-md transition-all text-sm"
                                 >
-                                    ⭐ Upgrade maintenant
+                                    ⭐ Upgrade
                                 </button>
                             )}
                             <button
@@ -164,7 +187,7 @@ export default function SettingsPage() {
                                         console.error('Logout error:', e)
                                     }
                                 }}
-                                className="w-full px-4 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-semibold rounded-lg transition-colors"
+                                className="w-full px-4 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-semibold rounded-lg transition-colors text-sm"
                             >
                                 🚪 Déconnexion
                             </button>
@@ -172,131 +195,164 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                {/* Language Section */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                        </svg>
-                        Langue de l'application
-                    </h2>
-                    <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
-                        Choisissez votre langue préférée
-                    </p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {SUPPORTED_LANGUAGES.map((lang) => (
-                            <button
-                                key={lang.code}
-                                onClick={() => handleLanguageChange(lang.i18nCode)}
-                                className={`relative p-4 rounded-lg border-2 transition-all text-left ${language === lang.i18nCode ? 'border-indigo-500 dark:' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
-                            >
-                                {language === lang.i18nCode && (
-                                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center">
-                                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                )}
-                                <div className="flex items-center gap-3">
-                                    <span className="text-3xl">{lang.flag}</span>
-                                    <div>
-                                        <div className="font-semibold text-gray-900 dark:text-white">{lang.label}</div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                            {lang.code === 'en-US' && 'United States'}
-                                            {lang.code === 'en-GB' && 'United Kingdom'}
-                                            {lang.code === 'fr' && 'France'}
-                                            {lang.code === 'de' && 'Deutschland'}
-                                            {lang.code === 'es' && 'España'}
-                                        </div>
-                                    </div>
-                                </div>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Preferences Gallery (compact) */}
+                {/* Preferences Mosaic */}
                 <div className="mb-6">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                         </svg>
-                        Préférences par défaut
+                        Préférences
                     </h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-6">Personnalisez vos paramètres par défaut</p>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        {/* Visibility Card */}
-                        <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                            <div className="flex items-start justify-between">
-                                <div>
-                                    <div className="font-medium text-gray-900 dark:text-white">Visibilité par défaut</div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Définir la visibilité par défaut des reviews</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {/* Notifications Toggle */}
+                        <div className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                                        <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="font-semibold text-gray-900 dark:text-white">Notifications</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Toast notifications</div>
+                                    </div>
                                 </div>
-                                <div className="w-36">
+                                <button
+                                    onClick={() => handlePreferenceChange('showNotifications', !preferences.showNotifications)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences.showNotifications ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.showNotifications ? 'translate-x-6' : 'translate-x-1'}`}
+                                    />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Default Visibility */}
+                        <div className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-start gap-3 mb-3">
+                                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                                    <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </div>
+                                <div className="flex-1">
+                                    <div className="font-semibold text-gray-900 dark:text-white">Visibilité par défaut</div>
                                     <select
                                         value={preferences.defaultVisibility}
                                         onChange={(e) => handlePreferenceChange('defaultVisibility', e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                                        className="mt-2 w-full px-3 py-1.5 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
                                     >
-                                        <option value="public">Publique</option>
-                                        <option value="private">Privée</option>
+                                        <option value="public">🌍 Publique</option>
+                                        <option value="private">🔒 Privée</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Export Format Card */}
-                        <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                            <div className="flex items-start justify-between">
-                                <div>
-                                    <div className="font-medium text-gray-900 dark:text-white">Format d'export</div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Format par défaut pour l'export</div>
+                        {/* Auto-save Drafts */}
+                        <div className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                                        <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="font-semibold text-gray-900 dark:text-white">Auto-sauvegarde</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Sauvegarder les brouillons</div>
+                                    </div>
                                 </div>
-                                <div className="w-36">
-                                    <select
-                                        value={preferences.exportFormat}
-                                        onChange={(e) => handlePreferenceChange('exportFormat', e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
-                                    >
-                                        <option value="png">PNG</option>
-                                        <option value="pdf">PDF</option>
-                                        <option value="json">JSON</option>
-                                    </select>
-                                </div>
+                                <button
+                                    onClick={() => handlePreferenceChange('autoSaveDrafts', !preferences.autoSaveDrafts)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences.autoSaveDrafts ? 'bg-purple-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.autoSaveDrafts ? 'translate-x-6' : 'translate-x-1'}`}
+                                    />
+                                </button>
                             </div>
                         </div>
 
-                        {/* Compact View Card */}
-                        <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
-                            <div>
-                                <div className="font-medium text-gray-900 dark:text-white">Vue compacte</div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Afficher plus de reviews par page</div>
+                        {/* Share on Social */}
+                        <div className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-pink-100 dark:bg-pink-900/30 rounded-lg">
+                                        <svg className="w-5 h-5 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C9.949 15.566 11.672 17.19 13.824 18.062c.44.148.676-.663.353-.899-2.335-1.579-4.03-3.455-5.195-5.578" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" />
+                                        </svg>
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="font-semibold text-gray-900 dark:text-white">Partage réseaux</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Partager automatiquement</div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => handlePreferenceChange('shareOnSocial', !preferences.shareOnSocial)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences.shareOnSocial ? 'bg-pink-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.shareOnSocial ? 'translate-x-6' : 'translate-x-1'}`}
+                                    />
+                                </button>
                             </div>
-                            <button
-                                onClick={() => handlePreferenceChange('compactView', !preferences.compactView)}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences.compactView ? '' : 'bg-gray-300 dark:bg-gray-600'}`}
-                            >
-                                <span
-                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.compactView ? 'translate-x-6' : 'translate-x-1'}`}
-                                />
-                            </button>
                         </div>
 
-                        {/* Notifications Card */}
-                        <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
-                            <div>
-                                <div className="font-medium text-gray-900 dark:text-white">Notifications</div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">Recevoir des notifications toast</div>
+                        {/* Show Detailed Stats */}
+                        <div className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                                        <svg className="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="font-semibold text-gray-900 dark:text-white">Stats détaillées</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Afficher les analyses</div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => handlePreferenceChange('showDetailedStats', !preferences.showDetailedStats)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences.showDetailedStats ? 'bg-orange-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.showDetailedStats ? 'translate-x-6' : 'translate-x-1'}`}
+                                    />
+                                </button>
                             </div>
-                            <button
-                                onClick={() => handlePreferenceChange('showNotifications', !preferences.showNotifications)}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences.showNotifications ? '' : 'bg-gray-300 dark:bg-gray-600'}`}
-                            >
-                                <span
-                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.showNotifications ? 'translate-x-6' : 'translate-x-1'}`}
-                                />
-                            </button>
+                        </div>
+
+                        {/* Private Profile */}
+                        <div className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                                        <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="font-semibold text-gray-900 dark:text-white">Profil privé</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Masquer votre profil</div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => handlePreferenceChange('privateProfile', !preferences.privateProfile)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences.privateProfile ? 'bg-red-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences.privateProfile ? 'translate-x-6' : 'translate-x-1'}`}
+                                    />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
