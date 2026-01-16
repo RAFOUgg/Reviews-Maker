@@ -119,13 +119,13 @@ export default function SettingsPage() {
                             <div>
                                 <p className="font-bold text-gray-900 dark:text-white text-lg">{user.username}</p>
                                 <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
-                                <p className="text-gray-500 dark:text-gray-400">Type d'abonnement : {user.subscriptionType || 'Standard'}</p>
+                                <p className="text-gray-500 dark:text-gray-400">Type de compte : {user.accountType || 'Amateur'}</p>
                             </div>
                         </div>
                         <div className="text-right">
                             <p className="text-sm text-gray-500 dark:text-gray-400">Connecté via Discord</p>
                             <p className="text-sm text-gray-500 dark:text-gray-400">Membre depuis {new Date(user.createdAt || Date.now()).toLocaleDateString('fr-FR')}</p>
-                            {user.subscriptionType !== 'Standard' && (
+                            {user.accountType !== 'consumer' && (
                                 <button
                                     onClick={() => navigate('/manage-subscription')}
                                     className="mt-2 px-4 py-2 bg-indigo-500 text-white rounded-lg shadow-md hover:bg-indigo-600"

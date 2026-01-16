@@ -92,9 +92,9 @@ export default function ProfilePage() {
         const badges = []
 
         // Badge selon type de compte
-        if (profile.accountType === 'Producteur') {
+        if (profile.accountType === 'producer') {
             badges.push({ icon: '🌱', label: 'Producteur Certifié', color: 'bg-emerald-500' })
-        } else if (profile.accountType === 'Influenceur') {
+        } else if (profile.accountType === 'influencer') {
             badges.push({ icon: '⭐', label: 'Influenceur', color: '' })
         }
 
