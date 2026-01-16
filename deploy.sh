@@ -15,7 +15,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$SCRIPT_DIR"
 
 # Branche par défaut
-BRANCH="${1:-main}"
+BRANCH="${1:-refactor/project-structure}"
 
 echo -e "${GREEN}🚀 DÉPLOIEMENT REVIEWS-MAKER${NC}"
 echo "======================================"
@@ -31,6 +31,8 @@ git stash > /dev/null 2>&1 || true
 # 1. Pull
 echo -e "${GREEN}[1/5] Pull des dernières modifications...${NC}"
 git fetch origin
+# Checkout branch if not already on it
+git checkout "$BRANCH" 2>/dev/null || true
 git pull origin "$BRANCH"
 echo -e "${GREEN}✅ Pull terminé${NC}"
 echo ""
