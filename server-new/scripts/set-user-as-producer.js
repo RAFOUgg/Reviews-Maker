@@ -19,8 +19,8 @@ async function setUserAsProducer(email) {
     }
 
     try {
-        // 1. Find user
-        const user = await prisma.user.findUnique({
+        // 1. Find user by email
+        const user = await prisma.user.findFirst({
             where: { email }
         });
 
