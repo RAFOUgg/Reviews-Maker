@@ -1,10 +1,9 @@
-#!/bin/bash
-#
-# Set User as Producer
-# ============================================================================
-# This script promotes a user to PRODUCTEUR (Producer) account type
-# Usage: node set-user-as-producer.js user@email.com
-#
+/**
+ * Set User as Producer
+ * ============================================================================
+ * This script promotes a user to PRODUCTEUR (Producer) account type
+ * Usage: node set-user-as-producer.js user@email.com
+ */
 
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();

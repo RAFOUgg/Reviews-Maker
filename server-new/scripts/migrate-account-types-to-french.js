@@ -1,10 +1,9 @@
-#!/bin/bash
-#
-# Migrate Account Types to French
-# ============================================================================
-# This script updates all account types from English to French
-# Usage: node migrate-account-types-to-french.js
-#
+/**
+ * Migrate Account Types to French
+ * ============================================================================
+ * This script updates all account types from English to French
+ * Usage: node migrate-account-types-to-french.js
+ */
 
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
@@ -13,12 +12,12 @@ async function migrateAccountTypes() {
     console.log('\n🔄 Starting Account Types Migration (English → French)...\n');
 
     try {
-        // 1. Migrate consumer → consommateur
+        // 1. Migrate consumer → amateur
         const consumerResult = await prisma.user.updateMany({
             where: { accountType: 'consumer' },
-            data: { accountType: 'consommateur' }
+            data: { accountType: 'amateur' }
         });
-        console.log(`✅ Migrated ${consumerResult.count} consumer → consommateur`);
+        console.log(`✅ Migrated ${consumerResult.count} consumer → amateur`);
 
         // 2. Migrate influencer → influenceur
         const influencerResult = await prisma.user.updateMany({
@@ -50,7 +49,7 @@ async function migrateAccountTypes() {
                     roles.roles = roles.roles.map(role => {
                         if (role === 'consumer') {
                             hasChanges = true;
-                            return 'consommateur';
+                            return 'amateur';
                         } else if (role === 'producer') {
                             hasChanges = true;
                             return 'producteur';
@@ -78,10 +77,10 @@ async function migrateAccountTypes() {
         // 5. Also migrate subscriptionType
         const subConsumerResult = await prisma.user.updateMany({
             where: { subscriptionType: 'consumer' },
-            data: { subscriptionType: 'consommateur' }
+            data: { subscriptionType: 'amateur' }
         });
         if (subConsumerResult.count > 0) {
-            console.log(`✅ Migrated ${subConsumerResult.count} subscriptionType consumer → consommateur`);
+            console.log(`✅ Migrated ${subConsumerResult.count} subscriptionType consumer → amateur`);
         }
 
         const subInfluencerResult = await prisma.user.updateMany({
