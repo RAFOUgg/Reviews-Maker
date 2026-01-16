@@ -269,7 +269,8 @@ router.get('/me', asyncHandler(async (req, res) => {
             id: 'dev-test-user-id',
             email: 'test@example.com',
             username: 'DevTestUser',
-            tier: 'PRODUCTEUR',
+            roles: JSON.stringify({ roles: ['producer'] }),
+            accountType: 'producer',
             emailVerified: true,
             legalAge: true,
             consentRDR: true
