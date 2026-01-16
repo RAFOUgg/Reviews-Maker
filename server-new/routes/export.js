@@ -18,12 +18,9 @@
 import express from 'express'
 import { asyncHandler, Errors } from '../utils/errorHandler.js'
 import { prisma } from '../server.js'
+import { requireAuth } from '../middleware/auth.js'
 import {
-    requireAuth,
-    requireExportFormat,
-    requireTemplateAccess,
     requireActiveSubscription,
-    canExportFormat,
     ACCOUNT_TYPES
 } from '../middleware/permissions.js'
 
@@ -80,7 +77,7 @@ router.post('/preview',
  */
 router.post('/:format',
     requireAuth,
-    requireExportFormat((req) => req.params.format), // Will throw 403 if not allowed
+    // TODO: Add format validation middleware
     requireActiveSubscription, // Producer/Influencer must have active subscription
     asyncHandler(async (req, res) => {
         const { format } = req.params
@@ -180,7 +177,7 @@ router.get('/formats',
  */
 router.post('/batch',
     requireAuth,
-    requireTemplateAccess('batch'), // Future permission for batch operations
+    // TODO: Add batch export permission check
     asyncHandler(async (req, res) => {
         const { reviewIds, format, templateName } = req.body
 
