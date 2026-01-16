@@ -451,6 +451,33 @@ export function requireFeature(feature, optionsGetter = null) {
 }
 
 /**
+ * Vérifie si un utilisateur peut accéder à une section spécifique
+ * @param {string} accountType - Type de compte de l'utilisateur
+ * @param {string} section - ID de la section (genetic, pipeline_culture, etc)
+ * @returns {boolean} True si accès autorisé
+ */
+export function canAccessSection(accountType, section) {
+    // Beta testers ont accès à tout
+    if (accountType === ACCOUNT_TYPES.BETA_TESTER) {
+        return true;
+    }
+
+    // Restriction par section
+    const sectionRestrictions = {
+        genetic: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
+        pipeline_culture: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
+        pipeline_extraction: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
+        pipeline_curing: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
+        phenohunt: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
+        branding: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
+        advanced_export: [ACCOUNT_TYPES.INFLUENCER, ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT]
+    };
+
+    const allowedAccountTypes = sectionRestrictions[section] || [];
+    return allowedAccountTypes.includes(accountType);
+}
+
+/**
  * Obtient les limites pour un utilisateur
  * @param {Object} user - User Prisma
  * @returns {Object} Limites complètes
@@ -550,6 +577,7 @@ export async function checkAndIncrementDailyExports(prisma, userId) {
 
 export default {
     canAccessFeature,
+    canAccessSection,
     requireFeature,
     getUserLimits,
     checkAndIncrementDailyExports,
