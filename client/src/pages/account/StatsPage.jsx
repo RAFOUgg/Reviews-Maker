@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../store/useStore'
+import ProfessionalStatsPanel from '../../components/account/ProfessionalStatsPanel'
 
 export default function StatsPage() {
     const navigate = useNavigate()
@@ -187,6 +188,11 @@ export default function StatsPage() {
                         ))}
                     </div>
                 </div>
+
+                {/* Professional panel for Producteur accounts */}
+                {user?.accountType && user.accountType.toLowerCase() === 'producteur' && (
+                    <ProfessionalStatsPanel reviews={reviews} stats={stats} />
+                )}
 
                 {/* Type Breakdown */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">

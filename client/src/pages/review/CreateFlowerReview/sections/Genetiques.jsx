@@ -8,7 +8,7 @@ import UnifiedGeneticsCanvas from '../../../../components/genetics/UnifiedGeneti
 import useGeneticsStore from '../../../../store/useGeneticsStore'
 import { useStore } from '../../../../store/useStore'
 
-export default function Genetiques({ formData, handleChange }) {
+export default function Genetiques({ formData, handleChange, allowPhenoHunt = true }) {
     const [showInitialModal, setShowInitialModal] = useState(true) // Modal de choix initial
     const [activeTab, setActiveTab] = useState('cultivars')
     const [activeTreeTab, setActiveTreeTab] = useState(0)
@@ -118,6 +118,28 @@ export default function Genetiques({ formData, handleChange }) {
 
     return (
         <LiquidCard title="🧬 Génétiques & Arbre Généalogique" bordered>
+            {/* V1 MVP: Check PhenoHunt permissions */}
+            {!allowPhenoHunt ? (
+                <div className="p-6 bg-amber-500/10 border-2 border-amber-500/30 rounded-lg space-y-3">
+                    <div className="flex items-start gap-3">
+                        <div className="p-2 bg-amber-600 text-white rounded-lg flex-shrink-0">
+                            <Info className="w-5 h-5" />
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+                                🌳 PhenoHunt - Arbre Généalogique Interactif
+                            </p>
+                            <p className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
+                                L'arbre généalogique complet avec gestion des phénotypes, sélections et relations complexes est exclusivement disponible pour les comptes <span className="font-semibold">Producteur</span> ($29.99/mois).
+                            </p>
+                            <p className="text-xs text-amber-700 dark:text-amber-300 mt-2">
+                                Vous pouvez néanmoins consulter et éditer les informations génétiques basiques (cultivar, type, breeder) dans cette section.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <>
             {/* MODAL INITIAL DE CHOIX */}
             <AnimatePresence>
                 {showInitialModal && (
@@ -461,7 +483,8 @@ export default function Genetiques({ formData, handleChange }) {
                     </motion.div>
                 )}
             </AnimatePresence>
+            </>
+            )}
         </LiquidCard>
     )
 }
-

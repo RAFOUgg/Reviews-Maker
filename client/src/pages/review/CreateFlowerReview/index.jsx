@@ -36,6 +36,13 @@ export default function CreateFlowerReview() {
     const [searchParams] = useSearchParams()
     const { user, isAuthenticated } = useStore()
 
+    // V1 MVP: Vérifier les permissions d'accès par type de compte
+    const accountType = user?.accountType || 'amateur'
+    const isProducteur = accountType === 'producteur'
+    const isInfluenceur = accountType === 'influenceur'
+    const canAccessGenetics = isProducteur || isInfluenceur
+    const canAccessPhenoHunt = isProducteur
+
     const {
         formData,
         setFormData,
@@ -264,9 +271,19 @@ export default function CreateFlowerReview() {
                             removePhoto={removePhoto}
                         />
                     )}
-                    {currentSection === 1 && (
-                        <Genetiques formData={formData} handleChange={handleChange} />
-                    )}
+                    {currentSection === 1 && canAccessGenetics ? (
+                        <Genetiques 
+                            formData={formData} 
+                            handleChange={handleChange}
+                            allowPhenoHunt={canAccessPhenoHunt}
+                        />
+                    ) : currentSection === 1 ? (
+                        <div className="p-6 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                            <p className="text-sm text-yellow-400 text-center">
+                                💡 Section Génétiques disponible pour les comptes Producteur ($29.99/mois)
+                            </p>
+                        </div>
+                    ) : null}
                     {currentSection === 2 && (
                         <CulturePipelineSection
                             data={formData.culture || {}}
