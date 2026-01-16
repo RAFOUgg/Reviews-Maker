@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, Trash2, Info, ChevronDown, ChevronUp } from 'lucide-react';
-import LiquidCard from './LiquidCard'
-import LiquidButton from './LiquidButton';
+import LiquidCard from '../../ui/LiquidCard'
+import LiquidButton from '../../ui/LiquidButton';
 
 /**
  * PipelineCellEditor - Modal d'édition de cellule pipeline

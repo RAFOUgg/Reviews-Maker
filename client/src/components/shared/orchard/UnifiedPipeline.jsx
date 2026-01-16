@@ -14,7 +14,7 @@
 import { useState, useEffect } from 'react'
 import { getPipelineConfig } from '../../../config/pipelineConfigs'
 import PipelineDragDropView from './PipelineDragDropView'
-import LiquidCard from './ui/LiquidCard'
+import LiquidCard from '../../ui/LiquidCard'
 
 const UnifiedPipeline = ({
     type = 'culture', // 'culture' | 'curing' | 'separation' | 'extraction' | 'recipe'

@@ -5,8 +5,8 @@ import {
     ChevronDown, Info, Thermometer, Droplets, Package,
     Sun, Moon, Sprout, Download
 } from 'lucide-react';
-import LiquidCard from './LiquidCard'
-import LiquidButton from './LiquidButton';
+import LiquidCard from '../../ui/LiquidCard'
+import LiquidButton from '../../ui/LiquidButton';
 
 /**
  * PipelineGitHubGrid - Système de Pipeline GitHub-style CDC-compliant

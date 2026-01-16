@@ -7,9 +7,8 @@
 
 import React, { useState } from 'react'
 import { useUserStore } from '@/store/useUserStore'
-import { usePermissions } from '@/hooks/usePermissions'
+import { usePermissions, FeatureUpgradeModal } from '@/hooks/usePermissions'
 import { LockIcon, UpgradeIcon } from '@/components/icons'
-import { UpgradeModal } from './UpgradeModal'
 
 /**
  * SectionGuard: Wrap sections that require specific account tier
@@ -104,9 +103,10 @@ export function SectionGuard({
 
             {/* Upgrade modal */}
             {showUpgradeModal && (
-                <UpgradeModal
+                <FeatureUpgradeModal
                     requiredTier={requiredTier}
                     feature={sectionTitle}
+                    isOpen={showUpgradeModal}
                     onClose={() => setShowUpgradeModal(false)}
                 />
             )}
@@ -156,9 +156,10 @@ export function FeatureLockedBanner({
                     →
                 </button>
                 {showUpgradeModal && (
-                    <UpgradeModal
+                    <FeatureUpgradeModal
                         requiredTier={requiredTier}
-                        feature={title}
+                        feature={sectionTitle}
+                        isOpen={showUpgradeModal}
                         onClose={() => setShowUpgradeModal(false)}
                     />
                 )}
@@ -185,9 +186,11 @@ export function FeatureLockedBanner({
             </div>
 
             {showUpgradeModal && (
-                <UpgradeModal
+                <FeatureUpgradeModal
                     requiredTier={requiredTier}
                     feature={title}
+                    isOpen={showUpgradeModal}
+                    isOpen={showUpgradeModal}
                     onClose={() => setShowUpgradeModal(false)}
                 />
             )}

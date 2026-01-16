@@ -1,7 +1,7 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import ColorWheelPicker from './ColorWheelPicker'
-import WeedPreview from './WeedPreview'
+import ColorWheelPicker from '../shared/charts/ColorWheelPicker'
+import WeedPreview from '../shared/preview/WeedPreview'
 
 /**
  * Section 5: Visuel Technique

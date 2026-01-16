@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Calendar, Eye, Heart, MessageSquare, ArrowRight } from 'lucide-react'
 import { reviewsService } from '../../services/apiService'
-import LoadingSpinner from './LoadingSpinner'
+import LoadingSpinner from '../shared/LoadingSpinner'
 
 /**
  * Section "Mes Reviews Récentes" - Affiche les 6 dernières reviews de l'utilisateur

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { FileText, Download, Star, Heart } from 'lucide-react'
-import LoadingSpinner from './LoadingSpinner'
+import LoadingSpinner from '../shared/LoadingSpinner'
 
 /**
  * Section "Statistiques Rapides" - Affiche 4 stats principales

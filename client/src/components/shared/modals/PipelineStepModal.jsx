@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import LiquidModal from './LiquidModal';
-import LiquidButton from './LiquidButton';
-import LiquidInput from './LiquidInput';
+import LiquidModal from '../../ui/LiquidModal';
+import LiquidButton from '../../ui/LiquidButton';
+import LiquidInput from '../../ui/LiquidInput';
 import { Save, X } from 'lucide-react';
 
 /**
