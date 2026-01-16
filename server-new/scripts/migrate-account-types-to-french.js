@@ -5,7 +5,8 @@
  * Usage: node migrate-account-types-to-french.js
  */
 
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
+
 const prisma = new PrismaClient();
 
 async function migrateAccountTypes() {

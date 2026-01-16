@@ -5,7 +5,8 @@
  * Usage: node set-user-as-producer.js user@email.com
  */
 
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
+
 const prisma = new PrismaClient();
 
 async function setUserAsProducer(email) {
