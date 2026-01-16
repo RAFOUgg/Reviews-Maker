@@ -85,3 +85,5 @@ db/backups/
 
 # Platform specific
 server-new/node_modules/.bin/
+setup-dev-local.ps1
+setup-dev-local.sh
