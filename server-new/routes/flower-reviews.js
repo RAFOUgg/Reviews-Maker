@@ -7,6 +7,12 @@ import { prisma } from '../server.js'
 import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } from '../utils/errorHandler.js'
 import { formatReview, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
 import { validateReviewId } from '../utils/validation.js'
+import { 
+  requireSectionAccess, 
+  requirePhenoHunt, 
+  requireActiveSubscription,
+  canAccessSection 
+} from '../middleware/permissions.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -334,10 +340,14 @@ function validateFlowerReviewData(data) {
 }
 
 // ===== POST /api/reviews/flower - Créer une review Fleur complète =====
-router.post('/', requireAuth, upload.fields([
+router.post('/', 
+  requireAuth, 
+  requireSectionAccess('info'),  // Check: can access basic sections
+  requireActiveSubscription,     // Check: subscription active for paid tiers
+  upload.fields([
     { name: 'images', maxCount: 4 }, // Photos produit (max 4)
     { name: 'analyticsPdf', maxCount: 1 } // PDF analytics (optionnel)
-]), asyncHandler(async (req, res) => {
+  ]), asyncHandler(async (req, res) => {
     console.log('🌿 Creating FlowerReview with data:', JSON.stringify(req.body, null, 2))
     console.log('📎 Files uploaded:', req.files)
 
@@ -527,10 +537,13 @@ router.get('/:id', asyncHandler(async (req, res) => {
 }))
 
 // ===== PUT /api/reviews/flower/:id - Mettre à jour une review Fleur =====
-router.put('/:id', requireAuth, upload.fields([
+router.put('/:id', 
+  requireAuth, 
+  requireActiveSubscription,
+  upload.fields([
     { name: 'images', maxCount: 4 },
     { name: 'analyticsPdf', maxCount: 1 }
-]), asyncHandler(async (req, res) => {
+  ]), asyncHandler(async (req, res) => {
     console.log(`🔁 PUT /api/reviews/flower/${req.params.id}`)
 
     // Valider l'ID
@@ -561,6 +574,25 @@ router.put('/:id', requireAuth, upload.fields([
 
     if (!validation.valid) {
         throw Errors.VALIDATION_ERROR(validation.errors)
+    }
+
+    // SPRINT 1: Check section-level permissions
+    // If user is trying to update genetics section, verify access
+    if (req.body.breeder || req.body.variety || req.body.genetics) {
+        if (!canAccessSection(req.user.accountType || 'consumer', 'genetic')) {
+            throw Errors.FORBIDDEN(
+                'Genetics section not available for your account type. Upgrade to Producer to access.'
+            )
+        }
+    }
+
+    // If user is trying to update culture pipeline, verify access
+    if (req.body.pipelineData?.culture) {
+        if (!canAccessSection(req.user.accountType || 'consumer', 'pipeline_culture')) {
+            throw Errors.FORBIDDEN(
+                'Culture Pipeline not available for your account type. Upgrade to Producer to access.'
+            )
+        }
     }
 
     // Gérer les images: nouvelles + conserver les existantes
