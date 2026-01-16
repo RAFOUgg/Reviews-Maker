@@ -415,6 +415,40 @@ export function canAccessFeature(user, feature, options = {}) {
  * @param {Function|null} optionsGetter - Fonction async pour récupérer options (req) => {...}
  * @returns {Function} Middleware Express
  */
+export function requireFeature(feature, optionsGetter = null) {
+    return async (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({
+                error: 'authentication_required',
+                message: 'Authentification requise'
+            });
+        }
+
+        // Récupérer options si fonction fournie
+        const options = typeof optionsGetter === 'function'
+            ? await optionsGetter(req)
+            : {};
+
+        // Vérifier permission
+        const check = canAccessFeature(req.user, feature, options);
+
+        if (!check.allowed) {
+            return res.status(403).json({
+                error: 'feature_restricted',
+                message: check.reason,
+                accountType: check.accountType || getUserAccountType(req.user),
+                upgradeRequired: check.upgradeRequired || null,
+                limit: check.limit,
+                current: check.current,
+                remaining: check.remaining
+            });
+        }
+
+        // Attacher résultat au req pour usage dans handler
+        req.featureCheck = check;
+        next();
+    };
+}
 
 /**
  * Middleware: Vérifie l'accès à une section spécifique
@@ -494,68 +528,6 @@ export function requireActiveSubscription(req, res, next) {
     }
     
     next();
-}
-
-/**
- * Vérifie si un utilisateur peut accéder à une section spécifique
- * @param {string} accountType - Type de compte de l'utilisateur
- * @param {string} section - ID de la section (genetic, pipeline_culture, etc)
- * @returns {boolean} True si accès autorisé
- */
-export function canAccessSection(accountType, section) {
-    // Beta testers ont accès à tout
-    if (accountType === ACCOUNT_TYPES.BETA_TESTER) {
-        return true;
-    }
-
-    // Restriction par section
-    const sectionRestrictions = {
-        genetic: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
-        pipeline_culture: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
-        pipeline_extraction: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
-        pipeline_curing: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
-        phenohunt: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
-        branding: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
-        advanced_export: [ACCOUNT_TYPES.INFLUENCER, ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT]
-    };
-
-    const allowedAccountTypes = sectionRestrictions[section] || [];
-    return allowedAccountTypes.includes(accountType);
-}
-
-export function requireFeature(feature, optionsGetter = null) {
-    return async (req, res, next) => {
-        if (!req.user) {
-            return res.status(401).json({
-                error: 'authentication_required',
-                message: 'Authentification requise'
-            });
-        }
-
-        // Récupérer options si fonction fournie
-        const options = typeof optionsGetter === 'function'
-            ? await optionsGetter(req)
-            : {};
-
-        // Vérifier permission
-        const check = canAccessFeature(req.user, feature, options);
-
-        if (!check.allowed) {
-            return res.status(403).json({
-                error: 'feature_restricted',
-                message: check.reason,
-                accountType: check.accountType || getUserAccountType(req.user),
-                upgradeRequired: check.upgradeRequired || null,
-                limit: check.limit,
-                current: check.current,
-                remaining: check.remaining
-            });
-        }
-
-        // Attacher résultat au req pour usage dans handler
-        req.featureCheck = check;
-        next();
-    };
 }
 
 /**
@@ -684,8 +656,12 @@ export async function checkAndIncrementDailyExports(prisma, userId) {
 }
 
 export default {
+    ACCOUNT_TYPES,
     canAccessFeature,
     canAccessSection,
+    requireSectionAccess,
+    requirePhenoHunt,
+    requireActiveSubscription,
     requireFeature,
     getUserLimits,
     checkAndIncrementDailyExports,
