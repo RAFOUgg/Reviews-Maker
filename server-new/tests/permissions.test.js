@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { ACCOUNT_TYPES, canAccessFeature, requireAccountType, requireFeature } from '../middleware/permissions.js'
+import { ACCOUNT_TYPES, canAccessFeature, requireFeature } from '../middleware/permissions.js'
 
 /**
  * Test Matrix: 3 Account Types × 20 Key Features
