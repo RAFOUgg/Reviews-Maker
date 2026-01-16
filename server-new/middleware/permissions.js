@@ -415,6 +415,114 @@ export function canAccessFeature(user, feature, options = {}) {
  * @param {Function|null} optionsGetter - Fonction async pour récupérer options (req) => {...}
  * @returns {Function} Middleware Express
  */
+
+/**
+ * Middleware: Vérifie l'accès à une section spécifique
+ * @param {string} section - ID de la section
+ * @returns {Function} Middleware Express
+ */
+export function requireSectionAccess(section) {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({ error: 'Non authentifié' });
+        }
+
+        const accountType = getUserAccountType(req.user);
+        
+        if (!canAccessSection(accountType, section)) {
+            const sectionNames = {
+                genetic: 'Genetiques',
+                pipeline_culture: 'Pipeline Culture',
+                pipeline_extraction: 'Pipeline Extraction',
+                pipeline_curing: 'Pipeline Curing',
+                phenohunt: 'PhenoHunt',
+                branding: 'Branding',
+                advanced_export: 'Export Avancé'
+            };
+            
+            return res.status(403).json({
+                error: `${sectionNames[section] || section} not available for your account type`,
+                code: 'SECTION_NOT_AVAILABLE',
+                upgradeRequired: 'producer'
+            });
+        }
+        
+        next();
+    };
+}
+
+/**
+ * Middleware: Vérifie l'accès à PhenoHunt (production génétique)
+ * @returns {Function} Middleware Express
+ */
+export function requirePhenoHunt(req, res, next) {
+    if (!req.user) {
+        return res.status(401).json({ error: 'Non authentifié' });
+    }
+
+    const accountType = getUserAccountType(req.user);
+    const allowedTypes = [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT, ACCOUNT_TYPES.BETA_TESTER];
+    
+    if (!allowedTypes.includes(accountType)) {
+        return res.status(403).json({
+            error: 'PhenoHunt is only available for Producers',
+            code: 'PHENOHUNT_NOT_AVAILABLE',
+            upgradeRequired: 'producer'
+        });
+    }
+    
+    next();
+}
+
+/**
+ * Middleware: Vérifie l'abonnement actif
+ * @returns {Function} Middleware Express
+ */
+export function requireActiveSubscription(req, res, next) {
+    if (!req.user) {
+        return res.status(401).json({ error: 'Non authentifié' });
+    }
+
+    const accountType = getUserAccountType(req.user);
+    const isPaid = [ACCOUNT_TYPES.INFLUENCER, ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType);
+    
+    if (!isPaid && accountType !== ACCOUNT_TYPES.BETA_TESTER) {
+        return res.status(403).json({
+            error: 'This feature requires an active subscription',
+            code: 'SUBSCRIPTION_REQUIRED'
+        });
+    }
+    
+    next();
+}
+
+/**
+ * Vérifie si un utilisateur peut accéder à une section spécifique
+ * @param {string} accountType - Type de compte de l'utilisateur
+ * @param {string} section - ID de la section (genetic, pipeline_culture, etc)
+ * @returns {boolean} True si accès autorisé
+ */
+export function canAccessSection(accountType, section) {
+    // Beta testers ont accès à tout
+    if (accountType === ACCOUNT_TYPES.BETA_TESTER) {
+        return true;
+    }
+
+    // Restriction par section
+    const sectionRestrictions = {
+        genetic: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
+        pipeline_culture: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
+        pipeline_extraction: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
+        pipeline_curing: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
+        phenohunt: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
+        branding: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
+        advanced_export: [ACCOUNT_TYPES.INFLUENCER, ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT]
+    };
+
+    const allowedAccountTypes = sectionRestrictions[section] || [];
+    return allowedAccountTypes.includes(accountType);
+}
+
 export function requireFeature(feature, optionsGetter = null) {
     return async (req, res, next) => {
         if (!req.user) {
