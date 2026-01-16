@@ -10,6 +10,9 @@
 
 import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js';
 
+// Re-export ACCOUNT_TYPES for use in routes
+export { ACCOUNT_TYPES }
+
 /**
  * Limites par type de compte
  */
