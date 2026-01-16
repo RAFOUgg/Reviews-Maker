@@ -107,32 +107,67 @@ export default function SettingsPage() {
                     </div>
                 )}
 
-                {/* Account Info (moved to top) */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
+                {/* Account Info Card */}
+                <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/30 dark:to-indigo-800/30 rounded-xl p-8 shadow-lg border border-indigo-200 dark:border-indigo-700 mb-6">
+                    <div className="grid md:grid-cols-3 gap-6">
+                        {/* Avatar & Identity */}
+                        <div className="md:col-span-1 flex flex-col items-center text-center">
                             <img
                                 src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=6366f1&color=fff`}
                                 alt={user.username}
-                                className="w-16 h-16 rounded-full border-2 border-indigo-500"
+                                className="w-20 h-20 rounded-full border-4 border-indigo-500 shadow-lg mb-4"
                             />
-                            <div>
-                                <p className="font-bold text-gray-900 dark:text-white text-lg">{user.username}</p>
-                                <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
-                                <p className="text-gray-500 dark:text-gray-400">Type de compte : {user.accountType || 'Amateur'}</p>
+                            <h3 className="font-bold text-gray-900 dark:text-white text-xl">{user.username}</h3>
+                            <p className="text-gray-600 dark:text-gray-300 text-sm break-all">{user.email}</p>
+                        </div>
+
+                        {/* Account Stats */}
+                        <div className="md:col-span-1 flex flex-col justify-center">
+                            <div className="space-y-3">
+                                <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Type de compte</p>
+                                    <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400 capitalize">{user.accountType || 'amateur'}</p>
+                                </div>
+                                <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Membre depuis</p>
+                                    <p className="text-lg font-bold text-gray-900 dark:text-white">{new Date(user.createdAt || Date.now()).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                </div>
                             </div>
                         </div>
-                        <div className="text-right">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Connecté via Discord</p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Membre depuis {new Date(user.createdAt || Date.now()).toLocaleDateString('fr-FR')}</p>
-                            {user.accountType !== 'consumer' && (
+
+                        {/* Actions */}
+                        <div className="md:col-span-1 flex flex-col justify-center gap-3">
+                            {['admin', 'producteur', 'influenceur'].includes(user.accountType?.toLowerCase()) && (
                                 <button
                                     onClick={() => navigate('/manage-subscription')}
-                                    className="mt-2 px-4 py-2 bg-indigo-500 text-white rounded-lg shadow-md hover:bg-indigo-600"
+                                    className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition-colors"
                                 >
-                                    Gérer l'abonnement
+                                    💳 Gérer l'abonnement
                                 </button>
                             )}
+                            {user.accountType?.toLowerCase() === 'amateur' && (
+                                <button
+                                    onClick={() => navigate('/manage-subscription')}
+                                    className="w-full px-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-semibold rounded-lg shadow-md transition-all text-center"
+                                >
+                                    ⭐ Upgrade maintenant
+                                </button>
+                            )}
+                            <button
+                                onClick={() => {
+                                    try {
+                                        fetch('/api/auth/logout', { 
+                                            method: 'POST',
+                                            credentials: 'include'
+                                        }).then(() => navigate('/'))
+                                    } catch (e) {
+                                        console.error('Logout error:', e)
+                                    }
+                                }}
+                                className="w-full px-4 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-semibold rounded-lg transition-colors"
+                            >
+                                🚪 Déconnexion
+                            </button>
                         </div>
                     </div>
                 </div>

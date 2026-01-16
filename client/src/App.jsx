@@ -43,6 +43,7 @@ const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'))
 const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'))
 const PaymentPage = lazy(() => import('./pages/account/PaymentPage'))
 const PreferencesPage = lazy(() => import('./pages/account/PreferencesPage'))
+const ManageSubscription = lazy(() => import('./pages/account/ManageSubscription'))
 const PhenoHuntPage = lazy(() => import('./pages/public/PhenoHuntPage'))
 const GeneticsManagementPage = lazy(() => import('./pages/public/GeneticsManagementPage'))
 
@@ -137,6 +138,7 @@ function App() {
                                     <Route path="/settings" element={<SettingsPage />} />
                                     <Route path="/preferences" element={<PreferencesPage />} />
                                     <Route path="/account" element={<SettingsPage />} />
+                                    <Route path="/manage-subscription" element={<ManageSubscription />} />
                                     <Route path="/phenohunt" element={<PhenoHuntPage />} />
                                     <Route path="/genetics" element={<GeneticsManagementPage />} />
 
