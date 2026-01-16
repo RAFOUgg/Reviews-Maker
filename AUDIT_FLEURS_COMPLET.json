@@ -1,0 +1,1042 @@
+{
+    "metadata": {
+        "audit_date": "2026-01-15",
+        "system": "Fleurs",
+        "project": "Reviews-Maker",
+        "total_status": "⚠️ PARTIELLEMENT IMPLÉMENTÉ - MVP en cours"
+    },
+    "frontend": {
+        "pages_structure": {
+            "main_page": "client/src/pages/review/CreateFlowerReview/index.jsx",
+            "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+            "details": {
+                "sections_count": 10,
+                "sections_implemented": [
+                    "Informations générales",
+                    "Génétiques & PhenoHunt",
+                    "Culture & Pipeline",
+                    "Analytiques",
+                    "Visuel & Technique",
+                    "Odeurs",
+                    "Texture",
+                    "Goûts",
+                    "Effets & Expérience (fusionnés)",
+                    "Curing & Maturation"
+                ],
+                "navigation": "Carousel avec emojis et progression",
+                "form_state_management": "Hook personnalisé useFlowerForm"
+            }
+        },
+        "sections": {
+            "infosGenerales": {
+                "file": "client/src/pages/review/CreateFlowerReview/sections/InfosGenerales.jsx",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "champs_implementes": [
+                    "nomCommercial (text requis)",
+                    "cultivars (multi-select pills avec source bibliothèque)",
+                    "farm/producteur (text avec auto-complete)",
+                    "photos (1-4 images avec système de tags: Macro, Full plant, Bud sec, Trichomes, Drying, Curing)"
+                ],
+                "controls": [
+                    "Input text simple",
+                    "MultiSelectPills composant réutilisable",
+                    "Upload image avec drag & drop",
+                    "Système de tags rapides par photo"
+                ],
+                "validation": "Champs requis: nomCommercial, photos (1-4 min)",
+                "storage": "FormData + transfert au backend"
+            },
+            "genetiques": {
+                "file": "client/src/pages/review/CreateFlowerReview/sections/Genetiques.jsx",
+                "status": "⚠️ PARTIELLEMENT IMPLÉMENTÉ",
+                "champs_implementes": [
+                    "breeder (text libre)",
+                    "variety (auto-complete depuis cultivars)",
+                    "geneticType (Indica/Sativa/Hybride)",
+                    "indicaPercent (slider 0-100)",
+                    "sativaPercent (slider 0-100)",
+                    "parentage (JSON: parents)",
+                    "phenotypeCode (text ex: 'Pheno #2')"
+                ],
+                "phenohunt_status": "⚠️ PARTIELLEMENT IMPLÉMENTÉ",
+                "phenohunt_details": {
+                    "arbre_genealogique": "✅ Composant UnifiedGeneticsCanvas existe",
+                    "tabs": [
+                        "cultivars (mode simple)",
+                        "arbre (visualisation drag-drop)",
+                        "pheno-hunt (mode création phénotypes)"
+                    ],
+                    "modal_initial": "✅ Présent avec 3 options: créer arbre vide, depuis review actuelle, importer depuis existant",
+                    "nodes_edges": "✅ Structure React Flow implémentée",
+                    "missing": [
+                        "Sauvegarde persistance des arbres en BDD",
+                        "Partage d'arbres via code unique",
+                        "Visualisation complète du pedigree (parent1->parent2->offspring)",
+                        "Import/export d'arbres en JSON"
+                    ]
+                },
+                "controls": [
+                    "Text inputs",
+                    "AutoComplete",
+                    "Range sliders",
+                    "React Flow canvas"
+                ],
+                "issues": [
+                    "Modal initial affiche 3 options mais 'Import to existing' non implémenté",
+                    "Données arbres sont en state local (React), pas persistées",
+                    "Édition d'arbres non implémentée"
+                ]
+            },
+            "culturePipeline": {
+                "file": "client/src/pages/review/CreateFlowerReview/sections/PipelineCulture.jsx",
+                "status": "⚠️ PARTIELLEMENT IMPLÉMENTÉ",
+                "structure": "Délégué à UnifiedPipeline (composant générique pour tous types)",
+                "pipeline_modes": {
+                    "jours": "⚠️ Implémenté (mode standard)",
+                    "semaines": "⚠️ Implémenté (avec calcul S1-Sn)",
+                    "phases": "⚠️ Implémenté (12 phases prédéfinies: Graine, Germination, Plantule, etc.)"
+                },
+                "neuf_groupes_de_donnees": {
+                    "groupe1_general": {
+                        "status": "✅ Implémenté",
+                        "champs": [
+                            "mode (Indoor/Outdoor/Greenhouse/No-till)",
+                            "dates (début/fin)",
+                            "durée",
+                            "saison"
+                        ]
+                    },
+                    "groupe2_environnement": {
+                        "status": "⚠️ Partiellement",
+                        "champs": [
+                            "type_propagation (graine/clone/bouture)",
+                            "substrat (type/volume/composition)",
+                            "irrigation (type/fréquence/volume)",
+                            "engrais (type/marque/dosage/fréquence)",
+                            "lumière (type/spectre/distance/puissance/DLI/PPFD/Kelvin)",
+                            "environnement (temp/humidité/CO2/ventilation)"
+                        ],
+                        "missing": [
+                            "Certains champs techniques (DLI, PPFD) non validés"
+                        ]
+                    },
+                    "groupe3_palissage": {
+                        "status": "⚠️ Partiellement",
+                        "champs": [
+                            "méthodologies (SCROG/SOG/Main-Lining/etc.)",
+                            "commentaires"
+                        ]
+                    },
+                    "groupe4_morphologie": {
+                        "status": "✅ Implémenté",
+                        "champs": [
+                            "taille",
+                            "volume",
+                            "poids",
+                            "branches",
+                            "feuilles",
+                            "buds"
+                        ]
+                    },
+                    "groupe5_recolte": {
+                        "status": "✅ Complètement implémenté dans Recolte.jsx",
+                        "champs": [
+                            "couleur trichomes",
+                            "date",
+                            "poids brut",
+                            "poids net",
+                            "rendement"
+                        ]
+                    },
+                    "groupes_6_9": "Voir sections Visuel, Odeurs, Goûts, Effets"
+                },
+                "github_pipeline_style": {
+                    "status": "⚠️ Implémenté côté backend uniquement",
+                    "frontend_status": "❌ Non visible dans UI (backend-only)",
+                    "cells_visualization": "❌ Grille GitHub (365 cases) non implémentée en frontend",
+                    "missing": [
+                        "Visualisation de la grille 365 cases/jour/semaine",
+                        "Édition cellule par cellule",
+                        "Graphique d'évolution temporelle",
+                        "Export GIF de progression"
+                    ]
+                },
+                "issues": [
+                    "UnifiedPipeline est très générique, spécificités culture peu visibles",
+                    "Système GitHub pipeline côté backend mais pas utilisé en frontend",
+                    "Visualisation GitHub-style inexistante",
+                    "Données modifiables complexes mais UI trop simplifiée"
+                ]
+            },
+            "recolte": {
+                "file": "client/src/pages/review/CreateFlowerReview/sections/Recolte.jsx",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "champs_implementes": [
+                    "fenetreRecolte (optimal/precoce/tardive)",
+                    "trichomesTranslucides (%)",
+                    "trichomesLaiteux (%)",
+                    "trichomesAmbres (%)",
+                    "dateRecolte",
+                    "poidsBrut (g)",
+                    "poidsNet (g)",
+                    "rendement (g/m² ou g/plante)"
+                ],
+                "controls": [
+                    "Sliders pour pourcentages trichomes",
+                    "Date picker",
+                    "Number inputs",
+                    "Indicateurs visuels (somme trichomes)"
+                ]
+            },
+            "analyticsSection": {
+                "file": "client/src/components/sections/AnalyticsSection.jsx",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "champs_implementes": [
+                    "thcPercent (0-100)",
+                    "cbdPercent (0-100)",
+                    "cbgPercent (0-100)",
+                    "cbcPercent (0-100)",
+                    "cbnPercent (0-100)",
+                    "thcvPercent (0-100)",
+                    "terpeneProfile (JSON depuis PDF/image)",
+                    "labReportUrl (upload PDF certificat)"
+                ],
+                "pdf_handling": "✅ Upload PDF + extraction OCR (via service backend)",
+                "terpenome": "⚠️ Partiellement - liste prédéfinie en data/terpenes.json"
+            },
+            "visuelTechnique": {
+                "file": "client/src/pages/review/CreateFlowerReview/sections/VisuelTechnique.jsx",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "champs_implementes": [
+                    "couleur/10 (avec ColorWheelPicker nuancier)",
+                    "densiteVisuelle/10",
+                    "trichomes/10",
+                    "pistils/10",
+                    "manucure/10",
+                    "moisissure/10 (10=aucune)",
+                    "graines/10 (10=aucune)",
+                    "couleurNuancier (sélection multi-couleurs)"
+                ],
+                "controls": [
+                    "ColorWheelPicker pour nuancier (max 5 couleurs)",
+                    "Range sliders pour scores /10"
+                ]
+            },
+            "odeurs": {
+                "file": "client/src/pages/review/CreateFlowerReview/sections/Odeurs.jsx",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "champs_implementes": [
+                    "intensiteOdeur/10",
+                    "odeursDominantes (max 7 tags depuis aromas.json)",
+                    "odeursSecondaires (max 7 tags)",
+                    "aromesInhalation (primaire/secondaire)",
+                    "saveurBouche (rétro-olfaction)"
+                ],
+                "data_source": "data/aromas.json (liste prédéfinie)",
+                "controls": [
+                    "Range slider intensité",
+                    "Multi-select pills avec limite 7"
+                ]
+            },
+            "texture": {
+                "file": "client/src/pages/review/CreateFlowerReview/sections/Texture.jsx",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "champs_implementes": [
+                    "durete/10",
+                    "densiteTactile/10",
+                    "elasticite/10",
+                    "collant/10"
+                ],
+                "controls": [
+                    "4 x Range sliders"
+                ]
+            },
+            "gouts": {
+                "file": "client/src/pages/review/CreateFlowerReview/sections/Gouts.jsx",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "champs_implementes": [
+                    "intensiteGout/10",
+                    "agressivite/10",
+                    "dryPuff (max 7 tags depuis tastes.json)",
+                    "inhalation (max 7)",
+                    "expiration (max 7)"
+                ],
+                "data_source": "data/tastes.json (liste prédéfinie)",
+                "controls": [
+                    "Range sliders",
+                    "Multi-select pills avec limite 7"
+                ]
+            },
+            "effets": {
+                "file": "client/src/pages/review/CreateFlowerReview/sections/Effets.jsx",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "champs_implementes": [
+                    "montee/10",
+                    "intensiteEffet/10",
+                    "effets (max 8 tags depuis effects.json)",
+                    "filtre (tous/mental/physique/therapeutique/positif/negatif)"
+                ],
+                "data_source": "data/effects.json (liste prédéfinie classée par type)",
+                "controls": [
+                    "Range sliders",
+                    "Filter buttons",
+                    "Multi-select pills max 8"
+                ]
+            },
+            "experience": {
+                "file": "client/src/components/forms/ExperienceUtilisation.jsx",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "champs_implementes": [
+                    "methodeConsommation (Combustion/Vapeur/Infusion)",
+                    "dosageUtilise (g/mg estimé)",
+                    "dureeEffets (HH:MM)",
+                    "profilsEffets (multi-select)",
+                    "effetsSecondaires (yeux secs, faim, anxiété, etc.)",
+                    "debutEffets (immédiat/différé)",
+                    "dureeEffets (courte/moyenne/longue)",
+                    "usagePreferred (soir/journée/seul/social/médical)"
+                ],
+                "controls": [
+                    "Dropdowns",
+                    "Text inputs",
+                    "Multi-selects"
+                ]
+            },
+            "curingMaturation": {
+                "file": "client/src/components/sections/CuringMaturationSection.jsx",
+                "status": "⚠️ PARTIELLEMENT IMPLÉMENTÉ",
+                "pipeline_type": "GitHub-style (grille cellules)",
+                "champs_implementes": [
+                    "dureeMaturation (jours/semaines/mois)",
+                    "typeCuring (froid <5°C / chaud >5°C)",
+                    "temperature (°C)",
+                    "humidite (%)",
+                    "typeRecipient (verre/plastique/autre)",
+                    "emballage (celophane/papier/aluminium/sous-vide/etc.)",
+                    "opaciteRecipient",
+                    "volumeOccupe (L/mL)"
+                ],
+                "testes_modifiables": [
+                    "Visuel & Technique (peut se modifier)",
+                    "Odeurs (peut se modifier)",
+                    "Goûts (peut se modifier)",
+                    "Effets ressentis (peut se modifier)"
+                ],
+                "missing": [
+                    "Visualisation grille GitHub",
+                    "Édition cellule par cellule",
+                    "Suivi temporel évolution"
+                ]
+            },
+            "optimized_versions": {
+                "note": "Versions Optimized existent mais non utilisées en prod",
+                "files": [
+                    "InfosGeneralesOptimized.jsx",
+                    "VisuelTechniqueOptimized.jsx",
+                    "OdeursOptimized.jsx",
+                    "GoutsOptimized.jsx",
+                    "EffetsOptimized.jsx"
+                ],
+                "status": "❌ Dead code ou variantes non intégrées"
+            }
+        },
+        "hooks": {
+            "useFlowerForm": {
+                "file": "client/src/pages/review/CreateFlowerReview/hooks/useFlowerForm.js",
+                "status": "✅ Implémenté",
+                "features": [
+                    "Gestion complète du state formData",
+                    "Load review si édition (id param)",
+                    "Save vers backend"
+                ]
+            },
+            "usePhotoUpload": {
+                "file": "client/src/pages/review/CreateFlowerReview/hooks/usePhotoUpload.js",
+                "status": "✅ Implémenté",
+                "features": [
+                    "Upload multiple images",
+                    "Preview local",
+                    "Remove photos"
+                ]
+            }
+        }
+    },
+    "backend": {
+        "routes": {
+            "flower_reviews": {
+                "file": "server-new/routes/flower-reviews.js",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "endpoints": [
+                    {
+                        "method": "POST",
+                        "path": "/",
+                        "description": "Créer une nouvelle review fleur",
+                        "auth": "required",
+                        "multipart": "photos + PDF analytique",
+                        "fields_accepted": "Tous les champs FlowerReview du schema"
+                    },
+                    {
+                        "method": "GET",
+                        "path": "/:id",
+                        "description": "Récupérer une review fleur",
+                        "auth": "not required (contrôle isPublic)",
+                        "returns": "Données formatées + stats agrégées"
+                    },
+                    {
+                        "method": "PUT",
+                        "path": "/:id",
+                        "description": "Mettre à jour une review fleur",
+                        "auth": "required + ownership check",
+                        "multipart": "Peut réupload photos/PDF"
+                    },
+                    {
+                        "method": "DELETE",
+                        "path": "/:id",
+                        "description": "Supprimer une review fleur",
+                        "auth": "required + ownership check"
+                    }
+                ],
+                "validation": "validateFlowerReviewData() - complet et exhaustif",
+                "cannabinoid_fields": [
+                    "thcPercent",
+                    "cbdPercent",
+                    "cbgPercent",
+                    "cbcPercent",
+                    "cbnPercent",
+                    "thcvPercent"
+                ],
+                "json_fields": [
+                    "terpeneProfile",
+                    "nuancierColors",
+                    "odeursDominantes",
+                    "odeursSecondaires",
+                    "goutsDryPuff",
+                    "goutsInhalation",
+                    "goutsExpiration",
+                    "effectProfiles",
+                    "sideEffects",
+                    "preferredUse"
+                ],
+                "lines_of_code": "744"
+            },
+            "pipeline_github": {
+                "file": "server-new/routes/pipeline-github.js",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "endpoints": [
+                    {
+                        "method": "POST",
+                        "path": "/",
+                        "description": "Créer/mettre à jour un pipeline GitHub-style",
+                        "required_fields": [
+                            "reviewId",
+                            "reviewType",
+                            "pipelineType",
+                            "intervalType",
+                            "cells"
+                        ],
+                        "cells_structure": "{ cellIndex: { intensity, temperature, humidity, container, packaging, notes } }"
+                    },
+                    {
+                        "method": "GET",
+                        "path": "/:pipelineId",
+                        "description": "Récupérer un pipeline",
+                        "returns": "Cells data + stats calculées"
+                    }
+                ],
+                "interval_types": [
+                    "seconds",
+                    "minutes",
+                    "hours",
+                    "days",
+                    "weeks",
+                    "months",
+                    "phase"
+                ],
+                "auto_calculated": [
+                    "totalCells",
+                    "filledCells",
+                    "completionRate"
+                ],
+                "curing_support": "Champs curingType, curingDuration optionnels"
+            },
+            "pipelines": {
+                "file": "server-new/routes/pipelines.js",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "endpoints": [
+                    {
+                        "method": "GET",
+                        "path": "/:pipelineId",
+                        "description": "Récupérer étapes d'un pipeline"
+                    },
+                    {
+                        "method": "POST",
+                        "path": "/",
+                        "description": "Créer nouveau pipeline (génère UUID)"
+                    },
+                    {
+                        "method": "POST",
+                        "path": "/:pipelineId/steps",
+                        "description": "Ajouter une étape"
+                    },
+                    {
+                        "method": "PUT",
+                        "path": "/steps/:stepId",
+                        "description": "Modifier une étape"
+                    },
+                    {
+                        "method": "DELETE",
+                        "path": "/steps/:stepId",
+                        "description": "Supprimer une étape"
+                    }
+                ],
+                "flexible_data": "Données stockées en JSON, varie selon pipelineType"
+            },
+            "genetics": {
+                "file": "server-new/routes/genetics.js",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "endpoints": [
+                    {
+                        "method": "GET",
+                        "path": "/trees",
+                        "description": "Lister arbres généalogiques de l'utilisateur"
+                    },
+                    {
+                        "method": "POST",
+                        "path": "/trees",
+                        "description": "Créer nouvel arbre"
+                    },
+                    {
+                        "method": "PUT",
+                        "path": "/trees/:id",
+                        "description": "Modifier arbre"
+                    },
+                    {
+                        "method": "DELETE",
+                        "path": "/trees/:id",
+                        "description": "Supprimer arbre"
+                    },
+                    {
+                        "method": "GET",
+                        "path": "/trees/:id/nodes",
+                        "description": "Lister nœuds d'un arbre"
+                    },
+                    {
+                        "method": "POST",
+                        "path": "/trees/:id/nodes",
+                        "description": "Ajouter nœud"
+                    },
+                    {
+                        "method": "PUT",
+                        "path": "/nodes/:nodeId",
+                        "description": "Modifier nœud"
+                    },
+                    {
+                        "method": "DELETE",
+                        "path": "/nodes/:nodeId",
+                        "description": "Supprimer nœud"
+                    },
+                    {
+                        "method": "POST",
+                        "path": "/trees/:id/edges",
+                        "description": "Ajouter arête (relation parent-enfant)"
+                    },
+                    {
+                        "method": "DELETE",
+                        "path": "/edges/:edgeId",
+                        "description": "Supprimer arête"
+                    }
+                ],
+                "share_feature": "shareCode unique pour partage"
+            },
+            "cultivars": {
+                "file": "server-new/routes/cultivars.js",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "endpoints": [
+                    {
+                        "method": "GET",
+                        "path": "/",
+                        "description": "Lister cultivars de l'utilisateur"
+                    },
+                    {
+                        "method": "GET",
+                        "path": "/search",
+                        "description": "Auto-complete rapide"
+                    },
+                    {
+                        "method": "POST",
+                        "path": "/",
+                        "description": "Créer cultivar"
+                    },
+                    {
+                        "method": "PUT",
+                        "path": "/:id",
+                        "description": "Modifier cultivar"
+                    },
+                    {
+                        "method": "DELETE",
+                        "path": "/:id",
+                        "description": "Supprimer cultivar"
+                    }
+                ]
+            },
+            "presets": {
+                "file": "server-new/routes/presets.js",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "endpoints": [
+                    {
+                        "method": "GET",
+                        "path": "/",
+                        "description": "Récupérer préréglages (filtre par type)"
+                    },
+                    {
+                        "method": "POST",
+                        "path": "/",
+                        "description": "Créer préréglage"
+                    },
+                    {
+                        "method": "PUT",
+                        "path": "/:id",
+                        "description": "Modifier préréglage"
+                    },
+                    {
+                        "method": "DELETE",
+                        "path": "/:id",
+                        "description": "Supprimer préréglage"
+                    }
+                ],
+                "types": [
+                    "field (préréglage individuel)",
+                    "grouped (groupe de données)",
+                    "pipeline (config pipeline)"
+                ],
+                "pipeline_types": [
+                    "culture",
+                    "curing",
+                    "separation",
+                    "extraction"
+                ]
+            },
+            "library": {
+                "file": "server-new/routes/library.js",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "features": [
+                    {
+                        "name": "Templates sauvegardés",
+                        "endpoints": [
+                            "GET /templates",
+                            "GET /templates/:id",
+                            "POST /templates",
+                            "PUT /templates/:id",
+                            "DELETE /templates/:id"
+                        ]
+                    },
+                    {
+                        "name": "Filigranes",
+                        "endpoints": [
+                            "GET /watermarks",
+                            "POST /watermarks",
+                            "PUT /watermarks/:id",
+                            "DELETE /watermarks/:id"
+                        ]
+                    },
+                    {
+                        "name": "Données réutilisables",
+                        "note": "Substrats, engrais, équipements sauvegardés"
+                    }
+                ]
+            }
+        },
+        "database_models": {
+            "flowerReview": {
+                "file": "server-new/prisma/schema.prisma (ligne 619-750)",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "fields_count": "60+",
+                "structure": {
+                    "general": [
+                        "nomCommercial*, farm, varietyType"
+                    ],
+                    "genetics": [
+                        "breeder, variety, geneticType, indicaPercent, sativaPercent, parentage, phenotypeCode"
+                    ],
+                    "culture_pipeline": [
+                        "culturePipelineId (OLD), culturePipelineGithubId (NEW)",
+                        "cultureStartDate, cultureEndDate, cultureDuration, cultureSeason"
+                    ],
+                    "analytics": [
+                        "thcPercent, cbdPercent, otherCannabinoids (JSON), terpeneProfile (JSON), labReportUrl"
+                    ],
+                    "experience": [
+                        "consumptionMethod, dosage, effectDuration, effectProfiles (JSON), sideEffects (JSON)",
+                        "effectOnset, effectLength, preferredUse (JSON)"
+                    ],
+                    "visual_technique": [
+                        "couleurScore, couleurNuancier (JSON), densiteVisuelle, trichomesScore, pistilsScore",
+                        "manucureScore, moisissureScore, grainesScore"
+                    ],
+                    "odeurs": [
+                        "notesOdeursDominantes (JSON), notesOdeursSecondaires (JSON), aromesInhalation (JSON)",
+                        "saveurBouche, intensiteAromeScore"
+                    ],
+                    "texture": [
+                        "dureteScore, densiteTactileScore, elasticiteScore, collantScore"
+                    ],
+                    "gouts": [
+                        "intensiteGoutScore, agressiviteScore, dryPuffNotes (JSON)",
+                        "inhalationNotes (JSON), expirationNotes (JSON)"
+                    ],
+                    "effets": [
+                        "monteeScore, intensiteEffetScore, effetsChoisis (JSON), effetsFiltre"
+                    ],
+                    "curing_pipeline": [
+                        "curingPipelineId (OLD), curingPipelineGithubId (NEW)",
+                        "curingDuration, curingType, curingInterval"
+                    ]
+                },
+                "indexes": [
+                    "reviewId (UNIQUE)",
+                    "nomCommercial",
+                    "variety",
+                    "review (foreign key)"
+                ]
+            },
+            "pipelineGithub": {
+                "file": "server-new/prisma/schema.prisma (ligne 583-618)",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "purpose": "Stocker pipelines GitHub-style (grilles 365 cases)",
+                "fields": [
+                    "reviewId, reviewType, pipelineType",
+                    "intervalType, startDate, endDate",
+                    "curingType, curingDuration",
+                    "cells (JSON complète)",
+                    "totalCells, filledCells, completionRate (auto-calculés)"
+                ]
+            },
+            "pipelineStep": {
+                "file": "server-new/prisma/schema.prisma (ligne 550-582)",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "purpose": "Étapes individuelles d'un pipeline",
+                "flexible_data": "Champ 'data' JSON qui varie selon pipelineType"
+            },
+            "cultivar": {
+                "file": "server-new/prisma/schema.prisma (ligne 929-977)",
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "fields": [
+                    "name (unique per userId), breeder, type, indicaRatio",
+                    "parentage (JSON), phenotype, notes",
+                    "useCount (statistique)"
+                ]
+            },
+            "geneticTree": {
+                "status": "✅ Modèle existe (voir schema)",
+                "fields": [
+                    "userId, name, description, projectType",
+                    "isPublic, shareCode (pour partage)",
+                    "nodes[], edges[] (relations)"
+                ]
+            }
+        },
+        "validation": {
+            "flower_reviews": {
+                "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+                "function": "validateFlowerReviewData(data)",
+                "validations": [
+                    "nomCommercial: required, non-vide, string",
+                    "varietyType: 'souche' ou 'hybride'",
+                    "Cannabinoids: float 0-100 (optionnel)",
+                    "Visual scores: float 0-10 (optionnel)",
+                    "Arrays (aromas, effects): max 7-8 items",
+                    "Dates: ISO string parsed to Date",
+                    "JSON fields: parsed + validated structure"
+                ]
+            }
+        }
+    },
+    "pipelines": {
+        "culture": {
+            "modes": {
+                "jours": {
+                    "status": "✅ Implémenté",
+                    "config": "date_debut + date_fin obligatoires",
+                    "display": "Case par jour (365 max)"
+                },
+                "semaines": {
+                    "status": "✅ Implémenté",
+                    "config": "semaine_debut obligatoire, fin facultatif",
+                    "display": "Case par semaine (S1, S2, ... Sn)"
+                },
+                "phases": {
+                    "status": "✅ Implémenté",
+                    "predefined_phases": [
+                        "0. Graine/Germination",
+                        "1. Plantule",
+                        "2. Croissance début",
+                        "3. Croissance milieu",
+                        "4. Croissance fin",
+                        "5. Stretch début",
+                        "6. Stretch milieu",
+                        "7. Stretch fin",
+                        "8. Floraison début",
+                        "9. Floraison milieu",
+                        "10. Floraison fin",
+                        "11. Maturation"
+                    ],
+                    "display": "Une case par phase"
+                }
+            },
+            "neuf_groupes": {
+                "groupe1": "Données générales (mode, dates, saisons)",
+                "groupe2": "Environnement (propagation, substrat, irrigation, engrais, lumière, climat)",
+                "groupe3": "Palissage/Formation (LST/HST)",
+                "groupe4": "Morphologie (taille, volume, poids, branches, feuilles, buds)",
+                "groupe5": "Récolte (trichomes, date, poids, rendement)",
+                "groupe6": "Visuel & Technique (scores /10)",
+                "groupe7": "Odeurs",
+                "groupe8": "Goûts",
+                "groupe9": "Effets"
+            },
+            "github_style": {
+                "backend": "✅ Route pipeline-github.js implémentée",
+                "frontend": "❌ Pas de visualisation grille 365 cases",
+                "cells_data": "Structure JSON: { cellIndex: { intensity, temp, humidity, container, packaging, notes } }"
+            },
+            "missing_features": [
+                "Visualisation grille GitHub-style",
+                "Édition cellule par cellule (drag, click, modify)",
+                "Graphiques d'évolution temporelle",
+                "Export GIF de la progression",
+                "Partage grille",
+                "Collaboratif (multiples contributeurs)"
+            ]
+        },
+        "curing": {
+            "modes": {
+                "similar_to_culture": "Jours, semaines, mois supportés",
+                "phase_not_relevant": "Phases n'ont pas de sens pour curing"
+            },
+            "configuration": [
+                "Durée (jours/semaines/mois selon trame)",
+                "Type curing (froid <5°C / chaud >5°C)",
+                "Température (°C)",
+                "Humidité (%)",
+                "Type récipient",
+                "Emballage",
+                "Opacité",
+                "Volume occupé"
+            ],
+            "github_style": {
+                "status": "⚠️ Backend prêt, frontend absent",
+                "missing": "Même que culture"
+            },
+            "testes_modifiables": "Oui - Visuel, Odeurs, Goûts, Effets peuvent être re-évalués à chaque étape"
+        }
+    },
+    "phenohunt": {
+        "status": "⚠️ PARTIELLEMENT IMPLÉMENTÉ",
+        "backend_routes": {
+            "file": "server-new/routes/genetics.js",
+            "endpoints": [
+                "GET /api/genetics/trees (list user trees)",
+                "POST /api/genetics/trees (create tree)",
+                "PUT/DELETE /api/genetics/trees/:id (manage tree)",
+                "Nodes endpoints (add/edit/delete nodes)",
+                "Edges endpoints (add/delete edges pour relations)"
+            ]
+        },
+        "frontend_canvas": {
+            "file": "client/src/components/genetics/UnifiedGeneticsCanvas.jsx",
+            "status": "✅ Composant existe",
+            "library": "React Flow (nodes + edges)"
+        },
+        "features": {
+            "implemented": [
+                "Créer/modifier/supprimer arbre",
+                "Ajouter nœuds (cultivars)",
+                "Créer relations parent-enfant (edges)",
+                "Drag & drop nœuds",
+                "Visualisation graphique (React Flow)",
+                "Partage via shareCode unique"
+            ],
+            "missing": [
+                "Persistance données sur EditorContext (state local only)",
+                "Import depuis reviews existantes (partiellement via modal)",
+                "Export/import d'arbre en JSON",
+                "Visualisation arbre complet (3 générations)",
+                "Prédictions phénotypiques",
+                "Statistiques génétiques",
+                "Collaboration (plusieurs users)",
+                "Fenêtre édition de nœud détaillée"
+            ]
+        }
+    },
+    "export": {
+        "frontend": {
+            "file": "client/src/components/export/ExportMaker.jsx",
+            "status": "⚠️ PARTIELLEMENT IMPLÉMENTÉ"
+        },
+        "formats_supported": {
+            "PNG": "✅ Implémenté (html2canvas)",
+            "JPEG": "✅ Implémenté (html2canvas)",
+            "PDF": "⚠️ Via jsPDF (partiellement)",
+            "SVG": "⚠️ Partiel",
+            "GIF": "⚠️ Pour pipelines uniquement (exportPipelineToGIF)",
+            "JSON": "⚠️ Structure non claire",
+            "CSV": "❌ Non implémenté",
+            "HTML": "❌ Non implémenté"
+        },
+        "templates": {
+            "compact": {
+                "status": "⚠️ Partiellement",
+                "format": "1:1 uniquement",
+                "contenu": [
+                    "Type produit",
+                    "Nom commercial",
+                    "Cultivars",
+                    "Farm",
+                    "Photo principale",
+                    "Pipeline curing (résumé)",
+                    "Scores agrégés (Visuel, Odeurs, Goûts, Effets)"
+                ]
+            },
+            "detailed": {
+                "status": "⚠️ Partiellement",
+                "formats": "1:1, 16:9, 9:16, A4",
+                "pagination": "Pas de limitation, affiche tout"
+            },
+            "complete": {
+                "status": "❌ Non implémenté",
+                "description": "Toutes les données avec arbres généalogiques"
+            },
+            "influencer": {
+                "status": "⚠️ Partiellement",
+                "format": "9:16 uniquement",
+                "premium": "✅ Accès contrôlé par accountType"
+            },
+            "custom": {
+                "status": "⚠️ Partiellement",
+                "drag_drop": "✅ DragDropExport.jsx existe",
+                "mode": "Producteur + Influenceur uniquement"
+            }
+        },
+        "features": {
+            "watermark": {
+                "status": "✅ WatermarkEditor.jsx implémenté",
+                "position": "Paramétrable (x, y)",
+                "opacity": "Paramétrable",
+                "types": "text, image"
+            },
+            "quality": {
+                "status": "⚠️ Limité",
+                "scale": "html2canvas scale=2",
+                "dpi": "Non géré (web standard 96dpi)"
+            },
+            "sharing": {
+                "status": "⚠️ Boutons existent mais actions non implémentées",
+                "networks": "Twitter, Instagram, Facebook, Reddit (UI presente)"
+            }
+        },
+        "missing_critical": [
+            "Sélection format (1:1, 16:9, A4, 9:16) non fonctionnelle",
+            "Pagination multi-pages non implémentée",
+            "Arbre généalogique non inclus dans export",
+            "Pipelines GitHub-style non visibles en export",
+            "Export PDF qualité insuffisante",
+            "Export SVG incomplet",
+            "Export GIF pipeline non complètement fonctionnel",
+            "CSV/JSON/HTML absents"
+        ]
+    },
+    "presets": {
+        "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+        "database": "server-new/routes/presets.js",
+        "types": [
+            "field (valeur simple ou preset)",
+            "grouped (groupe de champs)",
+            "pipeline (configuration pipeline entière)"
+        ],
+        "pipeline_types": [
+            "culture",
+            "curing",
+            "separation",
+            "extraction"
+        ],
+        "features": [
+            "Créer/modifier/supprimer presets",
+            "Récupérer presets par type",
+            "Appliquer presets à une review (données auto-fill)",
+            "Partage presets (future feature - pas implémenté)"
+        ]
+    },
+    "library": {
+        "status": "✅ COMPLÈTEMENT IMPLÉMENTÉ",
+        "database": "server-new/routes/library.js",
+        "sections": [
+            {
+                "name": "Templates sauvegardés",
+                "features": [
+                    "Sauvegarder template/config d'export",
+                    "Récupérer templates",
+                    "Modifier/supprimer templates",
+                    "Tags pour organisation",
+                    "Compteur useCount pour statistiques"
+                ]
+            },
+            {
+                "name": "Filigranes",
+                "features": [
+                    "Créer/modifier/supprimer watermarks personnalisés",
+                    "Réutiliser dans exports"
+                ]
+            },
+            {
+                "name": "Données réutilisables",
+                "planned_but_not_imp": [
+                    "Substrats favoris",
+                    "Engrais favoris",
+                    "Équipement (lampes, tentes, etc.)",
+                    "Recettes/formules"
+                ],
+                "note": "Prévu mais peu ou pas implémenté"
+            }
+        ]
+    },
+    "critiques": {
+        "bloquants": [
+            "❌ GRILLE GITHUB-STYLE INEXISTANTE EN FRONTEND: Toute la logique backend existe mais aucune UI pour éditer/visualiser grille 365 cases. C'est un élément clé du cahier des charges.",
+            "❌ PHENOHUNT INCOMPLET: Données d'arbres en state local uniquement, pas de persistance réelle. Édition limitée. Import/export absent.",
+            "❌ EXPORT FORMATS INCOMPLETS: Seulement PNG/JPEG. PDF, SVG, GIF, CSV, JSON, HTML manquent ou sont partiels.",
+            "❌ TEMPLATES D'EXPORT NON FONCTIONNELS: Sélection format, pagination multi-pages, contenu dynamique non opérationnels.",
+            "❌ DONNÉES PIPELINES NON MODIFIABLES EN FRONTEND: Les 9 groupes de données de la culture sont complexes mais UI UnifiedPipeline est trop générique et peu utilisable."
+        ],
+        "majeurs": [
+            "⚠️ SECTIONS VISIBLES MAIS DONNÉES NON PERSISTÉES: Génétiques, Pipelines - frontend affiche les champs mais données ne sauvegardent correctement.",
+            "⚠️ HOOKS/ÉTAT DE FORMULAIRE COMPLEXE: useFlowerForm utilise Zustand mais gestion de state fragmentée entre composants.",
+            "⚠️ VALIDATION BACKEND EXHAUSTIVE MAIS FRONTEND LÉGÈRE: Backend validations complètes mais frontend peu robuste.",
+            "⚠️ ARCHITECTURE COMPOSANTS TOUFFUE: 19 fichiers JSX dont certains 'Optimized' non utilisés. Dead code.",
+            "⚠️ DONNÉES JSON STOCKÉES COMME STRINGS: Approche SQLite par manque de colonnes JSON. Risque d'incohérence."
+        ],
+        "mineurs": [
+            "📝 Versions 'Optimized' des sections non intégrées",
+            "📝 Photos tags système implémenté mais peu utilisé",
+            "📝 Analytics PDF upload fonctionnel mais extraction OCR approximative",
+            "📝 Composants réutilisables (LiquidCard, MultiSelectPills) bons mais style inconsistant",
+            "📝 Pas de tests unitaires/intégration"
+        ]
+    },
+    "synthese_implementation": {
+        "pourcentage": "~65% implémentation fonctionnelle",
+        "status": "MVP en cours - Core features opérationnels, Features avancées incomplètes",
+        "priorites_urgentes": [
+            "1️⃣ Implémenter UI grille GitHub-style (Pipeline visualization)",
+            "2️⃣ Terminer persistance arbres généalogiques (PhenoHunt)",
+            "3️⃣ Rendre templates d'export vraiment dynamiques",
+            "4️⃣ Ajouter formats d'export manquants (CSV, JSON, GIF)",
+            "5️⃣ Refactoriser UnifiedPipeline pour meilleure UX"
+        ],
+        "quick_wins": [
+            "Nettoyer dead code (fichiers Optimized)",
+            "Améliorer validation frontend (echo validations backend)",
+            "Ajouter feedback UX lors save",
+            "Tests e2e sur formulaire fleur"
+        ]
+    }
+}

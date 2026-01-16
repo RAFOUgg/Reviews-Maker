@@ -1,5 +1,7 @@
 # Fleurs (Herbes/Buds) - Documentation Complète
 
+> 📚 **Synthèse Architecture Complète**: Voir [SYNTHESE_ARCHITECTURE.md](SYNTHESE_ARCHITECTURE.md) pour vue globale 9 sections, workflows, intégrations, et roadmap implémentation.
+
 ## 📋 Overview
 
 Type de produit: **Fleurs / Herbes / Buds**
@@ -50,6 +52,8 @@ Type de produit: **Fleurs / Herbes / Buds**
 ### **SECTION 3: PIPELINE CULTURE** ⚙️
 
 **Permissions**: Producteur uniquement
+
+📚 **Documentation Exhaustive**: Voir [SECTION_3_PIPELINE_CULTURE/SECTION_3_DATA_COMPLETE.md](SECTION_3_PIPELINE_CULTURE/SECTION_3_DATA_COMPLETE.md) pour structure JSON complète, modèles Prisma, et détails de tous les 9 groupes de données.
 
 #### Configuration Pipeline
 
