@@ -17,14 +17,14 @@ export { ACCOUNT_TYPES }
  * Limites par type de compte
  */
 export const EXPORT_LIMITS = {
-    [ACCOUNT_TYPES.BETA_TESTER]: {
+    [ACCOUNT_TYPES.ADMIN]: {
         daily: -1,
         templates: -1,
         watermarks: -1,
         reviews: -1,
         savedData: -1
     },
-    [ACCOUNT_TYPES.CONSUMER]: {
+    [ACCOUNT_TYPES.AMATEUR]: {
         daily: 3,
         templates: 3,
         watermarks: 0,
@@ -32,7 +32,7 @@ export const EXPORT_LIMITS = {
         publicReviews: 5,
         savedData: 10
     },
-    [ACCOUNT_TYPES.INFLUENCER]: {
+    [ACCOUNT_TYPES.INFLUENCEUR]: {
         daily: 50,
         templates: 20,
         watermarks: 10,
@@ -40,7 +40,7 @@ export const EXPORT_LIMITS = {
         publicReviews: -1,
         savedData: 100
     },
-    [ACCOUNT_TYPES.PRODUCER]: {
+    [ACCOUNT_TYPES.PRODUCTEUR]: {
         daily: -1,
         templates: -1,
         watermarks: -1,
@@ -49,35 +49,26 @@ export const EXPORT_LIMITS = {
         cultivars: -1,
         phenoProjects: -1
     },
-    [ACCOUNT_TYPES.MERCHANT]: {
-        daily: -1,
-        templates: -1,
-        watermarks: -1,
-        reviews: -1,
-        savedData: -1
-    },
 };
 
 /**
  * Formats d'export autorisés par type de compte
  */
 export const EXPORT_FORMATS = {
-    [ACCOUNT_TYPES.BETA_TESTER]: ['png', 'jpeg', 'pdf', 'svg', 'csv', 'json', 'html', 'gif'],
-    [ACCOUNT_TYPES.CONSUMER]: ['png', 'jpeg', 'pdf'],
-    [ACCOUNT_TYPES.INFLUENCER]: ['png', 'jpeg', 'pdf', 'svg', 'gif'],
-    [ACCOUNT_TYPES.PRODUCER]: ['png', 'jpeg', 'pdf', 'svg', 'csv', 'json', 'html', 'gif'],
-    [ACCOUNT_TYPES.MERCHANT]: ['png', 'jpeg', 'pdf', 'svg', 'csv', 'json', 'html'],
+    [ACCOUNT_TYPES.ADMIN]: ['png', 'jpeg', 'pdf', 'svg', 'csv', 'json', 'html', 'gif'],
+    [ACCOUNT_TYPES.AMATEUR]: ['png', 'jpeg', 'pdf'],
+    [ACCOUNT_TYPES.INFLUENCEUR]: ['png', 'jpeg', 'pdf', 'svg', 'gif'],
+    [ACCOUNT_TYPES.PRODUCTEUR]: ['png', 'jpeg', 'pdf', 'svg', 'csv', 'json', 'html', 'gif'],
 };
 
 /**
  * Qualité export (DPI) selon type de compte
  */
 export const EXPORT_DPI = {
-    [ACCOUNT_TYPES.BETA_TESTER]: 300,
-    [ACCOUNT_TYPES.CONSUMER]: 150,
-    [ACCOUNT_TYPES.INFLUENCER]: 300,
-    [ACCOUNT_TYPES.PRODUCER]: 300,
-    [ACCOUNT_TYPES.MERCHANT]: 300,
+    [ACCOUNT_TYPES.ADMIN]: 300,
+    [ACCOUNT_TYPES.AMATEUR]: 150,
+    [ACCOUNT_TYPES.INFLUENCEUR]: 300,
+    [ACCOUNT_TYPES.PRODUCTEUR]: 300,
 };
 
 /**
@@ -94,8 +85,8 @@ export function canAccessFeature(user, feature, options = {}) {
 
     const accountType = getUserAccountType(user);
 
-    // Beta testers : accès complet à tout
-    if (accountType === ACCOUNT_TYPES.BETA_TESTER) {
+    // Admins : accès complet à tout
+    if (accountType === ACCOUNT_TYPES.ADMIN) {
         return { allowed: true, accountType };
     }
 
@@ -103,7 +94,7 @@ export function canAccessFeature(user, feature, options = {}) {
         // Templates personnalisés (drag & drop)
         case 'template_custom':
         case 'template_drag_drop':
-            if (accountType === ACCOUNT_TYPES.PRODUCER || accountType === ACCOUNT_TYPES.MERCHANT) {
+            if (accountType === ACCOUNT_TYPES.PRODUCTEUR || accountType === ACCOUNT_TYPES.ADMIN) {
                 return { allowed: true, accountType };
             }
             return {
@@ -115,9 +106,9 @@ export function canAccessFeature(user, feature, options = {}) {
         // Export haute qualité (300dpi)
         case 'export_high_quality':
             const allowedAccounts = [
-                ACCOUNT_TYPES.INFLUENCER,
-                ACCOUNT_TYPES.PRODUCER,
-                ACCOUNT_TYPES.MERCHANT
+                ACCOUNT_TYPES.INFLUENCEUR,
+                ACCOUNT_TYPES.PRODUCTEUR,
+                ACCOUNT_TYPES.ADMIN
             ];
 
             if (allowedAccounts.includes(accountType)) {
@@ -137,7 +128,7 @@ export function canAccessFeature(user, feature, options = {}) {
 
         // Vérification format export
         case 'export_format':
-            const allowedFormats = EXPORT_FORMATS[accountType] || EXPORT_FORMATS[ACCOUNT_TYPES.CONSUMER];
+            const allowedFormats = EXPORT_FORMATS[accountType] || EXPORT_FORMATS[ACCOUNT_TYPES.AMATEUR];
             const requestedFormat = options.format?.toLowerCase();
 
             if (!requestedFormat) {
@@ -168,7 +159,7 @@ export function canAccessFeature(user, feature, options = {}) {
         case 'pipeline_culture':
         case 'pipeline_extraction':
         case 'pipeline_advanced':
-            if (accountType === ACCOUNT_TYPES.PRODUCER || accountType === ACCOUNT_TYPES.MERCHANT) {
+            if (accountType === ACCOUNT_TYPES.PRODUCTEUR || accountType === ACCOUNT_TYPES.ADMIN) {
                 return { allowed: true, accountType };
             }
             return {
@@ -181,7 +172,7 @@ export function canAccessFeature(user, feature, options = {}) {
         case 'genetics_canvas':
         case 'genetics_library':
         case 'pheno_hunt':
-            if (accountType === ACCOUNT_TYPES.PRODUCER || accountType === ACCOUNT_TYPES.MERCHANT) {
+            if (accountType === ACCOUNT_TYPES.PRODUCTEUR || accountType === ACCOUNT_TYPES.ADMIN) {
                 return { allowed: true, accountType };
             }
             return {
@@ -192,7 +183,7 @@ export function canAccessFeature(user, feature, options = {}) {
 
         // Bibliothèque templates
         case 'library_templates':
-            const templateLimits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.CONSUMER];
+            const templateLimits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.AMATEUR];
             const currentTemplateCount = options.currentCount || 0;
 
             if (templateLimits.templates === -1) {
@@ -210,7 +201,7 @@ export function canAccessFeature(user, feature, options = {}) {
                     reason: `Limite de ${templateLimits.templates} templates atteinte`,
                     limit: templateLimits.templates,
                     current: currentTemplateCount,
-                    upgradeRequired: accountType === ACCOUNT_TYPES.CONSUMER ? 'influencer' : 'producer'
+                    upgradeRequired: accountType === ACCOUNT_TYPES.AMATEUR ? 'influencer' : 'producer'
                 };
             }
 
@@ -224,7 +215,7 @@ export function canAccessFeature(user, feature, options = {}) {
 
         // Bibliothèque watermarks (filigranes)
         case 'library_watermarks':
-            const watermarkLimits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.CONSUMER];
+            const watermarkLimits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.AMATEUR];
             const currentWatermarkCount = options.currentCount || 0;
 
             if (watermarkLimits.watermarks === -1) {
@@ -256,7 +247,7 @@ export function canAccessFeature(user, feature, options = {}) {
 
         // Bibliothèque saved data (substrats, engrais, etc.)
         case 'library_saved_data':
-            const dataLimits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.CONSUMER];
+            const dataLimits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.AMATEUR];
             const currentDataCount = options.currentCount || 0;
 
             if (dataLimits.savedData === -1) {
@@ -274,7 +265,7 @@ export function canAccessFeature(user, feature, options = {}) {
                     reason: `Limite de ${dataLimits.savedData} données sauvegardées atteinte`,
                     limit: dataLimits.savedData,
                     current: currentDataCount,
-                    upgradeRequired: accountType === ACCOUNT_TYPES.CONSUMER ? 'influencer' : 'producer'
+                    upgradeRequired: accountType === ACCOUNT_TYPES.AMATEUR ? 'influencer' : 'producer'
                 };
             }
 
@@ -288,7 +279,7 @@ export function canAccessFeature(user, feature, options = {}) {
 
         // Limite quotidienne exports
         case 'daily_exports':
-            const exportLimits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.CONSUMER];
+            const exportLimits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.AMATEUR];
             const todayExports = options.todayCount || 0;
 
             if (exportLimits.daily === -1) {
@@ -307,7 +298,7 @@ export function canAccessFeature(user, feature, options = {}) {
                     limit: exportLimits.daily,
                     current: todayExports,
                     resetTime: options.resetTime || null,
-                    upgradeRequired: accountType === ACCOUNT_TYPES.CONSUMER ? 'influencer' : 'producer'
+                    upgradeRequired: accountType === ACCOUNT_TYPES.AMATEUR ? 'influencer' : 'producer'
                 };
             }
 
@@ -322,9 +313,9 @@ export function canAccessFeature(user, feature, options = {}) {
         // Filigrane personnalisé (Influencer+)
         case 'watermark_custom':
             const influencerAccounts = [
-                ACCOUNT_TYPES.INFLUENCER,
-                ACCOUNT_TYPES.PRODUCER,
-                ACCOUNT_TYPES.MERCHANT
+                ACCOUNT_TYPES.INFLUENCEUR,
+                ACCOUNT_TYPES.PRODUCTEUR,
+                ACCOUNT_TYPES.ADMIN
             ];
 
             if (influencerAccounts.includes(accountType)) {
@@ -343,9 +334,9 @@ export function canAccessFeature(user, feature, options = {}) {
         case 'stats_engagement':
         case 'stats_exports':
             const statsAccounts = [
-                ACCOUNT_TYPES.INFLUENCER,
-                ACCOUNT_TYPES.PRODUCER,
-                ACCOUNT_TYPES.MERCHANT
+                ACCOUNT_TYPES.INFLUENCEUR,
+                ACCOUNT_TYPES.PRODUCTEUR,
+                ACCOUNT_TYPES.ADMIN
             ];
 
             if (statsAccounts.includes(accountType)) {
@@ -362,7 +353,7 @@ export function canAccessFeature(user, feature, options = {}) {
         case 'stats_producer':
         case 'stats_cultures':
         case 'stats_yields':
-            if (accountType === ACCOUNT_TYPES.PRODUCER || accountType === ACCOUNT_TYPES.MERCHANT) {
+            if (accountType === ACCOUNT_TYPES.PRODUCTEUR || accountType === ACCOUNT_TYPES.ADMIN) {
                 return { allowed: true, accountType };
             }
             return {
@@ -374,7 +365,7 @@ export function canAccessFeature(user, feature, options = {}) {
         // Branding entreprise (logo, etc.)
         case 'branding':
         case 'company_logo':
-            if (accountType === ACCOUNT_TYPES.PRODUCER || accountType === ACCOUNT_TYPES.MERCHANT) {
+            if (accountType === ACCOUNT_TYPES.PRODUCTEUR || accountType === ACCOUNT_TYPES.ADMIN) {
                 return { allowed: true, accountType };
             }
             return {
@@ -386,9 +377,9 @@ export function canAccessFeature(user, feature, options = {}) {
         // Partage réseaux sociaux (API)
         case 'social_sharing':
             const socialAccounts = [
-                ACCOUNT_TYPES.INFLUENCER,
-                ACCOUNT_TYPES.PRODUCER,
-                ACCOUNT_TYPES.MERCHANT
+                ACCOUNT_TYPES.INFLUENCEUR,
+                ACCOUNT_TYPES.PRODUCTEUR,
+                ACCOUNT_TYPES.ADMIN
             ];
 
             if (socialAccounts.includes(accountType)) {
@@ -498,7 +489,7 @@ export function requirePhenoHunt(req, res, next) {
     }
 
     const accountType = getUserAccountType(req.user);
-    const allowedTypes = [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT, ACCOUNT_TYPES.BETA_TESTER];
+    const allowedTypes = [ACCOUNT_TYPES.PRODUCTEUR, ACCOUNT_TYPES.ADMIN];
     
     if (!allowedTypes.includes(accountType)) {
         return res.status(403).json({
@@ -521,9 +512,9 @@ export function requireActiveSubscription(req, res, next) {
     }
 
     const accountType = getUserAccountType(req.user);
-    const isPaid = [ACCOUNT_TYPES.INFLUENCER, ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType);
+    const isPaid = [ACCOUNT_TYPES.INFLUENCEUR, ACCOUNT_TYPES.PRODUCTEUR, ACCOUNT_TYPES.ADMIN].includes(accountType);
     
-    if (!isPaid && accountType !== ACCOUNT_TYPES.BETA_TESTER) {
+    if (!isPaid && accountType !== ACCOUNT_TYPES.ADMIN) {
         return res.status(403).json({
             error: 'This feature requires an active subscription',
             code: 'SUBSCRIPTION_REQUIRED'
@@ -540,20 +531,20 @@ export function requireActiveSubscription(req, res, next) {
  * @returns {boolean} True si accès autorisé
  */
 export function canAccessSection(accountType, section) {
-    // Beta testers ont accès à tout
-    if (accountType === ACCOUNT_TYPES.BETA_TESTER) {
+    // Admins ont accès à tout
+    if (accountType === ACCOUNT_TYPES.ADMIN) {
         return true;
     }
 
     // Restriction par section
     const sectionRestrictions = {
-        genetic: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
-        pipeline_culture: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
-        pipeline_extraction: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
-        pipeline_curing: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
-        phenohunt: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
-        branding: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
-        advanced_export: [ACCOUNT_TYPES.INFLUENCER, ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT]
+        genetic: [ACCOUNT_TYPES.PRODUCTEUR, ACCOUNT_TYPES.ADMIN],
+        pipeline_culture: [ACCOUNT_TYPES.PRODUCTEUR, ACCOUNT_TYPES.ADMIN],
+        pipeline_extraction: [ACCOUNT_TYPES.PRODUCTEUR, ACCOUNT_TYPES.ADMIN],
+        pipeline_curing: [ACCOUNT_TYPES.PRODUCTEUR, ACCOUNT_TYPES.ADMIN],
+        phenohunt: [ACCOUNT_TYPES.PRODUCTEUR, ACCOUNT_TYPES.ADMIN],
+        branding: [ACCOUNT_TYPES.PRODUCTEUR, ACCOUNT_TYPES.ADMIN],
+        advanced_export: [ACCOUNT_TYPES.INFLUENCEUR, ACCOUNT_TYPES.PRODUCTEUR, ACCOUNT_TYPES.ADMIN]
     };
 
     const allowedAccountTypes = sectionRestrictions[section] || [];
@@ -567,9 +558,9 @@ export function canAccessSection(accountType, section) {
  */
 export function getUserLimits(user) {
     const accountType = getUserAccountType(user);
-    const limits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.CONSUMER];
-    const formats = EXPORT_FORMATS[accountType] || EXPORT_FORMATS[ACCOUNT_TYPES.CONSUMER];
-    const dpi = EXPORT_DPI[accountType] || EXPORT_DPI[ACCOUNT_TYPES.CONSUMER];
+    const limits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.AMATEUR];
+    const formats = EXPORT_FORMATS[accountType] || EXPORT_FORMATS[ACCOUNT_TYPES.AMATEUR];
+    const dpi = EXPORT_DPI[accountType] || EXPORT_DPI[ACCOUNT_TYPES.AMATEUR];
 
     return {
         accountType,
@@ -577,20 +568,20 @@ export function getUserLimits(user) {
         formats,
         dpi,
         features: {
-            customTemplates: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
+            customTemplates: [ACCOUNT_TYPES.PRODUCTEUR, ACCOUNT_TYPES.ADMIN].includes(accountType),
             highQualityExport: [
-                ACCOUNT_TYPES.INFLUENCER,
-                ACCOUNT_TYPES.PRODUCER,
-                ACCOUNT_TYPES.MERCHANT
+                ACCOUNT_TYPES.INFLUENCEUR,
+                ACCOUNT_TYPES.PRODUCTEUR,
+                ACCOUNT_TYPES.ADMIN
             ].includes(accountType),
             advancedStats: [
-                ACCOUNT_TYPES.INFLUENCER,
-                ACCOUNT_TYPES.PRODUCER,
-                ACCOUNT_TYPES.MERCHANT
+                ACCOUNT_TYPES.INFLUENCEUR,
+                ACCOUNT_TYPES.PRODUCTEUR,
+                ACCOUNT_TYPES.ADMIN
             ].includes(accountType),
-            pipelines: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
-            genetics: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
-            branding: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
+            pipelines: [ACCOUNT_TYPES.PRODUCTEUR, ACCOUNT_TYPES.ADMIN].includes(accountType),
+            genetics: [ACCOUNT_TYPES.PRODUCTEUR, ACCOUNT_TYPES.ADMIN].includes(accountType),
+            branding: [ACCOUNT_TYPES.PRODUCTEUR, ACCOUNT_TYPES.ADMIN].includes(accountType),
         }
     };
 }
@@ -611,7 +602,7 @@ export async function checkAndIncrementDailyExports(prisma, userId) {
     }
 
     const accountType = getUserAccountType(user);
-    const limits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.CONSUMER];
+    const limits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.AMATEUR];
 
     // Pas de limite pour certains comptes
     if (limits.daily === -1) {
