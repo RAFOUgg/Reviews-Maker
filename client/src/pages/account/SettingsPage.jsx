@@ -140,19 +140,20 @@ export default function SettingsPage() {
                         {/* Language Selection (Compact) */}
                         <div className="md:col-span-1 flex flex-col justify-center">
                             <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-3">Langue</p>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="grid grid-cols-3 gap-2">
                                 {SUPPORTED_LANGUAGES.map((lang) => (
                                     <button
                                         key={lang.code}
                                         onClick={() => handleLanguageChange(lang.i18nCode)}
-                                        className={`px-3 py-2 rounded-lg font-semibold text-sm transition-all ${
+                                        className={`flex flex-col items-center justify-center p-2 rounded-lg font-semibold transition-all ${
                                             language === lang.i18nCode
-                                                ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-md'
-                                                : 'bg-white/50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700'
+                                                ? 'bg-white dark:bg-gray-700 shadow-md scale-110'
+                                                : 'bg-white/50 dark:bg-gray-700/50 hover:bg-white dark:hover:bg-gray-700'
                                         }`}
                                         title={lang.label}
                                     >
-                                        {lang.flag}
+                                        <span className="text-2xl mb-1">{lang.flag}</span>
+                                        <span className="text-xs font-bold">{lang.code.split('-')[0].toUpperCase()}</span>
                                     </button>
                                 ))}
                             </div>
