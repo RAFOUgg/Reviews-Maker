@@ -50,6 +50,30 @@ const requireAuth = (req, res, next) => {
 }
 
 /**
+ * Middleware pour valider les permissions de section (V1 MVP)
+ */
+const validateSectionPermissions = (req, res, next) => {
+    const { accountType } = req.user || {}
+    const body = req.body || {}
+
+    if (!accountType) {
+        return res.status(401).json({ error: 'Account type not determined' })
+    }
+
+    // Sections interdites par type de compte (Hash n'a pas les mêmes restrictions que Flowers)
+    // Pour Hash: seuls Producteur peuvent créer des reviews Hash
+    if (accountType !== 'producteur') {
+        return res.status(403).json({
+            error: 'Hash reviews are only available for Producteur accounts',
+            requiredPlan: 'producteur',
+            accountType: accountType
+        });
+    }
+
+    next()
+};
+
+/**
  * Validation des données HashReview
  */
 function validateHashReviewData(data) {
@@ -321,7 +345,11 @@ function validateHashReviewData(data) {
  * POST /api/hash-reviews
  * Créer une nouvelle HashReview
  */
-router.post('/', requireAuth, upload.array('photos', 4), asyncHandler(async (req, res) => {
+router.post('/', 
+    requireAuth, 
+    validateSectionPermissions,  // V1 MVP: Only Producteur can create Hash reviews
+    upload.array('photos', 4), 
+    asyncHandler(async (req, res) => {
     const userId = req.user.id
 
     // Parse body data
@@ -407,7 +435,11 @@ router.get('/:id', asyncHandler(async (req, res) => {
  * PUT /api/hash-reviews/:id
  * Mettre à jour une HashReview
  */
-router.put('/:id', requireAuth, upload.array('photos', 4), asyncHandler(async (req, res) => {
+router.put('/:id', 
+    requireAuth, 
+    validateSectionPermissions,  // V1 MVP: Only Producteur can update Hash reviews
+    upload.array('photos', 4), 
+    asyncHandler(async (req, res) => {
     const reviewId = req.params.id
     const userId = req.user.id
 

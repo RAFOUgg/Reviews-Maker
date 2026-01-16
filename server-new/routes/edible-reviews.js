@@ -50,6 +50,28 @@ const requireAuth = (req, res, next) => {
 }
 
 /**
+ * Middleware pour valider les permissions de section (V1 MVP)
+ */
+const validateSectionPermissions = (req, res, next) => {
+    const { accountType } = req.user || {}
+    
+    if (!accountType) {
+        return res.status(401).json({ error: 'Account type not determined' })
+    }
+
+    // Edible: seuls Producteur peuvent créer des reviews Edible
+    if (accountType !== 'producteur') {
+        return res.status(403).json({
+            error: 'Edible reviews are only available for Producteur accounts',
+            requiredPlan: 'producteur',
+            accountType: accountType
+        });
+    }
+
+    next()
+};
+
+/**
  * Validation des données EdibleReview
  */
 function validateEdibleReviewData(data) {
@@ -160,7 +182,11 @@ function validateEdibleReviewData(data) {
  * POST /api/edible-reviews
  * Créer une nouvelle EdibleReview
  */
-router.post('/', requireAuth, upload.array('photos', 4), asyncHandler(async (req, res) => {
+router.post('/', 
+    requireAuth, 
+    validateSectionPermissions,  // V1 MVP: Only Producteur can create Edible reviews
+    upload.array('photos', 4), 
+    asyncHandler(async (req, res) => {
     const userId = req.user.id
 
     let bodyData = {}
@@ -239,7 +265,11 @@ router.get('/:id', asyncHandler(async (req, res) => {
 /**
  * PUT /api/edible-reviews/:id
  */
-router.put('/:id', requireAuth, upload.array('photos', 4), asyncHandler(async (req, res) => {
+router.put('/:id', 
+    requireAuth, 
+    validateSectionPermissions,  // V1 MVP: Only Producteur can update Edible reviews
+    upload.array('photos', 4), 
+    asyncHandler(async (req, res) => {
     const reviewId = req.params.id
     const userId = req.user.id
 

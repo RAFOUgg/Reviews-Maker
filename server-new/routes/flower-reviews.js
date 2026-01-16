@@ -56,6 +56,62 @@ const requireAuth = (req, res, next) => {
 }
 
 /**
+ * Middleware pour valider les permissions de section (V1 MVP)
+ * Vérifie que l'utilisateur peut créer/mettre à jour les sections demandées
+ * selon son type de compte
+ */
+const validateSectionPermissions = (req, res, next) => {
+    const { accountType } = req.user || {}
+    const body = req.body || {}
+
+    if (!accountType) {
+        return res.status(401).json({ error: 'Account type not determined' })
+    }
+
+    // Sections interdites par type de compte (V1 MVP)
+    const forbiddenSections = {
+        'amateur': [
+            'breeder', 'variety', 'genetics', 'phenoType', // Section 2: Génétiques
+            'pipelineData', 'culture', // Section 3: Culture & Pipeline
+            'pipelineCuring' // Section 10: Curing/Maturation
+        ],
+        'influenceur': [
+            'pipelineData', 'culture', // Section 3: Culture Pipeline
+            'phenoHuntTreeId', 'phenoHuntData' // PhenoHunt spécifiquement
+        ]
+        // 'producteur': aucune restriction
+    };
+
+    const notAllowed = forbiddenSections[accountType] || [];
+
+    // Vérifier si une section interdite est présente
+    for (const section of notAllowed) {
+        if (body[section] !== undefined && body[section] !== null) {
+            const sectionLabel = {
+                'breeder': 'Genetics',
+                'variety': 'Genetics',
+                'genetics': 'Genetics',
+                'phenoType': 'Genetics',
+                'pipelineData': 'Culture Pipeline',
+                'culture': 'Culture Pipeline',
+                'pipelineCuring': 'Curing/Maturation Pipeline',
+                'phenoHuntTreeId': 'PhenoHunt',
+                'phenoHuntData': 'PhenoHunt'
+            }[section] || section;
+
+            return res.status(403).json({
+                error: `Section "${sectionLabel}" is not available for ${accountType} accounts`,
+                requiredPlan: 'producteur',
+                section: section,
+                accountType: accountType
+            });
+        }
+    }
+
+    next()
+};
+
+/**
  * Validation des données FlowerReview
  * @param {Object} data - Données à valider
  * @returns {Object} { valid: boolean, errors: string[], cleaned: Object }
@@ -342,6 +398,7 @@ function validateFlowerReviewData(data) {
 // ===== POST /api/reviews/flower - Créer une review Fleur complète =====
 router.post('/',
     requireAuth,
+    validateSectionPermissions,  // V1 MVP: Check section-level permissions
     requireSectionAccess('info'),  // Check: can access basic sections
     requireActiveSubscription,     // Check: subscription active for paid tiers
     upload.fields([
@@ -518,9 +575,12 @@ router.get('/:id', asyncHandler(async (req, res) => {
     let formattedReview = formatReview(review, currentUser)
     formattedReview = liftOrchardFromExtra(formattedReview)
 
-    // Parser les JSON strings pour le frontend
+    // V1 MVP: Filtrer les sections selon le type de compte du viewer
+    const viewerAccountType = currentUser?.accountType || 'amateur';
+    
     if (review.flowerData) {
-        formattedReview.flowerData = {
+        // Parser les JSON strings pour le frontend
+        let flowerData = {
             ...review.flowerData,
             terpeneProfile: review.flowerData.terpeneProfile ? JSON.parse(review.flowerData.terpeneProfile) : null,
             nuancierColors: review.flowerData.nuancierColors ? JSON.parse(review.flowerData.nuancierColors) : null,
@@ -530,7 +590,30 @@ router.get('/:id', asyncHandler(async (req, res) => {
             goutsInhalation: review.flowerData.goutsInhalation ? JSON.parse(review.flowerData.goutsInhalation) : null,
             goutsExpiration: review.flowerData.goutsExpiration ? JSON.parse(review.flowerData.goutsExpiration) : null,
             effetsSelectionnes: review.flowerData.effetsSelectionnes ? JSON.parse(review.flowerData.effetsSelectionnes) : null
+        };
+
+        // Amateur: Masquer Génétiques, Culture Pipeline, Curing
+        if (viewerAccountType === 'amateur') {
+            flowerData.breeder = null;
+            flowerData.variety = null;
+            flowerData.genetics = null;
+            flowerData.phenoType = null;
+            flowerData.pipelineData = null;
+            flowerData.culture = null;
+            flowerData.pipelineCuring = null;
+            flowerData.phenoHuntTreeId = null;
+            flowerData.phenoHuntData = null;
+        } 
+        // Influenceur: Masquer Culture Pipeline et PhenoHunt
+        else if (viewerAccountType === 'influenceur') {
+            flowerData.pipelineData = null;
+            flowerData.culture = null;
+            flowerData.phenoHuntTreeId = null;
+            flowerData.phenoHuntData = null;
         }
+        // Producteur: Aucun masquage
+
+        formattedReview.flowerData = flowerData;
     }
 
     res.json(formattedReview)
@@ -539,6 +622,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
 // ===== PUT /api/reviews/flower/:id - Mettre à jour une review Fleur =====
 router.put('/:id',
     requireAuth,
+    validateSectionPermissions,  // V1 MVP: Check section-level permissions
     requireActiveSubscription,
     upload.fields([
         { name: 'images', maxCount: 4 },

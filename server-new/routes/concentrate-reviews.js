@@ -50,6 +50,28 @@ const requireAuth = (req, res, next) => {
 }
 
 /**
+ * Middleware pour valider les permissions de section (V1 MVP)
+ */
+const validateSectionPermissions = (req, res, next) => {
+    const { accountType } = req.user || {}
+    
+    if (!accountType) {
+        return res.status(401).json({ error: 'Account type not determined' })
+    }
+
+    // Concentré: seuls Producteur peuvent créer des reviews Concentré
+    if (accountType !== 'producteur') {
+        return res.status(403).json({
+            error: 'Concentrate reviews are only available for Producteur accounts',
+            requiredPlan: 'producteur',
+            accountType: accountType
+        });
+    }
+
+    next()
+};
+
+/**
  * Validation des données ConcentrateReview
  */
 function validateConcentrateReviewData(data) {
@@ -255,7 +277,11 @@ function validateConcentrateReviewData(data) {
  * POST /api/concentrate-reviews
  * Créer une nouvelle ConcentrateReview
  */
-router.post('/', requireAuth, upload.array('photos', 4), asyncHandler(async (req, res) => {
+router.post('/', 
+    requireAuth, 
+    validateSectionPermissions,  // V1 MVP: Only Producteur can create Concentrate reviews
+    upload.array('photos', 4), 
+    asyncHandler(async (req, res) => {
     const userId = req.user.id
 
     let bodyData = {}
@@ -334,7 +360,11 @@ router.get('/:id', asyncHandler(async (req, res) => {
 /**
  * PUT /api/concentrate-reviews/:id
  */
-router.put('/:id', requireAuth, upload.array('photos', 4), asyncHandler(async (req, res) => {
+router.put('/:id', 
+    requireAuth, 
+    validateSectionPermissions,  // V1 MVP: Only Producteur can update Concentrate reviews
+    upload.array('photos', 4), 
+    asyncHandler(async (req, res) => {
     const reviewId = req.params.id
     const userId = req.user.id
 
