@@ -7,11 +7,11 @@ import { prisma } from '../server.js'
 import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } from '../utils/errorHandler.js'
 import { formatReview, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
 import { validateReviewId } from '../utils/validation.js'
-import { 
-  requireSectionAccess, 
-  requirePhenoHunt, 
-  requireActiveSubscription,
-  canAccessSection 
+import {
+    requireSectionAccess,
+    requirePhenoHunt,
+    requireActiveSubscription,
+    canAccessSection
 } from '../middleware/permissions.js'
 
 const router = express.Router()
@@ -340,137 +340,137 @@ function validateFlowerReviewData(data) {
 }
 
 // ===== POST /api/reviews/flower - Créer une review Fleur complète =====
-router.post('/', 
-  requireAuth, 
-  requireSectionAccess('info'),  // Check: can access basic sections
-  requireActiveSubscription,     // Check: subscription active for paid tiers
-  upload.fields([
-    { name: 'images', maxCount: 4 }, // Photos produit (max 4)
-    { name: 'analyticsPdf', maxCount: 1 } // PDF analytics (optionnel)
-  ]), asyncHandler(async (req, res) => {
-    console.log('🌿 Creating FlowerReview with data:', JSON.stringify(req.body, null, 2))
-    console.log('📎 Files uploaded:', req.files)
+router.post('/',
+    requireAuth,
+    requireSectionAccess('info'),  // Check: can access basic sections
+    requireActiveSubscription,     // Check: subscription active for paid tiers
+    upload.fields([
+        { name: 'images', maxCount: 4 }, // Photos produit (max 4)
+        { name: 'analyticsPdf', maxCount: 1 } // PDF analytics (optionnel)
+    ]), asyncHandler(async (req, res) => {
+        console.log('🌿 Creating FlowerReview with data:', JSON.stringify(req.body, null, 2))
+        console.log('📎 Files uploaded:', req.files)
 
-    // Valider les données FlowerReview
-    const validation = validateFlowerReviewData(req.body)
+        // Valider les données FlowerReview
+        const validation = validateFlowerReviewData(req.body)
 
-    if (!validation.valid) {
-        throw Errors.VALIDATION_ERROR(validation.errors)
-    }
+        if (!validation.valid) {
+            throw Errors.VALIDATION_ERROR(validation.errors)
+        }
 
-    // Traiter les images uploadées
-    const imageFiles = req.files?.images || []
-    const imageFilenames = imageFiles.map(file => file.filename)
+        // Traiter les images uploadées
+        const imageFiles = req.files?.images || []
+        const imageFilenames = imageFiles.map(file => file.filename)
 
-    // Au moins une image requise
-    if (imageFilenames.length === 0) {
-        throw Errors.MISSING_FIELD('images')
-    }
+        // Au moins une image requise
+        if (imageFilenames.length === 0) {
+            throw Errors.MISSING_FIELD('images')
+        }
 
-    // Photos produit (max 4)
-    const photo1 = imageFilenames[0] || null
-    const photo2 = imageFilenames[1] || null
-    const photo3 = imageFilenames[2] || null
-    const photo4 = imageFilenames[3] || null
+        // Photos produit (max 4)
+        const photo1 = imageFilenames[0] || null
+        const photo2 = imageFilenames[1] || null
+        const photo3 = imageFilenames[2] || null
+        const photo4 = imageFilenames[3] || null
 
-    // PDF analytics (optionnel)
-    const pdfFile = req.files?.analyticsPdf?.[0]
-    const analyticsPdfUrl = pdfFile ? pdfFile.filename : null
+        // PDF analytics (optionnel)
+        const pdfFile = req.files?.analyticsPdf?.[0]
+        const analyticsPdfUrl = pdfFile ? pdfFile.filename : null
 
-    // Créer la Review de base (compatible avec système existant)
-    const baseReviewData = {
-        holderName: validation.cleaned.nomCommercial, // Map nomCommercial vers holderName
-        type: 'Fleurs', // Type de produit
-        description: req.body.description || '', // Description générale (optionnel)
-        images: imageFilenames,
-        mainImage: imageFilenames[0],
-        authorId: req.user.id,
-        isPublic: req.body.isPublic !== undefined ? (req.body.isPublic === 'true' || req.body.isPublic === true) : true,
-        extraData: JSON.stringify({}) // Peut contenir orchardConfig/orchardPreset si besoin
-    }
+        // Créer la Review de base (compatible avec système existant)
+        const baseReviewData = {
+            holderName: validation.cleaned.nomCommercial, // Map nomCommercial vers holderName
+            type: 'Fleurs', // Type de produit
+            description: req.body.description || '', // Description générale (optionnel)
+            images: imageFilenames,
+            mainImage: imageFilenames[0],
+            authorId: req.user.id,
+            isPublic: req.body.isPublic !== undefined ? (req.body.isPublic === 'true' || req.body.isPublic === true) : true,
+            extraData: JSON.stringify({}) // Peut contenir orchardConfig/orchardPreset si besoin
+        }
 
-    // Créer la Review + FlowerReview dans une transaction
-    const result = await prisma.$transaction(async (tx) => {
-        // 1. Créer la Review de base
-        const review = await tx.review.create({
-            data: baseReviewData,
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatar: true,
-                        discordId: true
+        // Créer la Review + FlowerReview dans une transaction
+        const result = await prisma.$transaction(async (tx) => {
+            // 1. Créer la Review de base
+            const review = await tx.review.create({
+                data: baseReviewData,
+                include: {
+                    author: {
+                        select: {
+                            id: true,
+                            username: true,
+                            avatar: true,
+                            discordId: true
+                        }
                     }
                 }
+            })
+
+            // 2. Créer la FlowerReview liée
+            const flowerReviewData = {
+                reviewId: review.id,
+                ...validation.cleaned,
+                photo1,
+                photo2,
+                photo3,
+                photo4,
+                analyticsPdfUrl
             }
+
+            // Convertir les champs JSON en strings pour Prisma
+            if (flowerReviewData.terpeneProfile && typeof flowerReviewData.terpeneProfile === 'object') {
+                flowerReviewData.terpeneProfile = JSON.stringify(flowerReviewData.terpeneProfile)
+            }
+            if (flowerReviewData.nuancierColors && Array.isArray(flowerReviewData.nuancierColors)) {
+                flowerReviewData.nuancierColors = JSON.stringify(flowerReviewData.nuancierColors)
+            }
+            if (flowerReviewData.odeursDominantes && Array.isArray(flowerReviewData.odeursDominantes)) {
+                flowerReviewData.odeursDominantes = JSON.stringify(flowerReviewData.odeursDominantes)
+            }
+            if (flowerReviewData.odeursSecondaires && Array.isArray(flowerReviewData.odeursSecondaires)) {
+                flowerReviewData.odeursSecondaires = JSON.stringify(flowerReviewData.odeursSecondaires)
+            }
+            if (flowerReviewData.goutsDryPuff && Array.isArray(flowerReviewData.goutsDryPuff)) {
+                flowerReviewData.goutsDryPuff = JSON.stringify(flowerReviewData.goutsDryPuff)
+            }
+            if (flowerReviewData.goutsInhalation && Array.isArray(flowerReviewData.goutsInhalation)) {
+                flowerReviewData.goutsInhalation = JSON.stringify(flowerReviewData.goutsInhalation)
+            }
+            if (flowerReviewData.goutsExpiration && Array.isArray(flowerReviewData.goutsExpiration)) {
+                flowerReviewData.goutsExpiration = JSON.stringify(flowerReviewData.goutsExpiration)
+            }
+            if (flowerReviewData.effetsSelectionnes && Array.isArray(flowerReviewData.effetsSelectionnes)) {
+                flowerReviewData.effetsSelectionnes = JSON.stringify(flowerReviewData.effetsSelectionnes)
+            }
+
+            const flowerReview = await tx.flowerReview.create({
+                data: flowerReviewData
+            })
+
+            return { review, flowerReview }
         })
 
-        // 2. Créer la FlowerReview liée
-        const flowerReviewData = {
-            reviewId: review.id,
-            ...validation.cleaned,
-            photo1,
-            photo2,
-            photo3,
-            photo4,
-            analyticsPdfUrl
+        // Formater et retourner
+        let formattedReview = formatReview(result.review, req.user)
+        formattedReview = liftOrchardFromExtra(formattedReview)
+
+        // Ajouter les données flowerData dans la réponse
+        formattedReview.flowerData = {
+            ...result.flowerReview,
+            // Parser les JSON strings pour le frontend
+            terpeneProfile: result.flowerReview.terpeneProfile ? JSON.parse(result.flowerReview.terpeneProfile) : null,
+            nuancierColors: result.flowerReview.nuancierColors ? JSON.parse(result.flowerReview.nuancierColors) : null,
+            odeursDominantes: result.flowerReview.odeursDominantes ? JSON.parse(result.flowerReview.odeursDominantes) : null,
+            odeursSecondaires: result.flowerReview.odeursSecondaires ? JSON.parse(result.flowerReview.odeursSecondaires) : null,
+            goutsDryPuff: result.flowerReview.goutsDryPuff ? JSON.parse(result.flowerReview.goutsDryPuff) : null,
+            goutsInhalation: result.flowerReview.goutsInhalation ? JSON.parse(result.flowerReview.goutsInhalation) : null,
+            goutsExpiration: result.flowerReview.goutsExpiration ? JSON.parse(result.flowerReview.goutsExpiration) : null,
+            effetsSelectionnes: result.flowerReview.effetsSelectionnes ? JSON.parse(result.flowerReview.effetsSelectionnes) : null
         }
 
-        // Convertir les champs JSON en strings pour Prisma
-        if (flowerReviewData.terpeneProfile && typeof flowerReviewData.terpeneProfile === 'object') {
-            flowerReviewData.terpeneProfile = JSON.stringify(flowerReviewData.terpeneProfile)
-        }
-        if (flowerReviewData.nuancierColors && Array.isArray(flowerReviewData.nuancierColors)) {
-            flowerReviewData.nuancierColors = JSON.stringify(flowerReviewData.nuancierColors)
-        }
-        if (flowerReviewData.odeursDominantes && Array.isArray(flowerReviewData.odeursDominantes)) {
-            flowerReviewData.odeursDominantes = JSON.stringify(flowerReviewData.odeursDominantes)
-        }
-        if (flowerReviewData.odeursSecondaires && Array.isArray(flowerReviewData.odeursSecondaires)) {
-            flowerReviewData.odeursSecondaires = JSON.stringify(flowerReviewData.odeursSecondaires)
-        }
-        if (flowerReviewData.goutsDryPuff && Array.isArray(flowerReviewData.goutsDryPuff)) {
-            flowerReviewData.goutsDryPuff = JSON.stringify(flowerReviewData.goutsDryPuff)
-        }
-        if (flowerReviewData.goutsInhalation && Array.isArray(flowerReviewData.goutsInhalation)) {
-            flowerReviewData.goutsInhalation = JSON.stringify(flowerReviewData.goutsInhalation)
-        }
-        if (flowerReviewData.goutsExpiration && Array.isArray(flowerReviewData.goutsExpiration)) {
-            flowerReviewData.goutsExpiration = JSON.stringify(flowerReviewData.goutsExpiration)
-        }
-        if (flowerReviewData.effetsSelectionnes && Array.isArray(flowerReviewData.effetsSelectionnes)) {
-            flowerReviewData.effetsSelectionnes = JSON.stringify(flowerReviewData.effetsSelectionnes)
-        }
-
-        const flowerReview = await tx.flowerReview.create({
-            data: flowerReviewData
-        })
-
-        return { review, flowerReview }
-    })
-
-    // Formater et retourner
-    let formattedReview = formatReview(result.review, req.user)
-    formattedReview = liftOrchardFromExtra(formattedReview)
-
-    // Ajouter les données flowerData dans la réponse
-    formattedReview.flowerData = {
-        ...result.flowerReview,
-        // Parser les JSON strings pour le frontend
-        terpeneProfile: result.flowerReview.terpeneProfile ? JSON.parse(result.flowerReview.terpeneProfile) : null,
-        nuancierColors: result.flowerReview.nuancierColors ? JSON.parse(result.flowerReview.nuancierColors) : null,
-        odeursDominantes: result.flowerReview.odeursDominantes ? JSON.parse(result.flowerReview.odeursDominantes) : null,
-        odeursSecondaires: result.flowerReview.odeursSecondaires ? JSON.parse(result.flowerReview.odeursSecondaires) : null,
-        goutsDryPuff: result.flowerReview.goutsDryPuff ? JSON.parse(result.flowerReview.goutsDryPuff) : null,
-        goutsInhalation: result.flowerReview.goutsInhalation ? JSON.parse(result.flowerReview.goutsInhalation) : null,
-        goutsExpiration: result.flowerReview.goutsExpiration ? JSON.parse(result.flowerReview.goutsExpiration) : null,
-        effetsSelectionnes: result.flowerReview.effetsSelectionnes ? JSON.parse(result.flowerReview.effetsSelectionnes) : null
-    }
-
-    console.log('✅ FlowerReview created successfully:', formattedReview.id)
-    res.status(201).json(formattedReview)
-}))
+        console.log('✅ FlowerReview created successfully:', formattedReview.id)
+        res.status(201).json(formattedReview)
+    }))
 
 // ===== GET /api/reviews/flower/:id - Récupérer une review Fleur =====
 router.get('/:id', asyncHandler(async (req, res) => {
@@ -537,187 +537,187 @@ router.get('/:id', asyncHandler(async (req, res) => {
 }))
 
 // ===== PUT /api/reviews/flower/:id - Mettre à jour une review Fleur =====
-router.put('/:id', 
-  requireAuth, 
-  requireActiveSubscription,
-  upload.fields([
-    { name: 'images', maxCount: 4 },
-    { name: 'analyticsPdf', maxCount: 1 }
-  ]), asyncHandler(async (req, res) => {
-    console.log(`🔁 PUT /api/reviews/flower/${req.params.id}`)
+router.put('/:id',
+    requireAuth,
+    requireActiveSubscription,
+    upload.fields([
+        { name: 'images', maxCount: 4 },
+        { name: 'analyticsPdf', maxCount: 1 }
+    ]), asyncHandler(async (req, res) => {
+        console.log(`🔁 PUT /api/reviews/flower/${req.params.id}`)
 
-    // Valider l'ID
-    if (!validateReviewId(req.params.id)) {
-        throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
-    }
-
-    // Récupérer la review existante
-    const review = await prisma.review.findUnique({
-        where: { id: req.params.id },
-        include: { flowerData: true }
-    })
-
-    if (!review) {
-        throw Errors.REVIEW_NOT_FOUND()
-    }
-
-    // Vérifier ownership
-    await requireOwnershipOrThrow(review.authorId, req, 'review')
-
-    // Vérifier que c'est bien une review Fleurs
-    if (review.type !== 'Fleurs') {
-        throw Errors.INVALID_FIELD('type', 'This review is not a Flower review')
-    }
-
-    // Valider les données FlowerReview
-    const validation = validateFlowerReviewData(req.body)
-
-    if (!validation.valid) {
-        throw Errors.VALIDATION_ERROR(validation.errors)
-    }
-
-    // SPRINT 1: Check section-level permissions
-    // If user is trying to update genetics section, verify access
-    if (req.body.breeder || req.body.variety || req.body.genetics) {
-        if (!canAccessSection(req.user.accountType || 'consumer', 'genetic')) {
-            throw Errors.FORBIDDEN(
-                'Genetics section not available for your account type. Upgrade to Producer to access.'
-            )
+        // Valider l'ID
+        if (!validateReviewId(req.params.id)) {
+            throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
         }
-    }
 
-    // If user is trying to update culture pipeline, verify access
-    if (req.body.pipelineData?.culture) {
-        if (!canAccessSection(req.user.accountType || 'consumer', 'pipeline_culture')) {
-            throw Errors.FORBIDDEN(
-                'Culture Pipeline not available for your account type. Upgrade to Producer to access.'
-            )
-        }
-    }
-
-    // Gérer les images: nouvelles + conserver les existantes
-    const newImageFiles = req.files?.images || []
-    const newImages = newImageFiles.map(file => file.filename)
-
-    // Récupérer les images existantes à conserver
-    let existingImages = []
-    if (req.body.existingImages) {
-        try {
-            existingImages = typeof req.body.existingImages === 'string'
-                ? JSON.parse(req.body.existingImages)
-                : req.body.existingImages
-        } catch (e) {
-            console.warn('Failed to parse existingImages:', e)
-        }
-    }
-
-    // Mapper les photos existantes depuis flowerData
-    const existingPhotos = {
-        photo1: review.flowerData?.photo1 || null,
-        photo2: review.flowerData?.photo2 || null,
-        photo3: review.flowerData?.photo3 || null,
-        photo4: review.flowerData?.photo4 || null
-    }
-
-    // Combiner images existantes + nouvelles
-    const allImages = [...existingImages, ...newImages]
-    const photo1 = allImages[0] || existingPhotos.photo1
-    const photo2 = allImages[1] || existingPhotos.photo2
-    const photo3 = allImages[2] || existingPhotos.photo3
-    const photo4 = allImages[3] || existingPhotos.photo4
-
-    // Gérer le PDF analytics
-    const pdfFile = req.files?.analyticsPdf?.[0]
-    const analyticsPdfUrl = pdfFile ? pdfFile.filename : (review.flowerData?.analyticsPdfUrl || null)
-
-    // Mettre à jour dans une transaction
-    const result = await prisma.$transaction(async (tx) => {
-        // 1. Mettre à jour la Review de base
-        const updatedReview = await tx.review.update({
+        // Récupérer la review existante
+        const review = await prisma.review.findUnique({
             where: { id: req.params.id },
-            data: {
-                holderName: validation.cleaned.nomCommercial,
-                description: req.body.description || review.description,
-                images: allImages,
-                mainImage: allImages[0] || review.mainImage,
-                isPublic: req.body.isPublic !== undefined ? (req.body.isPublic === 'true' || req.body.isPublic === true) : review.isPublic
-            },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatar: true,
-                        discordId: true
+            include: { flowerData: true }
+        })
+
+        if (!review) {
+            throw Errors.REVIEW_NOT_FOUND()
+        }
+
+        // Vérifier ownership
+        await requireOwnershipOrThrow(review.authorId, req, 'review')
+
+        // Vérifier que c'est bien une review Fleurs
+        if (review.type !== 'Fleurs') {
+            throw Errors.INVALID_FIELD('type', 'This review is not a Flower review')
+        }
+
+        // Valider les données FlowerReview
+        const validation = validateFlowerReviewData(req.body)
+
+        if (!validation.valid) {
+            throw Errors.VALIDATION_ERROR(validation.errors)
+        }
+
+        // SPRINT 1: Check section-level permissions
+        // If user is trying to update genetics section, verify access
+        if (req.body.breeder || req.body.variety || req.body.genetics) {
+            if (!canAccessSection(req.user.accountType || 'consumer', 'genetic')) {
+                throw Errors.FORBIDDEN(
+                    'Genetics section not available for your account type. Upgrade to Producer to access.'
+                )
+            }
+        }
+
+        // If user is trying to update culture pipeline, verify access
+        if (req.body.pipelineData?.culture) {
+            if (!canAccessSection(req.user.accountType || 'consumer', 'pipeline_culture')) {
+                throw Errors.FORBIDDEN(
+                    'Culture Pipeline not available for your account type. Upgrade to Producer to access.'
+                )
+            }
+        }
+
+        // Gérer les images: nouvelles + conserver les existantes
+        const newImageFiles = req.files?.images || []
+        const newImages = newImageFiles.map(file => file.filename)
+
+        // Récupérer les images existantes à conserver
+        let existingImages = []
+        if (req.body.existingImages) {
+            try {
+                existingImages = typeof req.body.existingImages === 'string'
+                    ? JSON.parse(req.body.existingImages)
+                    : req.body.existingImages
+            } catch (e) {
+                console.warn('Failed to parse existingImages:', e)
+            }
+        }
+
+        // Mapper les photos existantes depuis flowerData
+        const existingPhotos = {
+            photo1: review.flowerData?.photo1 || null,
+            photo2: review.flowerData?.photo2 || null,
+            photo3: review.flowerData?.photo3 || null,
+            photo4: review.flowerData?.photo4 || null
+        }
+
+        // Combiner images existantes + nouvelles
+        const allImages = [...existingImages, ...newImages]
+        const photo1 = allImages[0] || existingPhotos.photo1
+        const photo2 = allImages[1] || existingPhotos.photo2
+        const photo3 = allImages[2] || existingPhotos.photo3
+        const photo4 = allImages[3] || existingPhotos.photo4
+
+        // Gérer le PDF analytics
+        const pdfFile = req.files?.analyticsPdf?.[0]
+        const analyticsPdfUrl = pdfFile ? pdfFile.filename : (review.flowerData?.analyticsPdfUrl || null)
+
+        // Mettre à jour dans une transaction
+        const result = await prisma.$transaction(async (tx) => {
+            // 1. Mettre à jour la Review de base
+            const updatedReview = await tx.review.update({
+                where: { id: req.params.id },
+                data: {
+                    holderName: validation.cleaned.nomCommercial,
+                    description: req.body.description || review.description,
+                    images: allImages,
+                    mainImage: allImages[0] || review.mainImage,
+                    isPublic: req.body.isPublic !== undefined ? (req.body.isPublic === 'true' || req.body.isPublic === true) : review.isPublic
+                },
+                include: {
+                    author: {
+                        select: {
+                            id: true,
+                            username: true,
+                            avatar: true,
+                            discordId: true
+                        }
                     }
                 }
+            })
+
+            // 2. Mettre à jour la FlowerReview
+            const flowerReviewData = {
+                ...validation.cleaned,
+                photo1,
+                photo2,
+                photo3,
+                photo4,
+                analyticsPdfUrl
             }
+
+            // Convertir les champs JSON en strings
+            if (flowerReviewData.terpeneProfile && typeof flowerReviewData.terpeneProfile === 'object') {
+                flowerReviewData.terpeneProfile = JSON.stringify(flowerReviewData.terpeneProfile)
+            }
+            if (flowerReviewData.nuancierColors && Array.isArray(flowerReviewData.nuancierColors)) {
+                flowerReviewData.nuancierColors = JSON.stringify(flowerReviewData.nuancierColors)
+            }
+            if (flowerReviewData.odeursDominantes && Array.isArray(flowerReviewData.odeursDominantes)) {
+                flowerReviewData.odeursDominantes = JSON.stringify(flowerReviewData.odeursDominantes)
+            }
+            if (flowerReviewData.odeursSecondaires && Array.isArray(flowerReviewData.odeursSecondaires)) {
+                flowerReviewData.odeursSecondaires = JSON.stringify(flowerReviewData.odeursSecondaires)
+            }
+            if (flowerReviewData.goutsDryPuff && Array.isArray(flowerReviewData.goutsDryPuff)) {
+                flowerReviewData.goutsDryPuff = JSON.stringify(flowerReviewData.goutsDryPuff)
+            }
+            if (flowerReviewData.goutsInhalation && Array.isArray(flowerReviewData.goutsInhalation)) {
+                flowerReviewData.goutsInhalation = JSON.stringify(flowerReviewData.goutsInhalation)
+            }
+            if (flowerReviewData.goutsExpiration && Array.isArray(flowerReviewData.goutsExpiration)) {
+                flowerReviewData.goutsExpiration = JSON.stringify(flowerReviewData.goutsExpiration)
+            }
+            if (flowerReviewData.effetsSelectionnes && Array.isArray(flowerReviewData.effetsSelectionnes)) {
+                flowerReviewData.effetsSelectionnes = JSON.stringify(flowerReviewData.effetsSelectionnes)
+            }
+
+            const updatedFlowerReview = await tx.flowerReview.update({
+                where: { reviewId: req.params.id },
+                data: flowerReviewData
+            })
+
+            return { review: updatedReview, flowerReview: updatedFlowerReview }
         })
 
-        // 2. Mettre à jour la FlowerReview
-        const flowerReviewData = {
-            ...validation.cleaned,
-            photo1,
-            photo2,
-            photo3,
-            photo4,
-            analyticsPdfUrl
+        // Formater et retourner
+        let formattedReview = formatReview(result.review, req.user)
+        formattedReview = liftOrchardFromExtra(formattedReview)
+
+        // Ajouter les données flowerData
+        formattedReview.flowerData = {
+            ...result.flowerReview,
+            terpeneProfile: result.flowerReview.terpeneProfile ? JSON.parse(result.flowerReview.terpeneProfile) : null,
+            nuancierColors: result.flowerReview.nuancierColors ? JSON.parse(result.flowerReview.nuancierColors) : null,
+            odeursDominantes: result.flowerReview.odeursDominantes ? JSON.parse(result.flowerReview.odeursDominantes) : null,
+            odeursSecondaires: result.flowerReview.odeursSecondaires ? JSON.parse(result.flowerReview.odeursSecondaires) : null,
+            goutsDryPuff: result.flowerReview.goutsDryPuff ? JSON.parse(result.flowerReview.goutsDryPuff) : null,
+            goutsInhalation: result.flowerReview.goutsInhalation ? JSON.parse(result.flowerReview.goutsInhalation) : null,
+            goutsExpiration: result.flowerReview.goutsExpiration ? JSON.parse(result.flowerReview.goutsExpiration) : null,
+            effetsSelectionnes: result.flowerReview.effetsSelectionnes ? JSON.parse(result.flowerReview.effetsSelectionnes) : null
         }
 
-        // Convertir les champs JSON en strings
-        if (flowerReviewData.terpeneProfile && typeof flowerReviewData.terpeneProfile === 'object') {
-            flowerReviewData.terpeneProfile = JSON.stringify(flowerReviewData.terpeneProfile)
-        }
-        if (flowerReviewData.nuancierColors && Array.isArray(flowerReviewData.nuancierColors)) {
-            flowerReviewData.nuancierColors = JSON.stringify(flowerReviewData.nuancierColors)
-        }
-        if (flowerReviewData.odeursDominantes && Array.isArray(flowerReviewData.odeursDominantes)) {
-            flowerReviewData.odeursDominantes = JSON.stringify(flowerReviewData.odeursDominantes)
-        }
-        if (flowerReviewData.odeursSecondaires && Array.isArray(flowerReviewData.odeursSecondaires)) {
-            flowerReviewData.odeursSecondaires = JSON.stringify(flowerReviewData.odeursSecondaires)
-        }
-        if (flowerReviewData.goutsDryPuff && Array.isArray(flowerReviewData.goutsDryPuff)) {
-            flowerReviewData.goutsDryPuff = JSON.stringify(flowerReviewData.goutsDryPuff)
-        }
-        if (flowerReviewData.goutsInhalation && Array.isArray(flowerReviewData.goutsInhalation)) {
-            flowerReviewData.goutsInhalation = JSON.stringify(flowerReviewData.goutsInhalation)
-        }
-        if (flowerReviewData.goutsExpiration && Array.isArray(flowerReviewData.goutsExpiration)) {
-            flowerReviewData.goutsExpiration = JSON.stringify(flowerReviewData.goutsExpiration)
-        }
-        if (flowerReviewData.effetsSelectionnes && Array.isArray(flowerReviewData.effetsSelectionnes)) {
-            flowerReviewData.effetsSelectionnes = JSON.stringify(flowerReviewData.effetsSelectionnes)
-        }
-
-        const updatedFlowerReview = await tx.flowerReview.update({
-            where: { reviewId: req.params.id },
-            data: flowerReviewData
-        })
-
-        return { review: updatedReview, flowerReview: updatedFlowerReview }
-    })
-
-    // Formater et retourner
-    let formattedReview = formatReview(result.review, req.user)
-    formattedReview = liftOrchardFromExtra(formattedReview)
-
-    // Ajouter les données flowerData
-    formattedReview.flowerData = {
-        ...result.flowerReview,
-        terpeneProfile: result.flowerReview.terpeneProfile ? JSON.parse(result.flowerReview.terpeneProfile) : null,
-        nuancierColors: result.flowerReview.nuancierColors ? JSON.parse(result.flowerReview.nuancierColors) : null,
-        odeursDominantes: result.flowerReview.odeursDominantes ? JSON.parse(result.flowerReview.odeursDominantes) : null,
-        odeursSecondaires: result.flowerReview.odeursSecondaires ? JSON.parse(result.flowerReview.odeursSecondaires) : null,
-        goutsDryPuff: result.flowerReview.goutsDryPuff ? JSON.parse(result.flowerReview.goutsDryPuff) : null,
-        goutsInhalation: result.flowerReview.goutsInhalation ? JSON.parse(result.flowerReview.goutsInhalation) : null,
-        goutsExpiration: result.flowerReview.goutsExpiration ? JSON.parse(result.flowerReview.goutsExpiration) : null,
-        effetsSelectionnes: result.flowerReview.effetsSelectionnes ? JSON.parse(result.flowerReview.effetsSelectionnes) : null
-    }
-
-    console.log('✅ FlowerReview updated successfully:', formattedReview.id)
-    res.json(formattedReview)
-}))
+        console.log('✅ FlowerReview updated successfully:', formattedReview.id)
+        res.json(formattedReview)
+    }))
 
 // ===== DELETE /api/reviews/flower/:id - Supprimer une review Fleur =====
 router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
