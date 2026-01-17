@@ -46,8 +46,8 @@ router.post('/create-checkout', requireAuth, async (req, res) => {
         //         quantity: 1,
         //     }],
         //     mode: 'subscription',
-        //     success_url: `${process.env.CLIENT_URL}/account-setup?success=true`,
-        //     cancel_url: `${process.env.CLIENT_URL}/account-setup?canceled=true`,
+        //     success_url: `${process.env.CLIENT_URL}/payment?success=true`,
+        //     cancel_url: `${process.env.CLIENT_URL}/payment?canceled=true`,
         //     client_reference_id: userId,
         // })
         // res.json({ sessionId: session.id, url: session.url })
@@ -55,7 +55,7 @@ router.post('/create-checkout', requireAuth, async (req, res) => {
         // MOCK pour développement
         res.json({
             sessionId: 'mock_session_' + Date.now(),
-            url: `${process.env.CLIENT_URL}/account-setup?mock_payment=success`,
+            url: `${process.env.CLIENT_URL}/payment?mock_payment=success`,
             message: 'MOCK: Paiement simulé (Stripe non configuré)',
         })
     } catch (error) {
