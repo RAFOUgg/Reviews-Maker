@@ -39,6 +39,9 @@ const AccountPage = () => {
   const navigate = useNavigate()
   const { user, accountType } = useStore()
   
+  // Check if profile is complete
+  const isProfileComplete = user?.birthdate && user?.country
+  
   // Active tab state
   const [activeTab, setActiveTab] = useState('profile')
   
@@ -115,6 +118,54 @@ const AccountPage = () => {
       'Influenceur': 'Influenceur'
     }
     return types[type] || type
+  }
+
+  // ✅ PROFILE INCOMPLETE CHECK
+  if (!isProfileComplete) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 md:p-8 flex items-center justify-center">
+        <div className="max-w-md w-full bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-8">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4v2m0 0H9m0 0h6m0 0v-2m0 2H9" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Complétez votre profil</h2>
+            <p className="text-gray-400 text-sm mb-6">Finalisez votre inscription pour déverrouiller toutes les fonctionnalités.</p>
+          </div>
+
+          <div className="space-y-2 mb-6">
+            {!user?.birthdate && (
+              <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                <span>📅</span>
+                <span>Date de naissance manquante</span>
+              </div>
+            )}
+            {!user?.country && (
+              <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                <span>🌍</span>
+                <span>Pays manquant</span>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={() => navigate('/choose-account')}
+            className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold rounded-lg transition-all shadow-lg"
+          >
+            Compléter mon profil
+          </button>
+
+          <button
+            onClick={() => navigate('/')}
+            className="w-full mt-3 px-6 py-3 bg-gray-700/50 hover:bg-gray-700 text-gray-300 font-medium rounded-lg transition-all"
+          >
+            Retour à l'accueil
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
