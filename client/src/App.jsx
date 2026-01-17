@@ -30,6 +30,7 @@ const EditReviewPage = lazy(() => import('./pages/review/EditReviewPage'))
 const LibraryPage = lazy(() => import('./pages/review/LibraryPage'))
 const GalleryPage = lazy(() => import('./pages/public/GalleryPage'))
 const StatsPage = lazy(() => import('./pages/account/StatsPage'))
+const AccountPage = lazy(() => import('./pages/account/AccountPage'))
 const SettingsPage = lazy(() => import('./pages/account/SettingsPage'))
 const ProfileSettingsPage = lazy(() => import('./pages/account/ProfileSettingsPage'))
 const AccountSetupPage = lazy(() => import('./pages/account/AccountSetupPage'))
@@ -199,3 +200,4 @@ function App() {
 }
 
 export default App
+
