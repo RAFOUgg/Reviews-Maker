@@ -30,6 +30,7 @@ const EditReviewPage = lazy(() => import('./pages/review/EditReviewPage'))
 const LibraryPage = lazy(() => import('./pages/review/LibraryPage'))
 const GalleryPage = lazy(() => import('./pages/public/GalleryPage'))
 const StatsPage = lazy(() => import('./pages/account/StatsPage'))
+const AccountPage = lazy(() => import('./pages/account/AccountPage'))
 const SettingsPage = lazy(() => import('./pages/account/SettingsPage'))
 const ProfilePage = lazy(() => import('./pages/account/ProfilePage'))
 const ProfileSettingsPage = lazy(() => import('./pages/account/ProfileSettingsPage'))
@@ -164,9 +165,7 @@ function App() {
                                     <Route path="/gallery" element={<GalleryPage />} />
                                     <Route path="/stats" element={<StatsPage />} />
                                     <Route path="/profile" element={<ProfilePage />} />
-                                    <Route path="/settings" element={<SettingsPage />} />
-                                    <Route path="/preferences" element={<PreferencesPage />} />
-                                    <Route path="/account" element={<SettingsPage />} />
+                                    <Route path="/account" element={<AccountPage />} />
                                     <Route path="/manage-subscription" element={<ManageSubscription />} />
                                     <Route path="/phenohunt" element={<PhenoHuntPage />} />
                                     <Route path="/genetics" element={<GeneticsManagementPage />} />
