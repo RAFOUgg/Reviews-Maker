@@ -189,6 +189,8 @@ export default function AdminPanel() {
     }
 
     console.log('✅ Rendering AdminPanel - users:', users.length, 'stats:', stats)
+
+    return (
         <div className="admin-panel">
             <div className="admin-header">
                 <h1>Admin Panel</h1>
