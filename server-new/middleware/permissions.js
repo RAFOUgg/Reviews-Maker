@@ -20,7 +20,9 @@ export const requireExportFormat = (formatGetter) => {
     return (req, res, next) => next();
 };
 
-export const requireTemplateAccess = (req, res, next) => next();
+export const requireTemplateAccess = (templateType) => {
+    return (req, res, next) => next();
+};
 
 export const canExportFormat = (format) => true;
 
