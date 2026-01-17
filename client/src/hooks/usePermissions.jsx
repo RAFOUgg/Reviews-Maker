@@ -7,7 +7,6 @@
 
 import React, { useMemo } from 'react'
 import { useStore } from '../store/useStore'
-import { ACCOUNT_TIERS } from '../utils/permissions'
 
 /**
  * Hook: usePermissions
