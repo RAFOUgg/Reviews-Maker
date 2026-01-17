@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, closestCenter } from '@dnd-kit/core';
 import { useOrchardStore } from '../../../store/orchardStore';
+import { normalizeReviewDataByType } from '../../../utils/orchard/normalizeByType';
 import ConfigPane from '../config/ConfigPane';
 import PreviewPane from '../preview/PreviewPane';
 import PagedPreviewPane from './PagedPreviewPane';
@@ -194,7 +195,7 @@ function normalizeReviewData(reviewData) {
     return normalized;
 }
 
-export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
+export default function OrchardPanel({ reviewData, onClose, onPresetApplied, productType = 'flower' }) {
     const [showExportModal, setShowExportModal] = useState(false);
     const [showPreview, setShowPreview] = useState(true);
     const [isCustomMode, setIsCustomMode] = useState(false); // Nouveau: mode template vs custom
@@ -225,14 +226,14 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
 
     useEffect(() => {
         if (reviewData) {
-            // Utiliser la fonction de normalisation centralisée
-            const normalized = normalizeReviewData(reviewData);
+            // Use generic normalization function for any product type
+            const normalized = normalizeReviewDataByType(reviewData, productType);
 
             if (normalized) {
                 setReviewData(normalized);
             }
 
-            // Charger le layout personnalisé s'il existe depuis la review
+            // Load custom layout if it exists
             if (reviewData.orchardCustomLayout) {
                 try {
                     const parsed = typeof reviewData.orchardCustomLayout === 'string'
@@ -244,7 +245,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                 }
             }
 
-            // Si la review a été sauvegardée en mode custom, activer le mode custom
+            // Enable custom mode if review was saved in custom mode
             if (reviewData.orchardLayoutMode === 'custom') {
                 setIsCustomMode(true);
             }
