@@ -8,5 +8,5 @@ export default function AccountSetupPage() {
         navigate('/account', { replace: true })
     }, [navigate])
     
-    return null
+    return <div className="hidden" />
 }
