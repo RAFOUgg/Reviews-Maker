@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../store/useStore'
 import LiquidButton from '../../components/ui/LiquidButton'
 import LiquidCard from '../../components/ui/LiquidCard'
-import LiquidInput from '../../components/ui/LiquidInput'
 import { Award, FileText, Heart, MessageCircle, Download, TrendingUp, Calendar, Star } from 'lucide-react'
 
 /**
@@ -197,6 +196,15 @@ export default function ProfilePage() {
                                         {badge.label}
                                     </span>
                                 ))}
+                            </div>
+
+                            {/* Bouton Gérer l'abonnement */}
+                            <div className="mt-6">
+                                <LiquidButton 
+                                    onClick={() => navigate('/manage-subscription')}
+                                >
+                                    💳 Gérer l'abonnement
+                                </LiquidButton>
                             </div>
                         </div>
                     </div>
