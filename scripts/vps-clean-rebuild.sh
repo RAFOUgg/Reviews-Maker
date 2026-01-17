@@ -83,12 +83,27 @@ ls -lh "$CLIENT_DIR/dist/assets" | grep -E "AccountSetup|AccountPage|\.js$" | he
 # 10. Verify NO old AccountSetupPage chunks
 echo ""
 echo "🔍 Verifying old artifacts are gone..."
-if find "$CLIENT_DIR/dist" -name "*AccountSetup*" 2>/dev/null; then
-    echo "⚠️  WARNING: Old AccountSetup files still found!"
+OLD_SETUP_FILES=$(find "$CLIENT_DIR/dist" -name "*AccountSetup*" 2>/dev/null | wc -l)
+OLD_ACCOUNT_HASHES=$(find "$CLIENT_DIR/dist" -name "*AccountPage-Bs*" -o -name "*AccountPage-COQ*" 2>/dev/null | wc -l)
+
+if [ "$OLD_SETUP_FILES" -gt 0 ]; then
+    echo "⚠️  WARNING: Old AccountSetup files found:"
     find "$CLIENT_DIR/dist" -name "*AccountSetup*" -ls
 else
     echo "✅ No old AccountSetup artifacts found"
 fi
+
+if [ "$OLD_ACCOUNT_HASHES" -gt 0 ]; then
+    echo "⚠️  WARNING: Old AccountPage hashes found:"
+    find "$CLIENT_DIR/dist" -name "*AccountPage-Bs*" -o -name "*AccountPage-COQ*" -ls
+else
+    echo "✅ No old AccountPage hashes found"
+fi
+
+# Show the new AccountPage chunk
+echo ""
+echo "✅ NEW AccountPage chunk in build:"
+ls -lh "$CLIENT_DIR/dist/assets/AccountPage-"*.js 2>/dev/null | awk '{print $9, "(" $5 ")"}'
 
 # 11. Restart services
 echo ""
