@@ -1,39 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useStore } from '../../store/useStore'
-import { CreditCard, FileCheck, CheckCircle2, AlertCircle, Upload } from 'lucide-react'
-import LiquidCard from '../../components/ui/LiquidCard'
-import LiquidButton from '../../components/ui/LiquidButton'
 
 /**
- * AccountSetupPage - Configuration compte payant (Influenceur/Producteur)
- * Gère : 1. Paiement abonnement  2. KYC documents  3. Activation compte
+ * DEPRECATED - Redirect to /account instead
+ * This page has been replaced by AccountPage
  */
 export default function AccountSetupPage() {
     const navigate = useNavigate()
-    const { user, isAuthenticated } = useStore()
-    const [step, setStep] = useState(1) // 1: payment, 2: kyc, 3: success
-    const [kycFiles, setKycFiles] = useState([])
-    const [uploading, setUploading] = useState(false)
-    const [error, setError] = useState('')
-
+    
     useEffect(() => {
-        if (!isAuthenticated) {
-            navigate('/login')
-            return
-        }
-
-        // Si compte amateur, rediriger
-        if (user?.accountType === 'consumer') {
-            navigate('/')
-            return
-        }
-
-        // Si déjà vérifié, rediriger
-        if (user?.subscriptionStatus === 'active' && user?.kycStatus === 'verified') {
-            navigate('/')
-        }
-    }, [isAuthenticated, user, navigate])
+        // Redirect all requests to /account (the new comprehensive page)
+        navigate('/account', { replace: true })
+    }, [navigate])
+    
+    return null
+}
 
     const accountDetails = {
         influencer: {
