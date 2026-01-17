@@ -58,11 +58,12 @@ export default function AdminPanel() {
             })
             if (!response.ok) throw new Error('Failed to fetch users')
             const data = await response.json()
-            setUsers(data)
+            setUsers(Array.isArray(data) ? data : [])
             setLoading(false)
         } catch (err) {
             console.error('Error fetching users:', err)
             setError(err.message)
+            setUsers([]) // Ensure users is always an array
             setLoading(false)
         }
     }
