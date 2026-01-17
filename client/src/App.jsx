@@ -54,6 +54,34 @@ const PageLoader = () => (
     </div>
 )
 
+// Admin panel error fallback
+const AdminPanelError = () => (
+    <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+        padding: '2rem'
+    }}>
+        <div style={{
+            background: '#0f3460',
+            border: '2px solid #ff6b6b',
+            padding: '2rem',
+            borderRadius: '12px',
+            textAlign: 'center',
+            maxWidth: '500px',
+            color: '#e0e0e0'
+        }}>
+            <h2 style={{ color: '#ff6b6b', marginBottom: '1rem' }}>⚠️ Admin Panel Load Error</h2>
+            <p>Failed to load the admin panel component.</p>
+            <p style={{ fontSize: '0.9em', marginTop: '1rem', color: '#e0e0e0' }}>
+                Check browser console (F12) for detailed error messages.
+            </p>
+        </div>
+    </div>
+)
+
 function App() {
     const checkAuth = useStore((state) => state.checkAuth)
     const {
@@ -143,7 +171,13 @@ function App() {
 
                                     <Route path="/choose-account" element={<AccountChoicePage />} />
                                     <Route path="/profile-settings" element={<ProfileSettingsPage />} />
-                                    <Route path="/admin" element={<AdminPanel />} />
+                                    <Route path="/admin" element={
+                                        <ErrorBoundary>
+                                            <Suspense fallback={<AdminPanelError />}>
+                                                <AdminPanel />
+                                            </Suspense>
+                                        </ErrorBoundary>
+                                    } />
                                 </Route>
                                 <Route path="/login" element={<LoginPage />} />
                                 <Route path="/register" element={<RegisterPage />} />

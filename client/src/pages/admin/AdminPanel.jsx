@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import './AdminPanel.css'
 
+console.log('📄 AdminPanel.jsx module loaded!')
+
 export default function AdminPanel() {
+    console.log('🔨 AdminPanel component function called!')
     const [users, setUsers] = useState([])
     const [stats, setStats] = useState(null)
     const [loading, setLoading] = useState(true)
