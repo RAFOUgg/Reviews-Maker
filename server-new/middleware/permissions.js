@@ -10,21 +10,59 @@
 
 import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js';
 
-// Re-export ACCOUNT_TYPES for use in other modules
-export { ACCOUNT_TYPES };
+// Basic auth middleware used across routes (expects `req.user` to be set by auth)
+export function requireAuth(req, res, next) {
+    if (!req.user) {
+        return res.status(401).json({ error: 'authentication_required', message: 'Authentification requise' });
+    }
+    next();
+}
 
-// Middleware factory stubs - return functions that work as Express middleware
-export const requireAuth = (req, res, next) => next();
+// Check whether a given format is allowed for the user's account
+export function canExportFormat(accountType, format) {
+    const formats = EXPORT_FORMATS[accountType] || EXPORT_FORMATS[ACCOUNT_TYPES.CONSUMER];
+    return formats.includes(String(format).toLowerCase());
+}
 
-export const requireExportFormat = (formatGetter) => {
-    return (req, res, next) => next();
-};
+// Middleware factory: validate export format for current user
+export function requireExportFormat(formatGetter) {
+    return async (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({ error: 'authentication_required' });
+        }
 
-export const requireTemplateAccess = (templateType) => {
-    return (req, res, next) => next();
-};
+        const format = typeof formatGetter === 'function' ? await formatGetter(req) : formatGetter;
+        const accountType = getUserAccountType(req.user);
 
-export const canExportFormat = (format) => true;
+        if (!canExportFormat(accountType, format)) {
+            return res.status(403).json({
+                error: 'format_not_allowed',
+                message: `Format ${String(format).toUpperCase()} non autorisé pour votre type de compte`,
+                allowed: EXPORT_FORMATS[accountType] || EXPORT_FORMATS[ACCOUNT_TYPES.CONSUMER]
+            });
+        }
+
+        next();
+    };
+}
+
+// Middleware factory: check access to a specific template type (producer-only templates)
+export function requireTemplateAccess(templateType) {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({ error: 'authentication_required' });
+        }
+
+        const accountType = getUserAccountType(req.user);
+        const producerOnly = ['batch', 'custom'];
+
+        if (producerOnly.includes(templateType) && ![ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT, ACCOUNT_TYPES.BETA_TESTER].includes(accountType)) {
+            return res.status(403).json({ error: 'template_restricted', message: 'Template réservé aux comptes Producer', upgradeRequired: 'producer' });
+        }
+
+        next();
+    };
+}
 
 /**
  * Limites par type de compte
