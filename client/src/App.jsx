@@ -33,7 +33,7 @@ const StatsPage = lazy(() => import('./pages/account/StatsPage'))
 const AccountPage = lazy(() => import('./pages/account/AccountPage'))
 const SettingsPage = lazy(() => import('./pages/account/SettingsPage'))
 const ProfileSettingsPage = lazy(() => import('./pages/account/ProfileSettingsPage'))
-const AccountSetupPage = lazy(() => import('./pages/account/AccountSetupPage'))
+
 const AccountChoicePage = lazy(() => import('./pages/account/AccountChoicePage'))
 const AgeVerificationPage = lazy(() => import('./pages/auth/AgeVerificationPage'))
 const DisclaimerRDR = lazy(() => import('./components/legal/DisclaimerRDR'))
@@ -185,7 +185,7 @@ function App() {
                                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                                 <Route path="/choose-account" element={<AccountChoicePage />} />
-                                <Route path="/account-setup" element={<AccountSetupPage />} />
+
                                 <Route path="/age-verification" element={<AgeVerificationPage />} />
                                 <Route path="/disclaimer-rdr" element={<DisclaimerRDR />} />
                                 <Route path="/auth/callback" element={<AuthCallback />} />
