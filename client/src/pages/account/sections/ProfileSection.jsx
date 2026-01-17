@@ -1,7 +1,7 @@
 import React, { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Edit2, Save, X, Upload, Mail, User, Globe, FileText, Link as LinkIcon } from 'lucide-react'
-import { useProfileData } from '../../hooks/useProfileData'
+import { useProfileData } from '../../../hooks/useProfileData'
 
 /**
  * ProfileSection - Gestion des informations personnelles
