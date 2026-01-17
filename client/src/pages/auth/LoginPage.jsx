@@ -33,7 +33,7 @@ export default function LoginPage() {
                 // Redirection selon type de compte
                 if (user.accountType === 'influencer' || user.accountType === 'producer') {
                     if (user.subscriptionStatus !== 'active' || user.kycStatus !== 'verified') {
-                        navigate('/account-setup')
+                        navigate('/account')
                     } else {
                         navigate('/')
                     }
