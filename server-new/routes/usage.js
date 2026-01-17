@@ -12,16 +12,16 @@ router.get('/stats', requireAuth, asyncHandler(async (req, res) => {
     // Récupérer le nombre de reviews privées
     const privateReviews = await prisma.review.count({
         where: {
-            userId,
-            isPublic: false
+            authorId: userId,
+            isPrivate: true
         }
     });
 
     // Récupérer le nombre de reviews publiques
     const publicReviews = await prisma.review.count({
         where: {
-            userId,
-            isPublic: true
+            authorId: userId,
+            isPrivate: false
         }
     });
 
@@ -56,7 +56,7 @@ router.get('/stats', requireAuth, asyncHandler(async (req, res) => {
     // Récupérer les reviews totales
     const totalReviews = await prisma.review.count({
         where: {
-            userId
+            authorId: userId
         }
     });
 
