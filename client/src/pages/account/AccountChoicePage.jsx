@@ -1,10 +1,22 @@
 import React, { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { CheckCircle, Sparkles, TrendingUp, Building2 } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { CheckCircle, Sparkles, TrendingUp, Building2, ArrowLeft } from 'lucide-react'
+import { useStore } from '../../store'
 
 export default function AccountChoicePage() {
     const navigate = useNavigate()
-    const initial = useMemo(() => localStorage.getItem('preferredAccountType') || 'consumer', [])
+    const [searchParams] = useSearchParams()
+    const { accountType } = useStore()
+    
+    // Mode: 'signup' (création) ou 'upgrade' (changement plan)
+    const mode = searchParams.get('mode') || 'signup'
+    const isUpgrade = mode === 'upgrade'
+    
+    const initial = useMemo(() => {
+        if (isUpgrade) return accountType || 'consumer'
+        return localStorage.getItem('preferredAccountType') || 'consumer'
+    }, [isUpgrade, accountType])
+    
     const [selectedType, setSelectedType] = useState(initial)
 
     // Définition statique des types de comptes selon le CDC (cahier des charges)
@@ -89,25 +101,48 @@ export default function AccountChoicePage() {
         localStorage.setItem('preferredAccountType', selectedType)
         localStorage.setItem('accountTypeSelected', 'true')
 
-        // Si compte payant (influenceur ou producteur) → page de paiement
-        // Si compte gratuit (consumer/amateur) → inscription directe
-        if (selectedType === 'influencer' || selectedType === 'producer') {
-            navigate(`/payment?type=${selectedType}`)
+        if (isUpgrade) {
+            // Mode UPGRADE: Changement de plan
+            if (selectedType === accountType) {
+                navigate('/account')  // Même plan, retour
+            } else if (selectedType === 'consumer') {
+                navigate(`/payment?type=${selectedType}&mode=downgrade`)  // Downgrade
+            } else {
+                navigate(`/payment?type=${selectedType}&mode=upgrade`)  // Upgrade
+            }
         } else {
-            navigate(`/register?type=${selectedType}`)
+            // Mode SIGNUP: Flux de création
+            if (selectedType === 'influencer' || selectedType === 'producer') {
+                navigate(`/payment?type=${selectedType}`)  // Paiement → Inscription
+            } else {
+                navigate(`/register?type=${selectedType}`)  // Inscription directe
+            }
         }
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br text-white flex items-center justify-center px-4 py-8 overflow-y-auto">
+        <div className="min-h-screen bg-gradient-to-br text-white flex flex-col items-center justify-center px-4 py-8 overflow-y-auto">
+            {/* Bouton retour si en mode upgrade */}
+            {isUpgrade && (
+                <button
+                    onClick={() => navigate('/account')}
+                    className="absolute top-6 left-6 flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
+                >
+                    <ArrowLeft className="w-5 h-5" />
+                    Retour au compte
+                </button>
+            )}
             <div className="w-full max-w-7xl my-8">
                 {/* En-tête */}
                 <div className="text-center mb-12 space-y-4 animate-fade-in">
                     <h1 className="text-5xl md:text-6xl font-black tracking-tight drop-shadow-2xl">
-                        Choisissez votre Plan
+                        {isUpgrade ? 'Changer de Plan' : 'Choisissez votre Plan'}
                     </h1>
                     <p className="text-xl md:text-2xl text-white font-light drop-shadow-lg max-w-3xl mx-auto">
-                        Des outils de traçabilité adaptés à vos besoins, du simple amateur au producteur professionnel
+                        {isUpgrade 
+                            ? `Plan actuel: ${accountTypes.find(t => t.type === accountType)?.name}`
+                            : 'Des outils de traçabilité adaptés à vos besoins, du simple amateur au producteur professionnel'
+                        }
                     </p>
                 </div>
 
@@ -272,7 +307,14 @@ export default function AccountChoicePage() {
                         onClick={handleContinue}
                         className="inline-flex items-center gap-3 px-12 py-5 bg-purple-600 text-white rounded-2xl font-black text-xl shadow-2xl hover:shadow-purple-900/50 hover:scale-105 transition-all duration-300 group"
                     >
-                        <span>Continuer avec {accountTypes.find(t => t.type === selectedType)?.name}</span>
+                        <span>
+                            {isUpgrade 
+                                ? (selectedType === accountType 
+                                    ? 'Garder ce plan' 
+                                    : `Changer pour ${accountTypes.find(t => t.type === selectedType)?.name}`)
+                                : `Continuer avec ${accountTypes.find(t => t.type === selectedType)?.name}`
+                            }
+                        </span>
                         <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                         </svg>

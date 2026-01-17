@@ -329,19 +329,19 @@ function ProfileSection({ user, accountType, language, handleLanguageChange, han
         <div className="bg-gray-700/30 rounded-xl p-4 border border-gray-600/30 space-y-3 flex flex-col justify-between">
           {accountType === 'Amateur' ? (
             <button
-              onClick={() => navigate('/payment')}
+              onClick={() => navigate('/choose-account?mode=upgrade')}
               className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-all shadow-lg"
             >
               <CreditCard size={18} />
-              {t('account.upgrade') || 'Passer Premium'}
+              {t('account.upgrade') || 'Changer de Plan'}
             </button>
           ) : (
             <button
-              onClick={() => navigate('/manage-subscription')}
+              onClick={() => navigate('/choose-account?mode=upgrade')}
               className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-2 px-4 rounded-lg transition-all shadow-lg"
             >
               <CreditCard size={18} />
-              {t('account.manageSubscription') || 'Gérer l\'abonnement'}
+              {t('account.changeplan') || 'Changer de Plan'}
             </button>
           )}
           
