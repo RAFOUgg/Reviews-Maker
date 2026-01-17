@@ -18,6 +18,7 @@ import {
   Settings
 } from 'lucide-react'
 import UsageQuotas from '../../components/account/UsageQuotas'
+import ProfileSection from './sections/ProfileSection'
 
 const SUPPORTED_LANGUAGES = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
@@ -216,17 +217,7 @@ const AccountPage = () => {
           className="p-6 md:p-8"
         >
           {activeTab === 'profile' && (
-            <ProfileSection 
-              user={user}
-              accountType={accountType}
-              language={language}
-              handleLanguageChange={handleLanguageChange}
-              handleLogout={handleLogout}
-              navigate={navigate}
-              t={t}
-              isSaved={isSaved}
-              getAccountTypeLabel={getAccountTypeLabel}
-            />
+            <ProfileSection />
           )}
           
           {activeTab === 'preferences' && (
@@ -265,109 +256,6 @@ const AccountPage = () => {
 }
 
 // ============== Section Components ==============
-
-function ProfileSection({ user, accountType, language, handleLanguageChange, handleLogout, navigate, t, isSaved, getAccountTypeLabel }) {
-  const SUPPORTED_LANGUAGES = [
-    { code: 'fr', name: 'Français', flag: '🇫🇷' },
-    { code: 'en', name: 'English', flag: '🇬🇧' },
-    { code: 'es', name: 'Español', flag: '🇪🇸' }
-  ]
-
-  return (
-    <div>
-      <h3 className="text-2xl font-bold mb-6">{t('account.profile') || 'Mon Profil'}</h3>
-
-      {/* Profile Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {/* Avatar & Basic Info */}
-        <div className="bg-gray-700/30 rounded-xl p-4 border border-gray-600/30 flex flex-col items-center text-center">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-3">
-            <span className="text-2xl font-bold">{user?.username?.charAt(0)?.toUpperCase() || 'U'}</span>
-          </div>
-          <h3 className="font-semibold text-lg mb-1">{user?.username || 'User'}</h3>
-          <p className="text-gray-400 text-sm break-all">{user?.email || 'email@example.com'}</p>
-        </div>
-
-        {/* Account Type & Member Date */}
-        <div className="bg-gray-700/30 rounded-xl p-4 border border-gray-600/30 space-y-3">
-          <div>
-            <p className="text-gray-400 text-sm mb-1">{t('account.accountType') || 'Type de compte'}</p>
-            <p className="font-semibold text-lg text-blue-400">{getAccountTypeLabel(accountType)}</p>
-          </div>
-          <div className="pt-3 border-t border-gray-600/30">
-            <p className="text-gray-400 text-sm mb-1 flex items-center gap-2">
-              <Calendar size={16} />
-              {t('account.memberSince') || 'Membre depuis'}
-            </p>
-            <p className="font-semibold">{user?.createdAt ? new Date(user.createdAt).toLocaleDateString('fr-FR') : 'N/A'}</p>
-          </div>
-        </div>
-
-        {/* Language Selector */}
-        <div className="bg-gray-700/30 rounded-xl p-4 border border-gray-600/30">
-          <p className="text-gray-400 text-sm mb-3">{t('account.language') || 'Langue'}</p>
-          <div className="grid grid-cols-3 gap-2">
-            {SUPPORTED_LANGUAGES.map(lang => (
-              <button
-                key={lang.code}
-                onClick={() => handleLanguageChange(lang.code)}
-                className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
-                  language === lang.code
-                    ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/50'
-                    : 'bg-gray-600/40 text-gray-300 hover:bg-gray-600/60'
-                }`}
-                title={lang.name}
-              >
-                <div className="text-xl mb-1">{lang.flag}</div>
-                <div className="text-xs">{lang.code.toUpperCase()}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="bg-gray-700/30 rounded-xl p-4 border border-gray-600/30 space-y-3 flex flex-col justify-between">
-          {accountType === 'Amateur' ? (
-            <button
-              onClick={() => navigate('/choose-account?mode=upgrade')}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-all shadow-lg"
-            >
-              <CreditCard size={18} />
-              {t('account.upgrade') || 'Changer de Plan'}
-            </button>
-          ) : (
-            <button
-              onClick={() => navigate('/choose-account?mode=upgrade')}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-2 px-4 rounded-lg transition-all shadow-lg"
-            >
-              <CreditCard size={18} />
-              {t('account.changeplan') || 'Changer de Plan'}
-            </button>
-          )}
-          
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 bg-red-600/40 hover:bg-red-600/60 text-red-300 hover:text-red-200 font-semibold py-2 px-4 rounded-lg transition-all border border-red-600/30"
-          >
-            <LogOut size={18} />
-            {t('account.logout') || 'Déconnexion'}
-          </button>
-        </div>
-      </div>
-
-      {isSaved && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-4 flex items-center gap-2 text-green-400 bg-green-500/10 p-3 rounded-lg border border-green-600/30"
-        >
-          <Check size={18} />
-          <span>{t('account.saved') || 'Changements enregistrés'}</span>
-        </motion.div>
-      )}
-    </div>
-  )
-}
 
 function PreferencesSection({ preferences, handlePreferenceChange, visibilityOptions, t }) {
   return (
