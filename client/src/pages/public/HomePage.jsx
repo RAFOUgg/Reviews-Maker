@@ -17,7 +17,7 @@ export default function HomePage() {
     const navigate = useNavigate()
     const toast = useToast()
     const { user, isAuthenticated, reviews, loading, error, fetchReviews, likeReview, dislikeReview } = useStore()
-    const permissions = usePermissions(user)
+    const { hasFeature } = usePermissions()
     const [filteredReviews, setFilteredReviews] = useState([])
     const [showAll, setShowAll] = useState(false)
     const [selectedAuthor, setSelectedAuthor] = useState(null)
