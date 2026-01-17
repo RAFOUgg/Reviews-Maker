@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react'
+import { Users, Settings, Shield, AlertCircle, RefreshCw, Search, Trash2, Lock, Unlock, CheckCircle2 } from 'lucide-react'
+import LiquidCard from '../../components/ui/LiquidCard'
+import LiquidButton from '../../components/ui/LiquidButton'
 
 console.log('📄 AdminPanel.jsx module loaded!')
 
@@ -49,29 +52,30 @@ export default function AdminPanel() {
 
     const fetchUsers = async () => {
         try {
-            setLoading(true)
-            const response = await fetch('/api/admin/users')
-            if (!response.ok) {
-                throw new Error('Failed to fetch users')
-            }
+            const response = await fetch('/api/admin/users', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            if (!response.ok) throw new Error('Failed to fetch users')
             const data = await response.json()
-            setUsers(data.users)
-            setError(null)
+            setUsers(data)
+            setLoading(false)
         } catch (err) {
-            setError(err.message)
             console.error('Error fetching users:', err)
-        } finally {
+            setError(err.message)
             setLoading(false)
         }
     }
 
     const fetchStats = async () => {
         try {
-            const response = await fetch('/api/admin/stats')
-            if (response.ok) {
-                const data = await response.json()
-                setStats(data)
-            }
+            const response = await fetch('/api/admin/stats', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            if (!response.ok) throw new Error('Failed to fetch stats')
+            const data = await response.json()
+            setStats(data)
         } catch (err) {
             console.error('Error fetching stats:', err)
         }
@@ -148,66 +152,38 @@ export default function AdminPanel() {
         }
     }
 
-    const filteredUsers = users.filter(user => {
-        const matchSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          user.email.toLowerCase().includes(searchTerm.toLowerCase())
-        const matchFilter = filter === 'all' || user.accountType === filter
-        return matchSearch && matchFilter
-    })
-
+    // Auth Error Screen
     if (authError) {
         console.log('❌ Rendering Access Denied - authError is true')
         return (
-            <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minHeight: '100vh',
-                background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-                padding: '2rem'
-            }}>
-                <div style={{
-                    background: '#0f3460',
-                    border: '2px solid #e94560',
-                    padding: '3rem',
-                    borderRadius: '12px',
-                    textAlign: 'center',
-                    boxShadow: '0 8px 24px rgba(233, 69, 96, 0.3)',
-                    maxWidth: '500px'
-                }}>
-                    <h2 style={{ color: '#ff6b6b', marginBottom: '1rem', fontSize: '1.8rem' }}>🔐 Admin Access Required</h2>
-                    <p style={{ color: '#e0e0e0', fontSize: '1.05rem' }}>You need to be logged in as an administrator to access this panel.</p>
-                    <p style={{ fontSize: '0.95em', marginTop: '1.5rem', lineHeight: '1.6', color: '#e0e0e0' }}>
-                        <strong>Troubleshooting:</strong><br/>
-                        • Ensure ADMIN_MODE is enabled on the server<br/>
-                        • Check browser console (F12) for API errors<br/>
-                        • Try refreshing the page (Ctrl+Shift+R)
-                    </p>
-                    <div style={{ 
-                        marginTop: '2rem',
-                        padding: '1rem',
-                        backgroundColor: 'rgba(255,255,255,0.1)',
-                        borderRadius: '6px',
-                        fontSize: '0.85em',
-                        color: '#e0e0e0'
-                    }}>
-                        <p style={{ margin: 0, opacity: 0.8 }}>API Response: Not authenticated or ADMIN_MODE not set</p>
+            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
+                <LiquidCard className="max-w-md w-full">
+                    <div className="p-8 text-center space-y-4">
+                        <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto">
+                            <Shield className="w-8 h-8 text-red-500" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-red-400">Admin Access Required</h2>
+                        <p className="text-gray-300 text-sm">You need to be logged in as an administrator to access this panel.</p>
+                        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-xs text-gray-400 space-y-1">
+                            <p><strong>Troubleshooting:</strong></p>
+                            <p>• Ensure ADMIN_MODE is enabled on server</p>
+                            <p>• Check browser console (F12) for API errors</p>
+                            <p>• Try refreshing page (Ctrl+Shift+R)</p>
+                        </div>
                     </div>
-                </div>
+                </LiquidCard>
             </div>
         )
     }
 
+    // Loading Screen
     if (loading) {
         console.log('⏳ Rendering Loading state')
         return (
-            <div className="admin-panel">
-                <div className="admin-header">
-                    <h1>Admin Panel</h1>
-                    <p>Loading...</p>
-                </div>
-                <div className="loading" style={{ textAlign: 'center', padding: '2rem' }}>
-                    Loading admin panel...
+            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
+                <div className="text-center space-y-4">
+                    <div className="w-12 h-12 rounded-full border-4 border-purple-500 border-t-transparent animate-spin mx-auto"></div>
+                    <p className="text-gray-400">Loading admin panel...</p>
                 </div>
             </div>
         )
@@ -215,195 +191,228 @@ export default function AdminPanel() {
 
     console.log('✅ Rendering AdminPanel - users:', users.length, 'stats:', stats)
 
+    const filteredUsers = users.filter(user => {
+        const matchSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          user.email.toLowerCase().includes(searchTerm.toLowerCase())
+        const matchFilter = filter === 'all' || user.accountType === filter
+        return matchSearch && matchFilter
+    })
+
     return (
-        <div className="admin-panel">
-            <div className="admin-header">
-                <h1>Admin Panel</h1>
-                <p>Manage users and account types</p>
-            </div>
-
-            {stats && (
-                <div className="stats-grid">
-                    <div className="stat-card">
-                        <div className="stat-number">{stats.totalUsers}</div>
-                        <div className="stat-label">Total Users</div>
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto space-y-8">
+                {/* Header */}
+                <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                        <Shield className="w-8 h-8 text-purple-400" />
+                        <h1 className="text-4xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                            Admin Panel
+                        </h1>
                     </div>
-                    <div className="stat-card">
-                        <div className="stat-number">{stats.amateurs}</div>
-                        <div className="stat-label">Consumers</div>
-                    </div>
-                    <div className="stat-card">
-                        <div className="stat-number">{stats.influencers}</div>
-                        <div className="stat-label">Influencers</div>
-                    </div>
-                    <div className="stat-card">
-                        <div className="stat-number">{stats.producers}</div>
-                        <div className="stat-label">Producers</div>
-                    </div>
-                    <div className="stat-card banned">
-                        <div className="stat-number">{stats.bannedUsers}</div>
-                        <div className="stat-label">Banned</div>
-                    </div>
+                    <p className="text-gray-400">Manage users and account types</p>
                 </div>
-            )}
 
-            <div className="admin-controls">
-                <input
-                    type="text"
-                    placeholder="Search users by name or email..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="search-input"
-                />
-                <select
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    className="filter-select"
-                >
-                    <option value="all">All Account Types</option>
-                    <option value="consumer">Consumer</option>
-                    <option value="influencer">Influencer</option>
-                    <option value="producer">Producer</option>
-                </select>
-                <button onClick={fetchUsers} className="refresh-btn">
-                    Refresh
-                </button>
-            </div>
+                {/* Stats Grid */}
+                {stats && (
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        {[
+                            { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'from-blue-600 to-blue-700' },
+                            { label: 'Consumers', value: stats.amateurs || 0, icon: Users, color: 'from-green-600 to-green-700' },
+                            { label: 'Influencers', value: stats.influencers || 0, icon: Users, color: 'from-cyan-600 to-blue-700' },
+                            { label: 'Producers', value: stats.producers || 0, icon: Users, color: 'from-purple-600 to-purple-700' },
+                            { label: 'Banned', value: stats.bannedUsers || 0, icon: AlertCircle, color: 'from-red-600 to-red-700' }
+                        ].map((stat, idx) => {
+                            const Icon = stat.icon
+                            return (
+                                <LiquidCard key={idx} className="col-span-1">
+                                    <div className="p-6 text-center space-y-2">
+                                        <div className={`inline-block p-3 bg-gradient-to-br ${stat.color} rounded-full`}>
+                                            <Icon className="w-6 h-6 text-white" />
+                                        </div>
+                                        <div className="text-3xl font-black text-white">{stat.value}</div>
+                                        <div className="text-xs text-gray-400 uppercase tracking-wider">{stat.label}</div>
+                                    </div>
+                                </LiquidCard>
+                            )
+                        })}
+                    </div>
+                )}
 
-            {error && <div className="error-message">{error}</div>}
+                {/* Controls */}
+                <LiquidCard>
+                    <div className="p-6 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                                <input
+                                    type="text"
+                                    placeholder="Search users..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+                                />
+                            </div>
+                            <select
+                                value={filter}
+                                onChange={(e) => setFilter(e.target.value)}
+                                className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
+                            >
+                                <option value="all">All Account Types</option>
+                                <option value="consumer">Consumer</option>
+                                <option value="influencer">Influencer</option>
+                                <option value="producer">Producer</option>
+                            </select>
+                            <LiquidButton
+                                variant="primary"
+                                size="sm"
+                                onClick={fetchUsers}
+                                icon={RefreshCw}
+                                fullWidth
+                            >
+                                Refresh
+                            </LiquidButton>
+                        </div>
+                    </div>
+                </LiquidCard>
 
-            {!stats && !loading && (
-                <div style={{ 
-                    padding: '2rem', 
-                    backgroundColor: 'rgba(255,165,0,0.1)', 
-                    borderRadius: '8px',
-                    marginBottom: '1rem',
-                    color: '#ff9500'
-                }}>
-                    <p>Failed to load admin data. User may not have admin permissions.</p>
-                    <p style={{ fontSize: '0.9em', marginTop: '0.5rem' }}>Check console (F12) for API errors.</p>
-                </div>
-            )}
+                {/* Error Message */}
+                {error && (
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-center gap-3">
+                        <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                        <p className="text-red-400 text-sm">{error}</p>
+                    </div>
+                )}
 
-            {loading ? (
-                <div className="loading">Loading users...</div>
-            ) : (
-                <div className="users-table-container">
-                    <table className="users-table">
-                        <thead>
-                            <tr>
-                                <th>Username</th>
-                                <th>Email</th>
-                                <th>Account Type</th>
-                                <th>Subscription</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredUsers.length === 0 ? (
-                                <tr>
-                                    <td colSpan="6" className="empty-state">
-                                        No users found
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredUsers.map((user) => (
-                                    <tr key={user.id} className={user.isBanned ? 'banned-user' : ''}>
-                                        <td>{user.username}</td>
-                                        <td>{user.email}</td>
-                                        <td>
+                {/* Users Table */}
+                {filteredUsers.length === 0 ? (
+                    <LiquidCard>
+                        <div className="p-12 text-center">
+                            <Users className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                            <p className="text-gray-400">No users found</p>
+                        </div>
+                    </LiquidCard>
+                ) : (
+                    <div className="space-y-3">
+                        {filteredUsers.map((user) => (
+                            <LiquidCard key={user.id} className={user.isBanned ? 'opacity-75' : ''}>
+                                <div className="p-4 md:p-6 space-y-4">
+                                    {/* User Header */}
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                                                    <span className="text-white font-bold">{user.username.charAt(0).toUpperCase()}</span>
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <h3 className="font-bold text-white truncate">{user.username}</h3>
+                                                    <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {user.isBanned && <span className="px-3 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded-full">BANNED</span>}
+                                            {user.kycStatus === 'verified' && <span className="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded-full">KYC</span>}
+                                        </div>
+                                    </div>
+
+                                    {/* Controls Grid */}
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                        {/* Account Type */}
+                                        <div className="space-y-1">
+                                            <label className="text-xs text-gray-400 uppercase tracking-wider">Account Type</label>
                                             <select
                                                 value={user.accountType}
-                                                onChange={(e) =>
-                                                    changeAccountType(user.id, e.target.value)
-                                                }
-                                                className="type-select"
+                                                onChange={(e) => changeAccountType(user.id, e.target.value)}
+                                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
                                             >
-                                                <option value="consumer">Consumer [C]</option>
-                                                <option value="influencer">
-                                                    Influencer [I]
-                                                </option>
-                                                <option value="producer">Producer [P]</option>
+                                                <option value="consumer">Consumer</option>
+                                                <option value="influencer">Influencer</option>
+                                                <option value="producer">Producer</option>
                                             </select>
-                                        </td>
-                                        <td>
+                                        </div>
+
+                                        {/* Subscription Status */}
+                                        <div className="space-y-1">
+                                            <label className="text-xs text-gray-400 uppercase tracking-wider">Subscription</label>
                                             {user.subscriptionType ? (
                                                 <select
-                                                    value={user.subscriptionStatus}
-                                                    onChange={(e) =>
-                                                        changeSubscriptionStatus(
-                                                            user.id,
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                    className="status-select"
+                                                    value={user.subscriptionStatus || 'none'}
+                                                    onChange={(e) => changeSubscriptionStatus(user.id, e.target.value)}
+                                                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
                                                 >
                                                     <option value="active">Active</option>
                                                     <option value="inactive">Inactive</option>
-                                                    <option value="cancelled">
-                                                        Cancelled
-                                                    </option>
+                                                    <option value="cancelled">Cancelled</option>
                                                     <option value="expired">Expired</option>
                                                 </select>
                                             ) : (
-                                                <span className="no-sub">None</span>
+                                                <div className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-500 text-sm">
+                                                    None
+                                                </div>
                                             )}
-                                        </td>
-                                        <td>
-                                            <div className="status-badges">
-                                                {user.isBanned && (
-                                                    <span className="badge banned">BANNED</span>
-                                                )}
-                                                {user.kycStatus === 'verified' && (
-                                                    <span className="badge verified">KYC</span>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td>
+                                        </div>
+
+                                        {/* Ban/Unban Button */}
+                                        <div className="space-y-1">
+                                            <label className="text-xs text-gray-400 uppercase tracking-wider">Actions</label>
                                             <button
-                                                onClick={() =>
-                                                    toggleBan(user.id, user.isBanned)
-                                                }
-                                                className={`action-btn ${
-                                                    user.isBanned ? 'unban' : 'ban'
+                                                onClick={() => toggleBan(user.id, user.isBanned)}
+                                                className={`w-full px-3 py-2 rounded-lg text-sm font-bold transition-all ${
+                                                    user.isBanned
+                                                        ? 'bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30'
+                                                        : 'bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30'
                                                 }`}
                                             >
+                                                {user.isBanned ? <Unlock className="w-4 h-4 inline mr-1" /> : <Lock className="w-4 h-4 inline mr-1" />}
                                                 {user.isBanned ? 'Unban' : 'Ban'}
                                             </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-
-            {showBanModal && (
-                <div className="modal-overlay" onClick={() => setShowBanModal(false)}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <h3>Ban User</h3>
-                        <textarea
-                            placeholder="Reason for ban (optional)..."
-                            value={banReason}
-                            onChange={(e) => setBanReason(e.target.value)}
-                            className="ban-reason-input"
-                        />
-                        <div className="modal-buttons">
-                            <button
-                                onClick={() => setShowBanModal(false)}
-                                className="btn-cancel"
-                            >
-                                Cancel
-                            </button>
-                            <button onClick={confirmBan} className="btn-confirm">
-                                Confirm Ban
-                            </button>
-                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </LiquidCard>
+                        ))}
                     </div>
-                </div>
-            )}
+                )}
+
+                {/* Ban Modal */}
+                {showBanModal && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                        <LiquidCard className="max-w-md w-full">
+                            <div className="p-6 space-y-4">
+                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                    <AlertCircle className="w-5 h-5 text-red-400" />
+                                    Confirm Ban
+                                </h3>
+                                <textarea
+                                    placeholder="Reason for ban (optional)..."
+                                    value={banReason}
+                                    onChange={(e) => setBanReason(e.target.value)}
+                                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors resize-none"
+                                    rows="3"
+                                />
+                                <div className="flex gap-3">
+                                    <LiquidButton
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={() => setShowBanModal(false)}
+                                        fullWidth
+                                    >
+                                        Cancel
+                                    </LiquidButton>
+                                    <LiquidButton
+                                        variant="primary"
+                                        size="sm"
+                                        onClick={confirmBan}
+                                        fullWidth
+                                    >
+                                        Confirm Ban
+                                    </LiquidButton>
+                                </div>
+                            </div>
+                        </LiquidCard>
+                    </div>
+                )}
+            </div>
         </div>
     )
 }
