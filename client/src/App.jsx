@@ -44,6 +44,7 @@ const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'))
 const PaymentPage = lazy(() => import('./pages/account/PaymentPage'))
 const PreferencesPage = lazy(() => import('./pages/account/PreferencesPage'))
 const ManageSubscription = lazy(() => import('./pages/account/ManageSubscription'))
+const AdminPanel = lazy(() => import('./pages/admin/AdminPanel'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -140,6 +141,7 @@ function App() {
 
                                     <Route path="/choose-account" element={<AccountChoicePage />} />
                                     <Route path="/profile-settings" element={<ProfileSettingsPage />} />
+                                    <Route path="/admin" element={<AdminPanel />} />
                                 </Route>
                                 <Route path="/login" element={<LoginPage />} />
                                 <Route path="/register" element={<RegisterPage />} />

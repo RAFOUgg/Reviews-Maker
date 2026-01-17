@@ -33,6 +33,7 @@ import pipelineGithubRoutes from './routes/pipeline-github.js'
 import usageRoutes from './routes/usage.js'
 import presetsRoutes from './routes/presets.js'
 import exportRoutes from './routes/export.js'
+import adminRoutes from './routes/admin.js'
 import { requireAuth, optionalAuth, logAuthRequest } from './middleware/auth.js'
 
 // Import config
@@ -117,6 +118,7 @@ app.use('/api/pipeline-github', pipelineGithubRoutes)
 app.use('/api/usage', usageRoutes)
 app.use('/api/presets', presetsRoutes)
 app.use('/api/export', exportRoutes)
+app.use('/api/admin', adminRoutes)
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
