@@ -14,6 +14,7 @@ export default function AdminPanel() {
     const [authError, setAuthError] = useState(false)
 
     useEffect(() => {
+        console.log('🔧 AdminPanel useEffect - checking auth...')
         checkAuth()
         fetchUsers()
         fetchStats()
@@ -21,11 +22,19 @@ export default function AdminPanel() {
 
     const checkAuth = async () => {
         try {
+            console.log('🔐 Calling /api/admin/check-auth')
             const response = await fetch('/api/admin/check-auth')
+            console.log('🔐 Response status:', response.status, 'ok:', response.ok)
+            const data = await response.json()
+            console.log('🔐 Response data:', data)
             if (!response.ok) {
+                console.log('🔐 Auth failed - setting authError to true')
                 setAuthError(true)
+            } else {
+                console.log('✅ Auth successful')
             }
         } catch (err) {
+            console.error('🔐 Auth error:', err)
             setAuthError(true)
         }
     }
@@ -139,17 +148,47 @@ export default function AdminPanel() {
     })
 
     if (authError) {
+        console.log('❌ Rendering Access Denied - authError is true')
         return (
             <div className="admin-panel error-state">
                 <div className="error-box">
-                    <h2>Access Denied</h2>
-                    <p>You don't have permission to access the admin panel.</p>
+                    <h2>🔐 Admin Access Required</h2>
+                    <p>You need to be logged in as an administrator to access this panel.</p>
+                    <p style={{ fontSize: '0.95em', marginTop: '1.5rem', lineHeight: '1.6' }}>
+                        <strong>Steps:</strong><br/>
+                        1. Log in to your account<br/>
+                        2. Contact the admin team if you need admin access
+                    </p>
+                    <div style={{ 
+                        marginTop: '2rem',
+                        padding: '1rem',
+                        backgroundColor: 'rgba(255,255,255,0.1)',
+                        borderRadius: '6px',
+                        fontSize: '0.85em'
+                    }}>
+                        <p style={{ margin: 0, opacity: 0.8 }}>API Response: Not authenticated</p>
+                    </div>
                 </div>
             </div>
         )
     }
 
-    return (
+    if (loading) {
+        console.log('⏳ Rendering Loading state')
+        return (
+            <div className="admin-panel">
+                <div className="admin-header">
+                    <h1>Admin Panel</h1>
+                    <p>Loading...</p>
+                </div>
+                <div className="loading" style={{ textAlign: 'center', padding: '2rem' }}>
+                    Loading admin panel...
+                </div>
+            </div>
+        )
+    }
+
+    console.log('✅ Rendering AdminPanel - users:', users.length, 'stats:', stats)
         <div className="admin-panel">
             <div className="admin-header">
                 <h1>Admin Panel</h1>
@@ -205,6 +244,19 @@ export default function AdminPanel() {
             </div>
 
             {error && <div className="error-message">{error}</div>}
+
+            {!stats && !loading && (
+                <div style={{ 
+                    padding: '2rem', 
+                    backgroundColor: 'rgba(255,165,0,0.1)', 
+                    borderRadius: '8px',
+                    marginBottom: '1rem',
+                    color: '#ff9500'
+                }}>
+                    <p>Failed to load admin data. User may not have admin permissions.</p>
+                    <p style={{ fontSize: '0.9em', marginTop: '0.5rem' }}>Check console (F12) for API errors.</p>
+                </div>
+            )}
 
             {loading ? (
                 <div className="loading">Loading users...</div>

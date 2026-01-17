@@ -389,24 +389,27 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
 }
 
 .error-box {
-    background: white;
+    background: #0f3460;
+    border: 2px solid #e94560;
     padding: 3rem;
     border-radius: 12px;
     text-align: center;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 24px rgba(233, 69, 96, 0.3);
     max-width: 500px;
 }
 
 .error-box h2 {
-    color: #ff4757;
+    color: #ff6b6b;
     margin-bottom: 1rem;
+    font-size: 1.8rem;
 }
 
 .error-box p {
-    color: #7f8c8d;
+    color: #e0e0e0;
     font-size: 1.05rem;
 }
 
