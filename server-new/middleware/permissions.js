@@ -10,6 +10,9 @@
 
 import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js';
 
+// Re-export ACCOUNT_TYPES for use in other modules
+export { ACCOUNT_TYPES };
+
 // Basic auth middleware used across routes (expects `req.user` to be set by auth)
 export function requireAuth(req, res, next) {
     if (!req.user) {
@@ -718,6 +721,7 @@ export default {
     requireFeature,
     getUserLimits,
     checkAndIncrementDailyExports,
+    ACCOUNT_TYPES,
     EXPORT_LIMITS,
     EXPORT_FORMATS,
     EXPORT_DPI
