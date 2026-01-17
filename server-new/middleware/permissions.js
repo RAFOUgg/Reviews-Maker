@@ -13,12 +13,16 @@ import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js';
 // Re-export ACCOUNT_TYPES for use in other modules
 export { ACCOUNT_TYPES };
 
-// Stub exports for missing middleware functions
-// These will be implemented or mapped to actual functions
+// Middleware factory stubs - return functions that work as Express middleware
 export const requireAuth = (req, res, next) => next();
-export const requireExportFormat = (req, res, next) => next();
+
+export const requireExportFormat = (formatGetter) => {
+    return (req, res, next) => next();
+};
+
 export const requireTemplateAccess = (req, res, next) => next();
-export const canExportFormat = () => true;
+
+export const canExportFormat = (format) => true;
 
 /**
  * Limites par type de compte
