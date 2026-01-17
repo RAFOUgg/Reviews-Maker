@@ -35,6 +35,12 @@
 			"command": "start msedge \"c:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker\\index.html\"",
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "Deploy Admin Panel to VPS",
+			"type": "shell",
+			"command": "echo 'VPS Deployment Command (run on VPS SSH terminal):' && echo '' && echo 'cd ~/Reviews-Maker && git pull origin main && npm run build --prefix client && pm2 restart reviews-maker && sleep 3 && pm2 logs reviews-maker --lines 40'",
+			"group": "build"
 		}
 	]
 }
