@@ -1,0 +1,330 @@
+import React, { useState, useEffect } from 'react'
+import './AdminPanel.css'
+
+export default function AdminPanel() {
+    const [users, setUsers] = useState([])
+    const [stats, setStats] = useState(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
+    const [searchTerm, setSearchTerm] = useState('')
+    const [filter, setFilter] = useState('all')
+    const [editingUser, setEditingUser] = useState(null)
+    const [showBanModal, setShowBanModal] = useState(false)
+    const [banReason, setBanReason] = useState('')
+    const [authError, setAuthError] = useState(false)
+
+    useEffect(() => {
+        checkAuth()
+        fetchUsers()
+        fetchStats()
+    }, [])
+
+    const checkAuth = async () => {
+        try {
+            const response = await fetch('/api/admin/check-auth')
+            if (!response.ok) {
+                setAuthError(true)
+            }
+        } catch (err) {
+            setAuthError(true)
+        }
+    }
+
+    const fetchUsers = async () => {
+        try {
+            setLoading(true)
+            const response = await fetch('/api/admin/users')
+            if (!response.ok) {
+                throw new Error('Failed to fetch users')
+            }
+            const data = await response.json()
+            setUsers(data.users)
+            setError(null)
+        } catch (err) {
+            setError(err.message)
+            console.error('Error fetching users:', err)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const fetchStats = async () => {
+        try {
+            const response = await fetch('/api/admin/stats')
+            if (response.ok) {
+                const data = await response.json()
+                setStats(data)
+            }
+        } catch (err) {
+            console.error('Error fetching stats:', err)
+        }
+    }
+
+    const changeAccountType = async (userId, newType) => {
+        try {
+            const response = await fetch(`/api/admin/users/${userId}/account-type`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ accountType: newType })
+            })
+            if (!response.ok) throw new Error('Failed to update')
+            const updated = await response.json()
+            setUsers(users.map(u => u.id === userId ? { ...u, ...updated } : u))
+        } catch (err) {
+            alert('Error: ' + err.message)
+        }
+    }
+
+    const changeSubscriptionStatus = async (userId, newStatus) => {
+        try {
+            const response = await fetch(`/api/admin/users/${userId}/subscription`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subscriptionStatus: newStatus })
+            })
+            if (!response.ok) throw new Error('Failed to update')
+            const updated = await response.json()
+            setUsers(users.map(u => u.id === userId ? { ...u, ...updated } : u))
+        } catch (err) {
+            alert('Error: ' + err.message)
+        }
+    }
+
+    const toggleBan = async (userId, currentBanned) => {
+        if (!currentBanned) {
+            setEditingUser(userId)
+            setShowBanModal(true)
+            return
+        }
+
+        try {
+            const response = await fetch(`/api/admin/users/${userId}/ban`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ banned: false })
+            })
+            if (!response.ok) throw new Error('Failed to unban')
+            const updated = await response.json()
+            setUsers(users.map(u => u.id === userId ? { ...u, ...updated } : u))
+        } catch (err) {
+            alert('Error: ' + err.message)
+        }
+    }
+
+    const confirmBan = async () => {
+        if (!editingUser) return
+
+        try {
+            const response = await fetch(`/api/admin/users/${editingUser}/ban`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ banned: true, reason: banReason })
+            })
+            if (!response.ok) throw new Error('Failed to ban')
+            const updated = await response.json()
+            setUsers(users.map(u => u.id === editingUser ? { ...u, ...updated } : u))
+            setShowBanModal(false)
+            setBanReason('')
+            setEditingUser(null)
+        } catch (err) {
+            alert('Error: ' + err.message)
+        }
+    }
+
+    const filteredUsers = users.filter(user => {
+        const matchSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          user.email.toLowerCase().includes(searchTerm.toLowerCase())
+        const matchFilter = filter === 'all' || user.accountType === filter
+        return matchSearch && matchFilter
+    })
+
+    if (authError) {
+        return (
+            <div className="admin-panel error-state">
+                <div className="error-box">
+                    <h2>Access Denied</h2>
+                    <p>You don't have permission to access the admin panel.</p>
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <div className="admin-panel">
+            <div className="admin-header">
+                <h1>Admin Panel</h1>
+                <p>Manage users and account types</p>
+            </div>
+
+            {stats && (
+                <div className="stats-grid">
+                    <div className="stat-card">
+                        <div className="stat-number">{stats.totalUsers}</div>
+                        <div className="stat-label">Total Users</div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-number">{stats.amateurs}</div>
+                        <div className="stat-label">Consumers</div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-number">{stats.influencers}</div>
+                        <div className="stat-label">Influencers</div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-number">{stats.producers}</div>
+                        <div className="stat-label">Producers</div>
+                    </div>
+                    <div className="stat-card banned">
+                        <div className="stat-number">{stats.bannedUsers}</div>
+                        <div className="stat-label">Banned</div>
+                    </div>
+                </div>
+            )}
+
+            <div className="admin-controls">
+                <input
+                    type="text"
+                    placeholder="Search users by name or email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="search-input"
+                />
+                <select
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                    className="filter-select"
+                >
+                    <option value="all">All Account Types</option>
+                    <option value="consumer">Consumer</option>
+                    <option value="influencer">Influencer</option>
+                    <option value="producer">Producer</option>
+                </select>
+                <button onClick={fetchUsers} className="refresh-btn">
+                    Refresh
+                </button>
+            </div>
+
+            {error && <div className="error-message">{error}</div>}
+
+            {loading ? (
+                <div className="loading">Loading users...</div>
+            ) : (
+                <div className="users-table-container">
+                    <table className="users-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Account Type</th>
+                                <th>Subscription</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredUsers.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="empty-state">
+                                        No users found
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredUsers.map((user) => (
+                                    <tr key={user.id} className={user.isBanned ? 'banned-user' : ''}>
+                                        <td>{user.username}</td>
+                                        <td>{user.email}</td>
+                                        <td>
+                                            <select
+                                                value={user.accountType}
+                                                onChange={(e) =>
+                                                    changeAccountType(user.id, e.target.value)
+                                                }
+                                                className="type-select"
+                                            >
+                                                <option value="consumer">Consumer [C]</option>
+                                                <option value="influencer">
+                                                    Influencer [I]
+                                                </option>
+                                                <option value="producer">Producer [P]</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            {user.subscriptionType ? (
+                                                <select
+                                                    value={user.subscriptionStatus}
+                                                    onChange={(e) =>
+                                                        changeSubscriptionStatus(
+                                                            user.id,
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    className="status-select"
+                                                >
+                                                    <option value="active">Active</option>
+                                                    <option value="inactive">Inactive</option>
+                                                    <option value="cancelled">
+                                                        Cancelled
+                                                    </option>
+                                                    <option value="expired">Expired</option>
+                                                </select>
+                                            ) : (
+                                                <span className="no-sub">None</span>
+                                            )}
+                                        </td>
+                                        <td>
+                                            <div className="status-badges">
+                                                {user.isBanned && (
+                                                    <span className="badge banned">BANNED</span>
+                                                )}
+                                                {user.kycStatus === 'verified' && (
+                                                    <span className="badge verified">KYC</span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button
+                                                onClick={() =>
+                                                    toggleBan(user.id, user.isBanned)
+                                                }
+                                                className={`action-btn ${
+                                                    user.isBanned ? 'unban' : 'ban'
+                                                }`}
+                                            >
+                                                {user.isBanned ? 'Unban' : 'Ban'}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {showBanModal && (
+                <div className="modal-overlay" onClick={() => setShowBanModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <h3>Ban User</h3>
+                        <textarea
+                            placeholder="Reason for ban (optional)..."
+                            value={banReason}
+                            onChange={(e) => setBanReason(e.target.value)}
+                            className="ban-reason-input"
+                        />
+                        <div className="modal-buttons">
+                            <button
+                                onClick={() => setShowBanModal(false)}
+                                className="btn-cancel"
+                            >
+                                Cancel
+                            </button>
+                            <button onClick={confirmBan} className="btn-confirm">
+                                Confirm Ban
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}
