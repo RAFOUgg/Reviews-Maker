@@ -15,6 +15,7 @@ export default function AdminPanel() {
 
     useEffect(() => {
         console.log('🔧 AdminPanel useEffect - checking auth...')
+        console.log('🔧 ADMIN_MODE check starting...')
         checkAuth()
         fetchUsers()
         fetchStats()
@@ -23,18 +24,23 @@ export default function AdminPanel() {
     const checkAuth = async () => {
         try {
             console.log('🔐 Calling /api/admin/check-auth')
-            const response = await fetch('/api/admin/check-auth')
+            const response = await fetch('/api/admin/check-auth', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            })
             console.log('🔐 Response status:', response.status, 'ok:', response.ok)
             const data = await response.json()
             console.log('🔐 Response data:', data)
             if (!response.ok) {
-                console.log('🔐 Auth failed - setting authError to true')
+                console.log('🔐 Auth failed (', response.status, ') - setting authError to true')
+                console.log('🔐 ADMIN_MODE likely not enabled on server')
                 setAuthError(true)
             } else {
-                console.log('✅ Auth successful')
+                console.log('✅ Auth successful - admin access granted')
             }
         } catch (err) {
-            console.error('🔐 Auth error:', err)
+            console.error('🔐 Auth error:', err.message)
+            console.log('🔐 Likely network error or API not responding')
             setAuthError(true)
         }
     }
@@ -150,23 +156,40 @@ export default function AdminPanel() {
     if (authError) {
         console.log('❌ Rendering Access Denied - authError is true')
         return (
-            <div className="admin-panel error-state">
-                <div className="error-box">
-                    <h2>🔐 Admin Access Required</h2>
-                    <p>You need to be logged in as an administrator to access this panel.</p>
-                    <p style={{ fontSize: '0.95em', marginTop: '1.5rem', lineHeight: '1.6' }}>
-                        <strong>Steps:</strong><br/>
-                        1. Log in to your account<br/>
-                        2. Contact the admin team if you need admin access
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '100vh',
+                background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+                padding: '2rem'
+            }}>
+                <div style={{
+                    background: '#0f3460',
+                    border: '2px solid #e94560',
+                    padding: '3rem',
+                    borderRadius: '12px',
+                    textAlign: 'center',
+                    boxShadow: '0 8px 24px rgba(233, 69, 96, 0.3)',
+                    maxWidth: '500px'
+                }}>
+                    <h2 style={{ color: '#ff6b6b', marginBottom: '1rem', fontSize: '1.8rem' }}>🔐 Admin Access Required</h2>
+                    <p style={{ color: '#e0e0e0', fontSize: '1.05rem' }}>You need to be logged in as an administrator to access this panel.</p>
+                    <p style={{ fontSize: '0.95em', marginTop: '1.5rem', lineHeight: '1.6', color: '#e0e0e0' }}>
+                        <strong>Troubleshooting:</strong><br/>
+                        • Ensure ADMIN_MODE is enabled on the server<br/>
+                        • Check browser console (F12) for API errors<br/>
+                        • Try refreshing the page (Ctrl+Shift+R)
                     </p>
                     <div style={{ 
                         marginTop: '2rem',
                         padding: '1rem',
                         backgroundColor: 'rgba(255,255,255,0.1)',
                         borderRadius: '6px',
-                        fontSize: '0.85em'
+                        fontSize: '0.85em',
+                        color: '#e0e0e0'
                     }}>
-                        <p style={{ margin: 0, opacity: 0.8 }}>API Response: Not authenticated</p>
+                        <p style={{ margin: 0, opacity: 0.8 }}>API Response: Not authenticated or ADMIN_MODE not set</p>
                     </div>
                 </div>
             </div>
