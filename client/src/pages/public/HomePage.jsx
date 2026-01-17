@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { useStore } from '../../store/useStore'
+import { usePermissions } from '../../hooks/usePermissions'
 import { useToast } from '../../components/shared/ToastContainer'
 import LiquidButton from '../../components/ui/LiquidButton'
 import FilterBar from '../../components/shared/ui-helpers/FilterBar'
@@ -16,6 +17,7 @@ export default function HomePage() {
     const navigate = useNavigate()
     const toast = useToast()
     const { user, isAuthenticated, reviews, loading, error, fetchReviews, likeReview, dislikeReview } = useStore()
+    const permissions = usePermissions(user)
     const [filteredReviews, setFilteredReviews] = useState([])
     const [showAll, setShowAll] = useState(false)
     const [selectedAuthor, setSelectedAuthor] = useState(null)
@@ -195,16 +197,18 @@ export default function HomePage() {
                     </>
                 )}
 
-                {/* PhénoHunt Navigation Button */}
-                <div className="text-center pt-8">
-                    <LiquidButton
-                        onClick={handleNavigateToPhenoHunt}
-                        variant="secondary"
-                        size="lg"
-                    >
-                        Accéder à PhénoHunt
-                    </LiquidButton>
-                </div>
+                {/* PhénoHunt Navigation Button - Producer only */}
+                {hasFeature('phenohunt') && (
+                    <div className="text-center pt-8">
+                        <LiquidButton
+                            onClick={handleNavigateToPhenoHunt}
+                            variant="secondary"
+                            size="lg"
+                        >
+                            Accéder à PhénoHunt
+                        </LiquidButton>
+                    </div>
+                )}
             </div>
 
             {/* Animations CSS */}

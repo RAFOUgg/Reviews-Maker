@@ -2,12 +2,14 @@ import { useState, useRef, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { useStore } from '../../store/useStore'
+import { usePermissions } from '../../hooks/usePermissions'
 
 export default function UserProfileDropdown() {
     const [isOpen, setIsOpen] = useState(false)
     const [position, setPosition] = useState({ top: 0, right: 0 })
     const buttonRef = useRef(null)
     const { user, logout } = useStore()
+    const { hasFeature } = usePermissions()
 
     useLayoutEffect(() => {
         if (isOpen && buttonRef.current) {
@@ -77,15 +79,18 @@ export default function UserProfileDropdown() {
                             <p className="text-xs text-[rgb(var(--text-secondary))] opacity-80">Voir mes stats détaillées</p>
                         </div>
                     </Link>
-                    <Link to="/genetics" className="flex items-center gap-3 px-4 py-3 hover:bg-theme-secondary transition-colors" onClick={() => setIsOpen(false)}>
-                        <svg className="w-5 h-5 text-[rgb(var(--color-accent))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                        </svg>
-                        <div>
-                            <p className="font-medium text-[rgb(var(--text-primary))]">Mes génétiques</p>
-                            <p className="text-xs text-[rgb(var(--text-secondary))] opacity-80">Gérer ma bibliothèque généalogique</p>
-                        </div>
-                    </Link>
+                    {/* Mes génétiques - Producer only */}
+                    {hasFeature('phenohunt') && (
+                        <Link to="/genetics" className="flex items-center gap-3 px-4 py-3 hover:bg-theme-secondary transition-colors" onClick={() => setIsOpen(false)}>
+                            <svg className="w-5 h-5 text-[rgb(var(--color-accent))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                            </svg>
+                            <div>
+                                <p className="font-medium text-[rgb(var(--text-primary))]">Mes génétiques</p>
+                                <p className="text-xs text-[rgb(var(--text-secondary))] opacity-80">Gérer ma bibliothèque généalogique</p>
+                            </div>
+                        </Link>
+                    )}
                 </div>
                 <div className="border-t border-theme py-2">
                     <button onClick={() => { logout(); setIsOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 bg-[rgba(220,38,38,0.15)] hover:bg-[rgba(220,38,38,0.3)] transition-colors text-[rgb(220,38,38)] font-medium border-t border-[rgba(220,38,38,0.2)]">

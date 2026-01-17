@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import './AdminPanel.css'
 
 console.log('📄 AdminPanel.jsx module loaded!')
 
