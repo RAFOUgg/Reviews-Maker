@@ -43,8 +43,16 @@ router.get('/check-auth', async (req, res) => {
                         (typeof req.user.roles === 'string' ? JSON.parse(req.user.roles) : req.user.roles)
                         .includes('admin'))
         
+        if (!isAdmin) {
+            return res.status(401).json({
+                authenticated: false,
+                isAdmin: false,
+                message: 'Not authenticated as admin'
+            })
+        }
+        
         res.json({
-            isAdmin: isAdmin,
+            isAdmin: true,
             authenticated: !!req.user,
             roles: req.user?.roles
         })
