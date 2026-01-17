@@ -163,7 +163,7 @@ function App() {
                                     <Route path="/library" element={<LibraryPage />} />
                                     <Route path="/gallery" element={<GalleryPage />} />
                                     <Route path="/stats" element={<StatsPage />} />
-                                    <Route path="/account" element={<SettingsPage />} />
+                                    <Route path="/account" element={<AccountPage />} />
                                     <Route path="/manage-subscription" element={<ManageSubscription />} />
                                     <Route path="/phenohunt" element={<PhenoHuntPage />} />
                                     <Route path="/genetics" element={<GeneticsManagementPage />} />
@@ -200,4 +200,5 @@ function App() {
 }
 
 export default App
+
 
