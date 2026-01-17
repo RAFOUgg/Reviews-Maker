@@ -6,7 +6,7 @@
  */
 
 import React, { useMemo } from 'react'
-import { useUserStore } from '../store/user'
+import { useStore } from '../store/useStore'
 import { ACCOUNT_TIERS } from '../utils/permissions'
 
 /**
@@ -16,7 +16,7 @@ import { ACCOUNT_TIERS } from '../utils/permissions'
  * Returns permission checking functions
  */
 export function usePermissions() {
-    const { user } = useUserStore()
+    const { user } = useStore()
     const accountType = user?.accountType || 'consumer'
 
     // Feature matrix based on BACKEND permissions
