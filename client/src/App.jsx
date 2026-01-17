@@ -162,8 +162,7 @@ function App() {
                                     <Route path="/library" element={<LibraryPage />} />
                                     <Route path="/gallery" element={<GalleryPage />} />
                                     <Route path="/stats" element={<StatsPage />} />
-                                    <Route path="/profile" element={<ProfilePage />} />
-                                    <Route path="/account" element={<AccountPage />} />
+                                    <Route path="/account" element={<SettingsPage />} />
                                     <Route path="/manage-subscription" element={<ManageSubscription />} />
                                     <Route path="/phenohunt" element={<PhenoHuntPage />} />
                                     <Route path="/genetics" element={<GeneticsManagementPage />} />
