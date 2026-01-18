@@ -2,17 +2,17 @@
  * useAccountPermissions - Hook pour gérer les permissions par type de compte
  * 
  * Types de comptes :
- * - Amateur (gratuit) : Accès limité
- * - Producteur (29.99€/mois) : Accès complet
- * - Influenceur (15.99€/mois) : Accès étendu
+ * - amateur (gratuit) : Accès limité
+ * - producteur (29.99€/mois) : Accès complet
+ * - influenceur (15.99€/mois) : Accès étendu
  */
 
 import { useStore } from '../store/useStore';
 
 const ACCOUNT_TYPES = {
-    AMATEUR: 'Amateur',
-    PRODUCTEUR: 'Producteur',
-    INFLUENCEUR: 'Influenceur'
+    AMATEUR: 'amateur',
+    PRODUCTEUR: 'producteur',
+    INFLUENCEUR: 'influenceur'
 };
 
 const PERMISSIONS = {
