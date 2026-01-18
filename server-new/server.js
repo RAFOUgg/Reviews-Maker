@@ -22,6 +22,7 @@ import accountRoutes from './routes/account.js'
 import cultivarsRoutes from './routes/cultivars.js'
 import geneticsRoutes from './routes/genetics.js'
 import pipelinesRoutes from './routes/pipelines.js'
+import pipelineCultureRoutes from './routes/pipeline-culture.js'
 import flowerReviewsRoutes from './routes/flower-reviews.js'
 import hashReviewsRoutes from './routes/hash-reviews.js'
 import concentrateReviewsRoutes from './routes/concentrate-reviews.js'
@@ -98,6 +99,7 @@ app.use('/api/account', accountRoutes)
 app.use('/api/cultivars', cultivarsRoutes)
 app.use('/api/genetics', geneticsRoutes)
 app.use('/api/pipelines', pipelinesRoutes)
+app.use(pipelineCultureRoutes)
 app.use('/api/flower-reviews', flowerReviewsRoutes)
 app.use('/api/hash-reviews', hashReviewsRoutes)
 app.use('/api/concentrate-reviews', concentrateReviewsRoutes)
