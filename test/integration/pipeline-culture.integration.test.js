@@ -213,7 +213,7 @@ describe('Integration: Complete Pipeline Lifecycle', () => {
         expect(allStagesRes.body.length).toBe(90)
 
         // Verify some stages have data
-        const stagesWithData = allStagesRes.body.filter(s => 
+        const stagesWithData = allStagesRes.body.filter(s =>
             s.data && Object.keys(s.data).length > 0
         )
         expect(stagesWithData.length).toBeGreaterThan(0)
@@ -314,7 +314,7 @@ describe('Integration: Data Persistence & Consistency', () => {
         expect(retrieveRes.body.length).toBe(7)
 
         // Step 5: Verify all stages have data
-        const stagesWithData = retrieveRes.body.filter(s => 
+        const stagesWithData = retrieveRes.body.filter(s =>
             s.data && s.data.index !== undefined
         )
         expect(stagesWithData.length).toBe(7)

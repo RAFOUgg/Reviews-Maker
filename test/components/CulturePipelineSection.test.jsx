@@ -42,11 +42,11 @@ describe('CulturePipelineSection Component', () => {
 
     test('should toggle expansion of config section', async () => {
         const { container } = render(<CulturePipelineSection {...defaultProps} />)
-        
+
         const configHeader = screen.getByText(/Configuration Pipeline/i).closest('div').parentElement
-        
+
         fireEvent.click(configHeader)
-        
+
         // Should collapse
         await waitFor(() => {
             expect(screen.queryByText(/Mode de suivi/i)).not.toBeInTheDocument()
@@ -54,7 +54,7 @@ describe('CulturePipelineSection Component', () => {
 
         // Should expand again
         fireEvent.click(configHeader)
-        
+
         await waitFor(() => {
             expect(screen.getByText(/Mode de suivi/i)).toBeInTheDocument()
         })

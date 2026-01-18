@@ -71,7 +71,7 @@ export default function CulturePipelineSection({ formData, handleChange, onPipel
     }
 
     const handleUpdateStage = (stageId, updates) => {
-        setPipelineStages(pipelineStages.map(s => 
+        setPipelineStages(pipelineStages.map(s =>
             s.id === stageId ? { ...s, ...updates } : s
         ))
     }
@@ -85,9 +85,9 @@ export default function CulturePipelineSection({ formData, handleChange, onPipel
                         <Settings size={20} />
                         Configuration Pipeline
                     </h3>
-                    <ChevronDown 
-                        size={20} 
-                        style={{ 
+                    <ChevronDown
+                        size={20}
+                        style={{
                             transform: expandedGroups.setup ? 'rotate(180deg)' : 'rotate(0deg)',
                             transition: 'transform 0.2s'
                         }}
@@ -96,7 +96,7 @@ export default function CulturePipelineSection({ formData, handleChange, onPipel
 
                 <AnimatePresence>
                     {expandedGroups.setup && (
-                        <motion.div 
+                        <motion.div
                             className="config-content"
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
@@ -151,7 +151,7 @@ export default function CulturePipelineSection({ formData, handleChange, onPipel
                                 </div>
                             )}
 
-                            <button 
+                            <button
                                 className="btn-primary"
                                 onClick={() => setShowConfigModal(true)}
                             >
@@ -166,7 +166,7 @@ export default function CulturePipelineSection({ formData, handleChange, onPipel
             <div className="presets-card">
                 <div className="presets-header">
                     <h3>📦 Presets réutilisables</h3>
-                    <button 
+                    <button
                         className="btn-icon"
                         onClick={() => setShowPresetModal(true)}
                     >
@@ -212,7 +212,7 @@ export default function CulturePipelineSection({ formData, handleChange, onPipel
                 <div className="stages-card">
                     <div className="stages-header">
                         <h3>📊 Étapes documentées ({pipelineStages.length})</h3>
-                        <button 
+                        <button
                             className="btn-primary"
                             onClick={handleAddStage}
                         >
@@ -265,9 +265,9 @@ export default function CulturePipelineSection({ formData, handleChange, onPipel
                 <div className="data-group">
                     <div className="group-header" onClick={() => toggleGroup('harvest')}>
                         <h4>🌾 Données de Récolte</h4>
-                        <ChevronDown 
+                        <ChevronDown
                             size={16}
-                            style={{ 
+                            style={{
                                 transform: expandedGroups.harvest ? 'rotate(180deg)' : 'rotate(0deg)',
                                 transition: 'transform 0.2s'
                             }}
@@ -310,9 +310,9 @@ export default function CulturePipelineSection({ formData, handleChange, onPipel
                 <div className="data-group">
                     <div className="group-header" onClick={() => toggleGroup('notes')}>
                         <h4>📝 Notes Générales</h4>
-                        <ChevronDown 
+                        <ChevronDown
                             size={16}
-                            style={{ 
+                            style={{
                                 transform: expandedGroups.notes ? 'rotate(180deg)' : 'rotate(0deg)',
                                 transition: 'transform 0.2s'
                             }}

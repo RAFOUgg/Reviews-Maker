@@ -25,7 +25,7 @@ async function seedPhase1Fleurs() {
         console.log('👤 Creating test producer user...')
 
         const hashedPassword = await bcrypt.hash('test-producer-123', 10)
-        
+
         const testUser = await prisma.user.upsert({
             where: { email: 'producer@test-reviews-maker.local' },
             update: {},

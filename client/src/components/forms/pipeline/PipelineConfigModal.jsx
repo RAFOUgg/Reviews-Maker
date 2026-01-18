@@ -41,7 +41,7 @@ export default function PipelineConfigModal({ mode, selectedPresets, onSave, onC
     const handleToggleCategory = (category) => {
         setConfig(prev => ({
             ...prev,
-            [`track${category.charAt(0).toUpperCase() + category.slice(1)}`]: 
+            [`track${category.charAt(0).toUpperCase() + category.slice(1)}`]:
                 !prev[`track${category.charAt(0).toUpperCase() + category.slice(1)}`]
         }))
     }
@@ -64,7 +64,7 @@ export default function PipelineConfigModal({ mode, selectedPresets, onSave, onC
     const handleUpdateCustomField = (fieldId, updates) => {
         setConfig(prev => ({
             ...prev,
-            customFields: prev.customFields.map(f => 
+            customFields: prev.customFields.map(f =>
                 f.id === fieldId ? { ...f, ...updates } : f
             )
         }))
@@ -86,7 +86,7 @@ export default function PipelineConfigModal({ mode, selectedPresets, onSave, onC
 
     return (
         <div className="config-modal-overlay">
-            <motion.div 
+            <motion.div
                 className="config-modal"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -135,7 +135,7 @@ export default function PipelineConfigModal({ mode, selectedPresets, onSave, onC
                     <div className="custom-fields-section">
                         <div className="section-header">
                             <h3>➕ Champs Personnalisés</h3>
-                            <button 
+                            <button
                                 className="btn-add-field"
                                 onClick={handleAddCustomField}
                             >
@@ -145,7 +145,7 @@ export default function PipelineConfigModal({ mode, selectedPresets, onSave, onC
 
                         <div className="custom-fields-list">
                             {config.customFields.map(field => (
-                                <motion.div 
+                                <motion.div
                                     key={field.id}
                                     className="custom-field-item"
                                     initial={{ opacity: 0, x: -20 }}

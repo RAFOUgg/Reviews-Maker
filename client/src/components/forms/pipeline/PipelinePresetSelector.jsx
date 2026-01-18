@@ -138,7 +138,7 @@ export default function PipelinePresetSelector({ onSelect, onClose }) {
 
     return (
         <div className="preset-selector-overlay">
-            <motion.div 
+            <motion.div
                 className="preset-selector-modal"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -169,7 +169,7 @@ export default function PipelinePresetSelector({ onSelect, onClose }) {
                             {selectedPresets[group.id] && (
                                 <div className="preset-selected">
                                     <span>✓ {selectedPresets[group.id].name}</span>
-                                    <button 
+                                    <button
                                         className="btn-unselect"
                                         onClick={() => handleRemovePreset(group.id)}
                                     >
