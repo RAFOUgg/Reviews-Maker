@@ -89,6 +89,7 @@ model User {
   reportsReceived     Report[] @relation("ReportedUser")
   cultivars           Cultivar[]
   geneticTrees        GeneticTree[] @relation("userGeneticTrees")
+  cultureSetups       CultureSetup[]
   savedTemplates      SavedTemplate[]
   watermarks          Watermark[]
   savedData           SavedData[]
@@ -264,6 +265,7 @@ model Review {
   hashData    HashReview? // Données spécifiques Hash (1-to-1)
   concentrateData ConcentrateReview? // Données spécifiques Concentré (1-to-1)
   edibleData  EdibleReview? // Données spécifiques Comestible (1-to-1)
+  pipeline    Pipeline? // Pipeline culture (Phase 1)
   views       ReviewView[]
   comments    ReviewComment[]
 
@@ -1331,4 +1333,123 @@ model GenEdge {
   @@index([childNodeId])
   @@unique([parentNodeId, childNodeId, relationshipType]) // Empêche les doublons
   @@map("gen_edges")
+}
+
+// ================================================
+// PHASE 1: FLEURS - Culture Pipeline System
+// ================================================
+
+// CultureSetup: Presets réutilisables pour chaque groupe de données
+model CultureSetup {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Métadonnées
+  name                String   // Ex: "Indoor LED Standard", "Bio Composé"
+  description         String?  // Description du preset
+  group               String   // "espace" | "substrat" | "irrigation" | "engrais" | "lumiere" | "climat" | "palissage" | "morphologie" | "recolte"
+  productType         String   @default("fleurs")
+  
+  // Gestion versions
+  version             Int      @default(1)
+  isActive            Boolean  @default(true)
+  isTemplate          Boolean  @default(false)
+  
+  // Statistiques d'utilisation
+  usageCount          Int      @default(0)
+  usedInReviews       String   @default("[]")  // JSON: IDs des reviews
+  personalRating      Int?     // Note 1-5
+  
+  // Données du preset (structure complète du groupe)
+  data                String   // JSON: Configuration complète
+  
+  // Timestamps
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  // Relations
+  pipelineStages      PipelineStage[]
+  
+  @@unique([userId, group, name])
+  @@index([userId])
+  @@index([group])
+  @@map("culture_setups")
+}
+
+// Pipeline: Vue d'ensemble de la culture entière
+model Pipeline {
+  id                  String   @id @default(cuid())
+  reviewId            String   @unique
+  review              Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  
+  // Configuration
+  mode                String   // "jours" | "semaines" | "phases"
+  startDate           DateTime
+  endDate             DateTime
+  
+  // Phases prédéfinies (si mode="phases")
+  phases              String   @default("[]")  // JSON: [{"name": "Germination", "startDay": 0, "endDay": 5, ...}]
+  
+  // Presets actifs utilisés dans cette culture
+  activeSetups        String   @default("[]")  // JSON: [setupId1, setupId2, ...]
+  
+  // Données générales
+  notesGenerales      String?  // Notes générales de la culture
+  
+  // Calculs automatiques
+  durationDays        Int?     // Durée totale en jours
+  totalEvents         Int      @default(0)
+  completionPercent   Float    @default(0)
+  
+  // Timestamps
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  // Relations
+  stages              PipelineStage[]
+  
+  @@index([reviewId])
+  @@map("pipelines")
+}
+
+// PipelineStage: Étape individuelle (jour, semaine, ou phase)
+model PipelineStage {
+  id                  String   @id @default(cuid())
+  pipelineId          String
+  pipeline            Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  
+  // Position dans le calendrier
+  intervalLabel       String   // Ex: "J1", "S1", "Germination"
+  scheduledDate       DateTime?
+  dayNumber           Int?     // 0-90 si mode=jours
+  weekNumber          Int?     // Si mode=semaines
+  phaseNumber         Int?     // Si mode=phases
+  
+  // Lien au preset pour ce groupe
+  cultureSetupId      String?
+  cultureSetup        CultureSetup? @relation(fields: [cultureSetupId], references: [id], onDelete: SetNull)
+  
+  // Événement principal
+  eventType           String?  // "arrosage" | "engrais" | "technique" | "climat" | "morphologie" | "note" | null
+  eventData           String?  // JSON: Données spécifiques à l'événement
+  
+  // Observations
+  observations        String?  // Commentaires (max 500 chars)
+  photoUrl            String?  // Photo de cette étape
+  
+  // État
+  isCompleted         Boolean  @default(false)
+  completedAt         DateTime?
+  completedBy         String?  // userId
+  
+  // Timestamps
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  @@unique([pipelineId, intervalLabel])
+  @@index([pipelineId])
+  @@index([cultureSetupId])
+  @@index([scheduledDate])
+  @@map("pipeline_stages")
 }
