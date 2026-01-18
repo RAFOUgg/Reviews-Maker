@@ -1,0 +1,273 @@
+/* PipelineCalendarView.css */
+
+.pipeline-calendar-view {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e0e6ed;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.calendar-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.legend {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.legend-box {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+/* Calendar Container */
+.calendar-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    padding: 0.5rem 0;
+}
+
+.calendar-week {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.week-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #999;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.week-label small {
+    display: block;
+    line-height: 1;
+}
+
+/* Calendar Cells */
+.week-cells {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.35rem;
+}
+
+.calendar-cell {
+    position: relative;
+    aspect-ratio: 1;
+    min-width: 16px;
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: #333;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.calendar-cell:hover {
+    transform: scale(1.15);
+    z-index: 10;
+    border-color: #4a9d6f;
+}
+
+.cell-date {
+    opacity: 0.7;
+}
+
+.cell-indicator {
+    position: absolute;
+    font-size: 0.4rem;
+    bottom: 1px;
+    color: #4a9d6f;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Tooltip */
+.week-tooltip {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #333;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    z-index: 20;
+    pointer-events: none;
+    animation: fadeInUp 0.2s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.week-tooltip strong {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.week-tooltip p {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Calendar Stats */
+.calendar-stats {
+    display: flex;
+    gap: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e0e6ed;
+    flex-wrap: wrap;
+}
+
+.stat {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.stat-label {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.stat strong {
+    color: #4a9d6f;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .pipeline-calendar-view {
+        padding: 1rem;
+    }
+
+    .calendar-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .legend {
+        width: 100%;
+    }
+
+    .week-label {
+        width: 40px;
+        font-size: 0.65rem;
+    }
+
+    .calendar-cell {
+        min-width: 14px;
+        font-size: 0.6rem;
+    }
+
+    .week-tooltip {
+        top: -35px;
+        font-size: 0.75rem;
+    }
+
+    .calendar-stats {
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-container {
+        gap: 0.25rem;
+        padding: 0.25rem 0;
+    }
+
+    .calendar-week {
+        gap: 0.25rem;
+    }
+
+    .week-label {
+        width: 30px;
+        font-size: 0.6rem;
+        height: 16px;
+    }
+
+    .week-cells {
+        gap: 0.2rem;
+    }
+
+    .calendar-cell {
+        min-width: 12px;
+        font-size: 0.55rem;
+    }
+
+    .calendar-header {
+        gap: 0.5rem;
+    }
+
+    .calendar-header h3 {
+        font-size: 1rem;
+    }
+
+    .legend {
+        gap: 0.75rem;
+    }
+
+    .legend-item {
+        font-size: 0.8rem;
+    }
+}
