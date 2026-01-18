@@ -40,23 +40,9 @@ router.get('/info', asyncHandler(async (req, res) => {
 router.get('/types', (req, res) => {
     const types = [
         {
-            type: ACCOUNT_TYPES.BETA_TESTER,
-            name: 'Beta testeur',
-            description: 'Accès complet à toutes les fonctionnalités pendant la bêta',
-            price: 0,
-            features: [
-                'Toutes les fonctionnalités activées',
-                'Exports HD et 4K',
-                'Galeries publiques et privées',
-                'Support prioritaire pendant la bêta',
-            ],
-            requiresSubscription: false,
-            disabled: false,
-        },
-        {
-            type: ACCOUNT_TYPES.CONSUMER,
-            name: 'Consommateur',
-            description: 'Créez et gérez vos reviews personnelles (bientôt disponible)',
+            type: ACCOUNT_TYPES.AMATEUR,
+            name: 'Amateur',
+            description: 'Créez et gérez vos reviews personnelles gratuitement',
             price: 0,
             features: [
                 'Sections essentielles',
@@ -67,7 +53,7 @@ router.get('/types', (req, res) => {
                 '3 exports/jour',
             ],
             requiresSubscription: false,
-            disabled: true,
+            disabled: false,
         },
         {
             type: ACCOUNT_TYPES.INFLUENCEUR,
@@ -88,20 +74,22 @@ router.get('/types', (req, res) => {
             disabled: false,
         },
         {
-            type: ACCOUNT_TYPES.PRODUCER,
+            type: ACCOUNT_TYPES.PRODUCTEUR,
             name: 'Producteur',
-            description: 'Pour les producteurs de cannabis (bientôt disponible)',
-            price: null,
+            description: 'Pour les producteurs - pipelines configurables et exports pros',
+            price: 29.99,
             features: [
-                'Profil entreprise vérifié',
-                'Dashboard analytics avancé',
-                'Gestion équipe (5 membres)',
-                'White-label exports',
-                'Support dédié',
+                'Tous les templates (5+ options)',
+                'PipeLines configurables',
+                'Arbre généalogique',
+                'Export tous formats (PNG/PDF/SVG/CSV/JSON/HTML)',
+                'Filigrane et branding avancé',
+                'Statistiques producteur',
+                'Support prioritaire',
+                'Gestion équipe (2 membres)',
             ],
-            requiresSubscription: false,
-            requiresVerification: true,
-            disabled: true,
+            requiresSubscription: true,
+            disabled: false,
         },
     ];
 
@@ -137,11 +125,13 @@ router.post('/change-type', asyncHandler(async (req, res) => {
         });
     }
 
-    // Producteur désactivé en MVP (paiement/verification non disponibles)
-    if (newType === ACCOUNT_TYPES.PRODUCER) {
-        return res.status(403).json({
-            error: 'type_not_available',
-            message: 'Le compte producteur sera disponible plus tard. Choisissez un autre type.',
+    // Producteur est maintenant disponible en subscription
+    if (newType === ACCOUNT_TYPES.PRODUCTEUR) {
+        // Vérifier que l'utilisateur a une subscription valide (Feature 13 - payment)
+        // Pour MVP1, on accepte le changement; le payment sera validé en Feature 13
+        return res.status(200).json({
+            message: 'Changement de type accepté (paiement requis en Feature 13)',
+            newType,
         });
     }
 
@@ -419,15 +409,15 @@ router.put('/update', asyncHandler(async (req, res) => {
     const { accountType } = req.body;
     if (accountType) {
         // Map frontend accountType to backend roles/subscription
-        if (accountType === 'producer') {
-            updates.subscriptionType = 'producer';
-            updates.roles = JSON.stringify({ roles: ['producer', 'consumer'] });
-        } else if (accountType === 'influencer') {
-            updates.subscriptionType = 'influencer';
-            updates.roles = JSON.stringify({ roles: ['influencer', 'consumer'] });
-        } else if (accountType === 'consumer') {
+        if (accountType === 'producteur') {
+            updates.subscriptionType = 'producteur';
+            updates.roles = JSON.stringify({ roles: ['producteur', 'amateur'] });
+        } else if (accountType === 'influenceur') {
+            updates.subscriptionType = 'influenceur';
+            updates.roles = JSON.stringify({ roles: ['influenceur', 'amateur'] });
+        } else if (accountType === 'amateur') {
             updates.subscriptionType = null;
-            updates.roles = JSON.stringify({ roles: ['consumer'] });
+            updates.roles = JSON.stringify({ roles: ['amateur'] });
         }
     }
 

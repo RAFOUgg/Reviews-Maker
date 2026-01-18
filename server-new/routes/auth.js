@@ -76,10 +76,10 @@ function sanitizeUser(user) {
         accountType,
         roles: (() => {
             try {
-                const parsed = JSON.parse(user.roles || '{"roles":["consumer"]}')
-                return parsed.roles || ['consumer']
+                const parsed = JSON.parse(user.roles || '{"roles":["amateur"]}')
+                return parsed.roles || ['amateur']
             } catch (err) {
-                return ['consumer']
+                return ['amateur']
             }
         })(),
         // Champs légaux pour ne pas redemander à chaque connexion
@@ -112,7 +112,7 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
     }
 
     const normalizedEmail = String(email).trim().toLowerCase()
-    const chosenType = Object.values(ACCOUNT_TYPES).includes(accountType) ? accountType : ACCOUNT_TYPES.CONSUMER
+    const chosenType = Object.values(ACCOUNT_TYPES).includes(accountType) ? accountType : ACCOUNT_TYPES.AMATEUR
 
     const existing = await prisma.user.findFirst({ where: { email: normalizedEmail } })
     if (existing && existing.passwordHash) {
