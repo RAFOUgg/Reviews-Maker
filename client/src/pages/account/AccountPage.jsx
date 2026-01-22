@@ -17,7 +17,6 @@ import {
   Check,
   Settings
 } from 'lucide-react'
-import UsageQuotas from '../../components/account/UsageQuotas'
 import ProfileSection from './sections/ProfileSection'
 import AccountTypeDisplay from '../../components/account/AccountTypeDisplay'
 import { useAccountFeatures } from '../../hooks/useAccountFeatures'
@@ -29,32 +28,14 @@ const SUPPORTED_LANGUAGES = [
 ]
 
 // Génère les onglets dynamiquement selon le type de compte
+// Gestion du compte UNIQUEMENT (pas de bibliothèque ici)
 const getTabSections = (accountType) => {
-  const baseTabs = [
+  return [
     { id: 'profile', label: 'Profil', icon: User },
     { id: 'subscription', label: 'Abonnement', icon: CreditCard },
+    { id: 'preferences', label: 'Préférences', icon: Settings },
+    { id: 'security', label: 'Sécurité', icon: Lock }
   ]
-
-  // Templates: Producteur + Influenceur only
-  if (accountType === 'producteur' || accountType === 'influenceur') {
-    baseTabs.push({ id: 'templates', label: 'Templates', icon: '⭐', locked: false })
-  }
-
-  // Filigranes: Producteur only
-  if (accountType === 'producteur') {
-    baseTabs.push({ id: 'watermarks', label: 'Filigranes', icon: '🏷️', locked: false })
-  }
-
-  // Export: Producteur + Influenceur only
-  if (accountType === 'producteur' || accountType === 'influenceur') {
-    baseTabs.push({ id: 'export', label: 'Export', icon: '📤', locked: false })
-  }
-
-  // Preferences and Saved Data (all account types)
-  baseTabs.push({ id: 'preferences', label: 'Préférences', icon: Settings })
-  baseTabs.push({ id: 'saved-data', label: 'Données sauvegardées', icon: Save, locked: false })
-
-  return baseTabs
 }
 
 const AccountPage = () => {
@@ -262,27 +243,10 @@ const AccountPage = () => {
             />
           )}
 
-          {activeTab === 'saved-data' && (
-            <SavedDataSection />
-          )}
-
-          {activeTab === 'templates' && (
-            <TemplatesSection />
-          )}
-
-          {activeTab === 'watermarks' && (
-            <WatermarksSection />
-          )}
-
-          {activeTab === 'export' && (
-            <ExportSection />
+          {activeTab === 'security' && (
+            <SecuritySection t={t} />
           )}
         </motion.div>
-      </div>
-
-      {/* Usage Quotas - Always visible below tabs */}
-      <div className="mt-8">
-        <UsageQuotas compact={false} />
       </div>
     </div>
   )
@@ -403,126 +367,61 @@ function PreferencesSection({ preferences, handlePreferenceChange, visibilityOpt
   )
 }
 
-function SavedDataSection() {
+function SecuritySection({ t }) {
   return (
     <div>
-      <h3 className="text-2xl font-bold mb-6">Données sauvegardées</h3>
-      <p className="text-gray-400 mb-6">Enregistrez vos substrats, engrais et matériel fréquemment utilisés pour un remplissage rapide des reviews.</p>
+      <h3 className="text-2xl font-bold mb-6">{t('account.security') || 'Sécurité'}</h3>
+      <p className="text-gray-400 mb-6">Gérez votre mot de passe et les paramètres de sécurité de votre compte.</p>
 
       <div className="space-y-6">
-        <div className="p-4 rounded-xl bg-gray-700/30 border border-gray-600/30">
-          <h3 className="font-semibold text-white mb-3 flex items-center gap-2"><span>🌱</span><span>Substrats favoris</span></h3>
-          <div className="space-y-2 mb-3">
-            <div className="flex items-center justify-between p-2 bg-gray-800/50 rounded-lg">
-              <span className="text-gray-400">Terre BioBizz Light Mix</span>
-              <button className="text-red-500 hover:text-red-600">🗑️</button>
+        <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600/30">
+          <h4 className="font-semibold text-white mb-4">Changer le mot de passe</h4>
+          <div className="space-y-4">
+            <input
+              type="password"
+              placeholder="Mot de passe actuel"
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600/50 rounded-lg text-white focus:border-blue-500/50 outline-none"
+            />
+            <input
+              type="password"
+              placeholder="Nouveau mot de passe"
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600/50 rounded-lg text-white focus:border-blue-500/50 outline-none"
+            />
+            <input
+              type="password"
+              placeholder="Confirmer le mot de passe"
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600/50 rounded-lg text-white focus:border-blue-500/50 outline-none"
+            />
+            <button className="w-full px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all">
+              Mettre à jour le mot de passe
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600/30">
+          <h4 className="font-semibold text-white mb-4">Authentification à deux facteurs (2FA)</h4>
+          <p className="text-gray-400 text-sm mb-4">Ajoutez une couche de sécurité supplémentaire à votre compte</p>
+          <button className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all">
+            Activer 2FA
+          </button>
+        </div>
+
+        <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600/30">
+          <h4 className="font-semibold text-white mb-4">Sessions actives</h4>
+          <p className="text-gray-400 text-sm mb-4">Gérez vos sessions de connexion actives</p>
+          <div className="space-y-2 mb-4">
+            <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                <span className="text-gray-300 text-sm">Appareil actuel</span>
+              </div>
+              <span className="text-gray-500 text-xs">Maintenant</span>
             </div>
           </div>
-          <button className="w-full px-4 py-2 border-2 border-dashed border-gray-600/30 rounded-lg text-gray-400 hover:border-gray-400 hover:text-white transition-all">+ Ajouter un substrat</button>
+          <button className="w-full px-4 py-2 border border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-lg transition-all">
+            Déconnecter tous les autres appareils
+          </button>
         </div>
-
-        <div className="p-4 rounded-xl bg-gray-700/30 border border-gray-600/30">
-          <h3 className="font-semibold text-white mb-3 flex items-center gap-2"><span>🧪</span><span>Engrais favoris</span></h3>
-          <div className="space-y-2 mb-3">
-            <div className="flex items-center justify-between p-2 bg-gray-800/50 rounded-lg">
-              <span className="text-gray-400">BioBizz Grow</span>
-              <button className="text-red-500 hover:text-red-600">🗑️</button>
-            </div>
-          </div>
-          <button className="w-full px-4 py-2 border-2 border-dashed border-gray-600/30 rounded-lg text-gray-400 hover:border-gray-400 hover:text-white transition-all">+ Ajouter un engrais</button>
-        </div>
-
-        <div className="p-4 rounded-xl bg-gray-700/30 border border-gray-600/30">
-          <h3 className="font-semibold text-white mb-3 flex items-center gap-2"><span>🔧</span><span>Matériel favori</span></h3>
-          <div className="space-y-2 mb-3">
-            <div className="flex items-center justify-between p-2 bg-gray-800/50 rounded-lg">
-              <span className="text-gray-400">LED Spider Farmer SF2000</span>
-              <button className="text-red-500 hover:text-red-600">🗑️</button>
-            </div>
-          </div>
-          <button className="w-full px-4 py-2 border-2 border-dashed border-gray-600/30 rounded-lg text-gray-400 hover:border-gray-400 hover:text-white transition-all">+ Ajouter du matériel</button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function TemplatesSection() {
-  return (
-    <div>
-      <h3 className="text-2xl font-bold mb-6">Templates favoris</h3>
-      <p className="text-gray-400 mb-6">Gérez vos templates d'export personnalisés et marquez vos favoris.</p>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-4 rounded-xl bg-gray-700/30 border border-gray-600/30 transition-all hover:border-blue-500/50">
-          <div className="flex items-start justify-between mb-3">
-            <div>
-              <h3 className="font-semibold text-white">Template Instagram</h3>
-              <p className="text-sm text-gray-400">Format 1:1 • Compact</p>
-            </div>
-            <button className="text-yellow-500 text-xl hover:scale-110 transition-transform">⭐</button>
-          </div>
-          <div className="flex gap-2">
-            <button className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-all">Utiliser</button>
-            <button className="px-3 py-2 rounded-lg text-gray-400 bg-gray-600/40 hover:bg-gray-600/60 text-sm font-medium transition-all">Modifier</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function WatermarksSection() {
-  return (
-    <div>
-      <h3 className="text-2xl font-bold mb-6">Filigranes personnalisés</h3>
-      <p className="text-gray-400 mb-6">Créez et gérez vos filigranes personnalisés pour vos exports.</p>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <button className="p-6 border-2 border-dashed border-gray-600/30 rounded-xl text-gray-400 hover:text-white hover:border-gray-400 transition-all bg-gray-700/30">
-          <div className="text-4xl mb-2">+</div>
-          <div className="font-semibold">Créer un filigrane</div>
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function ExportSection() {
-  return (
-    <div>
-      <h3 className="text-2xl font-bold mb-6">Préférences d'export</h3>
-
-      <div className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">Format par défaut</label>
-          <select className="w-full px-4 py-2 rounded-lg border border-gray-600/30 bg-gray-700/30 text-white focus:outline-none focus:border-blue-500/50">
-            <option value="png">PNG</option>
-            <option value="jpeg">JPEG</option>
-            <option value="pdf">PDF</option>
-            <option value="svg">SVG</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">Qualité par défaut</label>
-          <select className="w-full px-4 py-2 rounded-lg border border-gray-600/30 bg-gray-700/30 text-white focus:outline-none focus:border-blue-500/50">
-            <option value="standard">Standard (72 dpi)</option>
-            <option value="high">Haute (300 dpi)</option>
-            <option value="ultra">Ultra (600 dpi)</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">Template par défaut</label>
-          <select className="w-full px-4 py-2 rounded-lg border border-gray-600/30 bg-gray-700/30 text-white focus:outline-none focus:border-blue-500/50">
-            <option value="compact">Compact</option>
-            <option value="detailed">Détaillé</option>
-            <option value="complete">Complète</option>
-          </select>
-        </div>
-
-        <button className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all">Sauvegarder les modifications</button>
       </div>
     </div>
   )
