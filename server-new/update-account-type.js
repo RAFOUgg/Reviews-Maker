@@ -9,7 +9,8 @@ const prisma = new PrismaClient()
 
 async function updateUserAccount() {
   try {
-    const user = await prisma.user.findUnique({
+    // D'abord, chercher l'utilisateur par email
+    const user = await prisma.user.findFirst({
       where: { email: 'bgmgaming09@gmail.com' }
     })
 
@@ -19,22 +20,23 @@ async function updateUserAccount() {
     }
 
     console.log('📋 Utilisateur actuel:')
+    console.log(`  ID: ${user.id}`)
     console.log(`  Email: ${user.email}`)
     console.log(`  Type: ${user.accountType}`)
-    console.log(`  Rôle: ${user.role}`)
+    console.log(`  Rôles: ${user.roles}`)
 
     // Mettre à jour le compte
     const updated = await prisma.user.update({
-      where: { email: 'bgmgaming09@gmail.com' },
+      where: { id: user.id },
       data: {
-        accountType: 'producteur', // Producteur
-        role: 'admin' // + Admin pour dev/test
+        accountType: 'producteur',
+        roles: 'admin' // Producteur + Admin
       }
     })
 
     console.log('\n✅ Utilisateur mis à jour:')
     console.log(`  Type: ${updated.accountType}`)
-    console.log(`  Rôle: ${updated.role}`)
+    console.log(`  Rôles: ${updated.roles}`)
 
   } catch (error) {
     console.error('❌ Erreur:', error.message)
