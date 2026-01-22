@@ -10,7 +10,7 @@
 
 import express from 'express'
 import { PrismaClient } from '@prisma/client'
-import { verifyToken } from '../middleware/auth.js'
+import { requireAuth } from '../middleware/auth.js'
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -20,7 +20,7 @@ const prisma = new PrismaClient()
 // ============================================================
 
 // Vérifier que l'utilisateur est authentifié
-router.use(verifyToken);
+router.use(requireAuth)
 
 // ============================================================
 // CULTURE SETUPS (PRESETS) - 8 Endpoints
