@@ -198,8 +198,8 @@ const AccountPage = () => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-3 md:px-4 py-4 text-sm md:text-base font-medium transition-all border-b-2 ${activeTab === tab.id
-                    ? 'border-blue-500 bg-gray-700/30 text-white'
-                    : 'border-transparent text-gray-400 hover:text-gray-300'
+                  ? 'border-blue-500 bg-gray-700/30 text-white'
+                  : 'border-transparent text-gray-400 hover:text-gray-300'
                   }`}
                 title={tab.label}
               >
