@@ -428,4 +428,4 @@ function generateBackupCodes(count = 10) {
   return codes;
 }
 
-module.exports = router;
+export default router;
