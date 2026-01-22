@@ -1,6 +1,31 @@
 import { create } from 'zustand'
 import { reviewsService, authService, usersService } from '../services/apiService'
 
+/**
+ * Extrait le type de compte depuis les rôles utilisateur
+ * @param {string|null} rolesJson - Champ roles en JSON
+ * @returns {string} Type de compte: 'admin' | 'producteur' | 'influenceur' | 'amateur'
+ */
+function extractAccountType(rolesJson) {
+    if (!rolesJson) return 'amateur'
+    try {
+        const parsed = typeof rolesJson === 'string' ? JSON.parse(rolesJson) : rolesJson
+        const roles = parsed?.roles || []
+
+        // Priorité: admin > producteur > influenceur > amateur
+        if (roles.includes('admin')) return 'admin'
+        if (roles.includes('producteur')) return 'producteur'
+        if (roles.includes('influenceur')) return 'influenceur'
+        // Rétrocompatibilité
+        if (roles.includes('producer')) return 'producteur'
+        if (roles.includes('influencer_pro') || roles.includes('influencer_basic')) return 'influenceur'
+
+        return 'amateur'
+    } catch {
+        return 'amateur'
+    }
+}
+
 export const useStore = create((set, get) => ({
     // Reviews state
     reviews: [],
@@ -18,6 +43,7 @@ export const useStore = create((set, get) => ({
     // User state
     user: null,
     isAuthenticated: false,
+    accountType: 'amateur', // 'amateur' | 'producteur' | 'influenceur' | 'admin'
 
     // Cache pour éviter les requêtes répétées
     _reviewsCache: {},
@@ -26,6 +52,7 @@ export const useStore = create((set, get) => ({
 
     // Actions - User
     setUser: (user) => set({ user, isAuthenticated: !!user }),
+    setAccountType: (accountType) => set({ accountType }),
 
     logout: async () => {
         try {
@@ -33,16 +60,18 @@ export const useStore = create((set, get) => ({
         } catch (error) {
             // Erreur silencieuse
         }
-        set({ user: null, isAuthenticated: false, reviews: [], _reviewsCache: {} })
+        set({ user: null, isAuthenticated: false, accountType: 'amateur', reviews: [], _reviewsCache: {} })
     },
 
     checkAuth: async () => {
         try {
             const user = await authService.getMe()
-            set({ user, isAuthenticated: true })
+            // Extract account type from user roles
+            const accountType = extractAccountType(user?.roles) || 'amateur'
+            set({ user, isAuthenticated: true, accountType })
             return user
         } catch (error) {
-            set({ user: null, isAuthenticated: false })
+            set({ user: null, isAuthenticated: false, accountType: 'amateur' })
             return null
         }
     },

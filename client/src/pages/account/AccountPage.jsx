@@ -3,14 +3,14 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../store'
 import { motion } from 'framer-motion'
-import { 
-  LogOut, 
-  CreditCard, 
-  Bell, 
-  Eye, 
-  Save, 
-  Share2, 
-  BarChart3, 
+import {
+  LogOut,
+  CreditCard,
+  Bell,
+  Eye,
+  Save,
+  Share2,
+  BarChart3,
   Lock,
   User,
   Calendar,
@@ -19,6 +19,8 @@ import {
 } from 'lucide-react'
 import UsageQuotas from '../../components/account/UsageQuotas'
 import ProfileSection from './sections/ProfileSection'
+import AccountTypeDisplay from '../../components/account/AccountTypeDisplay'
+import { useAccountFeatures } from '../../hooks/useAccountFeatures'
 
 const SUPPORTED_LANGUAGES = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
@@ -26,30 +28,47 @@ const SUPPORTED_LANGUAGES = [
   { code: 'es', name: 'Español', flag: '🇪🇸' }
 ]
 
-const TAB_SECTIONS = [
-  { id: 'profile', label: 'Profil', icon: User },
-  { id: 'preferences', label: 'Préférences', icon: Settings },
-  { id: 'saved-data', label: 'Données sauvegardées', icon: Save, locked: false },
-  { id: 'templates', label: 'Templates', icon: '⭐', locked: false },
-  { id: 'watermarks', label: 'Filigranes', icon: '🏷️', locked: false },
-  { id: 'export', label: 'Export', icon: '📤', locked: false },
-]
+// Génère les onglets dynamiquement selon le type de compte
+const getTabSections = (accountType) => {
+  const baseTabs = [
+    { id: 'profile', label: 'Profil', icon: User },
+    { id: 'subscription', label: 'Abonnement', icon: CreditCard },
+    { id: 'preferences', label: 'Préférences', icon: Settings },
+    { id: 'saved-data', label: 'Données sauvegardées', icon: Save, locked: false },
+  ]
+
+  // Templates: Producteur + Influenceur only
+  if (accountType === 'producteur' || accountType === 'influenceur') {
+    baseTabs.push({ id: 'templates', label: 'Templates', icon: '⭐', locked: false })
+  }
+
+  // Filigranes: Producteur only
+  if (accountType === 'producteur') {
+    baseTabs.push({ id: 'watermarks', label: 'Filigranes', icon: '🏷️', locked: false })
+  }
+
+  baseTabs.push({ id: 'export', label: 'Export', icon: '📤', locked: false })
+
+  return baseTabs
+}
 
 const AccountPage = () => {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { user, accountType } = useStore()
-  
+  const { isProducteur } = useAccountFeatures()
+
   // Check if profile is complete
   const isProfileComplete = user?.birthdate && user?.country
-  
+
   // Active tab state
   const [activeTab, setActiveTab] = useState('profile')
-  
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+
   // Profile/Language state
   const [language, setLanguage] = useState(() => i18n.language || 'fr')
   const [isSaved, setIsSaved] = useState(false)
-  
+
   // Preferences state (from PreferencesPage)
   const [preferences, setPreferences] = useState(() => {
     const saved = localStorage.getItem('userPreferences')
@@ -68,14 +87,14 @@ const AccountPage = () => {
     try {
       setLanguage(newLang)
       await i18n.changeLanguage(newLang)
-      
+
       // Save to backend
       const response = await fetch('/api/account/language', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ language: newLang })
       })
-      
+
       if (response.ok) {
         setIsSaved(true)
         setTimeout(() => setIsSaved(false), 2000)
@@ -185,18 +204,17 @@ const AccountPage = () => {
       {/* Tabbed Navigation Container */}
       <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-700/50">
         {/* Tab Navigation */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-0">
-          {TAB_SECTIONS.map((tab) => {
+        <div className="grid grid-cols-2 md:grid-cols-7 gap-0">
+          {getTabSections(accountType).map((tab) => {
             const Icon = typeof tab.icon === 'string' ? null : tab.icon
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-3 md:px-4 py-4 text-sm md:text-base font-medium transition-all border-b-2 ${
-                  activeTab === tab.id
+                className={`px-3 md:px-4 py-4 text-sm md:text-base font-medium transition-all border-b-2 ${activeTab === tab.id
                     ? 'border-blue-500 bg-gray-700/30 text-white'
                     : 'border-transparent text-gray-400 hover:text-gray-300'
-                }`}
+                  }`}
                 title={tab.label}
               >
                 <div className="flex items-center gap-1 md:gap-2 justify-center">
@@ -219,7 +237,17 @@ const AccountPage = () => {
           {activeTab === 'profile' && (
             <ProfileSection />
           )}
-          
+
+          {activeTab === 'subscription' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold mb-2">💳 Gérer mon abonnement</h2>
+                <p className="text-gray-400">Découvrez nos offres et gérez votre souscription</p>
+              </div>
+              <AccountTypeDisplay onUpgradeClick={() => setShowUpgradeModal(true)} />
+            </div>
+          )}
+
           {activeTab === 'preferences' && (
             <PreferencesSection
               preferences={preferences}
@@ -228,19 +256,19 @@ const AccountPage = () => {
               t={t}
             />
           )}
-          
+
           {activeTab === 'saved-data' && (
             <SavedDataSection />
           )}
-          
+
           {activeTab === 'templates' && (
             <TemplatesSection />
           )}
-          
+
           {activeTab === 'watermarks' && (
             <WatermarksSection />
           )}
-          
+
           {activeTab === 'export' && (
             <ExportSection />
           )}
