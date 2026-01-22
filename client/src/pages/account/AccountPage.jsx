@@ -33,8 +33,6 @@ const getTabSections = (accountType) => {
   const baseTabs = [
     { id: 'profile', label: 'Profil', icon: User },
     { id: 'subscription', label: 'Abonnement', icon: CreditCard },
-    { id: 'preferences', label: 'Préférences', icon: Settings },
-    { id: 'saved-data', label: 'Données sauvegardées', icon: Save, locked: false },
   ]
 
   // Templates: Producteur + Influenceur only
@@ -47,7 +45,14 @@ const getTabSections = (accountType) => {
     baseTabs.push({ id: 'watermarks', label: 'Filigranes', icon: '🏷️', locked: false })
   }
 
-  baseTabs.push({ id: 'export', label: 'Export', icon: '📤', locked: false })
+  // Export: Producteur + Influenceur only
+  if (accountType === 'producteur' || accountType === 'influenceur') {
+    baseTabs.push({ id: 'export', label: 'Export', icon: '📤', locked: false })
+  }
+
+  // Preferences and Saved Data (all account types)
+  baseTabs.push({ id: 'preferences', label: 'Préférences', icon: Settings })
+  baseTabs.push({ id: 'saved-data', label: 'Données sauvegardées', icon: Save, locked: false })
 
   return baseTabs
 }

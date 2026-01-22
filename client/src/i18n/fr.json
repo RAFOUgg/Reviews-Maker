@@ -303,5 +303,33 @@
         "download": "Télécharger",
         "share": "Partager",
         "cancel": "Annuler"
+    },
+    "account": {
+        "title": "Mon Compte",
+        "subtitle": "Gérez votre profil, vos préférences et vos données",
+        "profile": "Profil",
+        "subscription": "Abonnement",
+        "preferences": "Préférences",
+        "savedData": "Données sauvegardées",
+        "templates": "Templates",
+        "watermarks": "Filigranes",
+        "export": "Export",
+        "security": "Sécurité",
+        "support": "Support",
+        "accountType": "Type de compte",
+        "memberSince": "Membre depuis",
+        "language": "Langue",
+        "theme": "Thème",
+        "notifications": "Notifications",
+        "notificationsDesc": "Recevoir les notifications d'activité",
+        "defaultVisibility": "Visibilité par défaut",
+        "autoSave": "Sauvegarde automatique",
+        "autoSaveDesc": "Sauvegarder automatiquement les brouillons",
+        "socialSharing": "Partage social",
+        "socialSharingDesc": "Autoriser le partage sur réseaux sociaux",
+        "stats": "Statistiques",
+        "statsDesc": "Afficher les statistiques détaillées",
+        "privacy": "Profil privé",
+        "privacyDesc": "Rendre mon profil privé"
     }
 }
