@@ -1,7 +1,8 @@
 import React, { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Edit2, Save, X, Upload, Mail, User, Globe, FileText, Link as LinkIcon } from 'lucide-react'
+import { Edit2, Save, X, Upload, Mail, User, Globe, FileText, Link as LinkIcon, Building2, MapPin, CreditCard } from 'lucide-react'
 import { useProfileData } from '../../../hooks/useProfileData'
+import { useStore } from '../../../store/useStore'
 
 /**
  * ProfileSection - Gestion des informations personnelles
@@ -10,6 +11,10 @@ import { useProfileData } from '../../../hooks/useProfileData'
 export default function ProfileSection() {
   const { t } = useTranslation()
   const fileInputRef = useRef(null)
+  const { accountType } = useStore()
+  
+  // Comptes payants ont accès aux données entreprise
+  const isPaidAccount = accountType === 'producteur' || accountType === 'influenceur'
   
   const {
     profileData,
@@ -325,6 +330,102 @@ export default function ProfileSection() {
           </label>
         </div>
       </div>
+
+      {/* Card Données Entreprise (Producteurs et Influenceurs uniquement) */}
+      {isPaidAccount && (
+        <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-gray-700/50 space-y-4">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <Building2 className="w-5 h-5" />
+            Données Entreprise
+            <span className="text-xs bg-purple-600/30 text-purple-400 px-2 py-0.5 rounded-full ml-2">
+              {accountType === 'producteur' ? '🌾 Producteur' : '⭐ Influenceur'}
+            </span>
+          </h3>
+          <p className="text-xs text-gray-400">
+            Ces informations sont utilisées pour la facturation et les documents légaux.
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* Nom d'entreprise */}
+            <div className="space-y-2">
+              <label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+                Nom de l'entreprise
+              </label>
+              <input
+                type="text"
+                value={profileData.companyName || ''}
+                onChange={(e) => updateField('companyName', e.target.value)}
+                disabled={!isEditing}
+                placeholder="Votre entreprise"
+                className={`w-full px-4 py-3 rounded-lg border transition-colors ${
+                  isEditing
+                    ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
+                    : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
+                }`}
+              />
+            </div>
+
+            {/* SIRET / Registre commerce */}
+            <div className="space-y-2">
+              <label className="text-xs text-gray-400 uppercase tracking-wider font-semibold flex items-center gap-2">
+                <CreditCard className="w-4 h-4" />
+                SIRET / Registre Commerce
+              </label>
+              <input
+                type="text"
+                value={profileData.siret || ''}
+                onChange={(e) => updateField('siret', e.target.value)}
+                disabled={!isEditing}
+                placeholder="Ex: 123 456 789 00012"
+                className={`w-full px-4 py-3 rounded-lg border transition-colors ${
+                  isEditing
+                    ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
+                    : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
+                }`}
+              />
+            </div>
+
+            {/* Adresse de facturation */}
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-xs text-gray-400 uppercase tracking-wider font-semibold flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                Adresse de facturation
+              </label>
+              <textarea
+                value={profileData.billingAddress || ''}
+                onChange={(e) => updateField('billingAddress', e.target.value)}
+                disabled={!isEditing}
+                placeholder="Adresse complète (rue, code postal, ville, pays)"
+                rows={3}
+                className={`w-full px-4 py-3 rounded-lg border transition-colors resize-none ${
+                  isEditing
+                    ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
+                    : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
+                }`}
+              />
+            </div>
+
+            {/* TVA si applicable */}
+            <div className="space-y-2">
+              <label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+                N° TVA Intracommunautaire (optionnel)
+              </label>
+              <input
+                type="text"
+                value={profileData.vatNumber || ''}
+                onChange={(e) => updateField('vatNumber', e.target.value)}
+                disabled={!isEditing}
+                placeholder="Ex: FR12345678901"
+                className={`w-full px-4 py-3 rounded-lg border transition-colors ${
+                  isEditing
+                    ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
+                    : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
+                }`}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Infos supplémentaires */}
       <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-gray-700/50 space-y-3">

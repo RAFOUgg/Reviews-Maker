@@ -374,7 +374,13 @@ router.put('/update', asyncHandler(async (req, res) => {
         });
     }
 
-    const { username, email, theme, locale } = req.body;
+    const { 
+        username, email, theme, locale,
+        // Champs profil personnel
+        firstName, lastName, country, bio, website, publicProfile,
+        // Champs entreprise (Producteur/Influenceur)
+        companyName, siret, billingAddress, vatNumber
+    } = req.body;
 
     // Validation basique
     const updates = {};
@@ -466,10 +472,40 @@ router.put('/update', asyncHandler(async (req, res) => {
         }
     }
 
+    // Champs profil personnel (nouveaux champs)
+    if (firstName !== undefined) updates.firstName = firstName?.trim() || null;
+    if (lastName !== undefined) updates.lastName = lastName?.trim() || null;
+    if (country !== undefined) updates.country = country?.trim() || null;
+    if (bio !== undefined) updates.bio = bio?.trim()?.substring(0, 500) || null; // Max 500 chars
+    if (website !== undefined) updates.website = website?.trim() || null;
+    if (publicProfile !== undefined) updates.publicProfile = Boolean(publicProfile);
+
     const updatedUser = await prisma.user.update({
         where: { id: req.user.id },
         data: updates,
     });
+
+    // === Gestion des données entreprise (ProducerProfile) ===
+    let producerProfile = null;
+    const userAccountType = getUserAccountType(updatedUser);
+    
+    if ((companyName || siret || billingAddress || vatNumber) && 
+        (userAccountType === 'producteur' || userAccountType === 'influenceur')) {
+        // Rechercher ou créer le ProducerProfile
+        producerProfile = await prisma.producerProfile.upsert({
+            where: { userId: req.user.id },
+            create: {
+                userId: req.user.id,
+                companyName: companyName?.trim() || '',
+                siret: siret?.trim() || null,
+                country: country?.trim() || 'FR',
+            },
+            update: {
+                companyName: companyName?.trim() || undefined,
+                siret: siret?.trim() || undefined,
+            }
+        });
+    }
 
     res.json({
         id: updatedUser.id,
@@ -478,10 +514,22 @@ router.put('/update', asyncHandler(async (req, res) => {
         avatar: updatedUser.avatar,
         theme: updatedUser.theme,
         locale: updatedUser.locale,
-        accountType: getUserAccountType(updatedUser),
+        accountType: userAccountType,
         legalAge: updatedUser.legalAge,
         consentRDR: updatedUser.consentRDR,
         createdAt: updatedUser.createdAt,
+        // Nouveaux champs
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        country: updatedUser.country,
+        bio: updatedUser.bio,
+        website: updatedUser.website,
+        publicProfile: updatedUser.publicProfile,
+        // Données entreprise
+        companyName: producerProfile?.companyName || null,
+        siret: producerProfile?.siret || null,
+        billingAddress: billingAddress || null, // Stocké côté client pour l'instant
+        vatNumber: vatNumber || null, // Stocké côté client pour l'instant
     });
 }));
 

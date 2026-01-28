@@ -17,7 +17,12 @@ export const useProfileData = () => {
     bio: '',
     website: '',
     avatar: null,
-    publicProfile: true
+    publicProfile: true,
+    // Champs entreprise (Producteur/Influenceur)
+    companyName: '',
+    siret: '',
+    billingAddress: '',
+    vatNumber: ''
   })
 
   const [isEditing, setIsEditing] = useState(false)
@@ -37,7 +42,12 @@ export const useProfileData = () => {
         bio: user.bio || '',
         website: user.website || '',
         avatar: user.avatar || null,
-        publicProfile: user.publicProfile ?? true
+        publicProfile: user.publicProfile ?? true,
+        // Champs entreprise
+        companyName: user.companyName || '',
+        siret: user.siret || '',
+        billingAddress: user.billingAddress || '',
+        vatNumber: user.vatNumber || ''
       })
     }
     setIsLoadingProfile(false)
@@ -71,7 +81,12 @@ export const useProfileData = () => {
           country: profileData.country,
           bio: profileData.bio,
           website: profileData.website,
-          publicProfile: profileData.publicProfile
+          publicProfile: profileData.publicProfile,
+          // Champs entreprise
+          companyName: profileData.companyName,
+          siret: profileData.siret,
+          billingAddress: profileData.billingAddress,
+          vatNumber: profileData.vatNumber
         })
       })
 
@@ -153,7 +168,12 @@ export const useProfileData = () => {
       bio: user?.bio || '',
       website: user?.website || '',
       avatar: user?.avatar || null,
-      publicProfile: user?.publicProfile ?? true
+      publicProfile: user?.publicProfile ?? true,
+      // Champs entreprise
+      companyName: user?.companyName || '',
+      siret: user?.siret || '',
+      billingAddress: user?.billingAddress || '',
+      vatNumber: user?.vatNumber || ''
     })
     setIsEditing(false)
     setSaveMessage('')

@@ -38,6 +38,13 @@ model User {
   totpSecret    String?
   totpEnabled   Boolean  @default(false)
   
+  // Profil personnel
+  firstName     String?
+  lastName      String?
+  bio           String?  // Max 500 chars
+  website       String?
+  publicProfile Boolean  @default(true)
+  
   // Conformité légale
   birthdate     DateTime?
   country       String?  // Code ISO (FR, US, CA, etc.)

@@ -19,6 +19,8 @@ import {
 } from 'lucide-react'
 import ProfileSection from './sections/ProfileSection'
 import AccountTypeDisplay from '../../components/account/AccountTypeDisplay'
+import UpgradeModal from '../../components/account/UpgradeModal'
+import SubscriptionHistory from '../../components/account/SubscriptionHistory'
 import { useAccountFeatures } from '../../hooks/useAccountFeatures'
 
 const SUPPORTED_LANGUAGES = [
@@ -231,6 +233,11 @@ const AccountPage = () => {
                 <p className="text-gray-400">Découvrez nos offres et gérez votre souscription</p>
               </div>
               <AccountTypeDisplay onUpgradeClick={() => setShowUpgradeModal(true)} />
+              
+              {/* Historique des paiements (comptes payants uniquement) */}
+              {(accountType === 'producteur' || accountType === 'influenceur') && (
+                <SubscriptionHistory />
+              )}
             </div>
           )}
 
@@ -248,6 +255,12 @@ const AccountPage = () => {
           )}
         </motion.div>
       </div>
+
+      {/* Modal Upgrade */}
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)} 
+      />
     </div>
   )
 }
