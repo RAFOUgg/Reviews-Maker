@@ -13,7 +13,15 @@ import WhiteSlider from '../ui/WhiteSlider';
 export default function EffectsSection({ productType, data: directData, onChange, formData, handleChange }) {
     // Support des deux patterns : data/onChange OU formData/handleChange
     const effectsData = directData || formData?.effets || {};
-    const updateHandler = onChange || ((newData) => handleChange?.('effets', newData));
+    
+    // Créer un handler sûr qui vérifie l'existence des fonctions
+    const updateHandler = (newData) => {
+        if (typeof onChange === 'function') {
+            onChange(newData);
+        } else if (typeof handleChange === 'function') {
+            handleChange('effets', newData);
+        }
+    };
 
     // EFFETS RESSENTIS
     const [onset, setOnset] = useState(effectsData?.onset || 5);
@@ -55,7 +63,7 @@ export default function EffectsSection({ productType, data: directData, onChange
             effetsSecondaires,
             usagesPreferes
         });
-    }, [onset, intensity, duration, selectedEffects, methodeConsommation, dosageUtilise, dosageUnite, dureeEffetsHeures, dureeEffetsMinutes, debutEffets, dureeEffetsCategorie, profilsEffets, effetsSecondaires, usagesPreferes, updateHandler]);
+    }, [onset, intensity, duration, selectedEffects, methodeConsommation, dosageUtilise, dosageUnite, dureeEffetsHeures, dureeEffetsMinutes, debutEffets, dureeEffetsCategorie, profilsEffets, effetsSecondaires, usagesPreferes]);
 
     const toggleEffect = (effectId) => {
         setSelectedEffects(prev => {

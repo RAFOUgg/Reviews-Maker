@@ -18,8 +18,19 @@ import '../../../../styles/sections/CulturePipelineSection.css'
  * Props: data/onChange OU formData/handleChange (supporte les deux patterns)
  */
 export default function CulturePipelineSection({ data, onChange, formData, handleChange, onPipelineCreate }) {
-    // Support des deux patterns d'appel
+    // Support des deux patterns d'appel - avec valeur par défaut sécurisée
     const cultureData = data || formData || {};
+    
+    // Handler sécurisé pour les mises à jour
+    const safeUpdate = (newData) => {
+        if (typeof onChange === 'function') {
+            onChange(newData);
+        } else if (typeof handleChange === 'function') {
+            Object.entries(newData).forEach(([key, value]) => {
+                handleChange(key, value);
+            });
+        }
+    };
 
     const [expandedGroups, setExpandedGroups] = useState({
         setup: true,
@@ -46,20 +57,8 @@ export default function CulturePipelineSection({ data, onChange, formData, handl
             selectedPresets,
             pipelineStages
         };
-
-        // Pattern 1: onChange directement avec l'objet complet
-        if (onChange) {
-            onChange(newData);
-        }
-        // Pattern 2: handleChange avec clés individuelles
-        else if (handleChange) {
-            handleChange('pipelineMode', pipelineMode);
-            handleChange('pipelineStartDate', pipelineStartDate);
-            handleChange('pipelineEndDate', pipelineEndDate);
-            handleChange('selectedPresets', selectedPresets);
-            handleChange('pipelineStages', pipelineStages);
-        }
-    }, [pipelineMode, pipelineStartDate, pipelineEndDate, selectedPresets, pipelineStages, onChange, handleChange])
+        safeUpdate(newData);
+    }, [pipelineMode, pipelineStartDate, pipelineEndDate, selectedPresets, pipelineStages])
 
     const toggleGroup = (groupName) => {
         setExpandedGroups(prev => ({

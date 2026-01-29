@@ -68,7 +68,15 @@ const TEXTURE_LABELS = {
 export default function TextureSection({ productType, data: directData, onChange, formData, handleChange }) {
     // Support des deux patterns : data/onChange OU formData/handleChange
     const textureData = directData || formData?.texture || {};
-    const updateHandler = onChange || ((newData) => handleChange?.('texture', newData));
+    
+    // Créer un handler sûr qui vérifie l'existence des fonctions
+    const updateHandler = (newData) => {
+        if (typeof onChange === 'function') {
+            onChange(newData);
+        } else if (typeof handleChange === 'function') {
+            handleChange('texture', newData);
+        }
+    };
 
     const [hardness, setHardness] = useState(textureData?.hardness || 5);
     const [density, setDensity] = useState(textureData?.density || 5);
@@ -113,7 +121,7 @@ export default function TextureSection({ productType, data: directData, onChange
         }
 
         updateHandler(newTextureData);
-    }, [hardness, density, malleability, elasticity, stickiness, melting, residue, friability, viscosity, productType, updateHandler]);
+    }, [hardness, density, malleability, elasticity, stickiness, melting, residue, friability, viscosity, productType]);
 
     return (
         <div className="space-y-8 p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50">
