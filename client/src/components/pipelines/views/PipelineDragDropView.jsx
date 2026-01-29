@@ -727,13 +727,13 @@ const PipelineDragDropView = ({
         longPressTimerRef.current = setTimeout(() => {
             // Appui long déclenché - activer multi-sélection
             if (longPressItemRef.current?.type === 'cell') {
-                setSelectedCells(prev => 
+                setSelectedCells(prev =>
                     prev.includes(id) ? prev : [...prev, id]
                 );
                 // Vibration feedback si disponible
                 if (navigator.vibrate) navigator.vibrate(50);
             } else if (longPressItemRef.current?.type === 'item') {
-                setMultiSelectedItems(prev => 
+                setMultiSelectedItems(prev =>
                     prev.includes(id) ? prev : [...prev, id]
                 );
                 if (navigator.vibrate) navigator.vibrate(50);
@@ -1853,7 +1853,7 @@ const PipelineDragDropView = ({
                         <div className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm p-4 border-b border-gray-200 dark:border-gray-700 z-10 flex-shrink-0">
                             <h3 className="font-bold text-gray-900 dark:text-white text-lg">📦 Contenus</h3>
                             <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                {multiSelectedItems.length > 0 
+                                {multiSelectedItems.length > 0
                                     ? `${multiSelectedItems.length} item${multiSelectedItems.length > 1 ? 's' : ''} sélectionné${multiSelectedItems.length > 1 ? 's' : ''} (Ctrl+clic ou appui long)`
                                     : 'Glissez les éléments vers les cases →'
                                 }
@@ -1890,17 +1890,17 @@ const PipelineDragDropView = ({
                                                         return null;
                                                     })
                                                     .filter(Boolean);
-                                                
+
                                                 // Pour chaque cellule, ouvrir la modal ou assigner directement avec valeur par défaut
                                                 selectedCells.forEach(ts => {
                                                     itemsToAssign.forEach(item => {
-                                                        const defaultVal = item.defaultValue !== undefined 
-                                                            ? item.defaultValue 
+                                                        const defaultVal = item.defaultValue !== undefined
+                                                            ? item.defaultValue
                                                             : (item.type === 'number' ? 0 : '');
                                                         onDataChange(ts, item.id || item.key, defaultVal);
                                                     });
                                                 });
-                                                
+
                                                 showToast(`${itemsToAssign.length} champ(s) assigné(s) à ${selectedCells.length} case(s)`);
                                                 setMultiSelectedItems([]);
                                                 setSelectedCells([]);
@@ -2042,11 +2042,10 @@ const PipelineDragDropView = ({
                                                                 anchorRect: e.currentTarget.getBoundingClientRect()
                                                             });
                                                         }}
-                                                        className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border-2 transition-all group ${
-                                                            isSelected 
-                                                                ? 'bg-blue-100 dark:bg-blue-900/50 border-blue-500 dark:border-blue-400 ring-2 ring-blue-300 dark:ring-blue-600' 
+                                                        className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border-2 transition-all group ${isSelected
+                                                                ? 'bg-blue-100 dark:bg-blue-900/50 border-blue-500 dark:border-blue-400 ring-2 ring-blue-300 dark:ring-blue-600'
                                                                 : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                                                        }`}
+                                                            }`}
                                                         style={{ touchAction: 'none' }}
                                                     >
                                                         {/* Indicateur de sélection */}
