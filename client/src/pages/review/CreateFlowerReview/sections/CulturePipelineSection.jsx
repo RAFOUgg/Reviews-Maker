@@ -48,10 +48,10 @@ const CulturePipelineSection = ({ data = {}, onChange, formData, handleChange })
     }), [cultureData]);
 
     // Convertir CULTURE_SIDEBAR_CONTENT vers format array pour le sidebar
+    // IMPORTANT: PipelineDragDropView attend: section.id, section.label, section.icon, section.items
     const sidebarArray = useMemo(() => {
         return Object.entries(CULTURE_SIDEBAR_CONTENT).map(([key, section]) => ({
             id: key,
-            name: section.label || key,
             label: section.label || key,
             icon: section.icon || '📦',
             color: section.color || 'gray',
@@ -74,21 +74,6 @@ const CulturePipelineSection = ({ data = {}, onChange, formData, handleChange })
                 showIf: item.showIf,
                 computeFrom: item.computeFrom,
                 computeFn: item.computeFn
-            })),
-            fields: (section.items || []).map(item => ({
-                id: item.id,
-                key: item.id,
-                label: item.label,
-                type: item.type,
-                icon: item.icon,
-                unit: item.unit,
-                options: item.options,
-                min: item.min,
-                max: item.max,
-                step: item.step,
-                defaultValue: item.defaultValue,
-                tooltip: item.tooltip,
-                zones: item.zones
             }))
         })).filter(section => section.items && section.items.length > 0);
     }, []);

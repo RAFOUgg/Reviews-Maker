@@ -2185,20 +2185,6 @@ const PipelineDragDropView = ({
                         </div>
                     </div>
 
-                    {/* Progression Bar - Outside config scrollable area */}
-                    <div className="px-3 md:px-4 py-2 md:py-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 bg-gray-50/50 dark:bg-gray-800/30">
-                        <div className="text-xs text-gray-600 dark:text-gray-400 mb-1.5">Progression: {filledCells}/{cells.length} ({completionPercent}%)</div>
-                        <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 overflow-hidden border border-gray-200 dark:border-gray-700 shadow-inner">
-                            <div
-                                className="h-2 rounded-full bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 transition-all duration-500 ease-out"
-                                style={{ width: `${Math.max(0, Math.min(100, completionPercent))}%` }}
-                                aria-valuenow={completionPercent}
-                                aria-valuemin={0}
-                                aria-valuemax={100}
-                            />
-                        </div>
-                    </div>
-
                     {/* Warning Messages - Outside config */}
                     {(timelineConfig.type === 'date' && (!timelineConfig.start || !timelineConfig.end)) ||
                         (timelineConfig.type === 'seconde' && (!timelineConfig.totalSeconds || timelineConfig.totalSeconds > 900)) ||

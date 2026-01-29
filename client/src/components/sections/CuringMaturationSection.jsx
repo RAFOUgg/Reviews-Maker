@@ -37,15 +37,19 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
 
     // Convertir CURING_SIDEBAR_CONTENT vers format array pour le sidebar
     // Les clés sont: CONFIGURATION, CONTAINER, ENVIRONMENT, VISUAL, ORGANOLEPTIC, NOTES
+    // IMPORTANT: PipelineDragDropView attend: section.id, section.label, section.icon, section.items (PAS fields!)
     const sidebarArray = useMemo(() => {
         // Mapper les sections du fichier config vers des catégories utilisables
         return Object.entries(CURING_SIDEBAR_CONTENT).map(([key, section]) => ({
-            name: section.label || key,
+            id: key, // ID unique pour la section (ex: CONFIGURATION, CONTAINER...)
+            label: section.label || key, // Libellé affiché
             icon: section.icon || '📦',
             color: section.color || 'gray',
             collapsed: section.collapsed ?? true,
-            fields: (section.items || []).map(item => ({
+            // ITEMS - pas fields! C'est ce que PipelineDragDropView attend
+            items: (section.items || []).map(item => ({
                 id: item.id,
+                key: item.id, // key aussi pour compatibilité
                 label: item.label,
                 type: item.type,
                 icon: item.icon,
@@ -58,7 +62,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                 tooltip: item.tooltip,
                 zones: item.zones
             }))
-        })).filter(section => section.fields.length > 0);
+        })).filter(section => section.items.length > 0);
     }, []);
 
     // Handler pour changements de configuration
