@@ -751,6 +751,9 @@ const PipelineDragDropView = ({
         longPressItemRef.current = null;
     };
 
+    // Ancre de sélection pour Shift+clic (comme Windows Explorer)
+    const selectionAnchorRef = useRef(null); // Index de la cellule d'ancrage
+
     // Action history for undo/redo (stack with pointer)
     const [actionsHistory, setActionsHistory] = useState([]);
     const [historyPointer, setHistoryPointer] = useState(-1); // -1 = vide, 0+ = index dans l'historique
@@ -996,49 +999,86 @@ const PipelineDragDropView = ({
         }));
     };
 
-    // Ouvrir modal cellule
+    // Ouvrir modal cellule - Sélection style Windows Explorer
     const handleCellClick = (e, cellId) => {
-        console.log('🖱️ Clic sur cellule:', cellId);
-        console.log('📊 Ctrl/Cmd pressé:', e.ctrlKey || e.metaKey);
-        console.log('📋 Cellules sélectionnées avant:', selectedCells);
+        // Trouver l'index de la cellule cliquée
+        const clickedIdx = cells.findIndex(c => c.timestamp === cellId);
+        if (clickedIdx === -1) return;
 
-        // Détecter Ctrl+click pour sélection multiple (au lieu de massAssignMode)
-        const isMultiSelectClick = e.ctrlKey || e.metaKey;
+        const isCtrl = e.ctrlKey || e.metaKey;
+        const isShift = e.shiftKey;
 
-        if (isMultiSelectClick) {
+        console.log('🖱️ Clic sur cellule:', cellId, '(idx:', clickedIdx, ')');
+        console.log('📊 Ctrl:', isCtrl, '| Shift:', isShift);
+        console.log('📋 Sélection avant:', selectedCells);
+        console.log('⚓ Ancre actuelle:', selectionAnchorRef.current);
+
+        // === SHIFT + CLIC : Sélection de plage ===
+        if (isShift && selectionAnchorRef.current !== null) {
+            e.preventDefault();
             setSelectedCell(null);
-            // Mode sélection multiple - TOGGLE la cellule
+
+            const anchorIdx = selectionAnchorRef.current;
+            const startIdx = Math.min(anchorIdx, clickedIdx);
+            const endIdx = Math.max(anchorIdx, clickedIdx);
+
+            // Générer la plage de cellules
+            const rangeIds = cells.slice(startIdx, endIdx + 1).map(c => c.timestamp);
+
+            if (isCtrl) {
+                // CTRL + SHIFT : Ajouter la plage à la sélection existante
+                setSelectedCells(prev => {
+                    const newSelection = [...new Set([...prev, ...rangeIds])];
+                    selectedCellsRef.current = newSelection;
+                    return newSelection;
+                });
+            } else {
+                // SHIFT seul : Remplacer par la plage
+                setSelectedCells(rangeIds);
+                selectedCellsRef.current = rangeIds;
+            }
+            // Note: On ne change PAS l'ancre sur Shift+clic
+            console.log('  → Plage sélectionnée:', rangeIds.length, 'cellules');
+            return;
+        }
+
+        // === CTRL + CLIC : Toggle une cellule ===
+        if (isCtrl) {
+            setSelectedCell(null);
             setSelectedCells(prev => {
                 const isAlreadySelected = prev.includes(cellId);
-                console.log('  → Cellule déjà sélectionnée:', isAlreadySelected);
+                let newSelection;
 
                 if (isAlreadySelected) {
                     // Retirer de la sélection
-                    const newSelection = prev.filter(id => id !== cellId);
-                    console.log('  → Retirée, nouvelle sélection:', newSelection);
-                    selectedCellsRef.current = newSelection;
-                    return newSelection;
+                    newSelection = prev.filter(id => id !== cellId);
                 } else {
                     // Ajouter à la sélection
-                    const newSelection = [...prev, cellId];
-                    console.log('  → Ajoutée, nouvelle sélection:', newSelection);
-                    selectedCellsRef.current = newSelection;
-                    return newSelection;
+                    newSelection = [...prev, cellId];
                 }
-            });
-        } else {
-            // Mode normal: ouvrir modal
-            console.log('📝 Ouverture modal pour:', cellId);
-            const nextSelection = selectedCells.length > 1 ? selectedCells : [cellId];
-            setSelectedCells(nextSelection);
-            selectedCellsRef.current = nextSelection;
-            setSelectedCell(cellId);
-            setDroppedItem(null);
-            setCurrentCellTimestamp(cellId);
-            setIsModalOpen(true);
 
-            // Aucun système de préréglages dans cette vue (désactivé pour CDC)
+                selectedCellsRef.current = newSelection;
+                console.log('  → Toggle:', isAlreadySelected ? 'retiré' : 'ajouté');
+                return newSelection;
+            });
+            // Mettre à jour l'ancre
+            selectionAnchorRef.current = clickedIdx;
+            return;
         }
+
+        // === CLIC SIMPLE : Ouvrir la modal ===
+        console.log('📝 Ouverture modal pour:', cellId);
+
+        // Si plusieurs cellules sont sélectionnées, les garder pour action groupée
+        const nextSelection = selectedCells.length > 1 ? selectedCells : [cellId];
+        setSelectedCells(nextSelection);
+        selectedCellsRef.current = nextSelection;
+        selectionAnchorRef.current = clickedIdx; // Nouvelle ancre
+
+        setSelectedCell(cellId);
+        setDroppedItem(null);
+        setCurrentCellTimestamp(cellId);
+        setIsModalOpen(true);
     };
 
     // Suppression logique préréglages
@@ -2043,8 +2083,8 @@ const PipelineDragDropView = ({
                                                             });
                                                         }}
                                                         className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border-2 transition-all group ${isSelected
-                                                                ? 'bg-blue-100 dark:bg-blue-900/50 border-blue-500 dark:border-blue-400 ring-2 ring-blue-300 dark:ring-blue-600'
-                                                                : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                                                            ? 'bg-blue-100 dark:bg-blue-900/50 border-blue-500 dark:border-blue-400 ring-2 ring-blue-300 dark:ring-blue-600'
+                                                            : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                                                             }`}
                                                         style={{ touchAction: 'none' }}
                                                     >

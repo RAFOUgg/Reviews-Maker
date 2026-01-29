@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Leaf, Info, Plus, Trash2, Edit2, FileText, FolderTree, Upload } from 'lucide-react'
+import { Leaf, Info, Plus, Trash2, Edit2, FileText, FolderTree, Upload, RefreshCw, AlertCircle } from 'lucide-react'
 import { ReactFlowProvider } from 'reactflow'
 import LiquidCard from '../../../../components/ui/LiquidCard'
 import PhenoCodeGenerator from '../../../../components/forms/helpers/PhenoCodeGenerator'
@@ -8,106 +8,184 @@ import UnifiedGeneticsCanvas from '../../../../components/genetics/UnifiedGeneti
 import useGeneticsStore from '../../../../store/useGeneticsStore'
 import { useStore } from '../../../../store/useStore'
 
+/**
+ * Section Génétiques & PhenoHunt (Section 2)
+ * - Gestion des arbres généalogiques via API
+ * - Sidebar avec reviews fleurs de l'utilisateur
+ * - Canvas ReactFlow pour visualisation
+ */
 export default function Genetiques({ formData, handleChange }) {
-    const [showInitialModal, setShowInitialModal] = useState(true) // Modal de choix initial
+    const [showInitialModal, setShowInitialModal] = useState(false)
     const [activeTab, setActiveTab] = useState('cultivars')
-    const [activeTreeTab, setActiveTreeTab] = useState(0)
-    const [trees, setTrees] = useState([])
-    const [userReviews, setUserReviews] = useState([]) // Reviews fleurs de l'utilisateur
-    const [loading, setLoading] = useState(false)
+    const [userReviews, setUserReviews] = useState([])
+    const [loadingReviews, setLoadingReviews] = useState(false)
+    const [creatingTree, setCreatingTree] = useState(false)
 
-    const genetics = formData.genetics || {}
     const { user } = useStore()
-    const geneticsStore = useGeneticsStore()
+    const genetics = formData.genetics || {}
 
-    const selectedNode = geneticsStore.selectedNodeId
-        ? geneticsStore.nodes.find(n => n.id === geneticsStore.selectedNodeId)
-        : null
+    // Store Zustand pour les arbres généalogiques (API)
+    const {
+        trees,
+        selectedTreeId,
+        nodes,
+        edges,
+        treeLoading,
+        treeError,
+        canvasLoading,
+        selectedNodeId,
+        fetchTrees,
+        loadTree,
+        createTree,
+        deleteTree: deleteTreeApi,
+        addNode,
+        clearTree
+    } = useGeneticsStore()
 
-    // Charger les reviews fleurs de l'utilisateur
+    // Trouver le nœud sélectionné
+    const selectedNode = selectedNodeId ? nodes.find(n => n.id === selectedNodeId) : null
+
+    // Charger les arbres et reviews au montage
     useEffect(() => {
         if (user?.id) {
+            fetchTrees()
             fetchUserFlowerReviews()
         }
     }, [user?.id])
 
+    // Charger le premier arbre disponible si aucun n'est sélectionné
+    useEffect(() => {
+        if (trees.length > 0 && !selectedTreeId && !canvasLoading) {
+            loadTree(trees[0].id)
+        }
+    }, [trees, selectedTreeId])
+
+    // Si pas d'arbres et pas de chargement, proposer d'en créer un
+    useEffect(() => {
+        if (!treeLoading && trees.length === 0) {
+            setShowInitialModal(true)
+        }
+    }, [treeLoading, trees.length])
+
+    // Charger les reviews fleurs de l'utilisateur pour la sidebar
     const fetchUserFlowerReviews = async () => {
-        setLoading(true)
+        setLoadingReviews(true)
         try {
-            const response = await fetch(`/api/reviews?userId=${user.id}&type=flower`)
+            const response = await fetch(`/api/reviews?userId=${user.id}&type=flower`, {
+                credentials: 'include'
+            })
             if (response.ok) {
                 const data = await response.json()
-                setUserReviews(data.reviews || [])
+                setUserReviews(data.reviews || data || [])
             }
         } catch (error) {
             console.error('Error fetching reviews:', error)
         } finally {
-            setLoading(false)
+            setLoadingReviews(false)
         }
     }
 
-    // Actions du modal initial
-    const handleCreateEmptyTree = () => {
-        const newTree = {
-            id: Date.now(),
-            name: 'Nouvel Arbre',
-            nodes: [],
-            edges: [],
-            createdAt: new Date().toISOString()
-        }
-        setTrees([newTree])
-        setActiveTreeTab(0)
-        setShowInitialModal(false)
-    }
+    // === ACTIONS DU MODAL - CRÉATION D'ARBRES VIA API ===
 
-    const handleCreateTreeFromCurrentFlower = () => {
-        const currentFlowerData = {
-            id: `node-${Date.now()}`,
-            type: 'cultivar',
-            position: { x: 250, y: 200 },
-            data: {
-                cultivarName: formData.generalInfo?.commercialName || 'Nouvelle Fleur',
-                breeder: formData.genetics?.breeder || '',
-                type: formData.genetics?.type || '',
-                photoUrl: formData.generalInfo?.photos?.[0] || null,
-                reviewId: formData.id || null
+    const handleCreateEmptyTree = async () => {
+        setCreatingTree(true)
+        try {
+            const result = await createTree({
+                name: 'Nouvel Arbre',
+                description: 'Arbre généalogique créé depuis une review',
+                projectType: 'phenohunt'
+            })
+
+            if (result.data) {
+                await loadTree(result.data.id)
             }
+            setShowInitialModal(false)
+        } catch (error) {
+            console.error('Error creating tree:', error)
+        } finally {
+            setCreatingTree(false)
         }
+    }
 
-        const newTree = {
-            id: Date.now(),
-            name: `Arbre - ${currentFlowerData.data.cultivarName}`,
-            nodes: [currentFlowerData],
-            edges: [],
-            createdAt: new Date().toISOString()
+    const handleCreateTreeFromCurrentFlower = async () => {
+        setCreatingTree(true)
+        try {
+            const flowerName = formData.generalInfo?.commercialName || 'Nouvelle Fleur'
+
+            // 1. Créer l'arbre via API
+            const treeResult = await createTree({
+                name: `Arbre - ${flowerName}`,
+                description: `Arbre généalogique pour ${flowerName}`,
+                projectType: 'phenohunt'
+            })
+
+            if (treeResult.data) {
+                // 2. Charger l'arbre créé
+                await loadTree(treeResult.data.id)
+
+                // 3. Ajouter le nœud de la fleur actuelle
+                await addNode(treeResult.data.id, {
+                    cultivarName: flowerName,
+                    position: JSON.stringify({ x: 300, y: 200 }),
+                    color: '#FF6B9D',
+                    genetics: JSON.stringify({
+                        breeder: genetics.breeder || '',
+                        type: genetics.type || 'hybrid',
+                        indicaRatio: genetics.indicaRatio || 50
+                    }),
+                    notes: `Créé depuis la review`
+                })
+            }
+            setShowInitialModal(false)
+        } catch (error) {
+            console.error('Error creating tree from flower:', error)
+        } finally {
+            setCreatingTree(false)
         }
-
-        setTrees([newTree])
-        setActiveTreeTab(0)
-        setShowInitialModal(false)
     }
 
     const handleImportToExistingTree = () => {
-        // TODO: Afficher modal de sélection d'arbre existant
         setShowInitialModal(false)
     }
 
-    const addNewTree = () => {
-        const newTree = {
-            id: Date.now(),
-            name: `Arbre ${trees.length + 1}`,
-            nodes: [],
-            edges: [],
-            createdAt: new Date().toISOString()
+    // Ajouter un nouvel arbre
+    const addNewTree = async () => {
+        setCreatingTree(true)
+        try {
+            const result = await createTree({
+                name: `Arbre ${trees.length + 1}`,
+                projectType: 'phenohunt'
+            })
+            if (result.data) {
+                await loadTree(result.data.id)
+            }
+        } catch (error) {
+            console.error('Error adding tree:', error)
+        } finally {
+            setCreatingTree(false)
         }
-        setTrees([...trees, newTree])
-        setActiveTreeTab(trees.length)
     }
 
-    const deleteTree = (index) => {
-        if (trees.length === 1) return
-        setTrees(trees.filter((_, i) => i !== index))
-        setActiveTreeTab(Math.max(0, index - 1))
+    // Supprimer un arbre
+    const deleteTree = async (treeId, e) => {
+        e?.stopPropagation()
+        if (trees.length <= 1) return
+        if (!confirm('Supprimer cet arbre ?')) return
+
+        await deleteTreeApi(treeId)
+
+        // Charger un autre arbre
+        const remaining = trees.filter(t => t.id !== treeId)
+        if (remaining.length > 0) {
+            await loadTree(remaining[0].id)
+        }
+    }
+
+    // Sélectionner un arbre
+    const handleSelectTree = async (treeId) => {
+        if (treeId !== selectedTreeId) {
+            await loadTree(treeId)
+        }
     }
 
     // Drag & Drop handler pour reviews
@@ -126,7 +204,7 @@ export default function Genetiques({ formData, handleChange }) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-                        onClick={() => setShowInitialModal(false)}
+                        onClick={() => trees.length > 0 && setShowInitialModal(false)}
                     >
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
@@ -146,11 +224,12 @@ export default function Genetiques({ formData, handleChange }) {
                             <div className="space-y-3">
                                 <button
                                     onClick={handleCreateEmptyTree}
-                                    className="w-full p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-2 border-purple-200 dark:border-purple-700 rounded-lg hover:border-purple-400 transition-all text-left group"
+                                    disabled={creatingTree}
+                                    className="w-full p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-2 border-purple-200 dark:border-purple-700 rounded-lg hover:border-purple-400 transition-all text-left group disabled:opacity-50"
                                 >
                                     <div className="flex items-start gap-3">
                                         <div className="p-2 bg-purple-600 text-white rounded-lg group-hover:scale-110 transition-transform">
-                                            <Plus className="w-5 h-5" />
+                                            {creatingTree ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
                                         </div>
                                         <div>
                                             <p className="font-semibold text-gray-900 dark:text-gray-100">Créer un arbre vide</p>
@@ -163,11 +242,12 @@ export default function Genetiques({ formData, handleChange }) {
 
                                 <button
                                     onClick={handleCreateTreeFromCurrentFlower}
-                                    className="w-full p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg hover:border-blue-400 transition-all text-left group"
+                                    disabled={creatingTree}
+                                    className="w-full p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg hover:border-blue-400 transition-all text-left group disabled:opacity-50"
                                 >
                                     <div className="flex items-start gap-3">
                                         <div className="p-2 bg-blue-600 text-white rounded-lg group-hover:scale-110 transition-transform">
-                                            <Leaf className="w-5 h-5" />
+                                            {creatingTree ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Leaf className="w-5 h-5" />}
                                         </div>
                                         <div>
                                             <p className="font-semibold text-gray-900 dark:text-gray-100">Créer un arbre à partir de cette fleur</p>
@@ -178,30 +258,35 @@ export default function Genetiques({ formData, handleChange }) {
                                     </div>
                                 </button>
 
-                                <button
-                                    onClick={handleImportToExistingTree}
-                                    className="w-full p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-200 dark:border-green-700 rounded-lg hover:border-green-400 transition-all text-left group"
-                                >
-                                    <div className="flex items-start gap-3">
-                                        <div className="p-2 bg-green-600 text-white rounded-lg group-hover:scale-110 transition-transform">
-                                            <Upload className="w-5 h-5" />
+                                {trees.length > 0 && (
+                                    <button
+                                        onClick={handleImportToExistingTree}
+                                        disabled={creatingTree}
+                                        className="w-full p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-200 dark:border-green-700 rounded-lg hover:border-green-400 transition-all text-left group disabled:opacity-50"
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            <div className="p-2 bg-green-600 text-white rounded-lg group-hover:scale-110 transition-transform">
+                                                <Upload className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-gray-900 dark:text-gray-100">Importer cette fleur à un arbre</p>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                                    Ajoutez cette fiche à un arbre existant ({trees.length} arbre{trees.length > 1 ? 's' : ''})
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-semibold text-gray-900 dark:text-gray-100">Importer cette fleur à un arbre</p>
-                                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                                Ajoutez cette fiche à un arbre existant
-                                            </p>
-                                        </div>
-                                    </div>
-                                </button>
+                                    </button>
+                                )}
                             </div>
 
-                            <button
-                                onClick={() => setShowInitialModal(false)}
-                                className="w-full mt-4 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
-                            >
-                                Annuler
-                            </button>
+                            {trees.length > 0 && (
+                                <button
+                                    onClick={() => setShowInitialModal(false)}
+                                    className="w-full mt-4 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+                                >
+                                    Annuler
+                                </button>
+                            )}
                         </motion.div>
                     </motion.div>
                 )}
@@ -243,9 +328,9 @@ export default function Genetiques({ formData, handleChange }) {
                                     exit={{ opacity: 0, x: 20 }}
                                     className="space-y-3"
                                 >
-                                    {loading ? (
+                                    {loadingReviews ? (
                                         <div className="text-center py-8">
-                                            <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full mx-auto"></div>
+                                            <RefreshCw className="w-8 h-8 animate-spin text-purple-600 mx-auto" />
                                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">Chargement...</p>
                                         </div>
                                     ) : userReviews.length === 0 ? (
@@ -267,10 +352,10 @@ export default function Genetiques({ formData, handleChange }) {
                                                 className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center gap-3 cursor-move hover:shadow-md hover:border-purple-400 dark:hover:border-purple-600 transition-all"
                                             >
                                                 <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg flex items-center justify-center overflow-hidden">
-                                                    {review.generalInfo?.photos?.[0] ? (
+                                                    {(review.generalInfo?.photos?.[0] || review.photos?.[0]) ? (
                                                         <img
-                                                            src={review.generalInfo.photos[0]}
-                                                            alt={review.generalInfo.commercialName}
+                                                            src={review.generalInfo?.photos?.[0] || review.photos?.[0]}
+                                                            alt={review.generalInfo?.commercialName || review.commercialName}
                                                             className="w-full h-full object-cover"
                                                         />
                                                     ) : (
@@ -279,14 +364,14 @@ export default function Genetiques({ formData, handleChange }) {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
-                                                        {review.generalInfo?.commercialName || 'Sans nom'}
+                                                        {review.generalInfo?.commercialName || review.commercialName || 'Sans nom'}
                                                     </p>
                                                     <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
-                                                        {review.genetics?.variety || 'Variété non définie'}
+                                                        {review.genetics?.variety || review.cultivars || 'Variété non définie'}
                                                     </p>
-                                                    {review.genetics?.breeder && (
+                                                    {(review.genetics?.breeder || review.farm) && (
                                                         <p className="text-xs text-gray-500 dark:text-gray-500 truncate">
-                                                            {review.genetics.breeder}
+                                                            {review.genetics?.breeder || review.farm}
                                                         </p>
                                                     )}
                                                 </div>
@@ -315,9 +400,55 @@ export default function Genetiques({ formData, handleChange }) {
                                     exit={{ opacity: 0, x: 20 }}
                                     className="space-y-3"
                                 >
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 text-center py-8">
-                                        Vos projets PhenoHunt apparaîtront ici
-                                    </p>
+                                    {treeLoading ? (
+                                        <div className="text-center py-8">
+                                            <RefreshCw className="w-8 h-8 animate-spin text-purple-600 mx-auto" />
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">Chargement des arbres...</p>
+                                        </div>
+                                    ) : trees.length === 0 ? (
+                                        <div className="text-center py-8">
+                                            <FolderTree className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                Aucun projet PhenoHunt
+                                            </p>
+                                            <button
+                                                onClick={() => setShowInitialModal(true)}
+                                                className="mt-3 px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors"
+                                            >
+                                                Créer un arbre
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        trees.map((tree) => (
+                                            <div
+                                                key={tree.id}
+                                                onClick={() => handleSelectTree(tree.id)}
+                                                className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${selectedTreeId === tree.id
+                                                    ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30'
+                                                    : 'border-gray-200 dark:border-gray-700 hover:border-purple-300 bg-white dark:bg-gray-800'
+                                                    }`}
+                                            >
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="font-semibold text-sm text-gray-900 dark:text-white">
+                                                            {tree.name}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                            {tree._count?.nodes || 0} nœuds • {tree._count?.edges || 0} liens
+                                                        </p>
+                                                    </div>
+                                                    {trees.length > 1 && (
+                                                        <button
+                                                            onClick={(e) => deleteTree(tree.id, e)}
+                                                            className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                                                        >
+                                                            <Trash2 className="w-4 h-4 text-red-500" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -328,22 +459,19 @@ export default function Genetiques({ formData, handleChange }) {
                 <div className="flex-1 flex flex-col border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900">
                     {/* Onglets des arbres */}
                     <div className="flex items-center gap-2 bg-gradient-to-r from-gray-800 to-gray-900 dark:from-gray-950 dark:to-black px-4 border-b border-gray-700">
-                        {trees.map((tree, index) => (
+                        {trees.map((tree) => (
                             <div
                                 key={tree.id}
-                                className={`group flex items-center gap-2 px-4 py-3 cursor-pointer transition-all ${activeTreeTab === index
+                                className={`group flex items-center gap-2 px-4 py-3 cursor-pointer transition-all ${selectedTreeId === tree.id
                                     ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-t-2 border-purple-500'
                                     : 'text-gray-400 hover:text-white hover:bg-gray-700'
                                     }`}
-                                onClick={() => setActiveTreeTab(index)}
+                                onClick={() => handleSelectTree(tree.id)}
                             >
                                 <span className="text-sm font-medium">{tree.name}</span>
                                 {trees.length > 1 && (
                                     <button
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                            deleteTree(index)
-                                        }}
+                                        onClick={(e) => deleteTree(tree.id, e)}
                                         className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-red-500 rounded transition-all"
                                     >
                                         <Trash2 className="w-3 h-3" />
@@ -354,10 +482,11 @@ export default function Genetiques({ formData, handleChange }) {
 
                         <button
                             onClick={addNewTree}
-                            className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-all"
+                            disabled={creatingTree}
+                            className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-all disabled:opacity-50"
                             title="Ajouter un nouvel arbre"
                         >
-                            <Plus className="w-4 h-4" />
+                            {creatingTree ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                         </button>
 
                         {/* Link icon à droite */}
@@ -372,15 +501,49 @@ export default function Genetiques({ formData, handleChange }) {
 
                     {/* Canvas Area */}
                     <div className="flex-1 relative bg-gradient-to-br from-slate-900 to-slate-800 dark:from-black dark:to-gray-950">
-                        <ReactFlowProvider>
-                            <UnifiedGeneticsCanvas
-                                treeId={trees[activeTreeTab]?.id}
-                                readOnly={false}
-                            />
-                        </ReactFlowProvider>
+                        {/* Erreur */}
+                        {treeError && (
+                            <div className="absolute top-4 left-4 right-4 z-20 bg-red-500/90 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                                <span className="text-sm flex-1">Erreur: {treeError}</span>
+                                <button
+                                    onClick={() => selectedTreeId && loadTree(selectedTreeId)}
+                                    className="text-xs underline hover:no-underline"
+                                >
+                                    Réessayer
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Canvas avec arbre sélectionné */}
+                        {selectedTreeId ? (
+                            <ReactFlowProvider>
+                                <UnifiedGeneticsCanvas
+                                    treeId={selectedTreeId}
+                                    readOnly={false}
+                                />
+                            </ReactFlowProvider>
+                        ) : (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="text-center space-y-3">
+                                    <Leaf className="w-16 h-16 mx-auto text-purple-400 opacity-50" />
+                                    <p className="text-white text-sm opacity-50">
+                                        {treeLoading ? 'Chargement...' : 'Sélectionnez ou créez un arbre'}
+                                    </p>
+                                    {!treeLoading && trees.length === 0 && (
+                                        <button
+                                            onClick={() => setShowInitialModal(true)}
+                                            className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors"
+                                        >
+                                            Créer un arbre
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Info overlay si pas de nœuds */}
-                        {(!trees[activeTreeTab]?.nodes || trees[activeTreeTab].nodes.length === 0) && (
+                        {selectedTreeId && nodes.length === 0 && !canvasLoading && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 <div className="text-center space-y-3 opacity-50">
                                     <Leaf className="w-16 h-16 mx-auto text-purple-400" />
@@ -405,7 +568,7 @@ export default function Genetiques({ formData, handleChange }) {
                     >
                         <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
                             <Edit2 className="w-4 h-4" />
-                            Métadonnées : {selectedNode.data?.cultivarName || 'Cultivar'}
+                            Métadonnées : {selectedNode.cultivarName || selectedNode.data?.cultivarName || 'Cultivar'}
                         </h4>
 
                         {/* Breeder & Type */}
@@ -414,7 +577,7 @@ export default function Genetiques({ formData, handleChange }) {
                                 <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Breeder</label>
                                 <input
                                     type="text"
-                                    value={selectedNode.data?.breeder || ''}
+                                    defaultValue={selectedNode.genetics?.breeder || selectedNode.data?.breeder || ''}
                                     className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                                     placeholder="DNA Genetics..."
                                 />
@@ -423,7 +586,7 @@ export default function Genetiques({ formData, handleChange }) {
                             <div className="space-y-2">
                                 <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Type</label>
                                 <select
-                                    value={selectedNode.data?.type || ''}
+                                    defaultValue={selectedNode.genetics?.type || selectedNode.data?.type || ''}
                                     className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value="">Sélectionner...</option>
@@ -453,7 +616,7 @@ export default function Genetiques({ formData, handleChange }) {
                         {/* Pheno Code */}
                         <div className="pt-3 border-t border-blue-200 dark:border-blue-700">
                             <PhenoCodeGenerator
-                                value={selectedNode.data?.codePheno || ''}
+                                value={selectedNode.genetics?.phenotypeCode || selectedNode.data?.codePheno || ''}
                                 onChange={(code) => { }}
                                 userId={user?.id}
                             />
@@ -464,4 +627,3 @@ export default function Genetiques({ formData, handleChange }) {
         </LiquidCard>
     )
 }
-
