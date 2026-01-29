@@ -4,7 +4,7 @@
  * Compatible avec le système de drag & drop unifié (même pattern que CuringMaturationSection)
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import PipelineDragDropView from '../../../../components/pipelines/views/PipelineDragDropView';
 import { CULTURE_SIDEBAR_CONTENT } from '../../../../config/cultureSidebarContent';
 
@@ -12,6 +12,20 @@ const CulturePipelineSection = ({ data = {}, onChange, formData, handleChange })
     // Support des deux patterns d'appel
     const cultureData = data || formData?.culture || {};
     
+    // État local pour les données de timeline (tableau)
+    const [timelineData, setTimelineData] = useState(() => {
+        const initial = cultureData.cultureTimeline;
+        return Array.isArray(initial) ? initial : [];
+    });
+    
+    // Sync avec parent quand timelineData change
+    useEffect(() => {
+        handleUpdate({
+            ...cultureData,
+            cultureTimeline: timelineData
+        });
+    }, [timelineData]);
+
     // Handler unifié
     const handleUpdate = (newData) => {
         if (typeof onChange === 'function') {
@@ -93,10 +107,27 @@ const CulturePipelineSection = ({ data = {}, onChange, formData, handleChange })
     };
 
     // Handler pour changements de données de cellules
-    const handleDataChange = (cellData) => {
-        handleUpdate({
-            ...cultureData,
-            cultureTimeline: cellData
+    // onDataChange est appelé avec (timestamp, field, value)
+    const handleDataChange = (timestamp, field, value) => {
+        setTimelineData(prev => {
+            const arr = Array.isArray(prev) ? [...prev] : [];
+            const existingIdx = arr.findIndex(d => d.timestamp === timestamp);
+            
+            if (existingIdx >= 0) {
+                // Mise à jour d'une cellule existante
+                const existing = { ...arr[existingIdx] };
+                if (value === null || value === undefined) {
+                    delete existing[field];
+                } else {
+                    existing[field] = value;
+                }
+                arr[existingIdx] = existing;
+            } else {
+                // Nouvelle cellule
+                arr.push({ timestamp, [field]: value });
+            }
+            
+            return arr;
         });
     };
 
@@ -105,7 +136,7 @@ const CulturePipelineSection = ({ data = {}, onChange, formData, handleChange })
             type="culture"
             sidebarContent={sidebarArray}
             timelineConfig={timelineConfig}
-            timelineData={cultureData.cultureTimeline || []}
+            timelineData={timelineData}
             onConfigChange={handleConfigChange}
             onDataChange={handleDataChange}
         />

@@ -4,11 +4,24 @@
  * Compatible tous types de produits (Fleurs, Hash, Concentrés, Comestibles)
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import PipelineDragDropView from '../pipelines/views/PipelineDragDropView';
 import { CURING_SIDEBAR_CONTENT } from '../../config/curingSidebarContent';
 
 const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }) => {
+    // État local pour les données de timeline (tableau)
+    const [timelineData, setTimelineData] = useState(() => {
+        const initial = data.curingTimeline;
+        return Array.isArray(initial) ? initial : [];
+    });
+    
+    // Sync avec parent quand timelineData change
+    useEffect(() => {
+        onChange({
+            ...data,
+            curingTimeline: timelineData
+        });
+    }, [timelineData]);
     // Construire la config timeline
     const timelineConfig = useMemo(() => ({
         type: data.curingTimelineConfig?.type || 'phase',
@@ -62,10 +75,27 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
     };
 
     // Handler pour changements de données de cellules
-    const handleDataChange = (cellData) => {
-        onChange({
-            ...data,
-            curingTimeline: cellData
+    // onDataChange est appelé avec (timestamp, field, value)
+    const handleDataChange = (timestamp, field, value) => {
+        setTimelineData(prev => {
+            const arr = Array.isArray(prev) ? [...prev] : [];
+            const existingIdx = arr.findIndex(d => d.timestamp === timestamp);
+            
+            if (existingIdx >= 0) {
+                // Mise à jour d'une cellule existante
+                const existing = { ...arr[existingIdx] };
+                if (value === null || value === undefined) {
+                    delete existing[field];
+                } else {
+                    existing[field] = value;
+                }
+                arr[existingIdx] = existing;
+            } else {
+                // Nouvelle cellule
+                arr.push({ timestamp, [field]: value });
+            }
+            
+            return arr;
         });
     };
 
@@ -74,7 +104,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
             type="curing"
             sidebarContent={sidebarArray}
             timelineConfig={timelineConfig}
-            timelineData={data.curingTimeline || []}
+            timelineData={timelineData}
             onConfigChange={handleConfigChange}
             onDataChange={handleDataChange}
         />
