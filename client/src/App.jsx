@@ -45,6 +45,7 @@ const ManageSubscription = lazy(() => import('./pages/account/ManageSubscription
 const PhenoHuntPage = lazy(() => import('./pages/public/PhenoHuntPage'))
 const GeneticsManagementPage = lazy(() => import('./pages/public/GeneticsManagementPage'))
 const AdminPanel = lazy(() => import('./pages/admin/AdminPanel'))
+const LiquidPreview = lazy(() => import('./pages/demo/LiquidPreview'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -165,6 +166,7 @@ function App() {
                                     <Route path="/manage-subscription" element={<ManageSubscription />} />
                                     <Route path="/phenohunt" element={<PhenoHuntPage />} />
                                     <Route path="/genetics" element={<GeneticsManagementPage />} />
+                                    <Route path="/liquid-preview" element={<LiquidPreview />} />
 
                                     <Route path="/choose-account" element={<AccountChoicePage />} />
                                     <Route path="/admin" element={
