@@ -14,7 +14,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
         const initial = data.curingTimeline;
         return Array.isArray(initial) ? initial : [];
     });
-    
+
     // Sync avec parent quand timelineData change
     useEffect(() => {
         onChange({
@@ -80,7 +80,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
         setTimelineData(prev => {
             const arr = Array.isArray(prev) ? [...prev] : [];
             const existingIdx = arr.findIndex(d => d.timestamp === timestamp);
-            
+
             if (existingIdx >= 0) {
                 // Mise à jour d'une cellule existante
                 const existing = { ...arr[existingIdx] };
@@ -94,7 +94,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
                 // Nouvelle cellule
                 arr.push({ timestamp, [field]: value });
             }
-            
+
             return arr;
         });
     };

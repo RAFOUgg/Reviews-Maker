@@ -11,13 +11,13 @@ import { CULTURE_SIDEBAR_CONTENT } from '../../../../config/cultureSidebarConten
 const CulturePipelineSection = ({ data = {}, onChange, formData, handleChange }) => {
     // Support des deux patterns d'appel
     const cultureData = data || formData?.culture || {};
-    
+
     // État local pour les données de timeline (tableau)
     const [timelineData, setTimelineData] = useState(() => {
         const initial = cultureData.cultureTimeline;
         return Array.isArray(initial) ? initial : [];
     });
-    
+
     // Sync avec parent quand timelineData change
     useEffect(() => {
         handleUpdate({
@@ -112,7 +112,7 @@ const CulturePipelineSection = ({ data = {}, onChange, formData, handleChange })
         setTimelineData(prev => {
             const arr = Array.isArray(prev) ? [...prev] : [];
             const existingIdx = arr.findIndex(d => d.timestamp === timestamp);
-            
+
             if (existingIdx >= 0) {
                 // Mise à jour d'une cellule existante
                 const existing = { ...arr[existingIdx] };
@@ -126,7 +126,7 @@ const CulturePipelineSection = ({ data = {}, onChange, formData, handleChange })
                 // Nouvelle cellule
                 arr.push({ timestamp, [field]: value });
             }
-            
+
             return arr;
         });
     };
