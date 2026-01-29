@@ -716,6 +716,41 @@ const PipelineDragDropView = ({
     const [cellContextMenu, setCellContextMenu] = useState(null); // { position, timestamp, selectedCells }
     const [copiedCellData, setCopiedCellData] = useState(null); // Pour copier/coller
 
+    // Appui long (touch) - refs pour les timers
+    const longPressTimerRef = useRef(null);
+    const longPressItemRef = useRef(null); // { type: 'cell' | 'item', id: string }
+    const LONG_PRESS_DURATION = 500; // ms
+
+    // Démarrer appui long (touch)
+    const startLongPress = (type, id) => {
+        longPressItemRef.current = { type, id };
+        longPressTimerRef.current = setTimeout(() => {
+            // Appui long déclenché - activer multi-sélection
+            if (longPressItemRef.current?.type === 'cell') {
+                setSelectedCells(prev => 
+                    prev.includes(id) ? prev : [...prev, id]
+                );
+                // Vibration feedback si disponible
+                if (navigator.vibrate) navigator.vibrate(50);
+            } else if (longPressItemRef.current?.type === 'item') {
+                setMultiSelectedItems(prev => 
+                    prev.includes(id) ? prev : [...prev, id]
+                );
+                if (navigator.vibrate) navigator.vibrate(50);
+            }
+            longPressItemRef.current = null;
+        }, LONG_PRESS_DURATION);
+    };
+
+    // Annuler appui long
+    const cancelLongPress = () => {
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+        longPressItemRef.current = null;
+    };
+
     // Action history for undo/redo (stack with pointer)
     const [actionsHistory, setActionsHistory] = useState([]);
     const [historyPointer, setHistoryPointer] = useState(-1); // -1 = vide, 0+ = index dans l'historique
@@ -1818,8 +1853,65 @@ const PipelineDragDropView = ({
                         <div className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm p-4 border-b border-gray-200 dark:border-gray-700 z-10 flex-shrink-0">
                             <h3 className="font-bold text-gray-900 dark:text-white text-lg">📦 Contenus</h3>
                             <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                Glissez les éléments vers les cases →
+                                {multiSelectedItems.length > 0 
+                                    ? `${multiSelectedItems.length} item${multiSelectedItems.length > 1 ? 's' : ''} sélectionné${multiSelectedItems.length > 1 ? 's' : ''} (Ctrl+clic ou appui long)`
+                                    : 'Glissez les éléments vers les cases →'
+                                }
                             </p>
+                            {/* Barre d'actions multi-sélection */}
+                            {(multiSelectedItems.length > 0 || selectedCells.length > 1) && (
+                                <div className="mt-2 flex items-center gap-2 flex-wrap">
+                                    {multiSelectedItems.length > 0 && (
+                                        <button
+                                            onClick={() => setMultiSelectedItems([])}
+                                            className="px-2 py-1 text-xs bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-800/50 transition-colors"
+                                        >
+                                            ✕ Désélectionner items ({multiSelectedItems.length})
+                                        </button>
+                                    )}
+                                    {selectedCells.length > 1 && (
+                                        <button
+                                            onClick={() => setSelectedCells([])}
+                                            className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
+                                        >
+                                            ✕ Désélectionner cases ({selectedCells.length})
+                                        </button>
+                                    )}
+                                    {multiSelectedItems.length > 0 && selectedCells.length > 0 && (
+                                        <button
+                                            onClick={() => {
+                                                // Assigner tous les items sélectionnés à toutes les cases sélectionnées
+                                                const itemsToAssign = multiSelectedItems
+                                                    .map(k => {
+                                                        for (const sec of sidebarContent) {
+                                                            const found = sec.items?.find(i => (i.key || i.id) === k);
+                                                            if (found) return found;
+                                                        }
+                                                        return null;
+                                                    })
+                                                    .filter(Boolean);
+                                                
+                                                // Pour chaque cellule, ouvrir la modal ou assigner directement avec valeur par défaut
+                                                selectedCells.forEach(ts => {
+                                                    itemsToAssign.forEach(item => {
+                                                        const defaultVal = item.defaultValue !== undefined 
+                                                            ? item.defaultValue 
+                                                            : (item.type === 'number' ? 0 : '');
+                                                        onDataChange(ts, item.id || item.key, defaultVal);
+                                                    });
+                                                });
+                                                
+                                                showToast(`${itemsToAssign.length} champ(s) assigné(s) à ${selectedCells.length} case(s)`);
+                                                setMultiSelectedItems([]);
+                                                setSelectedCells([]);
+                                            }}
+                                            className="px-3 py-1 text-xs bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all shadow-sm font-medium"
+                                        >
+                                            ✓ Assigner {multiSelectedItems.length} item(s) → {selectedCells.length} case(s)
+                                        </button>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         <div className="p-3 space-y-2 overflow-y-auto flex-1">
@@ -1936,6 +2028,9 @@ const PipelineDragDropView = ({
                                                             setMultiSelectedItems([]);
                                                         }}
                                                         onClick={handleSidebarItemClick}
+                                                        onTouchStart={() => startLongPress('item', itemKey)}
+                                                        onTouchEnd={cancelLongPress}
+                                                        onTouchMove={cancelLongPress}
                                                         onContextMenu={(e) => {
                                                             e.preventDefault();
                                                             setContextMenu({
@@ -1947,11 +2042,21 @@ const PipelineDragDropView = ({
                                                                 anchorRect: e.currentTarget.getBoundingClientRect()
                                                             });
                                                         }}
-                                                        className="relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border transition-all group bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                                        className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border-2 transition-all group ${
+                                                            isSelected 
+                                                                ? 'bg-blue-100 dark:bg-blue-900/50 border-blue-500 dark:border-blue-400 ring-2 ring-blue-300 dark:ring-blue-600' 
+                                                                : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                                                        }`}
                                                         style={{ touchAction: 'none' }}
                                                     >
+                                                        {/* Indicateur de sélection */}
+                                                        {isSelected && (
+                                                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg z-10">
+                                                                ✓
+                                                            </span>
+                                                        )}
                                                         <span className="text-base">{item.icon}</span>
-                                                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex-1">
+                                                        <span className={`text-xs font-medium flex-1 ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'}`}>
                                                             {item.label}
                                                         </span>
                                                         <span className="text-xs transition-colors text-gray-400 group-hover:text-gray-600">
@@ -2350,6 +2455,9 @@ const PipelineDragDropView = ({
                                                 onDrop={(e) => handleDrop(e, cell.timestamp)}
                                                 onClick={(e) => handleCellClick(e, cell.timestamp)}
                                                 onContextMenu={(e) => handleCellContextMenu(e, cell.timestamp)}
+                                                onTouchStart={() => startLongPress('cell', cell.timestamp)}
+                                                onTouchEnd={cancelLongPress}
+                                                onTouchMove={cancelLongPress}
                                                 onMouseEnter={(e) => { handleCellHover(e, cell.timestamp); }}
                                                 onMouseLeave={handleCellLeave}
                                                 onMouseDown={(e) => { if (e.button === 0) startSelection(e, idx, cell.timestamp); }}
@@ -2358,6 +2466,12 @@ const PipelineDragDropView = ({
                                                 className={cellClass}
                                                 style={{ userSelect: 'none' }}
                                             >
+                                                {/* Indicateur de sélection multiple */}
+                                                {isSelected && selectedCells.length > 1 && (
+                                                    <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg z-20 border-2 border-white dark:border-gray-900">
+                                                        {selectedCells.indexOf(cell.timestamp) + 1}
+                                                    </span>
+                                                )}
                                                 {/* Indicateur visuel drop */}
                                                 {isHovered && draggedContent && (
                                                     <div className="absolute inset-0 rounded-lg flex items-center justify-center z-20 pointer-events-none">
