@@ -20,7 +20,7 @@ import '../../../../styles/sections/CulturePipelineSection.css'
 export default function CulturePipelineSection({ data, onChange, formData, handleChange, onPipelineCreate }) {
     // Support des deux patterns d'appel
     const cultureData = data || formData || {};
-    
+
     const [expandedGroups, setExpandedGroups] = useState({
         setup: true,
         environment: false,
@@ -46,7 +46,7 @@ export default function CulturePipelineSection({ data, onChange, formData, handl
             selectedPresets,
             pipelineStages
         };
-        
+
         // Pattern 1: onChange directement avec l'objet complet
         if (onChange) {
             onChange(newData);

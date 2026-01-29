@@ -69,7 +69,7 @@ export default function TextureSection({ productType, data: directData, onChange
     // Support des deux patterns : data/onChange OU formData/handleChange
     const textureData = directData || formData?.texture || {};
     const updateHandler = onChange || ((newData) => handleChange?.('texture', newData));
-    
+
     const [hardness, setHardness] = useState(textureData?.hardness || 5);
     const [density, setDensity] = useState(textureData?.density || 5);
     const [malleability, setMalleability] = useState(textureData?.malleability || 5);
