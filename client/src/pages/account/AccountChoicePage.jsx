@@ -7,16 +7,16 @@ export default function AccountChoicePage() {
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
     const { accountType } = useStore()
-    
+
     // Mode: 'signup' (création) ou 'upgrade' (changement plan)
     const mode = searchParams.get('mode') || 'signup'
     const isUpgrade = mode === 'upgrade'
-    
+
     const initial = useMemo(() => {
         if (isUpgrade) return accountType || 'consumer'
         return localStorage.getItem('preferredAccountType') || 'consumer'
     }, [isUpgrade, accountType])
-    
+
     const [selectedType, setSelectedType] = useState(initial)
 
     // Définition statique des types de comptes selon le CDC (cahier des charges)
@@ -121,7 +121,7 @@ export default function AccountChoicePage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br text-white flex flex-col items-center justify-center px-4 py-8 overflow-y-auto">
+        <div className="min-h-screen bg-transparent relative flex flex-col items-center justify-center px-4 py-8 overflow-y-auto">
             {/* Bouton retour si en mode upgrade */}
             {isUpgrade && (
                 <button
@@ -139,7 +139,7 @@ export default function AccountChoicePage() {
                         {isUpgrade ? 'Changer de Plan' : 'Choisissez votre Plan'}
                     </h1>
                     <p className="text-xl md:text-2xl text-white font-light drop-shadow-lg max-w-3xl mx-auto">
-                        {isUpgrade 
+                        {isUpgrade
                             ? `Plan actuel: ${accountTypes.find(t => t.type === accountType)?.name}`
                             : 'Des outils de traçabilité adaptés à vos besoins, du simple amateur au producteur professionnel'
                         }
@@ -308,9 +308,9 @@ export default function AccountChoicePage() {
                         className="inline-flex items-center gap-3 px-12 py-5 bg-purple-600 text-white rounded-2xl font-black text-xl shadow-2xl hover:shadow-purple-900/50 hover:scale-105 transition-all duration-300 group"
                     >
                         <span>
-                            {isUpgrade 
-                                ? (selectedType === accountType 
-                                    ? 'Garder ce plan' 
+                            {isUpgrade
+                                ? (selectedType === accountType
+                                    ? 'Garder ce plan'
                                     : `Changer pour ${accountTypes.find(t => t.type === selectedType)?.name}`)
                                 : `Continuer avec ${accountTypes.find(t => t.type === selectedType)?.name}`
                             }
