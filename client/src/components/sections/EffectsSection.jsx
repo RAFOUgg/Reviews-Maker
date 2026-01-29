@@ -13,7 +13,7 @@ import WhiteSlider from '../ui/WhiteSlider';
 export default function EffectsSection({ productType, data: directData, onChange, formData, handleChange }) {
     // Support des deux patterns : data/onChange OU formData/handleChange
     const effectsData = directData || formData?.effets || {};
-    
+
     // Créer un handler sûr qui vérifie l'existence des fonctions
     const updateHandler = (newData) => {
         if (typeof onChange === 'function') {

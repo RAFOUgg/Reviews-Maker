@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 
 async function main() {
     console.log('Fetching all users...');
-    
+
     const users = await prisma.user.findMany({
         select: {
             id: true,
@@ -19,15 +19,15 @@ async function main() {
             roles: true
         }
     });
-    
+
     console.log('Users found:', JSON.stringify(users, null, 2));
-    
+
     if (users.length > 0) {
         // Mettre à jour le premier utilisateur (ou celui avec un email spécifique)
         const targetUser = users[0]; // Modifier si besoin
-        
+
         console.log(`\nUpdating user ${targetUser.username} to admin/producer...`);
-        
+
         const updated = await prisma.user.update({
             where: { id: targetUser.id },
             data: {
@@ -37,7 +37,7 @@ async function main() {
                 roles: JSON.stringify({ roles: ['producer', 'admin', 'consumer'] })
             }
         });
-        
+
         console.log('Updated user:', {
             id: updated.id,
             username: updated.username,
@@ -46,7 +46,7 @@ async function main() {
             roles: updated.roles
         });
     }
-    
+
     await prisma.$disconnect();
 }
 

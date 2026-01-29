@@ -68,7 +68,7 @@ const TEXTURE_LABELS = {
 export default function TextureSection({ productType, data: directData, onChange, formData, handleChange }) {
     // Support des deux patterns : data/onChange OU formData/handleChange
     const textureData = directData || formData?.texture || {};
-    
+
     // Créer un handler sûr qui vérifie l'existence des fonctions
     const updateHandler = (newData) => {
         if (typeof onChange === 'function') {

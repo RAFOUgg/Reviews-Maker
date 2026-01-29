@@ -20,7 +20,7 @@ import '../../../../styles/sections/CulturePipelineSection.css'
 export default function CulturePipelineSection({ data, onChange, formData, handleChange, onPipelineCreate }) {
     // Support des deux patterns d'appel - avec valeur par défaut sécurisée
     const cultureData = data || formData || {};
-    
+
     // Handler sécurisé pour les mises à jour
     const safeUpdate = (newData) => {
         if (typeof onChange === 'function') {
