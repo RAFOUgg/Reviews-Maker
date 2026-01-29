@@ -121,6 +121,8 @@ const useGeneticsStore = create(
             createTree: async (treeData) => {
                 set({ treeLoading: true, treeError: null });
                 try {
+                    // DEBUG: Log du body envoyé à l'API
+                    console.log('[Genetics] createTree - body envoyé:', treeData);
                     const response = await fetch(`${API_BASE}/trees`, {
                         method: 'POST',
                         credentials: 'include',
