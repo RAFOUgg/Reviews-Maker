@@ -374,3 +374,39 @@ select::-ms-value,
 select::placeholder {
     color: rgba(255, 255, 255, 0.5) !important;
 }
+
+/* Page-scoped override: remove grey/opaque panels and enable translucent liquid look
+   Usage: add class `no-panel-bg` to the page root element to neutralize opaque gray panels
+   while preserving glass/liquid effects (makes backgrounds transparent, keeps borders/glow)
+*/
+.no-panel-bg .glass,
+.no-panel-bg .liquid-glass--card,
+.no-panel-bg .backdrop-blur-sm,
+.no-panel-bg .backdrop-blur-md,
+.no-panel-bg .container-glass,
+.no-panel-bg [class*="bg-gray"],
+.no-panel-bg [class*="bg-white"],
+.no-panel-bg [class*="bg-theme-tertiary"],
+.no-panel-bg .glass p,
+.no-panel-bg .glass div,
+.no-panel-bg .glass section,
+.no-panel-bg .glass article {
+    background: transparent !important;
+    background-color: transparent !important;
+    border-color: rgba(255, 255, 255, 0.06) !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.55) !important;
+}
+
+/* Make modal/container glass translucent with glow */
+.no-panel-bg .glass,
+.no-panel-bg .liquid-glass--card {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.35)) !important;
+    -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+    backdrop-filter: blur(var(--glass-blur)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Subtle colored glow for accents */
+.no-panel-bg .glass[data-glow="accent"] {
+    box-shadow: 0 12px 40px rgba(var(--color-accent-rgb, 124, 58, 237), 0.08) !important;
+}

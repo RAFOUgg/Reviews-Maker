@@ -108,7 +108,7 @@ export default function LibraryPage() {
     }
 
     return (
-        <div className="min-h-screen bg-transparent relative pb-20 pt-8 px-4 md:px-8">
+        <div className="min-h-screen bg-transparent relative pb-20 pt-8 px-4 md:px-8 no-panel-bg">
             <div className="absolute inset-0 bg-gradient-to-br /20 /20 /20 pointer-events-none"></div>
             <div className="relative max-w-7xl mx-auto space-y-8">
 

@@ -177,7 +177,7 @@ const AccountPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 md:p-8 no-panel-bg">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">

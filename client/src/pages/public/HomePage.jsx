@@ -83,7 +83,7 @@ export default function HomePage() {
     };
 
     return (
-        <div className="min-h-screen bg-black bg-gradient-to-br from-black via-purple-900 to-black relative">
+        <div className="min-h-screen bg-black bg-gradient-to-br from-black via-purple-900 to-black relative no-panel-bg">
             <div className="relative max-w-7xl mx-auto px-4 py-12 space-y-12">
                 {/* Hero Section */}
                 <div className="glass liquid-glass--card">
