@@ -233,7 +233,7 @@ const AccountPage = () => {
                 <p className="text-gray-400">Découvrez nos offres et gérez votre souscription</p>
               </div>
               <AccountTypeDisplay onUpgradeClick={() => setShowUpgradeModal(true)} />
-              
+
               {/* Historique des paiements (comptes payants uniquement) */}
               {(accountType === 'producteur' || accountType === 'influenceur') && (
                 <SubscriptionHistory />
@@ -257,9 +257,9 @@ const AccountPage = () => {
       </div>
 
       {/* Modal Upgrade */}
-      <UpgradeModal 
-        isOpen={showUpgradeModal} 
-        onClose={() => setShowUpgradeModal(false)} 
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
       />
     </div>
   )

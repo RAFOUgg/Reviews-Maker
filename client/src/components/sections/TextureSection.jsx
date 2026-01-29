@@ -62,19 +62,23 @@ const TEXTURE_LABELS = {
 
 /**
  * Section Texture pour Hash/Concentrés/Fleurs
- * Props: productType, formData, handleChange
+ * Props: productType, data (ou formData), onChange (ou handleChange)
+ * Support des deux patterns d'appel pour compatibilité
  */
-export default function TextureSection({ productType, formData = {}, handleChange }) {
-    const data = formData.texture || {};
-    const [hardness, setHardness] = useState(data?.hardness || 5);
-    const [density, setDensity] = useState(data?.density || 5);
-    const [malleability, setMalleability] = useState(data?.malleability || 5);
-    const [elasticity, setElasticity] = useState(data?.elasticity || 5);
-    const [stickiness, setStickiness] = useState(data?.stickiness || 5);
-    const [melting, setMelting] = useState(data?.melting || 5);
-    const [residue, setResidue] = useState(data?.residue || 10);
-    const [friability, setFriability] = useState(data?.friability || 5);
-    const [viscosity, setViscosity] = useState(data?.viscosity || 5);
+export default function TextureSection({ productType, data: directData, onChange, formData, handleChange }) {
+    // Support des deux patterns : data/onChange OU formData/handleChange
+    const textureData = directData || formData?.texture || {};
+    const updateHandler = onChange || ((newData) => handleChange?.('texture', newData));
+    
+    const [hardness, setHardness] = useState(textureData?.hardness || 5);
+    const [density, setDensity] = useState(textureData?.density || 5);
+    const [malleability, setMalleability] = useState(textureData?.malleability || 5);
+    const [elasticity, setElasticity] = useState(textureData?.elasticity || 5);
+    const [stickiness, setStickiness] = useState(textureData?.stickiness || 5);
+    const [melting, setMelting] = useState(textureData?.melting || 5);
+    const [residue, setResidue] = useState(textureData?.residue || 10);
+    const [friability, setFriability] = useState(textureData?.friability || 5);
+    const [viscosity, setViscosity] = useState(textureData?.viscosity || 5);
 
     // Score de pureté calculé pour Hash / Concentrés (moyenne simple melting/residue)
     const purityScore = (productType === 'Hash' || productType === 'Concentré')
@@ -83,33 +87,33 @@ export default function TextureSection({ productType, formData = {}, handleChang
 
     // Synchroniser avec parent
     useEffect(() => {
-        const textureData = {
+        const newTextureData = {
             hardness,
             density,
             stickiness
         };
 
-        // Champs spécifiques selon productType
-        if (productType === 'Fleurs') {
-            textureData.elasticity = elasticity;
+        // Champs spécifiques selon productType - Note: "Fleur" (pas "Fleurs")
+        if (productType === 'Fleurs' || productType === 'Fleur') {
+            newTextureData.elasticity = elasticity;
         }
 
         if (productType === 'Hash' || productType === 'Concentré') {
-            textureData.melting = melting;
-            textureData.residue = residue;
+            newTextureData.melting = melting;
+            newTextureData.residue = residue;
         }
 
         if (productType === 'Hash') {
-            textureData.malleability = malleability;
-            textureData.friability = friability;
+            newTextureData.malleability = malleability;
+            newTextureData.friability = friability;
         }
 
         if (productType === 'Concentré') {
-            textureData.viscosity = viscosity;
+            newTextureData.viscosity = viscosity;
         }
 
-        handleChange('texture', textureData);
-    }, [hardness, density, malleability, elasticity, stickiness, melting, residue, friability, viscosity, productType, handleChange]);
+        updateHandler(newTextureData);
+    }, [hardness, density, malleability, elasticity, stickiness, melting, residue, friability, viscosity, productType, updateHandler]);
 
     return (
         <div className="space-y-8 p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50">

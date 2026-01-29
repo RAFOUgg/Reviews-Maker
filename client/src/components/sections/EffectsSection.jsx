@@ -7,36 +7,39 @@ import WhiteSlider from '../ui/WhiteSlider';
 /**
  * Section Effets Ressentis + Expérience d'Utilisation (FUSIONNÉE)
  * Inclut: Montée, Intensité, Durée, Effets + Expérience consommation
- * Props: productType, formData, handleChange
+ * Props: productType, data (ou formData), onChange (ou handleChange)
+ * Support des deux patterns d'appel pour compatibilité
  */
-export default function EffectsSection({ productType, formData = {}, handleChange }) {
-    const data = formData.effets || {};
+export default function EffectsSection({ productType, data: directData, onChange, formData, handleChange }) {
+    // Support des deux patterns : data/onChange OU formData/handleChange
+    const effectsData = directData || formData?.effets || {};
+    const updateHandler = onChange || ((newData) => handleChange?.('effets', newData));
 
     // EFFETS RESSENTIS
-    const [onset, setOnset] = useState(data?.onset || 5);
-    const [intensity, setIntensity] = useState(data?.intensity || 5);
-    const [duration, setDuration] = useState(data?.duration || '1-2h');
-    const [selectedEffects, setSelectedEffects] = useState(data?.effects || []);
+    const [onset, setOnset] = useState(effectsData?.onset || 5);
+    const [intensity, setIntensity] = useState(effectsData?.intensity || 5);
+    const [duration, setDuration] = useState(effectsData?.duration || '1-2h');
+    const [selectedEffects, setSelectedEffects] = useState(effectsData?.effects || []);
     const [categoryFilter, setCategoryFilter] = useState(null);
     const [sentimentFilter, setSentimentFilter] = useState(null);
 
     // EXPÉRIENCE D'UTILISATION
-    const [methodeConsommation, setMethodeConsommation] = useState(data?.methodeConsommation || '');
-    const [dosageUtilise, setDosageUtilise] = useState(data?.dosageUtilise || '');
-    const [dosageUnite, setDosageUnite] = useState(data?.dosageUnite || 'g');
-    const [dureeEffetsHeures, setDureeEffetsHeures] = useState(data?.dureeEffetsHeures || '');
-    const [dureeEffetsMinutes, setDureeEffetsMinutes] = useState(data?.dureeEffetsMinutes || '');
-    const [debutEffets, setDebutEffets] = useState(data?.debutEffets || '');
-    const [dureeEffetsCategorie, setDureeEffetsCategorie] = useState(data?.dureeEffetsCategorie || 'moyenne');
-    const [profilsEffets, setProfilsEffets] = useState(data?.profilsEffets || []);
-    const [effetsSecondaires, setEffetsSecondaires] = useState(data?.effetsSecondaires || []);
-    const [usagesPreferes, setUsagesPreferes] = useState(data?.usagesPreferes || []);
+    const [methodeConsommation, setMethodeConsommation] = useState(effectsData?.methodeConsommation || '');
+    const [dosageUtilise, setDosageUtilise] = useState(effectsData?.dosageUtilise || '');
+    const [dosageUnite, setDosageUnite] = useState(effectsData?.dosageUnite || 'g');
+    const [dureeEffetsHeures, setDureeEffetsHeures] = useState(effectsData?.dureeEffetsHeures || '');
+    const [dureeEffetsMinutes, setDureeEffetsMinutes] = useState(effectsData?.dureeEffetsMinutes || '');
+    const [debutEffets, setDebutEffets] = useState(effectsData?.debutEffets || '');
+    const [dureeEffetsCategorie, setDureeEffetsCategorie] = useState(effectsData?.dureeEffetsCategorie || 'moyenne');
+    const [profilsEffets, setProfilsEffets] = useState(effectsData?.profilsEffets || []);
+    const [effetsSecondaires, setEffetsSecondaires] = useState(effectsData?.effetsSecondaires || []);
+    const [usagesPreferes, setUsagesPreferes] = useState(effectsData?.usagesPreferes || []);
     const [filterProfils, setFilterProfils] = useState('tous');
     const [expandExperience, setExpandExperience] = useState(false);
 
     // Synchroniser avec parent
     useEffect(() => {
-        handleChange('effets', {
+        updateHandler({
             onset,
             intensity,
             duration,
@@ -52,7 +55,7 @@ export default function EffectsSection({ productType, formData = {}, handleChang
             effetsSecondaires,
             usagesPreferes
         });
-    }, [onset, intensity, duration, selectedEffects, methodeConsommation, dosageUtilise, dosageUnite, dureeEffetsHeures, dureeEffetsMinutes, debutEffets, dureeEffetsCategorie, profilsEffets, effetsSecondaires, usagesPreferes, handleChange]);
+    }, [onset, intensity, duration, selectedEffects, methodeConsommation, dosageUtilise, dosageUnite, dureeEffetsHeures, dureeEffetsMinutes, debutEffets, dureeEffetsCategorie, profilsEffets, effetsSecondaires, usagesPreferes, updateHandler]);
 
     const toggleEffect = (effectId) => {
         setSelectedEffects(prev => {

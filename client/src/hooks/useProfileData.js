@@ -7,7 +7,7 @@ import { useStore } from '../store'
  */
 export const useProfileData = () => {
   const { user, setUser } = useStore()
-  
+
   const [profileData, setProfileData] = useState({
     username: '',
     email: '',
@@ -96,13 +96,13 @@ export const useProfileData = () => {
       }
 
       const updatedUser = await response.json()
-      
+
       // Mettre à jour le store
       setUser(updatedUser)
-      
+
       setSaveMessage('✅ Profil mis à jour avec succès')
       setIsEditing(false)
-      
+
       setTimeout(() => setSaveMessage(''), 3000)
     } catch (error) {
       console.error('Profile save error:', error)
@@ -139,12 +139,12 @@ export const useProfileData = () => {
         ...prev,
         avatar: data.avatar
       }))
-      
+
       setUser({
         ...user,
         avatar: data.avatar
       })
-      
+
       setSaveMessage('✅ Avatar mis à jour')
       setTimeout(() => setSaveMessage(''), 2000)
     } catch (error) {

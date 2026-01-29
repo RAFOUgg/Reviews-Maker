@@ -22,26 +22,30 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
         humidity: data.humidity || 60
     }), [data]);
 
-    // Convertir les données du timeline
+    // Convertir CURING_SIDEBAR_CONTENT vers format array pour le sidebar
+    // Les clés sont: CONFIGURATION, CONTAINER, ENVIRONMENT, VISUAL, ORGANOLEPTIC, NOTES
     const sidebarArray = useMemo(() => {
-        const categories = {
-            'Température': CURING_SIDEBAR_CONTENT.Temperature || [],
-            'Humidité': CURING_SIDEBAR_CONTENT.Humidity || [],
-            'Visuel': CURING_SIDEBAR_CONTENT.Visual || [],
-            'Odeurs': CURING_SIDEBAR_CONTENT.Odors || [],
-            'Goûts': CURING_SIDEBAR_CONTENT.Tastes || [],
-            'Effets': CURING_SIDEBAR_CONTENT.Effects || []
-        };
-        return Object.entries(categories).map(([name, fields]) => ({
-            name,
-            fields: fields.map(field => ({
-                id: field.id,
-                label: field.label,
-                type: field.type,
-                icon: field.icon,
-                unit: field.unit
+        // Mapper les sections du fichier config vers des catégories utilisables
+        return Object.entries(CURING_SIDEBAR_CONTENT).map(([key, section]) => ({
+            name: section.label || key,
+            icon: section.icon || '📦',
+            color: section.color || 'gray',
+            collapsed: section.collapsed ?? true,
+            fields: (section.items || []).map(item => ({
+                id: item.id,
+                label: item.label,
+                type: item.type,
+                icon: item.icon,
+                unit: item.unit,
+                options: item.options,
+                min: item.min,
+                max: item.max,
+                step: item.step,
+                defaultValue: item.defaultValue,
+                tooltip: item.tooltip,
+                zones: item.zones
             }))
-        }));
+        })).filter(section => section.fields.length > 0);
     }, []);
 
     // Handler pour changements de configuration

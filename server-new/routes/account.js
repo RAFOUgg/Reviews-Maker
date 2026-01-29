@@ -374,7 +374,7 @@ router.put('/update', asyncHandler(async (req, res) => {
         });
     }
 
-    const { 
+    const {
         username, email, theme, locale,
         // Champs profil personnel
         firstName, lastName, country, bio, website, publicProfile,
@@ -488,8 +488,8 @@ router.put('/update', asyncHandler(async (req, res) => {
     // === Gestion des données entreprise (ProducerProfile) ===
     let producerProfile = null;
     const userAccountType = getUserAccountType(updatedUser);
-    
-    if ((companyName || siret || billingAddress || vatNumber) && 
+
+    if ((companyName || siret || billingAddress || vatNumber) &&
         (userAccountType === 'producteur' || userAccountType === 'influenceur')) {
         // Rechercher ou créer le ProducerProfile
         producerProfile = await prisma.producerProfile.upsert({

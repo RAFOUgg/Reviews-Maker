@@ -14,8 +14,13 @@ import '../../../../styles/sections/CulturePipelineSection.css'
  * 2. Sélection de presets réutilisables (9 groupes de données)
  * 3. Visualisation calendrier GitHub-style (90 jours)
  * 4. Gestion des stages du pipeline
+ * 
+ * Props: data/onChange OU formData/handleChange (supporte les deux patterns)
  */
-export default function CulturePipelineSection({ formData, handleChange, onPipelineCreate }) {
+export default function CulturePipelineSection({ data, onChange, formData, handleChange, onPipelineCreate }) {
+    // Support des deux patterns d'appel
+    const cultureData = data || formData || {};
+    
     const [expandedGroups, setExpandedGroups] = useState({
         setup: true,
         environment: false,
@@ -24,22 +29,37 @@ export default function CulturePipelineSection({ formData, handleChange, onPipel
     })
 
     // État pipeline
-    const [pipelineMode, setPipelineMode] = useState(formData.pipelineMode || 'jours')
-    const [pipelineStartDate, setPipelineStartDate] = useState(formData.pipelineStartDate || '')
-    const [pipelineEndDate, setPipelineEndDate] = useState(formData.pipelineEndDate || '')
-    const [selectedPresets, setSelectedPresets] = useState(formData.selectedPresets || {})
+    const [pipelineMode, setPipelineMode] = useState(cultureData.pipelineMode || 'jours')
+    const [pipelineStartDate, setPipelineStartDate] = useState(cultureData.pipelineStartDate || '')
+    const [pipelineEndDate, setPipelineEndDate] = useState(cultureData.pipelineEndDate || '')
+    const [selectedPresets, setSelectedPresets] = useState(cultureData.selectedPresets || {})
     const [showConfigModal, setShowConfigModal] = useState(false)
     const [showPresetModal, setShowPresetModal] = useState(false)
-    const [pipelineStages, setPipelineStages] = useState(formData.pipelineStages || [])
+    const [pipelineStages, setPipelineStages] = useState(cultureData.pipelineStages || [])
 
-    // Sync avec formData
+    // Sync avec parent - supporte les deux patterns
     useEffect(() => {
-        handleChange('pipelineMode', pipelineMode)
-        handleChange('pipelineStartDate', pipelineStartDate)
-        handleChange('pipelineEndDate', pipelineEndDate)
-        handleChange('selectedPresets', selectedPresets)
-        handleChange('pipelineStages', pipelineStages)
-    }, [pipelineMode, pipelineStartDate, pipelineEndDate, selectedPresets, pipelineStages])
+        const newData = {
+            pipelineMode,
+            pipelineStartDate,
+            pipelineEndDate,
+            selectedPresets,
+            pipelineStages
+        };
+        
+        // Pattern 1: onChange directement avec l'objet complet
+        if (onChange) {
+            onChange(newData);
+        }
+        // Pattern 2: handleChange avec clés individuelles
+        else if (handleChange) {
+            handleChange('pipelineMode', pipelineMode);
+            handleChange('pipelineStartDate', pipelineStartDate);
+            handleChange('pipelineEndDate', pipelineEndDate);
+            handleChange('selectedPresets', selectedPresets);
+            handleChange('pipelineStages', pipelineStages);
+        }
+    }, [pipelineMode, pipelineStartDate, pipelineEndDate, selectedPresets, pipelineStages, onChange, handleChange])
 
     const toggleGroup = (groupName) => {
         setExpandedGroups(prev => ({

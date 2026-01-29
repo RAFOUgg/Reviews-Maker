@@ -12,10 +12,10 @@ export default function ProfileSection() {
   const { t } = useTranslation()
   const fileInputRef = useRef(null)
   const { accountType } = useStore()
-  
+
   // Comptes payants ont accès aux données entreprise
   const isPaidAccount = accountType === 'producteur' || accountType === 'influenceur'
-  
+
   const {
     profileData,
     updateField,
@@ -104,11 +104,10 @@ export default function ProfileSection() {
 
       {/* Message de statut */}
       {saveMessage && (
-        <div className={`p-4 rounded-lg text-sm font-medium ${
-          saveMessage.includes('✅')
+        <div className={`p-4 rounded-lg text-sm font-medium ${saveMessage.includes('✅')
             ? 'bg-green-500/10 border border-green-500/30 text-green-400'
             : 'bg-red-500/10 border border-red-500/30 text-red-400'
-        }`}>
+          }`}>
           {saveMessage}
         </div>
       )}
@@ -119,9 +118,8 @@ export default function ProfileSection() {
           <div className="relative inline-block">
             <div
               onClick={handleAvatarClick}
-              className={`w-32 h-32 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-5xl font-bold text-white ${
-                isEditing ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
-              }`}
+              className={`w-32 h-32 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-5xl font-bold text-white ${isEditing ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+                }`}
             >
               {profileData.avatar ? (
                 <img
@@ -203,11 +201,10 @@ export default function ProfileSection() {
               onChange={(e) => updateField('firstName', e.target.value)}
               disabled={!isEditing}
               placeholder="Optionnel"
-              className={`w-full px-4 py-3 rounded-lg border transition-colors ${
-                isEditing
+              className={`w-full px-4 py-3 rounded-lg border transition-colors ${isEditing
                   ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
                   : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
-              }`}
+                }`}
             />
           </div>
 
@@ -222,11 +219,10 @@ export default function ProfileSection() {
               onChange={(e) => updateField('lastName', e.target.value)}
               disabled={!isEditing}
               placeholder="Optionnel"
-              className={`w-full px-4 py-3 rounded-lg border transition-colors ${
-                isEditing
+              className={`w-full px-4 py-3 rounded-lg border transition-colors ${isEditing
                   ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
                   : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
-              }`}
+                }`}
             />
           </div>
 
@@ -239,11 +235,10 @@ export default function ProfileSection() {
               value={profileData.country}
               onChange={(e) => updateField('country', e.target.value)}
               disabled={!isEditing}
-              className={`w-full px-4 py-3 rounded-lg border transition-colors ${
-                isEditing
+              className={`w-full px-4 py-3 rounded-lg border transition-colors ${isEditing
                   ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
                   : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
-              }`}
+                }`}
             >
               <option value="">Sélectionnez un pays</option>
               {COUNTRIES.map((country) => (
@@ -274,11 +269,10 @@ export default function ProfileSection() {
             disabled={!isEditing}
             placeholder="Décrivez-vous en quelques mots..."
             rows={4}
-            className={`w-full px-4 py-3 rounded-lg border transition-colors resize-none ${
-              isEditing
+            className={`w-full px-4 py-3 rounded-lg border transition-colors resize-none ${isEditing
                 ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
                 : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
-            }`}
+              }`}
           />
           <p className="text-xs text-gray-500">{profileData.bio.length}/500</p>
         </div>
@@ -295,11 +289,10 @@ export default function ProfileSection() {
             onChange={(e) => updateField('website', e.target.value)}
             disabled={!isEditing}
             placeholder="https://example.com"
-            className={`w-full px-4 py-3 rounded-lg border transition-colors ${
-              isEditing
+            className={`w-full px-4 py-3 rounded-lg border transition-colors ${isEditing
                 ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
                 : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
-            }`}
+              }`}
           />
         </div>
 
@@ -317,15 +310,13 @@ export default function ProfileSection() {
               disabled={!isEditing}
               className="sr-only peer"
             />
-            <div className={`absolute inset-0 rounded-full transition-colors ${
-              profileData.publicProfile
+            <div className={`absolute inset-0 rounded-full transition-colors ${profileData.publicProfile
                 ? 'bg-purple-600'
                 : 'bg-gray-600'
-            } ${!isEditing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              } ${!isEditing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             />
-            <div className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full transition-transform ${
-              profileData.publicProfile ? 'translate-x-6' : ''
-            }`}
+            <div className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full transition-transform ${profileData.publicProfile ? 'translate-x-6' : ''
+              }`}
             />
           </label>
         </div>
@@ -357,11 +348,10 @@ export default function ProfileSection() {
                 onChange={(e) => updateField('companyName', e.target.value)}
                 disabled={!isEditing}
                 placeholder="Votre entreprise"
-                className={`w-full px-4 py-3 rounded-lg border transition-colors ${
-                  isEditing
+                className={`w-full px-4 py-3 rounded-lg border transition-colors ${isEditing
                     ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
                     : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
-                }`}
+                  }`}
               />
             </div>
 
@@ -377,11 +367,10 @@ export default function ProfileSection() {
                 onChange={(e) => updateField('siret', e.target.value)}
                 disabled={!isEditing}
                 placeholder="Ex: 123 456 789 00012"
-                className={`w-full px-4 py-3 rounded-lg border transition-colors ${
-                  isEditing
+                className={`w-full px-4 py-3 rounded-lg border transition-colors ${isEditing
                     ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
                     : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
-                }`}
+                  }`}
               />
             </div>
 
@@ -397,11 +386,10 @@ export default function ProfileSection() {
                 disabled={!isEditing}
                 placeholder="Adresse complète (rue, code postal, ville, pays)"
                 rows={3}
-                className={`w-full px-4 py-3 rounded-lg border transition-colors resize-none ${
-                  isEditing
+                className={`w-full px-4 py-3 rounded-lg border transition-colors resize-none ${isEditing
                     ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
                     : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
-                }`}
+                  }`}
               />
             </div>
 
@@ -416,11 +404,10 @@ export default function ProfileSection() {
                 onChange={(e) => updateField('vatNumber', e.target.value)}
                 disabled={!isEditing}
                 placeholder="Ex: FR12345678901"
-                className={`w-full px-4 py-3 rounded-lg border transition-colors ${
-                  isEditing
+                className={`w-full px-4 py-3 rounded-lg border transition-colors ${isEditing
                     ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
                     : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
-                }`}
+                  }`}
               />
             </div>
           </div>
