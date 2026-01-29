@@ -23,6 +23,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
         });
     }, [timelineData]);
     // Construire la config timeline
+    // IMPORTANT: type='phase' par défaut pour générer les phases de curing
     const timelineConfig = useMemo(() => ({
         type: data.curingTimelineConfig?.type || 'phase',
         mode: data.curingTimelineConfig?.mode || 'phases',

@@ -36,8 +36,9 @@ const CulturePipelineSection = ({ data = {}, onChange, formData, handleChange })
     };
 
     // Construire la config timeline
+    // IMPORTANT: type='phase' par défaut pour générer les 12 phases de culture
     const timelineConfig = useMemo(() => ({
-        type: cultureData.cultureTimelineConfig?.type || 'culture',
+        type: cultureData.cultureTimelineConfig?.type || 'phase',
         mode: cultureData.cultureTimelineConfig?.mode || 'phases',
         startDate: cultureData.cultureTimelineConfig?.startDate || '',
         endDate: cultureData.cultureTimelineConfig?.endDate || '',
