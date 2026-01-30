@@ -22,6 +22,51 @@
     color: #eaeaf0;
 }
 
+/* liquid-glass base: ensure sheen and clipping */
+.no-panel-bg .liquid-glass {
+    position: relative;
+    overflow: hidden;
+}
+
+/* glossy sheen overlay */
+.no-panel-bg .liquid-glass::after {
+    content: '';
+    position: absolute;
+    left: -40%;
+    top: -60%;
+    width: 220%;
+    height: 160%;
+    transform: rotate(-18deg) translateX(-10%);
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 40%);
+    opacity: 0.7;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    filter: blur(16px);
+}
+
+/* stronger accent glow for gradient elements (primary buttons, etc.) */
+.no-panel-bg .liquid-glass.bg-gradient-to-r {
+    box-shadow: 0 14px 40px rgba(130, 94, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* color icons/arrow inside inputs */
+.no-panel-bg .input-surface svg {
+    color: var(--liquid-highlight);
+}
+
+/* dropdown menu visual polish */
+.no-panel-bg .absolute,
+.no-panel-bg [role='listbox'] {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015));
+    border: 1px solid var(--liquid-border);
+    box-shadow: 0 8px 28px rgba(2, 6, 23, 0.5);
+}
+
+.no-panel-bg .absolute div:hover,
+.no-panel-bg [role='listbox'] div:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
 .no-panel-bg .input-surface {
     display: inline-flex;
     align-items: center;
