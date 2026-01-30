@@ -55,6 +55,32 @@
         color: var(--text-primary) !important;
         border-radius: .6rem !important;
     }
+
+    /* Make native selects visually consistent inside liquid components (fallback) */
+    .liquid-glass select,
+    .liquid-glass--card select,
+    .glass select {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.15));
+        color: var(--text-primary) !important;
+        border: 1px solid rgba(255,255,255,0.06) !important;
+        padding: .6rem .9rem .6rem .9rem !important;
+        border-radius: .5rem !important;
+        background-image: radial-gradient(circle at right 85% center, rgba(255,255,255,0.06) 0, rgba(255,255,255,0.02) 40%), linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.12));
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center, left top;
+        background-size: 1.2rem 1.2rem, 100% 100%;
+    }
+
+    .liquid-glass select:focus,
+    .liquid-glass--card select:focus,
+    .glass select:focus {
+        outline: none;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.6) !important;
+        border-color: rgba(255,255,255,0.08) !important;
+    }
 }
 
 html {
