@@ -9,7 +9,9 @@
 @tailwind utilities;
 
 @layer utilities {
-    .glass {
+    .glass,
+    .liquid-glass,
+    .liquid-glass--card {
         position: relative;
         -webkit-backdrop-filter: blur(var(--glass-blur));
         backdrop-filter: blur(var(--glass-blur));
@@ -25,7 +27,11 @@
 
     /* Scoped select / react-select styles only when inside a glass container */
     .glass select,
-    .glass .react-select__control {
+    .glass .react-select__control,
+    .liquid-glass select,
+    .liquid-glass .react-select__control,
+    .liquid-glass--card select,
+    .liquid-glass--card .react-select__control {
         background: var(--glass-bg) !important;
         color: var(--text-primary) !important;
         border: 1px solid rgba(255, 255, 255, 0.04) !important;
@@ -37,7 +43,13 @@
 
     .glass .react-select__menu,
     .glass .react-select__menu-list,
-    .glass .react-select__option {
+    .glass .react-select__option,
+    .liquid-glass .react-select__menu,
+    .liquid-glass .react-select__menu-list,
+    .liquid-glass .react-select__option,
+    .liquid-glass--card .react-select__menu,
+    .liquid-glass--card .react-select__menu-list,
+    .liquid-glass--card .react-select__option {
         background: var(--glass-bg) !important;
         color: var(--text-primary) !important;
         border-radius: .6rem !important;
