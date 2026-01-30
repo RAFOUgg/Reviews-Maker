@@ -28,7 +28,7 @@ const SimpleSelect = ({ options = [], value, onChange, placeholder = 'Select' })
                 aria-expanded={open}
             >
                 <span className={`${selected ? 'text-title' : 'text-muted'}`}>{selected?.label ?? placeholder}</span>
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" className="opacity-70"><path d="M5 7l5 5 5-5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" className="opacity-70"><path d="M5 7l5 5 5-5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </button>
 
             {open && (
