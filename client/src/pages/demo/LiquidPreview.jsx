@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import '../../assets/liquid-visuals.css'
 import LiquidCard from '../../components/ui/LiquidCard'
 import LiquidButton from '../../components/ui/LiquidButton'
 import { Plus, Search, Settings } from 'lucide-react'
