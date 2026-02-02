@@ -440,7 +440,7 @@ export default function CreateReviewPage() {
             <div className="sticky top-[73px] z-40 glass liquid-glass--card bg-panel">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex items-center justify-between mb-3">
-                        <button onClick={() => navigate('/')} className="transition-colors text-gray-300">← Retour</button>
+                        <button onClick={() => navigate('/')} className="transition-colors text-white/70 hover:text-white">← Retour</button>
                         <div className="text-center"><h1 className="text-xl font-bold text-title">{isEditing ? `Modifier ${formData.type}` : formData.type}</h1><p className="text-xs text-subtitle">Section {currentSectionIndex + 1}/{sections.length}</p></div>
                         <button
                             onClick={() => setShowOrchardStudio(true)}
@@ -463,7 +463,7 @@ export default function CreateReviewPage() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="glass liquid-glass--card p-8 bg-card">
                     <h2 className="text-2xl font-bold text-title mb-6">{currentSection.title}</h2>
-                    <div className="space-y-6">{currentSection.fields.map((field, idx) => <div key={idx} className="space-y-2">{field.type !== 'checkbox' && field.type !== 'images' && <label className="block text-sm font-semibold text-gray-200">{field.label}{field.required && <span className="ml-1 text-red-400">*</span>}{field.max && field.type === 'slider' && <span className="ml-1 opacity-60">/{field.max}</span>}</label>}{renderField(field)}</div>)}</div>
+                    <div className="space-y-6">{currentSection.fields.map((field, idx) => <div key={idx} className="space-y-2">{field.type !== 'checkbox' && field.type !== 'images' && <label className="block text-sm font-semibold text-white/80">{field.label}{field.required && <span className="ml-1 text-red-400">*</span>}{field.max && field.type === 'slider' && <span className="ml-1 opacity-60">/{field.max}</span>}</label>}{renderField(field)}</div>)}</div>
                 </div>
             </div>
             <div className="fixed bottom-0 left-0 right-0 bg-transparent py-4 z-50">
@@ -535,7 +535,7 @@ export default function CreateReviewPage() {
             <AnimatePresence>
                 {showSaveModal && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-gray-900/95 backdrop-blur-xl rounded-2xl p-6 border border-white/10 max-w-md w-full">
+                        <div className="bg-[#12121a]/95 backdrop-blur-xl rounded-2xl p-6 border border-white/10 max-w-md w-full shadow-2xl">
                             <h3 className="text-xl font-bold text-white mb-4">Finaliser la review</h3>
 
                             <div className="space-y-4">

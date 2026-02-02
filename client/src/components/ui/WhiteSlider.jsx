@@ -21,7 +21,7 @@ export default function WhiteSlider({
     return (
         <div className={`space-y-3 ${className}`}>
             <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                <label className="text-sm font-semibold text-white/80">
                     {label}
                 </label>
                 <span className="text-lg font-bold text-white">
@@ -35,14 +35,14 @@ export default function WhiteSlider({
                 step={step}
                 value={displayValue}
                 onChange={(e) => onChange(parseFloat(e.target.value))}
-                className="w-full h-2 bg-gray-700/50 rounded-lg appearance-none cursor-pointer
+                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer
                     [&::-webkit-slider-thumb]:appearance-none
                     [&::-webkit-slider-thumb]:w-4
                     [&::-webkit-slider-thumb]:h-4
                     [&::-webkit-slider-thumb]:rounded-full
                     [&::-webkit-slider-thumb]:bg-white
                     [&::-webkit-slider-thumb]:border-2
-                    [&::-webkit-slider-thumb]:border-gray-400
+                    [&::-webkit-slider-thumb]:border-white/40
                     [&::-webkit-slider-thumb]:cursor-pointer
                     [&::-webkit-slider-thumb]:shadow-lg
                     [&::-webkit-slider-thumb]:hover:shadow-xl
@@ -53,14 +53,14 @@ export default function WhiteSlider({
                     [&::-moz-range-thumb]:rounded-full
                     [&::-moz-range-thumb]:bg-white
                     [&::-moz-range-thumb]:border-2
-                    [&::-moz-range-thumb]:border-gray-400
+                    [&::-moz-range-thumb]:border-white/40
                     [&::-moz-range-thumb]:cursor-pointer
                     [&::-moz-range-thumb]:shadow-lg
-                    hover:bg-gray-600/50
+                    hover:bg-white/15
                     transition-all"
             />
             {helper && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 italic">
+                <p className="text-xs text-white/50 italic">
                     {helper}
                 </p>
             )}

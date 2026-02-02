@@ -16,9 +16,9 @@ export default function SubstratViewer({ data }) {
     if (Array.isArray(parsed)) {
         return (
             <div>
-                <div className="text-sm text-gray-500">Substrat</div>
+                <div className="text-sm text-white/50">Substrat</div>
                 <ul className="list-disc pl-5 mt-2">
-                    {parsed.map((p, i) => <li key={i} className="text-sm text-gray-700">{typeof p === 'object' ? (p.name || JSON.stringify(p)) : p}</li>)}
+                    {parsed.map((p, i) => <li key={i} className="text-sm text-white/70">{typeof p === 'object' ? (p.name || JSON.stringify(p)) : p}</li>)}
                 </ul>
             </div>
         );
@@ -28,15 +28,15 @@ export default function SubstratViewer({ data }) {
     if (typeof parsed === 'object') {
         return (
             <div>
-                <div className="text-sm text-gray-500">Substrat</div>
+                <div className="text-sm text-white/50">Substrat</div>
                 <div className="mt-2 space-y-1">
-                    {Object.entries(parsed).map(([k, v]) => <div key={k} className="text-sm text-gray-700"><strong>{k}:</strong> {typeof v === 'object' ? JSON.stringify(v) : String(v)}</div>)}
+                    {Object.entries(parsed).map(([k, v]) => <div key={k} className="text-sm text-white/70"><strong>{k}:</strong> {typeof v === 'object' ? JSON.stringify(v) : String(v)}</div>)}
                 </div>
             </div>
         );
     }
 
-    return <div className="text-sm text-gray-700">{String(parsed)}</div>;
+    return <div className="text-sm text-white/70">{String(parsed)}</div>;
 }
 
 

@@ -106,7 +106,7 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                                                 key={tag}
                                                 type="button"
                                                 onClick={() => togglePhotoTag(index, tag)}
-                                                className={`px-2 py-0.5 text-xs rounded-full transition-all font-medium ${(photo.tags || []).includes(tag) ? 'bg-gradient-to-r text-white shadow-md' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
+                                                className={`px-2 py-0.5 text-xs rounded-full transition-all font-medium border ${(photo.tags || []).includes(tag) ? 'bg-violet-500/30 border-violet-500/50 text-violet-300 shadow-md' : 'bg-white/5 border-white/20 text-white/60 hover:bg-white/10 hover:border-white/30'}`}
                                             >
                                                 {tag}
                                             </button>
@@ -116,9 +116,9 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                             ))}
                         </div>
                         {photos.length < 4 && (
-                            <label className="flex items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-400 dark:hover:border-blue-400 bg-white/50 dark:bg-gray-800/30 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all">
-                                <Camera className="w-6 h-6 text-gray-400" />
-                                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                            <label className="flex items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-violet-500/50 bg-white/5 hover:bg-violet-500/10 transition-all backdrop-blur-sm">
+                                <Camera className="w-6 h-6 text-white/40" />
+                                <span className="text-sm font-medium text-white/60">
                                     Ajouter une photo ({photos.length}/4)
                                 </span>
                                 <input

@@ -207,7 +207,7 @@ export default function CreateFlowerReview() {
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-600 mx-auto mb-4"></div>
-                    <p className="text-gray-400">Chargement...</p>
+                    <p className="text-white/60">Chargement...</p>
                 </div>
             </div>
         )
@@ -247,7 +247,7 @@ export default function CreateFlowerReview() {
                     <div className="flex items-center gap-3 mb-6">
                         <span className="text-3xl">{currentSectionData.icon}</span>
                         <div>
-                            <h2 className="text-xl font-semibold text-gray-100">
+                            <h2 className="text-xl font-semibold text-white">
                                 {currentSectionData.title}
                                 {currentSectionData.required && <span className="text-red-500 ml-2">*</span>}
                             </h2>

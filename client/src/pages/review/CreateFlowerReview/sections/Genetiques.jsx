@@ -576,9 +576,9 @@ export default function Genetiques({ formData, handleChange }) {
                         initial={{ opacity: 0, height: 0, marginTop: 0 }}
                         animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
                         exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                        className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-700 rounded-lg space-y-4"
+                        className="p-4 bg-gradient-to-br from-violet-500/10 to-indigo-500/10 border border-violet-500/20 rounded-xl space-y-4 backdrop-blur-sm"
                     >
-                        <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                        <h4 className="text-sm font-semibold text-violet-300 flex items-center gap-2">
                             <Edit2 className="w-4 h-4" />
                             Métadonnées : {selectedNode.cultivarName || selectedNode.data?.cultivarName || 'Cultivar'}
                         </h4>
@@ -586,38 +586,38 @@ export default function Genetiques({ formData, handleChange }) {
                         {/* Breeder & Type */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div className="space-y-2">
-                                <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Breeder</label>
+                                <label className="text-xs font-medium text-white/60 uppercase tracking-wide">Breeder</label>
                                 <input
                                     type="text"
                                     defaultValue={selectedNode.genetics?.breeder || selectedNode.data?.breeder || ''}
-                                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 text-sm border border-white/10 rounded-xl bg-white/5 text-white placeholder:text-white/40 focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50"
                                     placeholder="DNA Genetics..."
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Type</label>
+                                <label className="text-xs font-medium text-white/60 uppercase tracking-wide">Type</label>
                                 <select
                                     defaultValue={selectedNode.genetics?.type || selectedNode.data?.type || ''}
-                                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 text-sm border border-white/10 rounded-xl bg-white/5 text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50"
                                 >
-                                    <option value="">Sélectionner...</option>
-                                    <option value="indica">🌙 Indica</option>
-                                    <option value="sativa">☀️ Sativa</option>
-                                    <option value="hybrid">⚖️ Hybride</option>
+                                    <option value="" className="bg-[#12121a] text-white">Sélectionner...</option>
+                                    <option value="indica" className="bg-[#12121a] text-white">🌙 Indica</option>
+                                    <option value="sativa" className="bg-[#12121a] text-white">☀️ Sativa</option>
+                                    <option value="hybrid" className="bg-[#12121a] text-white">⚖️ Hybride</option>
                                 </select>
                             </div>
                         </div>
 
                         {/* Genetic Relations Tags */}
                         <div className="space-y-2">
-                            <label className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Relation Généalogique</label>
+                            <label className="text-xs font-medium text-white/60 uppercase tracking-wide">Relation Généalogique</label>
                             <div className="flex flex-wrap gap-2">
                                 {['clone élite', 'seed run', 'selfed (S1)', 'BX1', 'BX2', 'polyhybride'].map(tag => (
                                     <button
                                         key={tag}
                                         type="button"
-                                        className="px-3 py-1.5 text-xs rounded-full transition-all bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-blue-500 hover:text-white"
+                                        className="px-3 py-1.5 text-xs rounded-full transition-all bg-white/10 text-white/70 hover:bg-violet-500/30 hover:text-white border border-white/10"
                                     >
                                         {tag}
                                     </button>
@@ -626,7 +626,7 @@ export default function Genetiques({ formData, handleChange }) {
                         </div>
 
                         {/* Pheno Code */}
-                        <div className="pt-3 border-t border-blue-200 dark:border-blue-700">
+                        <div className="pt-3 border-t border-white/10">
                             <PhenoCodeGenerator
                                 value={selectedNode.genetics?.phenotypeCode || selectedNode.data?.codePheno || ''}
                                 onChange={(code) => { }}

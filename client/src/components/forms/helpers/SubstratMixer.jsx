@@ -97,17 +97,17 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
     return (
         <div className="space-y-4">
             {/* Formulaire d'ajout */}
-            <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
                 <h4 className="text-sm font-medium text-white mb-3">🌱 Composer votre substrat</h4>
 
                 <div className="space-y-3">
                     {/* Sélection du substrat */}
                     <div>
-                        <label className="block text-xs text-gray-400 mb-1">Composant</label>
+                        <label className="block text-xs text-white/60 mb-1">Composant</label>
                         <select
                             value={selectedSubstrat}
                             onChange={(e) => setSelectedSubstrat(e.target.value)}
-                            className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-green-500"
+                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-violet-500/20 focus:border-violet-500/50"
                         >
                             <option value="">Sélectionner un composant...</option>
                             {availableSubstrats.map((substrat) => (
@@ -120,7 +120,7 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
 
                     {/* Pourcentage */}
                     <div>
-                        <label className="block text-xs text-gray-400 mb-1">
+                        <label className="block text-xs text-white/60 mb-1">
                             Pourcentage ({remainingPercentage}% restant)
                         </label>
                         <div className="flex items-center gap-2">
@@ -132,7 +132,7 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
                                 value={percentage}
                                 onChange={(e) => setPercentage(e.target.value)}
                                 placeholder="Ex: 50"
-                                className="flex-1 px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-green-500"
+                                className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-violet-500/20 focus:border-violet-500/50"
                             />
                             <span className="text-white text-sm font-medium">%</span>
                         </div>
@@ -150,7 +150,7 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
                         disabled={!canAddComponent()}
                         className={`w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors ${canAddComponent()
                             ? 'bg-green-600 hover:bg-green-700 text-white'
-                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                            : 'bg-white/5 text-white/30 cursor-not-allowed'
                             }`}
                     >
                         ➕ Ajouter au mélange
@@ -160,7 +160,7 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
 
             {/* Affichage du mélange actuel */}
             {value.length > 0 && (
-                <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
                     <div className="flex items-center justify-between mb-3">
                         <h4 className="text-sm font-medium text-white">
                             📋 Composition du substrat ({value.length} composant{value.length > 1 ? 's' : ''})
@@ -182,7 +182,7 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
                         {value.map((component, index) => (
                             <div
                                 key={component.id}
-                                className="bg-gray-700/30 rounded-lg p-3 border border-gray-600"
+                                className="bg-white/5 rounded-lg p-3 border border-white/10"
                             >
                                 <div className="flex items-start gap-3">
                                     {/* Numéro */}
@@ -205,9 +205,9 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
                                                 step="1"
                                                 value={component.percentage}
                                                 onChange={(e) => handlePercentageChange(component.id, e.target.value)}
-                                                className="w-20 px-2 py-1 bg-gray-800/50 border border-gray-600 rounded text-white text-xs focus:outline-none focus:border-green-500"
+                                                className="w-20 px-2 py-1 bg-white/5 border border-white/10 rounded text-white text-xs focus:outline-none focus:ring-violet-500/20 focus:border-violet-500/50"
                                             />
-                                            <span className="text-gray-400 text-xs font-medium">%</span>
+                                            <span className="text-white/60 text-xs font-medium">%</span>
                                         </div>
                                     </div>
 
@@ -218,8 +218,8 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
                                             onClick={() => handleMoveUp(index)}
                                             disabled={index === 0}
                                             className={`px-2 py-1 rounded text-xs ${index === 0
-                                                ? 'text-gray-600 cursor-not-allowed'
-                                                : 'text-gray-400 hover:text-white hover:bg-gray-600'
+                                                ? 'text-white/30 cursor-not-allowed'
+                                                : 'text-white/60 hover:text-white hover:bg-white/10'
                                                 }`}
                                             title="Monter"
                                         >
@@ -230,8 +230,8 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
                                             onClick={() => handleMoveDown(index)}
                                             disabled={index === value.length - 1}
                                             className={`px-2 py-1 rounded text-xs ${index === value.length - 1
-                                                ? 'text-gray-600 cursor-not-allowed'
-                                                : 'text-gray-400 hover:text-white hover:bg-gray-600'
+                                                ? 'text-white/30 cursor-not-allowed'
+                                                : 'text-white/60 hover:text-white hover:bg-white/10'
                                                 }`}
                                             title="Descendre"
                                         >
@@ -250,7 +250,7 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
 
                                 {/* Barre de progression visuelle */}
                                 <div className="mt-2">
-                                    <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                                         <div
                                             className="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-300"
                                             style={{ width: `${component.percentage}%` }}
@@ -262,12 +262,12 @@ const SubstratMixer = ({ value = [], onChange, availableSubstrats = [] }) => {
                     </div>
 
                     {/* Barre de progression totale */}
-                    <div className="mt-4 pt-3 border-t border-gray-700">
-                        <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+                    <div className="mt-4 pt-3 border-t border-white/10">
+                        <div className="flex items-center justify-between text-xs text-white/60 mb-1">
                             <span>Progression totale</span>
                             <span className="font-mono">{totalPercentage.toFixed(1)}% / 100%</span>
                         </div>
-                        <div className="h-3 bg-gray-800 rounded-full overflow-hidden">
+                        <div className="h-3 bg-white/10 rounded-full overflow-hidden">
                             <div
                                 className={`h-full transition-all duration-300 ${totalPercentage === 100
                                     ? 'bg-gradient-to-r from-green-500 to-green-400'

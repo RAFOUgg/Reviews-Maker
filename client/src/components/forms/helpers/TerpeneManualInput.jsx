@@ -33,21 +33,21 @@ export default function TerpeneManualInput({ data = {}, onChange }) {
     }, 0)
 
     return (
-        <LiquidCard className="bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 border-2 border-green-200 dark:border-green-700">
+        <LiquidCard className="bg-gradient-to-br from-green-900/20 to-teal-900/20 border-2 border-green-700">
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                        <h4 className="text-sm font-semibold text-white flex items-center gap-2">
                             <FlaskConical className="w-5 h-5 text-green-600" />
                             Profil Terpénique (saisie manuelle)
                         </h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-xs text-white/60 mt-1">
                             Saisissez les valeurs en % (pourcentage du poids sec)
                         </p>
                     </div>
                     <div className="text-right">
-                        <p className="text-xs text-gray-500">Total</p>
-                        <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                        <p className="text-xs text-white/50">Total</p>
+                        <p className="text-2xl font-bold text-green-400">
                             {totalTerpenes.toFixed(2)}%
                         </p>
                     </div>
@@ -59,11 +59,11 @@ export default function TerpeneManualInput({ data = {}, onChange }) {
                         return (
                             <div key={terp.key} className="space-y-2">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                                    <label className="text-sm font-medium text-white/80 flex items-center gap-2">
                                         <span className="text-lg">{terp.icon}</span>
                                         {terp.label}
                                     </label>
-                                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                    <span className="text-sm font-semibold text-white">
                                         {value.toFixed(2)}%
                                     </span>
                                 </div>
@@ -76,7 +76,7 @@ export default function TerpeneManualInput({ data = {}, onChange }) {
                                         step="0.01"
                                         value={value}
                                         onChange={(e) => handleTerpeneChange(terp.key, e.target.value)}
-                                        className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                                        className="flex-1 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-violet-500"
                                         style={{ accentColor: terp.color.replace('bg-', '#') }}
                                     />
                                     <input
@@ -86,7 +86,7 @@ export default function TerpeneManualInput({ data = {}, onChange }) {
                                         step="0.01"
                                         value={value}
                                         onChange={(e) => handleTerpeneChange(terp.key, e.target.value)}
-                                        className="w-20 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500"
+                                        className="w-20 px-2 py-1 text-sm border border-white/10 rounded bg-white/5 text-white focus:ring-violet-500/20 focus:border-violet-500/50"
                                     />
                                 </div>
                             </div>
@@ -96,16 +96,16 @@ export default function TerpeneManualInput({ data = {}, onChange }) {
 
                 {/* Validation / Avertissement */}
                 {totalTerpenes > 10 && (
-                    <div className="bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-500 rounded-lg p-3">
-                        <p className="text-sm text-orange-700 dark:text-orange-300 flex items-center gap-2">
+                    <div className="bg-orange-900/20 border-2 border-orange-500 rounded-lg p-3">
+                        <p className="text-sm text-orange-300 flex items-center gap-2">
                             ⚠️ <strong>Attention:</strong> Le total de {totalTerpenes.toFixed(2)}% semble élevé. Vérifiez vos valeurs.
                         </p>
                     </div>
                 )}
 
                 {/* Info */}
-                <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                    <p className="text-xs text-white/60">
                         💡 <strong>Note:</strong> Les terpènes représentent généralement 1-5% du poids sec total. Les valeurs exceptionnelles peuvent atteindre 8-10%.
                     </p>
                 </div>
