@@ -165,7 +165,7 @@ export default function MultiSelectPills({
             <div className="relative">
                 <div className="flex gap-2">
                     <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 z-10" />
                         <input
                             ref={inputRef}
                             type="text"
@@ -176,7 +176,7 @@ export default function MultiSelectPills({
                                 fetchItems();
                             }}
                             placeholder={placeholder}
-                            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/20 bg-white/5 text-white placeholder:text-white/40 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 focus:outline-none transition-all"
+                            className="liquid-input w-full pl-10 pr-4"
                         />
                     </div>
 

@@ -52,7 +52,7 @@ export default function TemplateSelector() {
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
                         onClick={() => setTemplate(template.id)}
-                        className={`p-3 rounded-lg text-left transition-all border ${config.template === template.id ? 'border-purple-500/50 bg-purple-500/10 ring-2 ring-purple-500/30' : 'border-white/10 bg-white/5 hover:bg-white/10' }`}
+                        className={`p-3 rounded-lg text-left transition-all border ${config.template === template.id ? 'border-purple-500/50 bg-purple-500/10 ring-2 ring-purple-500/30' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
                     >
                         <div className="flex items-start justify-between mb-1.5">
                             <div>
@@ -105,7 +105,7 @@ export default function TemplateSelector() {
                                 whileTap={isSupported ? { scale: 0.99 } : {}}
                                 onClick={() => isSupported && setRatio(ratio.id)}
                                 disabled={!isSupported}
-                                className={`p-2 rounded-md text-xs font-medium transition-all ${config.ratio === ratio.id ? 'bg-gradient-to-r from-purple-600 to-violet-600 text-white shadow-md' : isSupported ? 'bg-white/5 text-white/70 hover:bg-white/10' : 'bg-white/5 text-white/30 cursor-not-allowed opacity-50' }`}
+                                className={`p-2 rounded-md text-xs font-medium transition-all ${config.ratio === ratio.id ? 'bg-gradient-to-r from-purple-600 to-violet-600 text-white shadow-md' : isSupported ? 'bg-white/5 text-white/70 hover:bg-white/10' : 'bg-white/5 text-white/30 cursor-not-allowed opacity-50'}`}
                             >
                                 <div className="flex items-center justify-center gap-1.5">
                                     <span className="text-sm">{ratio.icon}</span>
