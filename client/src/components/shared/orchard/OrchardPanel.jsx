@@ -411,7 +411,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, pro
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-xl"
+                className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-xl"
                 onClick={onClose}
             />
 
@@ -420,7 +420,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, pro
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="fixed z-[200] bg-[#0a0a12]/95 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-white/10"
+                className="fixed z-[9999] bg-[#0a0a12]/95 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-white/10"
                 style={
                     showPreview
                         ? { left: '3%', right: '3%', top: '3%', bottom: '3%' }
